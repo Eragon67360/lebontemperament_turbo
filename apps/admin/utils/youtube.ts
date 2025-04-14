@@ -6,7 +6,6 @@ export const extractYouTubeId = (url: string): string => {
   }
 
   try {
-    // Normalize the URL by trimming whitespace and converting to lowercase
     const normalizedUrl = url.trim();
 
     // Early return if URL doesn't contain youtube or youtu.be
