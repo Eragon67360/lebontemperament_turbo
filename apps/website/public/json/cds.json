@@ -1,0 +1,71 @@
+[
+    {
+        "slug": "roi-arthur",
+        "title": "Roi Arthur",
+        "description": "Découvrez le projet exceptionnel 'Roi Arthur' par le chœur Le Bon Tempérament. Une performance magistrale qui allie musique et histoire.",
+        "image": "Site/cds/king_arthur",
+        "price": 800,
+        "currency": "EUR",
+        "releaseDate": "21 Septembre 2022",
+        "label": "Le Bon Tempérament",        
+        "tracks": [
+            {
+                "title": "Roi Arthur - Purcell Ouverture",
+                "duration": "2:29",
+                "sampleUrl": "/music/roi-arthur/09 King Arhtur - Purcell Ouverture.wav "
+            },
+            {
+                "title": "Sous l'océan",
+                "duration": "3:07",
+                "sampleUrl": "/music/roi-arthur/06 Sous l'océan.wav "
+            }
+        ],
+        "payment":"https://buy.stripe.com/28ofZF4gLbUh4sEdQR"
+    },
+    {
+        "slug": "camino-latino",
+        "title": "Camino Latino",
+        "description": "Projet Camino Latino",
+        "image": "Site/cds/camino_latino",
+        "price": 800,
+        "currency": "EUR",
+        "releaseDate": "24 Septembre 2023",
+        "label": "Le Bon Tempérament",        
+        "tracks": [
+            {
+                "title": "Triste Espana",
+                "duration": "5:28",
+                "sampleUrl": "/music/camino-latino/01 Triste Espana.mp3 "
+            },
+            {
+                "title": "Por una Cabeza",
+                "duration": "3:10",
+                "sampleUrl": "/music/camino-latino/14 Por una Cabeza.mp3 "
+            }
+        ],
+        "payment":"https://buy.stripe.com/fZeeVB7sX3nL3oA4gi"
+    },
+    {
+        "slug": "vent-d-est",
+        "title": "Vent d'Est",
+        "description": "Take a symphonic journey through the ages with this collection of orchestral masterpieces, performed by our leading orchestra.",
+        "image": "Site/cds/vent_d_est",
+        "price": 800,
+        "currency": "EUR",
+        "releaseDate": "Août 2021",
+        "label": "Le Bon Tempérament",        
+        "tracks": [
+            {
+                "title": "Salve Regina",
+                "duration": "2:14",
+                "sampleUrl": "/music/vent-d-est/04 Salve Regina.mp3"
+            },
+            {
+                "title": "Mignonne allons voir si la rose",
+                "duration": "2:22",
+                "sampleUrl": "/music/vent-d-est/17 Mignonne allons voir si la rose.mp3"
+            }
+        ],
+        "payment":"https://buy.stripe.com/00g8xd5kP8I5f7i7ss"
+    }
+]

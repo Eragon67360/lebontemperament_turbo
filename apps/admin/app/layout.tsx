@@ -1,9 +1,9 @@
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
-import { AnimatePresence } from 'framer-motion';
 import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
 import "./globals.css";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
@@ -19,9 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Analytics />
-      <body className={inter.className}><AnimatePresence mode="wait">
-        {children}
-      </AnimatePresence>
+      <body className={inter.className}>
+        <Providers>
+          {children}
+        </Providers>
         <Toaster
           position="top-right"
           richColors

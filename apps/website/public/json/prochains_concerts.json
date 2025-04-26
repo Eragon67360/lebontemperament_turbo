@@ -1,0 +1,33 @@
+[
+    {
+        "date":"19 janvier 2025",
+        "heure":"17h",
+        "lieu":"Foyer de l'Étudiant Catholique (FEC), Strasbourg",
+        "contexte":"Orchestre"
+    },
+    {
+        "date":"15 mars 2025",
+        "heure":"20h",
+        "lieu":"Centre Culturel Claude Vigée, Bischwiller",
+        "contexte":"Orchestre"
+    },
+    {
+        "date":"16 mars 2025",
+        "heure":"17h",
+        "lieu":"Église St Paul de Koenigshoffen, Strasbourg",
+        "contexte":"Orchestre"
+    },
+    {
+        "date":"21 juin 2025",
+        "heure":"20h",
+        "lieu":"Église des Récollets, Saverne",
+        "contexte":"Choeur"
+    },
+    {
+        "date":"22 juin 2025",
+        "heure":"??",
+        "lieu":"Ancienne Synagogue de Marmoutier",
+        "contexte":"Choeur"
+    }
+
+]
