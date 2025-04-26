@@ -48,9 +48,11 @@ npm run dev
 ## Apps Details
 
 ### Website (web)
+
 The main website for Le Bon Temperament, accessible at `lebontemperament.com`
 
 **Tech Stack:**
+
 - Next.js 15
 - React 19
 - HeroUI Components
@@ -59,9 +61,11 @@ The main website for Le Bon Temperament, accessible at `lebontemperament.com`
 - TypeScript 5.4
 
 ### Admin Dashboard (admin)
+
 The admin CMS dashboard, accessible at `admin.lebontemperament.com`
 
 **Tech Stack:**
+
 - Next.js 15
 - React 19
 - shadcn/ui Components
@@ -72,11 +76,13 @@ The admin CMS dashboard, accessible at `admin.lebontemperament.com`
 ## Setup Instructions
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/your-username/le-bon-temperament.git
 ```
 
 2. Install dependencies:
+
 ```bash
 cd le-bon-temperament
 npm install
@@ -85,18 +91,21 @@ npm install
 3. Create `.env` files:
 
 For website (`apps/web/.env.local`):
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 For admin (`apps/admin/.env.local`):
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 4. Start development servers:
+
 ```bash
 npm run dev
 ```
@@ -126,10 +135,7 @@ Example `package.json` for the monorepo root:
 {
   "name": "le-bon-temperament",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": ["apps/*", "packages/*"],
   "dependencies": {
     "next": "15.0.0",
     "react": "19.0.0",
@@ -170,13 +176,13 @@ Example `package.json` for the monorepo root:
 Example `tailwind.config.ts`:
 
 ```typescript
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -184,8 +190,8 @@ const config: Config = {
     },
   },
   plugins: [],
-}
-export default config
+};
+export default config;
 ```
 
 ## Contributing

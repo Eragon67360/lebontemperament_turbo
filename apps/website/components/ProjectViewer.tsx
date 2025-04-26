@@ -3,6 +3,7 @@ import projects from "@/public/json/projects.json";
 import Link from "next/link";
 import React, { useState } from "react";
 import { IoIosArrowRoundBack, IoIosArrowRoundForward } from "react-icons/io";
+import Image from "next/image";
 
 const ProjectViewer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -75,16 +76,22 @@ const ProjectViewer = () => {
           </div>
         </div>
       </div>
-
       <Link
         href={`/concerts/${currentProject?.slug}`}
-        className="order-1 lg:order-2 w-full lg:w-2/3 scale-75 relative flex h-full min-h-[400px] lg:min-h-[800px] justify-end flex-shrink-0 group bg-repeat-space bg-contain"
-        style={{
-          backgroundImage: `url(${currentProject?.image})`,
-          backgroundPosition: "center",
-        }}
+        className="order-1 lg:order-2 w-full lg:w-2/3 scale-75 relative flex h-full min-h-[400px] lg:min-h-[800px] justify-end flex-shrink-0 group"
       >
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition-all duration-300 hidden lg:flex items-center justify-center">
+        <div className="absolute inset-0 w-full h-full">
+          {currentProject && (
+            <Image
+              src={currentProject.image}
+              alt={currentProject.name}
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, 66vw"
+            />
+          )}
+        </div>
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/80 transition-all duration-300 hidden lg:flex items-center justify-center z-10">
           <div className="opacity-0 group-hover:opacity-100 transition duration-300 text-white text-center px-8">
             <h2 className="text-4xl font-bold">
               {currentProject?.name}&nbsp;{currentProject?.subName}
