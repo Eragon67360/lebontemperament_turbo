@@ -1,8 +1,8 @@
 // components/VideoForm.tsx
-'use client'
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -10,22 +10,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
-import { fr } from 'date-fns/locale'
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Video, VideoFormData } from "@/types/video"
+} from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Video, VideoFormData } from "@/types/video";
 
 const formSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
@@ -36,7 +36,7 @@ const formSchema = z.object({
     .url("URL invalide")
     .regex(
       /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/,
-      "URL YouTube invalide"
+      "URL YouTube invalide",
     ),
   performance_date: z.date({
     required_error: "La date est requise",
@@ -47,8 +47,8 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 interface VideoFormProps {
-  onSubmit: (data: VideoFormData) => void
-  initialData?: Video | null
+  onSubmit: (data: VideoFormData) => void;
+  initialData?: Video | null;
 }
 
 export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
@@ -71,9 +71,11 @@ export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
       title: values.title,
       composer: values.composer,
       youtube_url: values.youtube_url,
-      performance_date: format(values.performance_date, 'yyyy-MM-dd'),
+      performance_date: format(values.performance_date, "yyyy-MM-dd"),
       venue: values.venue,
-      soloists: values.soloists ? values.soloists.split(",").map(s => s.trim()) : [],
+      soloists: values.soloists
+        ? values.soloists.split(",").map((s) => s.trim())
+        : [],
     };
 
     await onSubmit(formattedData);
@@ -140,7 +142,7 @@ export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
                       variant={"outline"}
                       className={cn(
                         "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
+                        !field.value && "text-muted-foreground",
                       )}
                     >
                       {field.value ? (
@@ -152,10 +154,7 @@ export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent
-                  className="w-auto p-0 z-50"
-                  align="start"
-                >
+                <PopoverContent className="w-auto p-0 z-50" align="start">
                   <Calendar
                     mode="single"
                     selected={field.value}
@@ -208,5 +207,5 @@ export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
         </Button>
       </form>
     </Form>
-  )
+  );
 }

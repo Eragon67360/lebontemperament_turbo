@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
             unit_amount: item.price * 100,
           },
           quantity: item.quantity,
-        })
+        }),
       ),
       mode: "payment",
       success_url: `${req.nextUrl.origin}/success`,

@@ -7,16 +7,16 @@ import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { Roboto } from 'next/font/google';
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 
 const roboto = Roboto({
-  weight: ['100', '300', '400', '500', '700', '900'],
-  style: ['normal', 'italic'],
-  subsets: ['latin'],
-  display: 'swap',
-})
+  weight: ["100", "300", "400", "500", "700", "900"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  display: "swap",
+});
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be defined");
 }
@@ -40,33 +40,33 @@ export const keyword = [
   "Chœurs de jeunes musique classique France",
   "Performances de chœurs d'adultes musique classique",
   "Événements de musique classique à Saverne",
-  "Associations françaises de musique classique"
+  "Associations françaises de musique classique",
 ];
 
 export const metadata: Metadata = {
   metadataBase: new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/`),
   title: {
-    default: 'Le Bon Tempérament',
-    template: '%s | Le Bon Tempérament',
+    default: "Le Bon Tempérament",
+    template: "%s | Le Bon Tempérament",
   },
-  description: 'Le Bon Tempérament est un ensemble vocal et instrumental renommé à Saverne, France. Rejoignez-nous pour des concerts captivants, opéras et plus encore. Découvrez nos CDs et nos événements à venir.',
-  keywords: `${keyword.join(', ')}`,
+  description:
+    "Le Bon Tempérament est un ensemble vocal et instrumental renommé à Saverne, France. Rejoignez-nous pour des concerts captivants, opéras et plus encore. Découvrez nos CDs et nos événements à venir.",
+  keywords: `${keyword.join(", ")}`,
   openGraph: {
-    type: 'website',
-    locale: 'fr_FR',
+    type: "website",
+    locale: "fr_FR",
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
-    siteName: 'Le Bon Tempérament',
+    siteName: "Le Bon Tempérament",
     images: [
       {
-        url: 'https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png',
+        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
         width: 800,
         height: 600,
-        alt: 'Le Bon Tempérament',
+        alt: "Le Bon Tempérament",
       },
     ],
-  }
+  },
 };
-
 
 export default function RootLayout({
   children,
@@ -75,7 +75,6 @@ export default function RootLayout({
 }>) {
   return (
     <>
-
       <html lang="fr">
         <Header />
         <body className={roboto.className}>

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient();
@@ -26,14 +26,14 @@ export async function GET(
     console.error(error);
     return NextResponse.json(
       { error: "Error fetching project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient();
@@ -54,14 +54,14 @@ export async function PUT(
     console.error(error);
     return NextResponse.json(
       { error: "Error updating project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient();
@@ -76,7 +76,7 @@ export async function DELETE(
     console.error(error);
     return NextResponse.json(
       { error: "Error deleting project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

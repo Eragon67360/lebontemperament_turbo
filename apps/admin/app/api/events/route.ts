@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Erreur lors de la création de l'événement" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -53,7 +53,7 @@ export async function PATCH(request: Request) {
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -77,7 +77,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour de l'événement" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -88,7 +88,7 @@ export async function DELETE(request: Request) {
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -107,7 +107,7 @@ export async function DELETE(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Erreur lors de la suppression de l'événement" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

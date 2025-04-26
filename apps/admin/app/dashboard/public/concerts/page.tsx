@@ -4,10 +4,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import RouteNames from '@/utils/routes';
-import { Archive, Calendar } from 'lucide-react';
-import Link from 'next/link';
+} from "@/components/ui/card";
+import RouteNames from "@/utils/routes";
+import { Archive, Calendar } from "lucide-react";
+import Link from "next/link";
 
 export default function ConcertsPage() {
   return (

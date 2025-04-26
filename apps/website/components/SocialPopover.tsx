@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { FaFacebook, FaTiktok, FaInstagram, FaYoutube } from "react-icons/fa";
@@ -34,7 +34,7 @@ export const SocialPopover = () => {
               className={`
                 text-white text-xl 
                 transition-opacity duration-400 ease-in-out
-                ${isTransitioning ? 'opacity-0' : 'opacity-100'}
+                ${isTransitioning ? "opacity-0" : "opacity-100"}
               `}
             >
               {socials[currentIconIndex]?.icon}
@@ -61,8 +61,24 @@ export const SocialPopover = () => {
 };
 
 const socials = [
-  { name: 'Facebook', url: 'https://www.facebook.com/profile.php?id=100063069588507', icon: <FaFacebook size={20} /> },
-  { name: 'Tiktok', url: 'https://www.tiktok.com/@lebontemperament', icon: <FaTiktok size={20} /> },
-  { name: 'Instagram', url: 'https://www.instagram.com/lebontemperament_/', icon: <FaInstagram size={20} /> },
-  { name: 'YouTube', url: 'https://www.youtube.com/@lebontemperament', icon: <FaYoutube size={20} /> },
+  {
+    name: "Facebook",
+    url: "https://www.facebook.com/profile.php?id=100063069588507",
+    icon: <FaFacebook size={20} />,
+  },
+  {
+    name: "Tiktok",
+    url: "https://www.tiktok.com/@lebontemperament",
+    icon: <FaTiktok size={20} />,
+  },
+  {
+    name: "Instagram",
+    url: "https://www.instagram.com/lebontemperament_/",
+    icon: <FaInstagram size={20} />,
+  },
+  {
+    name: "YouTube",
+    url: "https://www.youtube.com/@lebontemperament",
+    icon: <FaYoutube size={20} />,
+  },
 ];

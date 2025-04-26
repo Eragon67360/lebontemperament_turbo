@@ -7,14 +7,14 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const authCheck = await checkAuthorization();
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -37,7 +37,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const supabase = await createClient();
@@ -67,7 +67,7 @@ export async function DELETE(
     if (subfolders && subfolders.length > 0) {
       return NextResponse.json(
         { error: "Cannot delete folder containing subfolders" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -112,7 +112,7 @@ export async function DELETE(
     console.error("Error deleting folder:", error);
     return NextResponse.json(
       { error: "Failed to delete folder" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

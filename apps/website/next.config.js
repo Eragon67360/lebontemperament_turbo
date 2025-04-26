@@ -57,18 +57,9 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        port: '',
-        pathname: '/dlt2j3dld/image/upload/v1/Site/**',
-      },
-      {
-        protocol: 'https',
-        hostname: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', ''),
-        port: '',
-        pathname: '/storage/v1/object/public/**',
-      },
+      new URL('https://res.cloudinary.com/dlt2j3dld/image/**'),
+      // eslint-disable-next-line no-undef
+      new URL(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`),
     ],
   }
 };

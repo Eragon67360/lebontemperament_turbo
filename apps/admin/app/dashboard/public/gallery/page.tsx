@@ -4,10 +4,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import RouteNames from '@/utils/routes';
-import { Image as ImageIcon, Video } from 'lucide-react';
-import Link from 'next/link';
+} from "@/components/ui/card";
+import RouteNames from "@/utils/routes";
+import { Image as ImageIcon, Video } from "lucide-react";
+import Link from "next/link";
 
 export default function GalleryPage() {
   return (
@@ -18,7 +18,8 @@ export default function GalleryPage() {
           Galerie Multimédia
         </h2>
         <p className="text-sm text-muted-foreground">
-          Gérez vos contenus photos et vidéos pour mettre en valeur vos événements.
+          Gérez vos contenus photos et vidéos pour mettre en valeur vos
+          événements.
         </p>
       </div>
 
@@ -66,7 +67,6 @@ export default function GalleryPage() {
           </Card>
         </Link>
       </div>
-
     </div>
   );
 }

@@ -10,6 +10,6 @@ export function createAdminClient() {
         autoRefreshToken: false,
         persistSession: false,
       },
-    }
+    },
   );
 }

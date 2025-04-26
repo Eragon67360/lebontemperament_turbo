@@ -31,31 +31,31 @@ export async function GET(request: Request) {
       if (usersError) {
         console.error(
           "Erreur lors de la récupération des utilisateurs:",
-          usersError
+          usersError,
         );
         throw usersError;
       }
       const userExists = users.some(
         (existingUser) =>
           existingUser.email === user.email &&
-          existingUser.email_confirmed_at !== null
+          existingUser.email_confirmed_at !== null,
       );
 
       if (!userExists) {
         await supabase.auth.signOut();
         return NextResponse.redirect(
-          `${requestUrl.origin}${RouteNames.AUTH.LOGIN}?error=${ERROR_CODES.UNAUTHORIZED}&error_description=Compte+non+autorisé`
+          `${requestUrl.origin}${RouteNames.AUTH.LOGIN}?error=${ERROR_CODES.UNAUTHORIZED}&error_description=Compte+non+autorisé`,
         );
       }
 
       return NextResponse.redirect(
-        `${requestUrl.origin}${RouteNames.MEMBRES.ROOT}`
+        `${requestUrl.origin}${RouteNames.MEMBRES.ROOT}`,
       );
     } catch (error) {
       console.error(error);
 
       return NextResponse.redirect(
-        `${requestUrl.origin}${RouteNames.AUTH.LOGIN}?error=auth_callback_error`
+        `${requestUrl.origin}${RouteNames.AUTH.LOGIN}?error=auth_callback_error`,
       );
     }
   }

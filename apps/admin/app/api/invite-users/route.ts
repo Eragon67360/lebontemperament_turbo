@@ -9,7 +9,7 @@ const invitationSchema = z.object({
     z.object({
       email: z.string().email("Format d'email invalide"),
       displayName: z.string().min(1, "Le nom complet est requis"),
-    })
+    }),
   ),
   invitedBy: z.string().email(),
   redirectTo: z.string().url().optional(),
@@ -17,7 +17,7 @@ const invitationSchema = z.object({
 
 function chunkArray<T>(array: T[], size: number): T[][] {
   return Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>
-    array.slice(i * size, i * size + size)
+    array.slice(i * size, i * size + size),
   );
 }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         (entry: { email: string; displayName: string }) => ({
           email: entry.email,
           displayName: entry.displayName,
-        })
+        }),
       ),
       invitedBy: user.email || "admin@lebontemperament.com",
       redirectTo,
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           error: "Validation échouée",
           details: validationResult.error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
                   current: processedCount,
                   total: totalInvitations,
                   percentage: Math.round(
-                    (processedCount / totalInvitations) * 100
+                    (processedCount / totalInvitations) * 100,
                   ),
                 },
               };
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
                 current: processedCount,
                 total: totalInvitations,
                 percentage: Math.round(
-                  (processedCount / totalInvitations) * 100
+                  (processedCount / totalInvitations) * 100,
                 ),
               },
             };
@@ -127,19 +127,19 @@ export async function POST(request: NextRequest) {
                 current: processedCount,
                 total: totalInvitations,
                 percentage: Math.round(
-                  (processedCount / totalInvitations) * 100
+                  (processedCount / totalInvitations) * 100,
                 ),
               },
             };
           }
-        })
+        }),
       );
 
       allResults = [...allResults, ...batchResults];
 
       if (emailBatches.indexOf(batch) < emailBatches.length - 1) {
         await new Promise((resolve) =>
-          setTimeout(resolve, DELAY_BETWEEN_BATCHES)
+          setTimeout(resolve, DELAY_BETWEEN_BATCHES),
         );
       }
     }

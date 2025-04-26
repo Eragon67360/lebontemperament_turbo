@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -49,12 +49,13 @@ export async function POST(request: Request) {
       user_id: authCheck?.user?.id,
       target_id: newConcert.id,
       title: "Nouveau concert",
-      description: `Concert ${newConcert.name ? `"${newConcert.name}"` : ""
-        } ajouté à ${newConcert.place} pour le ${format(
-          new Date(newConcert.date),
-          "d MMMM yyyy",
-          { locale: fr }
-        )}`,
+      description: `Concert ${
+        newConcert.name ? `"${newConcert.name}"` : ""
+      } ajouté à ${newConcert.place} pour le ${format(
+        new Date(newConcert.date),
+        "d MMMM yyyy",
+        { locale: fr },
+      )}`,
       metadata: {
         concert_id: newConcert.id,
         concert_name: newConcert.name || null,
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     console.error("Error creating concert:", error);
     return NextResponse.json(
       { error: "Erreur lors de la création du concert" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -83,7 +84,7 @@ export async function PATCH(request: Request) {
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -110,7 +111,7 @@ export async function DELETE(request: Request) {
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -158,7 +159,7 @@ export async function DELETE(request: Request) {
     console.error("Delete operation error:", error);
     return NextResponse.json(
       { error: "Delete operation failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

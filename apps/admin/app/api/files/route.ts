@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 

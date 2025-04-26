@@ -18,7 +18,7 @@ export async function GET() {
     console.error(error);
     return NextResponse.json(
       { error: "Error fetching projects" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Error creating project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -65,7 +65,7 @@ export async function PUT(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Error updating project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -88,7 +88,7 @@ export async function DELETE(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Error deleting project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
