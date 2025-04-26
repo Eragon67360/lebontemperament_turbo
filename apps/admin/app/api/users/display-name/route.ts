@@ -37,13 +37,13 @@ export async function PATCH(request: Request) {
     if (!userId || display_name === undefined) {
       return NextResponse.json(
         { error: "ID utilisateur et nom d'affichage requis" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
-      { user_metadata: { display_name } }
+      { user_metadata: { display_name } },
     );
 
     if (authError) throw authError;
@@ -62,7 +62,7 @@ export async function PATCH(request: Request) {
     console.error("Error updating display name:", error);
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour du nom d'affichage" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

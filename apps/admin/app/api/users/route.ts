@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     if (search) {
       query = query.or(
-        `email.ilike.%${search}%,display_name.ilike.%${search}%`
+        `email.ilike.%${search}%,display_name.ilike.%${search}%`,
       );
     }
 
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
       { error: "Erreur lors de la récupération des utilisateurs" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -170,7 +170,7 @@ export async function POST(request: Request) {
     console.error("Error creating user:", error);
     return NextResponse.json(
       { error: "Erreur lors de la création de l'utilisateur" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -189,13 +189,12 @@ export async function DELETE(request: Request) {
     if (!userId) {
       return NextResponse.json(
         { error: "ID utilisateur requis" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-      userId
-    );
+    const { error: deleteError } =
+      await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteError) throw deleteError;
 
@@ -206,7 +205,7 @@ export async function DELETE(request: Request) {
     console.error("Error deleting user:", error);
     return NextResponse.json(
       { error: "Erreur lors de la suppression de l'utilisateur" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -224,7 +223,7 @@ export async function PATCH(request: Request) {
     if (!userId || !role) {
       return NextResponse.json(
         { error: "ID utilisateur et rôle requis" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -237,7 +236,7 @@ export async function PATCH(request: Request) {
     if (targetUser?.role === "superadmin") {
       return NextResponse.json(
         { error: "Impossible de modifier le rôle d'un super administrateur" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -268,8 +267,8 @@ export async function PATCH(request: Request) {
           role === "admin"
             ? "administrateur"
             : role === "superadmin"
-            ? "super administrateur"
-            : "utilisateur"
+              ? "super administrateur"
+              : "utilisateur"
         }`,
         metadata: {
           target_user_id: userId,
@@ -287,7 +286,7 @@ export async function PATCH(request: Request) {
     console.error("Error updating user role:", error);
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour du rôle" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

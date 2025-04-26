@@ -18,7 +18,7 @@ export async function GET(request: Request) {
           email,
           display_name
         )
-      `
+      `,
       )
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     console.error("Error fetching activities:", error);
     return NextResponse.json(
       { error: "Erreur lors de la récupération des activités" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,4 +1,4 @@
-import CreateProfileForm from "@/components/auth/CreateProfileForm"
+import CreateProfileForm from "@/components/auth/CreateProfileForm";
 
 export default function CreateProfilePage() {
   return (
@@ -13,5 +13,5 @@ export default function CreateProfilePage() {
         </div>
       </div>
     </>
-  )
+  );
 }

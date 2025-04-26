@@ -7,7 +7,7 @@ export async function GET() {
     if (!groupEmail) {
       return NextResponse.json(
         { error: "Group email not set" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const members = await getGroupMembers(groupEmail);
@@ -16,7 +16,7 @@ export async function GET() {
     console.error("Error fetching group members:", error);
     return NextResponse.json(
       { error: "Error fetching group members" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -33,7 +33,7 @@ export async function POST() {
     console.error("Error in POST /api/group:", error);
     return NextResponse.json(
       { message: "Failed to subscribe", error: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
