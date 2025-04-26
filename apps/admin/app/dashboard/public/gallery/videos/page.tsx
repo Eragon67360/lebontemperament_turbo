@@ -1,5 +1,5 @@
 // app/dashboard/public/videos/page.tsx
-'use client'
+"use client";
 
 import {
   AlertDialog,
@@ -10,130 +10,131 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from '@/components/ui/button'
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog'
-import { VideoForm } from '@/components/VideoForm'
-import { YoutubeIframe } from "@/components/YoutubeIframe"
-import { Video, VideoFormData } from '@/types/video'
-import { extractYouTubeId } from "@/utils/youtube"
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
-import { Music2, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { VideoForm } from "@/components/VideoForm";
+import { YoutubeIframe } from "@/components/YoutubeIframe";
+import { Video, VideoFormData } from "@/types/video";
+import { extractYouTubeId } from "@/utils/youtube";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Music2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const loadingMessages = [
   "Chargement des vidéos... 🎥",
   "Préparation de la playlist... 🎵",
   "Les musiciens s'accordent... 🎻",
   "La scène se prépare... 🎭",
-]
+];
 
 export default function VideosPage() {
-  const [videos, setVideos] = useState<Video[]>([])
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [videoToDelete, setVideoToDelete] = useState<string | null>(null)
-  const [editingVideo, setEditingVideo] = useState<Video | null>(null)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [videoToDelete, setVideoToDelete] = useState<string | null>(null);
+  const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('/api/videos')
-      const data = await response.json()
-      setVideos(data)
+      const response = await fetch("/api/videos");
+      const data = await response.json();
+      setVideos(data);
     } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchVideos()
-  }, [])
-
-  const handleCreate = async (formData: VideoFormData) => {
-    try {
-      const response = await fetch('/api/videos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error('Error adding video');
-
-      toast.success('Vidéo ajoutée avec succès');
-      setOpen(false);
-      fetchVideos();
-    } catch (error) {
-      toast.error('Erreur lors de l\'ajout de la vidéo');
-      console.error(error);
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const handleCreate = async (formData: VideoFormData) => {
+    try {
+      const response = await fetch("/api/videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("Error adding video");
+
+      toast.success("Vidéo ajoutée avec succès");
+      setOpen(false);
+      fetchVideos();
+    } catch (error) {
+      toast.error("Erreur lors de l'ajout de la vidéo");
+      console.error(error);
+    }
+  };
 
   const handleEdit = async (formData: VideoFormData) => {
     if (!editingVideo) return;
 
     try {
-      const response = await fetch('/api/videos', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/videos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: editingVideo.id,
           ...formData,
         }),
       });
 
-      if (!response.ok) throw new Error('Error updating video');
+      if (!response.ok) throw new Error("Error updating video");
 
-      toast.success('Vidéo modifiée avec succès');
+      toast.success("Vidéo modifiée avec succès");
       setEditDialogOpen(false);
       setEditingVideo(null);
       fetchVideos();
     } catch (error) {
-      toast.error('Erreur lors de la modification');
+      toast.error("Erreur lors de la modification");
       console.error(error);
     }
   };
 
   const handleDelete = async () => {
-    if (!videoToDelete) return
+    if (!videoToDelete) return;
 
     try {
-      const response = await fetch('/api/videos', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/videos", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: videoToDelete }),
-      })
+      });
 
-      if (!response.ok) throw new Error('Error deleting video')
+      if (!response.ok) throw new Error("Error deleting video");
 
-      toast.success('Vidéo supprimée avec succès')
-      fetchVideos()
+      toast.success("Vidéo supprimée avec succès");
+      fetchVideos();
     } catch (error) {
-      toast.error('Erreur lors de la suppression')
-      console.error(error)
+      toast.error("Erreur lors de la suppression");
+      console.error(error);
     } finally {
-      setDeleteDialogOpen(false)
-      setVideoToDelete(null)
+      setDeleteDialogOpen(false);
+      setVideoToDelete(null);
     }
-  }
+  };
 
   const LoadingState = () => {
     const [message, setMessage] = useState(loadingMessages[0]);
 
     useEffect(() => {
       const intervalId = setInterval(() => {
-        setMessage(loadingMessages[Math.floor(Math.random() * loadingMessages.length)])
+        setMessage(
+          loadingMessages[Math.floor(Math.random() * loadingMessages.length)],
+        );
       }, 2000);
       return () => clearInterval(intervalId);
     }, []);
@@ -142,9 +143,7 @@ export default function VideosPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="space-y-4 text-center">
           <Music2 className="h-12 w-12 text-primary/50 animate-pulse mx-auto" />
-          <p className="text-sm text-muted-foreground">
-            {message}
-          </p>
+          <p className="text-sm text-muted-foreground">{message}</p>
         </div>
       </div>
     );
@@ -160,7 +159,7 @@ export default function VideosPage() {
       </div>
       <AddVideoButton />
     </div>
-  )
+  );
   const AddVideoButton = () => (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -179,10 +178,9 @@ export default function VideosPage() {
         <VideoForm onSubmit={handleCreate} />
       </DialogContent>
     </Dialog>
-  )
+  );
   const VideoCard = ({ video }: { video: Video }) => {
-    const videoId = extractYouTubeId(video.youtube_url)
-
+    const videoId = extractYouTubeId(video.youtube_url);
 
     return (
       <div className="bg-white dark:bg-black rounded-2xl overflow-hidden shadow-sm border border-border/50">
@@ -196,10 +194,14 @@ export default function VideosPage() {
           </div>
 
           <div className="space-y-1 text-sm text-muted-foreground">
-            <p>{format(new Date(video.performance_date), 'dd MMMM yyyy', { locale: fr })}</p>
+            <p>
+              {format(new Date(video.performance_date), "dd MMMM yyyy", {
+                locale: fr,
+              })}
+            </p>
             <p>{video.venue}</p>
             {video.soloists?.length > 0 && (
-              <p className="italic">{video.soloists.join(', ')}</p>
+              <p className="italic">{video.soloists.join(", ")}</p>
             )}
           </div>
 
@@ -209,8 +211,8 @@ export default function VideosPage() {
               size="sm"
               className="rounded-full"
               onClick={() => {
-                setEditingVideo(video)
-                setEditDialogOpen(true)
+                setEditingVideo(video);
+                setEditDialogOpen(true);
               }}
             >
               <Pencil className="h-4 w-4" />
@@ -220,8 +222,8 @@ export default function VideosPage() {
               size="sm"
               className="rounded-full text-destructive"
               onClick={() => {
-                setVideoToDelete(video.id)
-                setDeleteDialogOpen(true)
+                setVideoToDelete(video.id);
+                setDeleteDialogOpen(true);
               }}
             >
               <Trash2 className="h-4 w-4" />
@@ -229,10 +231,10 @@ export default function VideosPage() {
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
-  if (loading) return <LoadingState />
+  if (loading) return <LoadingState />;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -258,7 +260,8 @@ export default function VideosPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. La vidéo sera définitivement supprimée.
+              Cette action est irréversible. La vidéo sera définitivement
+              supprimée.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -285,5 +288,5 @@ export default function VideosPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

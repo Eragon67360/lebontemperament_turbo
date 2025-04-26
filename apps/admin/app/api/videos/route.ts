@@ -19,7 +19,7 @@ export async function GET() {
     console.error("Error:", error);
     return NextResponse.json(
       { error: "Error fetching videos" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -58,7 +58,7 @@ export async function PATCH(request: Request) {
     console.error("Error:", error);
     return NextResponse.json(
       { error: "Error updating video" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -80,7 +80,7 @@ export async function DELETE(request: Request) {
     console.error("Error:", error);
     return NextResponse.json(
       { error: "Error deleting video" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

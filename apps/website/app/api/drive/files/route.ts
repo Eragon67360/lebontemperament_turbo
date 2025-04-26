@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   if (!clientSecret || !clientId || !refreshToken) {
     return NextResponse.json(
       { error: "Missing OAuth2 credentials" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     const oAuth2Client = new google.auth.OAuth2(
       clientId,
       clientSecret,
-      redirectUri
+      redirectUri,
     );
     oAuth2Client.setCredentials({ refresh_token: refreshToken });
 
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     if (!response.data.files || !Array.isArray(response.data.files)) {
       return NextResponse.json(
         { error: "Invalid response format" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
         error: "Failed to retrieve files",
         details: isGoogleError(error) ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
   if (!clientSecret || !clientId || !refreshToken) {
     return NextResponse.json(
       { error: "Missing OAuth2 credentials" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     const oAuth2Client = new google.auth.OAuth2(
       clientId,
       clientSecret,
-      redirectUri
+      redirectUri,
     );
     oAuth2Client.setCredentials({ refresh_token: refreshToken });
 
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
     if (!folderId || !files || !Array.isArray(files)) {
       return NextResponse.json(
         { error: "Missing folder ID or files" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
         error: "Failed to upload files",
         details: isGoogleError(error) ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -188,7 +188,7 @@ export async function DELETE(req: NextRequest) {
   if (!clientSecret || !clientId || !refreshToken) {
     return NextResponse.json(
       { error: "Missing OAuth2 credentials" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -196,7 +196,7 @@ export async function DELETE(req: NextRequest) {
     const oAuth2Client = new google.auth.OAuth2(
       clientId,
       clientSecret,
-      redirectUri
+      redirectUri,
     );
     oAuth2Client.setCredentials({ refresh_token: refreshToken });
 
@@ -229,7 +229,7 @@ export async function DELETE(req: NextRequest) {
         error: "Failed to delete files",
         details: isGoogleError(error) ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

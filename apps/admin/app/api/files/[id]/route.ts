@@ -6,14 +6,14 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const authCheck = await checkAuthorization();
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
 
@@ -36,13 +36,13 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const authCheck = await checkAuthorization();
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
-      { status: authCheck.status }
+      { status: authCheck.status },
     );
   }
   const { id } = await params;

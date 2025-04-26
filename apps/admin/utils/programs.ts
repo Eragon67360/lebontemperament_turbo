@@ -2,7 +2,7 @@
 import { createClient } from "@/utils/supabase/server";
 
 export async function getProgramName(
-  programId: string
+  programId: string,
 ): Promise<string | null> {
   const supabase = await createClient();
 

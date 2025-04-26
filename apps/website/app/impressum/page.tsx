@@ -1,26 +1,28 @@
-import { Metadata } from 'next';
-import Head from 'next/head';
+import { Metadata } from "next";
+import Head from "next/head";
 
 export const metadata: Metadata = {
   title: "Impressum",
-  description: "En apprendre plus sur la politique de confidentialité du site du Bon Tempérament",
-  keywords: "Le Bon Tempérament,  Ensemble vocal et instrumental Alsace,  Concerts de musique classique,  Tournées musicales annuelles,  Répétitions musicales conviviales,  Communauté musicale engagée,  Passion pour la musique,  Histoire musicale depuis 1987",
+  description:
+    "En apprendre plus sur la politique de confidentialité du site du Bon Tempérament",
+  keywords:
+    "Le Bon Tempérament,  Ensemble vocal et instrumental Alsace,  Concerts de musique classique,  Tournées musicales annuelles,  Répétitions musicales conviviales,  Communauté musicale engagée,  Passion pour la musique,  Histoire musicale depuis 1987",
   openGraph: {
-      type: 'website',
-      locale: 'fr_FR',
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/impressum`,
-      siteName: 'Le Bon Tempérament',
-      images: [
-          {
-              url: 'https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png',
-              width: 800,
-              height: 600,
-              alt: 'Le Bon Tempérament',
-          },
-      ],
+    type: "website",
+    locale: "fr_FR",
+    url: `${process.env.NEXT_PUBLIC_BASE_URL}/impressum`,
+    siteName: "Le Bon Tempérament",
+    images: [
+      {
+        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
+        width: 800,
+        height: 600,
+        alt: "Le Bon Tempérament",
+      },
+    ],
   },
   alternates: {
-      canonical: '/impressum',
+    canonical: "/impressum",
   },
 };
 export default function Impressum() {
@@ -50,7 +52,9 @@ export default function Impressum() {
           </p>
         </section>
         <section className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Responsable de la publication</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            Responsable de la publication
+          </h2>
           <p className="mb-2">
             <strong>Nom :</strong> Sophie Bellard
           </p>

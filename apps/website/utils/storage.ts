@@ -42,7 +42,7 @@ export async function deleteStorageFolder(folderPath: string) {
   // If there are files, delete them
   if (files && files.length > 0) {
     const filePaths = files.map(
-      (file: { name: string }) => `${folderPath}/${file.name}`
+      (file: { name: string }) => `${folderPath}/${file.name}`,
     );
     const { error: deleteError } = await supabase.storage
       .from("programs")
