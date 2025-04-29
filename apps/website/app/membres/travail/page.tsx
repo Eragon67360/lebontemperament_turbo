@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const Travail = () => {
   return (
     <>
-      <div className="min-h-screen w-screen bg-[url('/img/background_travail.webp')] bg-cover opacity-60 flex flex-col items-center gap-8 py-12">
+      <div className="min-h-screen w-screen bg-[url('/img/background_travail.webp')] bg-cover flex flex-col items-center gap-8 py-12">
         <h1 className="text-title text-[#333] font-bold leading-none select-none">
           Au travail !!
         </h1>
