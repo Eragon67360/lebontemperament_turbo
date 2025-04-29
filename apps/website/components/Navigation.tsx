@@ -14,17 +14,20 @@ import {
   PopoverContent,
   PopoverTrigger,
   addToast,
+  Tooltip,
 } from "@heroui/react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { IoLogOut } from "react-icons/io5";
 import { useEffect, useState, useTransition } from "react";
 import { CiLock } from "react-icons/ci";
+import { IoLogOut } from "react-icons/io5";
 import MainLinks from "./links/MainLinks";
 import MainMenuLinks from "./links/MainMenuLinks";
 import SubLinks from "./links/SubLinks";
 import SubMenuLinks from "./links/SubMenuLinks";
 import { useAuth } from "./providers/AuthProvider";
+import { RoundedSize } from "@/utils/types";
+import CloudinaryImage from "./CloudinaryImage";
 
 type UserProfile = {
   id: string;
@@ -127,10 +130,29 @@ const Navigation = () => {
 
       <NavbarContent justify="end">
         {user ? (
-          <div>
+          <div className="flex items-center gap-4">
+            <Tooltip content="Accéder au drive">
+              <Link
+                href={
+                  "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
+                }
+                target="_blank"
+                rel="noopener"
+                className="bg-primary/20 rounded-md h-full size-8 p-2 hover:bg-primary/40 shrink-0"
+              >
+                <CloudinaryImage
+                  src={"Site/membres/logos/drive"}
+                  alt="Drive icon"
+                  width={16}
+                  height={16}
+                  rounded={RoundedSize.NONE}
+                />
+              </Link>
+            </Tooltip>
+            <div className="flex w-full justify-center"></div>
             <Popover placement="bottom-start">
               <PopoverTrigger
-                className="flex gap-1 items-center"
+                className="flex gap-1 items-center shrink-0 cursor-pointer"
                 disabled={isPending}
               >
                 <Avatar
