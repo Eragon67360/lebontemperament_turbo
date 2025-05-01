@@ -54,6 +54,8 @@ export default function ProchainsConcerts() {
   const [concertToDelete, setConcertToDelete] = useState<string | null>(null);
   const [editingConcert, setEditingConcert] = useState<Concert | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [isEditingConcert, setIsEditingConcert] = useState(false);
+  const [isCreatingConcert, setIsCreatingConcert] = useState(false);
 
   const fetchConcerts = async () => {
     try {
@@ -67,6 +69,8 @@ export default function ProchainsConcerts() {
 
   useEffect(() => {
     fetchConcerts();
+    setIsEditingConcert(false);
+    setIsCreatingConcert(false);
   }, []);
 
   const handleDeleteClick = (id: string) => {
@@ -80,35 +84,35 @@ export default function ProchainsConcerts() {
     selectedFile: File | null,
   ) => {
     e.preventDefault();
+    setIsCreatingConcert(true);
 
     try {
-      setLoading(true);
       let affiche = null;
+      const form = e.target as HTMLFormElement;
 
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
+        const fileFormData = new FormData();
+        fileFormData.append("file", selectedFile);
         const uploadResponse = await fetch("/api/upload", {
           method: "POST",
-          body: formData,
+          body: fileFormData,
         });
 
         if (!uploadResponse.ok)
           throw new Error("Erreur lors de l'upload de l'image");
         const { url } = await uploadResponse.json();
+
         affiche = url;
       }
 
-      const formData = new FormData(e.currentTarget);
+      // Get form values directly from the form elements
       const concertData = {
-        place: formData.get("place") as string,
+        place: form.place.value,
         date: formDate ? format(formDate, "yyyy-MM-dd") : "",
-        time: formData.get("time") as string,
-        context: formData.get("context") as Context,
-        name: formData.get("name") as string,
-        additional_informations: formData.get(
-          "additional_informations",
-        ) as string,
+        time: form.time.value,
+        context: form.context.value,
+        name: form.concertName.value,
+        additional_informations: form.additional_informations.value,
       };
 
       const response = await fetch("/api/prochains-concerts", {
@@ -129,7 +133,7 @@ export default function ProchainsConcerts() {
       toast.error("Erreur lors de l'ajout du concert");
       console.error(error);
     } finally {
-      setLoading(false);
+      setIsCreatingConcert(false);
     }
   };
 
@@ -139,7 +143,7 @@ export default function ProchainsConcerts() {
     selectedFile: File | null,
   ) => {
     e.preventDefault();
-    setLoading(true);
+    setIsEditingConcert(true);
 
     const formData = new FormData(e.currentTarget);
     const concertData = {
@@ -148,7 +152,7 @@ export default function ProchainsConcerts() {
       date: formDate ? format(formDate, "yyyy-MM-dd") : editingConcert!.date,
       time: formData.get("time") as string,
       context: formData.get("context") as Context,
-      name: formData.get("name") as string,
+      name: formData.get("concertName") as string,
       additional_informations: formData.get(
         "additional_informations",
       ) as string,
@@ -191,7 +195,7 @@ export default function ProchainsConcerts() {
       toast.error("Erreur lors de la modification");
       console.error(error);
     } finally {
-      setLoading(false);
+      setIsEditingConcert(false);
     }
   };
 
@@ -257,6 +261,7 @@ export default function ProchainsConcerts() {
       <AddConcertButton />
     </div>
   );
+
   const AddConcertButton = () => (
     <Dialog
       open={open}
@@ -281,7 +286,7 @@ export default function ProchainsConcerts() {
         </DialogHeader>
         <ConcertForm
           onSubmit={handleCreate}
-          loading={loading}
+          loading={isCreatingConcert}
           initialData={null}
           submitLabel="Ajouter"
           onClose={() => setOpen(false)}
@@ -441,7 +446,7 @@ export default function ProchainsConcerts() {
           </DialogHeader>
           <ConcertForm
             onSubmit={handleEdit}
-            loading={loading}
+            loading={isEditingConcert}
             initialData={editingConcert}
             submitLabel="Enregistrer"
           />
