@@ -36,8 +36,6 @@ export const extractYouTubeId = (url: string): string => {
     }
 
     if (videoId && videoId.length === 11) {
-      console.log(videoId);
-
       return videoId;
     }
 
