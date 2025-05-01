@@ -54,6 +54,7 @@ export default function ProchainsConcerts() {
   const [concertToDelete, setConcertToDelete] = useState<string | null>(null);
   const [editingConcert, setEditingConcert] = useState<Concert | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [isEditingConcert, setIsEditingConcert] = useState(false);
 
   const fetchConcerts = async () => {
     try {
@@ -67,6 +68,7 @@ export default function ProchainsConcerts() {
 
   useEffect(() => {
     fetchConcerts();
+    setIsEditingConcert(false)
   }, []);
 
   const handleDeleteClick = (id: string) => {
@@ -139,7 +141,7 @@ export default function ProchainsConcerts() {
     selectedFile: File | null,
   ) => {
     e.preventDefault();
-    setLoading(true);
+    setIsEditingConcert(true);
 
     const formData = new FormData(e.currentTarget);
     const concertData = {
@@ -148,7 +150,7 @@ export default function ProchainsConcerts() {
       date: formDate ? format(formDate, "yyyy-MM-dd") : editingConcert!.date,
       time: formData.get("time") as string,
       context: formData.get("context") as Context,
-      name: formData.get("name") as string,
+      name: formData.get("concertName") as string,
       additional_informations: formData.get(
         "additional_informations",
       ) as string,
@@ -171,6 +173,7 @@ export default function ProchainsConcerts() {
         const { url } = await uploadResponse.json();
         affiche = url;
       }
+      console.log("name", concertData.name);
 
       const response = await fetch("/api/prochains-concerts", {
         method: "PATCH",
@@ -191,7 +194,7 @@ export default function ProchainsConcerts() {
       toast.error("Erreur lors de la modification");
       console.error(error);
     } finally {
-      setLoading(false);
+      setIsEditingConcert(false);
     }
   };
 
@@ -257,6 +260,7 @@ export default function ProchainsConcerts() {
       <AddConcertButton />
     </div>
   );
+
   const AddConcertButton = () => (
     <Dialog
       open={open}
@@ -330,7 +334,7 @@ export default function ProchainsConcerts() {
                     concert.context === "orchestre_et_choeur"
                       ? "Orchestre et Chœur"
                       : concert.context.charAt(0).toUpperCase() +
-                        concert.context.slice(1)
+                      concert.context.slice(1)
                   }
                 />
               </div>
@@ -441,7 +445,7 @@ export default function ProchainsConcerts() {
           </DialogHeader>
           <ConcertForm
             onSubmit={handleEdit}
-            loading={loading}
+            loading={isEditingConcert}
             initialData={editingConcert}
             submitLabel="Enregistrer"
           />
