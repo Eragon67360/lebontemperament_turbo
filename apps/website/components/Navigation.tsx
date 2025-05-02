@@ -2,7 +2,9 @@
 "use client";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
+import { RoundedSize } from "@/utils/types";
 import {
+  addToast,
   Avatar,
   Button,
   Link,
@@ -13,21 +15,21 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  addToast,
   Tooltip,
 } from "@heroui/react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { CiLock } from "react-icons/ci";
+import { FaKey } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
+import CloudinaryImage from "./CloudinaryImage";
 import MainLinks from "./links/MainLinks";
 import MainMenuLinks from "./links/MainMenuLinks";
 import SubLinks from "./links/SubLinks";
+import ChangePasswordModal from "./ChangePasswordModal";
 import SubMenuLinks from "./links/SubMenuLinks";
 import { useAuth } from "./providers/AuthProvider";
-import { RoundedSize } from "@/utils/types";
-import CloudinaryImage from "./CloudinaryImage";
 
 type UserProfile = {
   id: string;
@@ -40,6 +42,7 @@ const Navigation = () => {
   const { user, setUser } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isMembresSection = pathname.startsWith("/membres");
   const supabase = createClient();
@@ -160,8 +163,8 @@ const Navigation = () => {
                   src={user.user_metadata?.avatar_url}
                 />
               </PopoverTrigger>
-              <PopoverContent className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+              <PopoverContent className="flex flex-col gap-2 items-start">
+                <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm ">
                   <Avatar
                     className="h-8 w-8 rounded-lg"
                     src={user.user_metadata?.avatar_url}
@@ -176,8 +179,18 @@ const Navigation = () => {
                 <Button
                   variant="light"
                   radius="sm"
+                  onPress={() => setIsPasswordModalOpen(true)}
+                  className="flex gap-1 items-center justify-start cursor-pointer w-full"
+                  disabled={isPending}
+                >
+                  <FaKey className="mr-2 size-4" />
+                  Changer mon mot de passe
+                </Button>
+                <Button
+                  variant="light"
+                  radius="sm"
                   onPress={handleSignOut}
-                  className="flex gap-1 items-center cursor-pointer w-full"
+                  className="flex gap-1 items-center justify-start cursor-pointer w-full"
                   disabled={isPending}
                 >
                   <IoLogOut className="mr-2 size-4" />
@@ -209,6 +222,10 @@ const Navigation = () => {
       ) : (
         <MainMenuLinks user={user} isLoading={isLoading} />
       )}
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </Navbar>
   );
 };
