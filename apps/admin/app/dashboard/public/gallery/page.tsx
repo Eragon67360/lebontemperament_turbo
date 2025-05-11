@@ -1,4 +1,5 @@
 // app/dashboard/public/gallery/page.tsx
+import { DashboardPageHeader } from "@/components/DashboardPageHeader";
 import {
   Card,
   CardDescription,
@@ -11,17 +12,13 @@ import Link from "next/link";
 
 export default function GalleryPage() {
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="container px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section */}
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Galerie Multimédia
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Gérez vos contenus photos et vidéos pour mettre en valeur vos
-          événements.
-        </p>
-      </div>
+      <DashboardPageHeader
+        title="Galerie Multimédia"
+        description=" Gérez vos contenus photos et vidéos pour mettre en valeur vos
+          événements."
+      />
 
       {/* Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2">
