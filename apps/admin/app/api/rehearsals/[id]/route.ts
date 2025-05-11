@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient();
@@ -18,7 +18,7 @@ export async function GET(
     if (!data) {
       return NextResponse.json(
         { error: "Rehearsal not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -28,14 +28,14 @@ export async function GET(
 
     return NextResponse.json(
       { error: "Error fetching rehearsal" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient();
@@ -56,7 +56,7 @@ export async function PATCH(
     if (!data) {
       return NextResponse.json(
         { error: "Rehearsal not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -66,14 +66,14 @@ export async function PATCH(
 
     return NextResponse.json(
       { error: "Error updating rehearsal" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient();
@@ -89,7 +89,7 @@ export async function DELETE(
 
     return NextResponse.json(
       { error: "Error deleting rehearsal" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
