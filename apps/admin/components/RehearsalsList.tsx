@@ -33,6 +33,7 @@ import { fr } from "date-fns/locale";
 import { CalendarIcon, Pencil, Plus, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { DashboardPageHeader } from "./DashboardPageHeader";
 
 type RehearsalFormData = {
   name: string;
@@ -119,13 +120,15 @@ export default function RehearsalsList() {
     }
   };
 
-  if (loading) return <div>Chargement...</div>;
   if (error) return <div>Erreur: {error}</div>;
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Répétitions</h1>
+        <DashboardPageHeader
+          title="Gestion des répétitions"
+          description="Gérez les prochaines répètes."
+        />
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -141,54 +144,59 @@ export default function RehearsalsList() {
           </DialogContent>
         </Dialog>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {rehearsals.map((rehearsal) => (
-          <Card key={rehearsal.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <span>{rehearsal.name}</span>
-                <div className="space-x-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setEditingRehearsal(rehearsal)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDelete(rehearsal.id)}
-                  >
-                    <Trash className="h-4 w-4 text-white" />
-                  </Button>
+      {loading ? (
+        "Chargement..."
+      ) : rehearsals.length === 0 ? (
+        "Pas de répétitions pour le moment"
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {rehearsals.map((rehearsal) => (
+            <Card key={rehearsal.id}>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <span>{rehearsal.name}</span>
+                  <div className="space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEditingRehearsal(rehearsal)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDelete(rehearsal.id)}
+                    >
+                      <Trash className="h-4 w-4 text-white" />
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p>
+                    <span className="font-semibold">Lieu :</span>{" "}
+                    {rehearsal.place}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Date :</span>{" "}
+                    {new Date(rehearsal.date).toLocaleDateString("fr-FR")}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Horaires :</span>{" "}
+                    {rehearsal.start_time} - {rehearsal.end_time}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Groupe :</span>{" "}
+                    {rehearsal.group_type}
+                  </p>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p>
-                  <span className="font-semibold">Lieu :</span>{" "}
-                  {rehearsal.place}
-                </p>
-                <p>
-                  <span className="font-semibold">Date :</span>{" "}
-                  {new Date(rehearsal.date).toLocaleDateString("fr-FR")}
-                </p>
-                <p>
-                  <span className="font-semibold">Horaires :</span>{" "}
-                  {rehearsal.start_time} - {rehearsal.end_time}
-                </p>
-                <p>
-                  <span className="font-semibold">Groupe :</span>{" "}
-                  {rehearsal.group_type}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <Dialog

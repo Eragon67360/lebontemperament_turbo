@@ -1,6 +1,5 @@
 "use client";
 
-import { ActivityFeed } from "@/components/ActivityFeed";
 import { DashboardWelcomeHeader } from "@/components/DashboardWelcomeUser";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

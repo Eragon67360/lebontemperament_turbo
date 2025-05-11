@@ -317,7 +317,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="mx-0 md:mx-4 lg:mx-8 xl:mx-12 2xl:mx-16">
+    <div className="container px-4 sm:px-6 lg:px-8 py-8">
       <UserHeader
         isAddUserOpen={isAddUserOpen}
         setIsAddUserOpen={setIsAddUserOpen}
