@@ -9,6 +9,7 @@
     "check-types": "turbo run check-types"
   },
   "dependencies": {
+    "@radix-ui/react-visually-hidden": "^1.2.2",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "@types/papaparse": "^5.3.15",
