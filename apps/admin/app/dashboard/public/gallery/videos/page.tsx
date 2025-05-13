@@ -1,6 +1,7 @@
 // app/dashboard/public/videos/page.tsx
 "use client";
 
+import { DashboardPageHeader } from "@/components/DashboardPageHeader";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -234,12 +235,14 @@ export default function VideosPage() {
     );
   };
 
-  if (loading) return <LoadingState />;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <header className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-medium">Vidéos</h1>
+    <div className="container px-4 sm:px-6 lg:px-8 py-8">
+      <header className="flex items-center justify-between">
+        <DashboardPageHeader
+          title="Vidéos"
+          description="Ajoutez ici les vidéos depuis YouTube que vous souhaitez voir apparaître sur le site."
+        />
+
         <AddVideoButton />
       </header>
 

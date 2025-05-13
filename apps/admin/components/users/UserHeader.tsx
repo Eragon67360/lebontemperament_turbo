@@ -2,6 +2,7 @@
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DashboardPageHeader } from "../DashboardPageHeader";
 
 interface UserHeaderProps {
   isAddUserOpen: boolean;
@@ -22,16 +23,14 @@ export function UserHeader({
 }: UserHeaderProps) {
   return (
     <div className="relative pb-8 mb-8 border-b border-border/40">
-      <div className="mx-auto">
+      <div className="">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           {/* Header Text */}
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Gestion des Utilisateurs
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Gérez les comptes utilisateurs et leurs permissions
-            </p>
+            <DashboardPageHeader
+              title="Gestion des utilisateurs"
+              description="Gérez les comptes utilisateurs et leurs permissions"
+            />
             <div className="flex gap-4 mt-2">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
