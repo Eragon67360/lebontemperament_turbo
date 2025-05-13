@@ -18,7 +18,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Error fetching rehearsals" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
