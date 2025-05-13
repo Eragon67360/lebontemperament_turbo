@@ -26,12 +26,3 @@ export interface Rehearsal {
   created_at: string;
   updated_at: string;
 }
-
-export interface CreateRehearsalDTO {
-  name: string;
-  place: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  group_type: GroupType;
-}
