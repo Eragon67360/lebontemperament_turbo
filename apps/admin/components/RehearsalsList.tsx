@@ -42,7 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Rehearsal } from "@/types/rehearsals";
+import { GROUP_TYPES, GroupType, Rehearsal } from "@/types/rehearsals";
 import { rehearsalAPI } from "@/utils/api";
 import { format, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -69,7 +69,7 @@ type RehearsalFormData = {
   date: Date;
   start_time: string;
   end_time: string;
-  group_type: "Orchestre" | "Choeur" | "Tous";
+  group_type: GroupType;
 };
 
 export default function RehearsalsList() {
@@ -464,7 +464,7 @@ function RehearsalForm({ initialData, onSubmit }: RehearsalFormProps) {
         <Label>Groupe</Label>
         <Select
           value={formData.group_type}
-          onValueChange={(value: "Orchestre" | "Choeur" | "Tous") =>
+          onValueChange={(value: GroupType) =>
             setFormData({ ...formData, group_type: value })
           }
         >
@@ -472,9 +472,11 @@ function RehearsalForm({ initialData, onSubmit }: RehearsalFormProps) {
             <SelectValue placeholder="Sélectionner un groupe" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Orchestre">Orchestre</SelectItem>
-            <SelectItem value="Choeur">Chœur</SelectItem>
-            <SelectItem value="Tous">Tous</SelectItem>
+            {GROUP_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

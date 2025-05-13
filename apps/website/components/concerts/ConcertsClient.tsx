@@ -5,6 +5,7 @@ import CloudinaryImage from "@/components/CloudinaryImage";
 import projects from "@/public/json/projects.json";
 import { Concert } from "@/types/concerts";
 import { Event } from "@/types/events";
+import { Rehearsal } from "@/types/rehearsals";
 import { RoundedSize } from "@/utils/types";
 import {
   Modal,
@@ -25,35 +26,47 @@ import { IoCalendarClear, IoLocationSharp, IoTime } from "react-icons/io5";
 const ConcertsClient = () => {
   const [concerts, setConcerts] = useState<Concert[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [rehearsals, setRehearsals] = useState<Rehearsal[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingRehearsals, setLoadingRehearsals] = useState(true);
   const [selectedConcertImage, setSelectedConcertImage] = useState<
     string | null
   >(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const fetchConcerts = async () => {
-    try {
-      const response = await fetch("/api/prochains-concerts");
-      const data = await response.json();
-      setConcerts(data);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch("/api/events");
-      const data = await response.json();
-      setEvents(data.filter((event: Event) => event.is_public));
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchConcerts = async () => {
+      try {
+        const response = await fetch("/api/prochains-concerts");
+        const data = await response.json();
+        setConcerts(data);
+      } finally {
+        setLoading(false);
+      }
+    };
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch("/api/events");
+        const data = await response.json();
+        setEvents(data.filter((event: Event) => event.is_public));
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+
+    const fetchRehearsals = async () => {
+      try {
+        const response = await fetch("/api/rehearsals");
+        const data = await response.json();
+        setRehearsals(data);
+      } finally {
+        setLoadingRehearsals(false);
+      }
+    };
     fetchConcerts();
     fetchEvents();
+    fetchRehearsals();
   }, []);
 
   const handleImageClick = (imageUrl: string) => {
@@ -75,7 +88,7 @@ const ConcertsClient = () => {
         </div>
 
         <div className="my-8">
-          <h3 className="text-xl font-bold mb-8">Prochains concerts:</h3>
+          <h3 className="text-xl font-bold mb-8">Prochains concerts :</h3>
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -249,6 +262,71 @@ const ConcertsClient = () => {
                         </Link>
                       </div>
                     )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="my-8">
+          <h3 className="text-xl font-bold mb-8">Prochaines répétitions :</h3>
+
+          {loadingRehearsals ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="p-4 space-y-3 bg-gray-100 rounded-lg">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : rehearsals.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Aucune répétitioin à venir
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {rehearsals.map((rehearsal) => (
+                <div
+                  key={rehearsal.id}
+                  className="bg-white rounded-lg border border-black/5 overflow-hidden transition-all shadow-md hover:shadow-lg duration-300 transform-gpu"
+                >
+                  <div className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-semibold text-lg text-gray-800 line-clamp-2">
+                        {rehearsal.name}
+                      </h4>
+                      <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                        {rehearsal.group_type}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <IoCalendarClear className="text-primary" />
+                        <span>
+                          {format(new Date(rehearsal.date), "dd MMMM yyyy", {
+                            locale: fr,
+                          })}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <IoTime className="text-primary" />
+                        <span>
+                          {rehearsal.start_time.slice(0, 5).replace(":", "h")} -
+                          {rehearsal.end_time.slice(0, 5).replace(":", "h")}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <IoLocationSharp className="text-primary" />
+                        <span className="font-medium">{rehearsal.place}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
