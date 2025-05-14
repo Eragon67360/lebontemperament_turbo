@@ -25,43 +25,71 @@ export const metadata: Metadata = {
     canonical: "/impressum",
   },
 };
+
 export default function Impressum() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       <Head>
         <title>Impressum - Le Bon Temperament</title>
       </Head>
-      <main className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold mb-6">Impressum</h1>
-        <section className="bg-white shadow-md rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Informations légales</h2>
-          <p className="mb-2">
-            <strong>Propriétaire du site :</strong> Le Bon Tempérament
-          </p>
-          <p className="mb-2">
-            <strong>Adresse :</strong> 3 Rue Clemenceau, 67700 SAVERNE, France
-          </p>
-          <p className="mb-2">
-            <strong>Téléphone :</strong> (+33) 09 52 39 57 89
-          </p>
-          <p className="mb-2">
-            <strong>Email :</strong> lebontemperament@gmail.com
-          </p>
-          <p className="mb-2">
-            <strong>Numéro de SIREN :</strong> 49966465400013
-          </p>
-        </section>
-        <section className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">
-            Responsable de la publication
-          </h2>
-          <p className="mb-2">
-            <strong>Nom :</strong> Sophie Bellard
-          </p>
-          <p className="mb-2">
-            <strong>Contact :</strong> lebontemperament@gmail.com
-          </p>
-        </section>
+      <main className="max-w-4xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-4xl font-bold mb-12 text-primary/90">Impressum</h1>
+
+        <div className="space-y-8">
+          <section className="border-b border-gray-200 pb-8">
+            <h2 className="text-2xl font-semibold mb-6 text-primary/80">
+              Informations légales
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <span className="text-gray-600 font-medium">
+                  Propriétaire du site :
+                </span>
+                <span className="ml-2 text-gray-800">Le Bon Tempérament</span>
+              </div>
+              <div>
+                <span className="text-gray-600 font-medium">Adresse :</span>
+                <span className="ml-2 text-gray-800">
+                  3 Rue Clemenceau, 67700 SAVERNE, France
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600 font-medium">Téléphone :</span>
+                <span className="ml-2 text-gray-800">(+33) 09 52 39 57 89</span>
+              </div>
+              <div>
+                <span className="text-gray-600 font-medium">Email :</span>
+                <span className="ml-2 text-gray-800">
+                  lebontemperament@gmail.com
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600 font-medium">
+                  Numéro de SIREN :
+                </span>
+                <span className="ml-2 text-gray-800">49966465400013</span>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold mb-6 text-primary/80">
+              Responsable de la publication
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <span className="text-gray-600 font-medium">Nom :</span>
+                <span className="ml-2 text-gray-800">Sophie Bellard</span>
+              </div>
+              <div>
+                <span className="text-gray-600 font-medium">Contact :</span>
+                <span className="ml-2 text-gray-800">
+                  lebontemperament@gmail.com
+                </span>
+              </div>
+            </div>
+          </section>
+        </div>
       </main>
     </div>
   );
