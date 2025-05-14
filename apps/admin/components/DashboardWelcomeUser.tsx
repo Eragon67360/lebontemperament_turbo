@@ -22,7 +22,7 @@ export function DashboardWelcomeHeader() {
 
   return (
     <div className="mb-12">
-      <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-black/60">
+      <h1 className="text-2xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-black/60">
         Bonjour,{" "}
         <motion.span
           initial={{
