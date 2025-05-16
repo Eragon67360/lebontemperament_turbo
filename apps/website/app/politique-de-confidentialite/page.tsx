@@ -55,7 +55,7 @@ export default function PrivacyPolicy() {
               Informations que nous recueillons
             </h2>
             <p className="text-gray-800 mb-4">
-              Nous recueillons différents types d'informations pour divers
+              Nous recueillons différents types d&apos;informations pour divers
               objectifs, y compris pour vous fournir et améliorer notre service.
             </p>
             <ul className="list-disc pl-5 text-gray-800">
@@ -64,8 +64,8 @@ export default function PrivacyPolicy() {
                 téléphone, etc.)
               </li>
               <li>
-                Données d'utilisation (adresse IP, type de navigateur, pages
-                visitées, etc.)
+                Données d&apos;utilisation (adresse IP, type de navigateur,
+                pages visitées, etc.)
               </li>
             </ul>
           </section>
@@ -84,7 +84,9 @@ export default function PrivacyPolicy() {
                 Vous notifier des changements de notre service
               </li>
               <li className="mb-2">Fournir un support client</li>
-              <li>Analyser des informations afin d'améliorer notre service</li>
+              <li>
+                Analyser des informations afin d&apos;améliorer notre service
+              </li>
             </ul>
           </section>
 
@@ -97,7 +99,7 @@ export default function PrivacyPolicy() {
               tiers. Nous pouvons partager vos informations avec des
               fournisseurs de services tiers pour faciliter notre service,
               fournir le service en notre nom, ou nous aider à analyser
-              l'utilisation de notre service.
+              l&apos;utilisation de notre service.
             </p>
           </section>
 
@@ -106,10 +108,10 @@ export default function PrivacyPolicy() {
               Vos droits
             </h2>
             <p className="text-gray-800">
-              Vous avez le droit d'accéder, de corriger ou de supprimer les
+              Vous avez le droit d&apos;accéder, de corriger ou de supprimer les
               informations personnelles que nous avons sur vous. Si vous
-              souhaitez exercer ces droits, veuillez nous contacter à l'adresse
-              suivante : contactbontemperament@gmail.com.
+              souhaitez exercer ces droits, veuillez nous contacter à
+              l&apos;adresse suivante : contactbontemperament@gmail.com.
             </p>
           </section>
         </div>
