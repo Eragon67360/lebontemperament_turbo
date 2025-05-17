@@ -1,60 +1,97 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @import "tw-animate-css";
 @plugin '../hero.ts';
 @source '../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
-
-@layer base{
- *{
-  @apply border-border 
- }
+@layer base {
   body {
-    @apply bg-white text-foreground scroll-smooth;
+    @apply scroll-smooth;
   }
-  html{
+  html {
     @apply scroll-smooth;
   }
 }
 
 @theme {
-  
-  --radius: 0.625rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.145 0 0);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.145 0 0);
   --color-primary: oklch(0.57 0.0911 200.74);
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.97 0 0);
-  --color-secondary-foreground: oklch(0.205 0 0);
-  --color-muted: oklch(0.97 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
-  --color-accent: oklch(0.97 0 0);
-  --color-accent-foreground: oklch(0.205 0 0);
-  --color-destructive: oklch(0.577 0.245 27.325);
-  --color-border: oklch(0.922 0 0);
-  --color-input: oklch(0.922 0 0);
-  --color-ring: oklch(0.708 0 0);
-  --color-chart-1: oklch(0.646 0.222 41.116);
-  --color-chart-2: oklch(0.6 0.118 184.704);
-  --color-chart-3: oklch(0.398 0.07 227.392);
-  --color-chart-4: oklch(0.828 0.189 84.429);
-  --color-chart-5: oklch(0.769 0.188 70.08);
-  --color-sidebar: oklch(0.985 0 0);
-  --color-sidebar-foreground: oklch(0.145 0 0);
-  --color-sidebar-primary: oklch(0.205 0 0);
-  --color-sidebar-primary-foreground: oklch(0.985 0 0);
-  --color-sidebar-accent: oklch(0.97 0 0);
-  --color-sidebar-accent-foreground: oklch(0.205 0 0);
-  --color-sidebar-border: oklch(0.922 0 0);
-  --color-sidebar-ring: oklch(0.708 0 0);
+  /* :root {
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-background: oklch(1 0 0);
+    --color-foreground: oklch(0.16 0 0);
+    --color-card: oklch(1 0 0);
+    --color-card-foreground: oklch(0.145 0 0);
+    --color-popover: oklch(1 0 0);
+    --color-popover-foreground: oklch(0.145 0 0);
+    --color-primary: oklch(0.57 0.0911 200.74);
+    --color-primary-foreground: oklch(0.985 0 0);
+    --color-secondary: oklch(0.97 0 0);
+    --color-secondary-foreground: oklch(0.205 0 0);
+    --color-muted: oklch(0.97 0 0);
+    --color-muted-foreground: oklch(0.556 0 0);
+    --color-accent: oklch(0.97 0 0);
+    --color-accent-foreground: oklch(0.205 0 0);
+    --color-destructive: oklch(0.577 0.245 27.325);
+    --color-border: oklch(0.922 0 0);
+    --color-input: oklch(0.922 0 0);
+    --color-ring: oklch(0.708 0 0);
+    --color-chart-1: oklch(0.646 0.222 41.116);
+    --color-chart-2: oklch(0.6 0.118 184.704);
+    --color-chart-3: oklch(0.398 0.07 227.392);
+    --color-chart-4: oklch(0.828 0.189 84.429);
+    --color-chart-5: oklch(0.769 0.188 70.08);
+    --color-sidebar: oklch(0.985 0 0);
+    --color-sidebar-foreground: oklch(0.145 0 0);
+    --color-sidebar-primary: oklch(0.205 0 0);
+    --color-sidebar-primary-foreground: oklch(0.985 0 0);
+    --color-sidebar-accent: oklch(0.97 0 0);
+    --color-sidebar-accent-foreground: oklch(0.205 0 0);
+    --color-sidebar-border: oklch(0.922 0 0);
+    --color-sidebar-ring: oklch(0.708 0 0);
+  }
+
+  :root[data-theme="dark"] {
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-background: oklch(0.16 0 0);
+    --color-foreground: oklch(0.95 0 0);
+    --color-card: oklch(0.2 0 0);
+    --color-card-foreground: oklch(0.95 0 0);
+    --color-popover: oklch(0.2 0 0);
+    --color-popover-foreground: oklch(0.95 0 0);
+    --color-primary: oklch(0.57 0.0911 200.74);
+    --color-primary-foreground: oklch(0.16 0 0);
+    --color-secondary: oklch(0.25 0 0);
+    --color-secondary-foreground: oklch(0.95 0 0);
+    --color-muted: oklch(0.25 0 0);
+    --color-muted-foreground: oklch(0.7 0 0);
+    --color-accent: oklch(0.25 0 0);
+    --color-accent-foreground: oklch(0.95 0 0);
+    --color-destructive: oklch(0.577 0.245 27.325);
+    --color-border: oklch(0.3 0 0);
+    --color-input: oklch(0.3 0 0);
+    --color-ring: oklch(0.4 0 0);
+    --color-chart-1: oklch(0.646 0.222 41.116);
+    --color-chart-2: oklch(0.6 0.118 184.704);
+    --color-chart-3: oklch(0.398 0.07 227.392);
+    --color-chart-4: oklch(0.828 0.189 84.429);
+    --color-chart-5: oklch(0.769 0.188 70.08);
+    --color-sidebar: oklch(0.18 0 0);
+    --color-sidebar-foreground: oklch(0.95 0 0);
+    --color-sidebar-primary: oklch(0.95 0 0);
+    --color-sidebar-primary-foreground: oklch(0.18 0 0);
+    --color-sidebar-accent: oklch(0.25 0 0);
+    --color-sidebar-accent-foreground: oklch(0.95 0 0);
+    --color-sidebar-border: oklch(0.3 0 0);
+    --color-sidebar-ring: oklch(0.4 0 0);
+  } */
 }
 
 .gallery {
@@ -74,14 +111,14 @@
 }
 
 .crossed {
-  background:
-    linear-gradient(to top left,
-      rgba(189, 189, 189, 0) 0%,
-      rgba(189, 189, 189, 0) calc(50% - 0.8px),
-      rgba(189, 189, 189, 1) 50%,
-      rgba(189, 189, 189, 0) calc(50% + 0.8px),
-      rgba(189, 189, 189, 0) 100%);
-
+  background: linear-gradient(
+    to top left,
+    rgba(189, 189, 189, 0) 0%,
+    rgba(189, 189, 189, 0) calc(50% - 0.8px),
+    rgba(189, 189, 189, 1) 50%,
+    rgba(189, 189, 189, 0) calc(50% + 0.8px),
+    rgba(189, 189, 189, 0) 100%
+  );
 }
 
 .audio-player .rhap_container,
@@ -89,18 +126,18 @@
 .audio-player .rhap_progress-container,
 .audio-player .rhap_time,
 .audio-player .rhap_volume-controls {
-    background-color: transparent !important;
-    color: white !important;
+  background-color: transparent !important;
+  color: white !important;
 }
 
 .audio-player .rhap_button {
-    color: white !important;
+  color: white !important;
 }
 
 .audio-player .rhap_volume-indicator,
 .audio-player .rhap_progress-indicator,
 .audio-player .rhap_progress-filled {
-    background: white !important;
+  background: white !important;
 }
 
 @keyframes fadeIn {
@@ -134,4 +171,4 @@
   height: 100%;
   object-fit: cover;
   object-position: left top;
-} 
+}
