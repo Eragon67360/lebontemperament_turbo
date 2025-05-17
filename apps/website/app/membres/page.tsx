@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 const Membres = () => {
   return (
-    <div className="m-auto flex flex-col size-fit max-w-5xl">
+    <div className="m-auto flex flex-col size-full h-full max-w-sm md:max-w-xl lg:max-w-5xl overflow-x-hidden">
       <MembresLandingPage />
     </div>
   );

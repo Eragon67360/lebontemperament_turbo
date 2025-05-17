@@ -4,6 +4,7 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import { ReactNode } from "react";
 import { motion } from "motion/react";
+import { ThemeProvider } from "next-themes";
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <>
@@ -15,8 +16,10 @@ export function Providers({ children }: { children: ReactNode }) {
       >
         <AuthProvider>
           <HeroUIProvider reducedMotion="user" locale="fr-FR">
-            <ToastProvider placement="top-right" />
-            {children}
+            <ThemeProvider attribute="class" defaultTheme="light">
+              <ToastProvider placement="top-right" />
+              {children}
+            </ThemeProvider>
           </HeroUIProvider>
         </AuthProvider>
       </motion.div>
