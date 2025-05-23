@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 
 const Decouvrir = () => {
   return (
-    <div className="mx-0 md:mx-4 lg:mx-8 px-0 max-w-[1440px] w-full flex flex-col mb-8">
+    <div className="container mx-auto w-full flex flex-col mb-8">
       <div className="py-4 md:py-8 lg:py-16 px-8">
         <h1 className="text-title text-primary/50 font-light leading-none">
           Nous
