@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 
 const Contact = () => {
   return (
-    <div className="px-8 max-w-[1440px] w-full flex flex-col">
+    <div className="container mx-auto w-full flex flex-col h-screen">
       <div className="flex flex-col lg:flex-row justify-between">
         <div className="py-16">
           <h1 className="text-title text-primary/50 font-light leading-none">

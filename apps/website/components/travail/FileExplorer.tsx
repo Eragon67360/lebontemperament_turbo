@@ -6,7 +6,7 @@ import { JSX, useState } from "react";
 import { IconType } from "react-icons";
 import { FaPerson } from "react-icons/fa6";
 import { GiTrumpet } from "react-icons/gi";
-import { LuBaby } from "react-icons/lu";
+import { LuBaby, LuExternalLink } from "react-icons/lu";
 import CloudinaryImage from "../CloudinaryImage";
 import Explorer from "./Explorer";
 
@@ -66,55 +66,81 @@ const FileExplorer: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabContent>(tabs[0]!);
 
   return (
-    <div className="mx-8 max-w-[1440px] flex flex-col lg:flex-row border border-primary/10 rounded-3xl backdrop-blur-[15px] w-full h-full select-none">
-      <div className="w-full lg:w-1/3 h-full border-r border-primary/10 bg-white/50 rounded-s-3xl flex flex-col px-10 py-10 justify-between gap-4">
-        <div className="flex flex-col gap-14">
-          <div className="flex gap-4 items-center">
-            <CloudinaryImage
-              src={"Site/membres/logos/drive"}
-              alt="Drive icon"
-              width={32}
-              height={32}
-              rounded={RoundedSize.NONE}
-            />
-            <h2 className="font-semibold text-2xl">Drive</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+    <div className="bg-white rounded-xl shadow-sm">
+      {/* Header */}
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3">
+          <CloudinaryImage
+            src={"Site/membres/logos/drive"}
+            alt="Drive icon"
+            width={24}
+            height={24}
+            rounded={RoundedSize.NONE}
+          />
+          <h2 className="font-semibold text-lg text-gray-900">Drive</h2>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar */}
+        <div className="w-full lg:w-72 border-r border-gray-100 p-4">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
             {tabs.map((tab, index) => (
               <button
                 key={index}
                 onClick={() => setActiveTab(tab)}
-                className="flex flex-col gap-2 justify-center items-start rounded-lg bg-white border border-primary/10 p-4 cursor-pointer hover:border-primary/30 hover:bg-[#f9f9f9] hover:scale-110 transition-all duration-200"
+                className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                  activeTab.id === tab.id
+                    ? "bg-primary/5 text-primary"
+                    : "hover:bg-gray-50"
+                }`}
               >
-                <div className={`p-[6px] bg-[#${tab.iconColor}1e] rounded-md`}>
-                  <tab.icon className={`text-[#${tab.iconColor}]`} size={24} />
+                <div
+                  className={`p-2 rounded-md`}
+                  style={{ backgroundColor: `#${tab.iconColor}1e` }}
+                >
+                  <tab.icon
+                    className={`w-4 h-4`}
+                    style={{ color: `#${tab.iconColor}` }}
+                  />
                 </div>
-                <p className="font-bold">{tab.title}</p>
+                <span className="font-medium text-sm">{tab.title}</span>
               </button>
             ))}
           </div>
-        </div>
-        <div className="flex w-full justify-center">
-          <Link
-            href={
-              "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
-            }
-            target="_blank"
-            rel="noopener"
-            className="bg-primary/20 rounded-lg px-3 py-2 hover:bg-primary/40"
-          >
-            Accès direct au drive
-          </Link>
-        </div>
-      </div>
 
-      <div className="flex flex-col py-12 px-6 w-full lg:w-2/3">
-        <div className="flex w-full justify-start">
-          <h2 className="text-xl md:text-3xl lg:text-5xl text-[#333] font-bold leading-none mb-8">
-            {activeTab.title}
-          </h2>
+          <div className="mt-6 pt-6 border-t">
+            <Link
+              href="https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
+              target="_blank"
+              rel="noopener"
+              className="flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Accès direct au drive
+              <LuExternalLink className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
-        {activeTab.component}
+
+        {/* Main Content */}
+        <div className="flex-1 p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div
+              className={`p-2 rounded-md`}
+              style={{ backgroundColor: `#${activeTab.iconColor}1e` }}
+            >
+              <activeTab.icon
+                className={`w-5 h-5`}
+                style={{ color: `#${activeTab.iconColor}` }}
+              />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {activeTab.title}
+            </h2>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">{activeTab.component}</div>
+        </div>
       </div>
     </div>
   );
