@@ -36,8 +36,8 @@ const Home = () => {
   return (
     <>
       <div className="flex flex-col items-center w-full">
-        <section className="bg-white  flex justify-center">
-          <div className="flex justify-between max-w-[1600px] px-4 py-8 w-full gap-32">
+        <section className="bg-white dark:bg-neutral-800  flex justify-center">
+          <div className="flex justify-between max-w-[1600px] px-4 py-16 w-full gap-32">
             <div className="hidden lg:mt-0 lg:col-span-5 lg:flex">
               <CloudinaryImage
                 src={"Site/logo"}

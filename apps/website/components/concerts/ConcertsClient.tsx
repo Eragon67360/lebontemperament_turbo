@@ -75,7 +75,7 @@ const ConcertsClient = () => {
   };
 
   return (
-    <div className="flex w-full max-w-[1440px] flex-col px-8">
+    <div className="flex w-full container mx-auto flex-col px-8">
       <div className="py-16">
         <div>
           <h1 className="text-title font-light leading-none text-primary/50">

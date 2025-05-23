@@ -28,7 +28,7 @@ export const rehearsalAPI = {
 
   async update(
     id: string,
-    rehearsal: Partial<CreateRehearsalDTO>,
+    rehearsal: Partial<CreateRehearsalDTO>
   ): Promise<Rehearsal> {
     const response = await fetch(`/api/rehearsals/${id}`, {
       method: "PATCH",
@@ -42,8 +42,6 @@ export const rehearsalAPI = {
   },
 
   async delete(id: string): Promise<void> {
-    console.log(id);
-
     const response = await fetch(`/api/rehearsals/${id}`, {
       method: "DELETE",
     });

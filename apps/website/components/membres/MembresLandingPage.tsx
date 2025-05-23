@@ -46,7 +46,7 @@ export const MembresLandingPage = () => {
       title: "Répétitions",
       description:
         "Voir les prochaines répétitions ainsi que le calendrier complet",
-      href: "/membres/repetitions",
+      href: "/membres/calendrier",
       target: "_self",
     },
     {
@@ -97,7 +97,7 @@ export const MembresLandingPage = () => {
 
   return (
     <div className="w-full flex flex-col justify-center items-center h-full relative">
-      <div className="w-full flex flex-col items-center max-w-7xl">
+      <div className="w-full flex flex-col items-center max-w-7xl overflow-hidden">
         {" "}
         <motion.div
           initial={{ opacity: 0 }}
