@@ -25,7 +25,7 @@ export const ThemeSwitcher = () => {
       <DropdownTrigger>
         <Button
           variant="ghost"
-          className="w-9 h-9 p-0"
+          className="w-9 h-9 p-0 pointer-events-none opacity-0"
           aria-label="Toggle theme"
         >
           {theme === "dark" ? (

@@ -107,7 +107,11 @@ const Navigation = () => {
 
   return (
     !isMembresSection && (
-      <Navbar maxWidth="full" onMenuOpenChange={setIsMenuOpen}>
+      <Navbar
+        maxWidth="full"
+        onMenuOpenChange={setIsMenuOpen}
+        className="bg-background/50"
+      >
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           className="lg:hidden"

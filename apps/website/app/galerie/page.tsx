@@ -38,9 +38,9 @@ export const metadata: Metadata = {
 
 const Galerie = () => {
   return (
-    <div className="px-8 max-w-[1440px] w-full flex flex-col mb-32">
+    <div className="container mx-auto flex flex-col mb-32">
       <div id="photos">
-        <div className="pt-16 pb-8">
+        <div className="py-4 md:py-8 lg:py-16 px-8">
           <div className="flex justify-between items-end">
             <div>
               <h1 className="text-title text-primary/50 font-light leading-none">

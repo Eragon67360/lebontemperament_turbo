@@ -78,10 +78,10 @@ export default function RehearsalsList() {
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRehearsal, setEditingRehearsal] = useState<Rehearsal | null>(
-    null,
+    null
   );
   const [rehearsalToDelete, setRehearsalToDelete] = useState<string | null>(
-    null,
+    null
   );
 
   const loadRehearsals = async () => {
@@ -115,13 +115,13 @@ export default function RehearsalsList() {
           groups[month].push(rehearsal);
           return groups;
         },
-        {} as Record<string, Rehearsal[]>,
+        {} as Record<string, Rehearsal[]>
       );
   };
 
   const handleSubmit = async (
     formData: RehearsalFormData,
-    isEditing: boolean = false,
+    isEditing: boolean = false
   ) => {
     try {
       if (isEditing && editingRehearsal) {
@@ -154,8 +154,6 @@ export default function RehearsalsList() {
 
   const handleDelete = async (id: string) => {
     try {
-      console.log(id);
-
       await rehearsalAPI.delete(id);
       toast.success("Succès", {
         description: "La répétition a été supprimée",
@@ -228,7 +226,7 @@ export default function RehearsalsList() {
                           <div
                             className={cn(
                               "text-center min-w-[80px] sm:min-w-[100px]",
-                              isToday ? "text-primary" : "text-black",
+                              isToday ? "text-primary" : "text-black"
                             )}
                           >
                             <div className="text-xl sm:text-2xl capitalize">
@@ -306,7 +304,7 @@ export default function RehearsalsList() {
                   })}
                 </div>
               </div>
-            ),
+            )
           )}
         </div>
       )}
@@ -409,7 +407,7 @@ function RehearsalForm({ initialData, onSubmit }: RehearsalFormProps) {
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
-                !formData.date && "text-muted-foreground",
+                !formData.date && "text-muted-foreground"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
