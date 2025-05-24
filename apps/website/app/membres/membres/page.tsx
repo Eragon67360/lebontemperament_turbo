@@ -18,7 +18,7 @@ const Membres = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdoIYE2BEV1E3qXW65BpTDsxzgDwFeaC4lvbQ3UNWXZOPfpRtqKfhmG05ElyByDp0442WTARufKmHg/pub?gid=0&single=true&output=csv"
+          "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdoIYE2BEV1E3qXW65BpTDsxzgDwFeaC4lvbQ3UNWXZOPfpRtqKfhmG05ElyByDp0442WTARufKmHg/pub?gid=0&single=true&output=csv",
         );
         const text = await response.text();
         const result = Papa.parse<MemberData>(text, { header: true });
@@ -41,15 +41,15 @@ const Membres = () => {
 
   const filteredData = data.filter((row) =>
     Object.values(row).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase()),
+    ),
   );
 
   return (
-    <div className="p-6 w-full">
+    <div className="p-2 md:p-4 lg:p-6 w-full">
       <div className="bg-white rounded-xl shadow-sm">
         {/* Header */}
-        <div className="p-6 border-b">
+        <div className="p-4 lg:p-6 border-b">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-md">
               <IoPersonCircle className="w-5 h-5 text-primary" />
@@ -64,7 +64,7 @@ const Membres = () => {
         </div>
 
         {/* Search and Stats */}
-        <div className="p-6 border-b">
+        <div className="p-4 lg:p-6 border-b">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div className="relative w-full sm:w-64">
               <input
@@ -83,7 +83,7 @@ const Membres = () => {
         </div>
 
         {/* Table */}
-        <div className="p-6">
+        <div className="p-2 lg:p-6">
           {loading ? (
             <div className="animate-pulse space-y-4">
               {[...Array(5)].map((_, i) => (
