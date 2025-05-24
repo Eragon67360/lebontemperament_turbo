@@ -28,24 +28,24 @@ const MembresConcertsEvents = () => {
 
       const today = startOfDay(new Date());
       const futureConcerts = concertsData.filter((concert: Concert) =>
-        isAfter(new Date(concert.date), today)
+        isAfter(new Date(concert.date), today),
       );
 
       // Filter out past events
       const futureEvents = eventsData.filter((event: Event) =>
-        isAfter(new Date(event.date_from), today)
+        isAfter(new Date(event.date_from), today),
       );
 
       // Sort concerts by date
       const sortedConcerts = futureConcerts.sort(
         (a: Concert, b: Concert) =>
-          new Date(a.date).getTime() - new Date(b.date).getTime()
+          new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
 
       // Sort events by date
       const sortedEvents = futureEvents.sort(
         (a: Event, b: Event) =>
-          new Date(a.date_from).getTime() - new Date(b.date_from).getTime()
+          new Date(a.date_from).getTime() - new Date(b.date_from).getTime(),
       );
 
       setConcerts(sortedConcerts);
@@ -116,9 +116,9 @@ const MembresConcertsEvents = () => {
   );
 
   return (
-    <div className="container mx-auto w-full flex flex-col p-6 space-y-8">
+    <div className="container mx-auto w-full flex flex-col p-2 md:p-4 lg:p-6 space-y-8">
       {/* Concerts Section */}
-      <section className="bg-white rounded-xl shadow-sm p-6">
+      <section className="bg-white rounded-xl shadow-sm p-4 md:p-4 lg:p-6">
         <SectionTitle subtitle="Agenda" title="Prochains concerts" />
         {!loading && concerts.length === 0 && (
           <div className="text-center py-8 text-gray-500">
@@ -177,7 +177,7 @@ const MembresConcertsEvents = () => {
       </section>
 
       {/* Events Section */}
-      <section className="bg-white rounded-xl shadow-sm p-6">
+      <section className="bg-white rounded-xl shadow-sm p-4 md:p-4 lg:p-6">
         <SectionTitle subtitle="Calendrier" title="Événements à venir" />
         {!loading && events.length === 0 && (
           <div className="text-center py-8 text-gray-500">
@@ -253,7 +253,7 @@ const MembresConcertsEvents = () => {
       </section>
 
       {/* Anniversary Concert Section */}
-      <section className="bg-white rounded-xl shadow-sm p-6">
+      <section className="bg-white rounded-xl shadow-sm p-4 md:p-4 lg:p-6">
         <SectionTitle subtitle="Archives" title="Concert Anniversaire" />
         <p className="text-sm text-gray-600 mb-6">
           Enregistrement du concert anniversaire pour les 20 ans du Bon

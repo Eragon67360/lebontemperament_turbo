@@ -25,7 +25,7 @@ const ContactForm = () => {
   // Check form validity
   useEffect(() => {
     setIsButtonDisabled(
-      !formData.email || !formData.message || !isValidEmail(formData.email)
+      !formData.email || !formData.message || !isValidEmail(formData.email),
     );
   }, [formData]);
 
