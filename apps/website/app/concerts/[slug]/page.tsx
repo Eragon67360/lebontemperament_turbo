@@ -62,7 +62,7 @@ const ProjectPage = async ({
 
   return (
     <>
-      <div className=" mx-8 max-w-[1440px] w-full flex flex-col pb-8">
+      <div className="container mx-auto w-full flex flex-col pb-8">
         <div className="py-16">
           <div>
             <h1 className="text-title text-primary/50 font-light leading-none">

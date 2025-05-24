@@ -1,4 +1,4 @@
-import MembresConcertsEvents from "@/components/membres/MembresConcertsEvents";
+import { MembresLandingPage } from "@/components/membres/MembresLandingPage";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,7 +23,11 @@ export const metadata: Metadata = {
 };
 
 const Membres = () => {
-  return <MembresConcertsEvents />;
+  return (
+    <div className="m-auto flex flex-col size-full h-full max-w-sm md:max-w-xl lg:max-w-5xl overflow-x-hidden">
+      <MembresLandingPage />
+    </div>
+  );
 };
 
 export default Membres;

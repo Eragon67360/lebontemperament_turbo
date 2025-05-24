@@ -79,8 +79,8 @@ export default function RootLayout({
         <Header />
         <body className={roboto.className}>
           <Providers>
-            <Navigation />
-            <main className="flex justify-center min-h-dvh">
+            <main className="flex flex-col justify-center min-h-dvh bg-white dark:bg-neutral-800">
+              <Navigation />
               {children}
               <SocialPopover />
               <CookieConsentComponent />

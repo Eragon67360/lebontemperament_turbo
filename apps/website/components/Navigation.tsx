@@ -2,7 +2,9 @@
 "use client";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
+import { RoundedSize } from "@/utils/types";
 import {
+  addToast,
   Avatar,
   Button,
   Link,
@@ -13,21 +15,19 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  addToast,
   Tooltip,
 } from "@heroui/react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { CiLock } from "react-icons/ci";
+import { FaKey } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
+import ChangePasswordModal from "./ChangePasswordModal";
+import CloudinaryImage from "./CloudinaryImage";
 import MainLinks from "./links/MainLinks";
 import MainMenuLinks from "./links/MainMenuLinks";
-import SubLinks from "./links/SubLinks";
-import SubMenuLinks from "./links/SubMenuLinks";
 import { useAuth } from "./providers/AuthProvider";
-import { RoundedSize } from "@/utils/types";
-import CloudinaryImage from "./CloudinaryImage";
 
 type UserProfile = {
   id: string;
@@ -40,6 +40,7 @@ const Navigation = () => {
   const { user, setUser } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isMembresSection = pathname.startsWith("/membres");
   const supabase = createClient();
@@ -105,111 +106,124 @@ const Navigation = () => {
   };
 
   return (
-    <Navbar maxWidth="full" onMenuOpenChange={setIsMenuOpen}>
-      <NavbarMenuToggle
-        aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-        className="lg:hidden"
-      />
-      <NavbarBrand>
-        <Link href={RouteNames.ROOT}>
-          <Image
-            src={"/img/picto.svg"}
-            className="hover:opacity-85"
-            alt={"BT Logo"}
-            width={64}
-            height={64}
-          />
-        </Link>
-      </NavbarBrand>
+    !isMembresSection && (
+      <Navbar
+        maxWidth="full"
+        onMenuOpenChange={setIsMenuOpen}
+        className="bg-background/50"
+      >
+        <NavbarMenuToggle
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          className="lg:hidden"
+        />
+        <NavbarBrand>
+          <Link href={RouteNames.ROOT}>
+            <Image
+              src={"/img/picto.svg"}
+              className="hover:opacity-85"
+              alt={"BT Logo"}
+              width={64}
+              height={64}
+            />
+          </Link>
+        </NavbarBrand>
 
-      {isMembresSection ? (
-        <SubLinks />
-      ) : (
         <MainLinks user={user} isLoading={isLoading} />
-      )}
 
-      <NavbarContent justify="end">
-        {user ? (
-          <div className="flex items-center gap-4">
-            <Tooltip content="Accéder au drive">
-              <Link
-                href={
-                  "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
-                }
-                target="_blank"
-                rel="noopener"
-                className="bg-primary/20 rounded-md h-full size-8 p-2 hover:bg-primary/40 shrink-0"
-              >
-                <CloudinaryImage
-                  src={"Site/membres/logos/drive"}
-                  alt="Drive icon"
-                  width={16}
-                  height={16}
-                  rounded={RoundedSize.NONE}
-                />
-              </Link>
-            </Tooltip>
-            <div className="flex w-full justify-center"></div>
-            <Popover placement="bottom-start">
-              <PopoverTrigger
-                className="flex gap-1 items-center shrink-0 cursor-pointer"
-                disabled={isPending}
-              >
-                <Avatar
-                  className="h-8 w-8 rounded-lg"
-                  src={user.user_metadata?.avatar_url}
-                />
-              </PopoverTrigger>
-              <PopoverContent className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+        <NavbarContent justify="end">
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Tooltip content="Accéder au drive">
+                <Link
+                  href={
+                    "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
+                  }
+                  target="_blank"
+                  rel="noopener"
+                  className="bg-primary/20 rounded-md h-full size-8 p-2 hover:bg-primary/40 shrink-0"
+                >
+                  <CloudinaryImage
+                    src={"Site/membres/logos/drive"}
+                    alt="Drive icon"
+                    width={16}
+                    height={16}
+                    rounded={RoundedSize.NONE}
+                  />
+                </Link>
+              </Tooltip>
+              <div className="flex w-full justify-center"></div>
+              <Popover placement="bottom-start">
+                <PopoverTrigger
+                  className="flex gap-1 items-center shrink-0 cursor-pointer"
+                  disabled={isPending}
+                >
                   <Avatar
                     className="h-8 w-8 rounded-lg"
                     src={user.user_metadata?.avatar_url}
                   />
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {userProfile?.display_name}
-                    </span>
-                    <span className="truncate text-xs">{user.email}</span>
+                </PopoverTrigger>
+                <PopoverContent className="flex flex-col gap-2 items-start">
+                  <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm ">
+                    <Avatar
+                      className="h-8 w-8 rounded-lg"
+                      src={user.user_metadata?.avatar_url}
+                    />
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {userProfile?.display_name}
+                      </span>
+                      <span className="truncate text-xs">{user.email}</span>
+                    </div>
                   </div>
-                </div>
-                <Button
-                  variant="light"
-                  radius="sm"
-                  onPress={handleSignOut}
-                  className="flex gap-1 items-center cursor-pointer w-full"
-                  disabled={isPending}
-                >
-                  <IoLogOut className="mr-2 size-4" />
-                  {isPending ? "Déconnexion..." : "Se déconnecter"}
-                </Button>
-              </PopoverContent>
-            </Popover>
-          </div>
-        ) : (
-          !isLoading && (
-            <Button
-              size="md"
-              as={Link}
-              href={RouteNames.AUTH.LOGIN}
-              radius="sm"
-              color="primary"
-              aria-label="Voir nos concerts"
-              disabled={isPending}
-            >
-              <CiLock />
-              <div>Membres</div>
-            </Button>
-          )
-        )}
-      </NavbarContent>
+                  <Button
+                    variant="light"
+                    radius="sm"
+                    onPress={() => setIsPasswordModalOpen(true)}
+                    className="flex gap-1 items-center justify-start cursor-pointer w-full"
+                    disabled={isPending}
+                  >
+                    <FaKey className="mr-2 size-4" />
+                    Changer mon mot de passe
+                  </Button>
+                  <Button
+                    variant="light"
+                    radius="sm"
+                    onPress={handleSignOut}
+                    className="flex gap-1 items-center justify-start cursor-pointer w-full"
+                    disabled={isPending}
+                  >
+                    <IoLogOut className="mr-2 size-4" />
+                    {isPending ? "Déconnexion..." : "Se déconnecter"}
+                  </Button>
+                </PopoverContent>
+              </Popover>
+            </div>
+          ) : (
+            !isLoading && (
+              <Button
+                size="md"
+                as={Link}
+                href={RouteNames.AUTH.LOGIN}
+                radius="sm"
+                color="primary"
+                aria-label="Voir nos concerts"
+                disabled={isPending}
+              >
+                <CiLock />
+                <div>Membres</div>
+              </Button>
+            )
+          )}
+        </NavbarContent>
 
-      {isMembresSection ? (
-        <SubMenuLinks />
-      ) : (
         <MainMenuLinks user={user} isLoading={isLoading} />
-      )}
-    </Navbar>
+
+        <ChangePasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => setIsPasswordModalOpen(false)}
+        />
+      </Navbar>
+    )
   );
 };
 
