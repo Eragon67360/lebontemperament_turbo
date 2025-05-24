@@ -13,7 +13,6 @@ export default function MembersLayoutHeader({
   const pathname = usePathname();
   const supabase = createClient();
 
-  // Use localStorage to cache user data
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined") {
       const cached = localStorage.getItem("cached_user");
@@ -49,22 +48,24 @@ export default function MembersLayoutHeader({
   return (
     <>
       {pathname.startsWith("/membres/") ? (
-        <div className="container mx-auto flex-1 flex flex-col min-h-0">
-          <div className="text-3xl font-bold mr-auto px-0 py-6 flex gap-4 items-center flex-shrink-0">
+        <div className="container mx-auto flex-1 flex flex-col min-h-0 px-4 sm:px-6 lg:px-8">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold mr-auto py-3 sm:py-4 lg:py-6 flex gap-2 sm:gap-3 lg:gap-4 items-center flex-shrink-0">
             <Image alt="picto" src={"/img/picto.svg"} width={48} height={48} />
             {user && (
-              <span>
+              <span className="truncate">
                 Bonjour,{" "}
-                {getFirstName(
-                  user.user_metadata.display_name || user.user_metadata.name
-                )}
+                <span className="inline-block">
+                  {getFirstName(
+                    user.user_metadata.display_name || user.user_metadata.name,
+                  )}
+                </span>
               </span>
             )}
           </div>
           {children}
         </div>
       ) : (
-        <div className="grow flex-1 h-fit flex items-center justify-center">
+        <div className="grow flex-1 h-fit w-full p-4 flex items-center justify-center">
           {children}
         </div>
       )}
