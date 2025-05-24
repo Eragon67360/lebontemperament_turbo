@@ -4,8 +4,7 @@ import Link from "next/link";
 import { IoLocationOutline } from "react-icons/io5";
 import { FiPhone } from "react-icons/fi";
 import { CiMail } from "react-icons/ci";
-import { FaFacebookF } from "react-icons/fa";
-import { FaInstagram } from "react-icons/fa";
+import { FaFacebookF, FaTiktok, FaInstagram, FaYoutube } from "react-icons/fa";
 import { CldImage } from "next-cloudinary";
 import { usePathname } from "next/navigation";
 
@@ -102,7 +101,7 @@ const Footer = () => {
               <div className="flex justify-between items-center gap-4">
                 <a
                   href="https://www.facebook.com/p/Le-Bon-Temp%C3%A9rament-100063069588507/"
-                  aria-label="Facebook"
+                  aria-label="Accéder à la page Facebook"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -115,6 +114,22 @@ const Footer = () => {
                   rel="noreferrer"
                 >
                   <FaInstagram size={20} />
+                </a>
+                <a
+                  href="https://www.youtube.com/@lebontemperament"
+                  aria-label="Accéder à la page YouTube"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <FaYoutube size={20} />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@lebontemperament"
+                  aria-label="Accéder à la page TikTok"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <FaTiktok size={20} />
                 </a>
               </div>
             </div>
