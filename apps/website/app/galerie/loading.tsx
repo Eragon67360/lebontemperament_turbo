@@ -3,7 +3,7 @@ import React from "react";
 
 const Loading = () => {
   return (
-    <div className="px-8 max-w-[1440px] w-full flex flex-col mb-32">
+    <div className="px-8 container mx-auto w-full flex flex-col mb-32">
       <div className="animate-pulse">
         <div className="h-32 bg-gray-200 rounded w-1/3 mb-8"></div>
         <div className="space-y-8">
