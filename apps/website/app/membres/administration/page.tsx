@@ -38,7 +38,7 @@ const Administration = () => {
   const [selected, setSelected] = useState("archives");
 
   const ArchivesSection = () => (
-    <div className="space-y-6">
+    <div className="space-y-2 lg:space-y-6">
       {/* CA Section */}
       <Card>
         <CardHeader className="flex gap-3">
@@ -134,7 +134,7 @@ const Administration = () => {
     <div className="space-y-6">
       {/* Main Regulations Card */}
       <Card>
-        <CardHeader className="flex justify-between items-start">
+        <CardHeader className="flex flex-col gap-2 lg:flex-row justify-between items-start lg:items-start">
           <div className="flex gap-3 items-center">
             <div className="p-2 bg-primary/10 rounded-md h-fit">
               <IoDocumentText className="w-5 h-5 text-primary" />
@@ -358,7 +358,7 @@ const Administration = () => {
   };
 
   return (
-    <div className="p-6 w-full">
+    <div className="p-2 md:p-4 lg:p-6 w-full">
       <Card>
         <CardHeader className="flex gap-3">
           <div className="p-2 bg-primary/10 rounded-md">
