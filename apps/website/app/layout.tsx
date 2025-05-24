@@ -83,7 +83,6 @@ export default function RootLayout({
               <Navigation />
               {children}
               <SocialPopover />
-              <CookieConsentComponent />
               <Analytics />
               <SpeedInsights />
             </main>
