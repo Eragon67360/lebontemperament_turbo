@@ -96,8 +96,8 @@ export const MembresLandingPage = () => {
   };
 
   return (
-    <div className="w-full flex flex-col justify-center items-center h-full relative">
-      <div className="w-full flex flex-col items-center max-w-7xl overflow-hidden">
+    <div className="container mx-auto w-full flex flex-col justify-center items-center h-full relative">
+      <div className="w-full flex flex-col items-center overflow-hidden">
         {" "}
         <motion.div
           initial={{ opacity: 0 }}
@@ -128,7 +128,7 @@ export const MembresLandingPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 2 }}
-          className="mx-auto mt-6 md:mt-10 lg:mt-16 w-full"
+          className="container mx-auto mt-6 md:mt-10 lg:mt-16 w-full"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-4 w-full max-w-3xl mx-auto">
             {gridItems.map((item, index) => (

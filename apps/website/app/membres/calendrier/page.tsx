@@ -29,7 +29,7 @@ const Calendrier = () => {
 
   const filteredRehearsals = rehearsals.filter(
     (rehearsal) =>
-      selectedGroup === "all" || rehearsal.group_type === selectedGroup
+      selectedGroup === "all" || rehearsal.group_type === selectedGroup,
   );
 
   const groupColors: Record<GroupType, string> = {
@@ -42,11 +42,11 @@ const Calendrier = () => {
   };
 
   return (
-    <div className="p-6 w-full">
+    <div className="p-2 md:p-4 lg:p-6 w-full">
       <div className="bg-white rounded-xl shadow-sm">
         {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
+        <div className="p-2 md:p-4 lg:p-6 border-b">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-md">
                 <IoCalendarClear className="w-5 h-5 text-primary" />
@@ -81,7 +81,7 @@ const Calendrier = () => {
 
         {/* Filters */}
         {!showGoogleCalendar && (
-          <div className="p-6 border-b">
+          <div className="p-2 md:p-4 lg:p-6 border-b">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedGroup("all")}
@@ -110,7 +110,7 @@ const Calendrier = () => {
           </div>
         )}
 
-        <div className="p-6">
+        <div className="p-2 md:p-4 lg:p-6">
           {showGoogleCalendar ? (
             <div className="bg-gray-50 rounded-lg overflow-hidden">
               <GoogleCalendar embedId={"lebontemperament@gmail.com"} />

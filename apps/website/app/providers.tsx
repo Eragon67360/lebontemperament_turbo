@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import { ThemeProvider } from "next-themes";

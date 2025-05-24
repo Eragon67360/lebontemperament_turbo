@@ -26,10 +26,10 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       }
 
       const fetchedFolders = data.filter(
-        (file: { type: string }) => file.type === "folder"
+        (file: { type: string }) => file.type === "folder",
       );
       const fetchedFiles = data.filter(
-        (file: { type: string }) => file.type === "file"
+        (file: { type: string }) => file.type === "file",
       );
 
       setFolders(fetchedFolders);
@@ -71,7 +71,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       window.open(baseFileUrl, "_blank");
     } else if (file.mimeType.startsWith("audio/")) {
       const audioPlayerUrl = `/membres/travail/audioplayer?fileUrl=${encodeURIComponent(
-        audioUrl
+        audioUrl,
       )}&fileName=${file.name}`;
       window.open(audioPlayerUrl, "_blank");
     } else {

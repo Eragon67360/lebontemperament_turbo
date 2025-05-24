@@ -12,7 +12,7 @@ const MusicList = () => {
 
   const getMusicSrc = (fileName: string) => {
     const hasExtension = commonExtensions.some((ext) =>
-      fileName.toLowerCase().endsWith(ext)
+      fileName.toLowerCase().endsWith(ext),
     );
     const fullPath = hasExtension ? fileName : `${fileName}.mp3`;
     return `/music/BT - Album/${fullPath}`;
