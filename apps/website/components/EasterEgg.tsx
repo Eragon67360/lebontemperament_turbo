@@ -4,26 +4,7 @@ import { useEasterEgg } from "@/hooks/useEasterEgg";
 import { Modal, ModalBody, ModalContent } from "@heroui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
-
-const SuccessMessage = () => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="text-center"
-  >
-    <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-[#1a878d] to-purple-600 text-transparent bg-clip-text">
-      WOW vous avez donc trouvé...
-    </h2>
-    <motion.p
-      initial={{ scale: 0.8 }}
-      animate={{ scale: 1 }}
-      transition={{ delay: 0.3 }}
-      className="text-2xl font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 text-transparent bg-clip-text"
-    >
-      Bienvenue !
-    </motion.p>
-  </motion.div>
-);
+import { SuccessMessage } from "./SuccessMessage";
 
 const CodeInput = ({
   length = 11,
@@ -39,9 +20,9 @@ const CodeInput = ({
     .fill(0)
     .map(() => React.createRef<HTMLInputElement>());
 
-  // Auto focus first input on mount
   useEffect(() => {
     inputRefs[0]?.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (index: number, value: string) => {
@@ -100,7 +81,7 @@ const CodeInput = ({
 export const EasterEgg = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showInitialMessage, setShowInitialMessage] = useState(true);
-  const [code, setCode] = useState("");
+  const [, setCode] = useState("");
   const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const correctCode = "PICONPASTIS";
@@ -139,7 +120,6 @@ export const EasterEgg = () => {
 
   return (
     <>
-      {/* Progress bar stays the same */}
       {progress > 0 && (
         <div
           style={{
@@ -207,7 +187,9 @@ export const EasterEgg = () => {
                   </motion.div>
                 )}
 
-                {isSuccess && <SuccessMessage />}
+                {isSuccess && (
+                  <SuccessMessage onClose={() => setIsOpen(false)} />
+                )}
               </AnimatePresence>
             </div>
           </ModalBody>
