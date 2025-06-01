@@ -75,7 +75,7 @@ const CodeInput = ({
 
   return (
     <motion.div
-      className="flex gap-2 justify-center"
+      className="flex flex-wrap gap-2 justify-center"
       animate={
         isError
           ? {
@@ -96,7 +96,7 @@ const CodeInput = ({
             value={code[index]}
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
-            className={`w-10 h-10 text-center border-2 rounded focus:outline-none uppercase transition-colors duration-200
+            className={`w-8 h-8 md:w-10 md:h-10 text-center border-2 rounded focus:outline-none uppercase transition-colors duration-200
                 ${
                   isError
                     ? "border-red-500 focus:border-red-600"
@@ -173,10 +173,15 @@ export const EasterEgg = () => {
         </div>
       )}
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="md">
-        <ModalContent className="min-w-3xl">
-          <ModalBody className="py-8">
-            <div className="flex flex-col items-center justify-center min-h-[200px]">
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        size="md"
+        className="mx-4" // Add margin for mobile
+      >
+        <ModalContent className="w-full max-w-[95vw] md:max-w-3xl">
+          <ModalBody className="py-4 md:py-8">
+            <div className="flex flex-col items-center justify-center min-h-[200px] px-2 md:px-4">
               <AnimatePresence mode="wait">
                 {showInitialMessage && (
                   <motion.div
@@ -184,7 +189,7 @@ export const EasterEgg = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-3xl font-bold text-center bg-gradient-to-r from-[#1a878d] to-blue-600 text-transparent bg-clip-text"
+                    className="text-xl md:text-3xl font-bold text-center bg-gradient-to-r from-[#1a878d] to-blue-600 text-transparent bg-clip-text"
                   >
                     Le BT est-il une secte ?
                   </motion.div>
@@ -195,9 +200,9 @@ export const EasterEgg = () => {
                     key="code"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex flex-col items-center gap-6"
+                    className="flex flex-col items-center gap-4 md:gap-6 w-full"
                   >
-                    <div className="text-xl font-bold text-center">
+                    <div className="text-lg md:text-xl font-bold text-center">
                       Trouve le code pour avoir la réponse
                     </div>
                     <CodeInput
@@ -209,7 +214,7 @@ export const EasterEgg = () => {
                       <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-red-500 mt-2"
+                        className="text-red-500 mt-2 text-sm md:text-base"
                       >
                         Code incorrect, essayez encore !
                       </motion.p>
