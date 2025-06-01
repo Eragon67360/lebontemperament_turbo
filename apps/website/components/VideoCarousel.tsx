@@ -17,6 +17,17 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [[page, direction], setPage] = useState([0, 0]);
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
+  const [isPortrait, setIsPortrait] = useState(true);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+
+    checkOrientation();
+    window.addEventListener("resize", checkOrientation);
+    return () => window.removeEventListener("resize", checkOrientation);
+  }, []);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -66,9 +77,54 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
     }
   }, [page, isMuted]);
 
+  const Controls = () => (
+    <div
+      className={`flex ${isPortrait ? "flex-row justify-center gap-4 mt-4" : "flex-col gap-4"}`}
+    >
+      <button
+        onClick={() => paginate(-1)}
+        disabled={page === 0}
+        className="cursor-pointer group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <BiUpArrow className="w-5 h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-gray-900 transition-colors" />
+        {page > 0 && (
+          <div className="absolute hidden md:block left-full ml-3 px-2 py-1 bg-black/75 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            Vidéo précédente
+          </div>
+        )}
+      </button>
+
+      <div className="flex items-center text-sm font-medium text-gray-600">
+        {page + 1}/{videos.length}
+      </div>
+
+      <button
+        onClick={() => paginate(1)}
+        className="cursor-pointer group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#1a878d] to-[#126266] shadow-lg hover:shadow-xl transition-all duration-300"
+      >
+        <BiDownArrow className="w-5 h-5 md:w-6 md:h-6 text-white" />
+        <div className="absolute hidden md:block left-full ml-3 px-2 py-1 bg-black/75 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          {page === videos.length - 1 ? "Terminer" : "Vidéo suivante"}
+        </div>
+      </button>
+
+      <button
+        onClick={toggleMute}
+        className="cursor-pointer group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg hover:shadow-xl transition-all duration-300"
+      >
+        {isMuted ? (
+          <HiVolumeOff className="w-5 h-5 md:w-6 md:h-6 text-gray-700" />
+        ) : (
+          <HiVolumeUp className="w-5 h-5 md:w-6 md:h-6 text-gray-700" />
+        )}
+      </button>
+    </div>
+  );
   return (
-    <div className="flex items-center gap-6">
-      <div className="relative w-[320px] h-[560px] overflow-hidden">
+    <div
+      className={`flex ${isPortrait ? "flex-col" : "flex-row items-center"} gap-4`}
+    >
+      <div className="relative w-full max-w-[90vw] md:max-w-[320px] aspect-[9/16] overflow-hidden">
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={page}
@@ -86,7 +142,6 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
             dragElastic={1}
             onDragEnd={(e, { offset, velocity }) => {
               const swipe = swipePower(offset.y, velocity.y);
-
               if (swipe < -swipeConfidenceThreshold) {
                 paginate(1);
               } else if (swipe > swipeConfidenceThreshold) {
@@ -100,7 +155,7 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
                 if (el) videoRefs.current[page] = el;
               }}
               src={videos[page]?.url}
-              className="w-full h-full object-cover rounded-2xl shadow-lg"
+              className="w-full h-full object-cover rounded-xl md:rounded-2xl shadow-lg"
               autoPlay
               loop
               playsInline
@@ -108,7 +163,7 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
             />
 
             {videos[page]?.caption && (
-              <div className="absolute bottom-4 left-4 right-4 text-white text-center bg-black/40 backdrop-blur-sm p-3 rounded-xl">
+              <div className="absolute bottom-4 left-4 right-4 text-white text-center bg-black/40 backdrop-blur-sm p-2 md:p-3 rounded-lg md:rounded-xl text-sm md:text-base">
                 {videos[page].caption}
               </div>
             )}
@@ -116,48 +171,7 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
         </AnimatePresence>
       </div>
 
-      <div className="flex flex-col gap-4">
-        <button
-          onClick={() => paginate(-1)}
-          disabled={page === 0}
-          className="cursor-pointer group relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <BiUpArrow className="w-6 h-6 text-gray-700 group-hover:text-gray-900 transition-colors" />
-          {page > 0 && (
-            <div className="absolute left-full ml-3 px-2 py-1 bg-black/75 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              Vidéo précédente
-            </div>
-          )}
-        </button>
-
-        <div className="mx-auto text-sm font-medium text-gray-600">
-          {page + 1}/{videos.length}
-        </div>
-
-        <button
-          onClick={() => paginate(1)}
-          className="cursor-pointer group relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#1a878d] to-[#126266] shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          <BiDownArrow className="w-6 h-6 text-white" />
-          <div className="absolute left-full ml-3 px-2 py-1 bg-black/75 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            {page === videos.length - 1 ? "Terminer" : "Vidéo suivante"}
-          </div>
-        </button>
-
-        <button
-          onClick={toggleMute}
-          className="cursor-pointer group relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          {isMuted ? (
-            <HiVolumeOff className="w-6 h-6 text-gray-700" />
-          ) : (
-            <HiVolumeUp className="w-6 h-6 text-gray-700" />
-          )}
-          <div className="absolute left-full ml-3 px-2 py-1 bg-black/75 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            {isMuted ? "Activer le son" : "Couper le son"}
-          </div>
-        </button>
-      </div>
+      <Controls />
     </div>
   );
 };
