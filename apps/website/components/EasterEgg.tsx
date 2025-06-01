@@ -6,6 +6,36 @@ import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { SuccessMessage } from "./SuccessMessage";
 
+const emulateShake = () => {
+  if (process.env.NODE_ENV === "development") {
+    const event = new CustomEvent("shake");
+    window.dispatchEvent(event);
+  }
+};
+
+// Add a development-only button component
+const DevShakeButton = () => {
+  if (process.env.NODE_ENV !== "development") return null;
+
+  return (
+    <button
+      onClick={emulateShake}
+      style={{
+        position: "fixed",
+        bottom: "20px",
+        right: "20px",
+        padding: "10px",
+        background: "#333",
+        color: "white",
+        borderRadius: "5px",
+        zIndex: 9999,
+      }}
+    >
+      Emulate Shake
+    </button>
+  );
+};
+
 const CodeInput = ({
   length = 11,
   onChange,
@@ -195,6 +225,8 @@ export const EasterEgg = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      <DevShakeButton />
     </>
   );
 };
