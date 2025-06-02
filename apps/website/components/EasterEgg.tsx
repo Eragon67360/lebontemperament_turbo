@@ -13,6 +13,11 @@ const emulateShake = () => {
   }
 };
 
+const isMobile = () => {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 768px)").matches;
+};
+
 // Add a development-only button component
 const DevShakeButton = () => {
   if (process.env.NODE_ENV !== "development") return null;
@@ -51,7 +56,9 @@ const CodeInput = ({
     .map(() => React.createRef<HTMLInputElement>());
 
   useEffect(() => {
-    inputRefs[0]?.current?.focus();
+    if (!isMobile()) {
+      inputRefs[0]?.current?.focus();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -133,6 +140,17 @@ export const EasterEgg = () => {
     }
   }, [showInitialMessage]);
 
+  useEffect(() => {
+    if (isOpen && isMobile()) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [isOpen]);
+
   const handleCodeChange = (value: string) => {
     setCode(value);
     setIsError(false);
@@ -177,9 +195,15 @@ export const EasterEgg = () => {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         size="md"
-        className="mx-4" // Add margin for mobile
+        className="mx-0"
       >
-        <ModalContent className="w-full max-w-[95vw] md:max-w-3xl">
+        <ModalContent
+          className="w-full max-w-[95vw] md:max-w-3xl fixed top-[20%] left-1/2 transform -translate-x-1/2 md:relative md:top-auto md:left-auto md:transform-none"
+          style={{
+            maxHeight: "80vh",
+            overflowY: "auto",
+          }}
+        >
           <ModalBody className="py-4 md:py-8">
             <div className="flex flex-col items-center justify-center min-h-[200px] px-2 md:px-4">
               <AnimatePresence mode="wait">
