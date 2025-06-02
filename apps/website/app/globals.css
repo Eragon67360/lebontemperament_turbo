@@ -223,3 +223,21 @@
 .custom-audio-player .rhap_volume-controls {
   margin-left: 12px;
 }
+
+/* Add this to your CSS */
+@media (max-width: 768px) {
+  .modal-open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+/* Optional: Add smooth behavior for virtual keyboard */
+@media (max-width: 768px) {
+  .modal-content {
+    transition: transform 0.3s ease-out;
+  }
+}
