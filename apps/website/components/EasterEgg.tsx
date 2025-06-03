@@ -5,11 +5,29 @@ import { Modal, ModalBody, ModalContent } from "@heroui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { SuccessMessage } from "./SuccessMessage";
-
 const emulateShake = () => {
   if (process.env.NODE_ENV === "development") {
-    const event = new CustomEvent("shake");
-    window.dispatchEvent(event);
+    const mockMotionEvent = new DeviceMotionEvent("devicemotion", {
+      accelerationIncludingGravity: {
+        x: 20, // Exceed the SHAKE_THRESHOLD
+        y: 20,
+        z: 20,
+      },
+    } as DeviceMotionEventInit);
+
+    window.dispatchEvent(mockMotionEvent);
+
+    setTimeout(() => {
+      const stopMotionEvent = new DeviceMotionEvent("devicemotion", {
+        accelerationIncludingGravity: {
+          x: 0,
+          y: 0,
+          z: 0,
+        },
+      } as DeviceMotionEventInit);
+
+      window.dispatchEvent(stopMotionEvent);
+    }, 100);
   }
 };
 
@@ -18,7 +36,6 @@ const isMobile = () => {
   return window.matchMedia("(max-width: 768px)").matches;
 };
 
-// Add a development-only button component
 const DevShakeButton = () => {
   if (process.env.NODE_ENV !== "development") return null;
 
