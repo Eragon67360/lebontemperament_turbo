@@ -5,43 +5,26 @@ import { Modal, ModalBody, ModalContent } from "@heroui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { SuccessMessage } from "./SuccessMessage";
-const emulateShake = () => {
+const emulateTaps = () => {
   if (process.env.NODE_ENV === "development") {
-    const mockMotionEvent = new DeviceMotionEvent("devicemotion", {
-      accelerationIncludingGravity: {
-        x: 20, // Exceed the SHAKE_THRESHOLD
-        y: 20,
-        z: 20,
-      },
-    } as DeviceMotionEventInit);
-
-    window.dispatchEvent(mockMotionEvent);
-
-    setTimeout(() => {
-      const stopMotionEvent = new DeviceMotionEvent("devicemotion", {
-        accelerationIncludingGravity: {
-          x: 0,
-          y: 0,
-          z: 0,
-        },
-      } as DeviceMotionEventInit);
-
-      window.dispatchEvent(stopMotionEvent);
+    let tapCount = 0;
+    const interval = setInterval(() => {
+      if (tapCount < 4) {
+        window.dispatchEvent(new Event("touchstart"));
+        tapCount++;
+      } else {
+        clearInterval(interval);
+      }
     }, 100);
   }
 };
 
-const isMobile = () => {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(max-width: 768px)").matches;
-};
-
-const DevShakeButton = () => {
+const DevTapButton = () => {
   if (process.env.NODE_ENV !== "development") return null;
 
   return (
     <button
-      onClick={emulateShake}
+      onClick={emulateTaps}
       style={{
         position: "fixed",
         bottom: "20px",
@@ -53,9 +36,14 @@ const DevShakeButton = () => {
         zIndex: 9999,
       }}
     >
-      Emulate Shake
+      Emulate Quad Tap
     </button>
   );
+};
+
+const isMobile = () => {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 768px)").matches;
 };
 
 const CodeInput = ({
@@ -141,6 +129,8 @@ export const EasterEgg = () => {
   const correctCode = "PICONPASTIS";
 
   const handleEasterEgg = () => {
+    console.log("COMPLETE");
+
     setIsOpen(true);
     setShowInitialMessage(true);
     setIsError(false);
@@ -215,9 +205,20 @@ export const EasterEgg = () => {
         className="mx-0"
       >
         <ModalContent
-          className="w-full max-w-[95vw] md:max-w-3xl fixed top-[20%] left-1/2 transform -translate-x-1/2 md:relative md:top-auto md:left-auto md:transform-none"
+          className={`
+            w-full max-w-[95vw] md:max-w-3xl
+            fixed transform -translate-x-1/2
+            ${
+              isMobile()
+                ? "top-4 left-1/2"
+                : "top-1/2 left-1/2 -translate-y-1/2"
+            }
+            md:rounded-lg
+            bg-white
+            shadow-xl
+          `}
           style={{
-            maxHeight: "80vh",
+            maxHeight: isMobile() ? "calc(100vh - 2rem)" : "80vh",
             overflowY: "auto",
           }}
         >
@@ -272,7 +273,7 @@ export const EasterEgg = () => {
         </ModalContent>
       </Modal>
 
-      <DevShakeButton />
+      <DevTapButton />
     </>
   );
 };
