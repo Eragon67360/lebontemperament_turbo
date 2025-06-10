@@ -12,7 +12,8 @@ part of 'concert.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 Concert _$ConcertFromJson(Map<String, dynamic> json) {
   return _Concert.fromJson(json);
@@ -46,18 +47,19 @@ abstract class $ConcertCopyWith<$Res> {
   factory $ConcertCopyWith(Concert value, $Res Function(Concert) then) =
       _$ConcertCopyWithImpl<$Res, Concert>;
   @useResult
-  $Res call(
-      {String id,
-      String? createdAt,
-      String? updatedAt,
-      String place,
-      String date,
-      String time,
-      Context context,
-      String? additionalInformations,
-      String? name,
-      String? createdBy,
-      String? affiche});
+  $Res call({
+    String id,
+    String? createdAt,
+    String? updatedAt,
+    String place,
+    String date,
+    String time,
+    Context context,
+    String? additionalInformations,
+    String? name,
+    String? createdBy,
+    String? affiche,
+  });
 }
 
 /// @nodoc
@@ -87,74 +89,79 @@ class _$ConcertCopyWithImpl<$Res, $Val extends Concert>
     Object? createdBy = freezed,
     Object? affiche = freezed,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      createdAt: freezed == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as String?,
-      updatedAt: freezed == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as String?,
-      place: null == place
-          ? _value.place
-          : place // ignore: cast_nullable_to_non_nullable
-              as String,
-      date: null == date
-          ? _value.date
-          : date // ignore: cast_nullable_to_non_nullable
-              as String,
-      time: null == time
-          ? _value.time
-          : time // ignore: cast_nullable_to_non_nullable
-              as String,
-      context: null == context
-          ? _value.context
-          : context // ignore: cast_nullable_to_non_nullable
-              as Context,
-      additionalInformations: freezed == additionalInformations
-          ? _value.additionalInformations
-          : additionalInformations // ignore: cast_nullable_to_non_nullable
-              as String?,
-      name: freezed == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String?,
-      createdBy: freezed == createdBy
-          ? _value.createdBy
-          : createdBy // ignore: cast_nullable_to_non_nullable
-              as String?,
-      affiche: freezed == affiche
-          ? _value.affiche
-          : affiche // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            createdAt: freezed == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            updatedAt: freezed == updatedAt
+                ? _value.updatedAt
+                : updatedAt // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            place: null == place
+                ? _value.place
+                : place // ignore: cast_nullable_to_non_nullable
+                      as String,
+            date: null == date
+                ? _value.date
+                : date // ignore: cast_nullable_to_non_nullable
+                      as String,
+            time: null == time
+                ? _value.time
+                : time // ignore: cast_nullable_to_non_nullable
+                      as String,
+            context: null == context
+                ? _value.context
+                : context // ignore: cast_nullable_to_non_nullable
+                      as Context,
+            additionalInformations: freezed == additionalInformations
+                ? _value.additionalInformations
+                : additionalInformations // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            name: freezed == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            createdBy: freezed == createdBy
+                ? _value.createdBy
+                : createdBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            affiche: freezed == affiche
+                ? _value.affiche
+                : affiche // ignore: cast_nullable_to_non_nullable
+                      as String?,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$ConcertImplCopyWith<$Res> implements $ConcertCopyWith<$Res> {
   factory _$$ConcertImplCopyWith(
-          _$ConcertImpl value, $Res Function(_$ConcertImpl) then) =
-      __$$ConcertImplCopyWithImpl<$Res>;
+    _$ConcertImpl value,
+    $Res Function(_$ConcertImpl) then,
+  ) = __$$ConcertImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String? createdAt,
-      String? updatedAt,
-      String place,
-      String date,
-      String time,
-      Context context,
-      String? additionalInformations,
-      String? name,
-      String? createdBy,
-      String? affiche});
+  $Res call({
+    String id,
+    String? createdAt,
+    String? updatedAt,
+    String place,
+    String date,
+    String time,
+    Context context,
+    String? additionalInformations,
+    String? name,
+    String? createdBy,
+    String? affiche,
+  });
 }
 
 /// @nodoc
@@ -162,8 +169,9 @@ class __$$ConcertImplCopyWithImpl<$Res>
     extends _$ConcertCopyWithImpl<$Res, _$ConcertImpl>
     implements _$$ConcertImplCopyWith<$Res> {
   __$$ConcertImplCopyWithImpl(
-      _$ConcertImpl _value, $Res Function(_$ConcertImpl) _then)
-      : super(_value, _then);
+    _$ConcertImpl _value,
+    $Res Function(_$ConcertImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of Concert
   /// with the given fields replaced by the non-null parameter values.
@@ -182,70 +190,73 @@ class __$$ConcertImplCopyWithImpl<$Res>
     Object? createdBy = freezed,
     Object? affiche = freezed,
   }) {
-    return _then(_$ConcertImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      createdAt: freezed == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as String?,
-      updatedAt: freezed == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as String?,
-      place: null == place
-          ? _value.place
-          : place // ignore: cast_nullable_to_non_nullable
-              as String,
-      date: null == date
-          ? _value.date
-          : date // ignore: cast_nullable_to_non_nullable
-              as String,
-      time: null == time
-          ? _value.time
-          : time // ignore: cast_nullable_to_non_nullable
-              as String,
-      context: null == context
-          ? _value.context
-          : context // ignore: cast_nullable_to_non_nullable
-              as Context,
-      additionalInformations: freezed == additionalInformations
-          ? _value.additionalInformations
-          : additionalInformations // ignore: cast_nullable_to_non_nullable
-              as String?,
-      name: freezed == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String?,
-      createdBy: freezed == createdBy
-          ? _value.createdBy
-          : createdBy // ignore: cast_nullable_to_non_nullable
-              as String?,
-      affiche: freezed == affiche
-          ? _value.affiche
-          : affiche // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
+    return _then(
+      _$ConcertImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        createdAt: freezed == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        updatedAt: freezed == updatedAt
+            ? _value.updatedAt
+            : updatedAt // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        place: null == place
+            ? _value.place
+            : place // ignore: cast_nullable_to_non_nullable
+                  as String,
+        date: null == date
+            ? _value.date
+            : date // ignore: cast_nullable_to_non_nullable
+                  as String,
+        time: null == time
+            ? _value.time
+            : time // ignore: cast_nullable_to_non_nullable
+                  as String,
+        context: null == context
+            ? _value.context
+            : context // ignore: cast_nullable_to_non_nullable
+                  as Context,
+        additionalInformations: freezed == additionalInformations
+            ? _value.additionalInformations
+            : additionalInformations // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        name: freezed == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        createdBy: freezed == createdBy
+            ? _value.createdBy
+            : createdBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        affiche: freezed == affiche
+            ? _value.affiche
+            : affiche // ignore: cast_nullable_to_non_nullable
+                  as String?,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$ConcertImpl implements _Concert {
-  const _$ConcertImpl(
-      {required this.id,
-      this.createdAt,
-      this.updatedAt,
-      required this.place,
-      required this.date,
-      required this.time,
-      required this.context,
-      this.additionalInformations,
-      this.name,
-      this.createdBy,
-      this.affiche});
+  const _$ConcertImpl({
+    required this.id,
+    this.createdAt,
+    this.updatedAt,
+    required this.place,
+    required this.date,
+    required this.time,
+    required this.context,
+    this.additionalInformations,
+    this.name,
+    this.createdBy,
+    this.affiche,
+  });
 
   factory _$ConcertImpl.fromJson(Map<String, dynamic> json) =>
       _$$ConcertImplFromJson(json);
@@ -302,8 +313,20 @@ class _$ConcertImpl implements _Concert {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, createdAt, updatedAt, place,
-      date, time, context, additionalInformations, name, createdBy, affiche);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    createdAt,
+    updatedAt,
+    place,
+    date,
+    time,
+    context,
+    additionalInformations,
+    name,
+    createdBy,
+    affiche,
+  );
 
   /// Create a copy of Concert
   /// with the given fields replaced by the non-null parameter values.
@@ -315,25 +338,24 @@ class _$ConcertImpl implements _Concert {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$ConcertImplToJson(
-      this,
-    );
+    return _$$ConcertImplToJson(this);
   }
 }
 
 abstract class _Concert implements Concert {
-  const factory _Concert(
-      {required final String id,
-      final String? createdAt,
-      final String? updatedAt,
-      required final String place,
-      required final String date,
-      required final String time,
-      required final Context context,
-      final String? additionalInformations,
-      final String? name,
-      final String? createdBy,
-      final String? affiche}) = _$ConcertImpl;
+  const factory _Concert({
+    required final String id,
+    final String? createdAt,
+    final String? updatedAt,
+    required final String place,
+    required final String date,
+    required final String time,
+    required final Context context,
+    final String? additionalInformations,
+    final String? name,
+    final String? createdBy,
+    final String? affiche,
+  }) = _$ConcertImpl;
 
   factory _Concert.fromJson(Map<String, dynamic> json) = _$ConcertImpl.fromJson;
 
