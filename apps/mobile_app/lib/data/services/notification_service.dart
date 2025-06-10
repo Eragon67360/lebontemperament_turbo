@@ -53,6 +53,21 @@ class NotificationService {
     try {
       final status = await Permission.notification.request();
       _logger.i('Notification permission status: $status');
+
+      // For Android 12+, also request exact alarm permission
+      if (status.isGranted) {
+        try {
+          // This will open system settings for exact alarms on Android 12+
+          await _notifications
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >()
+              ?.requestExactAlarmsPermission();
+        } catch (e) {
+          _logger.w('Could not request exact alarm permission: $e');
+        }
+      }
+
       return status.isGranted;
     } catch (e) {
       _logger.e('Error requesting notification permissions: $e');
@@ -210,7 +225,46 @@ class NotificationService {
         'Scheduled notification: $title at ${scheduledDate.toIso8601String()}',
       );
     } catch (e) {
-      _logger.e('Error scheduling notification: $e');
+      // Handle exact alarm permission error on Android 12+
+      if (e.toString().contains('exact_alarms_not_permitted')) {
+        _logger.w('Exact alarms not permitted, trying with inexact scheduling');
+        try {
+          await _notifications.zonedSchedule(
+            id,
+            title,
+            body,
+            tz.TZDateTime.from(scheduledDate, tz.local),
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'event_reminders',
+                'Rappels d\'événements',
+                channelDescription:
+                    'Notifications pour les concerts et répétitions',
+                importance: Importance.high,
+                priority: Priority.high,
+              ),
+              iOS: DarwinNotificationDetails(
+                presentAlert: true,
+                presentBadge: true,
+                presentSound: true,
+              ),
+            ),
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            payload: payload,
+          );
+          _logger.i(
+            'Scheduled notification with inexact timing: $title at ${scheduledDate.toIso8601String()}',
+          );
+        } catch (fallbackError) {
+          _logger.e(
+            'Error scheduling notification with fallback: $fallbackError',
+          );
+        }
+      } else {
+        _logger.e('Error scheduling notification: $e');
+      }
     }
   }
 
