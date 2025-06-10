@@ -354,21 +354,7 @@ class RehearsalsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
             ],
-
-            // Action button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => context.go('/rehearsals/${rehearsal.id}'),
-                icon: const Icon(Icons.visibility, size: 16),
-                label: const Text('Voir les détails'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
           ],
         ),
       ),
