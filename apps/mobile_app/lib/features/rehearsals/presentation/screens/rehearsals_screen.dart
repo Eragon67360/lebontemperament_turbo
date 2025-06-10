@@ -14,7 +14,7 @@ class RehearsalsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rehearsalsAsync = ref.watch(rehearsalsProvider);
+    final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
     final selectedFilter = ref.watch(rehearsalFilterProvider);
     final filteredRehearsals = ref.watch(filteredRehearsalsProvider);
 

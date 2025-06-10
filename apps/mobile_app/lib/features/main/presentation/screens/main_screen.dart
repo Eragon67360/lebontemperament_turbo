@@ -1,19 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 
 import '../../../concerts/presentation/screens/concerts_screen.dart';
 import '../../../events/presentation/screens/events_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
-import '../../../notifications/presentation/providers/notification_scheduler_provider.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../rehearsals/presentation/screens/rehearsals_screen.dart';
 import '../providers/main_navigation_provider.dart';
+import '../../../../features/notifications/presentation/providers/notification_scheduler_provider.dart';
 
-class MainScreen extends ConsumerWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends ConsumerState<MainScreen> {
+  final Logger _logger = Logger();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    try {
+      _logger.i('Initializing notifications in main screen...');
+
+      // Manually trigger notification scheduling after a short delay
+      // to ensure all data is loaded
+      Future.delayed(const Duration(seconds: 2), () {
+        _logger.i('Manually triggering notification scheduling...');
+        ref
+            .read(notificationSchedulerProvider.notifier)
+            .scheduleNotifications();
+      });
+    } catch (e) {
+      _logger.e('Error initializing notifications: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Watch the auto-scheduler to trigger notification scheduling
     ref.watch(autoScheduleNotificationsProvider);
 

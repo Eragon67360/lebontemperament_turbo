@@ -21,7 +21,7 @@ final rehearsalFilterProvider =
     );
 
 final filteredRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
-  final rehearsalsAsync = ref.watch(rehearsalsProvider);
+  final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
   final selectedFilter = ref.watch(rehearsalFilterProvider);
 
   return rehearsalsAsync.when(

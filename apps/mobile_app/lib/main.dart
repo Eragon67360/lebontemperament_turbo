@@ -9,6 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'data/services/notification_service.dart';
 import 'data/providers/realtime_notifications_provider.dart';
+import 'features/notifications/presentation/providers/notification_settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,8 +41,15 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Don't automatically start real-time notifications on app startup
-    // Let the user control it from the notification settings
+    // Start real-time notifications if enabled in settings
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settings = ref.read(notificationSettingsProvider);
+      if (settings.realtimeEnabled) {
+        ref
+            .read(realtimeNotificationsControllerProvider.notifier)
+            .startListening();
+      }
+    });
   }
 
   @override
@@ -59,8 +67,8 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
     switch (state) {
       case AppLifecycleState.resumed:
         // App came to foreground - check if real-time notifications were enabled
-        final isListening = ref.read(realtimeNotificationsProvider);
-        if (isListening) {
+        final settings = ref.read(notificationSettingsProvider);
+        if (settings.realtimeEnabled) {
           // Restart listening if it was previously enabled
           ref
               .read(realtimeNotificationsControllerProvider.notifier)

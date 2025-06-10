@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
+import '../../../notifications/presentation/screens/notification_test_screen.dart';
 import 'about_screen.dart';
 import 'theme_settings_screen.dart';
 
@@ -184,6 +185,41 @@ class ProfileScreen extends ConsumerWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => const NotificationSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Notification test (debug)
+            Card(
+              child: ListTile(
+                leading: Icon(
+                  Icons.bug_report,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                title: Text(
+                  'Test des Notifications',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                subtitle: Text(
+                  'Tester les notifications programmées',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  size: 16,
+                ),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationTestScreen(),
                     ),
                   );
                 },

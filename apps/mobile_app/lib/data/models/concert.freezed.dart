@@ -20,16 +20,27 @@ Concert _$ConcertFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Concert {
+  @HiveField(0)
   String get id => throw _privateConstructorUsedError;
+  @HiveField(1)
   String? get createdAt => throw _privateConstructorUsedError;
+  @HiveField(2)
   String? get updatedAt => throw _privateConstructorUsedError;
+  @HiveField(3)
   String get place => throw _privateConstructorUsedError;
+  @HiveField(4)
   String get date => throw _privateConstructorUsedError;
+  @HiveField(5)
   String get time => throw _privateConstructorUsedError;
+  @HiveField(6)
   Context get context => throw _privateConstructorUsedError;
+  @HiveField(7)
   String? get additionalInformations => throw _privateConstructorUsedError;
+  @HiveField(8)
   String? get name => throw _privateConstructorUsedError;
+  @HiveField(9)
   String? get createdBy => throw _privateConstructorUsedError;
+  @HiveField(10)
   String? get affiche => throw _privateConstructorUsedError;
 
   /// Serializes this Concert to a JSON map.
@@ -47,17 +58,17 @@ abstract class $ConcertCopyWith<$Res> {
       _$ConcertCopyWithImpl<$Res, Concert>;
   @useResult
   $Res call(
-      {String id,
-      String? createdAt,
-      String? updatedAt,
-      String place,
-      String date,
-      String time,
-      Context context,
-      String? additionalInformations,
-      String? name,
-      String? createdBy,
-      String? affiche});
+      {@HiveField(0) String id,
+      @HiveField(1) String? createdAt,
+      @HiveField(2) String? updatedAt,
+      @HiveField(3) String place,
+      @HiveField(4) String date,
+      @HiveField(5) String time,
+      @HiveField(6) Context context,
+      @HiveField(7) String? additionalInformations,
+      @HiveField(8) String? name,
+      @HiveField(9) String? createdBy,
+      @HiveField(10) String? affiche});
 }
 
 /// @nodoc
@@ -144,17 +155,17 @@ abstract class _$$ConcertImplCopyWith<$Res> implements $ConcertCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {String id,
-      String? createdAt,
-      String? updatedAt,
-      String place,
-      String date,
-      String time,
-      Context context,
-      String? additionalInformations,
-      String? name,
-      String? createdBy,
-      String? affiche});
+      {@HiveField(0) String id,
+      @HiveField(1) String? createdAt,
+      @HiveField(2) String? updatedAt,
+      @HiveField(3) String place,
+      @HiveField(4) String date,
+      @HiveField(5) String time,
+      @HiveField(6) Context context,
+      @HiveField(7) String? additionalInformations,
+      @HiveField(8) String? name,
+      @HiveField(9) String? createdBy,
+      @HiveField(10) String? affiche});
 }
 
 /// @nodoc
@@ -235,42 +246,53 @@ class __$$ConcertImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$ConcertImpl implements _Concert {
   const _$ConcertImpl(
-      {required this.id,
-      this.createdAt,
-      this.updatedAt,
-      required this.place,
-      required this.date,
-      required this.time,
-      required this.context,
-      this.additionalInformations,
-      this.name,
-      this.createdBy,
-      this.affiche});
+      {@HiveField(0) required this.id,
+      @HiveField(1) this.createdAt,
+      @HiveField(2) this.updatedAt,
+      @HiveField(3) required this.place,
+      @HiveField(4) required this.date,
+      @HiveField(5) required this.time,
+      @HiveField(6) required this.context,
+      @HiveField(7) this.additionalInformations,
+      @HiveField(8) this.name,
+      @HiveField(9) this.createdBy,
+      @HiveField(10) this.affiche});
 
   factory _$ConcertImpl.fromJson(Map<String, dynamic> json) =>
       _$$ConcertImplFromJson(json);
 
   @override
+  @HiveField(0)
   final String id;
   @override
+  @HiveField(1)
   final String? createdAt;
   @override
+  @HiveField(2)
   final String? updatedAt;
   @override
+  @HiveField(3)
   final String place;
   @override
+  @HiveField(4)
   final String date;
   @override
+  @HiveField(5)
   final String time;
   @override
+  @HiveField(6)
   final Context context;
   @override
+  @HiveField(7)
   final String? additionalInformations;
   @override
+  @HiveField(8)
   final String? name;
   @override
+  @HiveField(9)
   final String? createdBy;
   @override
+  @HiveField(10)
   final String? affiche;
 
   @override
@@ -323,41 +345,52 @@ class _$ConcertImpl implements _Concert {
 
 abstract class _Concert implements Concert {
   const factory _Concert(
-      {required final String id,
-      final String? createdAt,
-      final String? updatedAt,
-      required final String place,
-      required final String date,
-      required final String time,
-      required final Context context,
-      final String? additionalInformations,
-      final String? name,
-      final String? createdBy,
-      final String? affiche}) = _$ConcertImpl;
+      {@HiveField(0) required final String id,
+      @HiveField(1) final String? createdAt,
+      @HiveField(2) final String? updatedAt,
+      @HiveField(3) required final String place,
+      @HiveField(4) required final String date,
+      @HiveField(5) required final String time,
+      @HiveField(6) required final Context context,
+      @HiveField(7) final String? additionalInformations,
+      @HiveField(8) final String? name,
+      @HiveField(9) final String? createdBy,
+      @HiveField(10) final String? affiche}) = _$ConcertImpl;
 
   factory _Concert.fromJson(Map<String, dynamic> json) = _$ConcertImpl.fromJson;
 
   @override
+  @HiveField(0)
   String get id;
   @override
+  @HiveField(1)
   String? get createdAt;
   @override
+  @HiveField(2)
   String? get updatedAt;
   @override
+  @HiveField(3)
   String get place;
   @override
+  @HiveField(4)
   String get date;
   @override
+  @HiveField(5)
   String get time;
   @override
+  @HiveField(6)
   Context get context;
   @override
+  @HiveField(7)
   String? get additionalInformations;
   @override
+  @HiveField(8)
   String? get name;
   @override
+  @HiveField(9)
   String? get createdBy;
   @override
+  @HiveField(10)
   String? get affiche;
 
   /// Create a copy of Concert

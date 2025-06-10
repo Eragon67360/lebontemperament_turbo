@@ -9,6 +9,12 @@ import '../../data/services/storage_service.dart';
 import '../../features/auth/data/services/auth_service.dart';
 import '../../data/models/announcement.dart';
 import '../../data/models/user.dart' as app_user;
+import '../../data/models/event.dart';
+import '../../data/models/concert.dart';
+import '../../data/models/rehearsal.dart';
+import '../../data/models/event_type_adapter.dart';
+import '../../data/models/group_type_adapter.dart';
+import '../../data/models/context_adapter.dart';
 
 class DependencyInjection {
   static final GetIt _getIt = GetIt.instance;
@@ -22,10 +28,21 @@ class DependencyInjection {
     // Register Hive adapters
     Hive.registerAdapter(AnnouncementAdapter());
     Hive.registerAdapter(app_user.UserAdapter());
+    Hive.registerAdapter(EventAdapter());
+    Hive.registerAdapter(ConcertAdapter());
+    Hive.registerAdapter(RehearsalAdapter());
+
+    // Register enum adapters
+    Hive.registerAdapter(EventTypeAdapter());
+    Hive.registerAdapter(GroupTypeAdapter());
+    Hive.registerAdapter(ContextAdapter());
 
     // Open Hive boxes
     await Hive.openBox<Announcement>('announcements');
     await Hive.openBox<app_user.User>('users');
+    await Hive.openBox<Event>('events');
+    await Hive.openBox<Concert>('concerts');
+    await Hive.openBox<Rehearsal>('rehearsals');
 
     // Initialize Logger
     _getIt.registerSingleton<Logger>(

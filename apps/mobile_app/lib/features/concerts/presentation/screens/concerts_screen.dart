@@ -13,7 +13,7 @@ class ConcertsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final concertsAsync = ref.watch(concertsProvider);
+    final concertsAsync = ref.watch(realtimeConcertsProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,

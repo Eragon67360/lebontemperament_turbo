@@ -29,7 +29,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-         multiDexEnabled = true
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -37,6 +37,23 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            
+            // Disable aggressive optimizations that can break real-time connections
+            isMinifyEnabled = false
+            isShrinkResources = false
+            
+            // Proguard rules to preserve real-time functionality
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        
+        debug {
+            // Enable debugging for real-time connections
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
@@ -44,7 +61,6 @@ android {
 flutter {
     source = "../.."
 }
-
 
 dependencies {
     // For AGP 7.4+

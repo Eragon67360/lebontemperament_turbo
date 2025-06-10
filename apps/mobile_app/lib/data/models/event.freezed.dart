@@ -20,26 +20,40 @@ Event _$EventFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Event {
+  @HiveField(0)
   String get id => throw _privateConstructorUsedError;
+  @HiveField(1)
   String? get title => throw _privateConstructorUsedError;
+  @HiveField(2)
   @JsonKey(name: 'date_from')
   String? get dateFrom => throw _privateConstructorUsedError;
+  @HiveField(3)
   @JsonKey(name: 'date_to')
   String? get dateTo => throw _privateConstructorUsedError;
+  @HiveField(4)
   String? get time => throw _privateConstructorUsedError;
+  @HiveField(5)
   String? get location => throw _privateConstructorUsedError;
+  @HiveField(6)
   @JsonKey(name: 'responsible_name')
   String? get responsibleName => throw _privateConstructorUsedError;
+  @HiveField(7)
   @JsonKey(name: 'responsible_email')
   String? get responsibleEmail => throw _privateConstructorUsedError;
+  @HiveField(8)
   @JsonKey(name: 'event_type')
   EventType get eventType => throw _privateConstructorUsedError;
+  @HiveField(9)
   String? get description => throw _privateConstructorUsedError;
+  @HiveField(10)
   @JsonKey(name: 'created_at')
   String? get createdAt => throw _privateConstructorUsedError;
+  @HiveField(11)
   @JsonKey(name: 'updated_at')
   String? get updatedAt => throw _privateConstructorUsedError;
+  @HiveField(12)
   String? get link => throw _privateConstructorUsedError;
+  @HiveField(13)
   @JsonKey(name: 'is_public')
   bool? get isPublic => throw _privateConstructorUsedError;
 
@@ -58,20 +72,22 @@ abstract class $EventCopyWith<$Res> {
       _$EventCopyWithImpl<$Res, Event>;
   @useResult
   $Res call(
-      {String id,
-      String? title,
-      @JsonKey(name: 'date_from') String? dateFrom,
-      @JsonKey(name: 'date_to') String? dateTo,
-      String? time,
-      String? location,
-      @JsonKey(name: 'responsible_name') String? responsibleName,
-      @JsonKey(name: 'responsible_email') String? responsibleEmail,
-      @JsonKey(name: 'event_type') EventType eventType,
-      String? description,
-      @JsonKey(name: 'created_at') String? createdAt,
-      @JsonKey(name: 'updated_at') String? updatedAt,
-      String? link,
-      @JsonKey(name: 'is_public') bool? isPublic});
+      {@HiveField(0) String id,
+      @HiveField(1) String? title,
+      @HiveField(2) @JsonKey(name: 'date_from') String? dateFrom,
+      @HiveField(3) @JsonKey(name: 'date_to') String? dateTo,
+      @HiveField(4) String? time,
+      @HiveField(5) String? location,
+      @HiveField(6) @JsonKey(name: 'responsible_name') String? responsibleName,
+      @HiveField(7)
+      @JsonKey(name: 'responsible_email')
+      String? responsibleEmail,
+      @HiveField(8) @JsonKey(name: 'event_type') EventType eventType,
+      @HiveField(9) String? description,
+      @HiveField(10) @JsonKey(name: 'created_at') String? createdAt,
+      @HiveField(11) @JsonKey(name: 'updated_at') String? updatedAt,
+      @HiveField(12) String? link,
+      @HiveField(13) @JsonKey(name: 'is_public') bool? isPublic});
 }
 
 /// @nodoc
@@ -173,20 +189,22 @@ abstract class _$$EventImplCopyWith<$Res> implements $EventCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {String id,
-      String? title,
-      @JsonKey(name: 'date_from') String? dateFrom,
-      @JsonKey(name: 'date_to') String? dateTo,
-      String? time,
-      String? location,
-      @JsonKey(name: 'responsible_name') String? responsibleName,
-      @JsonKey(name: 'responsible_email') String? responsibleEmail,
-      @JsonKey(name: 'event_type') EventType eventType,
-      String? description,
-      @JsonKey(name: 'created_at') String? createdAt,
-      @JsonKey(name: 'updated_at') String? updatedAt,
-      String? link,
-      @JsonKey(name: 'is_public') bool? isPublic});
+      {@HiveField(0) String id,
+      @HiveField(1) String? title,
+      @HiveField(2) @JsonKey(name: 'date_from') String? dateFrom,
+      @HiveField(3) @JsonKey(name: 'date_to') String? dateTo,
+      @HiveField(4) String? time,
+      @HiveField(5) String? location,
+      @HiveField(6) @JsonKey(name: 'responsible_name') String? responsibleName,
+      @HiveField(7)
+      @JsonKey(name: 'responsible_email')
+      String? responsibleEmail,
+      @HiveField(8) @JsonKey(name: 'event_type') EventType eventType,
+      @HiveField(9) String? description,
+      @HiveField(10) @JsonKey(name: 'created_at') String? createdAt,
+      @HiveField(11) @JsonKey(name: 'updated_at') String? updatedAt,
+      @HiveField(12) String? link,
+      @HiveField(13) @JsonKey(name: 'is_public') bool? isPublic});
 }
 
 /// @nodoc
@@ -282,58 +300,72 @@ class __$$EventImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$EventImpl implements _Event {
   const _$EventImpl(
-      {required this.id,
-      this.title,
-      @JsonKey(name: 'date_from') this.dateFrom,
-      @JsonKey(name: 'date_to') this.dateTo,
-      this.time,
-      this.location,
-      @JsonKey(name: 'responsible_name') this.responsibleName,
-      @JsonKey(name: 'responsible_email') this.responsibleEmail,
-      @JsonKey(name: 'event_type') required this.eventType,
-      this.description,
-      @JsonKey(name: 'created_at') this.createdAt,
-      @JsonKey(name: 'updated_at') this.updatedAt,
-      this.link,
-      @JsonKey(name: 'is_public') this.isPublic});
+      {@HiveField(0) required this.id,
+      @HiveField(1) this.title,
+      @HiveField(2) @JsonKey(name: 'date_from') this.dateFrom,
+      @HiveField(3) @JsonKey(name: 'date_to') this.dateTo,
+      @HiveField(4) this.time,
+      @HiveField(5) this.location,
+      @HiveField(6) @JsonKey(name: 'responsible_name') this.responsibleName,
+      @HiveField(7) @JsonKey(name: 'responsible_email') this.responsibleEmail,
+      @HiveField(8) @JsonKey(name: 'event_type') required this.eventType,
+      @HiveField(9) this.description,
+      @HiveField(10) @JsonKey(name: 'created_at') this.createdAt,
+      @HiveField(11) @JsonKey(name: 'updated_at') this.updatedAt,
+      @HiveField(12) this.link,
+      @HiveField(13) @JsonKey(name: 'is_public') this.isPublic});
 
   factory _$EventImpl.fromJson(Map<String, dynamic> json) =>
       _$$EventImplFromJson(json);
 
   @override
+  @HiveField(0)
   final String id;
   @override
+  @HiveField(1)
   final String? title;
   @override
+  @HiveField(2)
   @JsonKey(name: 'date_from')
   final String? dateFrom;
   @override
+  @HiveField(3)
   @JsonKey(name: 'date_to')
   final String? dateTo;
   @override
+  @HiveField(4)
   final String? time;
   @override
+  @HiveField(5)
   final String? location;
   @override
+  @HiveField(6)
   @JsonKey(name: 'responsible_name')
   final String? responsibleName;
   @override
+  @HiveField(7)
   @JsonKey(name: 'responsible_email')
   final String? responsibleEmail;
   @override
+  @HiveField(8)
   @JsonKey(name: 'event_type')
   final EventType eventType;
   @override
+  @HiveField(9)
   final String? description;
   @override
+  @HiveField(10)
   @JsonKey(name: 'created_at')
   final String? createdAt;
   @override
+  @HiveField(11)
   @JsonKey(name: 'updated_at')
   final String? updatedAt;
   @override
+  @HiveField(12)
   final String? link;
   @override
+  @HiveField(13)
   @JsonKey(name: 'is_public')
   final bool? isPublic;
 
@@ -409,57 +441,78 @@ class _$EventImpl implements _Event {
 
 abstract class _Event implements Event {
   const factory _Event(
-      {required final String id,
-      final String? title,
-      @JsonKey(name: 'date_from') final String? dateFrom,
-      @JsonKey(name: 'date_to') final String? dateTo,
-      final String? time,
-      final String? location,
-      @JsonKey(name: 'responsible_name') final String? responsibleName,
-      @JsonKey(name: 'responsible_email') final String? responsibleEmail,
-      @JsonKey(name: 'event_type') required final EventType eventType,
-      final String? description,
-      @JsonKey(name: 'created_at') final String? createdAt,
-      @JsonKey(name: 'updated_at') final String? updatedAt,
-      final String? link,
-      @JsonKey(name: 'is_public') final bool? isPublic}) = _$EventImpl;
+          {@HiveField(0) required final String id,
+          @HiveField(1) final String? title,
+          @HiveField(2) @JsonKey(name: 'date_from') final String? dateFrom,
+          @HiveField(3) @JsonKey(name: 'date_to') final String? dateTo,
+          @HiveField(4) final String? time,
+          @HiveField(5) final String? location,
+          @HiveField(6)
+          @JsonKey(name: 'responsible_name')
+          final String? responsibleName,
+          @HiveField(7)
+          @JsonKey(name: 'responsible_email')
+          final String? responsibleEmail,
+          @HiveField(8)
+          @JsonKey(name: 'event_type')
+          required final EventType eventType,
+          @HiveField(9) final String? description,
+          @HiveField(10) @JsonKey(name: 'created_at') final String? createdAt,
+          @HiveField(11) @JsonKey(name: 'updated_at') final String? updatedAt,
+          @HiveField(12) final String? link,
+          @HiveField(13) @JsonKey(name: 'is_public') final bool? isPublic}) =
+      _$EventImpl;
 
   factory _Event.fromJson(Map<String, dynamic> json) = _$EventImpl.fromJson;
 
   @override
+  @HiveField(0)
   String get id;
   @override
+  @HiveField(1)
   String? get title;
   @override
+  @HiveField(2)
   @JsonKey(name: 'date_from')
   String? get dateFrom;
   @override
+  @HiveField(3)
   @JsonKey(name: 'date_to')
   String? get dateTo;
   @override
+  @HiveField(4)
   String? get time;
   @override
+  @HiveField(5)
   String? get location;
   @override
+  @HiveField(6)
   @JsonKey(name: 'responsible_name')
   String? get responsibleName;
   @override
+  @HiveField(7)
   @JsonKey(name: 'responsible_email')
   String? get responsibleEmail;
   @override
+  @HiveField(8)
   @JsonKey(name: 'event_type')
   EventType get eventType;
   @override
+  @HiveField(9)
   String? get description;
   @override
+  @HiveField(10)
   @JsonKey(name: 'created_at')
   String? get createdAt;
   @override
+  @HiveField(11)
   @JsonKey(name: 'updated_at')
   String? get updatedAt;
   @override
+  @HiveField(12)
   String? get link;
   @override
+  @HiveField(13)
   @JsonKey(name: 'is_public')
   bool? get isPublic;
 
