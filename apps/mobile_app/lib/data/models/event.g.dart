@@ -3,105 +3,47 @@
 part of 'event.dart';
 
 // **************************************************************************
-// TypeAdapterGenerator
+// JsonSerializableGenerator
 // **************************************************************************
 
-class EventAdapter extends TypeAdapter<Event> {
-  @override
-  final int typeId = 1;
-
-  @override
-  Event read(BinaryReader reader) {
-    final numOfFields = reader.readByte();
-    final fields = <int, dynamic>{
-      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
-    };
-    return Event(
-      id: fields[0] as String,
-      title: fields[1] as String,
-      date: fields[2] as DateTime,
-      location: fields[3] as String,
-      description: fields[4] as String,
-      type: fields[5] as EventType,
-      createdAt: fields[6] as DateTime?,
-      updatedAt: fields[7] as DateTime?,
-      imageUrl: fields[8] as String?,
-      isPublished: fields[9] as bool,
+_$EventImpl _$$EventImplFromJson(Map<String, dynamic> json) => _$EventImpl(
+      id: json['id'] as String,
+      title: json['title'] as String?,
+      dateFrom: json['date_from'] as String?,
+      dateTo: json['date_to'] as String?,
+      time: json['time'] as String?,
+      location: json['location'] as String?,
+      responsibleName: json['responsible_name'] as String?,
+      responsibleEmail: json['responsible_email'] as String?,
+      eventType: $enumDecode(_$EventTypeEnumMap, json['event_type']),
+      description: json['description'] as String?,
+      createdAt: json['created_at'] as String?,
+      updatedAt: json['updated_at'] as String?,
+      link: json['link'] as String?,
+      isPublic: json['is_public'] as bool?,
     );
-  }
 
-  @override
-  void write(BinaryWriter writer, Event obj) {
-    writer
-      ..writeByte(10)
-      ..writeByte(0)
-      ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.title)
-      ..writeByte(2)
-      ..write(obj.date)
-      ..writeByte(3)
-      ..write(obj.location)
-      ..writeByte(4)
-      ..write(obj.description)
-      ..writeByte(5)
-      ..write(obj.type)
-      ..writeByte(6)
-      ..write(obj.createdAt)
-      ..writeByte(7)
-      ..write(obj.updatedAt)
-      ..writeByte(8)
-      ..write(obj.imageUrl)
-      ..writeByte(9)
-      ..write(obj.isPublished);
-  }
+Map<String, dynamic> _$$EventImplToJson(_$EventImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'date_from': instance.dateFrom,
+      'date_to': instance.dateTo,
+      'time': instance.time,
+      'location': instance.location,
+      'responsible_name': instance.responsibleName,
+      'responsible_email': instance.responsibleEmail,
+      'event_type': _$EventTypeEnumMap[instance.eventType]!,
+      'description': instance.description,
+      'created_at': instance.createdAt,
+      'updated_at': instance.updatedAt,
+      'link': instance.link,
+      'is_public': instance.isPublic,
+    };
 
-  @override
-  int get hashCode => typeId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EventAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
-}
-
-class EventTypeAdapter extends TypeAdapter<EventType> {
-  @override
-  final int typeId = 0;
-
-  @override
-  EventType read(BinaryReader reader) {
-    switch (reader.readByte()) {
-      case 0:
-        return EventType.concert;
-      case 1:
-        return EventType.rehearsal;
-      default:
-        return EventType.concert;
-    }
-  }
-
-  @override
-  void write(BinaryWriter writer, EventType obj) {
-    switch (obj) {
-      case EventType.concert:
-        writer.writeByte(0);
-        break;
-      case EventType.rehearsal:
-        writer.writeByte(1);
-        break;
-    }
-  }
-
-  @override
-  int get hashCode => typeId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EventTypeAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
-}
+const _$EventTypeEnumMap = {
+  EventType.concert: 'concert',
+  EventType.vente: 'vente',
+  EventType.repetition: 'repetition',
+  EventType.autre: 'autre',
+};

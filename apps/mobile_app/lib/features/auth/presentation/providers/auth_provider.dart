@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/services/auth_service.dart';
+import '../../../../core/config/app_router.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
@@ -41,17 +42,17 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<void> signIn(String email, String password) async {
     try {
       state = const AsyncValue.loading();
-      print('AuthController: Starting sign in...');
 
       await _authService.signInWithEmail(email: email, password: password);
 
-      print('AuthController: Sign in successful');
       state = const AsyncValue.data(null);
 
       // Force a refresh of the auth state
       _ref.invalidate(authStateProvider);
+
+      // Notify the router that auth state has changed
+      AuthStateListener().notifyAuthStateChanged();
     } catch (e) {
-      print('AuthController: Sign in failed - $e');
       state = AsyncValue.error(e, StackTrace.current);
       rethrow;
     }
@@ -60,17 +61,17 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<void> signOut() async {
     try {
       state = const AsyncValue.loading();
-      print('AuthController: Starting sign out...');
 
       await _authService.signOut();
 
-      print('AuthController: Sign out successful');
       state = const AsyncValue.data(null);
 
       // Force a refresh of the auth state
       _ref.invalidate(authStateProvider);
+
+      // Notify the router that auth state has changed
+      AuthStateListener().notifyAuthStateChanged();
     } catch (e) {
-      print('AuthController: Sign out failed - $e');
       state = AsyncValue.error(e, StackTrace.current);
       rethrow;
     }

@@ -1,30 +1,63 @@
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../data/models/models.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/storage_service.dart';
 import '../../features/auth/data/services/auth_service.dart';
-
-final GetIt getIt = GetIt.instance;
+import '../../data/models/announcement.dart';
+import '../../data/models/user.dart' as app_user;
 
 class DependencyInjection {
-  static Future<void> initialize() async {
+  static final GetIt _getIt = GetIt.instance;
+
+  static GetIt get getIt => _getIt;
+
+  static Future<void> init() async {
     // Initialize Hive
     await Hive.initFlutter();
 
     // Register Hive adapters
-    Hive.registerAdapter(EventTypeAdapter());
-    Hive.registerAdapter(EventAdapter());
     Hive.registerAdapter(AnnouncementAdapter());
-    Hive.registerAdapter(UserAdapter());
+    Hive.registerAdapter(app_user.UserAdapter());
 
-    // Initialize Hive boxes
-    await Hive.openBox<Event>('events');
+    // Open Hive boxes
     await Hive.openBox<Announcement>('announcements');
-    await Hive.openBox<User>('users');
+    await Hive.openBox<app_user.User>('users');
+
+    // Initialize Logger
+    _getIt.registerSingleton<Logger>(
+      Logger(
+        printer: PrettyPrinter(
+          methodCount: 2,
+          errorMethodCount: 8,
+          lineLength: 120,
+          colors: true,
+          printEmojis: true,
+        ),
+      ),
+    );
+
+    // Initialize Auth Service
+    _getIt.registerSingleton<AuthService>(AuthService());
+
+    // Initialize Date Formatters
+    _getIt.registerSingleton<DateFormat>(
+      DateFormat('dd/MM/yyyy'),
+      instanceName: 'dateFormatter',
+    );
+
+    _getIt.registerSingleton<DateFormat>(
+      DateFormat('HH:mm'),
+      instanceName: 'timeFormatter',
+    );
+
+    _getIt.registerSingleton<DateFormat>(
+      DateFormat('dd/MM/yyyy HH:mm'),
+      instanceName: 'dateTimeFormatter',
+    );
 
     // Register services
     _registerServices();
@@ -34,55 +67,38 @@ class DependencyInjection {
   }
 
   static void _registerServices() {
-    // Logger
-    getIt.registerLazySingleton<Logger>(
-      () => Logger(
-        printer: PrettyPrinter(
-          methodCount: 2,
-          errorMethodCount: 8,
-          lineLength: 120,
-          colors: true,
-          printEmojis: true,
-          printTime: true,
-        ),
-      ),
-    );
-
     // Supabase client
-    getIt.registerLazySingleton<supabase.SupabaseClient>(
-      () => supabase.Supabase.instance.client,
+    _getIt.registerLazySingleton<SupabaseClient>(
+      () => Supabase.instance.client,
     );
 
     // API Service
-    getIt.registerLazySingleton<ApiService>(
+    _getIt.registerLazySingleton<ApiService>(
       () => ApiService(
-        supabaseClient: getIt<supabase.SupabaseClient>(),
-        logger: getIt<Logger>(),
+        supabaseClient: _getIt<SupabaseClient>(),
+        logger: _getIt<Logger>(),
       ),
     );
 
-    // Auth Service (singleton)
-    getIt.registerLazySingleton<AuthService>(() => AuthService());
-
     // Storage Service
-    getIt.registerLazySingleton<StorageService>(
-      () => StorageService(logger: getIt<Logger>()),
+    _getIt.registerLazySingleton<StorageService>(
+      () => StorageService(logger: _getIt<Logger>()),
     );
 
     // Initialize storage service
-    getIt<StorageService>().initialize();
+    _getIt<StorageService>().initialize();
   }
 
   static void _registerRepositories() {
     // TODO: Register repositories when they are created
-    // getIt.registerLazySingleton<EventRepository>(() => EventRepository(
-    //   apiService: getIt<ApiService>(),
-    //   storageService: getIt<StorageService>(),
+    // _getIt.registerLazySingleton<EventRepository>(() => EventRepository(
+    //   apiService: _getIt<ApiService>(),
+    //   storageService: _getIt<StorageService>(),
     // ));
   }
 
   static Future<void> dispose() async {
     await Hive.close();
-    await getIt.reset();
+    await _getIt.reset();
   }
 }

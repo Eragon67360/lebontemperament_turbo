@@ -1,11 +1,11 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 
-import '../models/models.dart';
+import '../models/announcement.dart';
+import '../models/user.dart';
 
 class StorageService {
   final Logger _logger;
-  late Box<Event> _eventsBox;
   late Box<Announcement> _announcementsBox;
   late Box<User> _usersBox;
 
@@ -13,60 +13,9 @@ class StorageService {
 
   // Initialize storage
   Future<void> initialize() async {
-    _eventsBox = Hive.box<Event>('events');
     _announcementsBox = Hive.box<Announcement>('announcements');
     _usersBox = Hive.box<User>('users');
     _logger.i('Storage service initialized');
-  }
-
-  // Events storage
-  Future<void> saveEvents(List<Event> events) async {
-    try {
-      await _eventsBox.clear();
-      await _eventsBox.addAll(events);
-      _logger.i('Saved ${events.length} events to local storage');
-    } catch (e) {
-      _logger.e('Error saving events: $e');
-      rethrow;
-    }
-  }
-
-  List<Event> getEvents() {
-    try {
-      return _eventsBox.values.toList();
-    } catch (e) {
-      _logger.e('Error getting events: $e');
-      return [];
-    }
-  }
-
-  Future<void> saveEvent(Event event) async {
-    try {
-      await _eventsBox.put(event.id, event);
-      _logger.i('Saved event: ${event.title}');
-    } catch (e) {
-      _logger.e('Error saving event: $e');
-      rethrow;
-    }
-  }
-
-  Event? getEvent(String id) {
-    try {
-      return _eventsBox.get(id);
-    } catch (e) {
-      _logger.e('Error getting event: $e');
-      return null;
-    }
-  }
-
-  Future<void> deleteEvent(String id) async {
-    try {
-      await _eventsBox.delete(id);
-      _logger.i('Deleted event: $id');
-    } catch (e) {
-      _logger.e('Error deleting event: $e');
-      rethrow;
-    }
   }
 
   // Announcements storage
@@ -152,7 +101,6 @@ class StorageService {
   // Clear all data
   Future<void> clearAll() async {
     try {
-      await _eventsBox.clear();
       await _announcementsBox.clear();
       await _usersBox.clear();
       _logger.i('Cleared all local storage');
@@ -165,7 +113,6 @@ class StorageService {
   // Get storage statistics
   Map<String, int> getStorageStats() {
     return {
-      'events': _eventsBox.length,
       'announcements': _announcementsBox.length,
       'users': _usersBox.length,
     };

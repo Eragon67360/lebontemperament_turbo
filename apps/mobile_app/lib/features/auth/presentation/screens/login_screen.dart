@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -27,25 +26,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    print('Login attempt with email: ${_emailController.text.trim()}');
-
     try {
       await ref
           .read(authControllerProvider.notifier)
           .signIn(_emailController.text.trim(), _passwordController.text);
-
-      print('Login successful - auth state should be updated');
-
-      // Check if user is now authenticated
-      final isAuthenticated = ref.read(isAuthenticatedProvider);
-      print('Is authenticated after login: $isAuthenticated');
     } catch (e) {
-      print('Login failed with error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur de connexion: $e'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -55,16 +45,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
-    final isAuthenticated = ref.watch(isAuthenticatedProvider);
     final isLoading = authState.isLoading;
 
-    // Debug logging
-    print(
-      'LoginScreen build - isAuthenticated: $isAuthenticated, isLoading: $isLoading',
-    );
-
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -84,7 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
@@ -98,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'Connexion',
                       style: Theme.of(context).textTheme.headlineLarge
                           ?.copyWith(
-                            color: AppTheme.textPrimary,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -106,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text(
                       'Connectez-vous à votre compte',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -53,9 +52,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final isAuthenticated = ref.read(isAuthenticatedProvider);
 
     if (isAuthenticated) {
-      context.go('/home');
+      context.go('/main');
     } else {
-      context.go('/login');
+      // Navigate to permissions first, then login
+      context.go('/permissions');
     }
   }
 
@@ -68,7 +68,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -80,20 +80,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // App Logo/Icon
+                    // Logo placeholder
                     Container(
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.music_note,
@@ -103,37 +96,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                     const SizedBox(height: 32),
 
-                    // App Name
+                    // App name
                     Text(
                       'Le Bon Tempérament',
-                      style: Theme.of(context).textTheme.displayMedium
+                      style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
-                            color: AppTheme.primaryColor,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
                     const SizedBox(height: 8),
 
-                    // App Tagline
+                    // Subtitle
                     Text(
-                      'Les infos de votre asso',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textSecondary,
+                      'Application mobile',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 48),
 
                     // Loading indicator
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.primaryColor,
-                        ),
-                      ),
-                    ),
+                    const CircularProgressIndicator(),
                   ],
                 ),
               ),
