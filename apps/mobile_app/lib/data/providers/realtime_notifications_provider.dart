@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import '../services/realtime_service.dart';
 import '../services/notification_service.dart';
 import '../models/rehearsal.dart';
+import '../../features/notifications/presentation/providers/notification_settings_provider.dart';
 
 final realtimeServiceProvider = Provider<RealtimeService>((ref) {
   return RealtimeService();
@@ -12,7 +13,13 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();
 });
 
-final realtimeNotificationsProvider =
+// Use the persisted setting from notification settings
+final realtimeNotificationsProvider = Provider<bool>((ref) {
+  final settings = ref.watch(notificationSettingsProvider);
+  return settings.realtimeEnabled;
+});
+
+final realtimeNotificationsControllerProvider =
     StateNotifierProvider<RealtimeNotificationsNotifier, bool>((ref) {
       final realtimeService = ref.watch(realtimeServiceProvider);
       final notificationService = ref.watch(notificationServiceProvider);
@@ -22,6 +29,7 @@ final realtimeNotificationsProvider =
         realtimeService: realtimeService,
         notificationService: notificationService,
         logger: logger,
+        ref: ref,
       );
     });
 
@@ -29,15 +37,30 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
   final RealtimeService _realtimeService;
   final NotificationService _notificationService;
   final Logger _logger;
+  final Ref _ref;
 
   RealtimeNotificationsNotifier({
     required RealtimeService realtimeService,
     required NotificationService notificationService,
     required Logger logger,
+    required Ref ref,
   }) : _realtimeService = realtimeService,
        _notificationService = notificationService,
        _logger = logger,
-       super(false);
+       _ref = ref,
+       super(false) {
+    // Initialize based on persisted setting
+    _initializeFromSettings();
+  }
+
+  void _initializeFromSettings() {
+    final settings = _ref.read(notificationSettingsProvider);
+    if (settings.realtimeEnabled && !state) {
+      startListening();
+    } else if (!settings.realtimeEnabled && state) {
+      stopListening();
+    }
+  }
 
   /// Start listening for real-time changes
   Future<bool> startListening() async {

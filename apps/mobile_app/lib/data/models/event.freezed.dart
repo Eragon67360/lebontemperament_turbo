@@ -12,8 +12,7 @@ part of 'event.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 Event _$EventFromJson(Map<String, dynamic> json) {
   return _Event.fromJson(json);
@@ -58,22 +57,21 @@ abstract class $EventCopyWith<$Res> {
   factory $EventCopyWith(Event value, $Res Function(Event) then) =
       _$EventCopyWithImpl<$Res, Event>;
   @useResult
-  $Res call({
-    String id,
-    String? title,
-    @JsonKey(name: 'date_from') String? dateFrom,
-    @JsonKey(name: 'date_to') String? dateTo,
-    String? time,
-    String? location,
-    @JsonKey(name: 'responsible_name') String? responsibleName,
-    @JsonKey(name: 'responsible_email') String? responsibleEmail,
-    @JsonKey(name: 'event_type') EventType eventType,
-    String? description,
-    @JsonKey(name: 'created_at') String? createdAt,
-    @JsonKey(name: 'updated_at') String? updatedAt,
-    String? link,
-    @JsonKey(name: 'is_public') bool? isPublic,
-  });
+  $Res call(
+      {String id,
+      String? title,
+      @JsonKey(name: 'date_from') String? dateFrom,
+      @JsonKey(name: 'date_to') String? dateTo,
+      String? time,
+      String? location,
+      @JsonKey(name: 'responsible_name') String? responsibleName,
+      @JsonKey(name: 'responsible_email') String? responsibleEmail,
+      @JsonKey(name: 'event_type') EventType eventType,
+      String? description,
+      @JsonKey(name: 'created_at') String? createdAt,
+      @JsonKey(name: 'updated_at') String? updatedAt,
+      String? link,
+      @JsonKey(name: 'is_public') bool? isPublic});
 }
 
 /// @nodoc
@@ -106,94 +104,89 @@ class _$EventCopyWithImpl<$Res, $Val extends Event>
     Object? link = freezed,
     Object? isPublic = freezed,
   }) {
-    return _then(
-      _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as String,
-            title: freezed == title
-                ? _value.title
-                : title // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            dateFrom: freezed == dateFrom
-                ? _value.dateFrom
-                : dateFrom // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            dateTo: freezed == dateTo
-                ? _value.dateTo
-                : dateTo // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            time: freezed == time
-                ? _value.time
-                : time // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            location: freezed == location
-                ? _value.location
-                : location // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            responsibleName: freezed == responsibleName
-                ? _value.responsibleName
-                : responsibleName // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            responsibleEmail: freezed == responsibleEmail
-                ? _value.responsibleEmail
-                : responsibleEmail // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            eventType: null == eventType
-                ? _value.eventType
-                : eventType // ignore: cast_nullable_to_non_nullable
-                      as EventType,
-            description: freezed == description
-                ? _value.description
-                : description // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            createdAt: freezed == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            updatedAt: freezed == updatedAt
-                ? _value.updatedAt
-                : updatedAt // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            link: freezed == link
-                ? _value.link
-                : link // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            isPublic: freezed == isPublic
-                ? _value.isPublic
-                : isPublic // ignore: cast_nullable_to_non_nullable
-                      as bool?,
-          )
-          as $Val,
-    );
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      title: freezed == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String?,
+      dateFrom: freezed == dateFrom
+          ? _value.dateFrom
+          : dateFrom // ignore: cast_nullable_to_non_nullable
+              as String?,
+      dateTo: freezed == dateTo
+          ? _value.dateTo
+          : dateTo // ignore: cast_nullable_to_non_nullable
+              as String?,
+      time: freezed == time
+          ? _value.time
+          : time // ignore: cast_nullable_to_non_nullable
+              as String?,
+      location: freezed == location
+          ? _value.location
+          : location // ignore: cast_nullable_to_non_nullable
+              as String?,
+      responsibleName: freezed == responsibleName
+          ? _value.responsibleName
+          : responsibleName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      responsibleEmail: freezed == responsibleEmail
+          ? _value.responsibleEmail
+          : responsibleEmail // ignore: cast_nullable_to_non_nullable
+              as String?,
+      eventType: null == eventType
+          ? _value.eventType
+          : eventType // ignore: cast_nullable_to_non_nullable
+              as EventType,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      link: freezed == link
+          ? _value.link
+          : link // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isPublic: freezed == isPublic
+          ? _value.isPublic
+          : isPublic // ignore: cast_nullable_to_non_nullable
+              as bool?,
+    ) as $Val);
   }
 }
 
 /// @nodoc
 abstract class _$$EventImplCopyWith<$Res> implements $EventCopyWith<$Res> {
   factory _$$EventImplCopyWith(
-    _$EventImpl value,
-    $Res Function(_$EventImpl) then,
-  ) = __$$EventImplCopyWithImpl<$Res>;
+          _$EventImpl value, $Res Function(_$EventImpl) then) =
+      __$$EventImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({
-    String id,
-    String? title,
-    @JsonKey(name: 'date_from') String? dateFrom,
-    @JsonKey(name: 'date_to') String? dateTo,
-    String? time,
-    String? location,
-    @JsonKey(name: 'responsible_name') String? responsibleName,
-    @JsonKey(name: 'responsible_email') String? responsibleEmail,
-    @JsonKey(name: 'event_type') EventType eventType,
-    String? description,
-    @JsonKey(name: 'created_at') String? createdAt,
-    @JsonKey(name: 'updated_at') String? updatedAt,
-    String? link,
-    @JsonKey(name: 'is_public') bool? isPublic,
-  });
+  $Res call(
+      {String id,
+      String? title,
+      @JsonKey(name: 'date_from') String? dateFrom,
+      @JsonKey(name: 'date_to') String? dateTo,
+      String? time,
+      String? location,
+      @JsonKey(name: 'responsible_name') String? responsibleName,
+      @JsonKey(name: 'responsible_email') String? responsibleEmail,
+      @JsonKey(name: 'event_type') EventType eventType,
+      String? description,
+      @JsonKey(name: 'created_at') String? createdAt,
+      @JsonKey(name: 'updated_at') String? updatedAt,
+      String? link,
+      @JsonKey(name: 'is_public') bool? isPublic});
 }
 
 /// @nodoc
@@ -201,9 +194,8 @@ class __$$EventImplCopyWithImpl<$Res>
     extends _$EventCopyWithImpl<$Res, _$EventImpl>
     implements _$$EventImplCopyWith<$Res> {
   __$$EventImplCopyWithImpl(
-    _$EventImpl _value,
-    $Res Function(_$EventImpl) _then,
-  ) : super(_value, _then);
+      _$EventImpl _value, $Res Function(_$EventImpl) _then)
+      : super(_value, _then);
 
   /// Create a copy of Event
   /// with the given fields replaced by the non-null parameter values.
@@ -225,88 +217,85 @@ class __$$EventImplCopyWithImpl<$Res>
     Object? link = freezed,
     Object? isPublic = freezed,
   }) {
-    return _then(
-      _$EventImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as String,
-        title: freezed == title
-            ? _value.title
-            : title // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        dateFrom: freezed == dateFrom
-            ? _value.dateFrom
-            : dateFrom // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        dateTo: freezed == dateTo
-            ? _value.dateTo
-            : dateTo // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        time: freezed == time
-            ? _value.time
-            : time // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        location: freezed == location
-            ? _value.location
-            : location // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        responsibleName: freezed == responsibleName
-            ? _value.responsibleName
-            : responsibleName // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        responsibleEmail: freezed == responsibleEmail
-            ? _value.responsibleEmail
-            : responsibleEmail // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        eventType: null == eventType
-            ? _value.eventType
-            : eventType // ignore: cast_nullable_to_non_nullable
-                  as EventType,
-        description: freezed == description
-            ? _value.description
-            : description // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        createdAt: freezed == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        updatedAt: freezed == updatedAt
-            ? _value.updatedAt
-            : updatedAt // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        link: freezed == link
-            ? _value.link
-            : link // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        isPublic: freezed == isPublic
-            ? _value.isPublic
-            : isPublic // ignore: cast_nullable_to_non_nullable
-                  as bool?,
-      ),
-    );
+    return _then(_$EventImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      title: freezed == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String?,
+      dateFrom: freezed == dateFrom
+          ? _value.dateFrom
+          : dateFrom // ignore: cast_nullable_to_non_nullable
+              as String?,
+      dateTo: freezed == dateTo
+          ? _value.dateTo
+          : dateTo // ignore: cast_nullable_to_non_nullable
+              as String?,
+      time: freezed == time
+          ? _value.time
+          : time // ignore: cast_nullable_to_non_nullable
+              as String?,
+      location: freezed == location
+          ? _value.location
+          : location // ignore: cast_nullable_to_non_nullable
+              as String?,
+      responsibleName: freezed == responsibleName
+          ? _value.responsibleName
+          : responsibleName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      responsibleEmail: freezed == responsibleEmail
+          ? _value.responsibleEmail
+          : responsibleEmail // ignore: cast_nullable_to_non_nullable
+              as String?,
+      eventType: null == eventType
+          ? _value.eventType
+          : eventType // ignore: cast_nullable_to_non_nullable
+              as EventType,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      link: freezed == link
+          ? _value.link
+          : link // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isPublic: freezed == isPublic
+          ? _value.isPublic
+          : isPublic // ignore: cast_nullable_to_non_nullable
+              as bool?,
+    ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$EventImpl implements _Event {
-  const _$EventImpl({
-    required this.id,
-    this.title,
-    @JsonKey(name: 'date_from') this.dateFrom,
-    @JsonKey(name: 'date_to') this.dateTo,
-    this.time,
-    this.location,
-    @JsonKey(name: 'responsible_name') this.responsibleName,
-    @JsonKey(name: 'responsible_email') this.responsibleEmail,
-    @JsonKey(name: 'event_type') required this.eventType,
-    this.description,
-    @JsonKey(name: 'created_at') this.createdAt,
-    @JsonKey(name: 'updated_at') this.updatedAt,
-    this.link,
-    @JsonKey(name: 'is_public') this.isPublic,
-  });
+  const _$EventImpl(
+      {required this.id,
+      this.title,
+      @JsonKey(name: 'date_from') this.dateFrom,
+      @JsonKey(name: 'date_to') this.dateTo,
+      this.time,
+      this.location,
+      @JsonKey(name: 'responsible_name') this.responsibleName,
+      @JsonKey(name: 'responsible_email') this.responsibleEmail,
+      @JsonKey(name: 'event_type') required this.eventType,
+      this.description,
+      @JsonKey(name: 'created_at') this.createdAt,
+      @JsonKey(name: 'updated_at') this.updatedAt,
+      this.link,
+      @JsonKey(name: 'is_public') this.isPublic});
 
   factory _$EventImpl.fromJson(Map<String, dynamic> json) =>
       _$$EventImplFromJson(json);
@@ -386,22 +375,21 @@ class _$EventImpl implements _Event {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-    runtimeType,
-    id,
-    title,
-    dateFrom,
-    dateTo,
-    time,
-    location,
-    responsibleName,
-    responsibleEmail,
-    eventType,
-    description,
-    createdAt,
-    updatedAt,
-    link,
-    isPublic,
-  );
+      runtimeType,
+      id,
+      title,
+      dateFrom,
+      dateTo,
+      time,
+      location,
+      responsibleName,
+      responsibleEmail,
+      eventType,
+      description,
+      createdAt,
+      updatedAt,
+      link,
+      isPublic);
 
   /// Create a copy of Event
   /// with the given fields replaced by the non-null parameter values.
@@ -413,27 +401,28 @@ class _$EventImpl implements _Event {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$EventImplToJson(this);
+    return _$$EventImplToJson(
+      this,
+    );
   }
 }
 
 abstract class _Event implements Event {
-  const factory _Event({
-    required final String id,
-    final String? title,
-    @JsonKey(name: 'date_from') final String? dateFrom,
-    @JsonKey(name: 'date_to') final String? dateTo,
-    final String? time,
-    final String? location,
-    @JsonKey(name: 'responsible_name') final String? responsibleName,
-    @JsonKey(name: 'responsible_email') final String? responsibleEmail,
-    @JsonKey(name: 'event_type') required final EventType eventType,
-    final String? description,
-    @JsonKey(name: 'created_at') final String? createdAt,
-    @JsonKey(name: 'updated_at') final String? updatedAt,
-    final String? link,
-    @JsonKey(name: 'is_public') final bool? isPublic,
-  }) = _$EventImpl;
+  const factory _Event(
+      {required final String id,
+      final String? title,
+      @JsonKey(name: 'date_from') final String? dateFrom,
+      @JsonKey(name: 'date_to') final String? dateTo,
+      final String? time,
+      final String? location,
+      @JsonKey(name: 'responsible_name') final String? responsibleName,
+      @JsonKey(name: 'responsible_email') final String? responsibleEmail,
+      @JsonKey(name: 'event_type') required final EventType eventType,
+      final String? description,
+      @JsonKey(name: 'created_at') final String? createdAt,
+      @JsonKey(name: 'updated_at') final String? updatedAt,
+      final String? link,
+      @JsonKey(name: 'is_public') final bool? isPublic}) = _$EventImpl;
 
   factory _Event.fromJson(Map<String, dynamic> json) = _$EventImpl.fromJson;
 

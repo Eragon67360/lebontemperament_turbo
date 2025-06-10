@@ -12,8 +12,7 @@ part of 'rehearsal.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 Rehearsal _$RehearsalFromJson(Map<String, dynamic> json) {
   return _Rehearsal.fromJson(json);
@@ -51,17 +50,16 @@ abstract class $RehearsalCopyWith<$Res> {
   factory $RehearsalCopyWith(Rehearsal value, $Res Function(Rehearsal) then) =
       _$RehearsalCopyWithImpl<$Res, Rehearsal>;
   @useResult
-  $Res call({
-    String id,
-    String? name,
-    String? place,
-    String? date,
-    @JsonKey(name: 'start_time') String? startTime,
-    @JsonKey(name: 'end_time') String? endTime,
-    @JsonKey(name: 'group_type') GroupType groupType,
-    @JsonKey(name: 'created_at') String? createdAt,
-    @JsonKey(name: 'updated_at') String? updatedAt,
-  });
+  $Res call(
+      {String id,
+      String? name,
+      String? place,
+      String? date,
+      @JsonKey(name: 'start_time') String? startTime,
+      @JsonKey(name: 'end_time') String? endTime,
+      @JsonKey(name: 'group_type') GroupType groupType,
+      @JsonKey(name: 'created_at') String? createdAt,
+      @JsonKey(name: 'updated_at') String? updatedAt});
 }
 
 /// @nodoc
@@ -89,47 +87,44 @@ class _$RehearsalCopyWithImpl<$Res, $Val extends Rehearsal>
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
-    return _then(
-      _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as String,
-            name: freezed == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            place: freezed == place
-                ? _value.place
-                : place // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            date: freezed == date
-                ? _value.date
-                : date // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            startTime: freezed == startTime
-                ? _value.startTime
-                : startTime // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            endTime: freezed == endTime
-                ? _value.endTime
-                : endTime // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            groupType: null == groupType
-                ? _value.groupType
-                : groupType // ignore: cast_nullable_to_non_nullable
-                      as GroupType,
-            createdAt: freezed == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            updatedAt: freezed == updatedAt
-                ? _value.updatedAt
-                : updatedAt // ignore: cast_nullable_to_non_nullable
-                      as String?,
-          )
-          as $Val,
-    );
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      name: freezed == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String?,
+      place: freezed == place
+          ? _value.place
+          : place // ignore: cast_nullable_to_non_nullable
+              as String?,
+      date: freezed == date
+          ? _value.date
+          : date // ignore: cast_nullable_to_non_nullable
+              as String?,
+      startTime: freezed == startTime
+          ? _value.startTime
+          : startTime // ignore: cast_nullable_to_non_nullable
+              as String?,
+      endTime: freezed == endTime
+          ? _value.endTime
+          : endTime // ignore: cast_nullable_to_non_nullable
+              as String?,
+      groupType: null == groupType
+          ? _value.groupType
+          : groupType // ignore: cast_nullable_to_non_nullable
+              as GroupType,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
   }
 }
 
@@ -137,22 +132,20 @@ class _$RehearsalCopyWithImpl<$Res, $Val extends Rehearsal>
 abstract class _$$RehearsalImplCopyWith<$Res>
     implements $RehearsalCopyWith<$Res> {
   factory _$$RehearsalImplCopyWith(
-    _$RehearsalImpl value,
-    $Res Function(_$RehearsalImpl) then,
-  ) = __$$RehearsalImplCopyWithImpl<$Res>;
+          _$RehearsalImpl value, $Res Function(_$RehearsalImpl) then) =
+      __$$RehearsalImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({
-    String id,
-    String? name,
-    String? place,
-    String? date,
-    @JsonKey(name: 'start_time') String? startTime,
-    @JsonKey(name: 'end_time') String? endTime,
-    @JsonKey(name: 'group_type') GroupType groupType,
-    @JsonKey(name: 'created_at') String? createdAt,
-    @JsonKey(name: 'updated_at') String? updatedAt,
-  });
+  $Res call(
+      {String id,
+      String? name,
+      String? place,
+      String? date,
+      @JsonKey(name: 'start_time') String? startTime,
+      @JsonKey(name: 'end_time') String? endTime,
+      @JsonKey(name: 'group_type') GroupType groupType,
+      @JsonKey(name: 'created_at') String? createdAt,
+      @JsonKey(name: 'updated_at') String? updatedAt});
 }
 
 /// @nodoc
@@ -160,9 +153,8 @@ class __$$RehearsalImplCopyWithImpl<$Res>
     extends _$RehearsalCopyWithImpl<$Res, _$RehearsalImpl>
     implements _$$RehearsalImplCopyWith<$Res> {
   __$$RehearsalImplCopyWithImpl(
-    _$RehearsalImpl _value,
-    $Res Function(_$RehearsalImpl) _then,
-  ) : super(_value, _then);
+      _$RehearsalImpl _value, $Res Function(_$RehearsalImpl) _then)
+      : super(_value, _then);
 
   /// Create a copy of Rehearsal
   /// with the given fields replaced by the non-null parameter values.
@@ -179,63 +171,60 @@ class __$$RehearsalImplCopyWithImpl<$Res>
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
-    return _then(
-      _$RehearsalImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as String,
-        name: freezed == name
-            ? _value.name
-            : name // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        place: freezed == place
-            ? _value.place
-            : place // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        date: freezed == date
-            ? _value.date
-            : date // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        startTime: freezed == startTime
-            ? _value.startTime
-            : startTime // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        endTime: freezed == endTime
-            ? _value.endTime
-            : endTime // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        groupType: null == groupType
-            ? _value.groupType
-            : groupType // ignore: cast_nullable_to_non_nullable
-                  as GroupType,
-        createdAt: freezed == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        updatedAt: freezed == updatedAt
-            ? _value.updatedAt
-            : updatedAt // ignore: cast_nullable_to_non_nullable
-                  as String?,
-      ),
-    );
+    return _then(_$RehearsalImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      name: freezed == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String?,
+      place: freezed == place
+          ? _value.place
+          : place // ignore: cast_nullable_to_non_nullable
+              as String?,
+      date: freezed == date
+          ? _value.date
+          : date // ignore: cast_nullable_to_non_nullable
+              as String?,
+      startTime: freezed == startTime
+          ? _value.startTime
+          : startTime // ignore: cast_nullable_to_non_nullable
+              as String?,
+      endTime: freezed == endTime
+          ? _value.endTime
+          : endTime // ignore: cast_nullable_to_non_nullable
+              as String?,
+      groupType: null == groupType
+          ? _value.groupType
+          : groupType // ignore: cast_nullable_to_non_nullable
+              as GroupType,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$RehearsalImpl implements _Rehearsal {
-  const _$RehearsalImpl({
-    required this.id,
-    this.name,
-    this.place,
-    this.date,
-    @JsonKey(name: 'start_time') this.startTime,
-    @JsonKey(name: 'end_time') this.endTime,
-    @JsonKey(name: 'group_type') required this.groupType,
-    @JsonKey(name: 'created_at') this.createdAt,
-    @JsonKey(name: 'updated_at') this.updatedAt,
-  });
+  const _$RehearsalImpl(
+      {required this.id,
+      this.name,
+      this.place,
+      this.date,
+      @JsonKey(name: 'start_time') this.startTime,
+      @JsonKey(name: 'end_time') this.endTime,
+      @JsonKey(name: 'group_type') required this.groupType,
+      @JsonKey(name: 'created_at') this.createdAt,
+      @JsonKey(name: 'updated_at') this.updatedAt});
 
   factory _$RehearsalImpl.fromJson(Map<String, dynamic> json) =>
       _$$RehearsalImplFromJson(json);
@@ -291,18 +280,8 @@ class _$RehearsalImpl implements _Rehearsal {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    id,
-    name,
-    place,
-    date,
-    startTime,
-    endTime,
-    groupType,
-    createdAt,
-    updatedAt,
-  );
+  int get hashCode => Object.hash(runtimeType, id, name, place, date, startTime,
+      endTime, groupType, createdAt, updatedAt);
 
   /// Create a copy of Rehearsal
   /// with the given fields replaced by the non-null parameter values.
@@ -314,22 +293,23 @@ class _$RehearsalImpl implements _Rehearsal {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$RehearsalImplToJson(this);
+    return _$$RehearsalImplToJson(
+      this,
+    );
   }
 }
 
 abstract class _Rehearsal implements Rehearsal {
-  const factory _Rehearsal({
-    required final String id,
-    final String? name,
-    final String? place,
-    final String? date,
-    @JsonKey(name: 'start_time') final String? startTime,
-    @JsonKey(name: 'end_time') final String? endTime,
-    @JsonKey(name: 'group_type') required final GroupType groupType,
-    @JsonKey(name: 'created_at') final String? createdAt,
-    @JsonKey(name: 'updated_at') final String? updatedAt,
-  }) = _$RehearsalImpl;
+  const factory _Rehearsal(
+      {required final String id,
+      final String? name,
+      final String? place,
+      final String? date,
+      @JsonKey(name: 'start_time') final String? startTime,
+      @JsonKey(name: 'end_time') final String? endTime,
+      @JsonKey(name: 'group_type') required final GroupType groupType,
+      @JsonKey(name: 'created_at') final String? createdAt,
+      @JsonKey(name: 'updated_at') final String? updatedAt}) = _$RehearsalImpl;
 
   factory _Rehearsal.fromJson(Map<String, dynamic> json) =
       _$RehearsalImpl.fromJson;

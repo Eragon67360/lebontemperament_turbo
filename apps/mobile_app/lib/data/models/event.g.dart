@@ -7,21 +7,21 @@ part of 'event.dart';
 // **************************************************************************
 
 _$EventImpl _$$EventImplFromJson(Map<String, dynamic> json) => _$EventImpl(
-  id: json['id'] as String,
-  title: json['title'] as String?,
-  dateFrom: json['date_from'] as String?,
-  dateTo: json['date_to'] as String?,
-  time: json['time'] as String?,
-  location: json['location'] as String?,
-  responsibleName: json['responsible_name'] as String?,
-  responsibleEmail: json['responsible_email'] as String?,
-  eventType: $enumDecode(_$EventTypeEnumMap, json['event_type']),
-  description: json['description'] as String?,
-  createdAt: json['created_at'] as String?,
-  updatedAt: json['updated_at'] as String?,
-  link: json['link'] as String?,
-  isPublic: json['is_public'] as bool?,
-);
+      id: json['id'] as String,
+      title: json['title'] as String?,
+      dateFrom: json['date_from'] as String?,
+      dateTo: json['date_to'] as String?,
+      time: json['time'] as String?,
+      location: json['location'] as String?,
+      responsibleName: json['responsible_name'] as String?,
+      responsibleEmail: json['responsible_email'] as String?,
+      eventType: $enumDecode(_$EventTypeEnumMap, json['event_type']),
+      description: json['description'] as String?,
+      createdAt: json['created_at'] as String?,
+      updatedAt: json['updated_at'] as String?,
+      link: json['link'] as String?,
+      isPublic: json['is_public'] as bool?,
+    );
 
 Map<String, dynamic> _$$EventImplToJson(_$EventImpl instance) =>
     <String, dynamic>{

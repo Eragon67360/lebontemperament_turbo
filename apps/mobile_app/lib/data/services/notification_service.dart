@@ -446,15 +446,40 @@ class NotificationService {
     if (rehearsal.date != null) {
       try {
         final date = DateTime.parse(rehearsal.date!);
-        final formattedDate = '${date.day}/${date.month}/${date.year}';
-        parts.add('le $formattedDate');
+        final monthNames = [
+          'janvier',
+          'février',
+          'mars',
+          'avril',
+          'mai',
+          'juin',
+          'juillet',
+          'août',
+          'septembre',
+          'octobre',
+          'novembre',
+          'décembre',
+        ];
+        final formattedDate =
+            'le ${date.day} ${monthNames[date.month - 1]} ${date.year}';
+        parts.add(formattedDate);
       } catch (e) {
         _logger.w('Error parsing rehearsal date: $e');
       }
     }
 
     if (rehearsal.startTime != null && rehearsal.startTime!.isNotEmpty) {
-      parts.add('à ${rehearsal.startTime}');
+      try {
+        final timeParts = rehearsal.startTime!.split(':');
+        if (timeParts.length >= 2) {
+          final hour = timeParts[0];
+          final minute = timeParts[1];
+          final formattedTime = 'à ${hour}h$minute';
+          parts.add(formattedTime);
+        }
+      } catch (e) {
+        _logger.w('Error parsing rehearsal time: $e');
+      }
     }
 
     if (rehearsal.place != null && rehearsal.place!.isNotEmpty) {

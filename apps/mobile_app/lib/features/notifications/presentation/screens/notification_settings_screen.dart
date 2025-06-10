@@ -92,7 +92,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
 
                     // Try to start listening
                     final success = await ref
-                        .read(realtimeNotificationsProvider.notifier)
+                        .read(realtimeNotificationsControllerProvider.notifier)
                         .startListening();
 
                     // Hide loading indicator
@@ -100,7 +100,12 @@ class NotificationSettingsScreen extends ConsumerWidget {
                       Navigator.of(context).pop();
                     }
 
-                    if (!success && context.mounted) {
+                    if (success) {
+                      // Save the setting to persistent storage
+                      await ref
+                          .read(notificationSettingsProvider.notifier)
+                          .toggleRealtimeEnabled();
+                    } else if (context.mounted) {
                       // Show error message with guidance
                       showDialog(
                         context: context,
@@ -136,9 +141,13 @@ class NotificationSettingsScreen extends ConsumerWidget {
                       );
                     }
                   } else {
+                    // Stop listening and save the setting
                     ref
-                        .read(realtimeNotificationsProvider.notifier)
+                        .read(realtimeNotificationsControllerProvider.notifier)
                         .stopListening();
+                    await ref
+                        .read(notificationSettingsProvider.notifier)
+                        .toggleRealtimeEnabled();
                   }
                 },
                 activeColor: Theme.of(context).colorScheme.primary,

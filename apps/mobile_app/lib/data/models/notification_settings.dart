@@ -26,6 +26,7 @@ class NotificationSettings with _$NotificationSettings {
     List<NotificationTime> selectedTimes,
     @Default(true) bool concertsEnabled,
     @Default(true) bool rehearsalsEnabled,
+    @Default(false) bool realtimeEnabled,
   }) = _NotificationSettings;
 
   factory NotificationSettings.fromJson(Map<String, dynamic> json) =>

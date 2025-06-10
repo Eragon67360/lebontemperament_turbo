@@ -48,7 +48,7 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     // Stop real-time notifications when app is disposed
-    ref.read(realtimeNotificationsProvider.notifier).stopListening();
+    ref.read(realtimeNotificationsControllerProvider.notifier).stopListening();
     super.dispose();
   }
 
@@ -62,20 +62,26 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
         final isListening = ref.read(realtimeNotificationsProvider);
         if (isListening) {
           // Restart listening if it was previously enabled
-          ref.read(realtimeNotificationsProvider.notifier).startListening();
+          ref
+              .read(realtimeNotificationsControllerProvider.notifier)
+              .startListening();
         }
         break;
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
         // App went to background or was closed - stop listening
-        ref.read(realtimeNotificationsProvider.notifier).stopListening();
+        ref
+            .read(realtimeNotificationsControllerProvider.notifier)
+            .stopListening();
         break;
       case AppLifecycleState.inactive:
         // App is inactive - keep listening but could stop if needed
         break;
       case AppLifecycleState.hidden:
         // App is hidden - stop listening
-        ref.read(realtimeNotificationsProvider.notifier).stopListening();
+        ref
+            .read(realtimeNotificationsControllerProvider.notifier)
+            .stopListening();
         break;
     }
   }

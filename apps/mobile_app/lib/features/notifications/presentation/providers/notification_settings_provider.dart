@@ -52,6 +52,11 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     await _saveSettings();
   }
 
+  Future<void> toggleRealtimeEnabled() async {
+    state = state.copyWith(realtimeEnabled: !state.realtimeEnabled);
+    await _saveSettings();
+  }
+
   Future<void> toggleNotificationTime(NotificationTime time) async {
     final newTimes = List<NotificationTime>.from(state.selectedTimes);
 
