@@ -342,4 +342,129 @@ class NotificationService {
       return [];
     }
   }
+
+  /// Check if notifications can be shown
+  Future<bool> canShowNotifications() async {
+    try {
+      final permissionsGranted = await hasPermissions();
+      if (!permissionsGranted) {
+        return false;
+      }
+
+      // If we have permissions, we should be able to show notifications
+      return true;
+    } catch (e) {
+      _logger.e('Error checking if notifications can be shown: $e');
+      return false;
+    }
+  }
+
+  /// Show immediate notification for new rehearsal
+  Future<void> showRehearsalAddedNotification(Rehearsal rehearsal) async {
+    try {
+      _logger.i(
+        'Attempting to show notification for rehearsal: ${rehearsal.name} (ID: ${rehearsal.id})',
+      );
+
+      // Check if we can show notifications
+      final canShow = await canShowNotifications();
+      if (!canShow) {
+        _logger.w('Cannot show notifications - permissions may not be granted');
+        return;
+      }
+
+      // Generate a smaller notification ID that fits in 32-bit integer
+      final notificationId = _generateRealtimeNotificationId(rehearsal.id);
+      _logger.i(
+        'Generated notification ID: $notificationId for rehearsal: ${rehearsal.id}',
+      );
+
+      final notificationBody = _buildRehearsalNotificationBody(rehearsal);
+      _logger.i('Notification body: $notificationBody');
+
+      await _notifications.show(
+        notificationId,
+        'Nouvelle répétition ajoutée',
+        notificationBody,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_rehearsals',
+            'Nouvelles répétitions',
+            channelDescription: 'Notifications pour les nouvelles répétitions',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'rehearsal_${rehearsal.id}',
+      );
+
+      _logger.i(
+        'Successfully showed immediate notification for new rehearsal: ${rehearsal.name}',
+      );
+    } catch (e) {
+      _logger.e('Error showing rehearsal added notification: $e');
+      _logger.e('Rehearsal details: ${rehearsal.toJson()}');
+    }
+  }
+
+  /// Generate a notification ID for real-time notifications that fits in 32-bit integer
+  int _generateRealtimeNotificationId(String rehearsalId) {
+    // Use a hash of the rehearsal ID to generate a smaller number
+    final hash = rehearsalId.hashCode;
+    // Ensure it's positive and within 32-bit range
+    final notificationId =
+        (hash.abs() % 2147483647) + 1000000; // Start from 1M to avoid conflicts
+
+    // Validate the ID is within correct range
+    if (notificationId < 0 || notificationId > 2147483647) {
+      _logger.e(
+        'Generated notification ID $notificationId is out of range! Using fallback ID.',
+      );
+      return 1000000; // Fallback to a safe ID
+    }
+
+    _logger.d(
+      'Generated notification ID: $notificationId from rehearsal ID: $rehearsalId (hash: $hash)',
+    );
+    return notificationId;
+  }
+
+  /// Build notification body for rehearsal
+  String _buildRehearsalNotificationBody(Rehearsal rehearsal) {
+    final parts = <String>[];
+
+    if (rehearsal.name != null && rehearsal.name!.isNotEmpty) {
+      parts.add(rehearsal.name!);
+    }
+
+    if (rehearsal.date != null) {
+      try {
+        final date = DateTime.parse(rehearsal.date!);
+        final formattedDate = '${date.day}/${date.month}/${date.year}';
+        parts.add('le $formattedDate');
+      } catch (e) {
+        _logger.w('Error parsing rehearsal date: $e');
+      }
+    }
+
+    if (rehearsal.startTime != null && rehearsal.startTime!.isNotEmpty) {
+      parts.add('à ${rehearsal.startTime}');
+    }
+
+    if (rehearsal.place != null && rehearsal.place!.isNotEmpty) {
+      parts.add('Lieu : ${rehearsal.place}');
+    }
+
+    if (parts.isEmpty) {
+      return 'Nouvelle répétition ajoutée';
+    }
+
+    return parts.join(' ');
+  }
 }

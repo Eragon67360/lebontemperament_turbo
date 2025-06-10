@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/notification_settings.dart';
+import '../../../../data/providers/realtime_notifications_provider.dart';
 import '../providers/notification_settings_provider.dart';
 
 class NotificationSettingsScreen extends ConsumerWidget {
@@ -11,6 +12,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(notificationSettingsProvider);
+    final isRealtimeEnabled = ref.watch(realtimeNotificationsProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -49,6 +51,101 @@ class NotificationSettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+
+          // Real-time notifications toggle
+          if (settings.enabled) ...[
+            Card(
+              child: SwitchListTile(
+                title: Row(
+                  children: [
+                    Icon(
+                      Icons.sync,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Notifications en temps réel',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: Text(
+                  'Recevoir des notifications immédiates quand de nouvelles répétitions sont ajoutées',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                value: isRealtimeEnabled,
+                onChanged: (value) async {
+                  if (value) {
+                    // Show loading indicator
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) =>
+                          const Center(child: CircularProgressIndicator()),
+                    );
+
+                    // Try to start listening
+                    final success = await ref
+                        .read(realtimeNotificationsProvider.notifier)
+                        .startListening();
+
+                    // Hide loading indicator
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+
+                    if (!success && context.mounted) {
+                      // Show error message with guidance
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Permissions requises'),
+                          content: const Text(
+                            'Pour activer les notifications en temps réel, vous devez autoriser les notifications dans les paramètres de votre appareil.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Annuler'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                // You could add navigation to app settings here
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      'Allez dans Paramètres > Notifications > Le Bon Tempérament pour autoriser les notifications',
+                                    ),
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                );
+                              },
+                              child: const Text('Paramètres'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  } else {
+                    ref
+                        .read(realtimeNotificationsProvider.notifier)
+                        .stopListening();
+                  }
+                },
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // Event type toggles
           if (settings.enabled) ...[

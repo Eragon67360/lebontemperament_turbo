@@ -8,6 +8,7 @@ import 'core/config/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'data/services/notification_service.dart';
+import 'data/providers/realtime_notifications_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,11 +25,63 @@ void main() async {
   runApp(const ProviderScope(child: LeBonTemperamentApp()));
 }
 
-class LeBonTemperamentApp extends ConsumerWidget {
+class LeBonTemperamentApp extends ConsumerStatefulWidget {
   const LeBonTemperamentApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeBonTemperamentApp> createState() =>
+      _LeBonTemperamentAppState();
+}
+
+class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Don't automatically start real-time notifications on app startup
+    // Let the user control it from the notification settings
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Stop real-time notifications when app is disposed
+    ref.read(realtimeNotificationsProvider.notifier).stopListening();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // App came to foreground - check if real-time notifications were enabled
+        final isListening = ref.read(realtimeNotificationsProvider);
+        if (isListening) {
+          // Restart listening if it was previously enabled
+          ref.read(realtimeNotificationsProvider.notifier).startListening();
+        }
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        // App went to background or was closed - stop listening
+        ref.read(realtimeNotificationsProvider.notifier).stopListening();
+        break;
+      case AppLifecycleState.inactive:
+        // App is inactive - keep listening but could stop if needed
+        break;
+      case AppLifecycleState.hidden:
+        // App is hidden - stop listening
+        ref.read(realtimeNotificationsProvider.notifier).stopListening();
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeProvider);
 
     return MaterialApp.router(
