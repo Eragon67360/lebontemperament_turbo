@@ -69,19 +69,15 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
         break;
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
-        // App went to background or was closed - stop listening
-        ref
-            .read(realtimeNotificationsControllerProvider.notifier)
-            .stopListening();
+        // App went to background or was closed - keep listening for real-time notifications
+        // Don't stop listening as we want notifications to work in background
         break;
       case AppLifecycleState.inactive:
-        // App is inactive - keep listening but could stop if needed
+        // App is inactive - keep listening
         break;
       case AppLifecycleState.hidden:
-        // App is hidden - stop listening
-        ref
-            .read(realtimeNotificationsControllerProvider.notifier)
-            .stopListening();
+        // App is hidden - keep listening for real-time notifications
+        // Don't stop listening as we want notifications to work in background
         break;
     }
   }

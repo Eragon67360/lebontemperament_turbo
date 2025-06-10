@@ -70,19 +70,40 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     }
 
     try {
+      _logger.i('Starting real-time listening...');
+
       // Initialize notification service if not already done
       await _notificationService.initialize();
+      _logger.i('Notification service initialized');
 
       // Check and request permissions
       final hasPermissions = await _notificationService.hasPermissions();
+      _logger.i('Initial permission check result: $hasPermissions');
+
       if (!hasPermissions) {
         _logger.i('Requesting notification permissions...');
         final granted = await _notificationService.requestPermissions();
+        _logger.i('Permission request result: $granted');
+
         if (!granted) {
           _logger.w('Notification permissions not granted by user');
           return false;
         }
+
+        // Check permissions again after request
+        final finalPermissionCheck = await _notificationService
+            .hasPermissions();
+        _logger.i(
+          'Final permission check after request: $finalPermissionCheck',
+        );
+
+        if (!finalPermissionCheck) {
+          _logger.w('Permissions still not available after request');
+          return false;
+        }
       }
+
+      _logger.i('Permissions confirmed, subscribing to rehearsals...');
 
       // Subscribe to rehearsals changes
       _realtimeService.subscribeToRehearsals(

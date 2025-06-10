@@ -30,9 +30,9 @@ class NotificationService {
       '@mipmap/ic_launcher',
     );
     const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
     );
 
     const initializationSettings = InitializationSettings(
@@ -51,8 +51,42 @@ class NotificationService {
 
   Future<bool> requestPermissions() async {
     try {
+      _logger.i('Requesting notification permissions...');
+
+      // Check current status first
+      final currentStatus = await Permission.notification.status;
+      _logger.i('Current notification permission status: $currentStatus');
+
+      // For iOS, use the flutter_local_notifications plugin directly
+      // This is more reliable than using permission_handler on iOS
+      try {
+        final iosPlugin = _notifications
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+        if (iosPlugin != null) {
+          _logger.i('Using iOS-specific permission request...');
+          final iosSettings = await iosPlugin.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+          _logger.i('iOS notification permissions result: $iosSettings');
+
+          // If iOS permissions were granted, we're good
+          if (iosSettings != null) {
+            _logger.i('iOS permissions granted successfully');
+            return true;
+          }
+        }
+      } catch (e) {
+        _logger.w('Could not request iOS notification permissions: $e');
+      }
+
+      // Fallback to permission_handler for Android or if iOS method fails
+      _logger.i('Using permission_handler fallback...');
       final status = await Permission.notification.request();
-      _logger.i('Notification permission status: $status');
+      _logger.i('Permission handler request result: $status');
 
       // For Android 12+, also request exact alarm permission
       if (status.isGranted) {
@@ -77,8 +111,40 @@ class NotificationService {
 
   Future<bool> hasPermissions() async {
     try {
+      // For iOS, check using flutter_local_notifications first
+      try {
+        final iosPlugin = _notifications
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+        if (iosPlugin != null) {
+          _logger.i(
+            'Checking iOS permissions using flutter_local_notifications...',
+          );
+          final iosSettings = await iosPlugin.checkPermissions();
+          _logger.i('iOS notification settings: $iosSettings');
+
+          // If we can get the settings and they're not null, permissions are granted
+          if (iosSettings != null) {
+            _logger.i(
+              'iOS permissions confirmed via flutter_local_notifications',
+            );
+            return true;
+          }
+        }
+      } catch (e) {
+        _logger.w('Could not check iOS notification settings: $e');
+      }
+
+      // Fallback to permission_handler
       final status = await Permission.notification.status;
-      return status.isGranted;
+      _logger.i(
+        'Current notification permission status (permission_handler): $status',
+      );
+
+      final result = status.isGranted;
+      _logger.i('Permission check result: $result');
+      return result;
     } catch (e) {
       _logger.e('Error checking notification permissions: $e');
       return false;
@@ -373,6 +439,12 @@ class NotificationService {
         return;
       }
 
+      // Note: iOS Simulator has limited notification support
+      // Notifications may not appear visually on simulator but will work on real device
+      _logger.i(
+        'Note: On iOS Simulator, notifications may not appear visually but will work on real device',
+      );
+
       // Generate a smaller notification ID that fits in 32-bit integer
       final notificationId = _generateRealtimeNotificationId(rehearsal.id);
       _logger.i(
@@ -399,6 +471,10 @@ class NotificationService {
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_rehearsal',
           ),
         ),
         payload: 'rehearsal_${rehearsal.id}',
@@ -491,5 +567,57 @@ class NotificationService {
     }
 
     return parts.join(' ');
+  }
+
+  /// Test notification to verify permissions are working
+  Future<void> showTestNotification() async {
+    try {
+      _logger.i('Showing test notification...');
+
+      final canShow = await canShowNotifications();
+      if (!canShow) {
+        _logger.w(
+          'Cannot show test notification - permissions may not be granted',
+        );
+        return;
+      }
+
+      // Note: iOS Simulator has limited notification support
+      // Notifications may not appear visually on simulator but will work on real device
+      _logger.i(
+        'Note: On iOS Simulator, notifications may not appear visually but will work on real device',
+      );
+
+      final notificationId = 999999; // Use a special ID for test notifications
+
+      await _notifications.show(
+        notificationId,
+        'Test de notification',
+        'Si vous voyez cette notification, les permissions fonctionnent correctement !',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'test_notifications',
+            'Notifications de test',
+            channelDescription: 'Notifications pour tester les permissions',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'test_notification',
+          ),
+        ),
+        payload: 'test_notification',
+      );
+
+      _logger.i('Test notification sent successfully');
+    } catch (e) {
+      _logger.e('Error showing test notification: $e');
+    }
   }
 }
