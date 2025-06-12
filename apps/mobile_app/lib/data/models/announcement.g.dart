@@ -1,0 +1,62 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'announcement.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
+class AnnouncementAdapter extends TypeAdapter<Announcement> {
+  @override
+  final int typeId = 2;
+
+  @override
+  Announcement read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Announcement(
+      id: fields[0] as String,
+      title: fields[1] as String,
+      content: fields[2] as String,
+      publishedAt: fields[3] as DateTime,
+      createdAt: fields[4] as DateTime?,
+      updatedAt: fields[5] as DateTime?,
+      isPublished: fields[6] as bool,
+      authorId: fields[7] as String?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Announcement obj) {
+    writer
+      ..writeByte(8)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.title)
+      ..writeByte(2)
+      ..write(obj.content)
+      ..writeByte(3)
+      ..write(obj.publishedAt)
+      ..writeByte(4)
+      ..write(obj.createdAt)
+      ..writeByte(5)
+      ..write(obj.updatedAt)
+      ..writeByte(6)
+      ..write(obj.isPublished)
+      ..writeByte(7)
+      ..write(obj.authorId);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AnnouncementAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
