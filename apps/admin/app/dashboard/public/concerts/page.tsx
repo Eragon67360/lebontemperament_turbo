@@ -1,4 +1,5 @@
 // app/dashboard/public/concerts/page.tsx
+import { DashboardPageHeader } from "@/components/DashboardPageHeader";
 import {
   Card,
   CardDescription,
@@ -11,16 +12,12 @@ import Link from "next/link";
 
 export default function ConcertsPage() {
   return (
-    <div className="ontainer mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="container px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section */}
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Gestion des Concerts
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Gérez les concerts à venir et consultez les archives.
-        </p>
-      </div>
+      <DashboardPageHeader
+        title="Gestion des Concerts"
+        description="Gérez les concerts à venir et consultez les archives."
+      />
 
       {/* Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2">

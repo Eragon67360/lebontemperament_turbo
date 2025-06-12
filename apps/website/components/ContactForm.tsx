@@ -169,10 +169,7 @@ const ContactForm = () => {
               <button
                 type="submit"
                 disabled={isButtonDisabled || loading}
-                className="justify-end px-[20px] py-[18px] bg-[#333] text-white border-[#333] border 
-                                         hover:bg-white hover:text-[#333] disabled:border-gray-300 
-                                         disabled:text-gray-300 disabled:bg-white transition-all 
-                                         flex items-center space-x-[18px]"
+                className="justify-end px-[20px] py-[18px] bg-[#333] text-white border-[#333] border  hover:bg-white hover:text-[#333] transition-all flex items-center space-x-[18px]"
               >
                 <span className="uppercase text-[12px] tracking-[2.4px]">
                   {loading ? "Envoi en cours..." : "Envoyer un mail"}

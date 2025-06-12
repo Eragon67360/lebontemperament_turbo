@@ -7,7 +7,7 @@ import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { Button, Input, addToast } from "@heroui/react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiLoader } from "react-icons/fi";
@@ -20,7 +20,6 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default function LoginForm() {
-  const params = useParams();
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
@@ -28,10 +27,8 @@ export default function LoginForm() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     const hashParams = window.location.hash;
@@ -50,18 +47,8 @@ export default function LoginForm() {
         description: errorMessage,
         color: "danger",
       });
-
-      // router.replace(RouteNames.AUTH.LOGIN)
     }
-  }, [error, errorDescription, router, params]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  }, [error, errorDescription]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -85,7 +72,6 @@ export default function LoginForm() {
         });
       }
     } catch (error: unknown) {
-      // Type guard pour vérifier si c'est une Error
       if (error instanceof Error) {
         console.error("Google login error:", error);
         addToast({
@@ -95,7 +81,6 @@ export default function LoginForm() {
           color: "danger",
         });
       } else {
-        // Fallback pour les cas où ce n'est pas une Error
         console.error("Google login error:", error);
         addToast({
           title: "Erreur de connexion",
@@ -106,12 +91,14 @@ export default function LoginForm() {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
 
     startTransition(async () => {
       try {
-        const formData = new FormData(event.currentTarget);
         const result = await login(formData);
 
         if (result?.error) {
@@ -156,94 +143,91 @@ export default function LoginForm() {
   };
 
   return (
-    <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Se connecter</h1>
-        <p className="text-balance text-sm text-muted-foreground">
-          Entrez votre email pour vous connecter
-        </p>
-      </div>
+    <div className="w-full px-2">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 mt-2">
+        <div className="grid gap-6">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Input
+                id="email"
+                size="sm"
+                name="email"
+                type="email"
+                label="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                isRequired
+                autoComplete="email"
+                disabled={isPending}
+              />
+            </div>
 
-      <div className="grid gap-6">
-        <div className="grid gap-2">
-          <Input
-            id="email"
-            size="sm"
-            name="email"
-            type="email"
-            label="Email"
-            value={formData.email}
-            onChange={handleChange}
-            isRequired
-            autoComplete="email"
-            disabled={isPending}
-          />
-        </div>
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <div></div>
+                <Link
+                  href={RouteNames.AUTH.RESET_PASSWORD}
+                  className="text-xs text-primary hover:underline"
+                  tabIndex={isPending ? -1 : 0}
+                >
+                  Mot de passe oublié?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                size="sm"
+                name="password"
+                type="password"
+                label="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                isRequired
+                autoComplete="current-password"
+                disabled={isPending}
+              />
+            </div>
 
-        <div className="grid gap-2">
-          <div className="flex items-center ml-auto">
-            <Link
-              href={RouteNames.AUTH.RESET_PASSWORD}
-              className="text-xs text-primary hover:underline"
-              tabIndex={isPending ? -1 : 0}
+            <Button
+              variant="solid"
+              type="submit"
+              color="primary"
+              className="w-full"
+              isDisabled={!email || !password || isPending}
             >
-              Mot de passe oublié?
-            </Link>
+              {isPending ? (
+                <>
+                  <FiLoader className="mr-2 h-4 w-4 animate-spin" />
+                  Connexion...
+                </>
+              ) : (
+                "Se connecter"
+              )}
+            </Button>
           </div>
-          <Input
-            id="password"
-            size="sm"
-            name="password"
-            type="password"
-            label="Mot de passe"
-            value={formData.password}
-            onChange={handleChange}
-            isRequired
-            autoComplete="current-password"
-            disabled={isPending}
-          />
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Ou continuer avec
+              </span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="bordered"
+            className="w-full"
+            onPress={handleGoogleSignIn}
+            isDisabled={isPending}
+          >
+            <FcGoogle className="mr-2 h-4 w-4" />
+            Google
+          </Button>
         </div>
-
-        <Button
-          variant="solid"
-          type="submit"
-          color="primary"
-          className="w-full"
-          isDisabled={isPending}
-          aria-busy={isPending}
-        >
-          {isPending ? (
-            <>
-              <FiLoader className="mr-2 h-4 w-4 animate-spin" />
-              Connexion...
-            </>
-          ) : (
-            "Se connecter"
-          )}
-        </Button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Ou continuer avec
-            </span>
-          </div>
-        </div>
-
-        <Button
-          type="button"
-          variant="bordered"
-          className="w-full"
-          onPress={handleGoogleSignIn}
-          isDisabled={isPending}
-        >
-          <FcGoogle className="mr-2 h-4 w-4" />
-          Google
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

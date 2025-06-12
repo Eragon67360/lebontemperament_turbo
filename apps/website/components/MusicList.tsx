@@ -3,6 +3,7 @@
 import musicDetails from "@/public/json/music_files_bt_album.json";
 import Image from "next/image";
 import { useState } from "react";
+import { IoMusicalNotes, IoPlay } from "react-icons/io5"; // Add these imports
 import MusicPlayer from "./MusicPlayer";
 
 const MusicList = () => {
@@ -18,58 +19,70 @@ const MusicList = () => {
   };
 
   const cleanDisplayName = (fileName: string) => {
-    const cleanedName = fileName
+    return fileName
       .replace("/music/BT - Album/", "")
       .replace(/^\d+ - Le Bon Tempérament - /, "")
       .replace(/\.mp3$/, "");
-    // Additional cleanup logic if necessary
-    return cleanedName;
   };
 
   return (
-    <div>
-      <div className="flex flex-col rounded-2xl mx-0 lg:mx-32 bg-gradient-to-r from-[#599c9b] to-[#43475e]">
-        <div className="rounded-md md:rounded-xl lg:rounded-2xl bg-gradient-to-r from-primary to-[#43475e] p-4 md:p-8 lg:p-16 shadow-xl flex flex-col lg:flex-row items-center lg:items-start gap-16">
+    <div className="bg-white rounded-xl overflow-hidden">
+      {/* Album Header */}
+      <div className="bg-gradient-to-r from-primary to-[#43475e] p-4">
+        <div className="flex items-center gap-4">
           <Image
-            src={"/music/BT - Album/bt_20ans_pochette.jpg"}
+            src="/music/BT - Album/bt_20ans_pochette.jpg"
             alt="album pochette"
-            width={280}
+            width={120}
             height={120}
+            className="rounded-lg shadow-lg"
           />
-          <div className="flex flex-col w-full justify-between px-8 lg:px-0">
-            <h2 className="text-xl md:text-2xl lg:text-4xl text-white font-bold">
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold text-white">
               Les 20 ans du BT (Live)
             </h2>
-            <h3 className="text-lg md:text-xl lg:text-2xl text-white font-semibold">
-              Le Bon Tempérament
-            </h3>
-
-            <div className="mt-8 space-y-2">
-              {currentSong && <MusicPlayer src={currentSong} />}
-            </div>
+            <h3 className="text-sm text-white/80">Le Bon Tempérament</h3>
           </div>
         </div>
-        <div className="my-4 md:my-8 lg:my-16 px-2 md:px-4 lg:px-8 space-y-4 text-white text-left ">
-          {musicDetails.map((file, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSong(getMusicSrc(file.name))}
-              className="bg-[#1E1E1E] p-8 w-full rounded-lg text-left flex justify-between hover:bg-[#1e1e1eaa]"
-            >
-              <div>
-                <p className="text-base md:text-lg lg:text-xl font-bold">
-                  {cleanDisplayName(file.name)}
-                </p>
-                <p className="text-sm md:text-base lg:text-lg">
-                  Le Bon Tempérament
-                </p>
-              </div>
-              <span className="text-white text-xs md:text-sm lg:text-base">
-                {file.duration}
-              </span>
-            </button>
-          ))}
-        </div>
+
+        {/* Music Player */}
+        {currentSong && (
+          <div className="mt-4">
+            <MusicPlayer src={currentSong} />
+          </div>
+        )}
+      </div>
+
+      {/* Tracks List */}
+      <div className="divide-y divide-gray-100">
+        {musicDetails.map((file, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentSong(getMusicSrc(file.name))}
+            className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
+              currentSong === getMusicSrc(file.name)
+                ? "bg-primary/5"
+                : "bg-transparent"
+            }`}
+          >
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10">
+              {currentSong === getMusicSrc(file.name) ? (
+                <IoMusicalNotes className="text-primary w-4 h-4" />
+              ) : (
+                <IoPlay className="text-primary w-4 h-4" />
+              )}
+            </div>
+
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-gray-900">
+                {cleanDisplayName(file.name)}
+              </p>
+              <p className="text-xs text-gray-500">Le Bon Tempérament</p>
+            </div>
+
+            <span className="text-xs text-gray-400">{file.duration}</span>
+          </button>
+        ))}
       </div>
     </div>
   );

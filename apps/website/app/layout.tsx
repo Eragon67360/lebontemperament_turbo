@@ -1,4 +1,3 @@
-import CookieConsentComponent from "@/components/cookies/CookieConsent";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
@@ -10,6 +9,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import { EasterEgg } from "@/components/EasterEgg";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700", "900"],
@@ -79,11 +79,11 @@ export default function RootLayout({
         <Header />
         <body className={roboto.className}>
           <Providers>
-            <Navigation />
-            <main className="flex justify-center min-h-dvh">
+            <EasterEgg />
+            <main className="flex flex-col justify-center min-h-dvh bg-white dark:bg-neutral-800">
+              <Navigation />
               {children}
               <SocialPopover />
-              <CookieConsentComponent />
               <Analytics />
               <SpeedInsights />
             </main>

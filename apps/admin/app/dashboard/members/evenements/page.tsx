@@ -1,5 +1,6 @@
 "use client";
 
+import { DashboardPageHeader } from "@/components/DashboardPageHeader";
 import { EventForm } from "@/components/EventForm";
 import {
   AlertDialog,
@@ -203,10 +204,6 @@ export default function Evenements() {
     </div>
   );
 
-  if (loading) {
-    return <LoadingState />;
-  }
-
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
       <div className="text-center space-y-4">
@@ -243,13 +240,13 @@ export default function Evenements() {
   };
 
   return (
-    <div className="mx-0 md:mx-4 lg:mx-8 xl:mx-12 2xl:mx-16 transition-all duration-300">
+    <div className="container px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
         <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Événements</h1>
-          <p className="text-sm text-muted-foreground">
-            Gérez vos événements et leur programmation
-          </p>
+          <DashboardPageHeader
+            title="Gestion des événements"
+            description="Gérez vos événements et leur programmation."
+          />
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -277,7 +274,9 @@ export default function Evenements() {
         </Dialog>
       </div>
 
-      {events.length === 0 ? (
+      {loading ? (
+        <LoadingState />
+      ) : events.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="space-y-4">

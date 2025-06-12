@@ -20,8 +20,8 @@ export default function RootLayout({
     <html lang="en">
       <Analytics />
       <body className={inter.className}>
-        <Providers>{children}</Providers>
         <Toaster position="top-right" richColors />
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

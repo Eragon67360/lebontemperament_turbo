@@ -26,14 +26,6 @@ export const metadata: Metadata = {
   },
 };
 
-// function truncateText(text: string, limit: number) {
-//   const wordArray = text.split(' ');
-//   if (wordArray.length > limit) {
-//     return wordArray.slice(0, limit).join(' ') + '...';
-//   }
-//   return text;
-// }
-
 const Projets = () => {
   return <ConcertsClient />;
 };
