@@ -111,19 +111,27 @@ const Navigation = () => {
         maxWidth="full"
         onMenuOpenChange={setIsMenuOpen}
         className="bg-background/50"
+        role="navigation"
+        aria-label="Navigation principale"
       >
         <NavbarMenuToggle
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-expanded={isMenuOpen}
+          aria-controls="main-menu"
           className="lg:hidden"
         />
         <NavbarBrand>
-          <Link href={RouteNames.ROOT}>
+          <Link
+            href={RouteNames.ROOT}
+            aria-label="Aller à l'accueil - Le Bon Tempérament"
+          >
             <Image
               src={"/img/picto.svg"}
-              className="hover:opacity-85"
-              alt={"BT Logo"}
+              className="hover:opacity-85 transition-opacity"
+              alt="Logo Le Bon Tempérament"
               width={64}
               height={64}
+              priority
             />
           </Link>
         </NavbarBrand>
@@ -133,18 +141,19 @@ const Navigation = () => {
         <NavbarContent justify="end">
           {user ? (
             <div className="flex items-center gap-4">
-              <Tooltip content="Accéder au drive">
+              <Tooltip content="Accéder au drive Google">
                 <Link
                   href={
                     "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
                   }
                   target="_blank"
-                  rel="noopener"
-                  className="bg-primary/20 rounded-md h-full size-8 p-2 hover:bg-primary/40 shrink-0"
+                  rel="noopener noreferrer"
+                  aria-label="Ouvrir le drive Google dans un nouvel onglet"
+                  className="bg-primary/20 rounded-md h-full size-8 p-2 hover:bg-primary/40 shrink-0 transition-colors"
                 >
                   <CloudinaryImage
                     src={"Site/membres/logos/drive"}
-                    alt="Drive icon"
+                    alt="Icône Google Drive"
                     width={16}
                     height={16}
                     rounded={RoundedSize.NONE}
@@ -156,17 +165,24 @@ const Navigation = () => {
                 <PopoverTrigger
                   className="flex gap-1 items-center shrink-0 cursor-pointer"
                   disabled={isPending}
+                  aria-label="Menu utilisateur"
+                  aria-expanded="false"
                 >
                   <Avatar
                     className="h-8 w-8 rounded-lg"
                     src={user.user_metadata?.avatar_url}
+                    alt={`Avatar de ${userProfile?.display_name || user.email}`}
                   />
                 </PopoverTrigger>
-                <PopoverContent className="flex flex-col gap-2 items-start">
-                  <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm ">
+                <PopoverContent
+                  className="flex flex-col gap-2 items-start"
+                  aria-label="Options utilisateur"
+                >
+                  <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar
                       className="h-8 w-8 rounded-lg"
                       src={user.user_metadata?.avatar_url}
+                      alt={`Avatar de ${userProfile?.display_name || user.email}`}
                     />
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
@@ -181,8 +197,9 @@ const Navigation = () => {
                     onPress={() => setIsPasswordModalOpen(true)}
                     className="flex gap-1 items-center justify-start cursor-pointer w-full"
                     disabled={isPending}
+                    aria-label="Changer mon mot de passe"
                   >
-                    <FaKey className="mr-2 size-4" />
+                    <FaKey className="mr-2 size-4" aria-hidden="true" />
                     Changer mon mot de passe
                   </Button>
                   <Button
@@ -191,8 +208,9 @@ const Navigation = () => {
                     onPress={handleSignOut}
                     className="flex gap-1 items-center justify-start cursor-pointer w-full"
                     disabled={isPending}
+                    aria-label="Se déconnecter"
                   >
-                    <IoLogOut className="mr-2 size-4" />
+                    <IoLogOut className="mr-2 size-4" aria-hidden="true" />
                     {isPending ? "Déconnexion..." : "Se déconnecter"}
                   </Button>
                 </PopoverContent>
@@ -206,10 +224,10 @@ const Navigation = () => {
                 href={RouteNames.AUTH.LOGIN}
                 radius="sm"
                 color="primary"
-                aria-label="Voir nos concerts"
+                aria-label="Se connecter à l'espace membres"
                 disabled={isPending}
               >
-                <CiLock />
+                <CiLock aria-hidden="true" />
                 <div>Membres</div>
               </Button>
             )

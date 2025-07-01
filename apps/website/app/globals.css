@@ -2,17 +2,114 @@
 @import "tw-animate-css";
 @plugin '../hero.ts';
 @source '../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   * {
-    @apply border-border dark:border-neutral-700 focus-visible:ring-primary outline-primary;
+    @apply border-border focus-visible:ring-primary outline-primary;
   }
   body {
     @apply scroll-smooth;
   }
   html {
     @apply scroll-smooth;
+  }
+
+  /* Accessibility improvements */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Skip link styles */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border: 2px solid var(--color-primary);
+    border-radius: 0.25rem;
+    background: var(--color-primary);
+    color: white;
+    z-index: 9999;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    :root {
+      --color-primary: #000000;
+      --color-border: #000000;
+    }
+  }
+
+  /* Focus styles for interactive elements */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Improved link styles */
+  a {
+    transition: color 0.2s ease-in-out;
+  }
+
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  /* Better form element styles */
+  input,
+  textarea,
+  select {
+    transition:
+      border-color 0.2s ease-in-out,
+      box-shadow 0.2s ease-in-out;
+  }
+
+  /* Loading states */
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* Screen reader only text */
+  .sr-text {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 }
 
@@ -57,45 +154,6 @@
     --color-sidebar-accent-foreground: oklch(0.205 0 0);
     --color-sidebar-border: oklch(0.922 0 0);
     --color-sidebar-ring: oklch(0.708 0 0);
-  }
-
-  :root[data-theme="dark"] {
-    --radius: 0.625rem;
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
-    --color-background: oklch(0.16 0 0);
-    --color-foreground: oklch(0.95 0 0);
-    --color-card: oklch(0.2 0 0);
-    --color-card-foreground: oklch(0.95 0 0);
-    --color-popover: oklch(0.2 0 0);
-    --color-popover-foreground: oklch(0.95 0 0);
-    --color-primary: oklch(0.57 0.0911 200.74);
-    --color-primary-foreground: oklch(0.16 0 0);
-    --color-secondary: oklch(0.25 0 0);
-    --color-secondary-foreground: oklch(0.95 0 0);
-    --color-muted: oklch(0.25 0 0);
-    --color-muted-foreground: oklch(0.7 0 0);
-    --color-accent: oklch(0.25 0 0);
-    --color-accent-foreground: oklch(0.95 0 0);
-    --color-destructive: oklch(0.577 0.245 27.325);
-    --color-border: oklch(0.3 0 0);
-    --color-input: oklch(0.3 0 0);
-    --color-ring: oklch(0.4 0 0);
-    --color-chart-1: oklch(0.646 0.222 41.116);
-    --color-chart-2: oklch(0.6 0.118 184.704);
-    --color-chart-3: oklch(0.398 0.07 227.392);
-    --color-chart-4: oklch(0.828 0.189 84.429);
-    --color-chart-5: oklch(0.769 0.188 70.08);
-    --color-sidebar: oklch(0.18 0 0);
-    --color-sidebar-foreground: oklch(0.95 0 0);
-    --color-sidebar-primary: oklch(0.95 0 0);
-    --color-sidebar-primary-foreground: oklch(0.18 0 0);
-    --color-sidebar-accent: oklch(0.25 0 0);
-    --color-sidebar-accent-foreground: oklch(0.95 0 0);
-    --color-sidebar-border: oklch(0.3 0 0);
-    --color-sidebar-ring: oklch(0.4 0 0);
   } */;
 }
 
@@ -200,11 +258,10 @@
 }
 
 .custom-audio-player .rhap_controls-section {
-  margin-top: 0;
+  margin-top: 8px;
 }
 
 .custom-audio-player .rhap_time {
-  color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
 }
 
@@ -213,31 +270,26 @@
 }
 
 .custom-audio-player .rhap_progress-filled {
-  background-color: white;
+  background: white;
 }
 
 .custom-audio-player .rhap_progress-bar-show-download {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .custom-audio-player .rhap_volume-controls {
-  margin-left: 12px;
+  margin-left: 8px;
 }
 
-/* Add this to your CSS */
 @media (max-width: 768px) {
   .modal-open {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    overflow: hidden;
   }
 }
 
-/* Optional: Add smooth behavior for virtual keyboard */
 @media (max-width: 768px) {
   .modal-content {
-    transition: transform 0.3s ease-out;
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
   }
 }
