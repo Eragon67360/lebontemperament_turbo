@@ -2,6 +2,7 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { SocialPopover } from "@/components/SocialPopover";
+import Breadcrumb from "@/components/Breadcrumb";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -16,10 +17,14 @@ const roboto = Roboto({
   style: ["normal", "italic"],
   subsets: ["latin"],
   display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
 });
+
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be defined");
 }
+
 export const keyword = [
   "Classical music concerts in France",
   "Baroque music ensemble performances",
@@ -46,25 +51,59 @@ export const keyword = [
 export const metadata: Metadata = {
   metadataBase: new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/`),
   title: {
-    default: "Le Bon Tempérament",
+    default: "Le Bon Tempérament - Ensemble vocal et instrumental à Saverne",
     template: "%s | Le Bon Tempérament",
   },
   description:
     "Le Bon Tempérament est un ensemble vocal et instrumental renommé à Saverne, France. Rejoignez-nous pour des concerts captivants, opéras et plus encore. Découvrez nos CDs et nos événements à venir.",
   keywords: `${keyword.join(", ")}`,
+  authors: [{ name: "Le Bon Tempérament" }],
+  creator: "Le Bon Tempérament",
+  publisher: "Le Bon Tempérament",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     locale: "fr_FR",
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
     siteName: "Le Bon Tempérament",
+    title: "Le Bon Tempérament - Ensemble vocal et instrumental à Saverne",
+    description:
+      "Le Bon Tempérament est un ensemble vocal et instrumental renommé à Saverne, France. Rejoignez-nous pour des concerts captivants, opéras et plus encore.",
     images: [
       {
         url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
-        width: 800,
-        height: 600,
-        alt: "Le Bon Tempérament",
+        width: 1200,
+        height: 630,
+        alt: "Le Bon Tempérament - Ensemble vocal et instrumental",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Le Bon Tempérament - Ensemble vocal et instrumental à Saverne",
+    description:
+      "Le Bon Tempérament est un ensemble vocal et instrumental renommé à Saverne, France.",
+    images: [
+      "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
   },
 };
 
@@ -74,25 +113,43 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <html lang="fr">
+    <html lang="fr" className={roboto.className}>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#333333" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
+      <body className="bg-white">
         <Header />
-        <body className={roboto.className}>
-          <Providers>
-            <EasterEgg />
-            <main className="flex flex-col justify-center min-h-dvh bg-white dark:bg-neutral-800">
-              <Navigation />
-              {children}
-              <SocialPopover />
-              <Analytics />
-              <SpeedInsights />
-            </main>
-            <Footer />
-          </Providers>
-        </body>
+        <Providers>
+          <EasterEgg />
+
+          {/* Skip to main content link for accessibility */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            Aller au contenu principal
+          </a>
+
+          <main
+            id="main-content"
+            className="flex flex-col justify-center min-h-dvh"
+          >
+            <Navigation />
+            <Breadcrumb />
+            {children}
+            <SocialPopover />
+            <Analytics />
+            <SpeedInsights />
+          </main>
+          <Footer />
+        </Providers>
         <GoogleAnalytics gaId="G-J893T7P26M" />
         <GoogleTagManager gtmId="G-J893T7P26M" />
-      </html>
-    </>
+      </body>
+    </html>
   );
 }

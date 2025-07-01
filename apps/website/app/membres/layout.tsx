@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-screen w-screen bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-4 overflow-hidden">
+    <div className="h-screen w-screen bg-neutral-50 flex flex-col gap-4 overflow-hidden">
       <MembersLayoutHeader>
         <Suspense
           fallback={

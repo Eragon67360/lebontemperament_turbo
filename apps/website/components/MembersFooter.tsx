@@ -8,7 +8,6 @@ import {
 } from "@heroui/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import { ThemeSwitcher } from "./ThemeSwitcher";
 import { useEffect, useState } from "react";
 
 export const MembersFooter = () => {
@@ -69,8 +68,6 @@ export const MembersFooter = () => {
           </NavLink>
         ))}
       </div>
-
-      <ThemeSwitcher />
     </div>
   );
 };

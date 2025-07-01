@@ -8,13 +8,6 @@ const heroConfig: ReturnType<typeof createPlugin> = heroui({
         focus: "#1a878d",
       },
     },
-    dark: {
-      layout: {},
-      colors: {
-        primary: "#1a878d",
-        focus: "#1a878d",
-      },
-    },
   },
 });
 
