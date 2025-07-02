@@ -32,7 +32,7 @@ const Contact = () => {
   return (
     <div className="container mx-auto w-full flex flex-col h-screen">
       <div className="flex flex-col lg:flex-row justify-between">
-        <div className="py-16">
+        <div className="py-4 md:py-8 lg:py-16 px-8">
           <h1 className="text-title text-primary/50 font-light leading-none">
             Contact
           </h1>
