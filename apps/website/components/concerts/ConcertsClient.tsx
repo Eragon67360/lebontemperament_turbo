@@ -40,16 +40,36 @@ const ConcertsClient = () => {
       try {
         const response = await fetch("/api/prochains-concerts");
         const data = await response.json();
-        setConcerts(data);
+
+        // Filter concerts to only include future ones
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+
+        const futureConcerts = data.filter((concert: Concert) => {
+          const concertDate = new Date(concert.date);
+          return concertDate >= today;
+        });
+
+        setConcerts(futureConcerts);
       } finally {
         setLoading(false);
       }
     };
+
     const fetchEvents = async () => {
       try {
         const response = await fetch("/api/events");
         const data = await response.json();
-        setEvents(data.filter((event: Event) => event.is_public));
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const futurePublicEvents = data.filter((event: Event) => {
+          const eventDate = new Date(event.date_from);
+          return event.is_public && eventDate >= today;
+        });
+
+        setEvents(futurePublicEvents);
       } finally {
         setLoadingEvents(false);
       }
@@ -59,11 +79,21 @@ const ConcertsClient = () => {
       try {
         const response = await fetch("/api/rehearsals");
         const data = await response.json();
-        setRehearsals(data);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const futureRehearsals = data.filter((rehearsal: Rehearsal) => {
+          const rehearsalDate = new Date(rehearsal.date);
+          return rehearsalDate >= today;
+        });
+
+        setRehearsals(futureRehearsals);
       } finally {
         setLoadingRehearsals(false);
       }
     };
+
     fetchConcerts();
     fetchEvents();
     fetchRehearsals();
@@ -165,7 +195,7 @@ const ConcertsClient = () => {
                         {concert.context === "orchestre_et_choeur"
                           ? "Orchestre et Chœur"
                           : concert.context.charAt(0).toUpperCase() +
-                            concert.context.slice(1)}
+                          concert.context.slice(1)}
                       </span>
                     </div>
 
