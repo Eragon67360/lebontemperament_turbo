@@ -34,6 +34,7 @@ const DevTapButton = () => {
         color: "white",
         borderRadius: "5px",
         zIndex: 9999,
+        display: 'none'
       }}
     >
       Emulate Quad Tap
@@ -91,9 +92,9 @@ const CodeInput = ({
       animate={
         isError
           ? {
-              x: [-10, 10, -10, 10, 0],
-              transition: { duration: 0.4 },
-            }
+            x: [-10, 10, -10, 10, 0],
+            transition: { duration: 0.4 },
+          }
           : {}
       }
     >
@@ -109,11 +110,10 @@ const CodeInput = ({
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             className={`w-8 h-8 md:w-10 md:h-10 text-center border-2 rounded focus:outline-none uppercase transition-colors duration-200
-                ${
-                  isError
-                    ? "border-red-500 focus:border-red-600"
-                    : "border-gray-300 focus:border-primary"
-                }`}
+                ${isError
+                ? "border-red-500 focus:border-red-600"
+                : "border-gray-300 focus:border-primary"
+              }`}
           />
         ))}
     </motion.div>
@@ -208,10 +208,9 @@ export const EasterEgg = () => {
           className={`
             w-full max-w-[95vw] md:max-w-3xl
             fixed transform -translate-x-1/2
-            ${
-              isMobile()
-                ? "top-4 left-1/2"
-                : "top-1/2 left-1/2 -translate-y-1/2"
+            ${isMobile()
+              ? "top-4 left-1/2"
+              : "top-1/2 left-1/2 -translate-y-1/2"
             }
             md:rounded-lg
             bg-white
