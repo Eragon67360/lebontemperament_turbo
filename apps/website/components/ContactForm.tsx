@@ -49,7 +49,7 @@ const ContactForm = () => {
           return "";
       }
     },
-    []
+    [],
   );
 
   // Check form validity
@@ -61,7 +61,7 @@ const ContactForm = () => {
       !formData.email ||
         !formData.message ||
         Boolean(emailError) ||
-        Boolean(messageError)
+        Boolean(messageError),
     );
   }, [formData, validateField]);
 

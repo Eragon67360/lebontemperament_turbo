@@ -12,8 +12,8 @@ interface BreadcrumbItem {
 const Breadcrumb = () => {
   const pathname = usePathname();
 
-  // Skip breadcrumb for home page
-  if (pathname === "/") {
+  // Skip breadcrumb for home page and members section
+  if (pathname === "/" || pathname.startsWith("/membres")) {
     return null;
   }
 
