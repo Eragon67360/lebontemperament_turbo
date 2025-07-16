@@ -32,14 +32,14 @@ export default function PrivacyPolicy() {
       <Head>
         <title>Politique de confidentialité - Le Bon Temperament</title>
       </Head>
-      <main className="max-w-4xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl xl:text-4xl font-bold mb-12 text-primary/90">
+      <main className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <h1 className="text-primary/90 mb-12 text-2xl font-bold xl:text-4xl">
           Politique de confidentialité
         </h1>
 
         <div className="space-y-8">
           <section className="border-b border-gray-200 pb-8">
-            <h2 className="text-lg xl:text-2xl font-semibold mb-6 text-primary/80">
+            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Introduction
             </h2>
             <p className="text-gray-800">
@@ -51,10 +51,10 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="border-b border-gray-200 pb-8">
-            <h2 className="text-lg xl:text-2xl font-semibold mb-6 text-primary/80">
+            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Informations que nous recueillons
             </h2>
-            <p className="text-gray-800 mb-4">
+            <p className="mb-4 text-gray-800">
               Nous recueillons différents types d&apos;informations pour divers
               objectifs, y compris pour vous fournir et améliorer notre service.
             </p>
@@ -71,10 +71,10 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="border-b border-gray-200 pb-8">
-            <h2 className="text-lg xl:text-2xl font-semibold mb-6 text-primary/80">
+            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Utilisation des données
             </h2>
-            <p className="text-gray-800 mb-4">
+            <p className="mb-4 text-gray-800">
               Nous utilisons les données recueillies pour divers objectifs, tels
               que :
             </p>
@@ -91,7 +91,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="border-b border-gray-200 pb-8">
-            <h2 className="text-lg xl:text-2xl font-semibold mb-6 text-primary/80">
+            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Partage des données
             </h2>
             <p className="text-gray-800">
@@ -104,7 +104,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-lg xl:text-2xl font-semibold mb-6 text-primary/80">
+            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Vos droits
             </h2>
             <p className="text-gray-800">

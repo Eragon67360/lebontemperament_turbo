@@ -22,7 +22,7 @@ const ButtonWithToast: React.FC<ButtonWithToastProps> = ({
   return (
     <button
       onClick={handleClick}
-      className="w-2/5 lg:w-1/5 rounded-r-lg bg-gradient-to-r from-primary to-[#00F1AE] text-white font-bold text-xs md:text-sm lg:text-base"
+      className="from-primary w-2/5 rounded-r-lg bg-gradient-to-r to-[#00F1AE] text-xs font-bold text-white md:text-sm lg:w-1/5 lg:text-base"
     >
       S&apos;abonner
     </button>

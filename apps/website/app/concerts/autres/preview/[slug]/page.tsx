@@ -37,8 +37,8 @@ export default function Preview() {
   if (!cd) {
     return (
       <>
-        <div className="flex flex-col justify-center items-center">
-          <h2 className="font-bold text-xl">
+        <div className="flex flex-col items-center justify-center">
+          <h2 className="text-xl font-bold">
             {" "}
             Les données de ce CD n&apos;ont pas pu être trouvées, nous en sommes
             désolés
@@ -51,25 +51,25 @@ export default function Preview() {
     );
   }
   return (
-    <div className="container mx-auto pt-8 my-8 space-y-8 h-full">
-      <h1 className="text-xl md:text-3xl lg:text-5xl font-bold mb-4 mx-auto text-center">
+    <div className="container mx-auto my-8 h-full space-y-8 pt-8">
+      <h1 className="mx-auto mb-4 text-center text-xl font-bold md:text-3xl lg:text-5xl">
         {cd.title} | Le Bon Tempérament
       </h1>
 
-      <div className="flex flex-col lg:flex-row gap-8 h-full">
+      <div className="flex h-full flex-col gap-8 lg:flex-row">
         <CloudinaryImage
           src={cd.image}
           alt={cd.title}
-          className="h-[300px] md:h-[400px] lg:h-[600px] object-cover mb-4 mx-auto border border-black"
+          className="mx-auto mb-4 h-[300px] border border-black object-cover md:h-[400px] lg:h-[600px]"
           width={1000}
           height={400}
           rounded={RoundedSize.NONE}
         />
 
-        <div className="flex flex-col gap-4 justify-between h-full lg:h-[600px] w-full px-8 lg:px-0">
+        <div className="flex h-full w-full flex-col justify-between gap-4 px-8 lg:h-[600px] lg:px-0">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col lg:flex-row gap-8 justify-between items-center w-full">
-              <div className="flex gap-4 w-full">
+            <div className="flex w-full flex-col items-center justify-between gap-8 lg:flex-row">
+              <div className="flex w-full gap-4">
                 <Avatar size="lg" src="/img/picto.svg" />
                 <div className="flex-col">
                   <h2 className="font-bold">Le Bon Tempérament</h2>
@@ -77,8 +77,8 @@ export default function Preview() {
                 </div>
               </div>
             </div>
-            <p className="text-gray-600 mb-4">{cd.description}</p>
-            <p className="text-lg font-bold mb-4">
+            <p className="mb-4 text-gray-600">{cd.description}</p>
+            <p className="mb-4 text-lg font-bold">
               {new Intl.NumberFormat("fr-FR", {
                 style: "currency",
                 currency: cd.currency,
@@ -91,14 +91,14 @@ export default function Preview() {
           </div>
 
           <div className="flex flex-col">
-            <h2 className="text-2xl font-semibold mb-4">Extraits</h2>
+            <h2 className="mb-4 text-2xl font-semibold">Extraits</h2>
             <ul className="mb-4">
               {cd.tracks.length !== 0 ? (
                 <>
                   {cd.tracks.map((track, index) => (
                     <li key={index} className="mb-2">
                       <strong>{track.title}</strong> - {track.duration}
-                      <audio controls className="w-full mt-2">
+                      <audio controls className="mt-2 w-full">
                         <source src={track.sampleUrl} type="audio/mpeg" />
                         Votre navigateur ne supporte pas l&apos;élément audio.
                       </audio>
@@ -112,7 +112,7 @@ export default function Preview() {
           </div>
           <Link
             href={cd.payment}
-            className="w-full h-12 flex items-center justify-between font-bold text-white bg-primary rounded hover:bg-primary/80 uppercase transition-all duration-200 hover:shadow-md"
+            className="bg-primary hover:bg-primary/80 flex h-12 w-full items-center justify-between rounded font-bold text-white uppercase transition-all duration-200 hover:shadow-md"
           >
             <p className="w-full text-center">Acheter ce CD</p>
           </Link>

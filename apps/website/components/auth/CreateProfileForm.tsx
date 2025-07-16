@@ -104,7 +104,7 @@ export default function CreateProfileForm() {
 
   if (invalidLink) {
     return (
-      <div className="flex flex-col items-center gap-4 text-center text-destructive">
+      <div className="text-destructive flex flex-col items-center gap-4 text-center">
         <h1 className="text-2xl font-bold">
           Oups ! Le lien n&apos;est pas valide 😕
         </h1>
@@ -133,7 +133,7 @@ export default function CreateProfileForm() {
         <h1 className="text-2xl font-bold">
           Bienvenue dans l&apos;équipe ! 🎉
         </h1>
-        <p className="text-balance text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm text-balance">
           Choisis un mot de passe qui en jette !
         </p>
       </div>

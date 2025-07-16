@@ -9,10 +9,10 @@ import { Suspense, useEffect } from "react";
 import { IoArrowBack, IoMusicalNotes } from "react-icons/io5";
 
 const LoadingSpinner = () => (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background">
-    <div className="relative w-16 h-16">
-      <div className="absolute top-0 left-0 w-full h-full border-4 border-primary/20 rounded-full"></div>
-      <div className="absolute top-0 left-0 w-full h-full border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+  <div className="bg-background fixed inset-0 z-[9999] flex items-center justify-center">
+    <div className="relative h-16 w-16">
+      <div className="border-primary/20 absolute top-0 left-0 h-full w-full rounded-full border-4"></div>
+      <div className="border-primary absolute top-0 left-0 h-full w-full animate-spin rounded-full border-4 border-t-transparent"></div>
     </div>
   </div>
 );
@@ -33,7 +33,7 @@ export default function LoginPage() {
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <div className="fixed inset-0 z-[9999] bg-background">
+      <div className="bg-background fixed inset-0 z-[9999]">
         {/* Return Button */}
         <Button
           isIconOnly
@@ -41,13 +41,13 @@ export default function LoginPage() {
           className="absolute top-4 left-4 z-50"
           onClick={() => router.push("/")}
         >
-          <IoArrowBack className="w-6 h-6" />
+          <IoArrowBack className="h-6 w-6" />
         </Button>
 
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-primary/5">
+        <div className="from-background to-primary/5 flex min-h-screen flex-col items-center justify-center bg-gradient-to-b p-4">
           <div className="w-full max-w-md">
             {/* Logo Section */}
-            <div className="text-center mb-8">
+            <div className="mb-8 text-center">
               <div className="inline-block">
                 <Image
                   src="/img/picto.svg"
@@ -57,21 +57,21 @@ export default function LoginPage() {
                   className="mx-auto mb-4"
                 />
               </div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-foreground text-2xl font-bold">
                 Le Bon Tempérament
               </h1>
-              <p className="text-sm text-foreground/60 mt-2">Espace membres</p>
+              <p className="text-foreground/60 mt-2 text-sm">Espace membres</p>
             </div>
 
             {/* Login Card */}
-            <Card className="bg-background/60 backdrop-blur-lg border border-foreground/10">
-              <CardHeader className="flex gap-3 pb-2 pt-6 px-8">
-                <div className="p-2 bg-primary/10 rounded-md">
-                  <IoMusicalNotes className="w-5 h-5 text-primary" />
+            <Card className="bg-background/60 border-foreground/10 border backdrop-blur-lg">
+              <CardHeader className="flex gap-3 px-8 pt-6 pb-2">
+                <div className="bg-primary/10 rounded-md p-2">
+                  <IoMusicalNotes className="text-primary h-5 w-5" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">Connexion</h2>
-                  <p className="text-sm text-foreground/60">
+                  <p className="text-foreground/60 text-sm">
                     Accédez à votre espace personnel
                   </p>
                 </div>
@@ -82,7 +82,7 @@ export default function LoginPage() {
             </Card>
 
             {/* Footer */}
-            <div className="mt-8 text-center text-sm text-foreground/60">
+            <div className="text-foreground/60 mt-8 text-center text-sm">
               <p>
                 © {new Date().getFullYear()} Le Bon Tempérament. Tous droits
                 réservés.
@@ -92,8 +92,8 @@ export default function LoginPage() {
 
           {/* Background Decoration */}
           <div className="fixed inset-0 -z-10 overflow-hidden">
-            <div className="absolute -top-1/2 -right-1/2 w-full h-full rotate-12 bg-primary/5 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-1/2 -left-1/2 w-full h-full -rotate-12 bg-primary/5 rounded-full blur-3xl"></div>
+            <div className="bg-primary/5 absolute -top-1/2 -right-1/2 h-full w-full rotate-12 rounded-full blur-3xl"></div>
+            <div className="bg-primary/5 absolute -bottom-1/2 -left-1/2 h-full w-full -rotate-12 rounded-full blur-3xl"></div>
           </div>
         </div>
       </div>

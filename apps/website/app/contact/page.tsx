@@ -30,38 +30,38 @@ export const metadata: Metadata = {
 
 const Contact = () => {
   return (
-    <div className="container mx-auto w-full flex flex-col h-screen">
-      <div className="flex flex-col lg:flex-row justify-between">
-        <div className="py-4 md:py-8 lg:py-16 px-8">
-          <h1 className="text-title text-primary/50 font-light leading-none">
+    <div className="container mx-auto flex h-screen w-full flex-col">
+      <div className="flex flex-col justify-between lg:flex-row">
+        <div className="px-8 py-4 md:py-8 lg:py-16">
+          <h1 className="text-title text-primary/50 leading-none font-light">
             Contact
           </h1>
-          <h2 className="text-title text-[#333] font-bold leading-none">
+          <h2 className="text-title leading-none font-bold text-[#333]">
             Informations
           </h2>
           <hr className="mt-8" />
-          <h3 className="font-bold mt-8">Où nous trouver</h3>
+          <h3 className="mt-8 font-bold">Où nous trouver</h3>
           <p>
             3 Rue Clemenceau,
             <br />
             67700 SAVERNE, France
           </p>
-          <h3 className="font-bold mt-2">Email</h3>
+          <h3 className="mt-2 font-bold">Email</h3>
           <a href="mailto:lebontemperament@gmail.com">
             lebontemperament@gmail.com
           </a>
-          <h3 className="font-bold mt-2">Téléphone</h3>
+          <h3 className="mt-2 font-bold">Téléphone</h3>
           <a href="tel:+33952395789">(+33) 09 52 39 57 89</a>
         </div>
 
-        <div className="hidden lg:flex flex-wrap ml-[178px] w-1/2">
+        <div className="ml-[178px] hidden w-1/2 flex-wrap lg:flex">
           <Map />
         </div>
       </div>
 
-      <div className="my-20 shadow-lg rounded-lg bg-[#F2F2F2] flex flex-col p-8 w-full lg:w-1/2">
+      <div className="my-20 flex w-full flex-col rounded-lg bg-[#F2F2F2] p-8 shadow-lg lg:w-1/2">
         <div className="flex gap-8 py-4 lg:py-12">
-          <div className="w-1/2 scale-125 items-center justify-center hidden lg:flex">
+          <div className="hidden w-1/2 scale-125 items-center justify-center lg:flex">
             <svg
               width="191"
               height="142"
@@ -234,18 +234,18 @@ const Contact = () => {
             </svg>
           </div>
 
-          <div className="w-full lg:w-1/2 flex flex-col">
-            <div className="font-extrabold uppercase text-[18px]">
+          <div className="flex w-full flex-col lg:w-1/2">
+            <div className="text-[18px] font-extrabold uppercase">
               Recevez notre
             </div>
-            <div className="font-extrabold uppercase text-[32px] bg-gradient-to-r from-primary to-[#00F1AE] inline-block text-transparent bg-clip-text">
+            <div className="from-primary inline-block bg-gradient-to-r to-[#00F1AE] bg-clip-text text-[32px] font-extrabold text-transparent uppercase">
               Newsletter
             </div>
             <div className="mt-8">
               Les dernières nouvelles du Bon Tempérament dans votre boite
               mail.{" "}
             </div>
-            <div className="font-extrabold text-lg">Abonnez-vous !</div>
+            <div className="text-lg font-extrabold">Abonnez-vous !</div>
           </div>
         </div>
         <Subscribe />

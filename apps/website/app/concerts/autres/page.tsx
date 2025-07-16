@@ -29,13 +29,13 @@ export const metadata: Metadata = {
 
 const page = () => {
   return (
-    <div className=" container mx-auto w-full flex flex-col pb-8">
+    <div className="container mx-auto flex w-full flex-col pb-8">
       <div className="py-16">
         <div>
-          <h1 className="text-title text-primary/50 font-light leading-none">
+          <h1 className="text-title text-primary/50 leading-none font-light">
             Concerts
           </h1>
-          <h2 className="text-title text-[#333] font-bold leading-none">CDs</h2>
+          <h2 className="text-title leading-none font-bold text-[#333]">CDs</h2>
           <hr className="mt-8" />
         </div>
       </div>

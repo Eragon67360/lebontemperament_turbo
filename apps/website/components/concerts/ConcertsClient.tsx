@@ -1,7 +1,5 @@
-// app/concerts/ConcertsClient.tsx (Client Component)
 "use client";
 
-import CloudinaryImage from "@/components/CloudinaryImage";
 import projects from "@/public/json/projects.json";
 import { Concert } from "@/types/concerts";
 import { Event } from "@/types/events";
@@ -19,84 +17,56 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { IoIosArrowRoundForward } from "react-icons/io";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { IoIosArrowRoundDown, IoIosArrowRoundForward } from "react-icons/io";
 import { IoCalendarClear, IoLocationSharp, IoTime } from "react-icons/io5";
+import CloudinaryImage from "../CloudinaryImage";
 
 const ConcertsClient = () => {
-  const [concerts, setConcerts] = useState<Concert[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [rehearsals, setRehearsals] = useState<Rehearsal[]>([]);
+  const [concerts, setConcerts] = useState<Array<Concert>>([]);
+  const [events, setEvents] = useState<Array<Event>>([]);
+  const [rehearsals, setRehearsals] = useState<Array<Rehearsal>>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingEvents, setLoadingEvents] = useState(true);
-  const [loadingRehearsals, setLoadingRehearsals] = useState(true);
   const [selectedConcertImage, setSelectedConcertImage] = useState<
     string | null
   >(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   useEffect(() => {
-    const fetchConcerts = async () => {
+    const fetchData = async (
+      endpoint: string,
+      setState:
+        | Dispatch<SetStateAction<Concert[]>>
+        | Dispatch<SetStateAction<Event[]>>
+        | Dispatch<SetStateAction<Rehearsal[]>>,
+    ) => {
       try {
-        const response = await fetch("/api/prochains-concerts");
+        const response = await fetch(endpoint);
         const data = await response.json();
-
-        // Filter concerts to only include future ones
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+        today.setHours(0, 0, 0, 0);
 
-        const futureConcerts = data.filter((concert: Concert) => {
-          const concertDate = new Date(concert.date);
-          return concertDate >= today;
-        });
+        const futureItems = data.filter(
+          (item: {
+            date: number | string | Date;
+            date_from: number | string | Date;
+          }) => {
+            const itemDate = new Date(item.date || item.date_from);
+            return itemDate >= today;
+          },
+        );
 
-        setConcerts(futureConcerts);
+        setState(futureItems);
+      } catch (error) {
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch("/api/events");
-        const data = await response.json();
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const futurePublicEvents = data.filter((event: Event) => {
-          const eventDate = new Date(event.date_from);
-          return event.is_public && eventDate >= today;
-        });
-
-        setEvents(futurePublicEvents);
-      } finally {
-        setLoadingEvents(false);
-      }
-    };
-
-    const fetchRehearsals = async () => {
-      try {
-        const response = await fetch("/api/rehearsals");
-        const data = await response.json();
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const futureRehearsals = data.filter((rehearsal: Rehearsal) => {
-          const rehearsalDate = new Date(rehearsal.date);
-          return rehearsalDate >= today;
-        });
-
-        setRehearsals(futureRehearsals);
-      } finally {
-        setLoadingRehearsals(false);
-      }
-    };
-
-    fetchConcerts();
-    fetchEvents();
-    fetchRehearsals();
+    fetchData("/api/prochains-concerts", setConcerts);
+    fetchData("/api/events", setEvents);
+    fetchData("/api/rehearsals", setRehearsals);
   }, []);
 
   const handleImageClick = (imageUrl: string) => {
@@ -105,102 +75,154 @@ const ConcertsClient = () => {
   };
 
   return (
-    <div className="flex w-full container mx-auto flex-col px-8">
-      <div className="py-16">
-        <div>
-          <h1 className="text-title font-light leading-none text-primary/50">
-            Nos
-          </h1>
-          <h2 className="text-title font-bold leading-none text-[#333]">
-            Concerts
-          </h2>
+    <div className="flex w-full flex-col items-center">
+      {/* Hero Section */}
+      <section className="flex w-full justify-center bg-white py-16">
+        <div className="w-full max-w-[1440px] px-8 lg:px-24">
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-title text-primary/50 leading-none font-light">
+                Nos
+              </h1>
+              <h2 className="text-title leading-none font-bold text-[#333]">
+                Concerts
+              </h2>
+            </div>
+            <button
+              onClick={() => {
+                const el = document.getElementById("projects-section");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="flex items-center justify-center gap-2 rounded-lg border-none bg-transparent p-2 text-xl font-light text-gray-400 hover:text-gray-500 md:text-2xl lg:text-3xl"
+              aria-label="Voir les projets"
+            >
+              <span>Voir projets</span>
+              <IoIosArrowRoundDown />
+            </button>
+          </div>
           <hr className="mt-8" />
         </div>
+      </section>
 
-        <div className="my-8">
-          <h3 className="text-xl font-bold mb-8">Prochains concerts :</h3>
+      {/* Main Content Container */}
+      <div className="mx-0 flex w-full max-w-[1440px] flex-col">
+        {/* Upcoming Concerts Section with Bento Layout */}
+        <section
+          className="w-full bg-gray-100 px-8 py-16 lg:px-24"
+          aria-labelledby="upcoming-concerts-title"
+        >
+          <h2
+            id="upcoming-concerts-title"
+            className="text-primary/50 text-title mb-14 leading-none font-light"
+          >
+            Prochains concerts
+          </h2>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="h-48 bg-gray-200 rounded-t-lg"></div>
-                  <div className="p-4 space-y-3 bg-gray-100 rounded-b-lg">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-48 rounded-lg bg-gray-200"></div>
+                  <div className="mt-4 space-y-3 rounded-lg bg-gray-100 p-4">
+                    <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
+                    <div className="h-4 w-2/3 rounded bg-gray-200"></div>
                   </div>
                 </div>
               ))}
             </div>
+          ) : concerts.length === 0 ? (
+            <div className="py-8 text-center text-gray-500">
+              Aucun concert à venir
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-6">
               {concerts.map((concert, index) => (
                 <div
-                  key={index}
-                  className="bg-white rounded-lg border border-black/5 overflow-hidden transition-all shadow-md hover:shadow-lg duration-300 transform-gpu"
+                  key={concert.id}
+                  className={`relative flex flex-col overflow-hidden rounded-lg border border-black/5 bg-white p-4 shadow-none transition-all duration-300 hover:shadow-md ${
+                    index === 0 ? "col-span-2 row-span-2" : "!h-full"
+                  }`}
+                  style={{
+                    gridArea: index === 0 ? "span 2 / span 2" : "auto",
+                  }}
                 >
                   {concert.affiche ? (
                     <Tooltip content="Cliquez pour agrandir">
                       <Image
                         src={concert.affiche}
                         alt={concert.name || "Affiche du concert"}
-                        width={400}
-                        height={200}
+                        width={200}
+                        height={600}
                         onClick={() =>
                           handleImageClick(concert.affiche as string)
                         }
-                        className="w-full h-48 object-cover cursor-pointer"
+                        className={`cursor-pointer !rounded-lg object-center ${
+                          index === 0
+                            ? "!h-[600px] !w-auto object-contain"
+                            : "!h-48 !w-full object-cover"
+                        }`} // Allow full height for the first item
+                        style={{
+                          flexGrow: index === 0 ? 1 : 0, // Allow the image to grow in the first item
+                        }}
                       />
                     </Tooltip>
                   ) : (
-                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                    <div
+                      className={`flex w-full items-center justify-center ${
+                        index === 0 ? "h-full" : "h-48"
+                      } bg-gray-200`}
+                    >
                       <span className="text-gray-400">
                         Aucune affiche disponible
                       </span>
                     </div>
                   )}
-
-                  <div className="p-4 space-y-3">
-                    <h4 className="font-semibold text-lg text-gray-800 line-clamp-2">
+                  <div
+                    className={`flex flex-1 flex-col justify-start space-y-3 p-4 ${
+                      index === 0 ? "h-auto" : ""
+                    }`}
+                  >
+                    <h4 className="line-clamp-2 text-lg font-semibold text-gray-800">
                       {concert.name ||
-                        `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })} à ${concert.place}`}
+                        `Concert du ${format(
+                          new Date(concert.date),
+                          "dd MMMM yyyy",
+                          {
+                            locale: fr,
+                          },
+                        )} à ${concert.place}`}
                     </h4>
-
                     <div className="space-y-2 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
-                        <IoCalendarClear className="text-primary" />
+                        <IoCalendarClear className="text-primary shrink-0" />
                         <span>
                           {format(new Date(concert.date), "dd MMMM yyyy", {
                             locale: fr,
                           })}
                         </span>
                       </div>
-
                       <div className="flex items-center gap-2">
-                        <IoTime className="text-primary" />
+                        <IoTime className="text-primary shrink-0" />
                         <span>
                           {concert.time.slice(0, 5).replace(":", "h")}
                         </span>
                       </div>
-
                       <div className="flex items-center gap-2">
-                        <IoLocationSharp className="text-primary" />
+                        <IoLocationSharp className="text-primary shrink-0" />
                         <span className="font-medium">{concert.place}</span>
                       </div>
                     </div>
-
                     <div className="pt-2">
-                      <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
                         {concert.context === "orchestre_et_choeur"
                           ? "Orchestre et Chœur"
                           : concert.context.charAt(0).toUpperCase() +
-                          concert.context.slice(1)}
+                            concert.context.slice(1)}
                       </span>
                     </div>
-
                     {concert.additional_informations && (
-                      <p className="text-sm text-gray-500 italic whitespace-pre-wrap">
+                      <p className="text-sm whitespace-pre-wrap text-gray-500 italic">
                         {concert.additional_informations}
                       </p>
                     )}
@@ -209,39 +231,141 @@ const ConcertsClient = () => {
               ))}
             </div>
           )}
-        </div>
-        <div className="my-8">
-          <h3 className="text-xl font-bold mb-8">Autres événements:</h3>
+        </section>
 
-          {loadingEvents ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Projects Section */}
+        <section
+          id="projects-section"
+          className="w-full bg-white px-8 py-16 lg:px-24"
+          aria-labelledby="projects-title"
+        >
+          <h2
+            id="projects-title"
+            className="text-primary/50 text-title mb-14 leading-none font-light"
+          >
+            Nos projets
+          </h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((projet) => (
+              <div
+                className="flex flex-col overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md"
+                key={projet.slug}
+              >
+                <Link
+                  href={`/concerts/${projet.slug}`}
+                  className="relative block h-48 w-full"
+                >
+                  <CloudinaryImage
+                    src={projet.banniere}
+                    alt={`Image bannière ${projet.name} ${projet.subName}`}
+                    className="h-full w-full object-cover object-left"
+                    width={1000}
+                    height={500}
+                    rounded={RoundedSize.NONE}
+                  />
+                </Link>
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                  <h3 className="line-clamp-2 text-lg font-semibold text-gray-800">
+                    {projet.name} {projet.subName}
+                  </h3>
+                  <p
+                    className="line-clamp-4 flex-1 overflow-hidden text-sm text-gray-500"
+                    dangerouslySetInnerHTML={{ __html: projet.explanation }}
+                  ></p>
+                  <div className="flex">
+                    <Link
+                      href={`/concerts/${projet.slug}`}
+                      aria-label={`Lien vers ${projet.name} ${projet.subName}`}
+                      className="bg-primary flex items-center justify-start space-x-[18px] rounded-lg px-[20px] py-[10px] text-xs tracking-[2.4px] text-white uppercase transition-all hover:bg-[#333]"
+                    >
+                      <span>Voir plus</span>
+                      <IoIosArrowRoundForward className="scale-110" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="flex flex-col overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md">
+              <Link
+                href={`/concerts/autres`}
+                className="relative block h-48 w-full"
+              >
+                <CloudinaryImage
+                  src={"Site/concerts/bannieres/2022"}
+                  alt={`Image bannière autres concerts`}
+                  className="h-full w-full object-cover object-center"
+                  width={1000}
+                  height={500}
+                  rounded={RoundedSize.NONE}
+                />
+              </Link>
+              <div className="flex flex-1 flex-col gap-4 p-4">
+                <h3 className="line-clamp-2 text-lg font-semibold text-gray-800">
+                  Autres concerts
+                </h3>
+                <p className="line-clamp-4 flex-1 overflow-hidden text-sm text-gray-500">
+                  Découvrez notre riche histoire musicale avec la section dédiée
+                  aux concerts antérieurs à 2022 du Bon Tempérament. Revivez les
+                  moments forts et explorez les performances mémorables qui ont
+                  marqué notre parcours artistique, témoignant de notre passion
+                  et de notre engagement envers la musique classique.
+                </p>
+                <div className="flex">
+                  <Link
+                    href={`/concerts/autres`}
+                    aria-label={`Lien vers autres projets`}
+                    className="bg-primary flex items-center justify-start space-x-[18px] rounded-lg px-[20px] py-[10px] text-xs tracking-[2.4px] text-white uppercase transition-all hover:bg-[#333]"
+                  >
+                    <span>Voir plus</span>
+                    <IoIosArrowRoundForward className="scale-110" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Other Events Section */}
+        <section
+          className="w-full bg-white px-8 py-16 lg:px-24"
+          aria-labelledby="other-events-title"
+        >
+          <h2
+            id="other-events-title"
+            className="text-primary/50 text-title mb-14 leading-none font-light"
+          >
+            Autres événements
+          </h2>
+
+          {loading ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="p-4 space-y-3 bg-gray-100 rounded-lg">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  <div className="space-y-3 rounded-lg bg-gray-100 p-4">
+                    <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
+                    <div className="h-4 w-2/3 rounded bg-gray-200"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : events.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="py-8 text-center text-gray-500">
               Aucun événement public à venir
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className="bg-white rounded-lg border border-black/5 overflow-hidden transition-all shadow-md hover:shadow-lg duration-300 transform-gpu"
+                  className="overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md"
                 >
-                  <div className="p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-lg text-gray-800 line-clamp-2">
+                  <div className="space-y-3 p-4">
+                    <div className="flex items-start justify-between">
+                      <h4 className="line-clamp-2 text-lg font-semibold text-gray-800">
                         {event.title}
                       </h4>
-                      <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
                         {event.event_type === "concert"
                           ? "Concert"
                           : event.event_type === "repetition"
@@ -260,7 +384,11 @@ const ConcertsClient = () => {
                             locale: fr,
                           })}
                           {event.date_to &&
-                            ` au ${format(new Date(event.date_to), "dd MMMM yyyy", { locale: fr })}`}
+                            ` au ${format(
+                              new Date(event.date_to),
+                              "dd MMMM yyyy",
+                              { locale: fr },
+                            )}`}
                         </span>
                       </div>
 
@@ -276,7 +404,7 @@ const ConcertsClient = () => {
                     </div>
 
                     {event.description && (
-                      <p className="text-sm text-gray-500 whitespace-pre-wrap">
+                      <p className="text-sm whitespace-pre-wrap text-gray-500">
                         {event.description}
                       </p>
                     )}
@@ -286,7 +414,7 @@ const ConcertsClient = () => {
                         <Link
                           href={event.link}
                           target="_blank"
-                          className="text-primary hover:underline text-sm"
+                          className="text-primary text-sm hover:underline"
                         >
                           Plus d&apos;informations
                         </Link>
@@ -297,39 +425,49 @@ const ConcertsClient = () => {
               ))}
             </div>
           )}
-        </div>
-        <div className="my-8">
-          <h3 className="text-xl font-bold mb-8">Prochaines répétitions :</h3>
+        </section>
 
-          {loadingRehearsals ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Rehearsals Section */}
+        <section
+          className="w-full bg-gray-100 px-8 py-16 lg:px-24"
+          aria-labelledby="rehearsals-title"
+        >
+          <h2
+            id="rehearsals-title"
+            className="text-primary/50 text-title mb-14 leading-none font-light"
+          >
+            Prochaines répétitions
+          </h2>
+
+          {loading ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="p-4 space-y-3 bg-gray-100 rounded-lg">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  <div className="space-y-3 rounded-lg bg-gray-100 p-4">
+                    <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
+                    <div className="h-4 w-2/3 rounded bg-gray-200"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : rehearsals.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Aucune répétitioin à venir
+            <div className="py-8 text-center text-gray-500">
+              Aucune répétition à venir
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {rehearsals.map((rehearsal) => (
                 <div
                   key={rehearsal.id}
-                  className="bg-white rounded-lg border border-black/5 overflow-hidden transition-all shadow-md hover:shadow-lg duration-300 transform-gpu"
+                  className="overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md"
                 >
-                  <div className="p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-lg text-gray-800 line-clamp-2">
+                  <div className="space-y-3 p-4">
+                    <div className="flex items-start justify-between">
+                      <h4 className="line-clamp-2 text-lg font-semibold text-gray-800">
                         {rehearsal.name}
                       </h4>
-                      <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
                         {rehearsal.group_type}
                       </span>
                     </div>
@@ -362,118 +500,33 @@ const ConcertsClient = () => {
               ))}
             </div>
           )}
-        </div>
-
-        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-          <ModalContent className="lg:scale-125 lg:w-[800px]">
-            {() => (
-              <>
-                <ModalHeader>
-                  {selectedConcertImage && "Affiche du concert"}
-                </ModalHeader>
-                <ModalBody>
-                  {selectedConcertImage && (
-                    <div className="flex justify-center">
-                      <Image
-                        src={selectedConcertImage}
-                        alt="Concert poster"
-                        width={600}
-                        height={600}
-                        className="max-w-full max-h-[500px] object-contain"
-                      />
-                    </div>
-                  )}
-                </ModalBody>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
-        <div className="my-16 w-full h-px bg-gray-200" />
-        <div className="my-6 flex w-full flex-col gap-14">
-          {projects.map((projet) => (
-            <div
-              className="flex w-full flex-col bg-[#f2f2f2] lg:flex-row"
-              key={projet.slug}
-            >
-              <Link
-                href={`/concerts/${projet.slug}`}
-                className="w-full transition-all duration-200 hover:scale-95 hover:opacity-60 lg:w-[57%]"
-              >
-                <CloudinaryImage
-                  src={projet.banniere}
-                  alt={`Image bannière ${projet.name} ${projet.subName}`}
-                  className="h-full object-cover object-left"
-                  width={1000}
-                  height={500}
-                  rounded={RoundedSize.NONE}
-                />
-              </Link>
-
-              <div className="flex w-full flex-col justify-between gap-8 py-8 pl-8 pr-8 md:pr-12 lg:w-[43%] lg:pr-16">
-                <h2 className="text-lg font-light text-[#BDBDBD] md:text-2xl lg:text-[40px]">
-                  {projet.name} {projet.subName}
-                </h2>
-                <p
-                  className="w-full text-justify text-xs font-light text-black md:text-sm lg:text-base"
-                  dangerouslySetInnerHTML={{ __html: projet.explanation }}
-                ></p>
-                <div className="flex">
-                  <Link
-                    href={`/concerts/${projet.slug}`}
-                    aria-label={`Lien vers ${projet.name} ${projet.subName}`}
-                    className="flex items-center justify-start space-x-[18px] bg-white px-[20px] py-[18px] text-[#333] transition-all hover:bg-[#333] hover:text-[#F2F2F2]"
-                  >
-                    <span className="text-[12px] uppercase tracking-[2.4px]">
-                      Voir plus
-                    </span>
-                    <IoIosArrowRoundForward className="scale-110" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-          <div className="flex w-full flex-col bg-[#f2f2f2] lg:flex-row">
-            <Link
-              href={`/concerts/autres`}
-              className="w-full transition-all duration-200 hover:scale-95 hover:opacity-60 lg:w-[57%]"
-            >
-              <CloudinaryImage
-                src={"Site/concerts/bannieres/2022"}
-                alt={`Image bannière autres concerts`}
-                className="h-full w-full object-cover object-center"
-                width={1000}
-                height={500}
-                rounded={RoundedSize.NONE}
-              />
-            </Link>
-
-            <div className="flex w-full flex-col justify-between gap-8 py-8 pl-8 pr-16 lg:w-[43%]">
-              <h2 className="text-lg font-light text-[#BDBDBD] md:text-2xl lg:text-[40px]">
-                Autres concerts
-              </h2>
-              <p className="w-full text-justify text-xs font-light text-black md:text-sm lg:text-base">
-                Découvrez notre riche histoire musicale avec la section dédiée
-                aux concerts antérieurs à 2022 du Bon Tempérament. Revivez les
-                moments forts et explorez les performances mémorables qui ont
-                marqué notre parcours artistique, témoignant de notre passion et
-                de notre engagement envers la musique classique.
-              </p>
-              <div className="flex">
-                <Link
-                  href={`/concerts/autres`}
-                  aria-label={`Lien vers autres projets`}
-                  className="flex items-center justify-start space-x-[18px] bg-white px-[20px] py-[18px] text-[#333] transition-all hover:bg-[#333] hover:text-[#F2F2F2]"
-                >
-                  <span className="text-[12px] uppercase tracking-[2.4px]">
-                    Voir plus
-                  </span>
-                  <IoIosArrowRoundForward className="scale-110" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        </section>
       </div>
+
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent className="lg:w-[800px] lg:scale-125">
+          {() => (
+            <>
+              <ModalHeader>
+                {selectedConcertImage && "Affiche du concert"}
+              </ModalHeader>
+              <ModalBody>
+                {selectedConcertImage && (
+                  <div className="flex justify-center">
+                    <Image
+                      src={selectedConcertImage}
+                      alt="Concert poster"
+                      width={600}
+                      height={600}
+                      className="max-h-[500px] max-w-full object-contain"
+                    />
+                  </div>
+                )}
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

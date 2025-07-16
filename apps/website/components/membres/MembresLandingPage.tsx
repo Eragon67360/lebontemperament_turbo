@@ -93,17 +93,17 @@ export const MembresLandingPage = () => {
     active: {
       scale: 1.0,
     },
-  };
+  } as const;
 
   return (
-    <div className="container mx-auto w-full flex flex-col justify-center items-center h-full relative">
-      <div className="w-full flex flex-col items-center overflow-hidden">
+    <div className="relative container mx-auto flex h-full w-full flex-col items-center justify-center">
+      <div className="flex w-full flex-col items-center overflow-hidden">
         {" "}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="text-2xl md:text-3xl lg:text-5xl xl:text-7xl transition-[font-size] duration-400 text-center hyphens-auto font-extrabold bg-gradient-to-r from-primary via-foreground/50 to-purple-500 inline-block text-transparent bg-clip-text"
+          className="from-primary via-foreground/50 inline-block bg-gradient-to-r to-purple-500 bg-clip-text text-center text-2xl font-extrabold hyphens-auto text-transparent transition-[font-size] duration-400 md:text-3xl lg:text-5xl xl:text-7xl"
         >
           Bienvenue, <br />
           <motion.span
@@ -118,7 +118,7 @@ export const MembresLandingPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="text-sm md:text-base hyphens-auto text-foreground/50 mt-4 max-w-xl text-center"
+          className="text-foreground/50 mt-4 max-w-xl text-center text-sm hyphens-auto md:text-base"
         >
           Ici, tu peux retrouver tout ce qui est relatif à la vie du{" "}
           <b>Bon Tempérament</b>.<br /> Tu trouveras ci-dessous les liens les
@@ -128,9 +128,9 @@ export const MembresLandingPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 2 }}
-          className="container mx-auto mt-6 md:mt-10 lg:mt-16 w-full"
+          className="container mx-auto mt-6 w-full md:mt-10 lg:mt-16"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-4 w-full max-w-3xl mx-auto">
+          <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-2 md:gap-4 lg:grid-cols-2">
             {gridItems.map((item, index) => (
               <Link href={item.href} key={index} target={item.target}>
                 <motion.div
@@ -139,10 +139,10 @@ export const MembresLandingPage = () => {
                   animate="visible"
                   whileHover="hover"
                   whileTap="active"
-                  className="group relative overflow-hidden rounded-xl h-full"
+                  className="group relative h-full overflow-hidden rounded-xl"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
-                  <div className="relative z-10 px-3 py-2 md:px-4 md:py-5 lg:px-6 lg:py-8 bg-foreground/5 backdrop-blur-md group-hover:bg-background/10 transition-all h-full">
+                  <div className="from-primary/10 absolute inset-0 bg-gradient-to-r to-purple-500/10 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100"></div>
+                  <div className="bg-foreground/5 group-hover:bg-background/10 relative z-10 h-full px-3 py-2 backdrop-blur-md transition-all md:px-4 md:py-5 lg:px-6 lg:py-8">
                     <motion.p
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -150,7 +150,7 @@ export const MembresLandingPage = () => {
                         duration: 0.5,
                         delay: 0.3 + 0.2 * index,
                       }}
-                      className="font-bold text-primary text-sm md:text-base"
+                      className="text-primary text-sm font-bold md:text-base"
                     >
                       {item.title}
                     </motion.p>

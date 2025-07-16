@@ -46,13 +46,13 @@ const Membres = () => {
   );
 
   return (
-    <div className="p-2 md:p-4 lg:p-6 w-full">
-      <div className="bg-white rounded-xl shadow-sm">
+    <div className="w-full p-2 md:p-4 lg:p-6">
+      <div className="rounded-xl bg-white shadow-sm">
         {/* Header */}
-        <div className="p-4 lg:p-6 border-b">
+        <div className="border-b p-4 lg:p-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-md">
-              <IoPersonCircle className="w-5 h-5 text-primary" />
+            <div className="bg-primary/10 rounded-md p-2">
+              <IoPersonCircle className="text-primary h-5 w-5" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Membres</h2>
@@ -64,17 +64,17 @@ const Membres = () => {
         </div>
 
         {/* Search and Stats */}
-        <div className="p-4 lg:p-6 border-b">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="border-b p-4 lg:p-6">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="relative w-full sm:w-64">
               <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-2 focus:outline-none"
               />
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <FaSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
             </div>
             <div className="text-sm text-gray-500">
               {filteredData.length} membre{filteredData.length !== 1 && "s"}
@@ -87,7 +87,7 @@ const Membres = () => {
           {loading ? (
             <div className="animate-pulse space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-gray-100 rounded" />
+                <div key={i} className="h-12 rounded bg-gray-100" />
               ))}
             </div>
           ) : (
@@ -98,7 +98,7 @@ const Membres = () => {
                     {columns.map((column) => (
                       <th
                         key={column}
-                        className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="border-b px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                       >
                         {column}
                       </th>
@@ -109,12 +109,12 @@ const Membres = () => {
                   {filteredData.map((row, index) => (
                     <tr
                       key={index}
-                      className="hover:bg-gray-50 transition-colors"
+                      className="transition-colors hover:bg-gray-50"
                     >
                       {columns.map((column) => (
                         <td
                           key={column}
-                          className="whitespace-nowrap py-3 px-4 text-sm text-gray-900"
+                          className="px-4 py-3 text-sm whitespace-nowrap text-gray-900"
                         >
                           {row[column]}
                         </td>
@@ -125,7 +125,7 @@ const Membres = () => {
               </table>
 
               {filteredData.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
+                <div className="py-12 text-center text-gray-500">
                   Aucun résultat trouvé
                 </div>
               )}

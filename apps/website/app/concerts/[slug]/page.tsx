@@ -1,6 +1,5 @@
-import CloudinaryImage from "@/components/CloudinaryImage";
+import ConcertPageClient from "@/components/ConcertPageClient";
 import projects from "@/public/json/projects.json";
-import { RoundedSize } from "@/utils/types";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -56,71 +55,20 @@ const ProjectPage = async ({
 
   if (!project) {
     return (
-      <div>Ce concert n&apos;a pas pu être trouvé dans la base de données</div>
+      <main className="container mx-auto px-4 py-16">
+        <div role="status" aria-live="polite">
+          <h1 className="mb-4 text-2xl font-bold text-red-600">
+            Concert non trouvé
+          </h1>
+          <p className="text-gray-600">
+            Ce concert n&apos;a pas pu être trouvé dans la base de données.
+          </p>
+        </div>
+      </main>
     );
   }
 
-  return (
-    <>
-      <div className="container mx-auto w-full flex flex-col pb-8">
-        <div className="py-16">
-          <div>
-            <h1 className="text-title text-primary/50 font-light leading-none">
-              {project.name}
-            </h1>
-            <h2 className="text-title text-[#333] font-bold leading-none">
-              {project.subName}
-            </h2>
-            <hr className="mt-8" />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-12">
-          <div className="h-full">
-            <CloudinaryImage
-              src={project.banniere}
-              alt={project.name}
-              className="fill-image"
-              width={2000}
-              height={500}
-              rounded={RoundedSize.NONE}
-            />
-          </div>
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-0">
-            <div className="w-full lg:w-1/3 order-2 lg:order-1">
-              <CloudinaryImage
-                src={project.image2}
-                width={600}
-                alt={`Image de ${project.name} ${project.subName}`}
-                height={500}
-                rounded={RoundedSize.NONE}
-              />
-            </div>
-            <div
-              className="w-full lg:w-2/3 pl-0 lg:pl-8 text-justify order-1 lg:order-2"
-              dangerouslySetInnerHTML={{ __html: project.text1 }}
-            ></div>
-          </div>
-
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-0">
-            <div
-              className="w-full lg:w-2/3 pr-0 lg:pr-8 text-justify"
-              dangerouslySetInnerHTML={{ __html: project.text2 }}
-            ></div>
-            <div className="w-full lg:w-1/3">
-              <CloudinaryImage
-                src={project.image3}
-                width={600}
-                alt={`Image de ${project.name} ${project.subName}`}
-                height={500}
-                rounded={RoundedSize.NONE}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+  return <ConcertPageClient project={project} />;
 };
 
 export default ProjectPage;

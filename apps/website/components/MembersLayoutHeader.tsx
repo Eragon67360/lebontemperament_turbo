@@ -48,8 +48,8 @@ export default function MembersLayoutHeader({
   return (
     <>
       {pathname.startsWith("/membres/") ? (
-        <div className="container mx-auto flex-1 flex flex-col min-h-0 px-4 sm:px-6 lg:px-8">
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold mr-auto py-3 sm:py-4 lg:py-6 flex gap-2 sm:gap-3 lg:gap-4 items-center flex-shrink-0">
+        <div className="container mx-auto flex min-h-0 flex-1 flex-col px-4 sm:px-6 lg:px-8">
+          <div className="mr-auto flex flex-shrink-0 items-center gap-2 py-3 text-xl font-bold sm:gap-3 sm:py-4 sm:text-2xl lg:gap-4 lg:py-6 lg:text-3xl">
             <Image alt="picto" src={"/img/picto.svg"} width={48} height={48} />
             {user && (
               <span className="truncate">
@@ -65,7 +65,7 @@ export default function MembersLayoutHeader({
           {children}
         </div>
       ) : (
-        <div className="grow flex-1 h-fit w-full p-4 flex items-center justify-center">
+        <div className="flex h-fit w-full flex-1 grow items-center justify-center p-4">
           {children}
         </div>
       )}

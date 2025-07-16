@@ -26,9 +26,9 @@ const MusicList = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden">
+    <div className="overflow-hidden rounded-xl bg-white">
       {/* Album Header */}
-      <div className="bg-gradient-to-r from-primary to-[#43475e] p-4">
+      <div className="from-primary bg-gradient-to-r to-[#43475e] p-4">
         <div className="flex items-center gap-4">
           <Image
             src="/music/BT - Album/bt_20ans_pochette.jpg"
@@ -59,17 +59,17 @@ const MusicList = () => {
           <button
             key={index}
             onClick={() => setCurrentSong(getMusicSrc(file.name))}
-            className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
+            className={`flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50 ${
               currentSong === getMusicSrc(file.name)
                 ? "bg-primary/5"
                 : "bg-transparent"
             }`}
           >
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10">
+            <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
               {currentSong === getMusicSrc(file.name) ? (
-                <IoMusicalNotes className="text-primary w-4 h-4" />
+                <IoMusicalNotes className="text-primary h-4 w-4" />
               ) : (
-                <IoPlay className="text-primary w-4 h-4" />
+                <IoPlay className="text-primary h-4 w-4" />
               )}
             </div>
 

@@ -42,14 +42,14 @@ const Calendrier = () => {
   };
 
   return (
-    <div className="p-2 md:p-4 lg:p-6 w-full">
-      <div className="bg-white rounded-xl shadow-sm">
+    <div className="w-full p-2 md:p-4 lg:p-6">
+      <div className="rounded-xl bg-white shadow-sm">
         {/* Header */}
-        <div className="p-2 md:p-4 lg:p-6 border-b">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 justify-between">
+        <div className="border-b p-2 md:p-4 lg:p-6">
+          <div className="flex flex-col items-start justify-between gap-2 lg:flex-row lg:items-center">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-md">
-                <IoCalendarClear className="w-5 h-5 text-primary" />
+              <div className="bg-primary/10 rounded-md p-2">
+                <IoCalendarClear className="text-primary h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -62,16 +62,16 @@ const Calendrier = () => {
             </div>
             <button
               onClick={() => setShowGoogleCalendar(!showGoogleCalendar)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
             >
               {showGoogleCalendar ? (
                 <>
-                  <IoList className="w-4 h-4" />
+                  <IoList className="h-4 w-4" />
                   Vue liste
                 </>
               ) : (
                 <>
-                  <MdCalendarMonth className="w-4 h-4" />
+                  <MdCalendarMonth className="h-4 w-4" />
                   Calendrier complet
                 </>
               )}
@@ -81,11 +81,11 @@ const Calendrier = () => {
 
         {/* Filters */}
         {!showGoogleCalendar && (
-          <div className="p-2 md:p-4 lg:p-6 border-b">
+          <div className="border-b p-2 md:p-4 lg:p-6">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedGroup("all")}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                className={`rounded-full px-3 py-1 text-sm transition-colors ${
                   selectedGroup === "all"
                     ? "bg-primary/10 text-primary"
                     : "bg-gray-50 text-gray-700 hover:bg-gray-100"
@@ -97,7 +97,7 @@ const Calendrier = () => {
                 <button
                   key={group}
                   onClick={() => setSelectedGroup(group as GroupType)}
-                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  className={`rounded-full px-3 py-1 text-sm transition-colors ${
                     selectedGroup === group
                       ? "bg-primary/10 text-primary"
                       : "bg-gray-50 text-gray-700 hover:bg-gray-100"
@@ -112,7 +112,7 @@ const Calendrier = () => {
 
         <div className="p-2 md:p-4 lg:p-6">
           {showGoogleCalendar ? (
-            <div className="bg-gray-50 rounded-lg overflow-hidden">
+            <div className="overflow-hidden rounded-lg bg-gray-50">
               <GoogleCalendar embedId={"lebontemperament@gmail.com"} />
             </div>
           ) : (
@@ -120,14 +120,14 @@ const Calendrier = () => {
               {loadingRehearsals ? (
                 <div className="animate-pulse space-y-4">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-24 bg-gray-100 rounded-lg" />
+                    <div key={i} className="h-24 rounded-lg bg-gray-100" />
                   ))}
                 </div>
               ) : filteredRehearsals.length > 0 ? (
                 filteredRehearsals.map((rehearsal) => (
                   <div
                     key={rehearsal.id}
-                    className="p-4 bg-white border rounded-lg hover:border-primary/20 transition-colors"
+                    className="hover:border-primary/20 rounded-lg border bg-white p-4 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -139,14 +139,14 @@ const Calendrier = () => {
                         </p>
                       </div>
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${groupColors[rehearsal.group_type]}`}
+                        className={`rounded-full px-2 py-1 text-xs ${groupColors[rehearsal.group_type]}`}
                       >
                         {rehearsal.group_type}
                       </span>
                     </div>
                     <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
-                        <IoCalendarClear className="w-4 h-4" />
+                        <IoCalendarClear className="h-4 w-4" />
                         {format(parseISO(rehearsal.date), "dd MMMM yyyy", {
                           locale: fr,
                         })}
@@ -159,7 +159,7 @@ const Calendrier = () => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="py-12 text-center text-gray-500">
                   Aucune répétition trouvée
                 </div>
               )}
