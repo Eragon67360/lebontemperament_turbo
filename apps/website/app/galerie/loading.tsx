@@ -3,18 +3,18 @@ import React from "react";
 
 const Loading = () => {
   return (
-    <div className="px-8 container mx-auto w-full flex flex-col mb-32">
+    <div className="container mx-auto mb-32 flex w-full flex-col px-8">
       <div className="animate-pulse">
-        <div className="h-32 bg-gray-200 rounded w-1/3 mb-8"></div>
+        <div className="mb-8 h-32 w-1/3 rounded bg-gray-200"></div>
         <div className="space-y-8">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex flex-col lg:flex-row gap-8">
-              <div className="w-full lg:w-1/2 h-[400px] bg-gray-200 rounded"></div>
-              <div className="w-full lg:w-1/2 space-y-4">
-                <div className="h-12 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            <div key={i} className="flex flex-col gap-8 lg:flex-row">
+              <div className="h-[400px] w-full rounded bg-gray-200 lg:w-1/2"></div>
+              <div className="w-full space-y-4 lg:w-1/2">
+                <div className="h-12 w-3/4 rounded bg-gray-200"></div>
+                <div className="h-6 w-1/2 rounded bg-gray-200"></div>
+                <div className="h-6 w-1/2 rounded bg-gray-200"></div>
+                <div className="h-6 w-1/2 rounded bg-gray-200"></div>
               </div>
             </div>
           ))}

@@ -57,12 +57,12 @@ export function NotificationsPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start relative">
-          <Bell className="size-4 mr-2" />
+        <Button variant="ghost" className="relative w-full justify-start">
+          <Bell className="mr-2 size-4" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
+              className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center p-0"
             >
               {unreadCount}
             </Badge>
@@ -71,10 +71,10 @@ export function NotificationsPopover() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">
-        <h3 className="font-semibold mb-2">Notifications</h3>
+        <h3 className="mb-2 font-semibold">Notifications</h3>
         <ScrollArea className="h-[300px]">
           {notifications.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="py-4 text-center text-sm text-gray-500">
               Aucune notification
             </p>
           ) : (
@@ -82,7 +82,7 @@ export function NotificationsPopover() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-3 rounded-lg ${
+                  className={`rounded-lg p-3 ${
                     notification.read ? "bg-gray-50" : "bg-blue-50"
                   }`}
                   onClick={() => markAsRead(notification.id)}
@@ -94,12 +94,12 @@ export function NotificationsPopover() {
                   {notification.reference_id && (
                     <Link
                       href={`/dashboard/bug-reports/${notification.reference_id}`}
-                      className="text-sm text-blue-500 hover:underline mt-1 block"
+                      className="mt-1 block text-sm text-blue-500 hover:underline"
                     >
                       Voir les détails
                     </Link>
                   )}
-                  <span className="text-xs text-gray-400 mt-1 block">
+                  <span className="mt-1 block text-xs text-gray-400">
                     {new Date(notification.created_at).toLocaleString()}
                   </span>
                 </div>

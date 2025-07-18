@@ -15,11 +15,11 @@ const Footer = () => {
   }
   return (
     <footer
-      className="w-full bg-[#2C2C2C] flex flex-col select-none justify-center"
+      className="flex w-full flex-col justify-center bg-[#2C2C2C] select-none"
       role="contentinfo"
       aria-label="Pied de page"
     >
-      <div className="h-full mx-8 max-w-[1920px] flex flex-col lg:flex-row justify-evenly py-12 items-center lg:items-start gap-4">
+      <div className="mx-8 flex h-full max-w-[1920px] flex-col items-center justify-evenly gap-4 py-12 lg:flex-row lg:items-start">
         <CldImage
           src={"Site/logo_nega"}
           alt="Logo Le Bon Tempérament en version négative"
@@ -27,50 +27,50 @@ const Footer = () => {
           height={190}
         />
 
-        <div className="flex flex-col xl:flex-row gap-8">
+        <div className="flex flex-col gap-8 xl:flex-row">
           {/* Navigation Links */}
           <nav
-            className="flex flex-col items-start text-white text-[14px] select-none gap-4"
+            className="flex flex-col items-start gap-4 text-[14px] text-white select-none"
             aria-labelledby="footer-navigation"
           >
             <h3
               id="footer-navigation"
-              className="font-bold uppercase text-[16px]"
+              className="text-[16px] font-bold uppercase"
             >
               Naviguer
             </h3>
             <Link
               href={"/"}
               aria-label="Aller à l'accueil"
-              className="transition-all duration-300 hover:text-primary"
+              className="hover:text-primary transition-all duration-300"
             >
               Accueil
             </Link>
             <Link
               href={"/galerie"}
               aria-label="Aller à la galerie"
-              className="transition-all duration-300 hover:text-primary"
+              className="hover:text-primary transition-all duration-300"
             >
               Galerie
             </Link>
             <Link
               href={"/decouvrir"}
               aria-label="Aller à la page Nous Découvrir"
-              className="transition-all duration-300 hover:text-primary"
+              className="hover:text-primary transition-all duration-300"
             >
               Nous découvrir
             </Link>
             <Link
               href={"/concerts"}
               aria-label="Aller à la page Nos Concerts"
-              className="transition-all duration-300 hover:text-primary"
+              className="hover:text-primary transition-all duration-300"
             >
               Nos concerts
             </Link>
             <Link
               href={"/contact"}
               aria-label="Aller à la page Contact"
-              className="transition-all duration-300 hover:text-primary"
+              className="hover:text-primary transition-all duration-300"
             >
               Contact
             </Link>
@@ -78,13 +78,13 @@ const Footer = () => {
 
           {/* Contact Information */}
           <address
-            className="flex flex-col items-start text-white text-[14px] select-none gap-4 not-italic"
+            className="flex flex-col items-start gap-4 text-[14px] text-white not-italic select-none"
             aria-labelledby="footer-contact"
           >
-            <h3 id="footer-contact" className="font-bold uppercase text-[16px]">
+            <h3 id="footer-contact" className="text-[16px] font-bold uppercase">
               Contact
             </h3>
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center justify-between gap-4">
               <IoLocationOutline size={20} aria-hidden="true" />
               <p>
                 3 Rue Clémenceau,
@@ -93,7 +93,7 @@ const Footer = () => {
               </p>
             </div>
 
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center justify-between gap-4">
               <CiMail size={20} aria-hidden="true" />
               <a
                 href="mailto:lebontemperament@gmail.com"
@@ -104,7 +104,7 @@ const Footer = () => {
               </a>
             </div>
 
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center justify-between gap-4">
               <FiPhone size={20} aria-hidden="true" />
               <a
                 href="tel:+33952395789"
@@ -118,13 +118,13 @@ const Footer = () => {
 
           {/* Social Media Links */}
           <nav
-            className="flex flex-col items-start text-white text-[14px] select-none gap-4"
+            className="flex flex-col items-start gap-4 text-[14px] text-white select-none"
             aria-labelledby="footer-social"
           >
-            <h3 id="footer-social" className="font-bold uppercase text-[16px]">
+            <h3 id="footer-social" className="text-[16px] font-bold uppercase">
               Nos réseaux
             </h3>
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center justify-between gap-4">
               <a
                 href="https://www.facebook.com/p/Le-Bon-Temp%C3%A9rament-100063069588507/"
                 aria-label="Accéder à la page Facebook de Le Bon Tempérament"
@@ -166,7 +166,7 @@ const Footer = () => {
         </div>
       </div>
       <hr className="opacity-10" />
-      <div className="flex justify-center items-center py-4 text-[#c8c8c894] flex-col lg:flex-row text-center">
+      <div className="flex flex-col items-center justify-center py-4 text-center text-[#c8c8c894] lg:flex-row">
         <p>
           © {new Date().getFullYear()} Tous droits réservés - Le Bon
           Tempérament
@@ -174,7 +174,7 @@ const Footer = () => {
         <span className="hidden lg:block">&nbsp;|&nbsp;</span>
         <Link
           href={"/politique-de-confidentialite"}
-          className="underline hover:text-white transition-colors"
+          className="underline transition-colors hover:text-white"
           aria-label="Lire la politique de confidentialité"
         >
           Politique de Confidentialité

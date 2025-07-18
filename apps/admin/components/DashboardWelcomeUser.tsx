@@ -22,7 +22,7 @@ export function DashboardWelcomeHeader() {
 
   return (
     <div className="mb-12">
-      <h1 className="text-2xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-black/60">
+      <h1 className="text-2xl font-extrabold tracking-tight text-black/60 md:text-5xl lg:text-5xl">
         Bonjour,{" "}
         <motion.span
           initial={{
@@ -30,7 +30,7 @@ export function DashboardWelcomeHeader() {
           }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent"
+          className="from-primary bg-gradient-to-r to-purple-600 bg-clip-text text-transparent"
         >
           {displayName}
         </motion.span>

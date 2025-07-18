@@ -67,14 +67,14 @@ const PdfList: React.FC<PdfListProps> = ({ jsonFileName, context }) => {
   };
 
   return (
-    <div className="mt-2 md:mt-4 lg:mt-8 flex flex-wrap gap-6">
+    <div className="mt-2 flex flex-wrap gap-6 md:mt-4 lg:mt-8">
       {pdfFiles.map((file: PdfFile, index: number) => (
         <Link
           href={`/pdf/${context}/${file.name}`}
           key={index}
           target="_blank"
           rel="noopener"
-          className="p-2 lg:p-4 rounded-lg bg-primary text-white flex gap-4 items-center hover:bg-[#18858ba7] text-xs md:text-sm"
+          className="bg-primary flex items-center gap-4 rounded-lg p-2 text-xs text-white hover:bg-[#18858ba7] md:text-sm lg:p-4"
         >
           <FaRegFilePdf />{" "}
           <span>

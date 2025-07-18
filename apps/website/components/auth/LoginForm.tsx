@@ -144,7 +144,7 @@ export default function LoginForm() {
 
   return (
     <div className="w-full px-2">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6 mt-2">
+      <form onSubmit={handleSubmit} className="mt-2 flex flex-col gap-6">
         <div className="grid gap-6">
           <div className="grid gap-4">
             <div className="grid gap-2">
@@ -167,7 +167,7 @@ export default function LoginForm() {
                 <div></div>
                 <Link
                   href={RouteNames.AUTH.RESET_PASSWORD}
-                  className="text-xs text-primary hover:underline"
+                  className="text-primary text-xs hover:underline"
                   tabIndex={isPending ? -1 : 0}
                 >
                   Mot de passe oublié?
@@ -210,7 +210,7 @@ export default function LoginForm() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-background text-muted-foreground px-2">
                 Ou continuer avec
               </span>
             </div>

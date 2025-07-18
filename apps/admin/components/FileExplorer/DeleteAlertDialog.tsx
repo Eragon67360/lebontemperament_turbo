@@ -43,7 +43,7 @@ export function DeleteAlertDialog({
                 Cette action supprimera définitivement le dossier &quot;
                 {item.name}&quot; et tout son contenu.
                 <br />
-                <span className="font-medium text-destructive">
+                <span className="text-destructive font-medium">
                   Cette action est irréversible.
                 </span>
               </>
@@ -52,7 +52,7 @@ export function DeleteAlertDialog({
                 Cette action supprimera définitivement le fichier &quot;
                 {item.name}&quot;.
                 <br />
-                <span className="font-medium text-destructive">
+                <span className="text-destructive font-medium">
                   Cette action est irréversible.
                 </span>
               </>

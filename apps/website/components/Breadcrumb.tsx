@@ -56,7 +56,7 @@ const Breadcrumb = () => {
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <nav aria-label="Fil d'Ariane" className="px-8 lg:px-24 py-4 bg-gray-50">
+    <nav aria-label="Fil d'Ariane" className="bg-gray-50 px-8 py-4 lg:px-24">
       <ol className="flex items-center space-x-2 text-sm">
         {breadcrumbs.map((breadcrumb, index) => (
           <li key={breadcrumb.href} className="flex items-center">
@@ -68,13 +68,13 @@ const Breadcrumb = () => {
               />
             )}
             {breadcrumb.current ? (
-              <span className="text-gray-600 font-medium" aria-current="page">
+              <span className="font-medium text-gray-600" aria-current="page">
                 {breadcrumb.label}
               </span>
             ) : (
               <Link
                 href={breadcrumb.href}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-gray-500 transition-colors hover:text-gray-700"
                 aria-label={`Aller à ${breadcrumb.label}`}
               >
                 {breadcrumb.label}

@@ -7,24 +7,24 @@ import { IoHome, IoArrowBack } from "react-icons/io5";
 export default function NotFound() {
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center justify-center bg-cover bg-center text-gray-800 relative"
+      className="relative flex min-h-screen w-full flex-col items-center justify-center bg-cover bg-center text-gray-800"
       style={{ backgroundImage: "url(/img/not_found.webp)" }}
       role="main"
       aria-labelledby="error-title"
     >
       {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+      <div className="bg-opacity-40 absolute inset-0 bg-black"></div>
 
-      <div className="relative z-10 bg-white bg-opacity-95 p-8 rounded-lg shadow-lg text-center max-w-md mx-4">
-        <h1 id="error-title" className="text-4xl font-bold mb-4 text-gray-800">
+      <div className="bg-opacity-95 relative z-10 mx-4 max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
+        <h1 id="error-title" className="mb-4 text-4xl font-bold text-gray-800">
           404 - Page non trouvée
         </h1>
-        <p className="text-lg mb-8 text-gray-600">
+        <p className="mb-8 text-lg text-gray-600">
           Désolé, la page que vous recherchez n&apos;existe pas ou a été
           déplacée.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Button
             as={Link}
             href="/"

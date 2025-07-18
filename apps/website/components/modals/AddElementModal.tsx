@@ -60,7 +60,7 @@ const AddElementModal: FC<AddElementModalProps> = ({
               <div
                 {...getRootProps({ className: "dropzone" })}
                 style={{}}
-                className="p-5 border-2 border-dashed border-primary rounded-lg flex flex-col justify-center items-center gap-1 cursor-pointer text-center"
+                className="border-primary flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-5 text-center"
               >
                 <input {...getInputProps()} />
                 <FiUploadCloud color="#18858b" size={48} />
@@ -78,14 +78,14 @@ const AddElementModal: FC<AddElementModalProps> = ({
                     {selectedFiles.map((file) => (
                       <li
                         key={file.name}
-                        className="flex items-center justify-between bg-gray-100 p-2 mb-2 rounded"
+                        className="mb-2 flex items-center justify-between rounded bg-gray-100 p-2"
                       >
                         <div className="flex items-center">
                           {file.type === "folder" ? (
-                            <FaFolder className="mr-2 text-primary" size={24} />
+                            <FaFolder className="text-primary mr-2" size={24} />
                           ) : (
                             <FaFileAlt
-                              className="mr-2 text-primary"
+                              className="text-primary mr-2"
                               size={24}
                             />
                           )}
@@ -99,7 +99,7 @@ const AddElementModal: FC<AddElementModalProps> = ({
                           </div>
                         </div>
                         <FaTimes
-                          className="text-red-500 cursor-pointer"
+                          className="cursor-pointer text-red-500"
                           onClick={() => handleRemoveFile(file)}
                         />
                       </li>

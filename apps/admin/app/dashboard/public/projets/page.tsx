@@ -33,12 +33,12 @@ export default function ProjectsPage() {
   };
 
   if (loading) {
-    return <div className="text-center mt-10">Chargement...</div>;
+    return <div className="mt-10 text-center">Chargement...</div>;
   }
 
   if (error) {
     return (
-      <div className="text-center mt-10">
+      <div className="mt-10 text-center">
         <p>{error}</p>
         <Button onClick={fetchProjects} className="mt-4">
           Réessayer
@@ -49,8 +49,8 @@ export default function ProjectsPage() {
 
   return (
     <div className="mx-0 md:mx-4 lg:mx-8 xl:mx-12 2xl:mx-16">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-base md:text-lg xl:text-xl font-bold">Projets</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-base font-bold md:text-lg xl:text-xl">Projets</h1>
         <Link href={RouteNames.DASHBOARD.PUBLIC.PROJETS.CREATE}>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
@@ -60,7 +60,7 @@ export default function ProjectsPage() {
       </div>
 
       {projects.length === 0 ? (
-        <div className="text-center text-muted-foreground">
+        <div className="text-muted-foreground text-center">
           Aucun projet trouvé
         </div>
       ) : (
@@ -76,7 +76,7 @@ export default function ProjectsPage() {
                   >
                     {project.name}
                   </Link>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm">
                     Ordre : {project.display_order}
                   </span>
                 </CardTitle>

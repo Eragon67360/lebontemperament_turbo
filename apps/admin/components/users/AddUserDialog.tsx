@@ -61,7 +61,7 @@ export function AddUserDialog({
             <div className="space-y-2">
               <Label htmlFor="display_name">
                 Nom d&apos;affichage
-                <span className="text-xs text-muted-foreground ml-2">
+                <span className="text-muted-foreground ml-2 text-xs">
                   (Optionnel)
                 </span>
               </Label>

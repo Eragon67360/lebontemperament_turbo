@@ -67,7 +67,7 @@ export function BugReportStatus() {
       className="hidden xl:block"
     >
       <Button variant="ghost" className="inset-0 w-full justify-start">
-        <Bug className="h-4 w-4 mr-2" />
+        <Bug className="mr-2 h-4 w-4" />
         <span>Bug Reports</span>
         {unreadCount > 0 && (
           <Badge variant="destructive" className="animate-pulse">

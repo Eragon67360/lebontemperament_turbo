@@ -16,8 +16,8 @@ export default function DashboardLayout({
           <Sidebar />
         </div>
         <MobileSidebar className="md:hidden" />
-        <main className="flex-1 container p-2 sm:p-4 max-h-screen overflow-y-hidden">
-          <div className="p-2 sm:p-4 md:p-6 overflow-y-auto max-h-screen">
+        <main className="container max-h-screen flex-1 overflow-y-hidden p-2 sm:p-4">
+          <div className="max-h-screen overflow-y-auto p-2 sm:p-4 md:p-6">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>

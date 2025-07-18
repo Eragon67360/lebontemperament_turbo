@@ -62,7 +62,7 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Détails du projet</h1>
+      <h1 className="mb-6 text-2xl font-bold">Détails du projet</h1>
       <form onSubmit={handleUpdate} className="space-y-4">
         <div>
           <Label>Nom du projet</Label>

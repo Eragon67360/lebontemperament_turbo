@@ -13,14 +13,14 @@ type MemberCardProps = {
 const MemberCard: FC<MemberCardProps> = ({ role, name, src, quote }) => {
   return (
     <Card isFooterBlurred radius="lg" className="border-none">
-      <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-        <h3 className="text-tiny uppercase font-bold">{role}</h3>
-        <h4 className="font-bold text-large">{name}</h4>
+      <CardHeader className="flex-col items-start px-4 pt-2 pb-0">
+        <h3 className="text-tiny font-bold uppercase">{role}</h3>
+        <h4 className="text-large font-bold">{name}</h4>
       </CardHeader>
       <CardBody>
         <CldImage
           alt={`Photo ${name}`}
-          className="object-cover rounded-xl h-auto w-auto max-h-[800px]"
+          className="h-auto max-h-[800px] w-auto rounded-xl object-cover"
           src={src}
           width={400}
           height={300}

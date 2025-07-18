@@ -105,47 +105,47 @@ const MembresConcertsEvents = () => {
   );
 
   const LoadingCard = () => (
-    <div className="animate-pulse bg-white rounded-lg shadow-md p-4 ">
-      <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+    <div className="animate-pulse rounded-lg bg-white p-4 shadow-md">
+      <div className="mb-4 h-6 w-3/4 rounded bg-gray-200"></div>
       <div className="space-y-3">
-        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+        <div className="h-4 w-1/2 rounded bg-gray-200"></div>
+        <div className="h-4 w-2/3 rounded bg-gray-200"></div>
+        <div className="h-4 w-3/4 rounded bg-gray-200"></div>
       </div>
     </div>
   );
 
   return (
-    <div className="container mx-auto w-full flex flex-col p-2 md:p-4 lg:p-6 space-y-8">
+    <div className="container mx-auto flex w-full flex-col space-y-8 p-2 md:p-4 lg:p-6">
       {/* Concerts Section */}
-      <section className="bg-white rounded-xl shadow-sm p-4 md:p-4 lg:p-6">
+      <section className="rounded-xl bg-white p-4 shadow-sm md:p-4 lg:p-6">
         <SectionTitle subtitle="Agenda" title="Prochains concerts" />
         {!loading && concerts.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="py-8 text-center text-gray-500">
             Aucun concert à venir pour le moment.
           </div>
         )}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
               <LoadingCard key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {concerts.map((concert, index) => (
               <div
                 key={index}
-                className="border border-gray-100 rounded-lg p-4 hover:border-primary/20 transition-all duration-300"
+                className="hover:border-primary/20 rounded-lg border border-gray-100 p-4 transition-all duration-300"
               >
-                <h3 className="text-base font-medium text-gray-800 mb-3">
+                <h3 className="mb-3 text-base font-medium text-gray-800">
                   {concert.name ||
                     `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
                 </h3>
 
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
-                    <IoCalendarClear className="text-primary w-4 h-4" />
+                    <IoCalendarClear className="text-primary h-4 w-4" />
                     <span>
                       {format(new Date(concert.date), "dd MMM yyyy", {
                         locale: fr,
@@ -153,17 +153,17 @@ const MembresConcertsEvents = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <IoTime className="text-primary w-4 h-4" />
+                    <IoTime className="text-primary h-4 w-4" />
                     <span>{concert.time.slice(0, 5).replace(":", "h")}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <IoLocationSharp className="text-primary w-4 h-4" />
+                    <IoLocationSharp className="text-primary h-4 w-4" />
                     <span>{concert.place}</span>
                   </div>
                 </div>
 
                 <div className="mt-3">
-                  <span className="inline-block px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md">
+                  <span className="bg-primary/10 text-primary inline-block rounded-md px-2 py-1 text-xs font-medium">
                     {concert.context === "orchestre_et_choeur"
                       ? "Orchestre et Chœur"
                       : concert.context.charAt(0).toUpperCase() +
@@ -177,32 +177,32 @@ const MembresConcertsEvents = () => {
       </section>
 
       {/* Events Section */}
-      <section className="bg-white rounded-xl shadow-sm p-4 md:p-4 lg:p-6">
+      <section className="rounded-xl bg-white p-4 shadow-sm md:p-4 lg:p-6">
         <SectionTitle subtitle="Calendrier" title="Événements à venir" />
         {!loading && events.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="py-8 text-center text-gray-500">
             Aucun événement à venir pour le moment.
           </div>
         )}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
               <LoadingCard key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event, index) => (
               <div
                 key={index}
-                className="border border-gray-100 rounded-lg p-4 hover:border-primary/20 transition-all duration-300"
+                className="hover:border-primary/20 rounded-lg border border-gray-100 p-4 transition-all duration-300"
               >
-                <div className="flex justify-between items-start mb-3">
+                <div className="mb-3 flex items-start justify-between">
                   <h3 className="text-base font-medium text-gray-800">
                     {event.title}
                   </h3>
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded-md ${getEventTypeColor(event.event_type)}`}
+                    className={`rounded-md px-2 py-1 text-xs font-medium ${getEventTypeColor(event.event_type)}`}
                   >
                     {getEventTypeLabel(event.event_type)}
                   </span>
@@ -210,28 +210,28 @@ const MembresConcertsEvents = () => {
 
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
-                    <IoCalendarClear className="text-primary w-4 h-4" />
+                    <IoCalendarClear className="text-primary h-4 w-4" />
                     <span>{formatEventDate(event)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <IoTime className="text-primary w-4 h-4" />
+                    <IoTime className="text-primary h-4 w-4" />
                     <span>{event.time.slice(0, 5).replace(":", "h")}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <IoLocationSharp className="text-primary w-4 h-4" />
+                    <IoLocationSharp className="text-primary h-4 w-4" />
                     <span>{event.location}</span>
                   </div>
                 </div>
 
                 {event.description && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="mt-2 text-xs text-gray-500">
                     {event.description}
                   </p>
                 )}
 
-                <div className="mt-3 flex gap-2 flex-wrap">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {event.responsible_email && (
-                    <span className="text-xs px-2 py-1 bg-gray-50 text-gray-600 rounded-md">
+                    <span className="rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-600">
                       Contact: {event.responsible_name}
                     </span>
                   )}
@@ -240,9 +240,9 @@ const MembresConcertsEvents = () => {
                       href={event.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded-md hover:bg-gray-100"
+                      className="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
                     >
-                      <span>Infos</span> <MdOpenInNew className="w-3 h-3" />
+                      <span>Infos</span> <MdOpenInNew className="h-3 w-3" />
                     </a>
                   )}
                 </div>
@@ -253,9 +253,9 @@ const MembresConcertsEvents = () => {
       </section>
 
       {/* Anniversary Concert Section */}
-      <section className="bg-white rounded-xl shadow-sm p-4 md:p-4 lg:p-6">
+      <section className="rounded-xl bg-white p-4 shadow-sm md:p-4 lg:p-6">
         <SectionTitle subtitle="Archives" title="Concert Anniversaire" />
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="mb-6 text-sm text-gray-600">
           Enregistrement du concert anniversaire pour les 20 ans du Bon
           Tempérament
         </p>

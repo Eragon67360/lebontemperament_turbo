@@ -1,8 +1,8 @@
+import { EasterEgg } from "@/components/EasterEgg";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { SocialPopover } from "@/components/SocialPopover";
-import Breadcrumb from "@/components/Breadcrumb";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -10,7 +10,6 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import { EasterEgg } from "@/components/EasterEgg";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700", "900"],
@@ -129,17 +128,17 @@ export default function RootLayout({
           {/* Skip to main content link for accessibility */}
           <a
             href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="focus:bg-primary focus:ring-primary sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-offset-2 focus:outline-none"
           >
             Aller au contenu principal
           </a>
 
           <main
             id="main-content"
-            className="flex flex-col justify-center min-h-dvh"
+            className="flex min-h-dvh flex-col justify-center"
           >
             <Navigation />
-            <Breadcrumb />
+
             {children}
             <SocialPopover />
             <Analytics />

@@ -22,38 +22,38 @@ export function UserHeader({
   approvedInvites,
 }: UserHeaderProps) {
   return (
-    <div className="relative pb-8 mb-8 border-b border-border/40">
+    <div className="border-border/40 relative mb-8 border-b pb-8">
       <div className="">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
           {/* Header Text */}
           <div className="space-y-2">
             <DashboardPageHeader
               title="Gestion des utilisateurs"
               description="Gérez les comptes utilisateurs et leurs permissions"
             />
-            <div className="flex gap-4 mt-2">
+            <div className="mt-2 flex gap-4">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
                   {pendingInvites} en attente
                 </span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
                   {approvedInvites} acceptées
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3 flex-col sm:flex-row w-full sm:w-auto">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             {/* Invite Users Button */}
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
               <DialogTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="border md:border-none h-11 px-6 rounded-full hover:bg-primary/10 transition-colors justify-start sm:justify-center w-full sm:w-auto"
+                  className="hover:bg-primary/10 h-11 w-full justify-start rounded-full border px-6 transition-colors sm:w-auto sm:justify-center md:border-none"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-full">
-                      <UserPlus className="h-4 w-4 text-primary" />
+                    <div className="bg-primary/10 rounded-full p-2">
+                      <UserPlus className="text-primary h-4 w-4" />
                     </div>
                     <span>Inviter des Utilisateurs</span>
                   </div>
@@ -63,9 +63,9 @@ export function UserHeader({
 
             <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
               <DialogTrigger asChild>
-                <Button className="h-11 px-6 rounded-full justify-start sm:justify-center w-full sm:w-auto">
+                <Button className="h-11 w-full justify-start rounded-full px-6 sm:w-auto sm:justify-center">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/20 rounded-full">
+                    <div className="rounded-full bg-white/20 p-2">
                       <Plus className="h-4 w-4" />
                     </div>
                     <span>Nouvel Utilisateur</span>
@@ -78,7 +78,7 @@ export function UserHeader({
       </div>
 
       {/* Optional: Subtle gradient overlay */}
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+      <div className="via-border/50 absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent to-transparent" />
     </div>
   );
 }

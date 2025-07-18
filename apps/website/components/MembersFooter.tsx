@@ -27,7 +27,7 @@ export const MembersFooter = () => {
   }) => (
     <NextLink
       href={href}
-      className={`transition m-o p-2 block ${
+      className={`m-o block p-2 transition ${
         pathname === href
           ? "text-primary"
           : "text-foreground/50 hover:text-primary/80"
@@ -47,7 +47,7 @@ export const MembersFooter = () => {
   ];
 
   return (
-    <div className="border-t border-foreground/20 mx-4 md:mx-8 lg:mx-16 max-w-[96%] w-full px-8 py-4 items-center flex justify-between gap-2 text-sm">
+    <div className="border-foreground/20 mx-4 flex w-full max-w-[96%] items-center justify-between gap-2 border-t px-8 py-4 text-sm md:mx-8 lg:mx-16">
       <div>©&nbsp;{year}&nbsp;Le Bon Tempérament</div>
 
       <Dropdown className="capitalize">
@@ -61,7 +61,7 @@ export const MembersFooter = () => {
         </DropdownMenu>
       </Dropdown>
 
-      <div className="hidden lg:flex flex-col md:flex-row gap-1 lg:gap-4 uppercase mt-2">
+      <div className="mt-2 hidden flex-col gap-1 uppercase md:flex-row lg:flex lg:gap-4">
         {links.map((link) => (
           <NavLink key={link.href} href={link.href}>
             {link.label}

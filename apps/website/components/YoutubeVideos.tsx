@@ -24,17 +24,17 @@ export const YoutubeVideos = () => {
   return (
     <>
       {loading ? (
-        <div className="px-8 max-w-[1440px] w-full flex flex-col mb-32">
+        <div className="mb-32 flex w-full max-w-[1440px] flex-col px-8">
           <div className="animate-pulse">
             <div className="space-y-8">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex flex-col lg:flex-row gap-8">
-                  <div className="w-[80dvw] lg:w-[500px] h-[45dvw] lg:h-[281px] bg-gray-200 rounded"></div>
-                  <div className="w-full lg:w-1/2 space-y-4">
-                    <div className="h-12 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                <div key={i} className="flex flex-col gap-8 lg:flex-row">
+                  <div className="h-[45dvw] w-[80dvw] rounded bg-gray-200 lg:h-[281px] lg:w-[500px]"></div>
+                  <div className="w-full space-y-4 lg:w-1/2">
+                    <div className="h-12 w-3/4 rounded bg-gray-200"></div>
+                    <div className="h-6 w-1/2 rounded bg-gray-200"></div>
+                    <div className="h-6 w-1/2 rounded bg-gray-200"></div>
+                    <div className="h-6 w-1/2 rounded bg-gray-200"></div>
                   </div>
                 </div>
               ))}
@@ -46,18 +46,18 @@ export const YoutubeVideos = () => {
           {videos.map((video) => (
             <div
               key={video.id}
-              className="my-8 flex flex-col lg:flex-row gap-0 lg:gap-8"
+              className="my-8 flex flex-col gap-0 lg:flex-row lg:gap-8"
             >
               <YouTubeVideo videoId={extractYouTubeId(video.youtube_url)} />
               <div className="flex flex-col pt-8">
-                <h2 className="text-xl md:text-2xl lg:text-4xl text-[#BDBDBD] font-light">
+                <h2 className="text-xl font-light text-[#BDBDBD] md:text-2xl lg:text-4xl">
                   {video.title}
                 </h2>
-                <h2 className="text-sm md:text-base lg:text-lg font-bold mt-8">
+                <h2 className="mt-8 text-sm font-bold md:text-base lg:text-lg">
                   Auteur/Compositeur :{" "}
                   <span className="font-normal">{video.composer}</span>
                 </h2>
-                <h2 className="text-sm md:text-base lg:text-lg font-bold">
+                <h2 className="text-sm font-bold md:text-base lg:text-lg">
                   Date :{" "}
                   <span className="font-normal">
                     {new Date(video.performance_date).toLocaleDateString(
@@ -65,11 +65,11 @@ export const YoutubeVideos = () => {
                     )}
                   </span>
                 </h2>
-                <h2 className="text-sm md:text-base lg:text-lg font-bold">
+                <h2 className="text-sm font-bold md:text-base lg:text-lg">
                   Lieu : <span className="font-normal">{video.venue}</span>
                 </h2>
                 {video.soloists && video.soloists.length > 0 && (
-                  <h2 className="text-sm md:text-base lg:text-lg font-bold">
+                  <h2 className="text-sm font-bold md:text-base lg:text-lg">
                     Solistes :{" "}
                     <span className="font-normal">
                       {video.soloists.join(", ")}

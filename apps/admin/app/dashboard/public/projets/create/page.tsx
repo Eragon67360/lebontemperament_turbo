@@ -42,7 +42,7 @@ export default function CreateProjectPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Créer un nouveau projet</h1>
+      <h1 className="mb-6 text-2xl font-bold">Créer un nouveau projet</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label>Nom du projet</Label>

@@ -127,7 +127,7 @@ const Navigation = () => {
           >
             <Image
               src={"/img/picto.svg"}
-              className="hover:opacity-85 transition-opacity"
+              className="transition-opacity hover:opacity-85"
               alt="Logo Le Bon Tempérament"
               width={64}
               height={64}
@@ -149,7 +149,7 @@ const Navigation = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Ouvrir le drive Google dans un nouvel onglet"
-                  className="bg-primary/20 rounded-md h-full size-8 p-2 hover:bg-primary/40 shrink-0 transition-colors"
+                  className="bg-primary/20 hover:bg-primary/40 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
                 >
                   <CloudinaryImage
                     src={"Site/membres/logos/drive"}
@@ -163,7 +163,7 @@ const Navigation = () => {
               <div className="flex w-full justify-center"></div>
               <Popover placement="bottom-start">
                 <PopoverTrigger
-                  className="flex gap-1 items-center shrink-0 cursor-pointer"
+                  className="flex shrink-0 cursor-pointer items-center gap-1"
                   disabled={isPending}
                   aria-label="Menu utilisateur"
                   aria-expanded="false"
@@ -175,7 +175,7 @@ const Navigation = () => {
                   />
                 </PopoverTrigger>
                 <PopoverContent
-                  className="flex flex-col gap-2 items-start"
+                  className="flex flex-col items-start gap-2"
                   aria-label="Options utilisateur"
                 >
                   <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm">
@@ -195,7 +195,7 @@ const Navigation = () => {
                     variant="light"
                     radius="sm"
                     onPress={() => setIsPasswordModalOpen(true)}
-                    className="flex gap-1 items-center justify-start cursor-pointer w-full"
+                    className="flex w-full cursor-pointer items-center justify-start gap-1"
                     disabled={isPending}
                     aria-label="Changer mon mot de passe"
                   >
@@ -206,7 +206,7 @@ const Navigation = () => {
                     variant="light"
                     radius="sm"
                     onPress={handleSignOut}
-                    className="flex gap-1 items-center justify-start cursor-pointer w-full"
+                    className="flex w-full cursor-pointer items-center justify-start gap-1"
                     disabled={isPending}
                     aria-label="Se déconnecter"
                   >

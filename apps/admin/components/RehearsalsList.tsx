@@ -171,7 +171,7 @@ export default function RehearsalsList() {
 
   return (
     <div className="">
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 sm:justify-between sm:items-center mb-4 sm:mb-6">
+      <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
         <DashboardPageHeader
           title="Gestion des répétitions"
           description="Gérez les prochaines répètes."
@@ -202,7 +202,7 @@ export default function RehearsalsList() {
         "Chargement..."
       ) : rehearsals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12">
-          <CalendarX className="h-12 w-12 text-muted-foreground mb-4" />
+          <CalendarX className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="text-lg font-medium">Aucune répétition</h3>
           <p className="text-muted-foreground">
             Commencez par ajouter une nouvelle répétition.
@@ -221,36 +221,36 @@ export default function RehearsalsList() {
 
                     return (
                       <Card key={rehearsal.id} className="w-full">
-                        <CardContent className="flex flex-col sm:flex-row items-start sm:items-center p-4 sm:p-6 gap-4 sm:gap-0">
+                        <CardContent className="flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:gap-0 sm:p-6">
                           {/* Column 1: Date */}
                           <div
                             className={cn(
-                              "text-center min-w-[80px] sm:min-w-[100px]",
+                              "min-w-[80px] text-center sm:min-w-[100px]",
                               isToday ? "text-primary" : "text-black",
                             )}
                           >
-                            <div className="text-xl sm:text-2xl capitalize">
+                            <div className="text-xl capitalize sm:text-2xl">
                               {format(rehearsalDate, "EEE", { locale: fr })}
                             </div>
-                            <div className="text-3xl sm:text-5xl font-bold">
+                            <div className="text-3xl font-bold sm:text-5xl">
                               {format(rehearsalDate, "dd")}
                             </div>
                           </div>
 
                           {/* Vertical Separator */}
-                          <div className="hidden sm:block w-px h-16 bg-border mx-6" />
+                          <div className="bg-border mx-6 hidden h-16 w-px sm:block" />
 
                           {/* Column 2: Time and Place */}
-                          <div className="sm:mr-16 w-full sm:w-auto">
+                          <div className="w-full sm:mr-16 sm:w-auto">
                             <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <Clock className="text-muted-foreground h-4 w-4" />
                               <span className="text-sm sm:text-base">
                                 {formatTime(rehearsal.start_time)} -{" "}
                                 {formatTime(rehearsal.end_time)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <div className="mt-2 flex items-center gap-2">
+                              <MapPin className="text-muted-foreground h-4 w-4" />
                               <span className="text-sm sm:text-base">
                                 {rehearsal.place}
                               </span>
@@ -258,12 +258,12 @@ export default function RehearsalsList() {
                           </div>
 
                           {/* Column 3: Name and Group */}
-                          <div className="flex-1 w-full sm:w-auto">
-                            <div className="font-medium text-sm sm:text-base">
+                          <div className="w-full flex-1 sm:w-auto">
+                            <div className="text-sm font-medium sm:text-base">
                               {rehearsal.name}
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
+                            <div className="mt-2 flex items-center gap-2">
+                              <User className="text-muted-foreground h-4 w-4" />
                               <span className="text-sm sm:text-base">
                                 {rehearsal.group_type}
                               </span>
@@ -271,7 +271,7 @@ export default function RehearsalsList() {
                           </div>
 
                           {/* Column 4: Actions */}
-                          <div className="self-end sm:self-center w-full sm:w-auto">
+                          <div className="w-full self-end sm:w-auto sm:self-center">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -280,7 +280,7 @@ export default function RehearsalsList() {
                                   className="w-full sm:w-auto"
                                 >
                                   Éditer
-                                  <ChevronDown className="h-4 w-4 ml-2" />
+                                  <ChevronDown className="ml-2 h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">

@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+  <div className="flex min-h-screen items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
   </div>
 );
 
@@ -14,7 +14,7 @@ export default function LoginPage() {
     <Suspense fallback={<LoadingSpinner />}>
       <div className="relative flex h-screen bg-cover bg-center">
         <div className="absolute inset-0 bg-[url(/login.svg)] bg-cover bg-center opacity-20"></div>
-        <div className="absolute flex flex-col gap-4 top-6 left-6 h-fit z-10">
+        <div className="absolute top-6 left-6 z-10 flex h-fit flex-col gap-4">
           <div className="flex justify-center gap-2 md:justify-start">
             <Link
               href={RouteNames.DASHBOARD.ROOT}
@@ -31,8 +31,8 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-        <div className="flex flex-1 items-center justify-center z-10">
-          <div className="w-full max-w-xs border rounded-xl shadow-md p-6 backdrop-blur-lg bg-white/80">
+        <div className="z-10 flex flex-1 items-center justify-center">
+          <div className="w-full max-w-xs rounded-xl border bg-white/80 p-6 shadow-md backdrop-blur-lg">
             <LoginForm />
           </div>
         </div>

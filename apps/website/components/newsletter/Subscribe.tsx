@@ -48,19 +48,19 @@ const Subscribe = () => {
   };
 
   return (
-    <div className="mt-8 rounded-lg border-gray-300 border-[1px] flex">
+    <div className="mt-8 flex rounded-lg border-[1px] border-gray-300">
       <input
         type="text"
         name="email"
         placeholder="Adresse e-mail"
         value={email}
         onChange={handleInputChange}
-        className="w-3/5 lg:w-4/5 py-2 pl-2 rounded-l-lg"
+        className="w-3/5 rounded-l-lg py-2 pl-2 lg:w-4/5"
       />
 
       <button
         onClick={handleSubscribe}
-        className="w-2/5 lg:w-1/5 rounded-r-lg bg-gradient-to-r from-primary to-[#00F1AE] text-white font-bold text-xs md:text-sm lg:text-base"
+        className="from-primary w-2/5 rounded-r-lg bg-gradient-to-r to-[#00F1AE] text-xs font-bold text-white md:text-sm lg:w-1/5 lg:text-base"
       >
         S&apos;abonner
       </button>
