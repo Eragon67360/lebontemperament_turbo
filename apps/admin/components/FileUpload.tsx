@@ -67,17 +67,16 @@ export function FileUpload({
       {!preview ? (
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors
-            ${
-              isDragActive
-                ? "border-primary bg-primary/10"
-                : "border-muted-foreground/25 hover:border-primary"
-            }`}
+          className={`cursor-pointer rounded-lg border-2 border-dashed p-6 transition-colors ${
+            isDragActive
+              ? "border-primary bg-primary/10"
+              : "border-muted-foreground/25 hover:border-primary"
+          }`}
         >
           <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <div className="text-muted-foreground flex flex-col items-center gap-2">
             <Upload className="h-8 w-8" />
-            <p className="text-sm text-center">
+            <p className="text-center text-sm">
               {isDragActive
                 ? "Déposez l'image ici"
                 : "Glissez-déposez une image ou cliquez pour sélectionner"}
@@ -86,7 +85,7 @@ export function FileUpload({
           </div>
         </div>
       ) : (
-        <div className="relative w-full h-[200px]">
+        <div className="relative h-[200px] w-full">
           <Image
             src={preview}
             alt="Aperçu de l'affiche"
@@ -97,7 +96,7 @@ export function FileUpload({
           />
           <button
             onClick={handleClear}
-            className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors z-10"
+            className="absolute top-2 right-2 z-10 rounded-full bg-black/50 p-1 transition-colors hover:bg-black/70"
             type="button"
           >
             <X className="h-4 w-4 text-white" />

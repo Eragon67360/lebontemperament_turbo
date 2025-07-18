@@ -178,9 +178,9 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
   });
 
   return (
-    <div className="space-y-4 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-2">
-        <div className="w-full sm:w-auto overflow-x-auto">
+    <div className="mx-auto w-full max-w-[1400px] space-y-4 px-4 transition-all duration-300 sm:px-6 lg:px-8">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-2">
+        <div className="w-full overflow-x-auto sm:w-auto">
           <BreadcrumbNav
             currentFolder={currentFolder}
             onNavigate={(folder) => {
@@ -190,14 +190,14 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
           />
         </div>
 
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
           <Button
             onClick={() => setIsCreateFolderOpen(true)}
             variant="outline"
             size="sm"
-            className="flex-1 sm:flex-none transition-all duration-300 hover:scale-105"
+            className="flex-1 transition-all duration-300 hover:scale-105 sm:flex-none"
           >
-            <FolderPlus className="mr-2 h-4 w-4 hidden sm:inline" />
+            <FolderPlus className="mr-2 hidden h-4 w-4 sm:inline" />
             <span className="whitespace-nowrap">Nouveau dossier</span>
           </Button>
 
@@ -205,9 +205,9 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
             onClick={() => setIsUploadFileOpen(true)}
             variant="default"
             size="sm"
-            className="flex-1 sm:flex-none transition-all duration-300 hover:scale-105"
+            className="flex-1 transition-all duration-300 hover:scale-105 sm:flex-none"
           >
-            <Upload className="mr-2 h-4 w-4 hidden sm:inline" />
+            <Upload className="mr-2 hidden h-4 w-4 sm:inline" />
             <span className="whitespace-nowrap">Ajouter un fichier</span>
           </Button>
         </div>
@@ -215,11 +215,11 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
 
       <div className="relative min-h-[200px] transition-all duration-300">
         {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+          <div className="bg-background/50 absolute inset-0 flex items-center justify-center backdrop-blur-sm">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : (
-          <div className="rounded-lg border border-border p-4 transition-all duration-300">
+          <div className="border-border rounded-lg border p-4 transition-all duration-300">
             <FileList
               folders={currentFolders}
               files={files}

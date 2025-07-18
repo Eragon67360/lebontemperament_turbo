@@ -52,12 +52,12 @@ export function UserCard({
   onRoleChange,
 }: UserCardProps) {
   return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-black/50 border-0 shadow-lg rounded-2xl overflow-hidden mb-4">
+    <Card className="mb-4 overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl dark:bg-black/50">
       <div className="p-6">
-        <div className="flex items-center justify-between flex-wrap md:flex-nowrap gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 md:flex-nowrap">
           {/* User Info Section */}
           <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12 ring-2 ring-border/50">
+            <Avatar className="ring-border/50 h-12 w-12 ring-2">
               <AvatarImage src={user.avatar} />
               <AvatarFallback className="bg-primary/10 text-primary font-medium">
                 {user.display_name?.[0] || user?.email[0]?.toUpperCase()}
@@ -82,15 +82,15 @@ export function UserCard({
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-sm">{user.email}</p>
+              <p className="text-muted-foreground text-xs">
                 Créé le {new Date(user.created_at).toLocaleDateString("fr-FR")}
               </p>
             </div>
           </div>
 
           {/* Actions Section */}
-          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          <div className="flex w-full items-center justify-end gap-3 md:w-auto">
             {user.id === currentUser || user.role === "superadmin" ? (
               <Badge
                 variant={getRoleBadgeVariant(user.role)}
@@ -105,7 +105,7 @@ export function UserCard({
                   onRoleChange(user.id, value)
                 }
               >
-                <SelectTrigger className="w-[140px] rounded-full bg-primary/5 border-0">
+                <SelectTrigger className="bg-primary/5 w-[140px] rounded-full border-0">
                   <SelectValue>{getRoleLabel(user.role)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -121,7 +121,7 @@ export function UserCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-full hover:bg-primary/10"
+                    className="hover:bg-primary/10 rounded-full"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>

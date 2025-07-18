@@ -10,9 +10,9 @@ export function DashboardPageHeader({
 }: DashboardPageHeaderProps) {
   return (
     <div className="mb-4 sm:mb-8">
-      <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h1>
+      <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
       {description && (
-        <p className="text-sm sm:text-base text-muted-foreground mt-0">
+        <p className="text-muted-foreground mt-0 text-sm sm:text-base">
           {description}
         </p>
       )}

@@ -154,11 +154,11 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
           </CardHeader>
           <CardContent>
             <div className="mt-2">
-              <h4 className="text-sm font-medium text-gray-500 mb-2">
+              <h4 className="mb-2 text-sm font-medium text-gray-500">
                 Description
               </h4>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="whitespace-pre-wrap text-sm text-gray-700">
+              <div className="rounded-lg bg-gray-50 p-4">
+                <p className="text-sm whitespace-pre-wrap text-gray-700">
                   {report.description}
                 </p>
               </div>
@@ -166,17 +166,17 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
           </CardContent>
         </Card>
         <div className="mt-6">
-          <h4 className="text-sm font-medium mb-2">Messages</h4>
-          <ScrollArea className="space-y-2 max-h-[200px] overflow-y-auto">
+          <h4 className="mb-2 text-sm font-medium">Messages</h4>
+          <ScrollArea className="max-h-[200px] space-y-2 overflow-y-auto">
             {messages.map((message) => (
-              <div key={message.id} className="bg-gray-50 p-3 rounded-lg">
-                <div className="flex justify-between items-start">
+              <div key={message.id} className="rounded-lg bg-gray-50 p-3">
+                <div className="flex items-start justify-between">
                   <span className="text-sm font-medium"></span>
                   <span className="text-xs text-gray-400">
                     {new Date(message.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p className="text-sm mt-1">{message.message}</p>
+                <p className="mt-1 text-sm">{message.message}</p>
               </div>
             ))}
           </ScrollArea>

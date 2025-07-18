@@ -64,7 +64,7 @@ const DashboardCard = ({
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </CardContent>
       </Card>
     </Link>

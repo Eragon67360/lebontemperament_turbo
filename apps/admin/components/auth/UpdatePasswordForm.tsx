@@ -60,7 +60,7 @@ export default function UpdatePasswordForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Nouveau mot de passe</h1>
-        <p className="text-balance text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm text-balance">
           Entrez votre nouveau mot de passe
         </p>
       </div>

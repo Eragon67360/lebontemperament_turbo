@@ -194,24 +194,24 @@ export default function Evenements() {
 
   // Loading State Component
   const LoadingState = () => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
-      <div className="p-4 bg-primary/10 rounded-full animate-pulse">
-        <Calendar className="h-12 w-12 text-primary" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-8">
+      <div className="bg-primary/10 animate-pulse rounded-full p-4">
+        <Calendar className="text-primary h-12 w-12" />
       </div>
-      <p className="text-sm text-muted-foreground animate-pulse">
+      <p className="text-muted-foreground animate-pulse text-sm">
         {loadingMessage || loadingMessages[0]}
       </p>
     </div>
   );
 
   const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-      <div className="text-center space-y-4">
-        <div className="p-4 bg-primary/5 rounded-full inline-block">
-          <Calendar className="h-16 w-16 text-primary/30" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
+      <div className="space-y-4 text-center">
+        <div className="bg-primary/5 inline-block rounded-full p-4">
+          <Calendar className="text-primary/30 h-16 w-16" />
         </div>
         <h2 className="text-xl font-medium">Aucun événement</h2>
-        <p className="text-sm text-muted-foreground max-w-sm">
+        <p className="text-muted-foreground max-w-sm text-sm">
           Aucun événement n&apos;est prévu pour le moment.
         </p>
       </div>
@@ -240,8 +240,8 @@ export default function Evenements() {
   };
 
   return (
-    <div className="container px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
+    <div className="container px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
         <div className="space-y-1.5">
           <DashboardPageHeader
             title="Gestion des événements"
@@ -283,14 +283,14 @@ export default function Evenements() {
           {events.map((event) => (
             <Card
               key={event.id}
-              className="backdrop-blur-xl bg-white/50 dark:bg-black/50 border-0 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-200"
+              className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl transition-all duration-200 hover:shadow-xl dark:bg-black/50"
             >
               <div className="p-6">
-                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row">
                   <div className="space-y-4">
                     <div className="space-y-1">
                       <h3 className="text-lg font-semibold">{event.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4" />
                         <span>
                           {formatEventDate(event)} à{" "}
@@ -301,7 +301,7 @@ export default function Evenements() {
 
                     <div className="space-y-2">
                       <p className="font-medium">{event.location}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         Responsable : {event.responsible_name}
                         {event.responsible_email && (
                           <span className="text-primary/70">
@@ -310,7 +310,7 @@ export default function Evenements() {
                         )}
                       </p>
                       {event.description && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {event.description}
                         </p>
                       )}
@@ -319,7 +319,7 @@ export default function Evenements() {
                           href={event.link}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                          className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
                         >
                           Voir plus
                         </a>
@@ -335,7 +335,7 @@ export default function Evenements() {
                         setEditingEvent(event);
                         setEditDialogOpen(true);
                       }}
-                      className="rounded-full hover:bg-primary/10"
+                      className="hover:bg-primary/10 rounded-full"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -343,7 +343,7 @@ export default function Evenements() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteClick(event.id)}
-                      className="rounded-full hover:bg-destructive/10 text-destructive"
+                      className="hover:bg-destructive/10 text-destructive rounded-full"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

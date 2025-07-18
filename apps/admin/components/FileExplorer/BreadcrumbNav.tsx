@@ -19,7 +19,7 @@ export function BreadcrumbNav({
       </Button>
       {currentFolder && (
         <>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground h-4 w-4" />
           <Button variant="ghost" size="sm">
             {currentFolder.name}
           </Button>

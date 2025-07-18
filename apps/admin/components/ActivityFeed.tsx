@@ -70,17 +70,17 @@ export function ActivityFeed() {
   };
 
   return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-black/50 border-0 shadow-lg rounded-2xl overflow-hidden">
+    <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl dark:bg-black/50">
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Bell className="size-5 text-primary" />
+            <div className="bg-primary/10 rounded-full p-2">
+              <Bell className="text-primary size-5" />
             </div>
             <h2 className="text-lg font-semibold">
               Activités récentes
               {!isLoading && (
-                <span className="text-sm text-muted-foreground ml-2">
+                <span className="text-muted-foreground ml-2 text-sm">
                   ({activities.length})
                 </span>
               )}
@@ -97,10 +97,10 @@ export function ActivityFeed() {
             </div>
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="p-4 bg-primary/5 rounded-full mb-4">
-                <Bell className="h-8 w-8 text-primary/30" />
+              <div className="bg-primary/5 mb-4 rounded-full p-4">
+                <Bell className="text-primary/30 h-8 w-8" />
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Aucune activité récente à afficher
               </p>
             </div>
@@ -109,20 +109,20 @@ export function ActivityFeed() {
               {activities.slice(0, visibleActivities).map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-start space-x-4 p-3 hover:bg-primary/5 rounded-xl transition-colors"
+                  className="hover:bg-primary/5 flex items-start space-x-4 rounded-xl p-3 transition-colors"
                 >
-                  <div className="p-2 bg-primary/10 rounded-full mt-1">
+                  <div className="bg-primary/10 mt-1 rounded-full p-2">
                     {getActivityIcon(activity.type)}
                   </div>
 
                   <div className="flex-1 space-y-1.5">
-                    <p className="text-sm font-medium leading-tight">
+                    <p className="text-sm leading-tight font-medium">
                       {activity.title}
                     </p>
-                    <p className="text-sm text-muted-foreground leading-normal">
+                    <p className="text-muted-foreground text-sm leading-normal">
                       {activity.description}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
                       <span>
                         {formatDistanceToNow(new Date(activity.created_at), {
                           addSuffix: true,
@@ -131,7 +131,7 @@ export function ActivityFeed() {
                       </span>
                       {activity.profiles && (
                         <>
-                          <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
+                          <span className="bg-muted-foreground/50 h-1 w-1 rounded-full" />
                           <span>
                             {activity.profiles.display_name ||
                               activity.profiles.email}
@@ -148,9 +148,9 @@ export function ActivityFeed() {
                   <Button
                     variant="ghost"
                     onClick={handleShowMore}
-                    className="rounded-full hover:bg-primary/10 transition-colors"
+                    className="hover:bg-primary/10 rounded-full transition-colors"
                   >
-                    <ChevronDown className="h-4 w-4 mr-2" />
+                    <ChevronDown className="mr-2 h-4 w-4" />
                     Afficher plus
                   </Button>
                 </div>

@@ -317,7 +317,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="container px-4 sm:px-6 lg:px-8 py-8">
+    <div className="container px-4 py-8 sm:px-6 lg:px-8">
       <UserHeader
         isAddUserOpen={isAddUserOpen}
         setIsAddUserOpen={setIsAddUserOpen}
@@ -337,7 +337,7 @@ export default function UsersPage() {
       {isLoading ? (
         <UserLoadingState />
       ) : error ? (
-        <div className="text-center text-red-500 py-8">
+        <div className="py-8 text-center text-red-500">
           <p>{error}</p>
         </div>
       ) : users.length === 0 ? (

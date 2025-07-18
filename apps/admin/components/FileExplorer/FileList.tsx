@@ -17,9 +17,9 @@ export function FileList({
   onDelete,
 }: FileListProps) {
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {folders.length === 0 && files.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-muted-foreground py-8 text-center">
           Ce dossier est vide
         </div>
       ) : (
@@ -27,7 +27,7 @@ export function FileList({
           {folders.map((folder) => (
             <div
               key={folder.id}
-              className="flex items-center justify-between p-2 hover:bg-accent rounded-md"
+              className="hover:bg-accent flex items-center justify-between rounded-md p-2"
             >
               <Button
                 variant="ghost"
@@ -50,7 +50,7 @@ export function FileList({
           {files.map((file) => (
             <div
               key={file.id}
-              className="flex items-center justify-between p-2 hover:bg-accent rounded-md"
+              className="hover:bg-accent flex items-center justify-between rounded-md p-2"
             >
               <div className="flex items-center">
                 <FileIcon className="mr-2 h-4 w-4" />

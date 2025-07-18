@@ -28,7 +28,7 @@ export function CreateFolderDialog({
         <DialogHeader>
           <DialogTitle>Créer un nouveau dossier</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 ">
+        <div className="space-y-4">
           <Input
             placeholder="Nom du dossier"
             value={name}

@@ -10,11 +10,11 @@ export function UserEmptyState({ setIsAddUserOpen }: UserEmptyStateProps) {
   return (
     <Card className="w-full">
       <CardContent className="flex flex-col items-center justify-center py-12">
-        <div className="rounded-full bg-muted p-3 mb-4">
-          <Users2 className="h-8 w-8 text-muted-foreground" />
+        <div className="bg-muted mb-4 rounded-full p-3">
+          <Users2 className="text-muted-foreground h-8 w-8" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Aucun utilisateur trouvé</h3>
-        <p className="text-sm text-muted-foreground text-center mb-6">
+        <h3 className="mb-2 text-lg font-semibold">Aucun utilisateur trouvé</h3>
+        <p className="text-muted-foreground mb-6 text-center text-sm">
           Commencez par ajouter votre premier utilisateur pour gérer les accès.
         </p>
         <Button onClick={() => setIsAddUserOpen(true)}>
