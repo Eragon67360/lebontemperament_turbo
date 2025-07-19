@@ -1,5 +1,6 @@
 import ConcertPageClient from "@/components/ConcertPageClient";
 import projects from "@/public/json/projects.json";
+import { Project } from "@/types/projects";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -30,12 +31,14 @@ export async function generateMetadata({
       locale: "fr_FR",
       url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
       siteName: "Le Bon Tempérament",
+      title: `${project.name} ${project.subName} - Le Bon Tempérament`,
+      description: `${project?.explanation}`,
       images: [
         {
           url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-          width: 800,
-          height: 600,
-          alt: "Le Bon Tempérament",
+          width: 1200,
+          height: 630,
+          alt: `${project.name} ${project.subName} - Le Bon Tempérament`,
         },
       ],
     },
@@ -45,30 +48,64 @@ export async function generateMetadata({
   };
 }
 
-const ProjectPage = async ({
+// Generate structured data for events
+function generateStructuredData(project: Project, slug: string) {
+  const eventSchema = {
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    name: `${project.name} ${project.subName}`,
+    description: project.explanation,
+    url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
+    organizer: {
+      "@type": "Organization",
+      name: "Le Bon Tempérament",
+      url: process.env.NEXT_PUBLIC_BASE_URL,
+    },
+    performer: {
+      "@type": "MusicGroup",
+      name: "Le Bon Tempérament",
+      description: "Ensemble vocal et instrumental",
+    },
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    inLanguage: "fr-FR",
+    location: {
+      "@type": "Place",
+      name: "Saverne, France",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Saverne",
+        addressCountry: "FR",
+      },
+    },
+  };
+
+  return eventSchema;
+}
+
+export default async function ConcertPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) => {
+}) {
   const { slug } = await params;
-  const project = projects.find((p) => `${p.slug}` === slug);
+  const project = projects.find((p) => p.slug === slug);
 
   if (!project) {
-    return (
-      <main className="container mx-auto px-4 py-16">
-        <div role="status" aria-live="polite">
-          <h1 className="mb-4 text-2xl font-bold text-red-600">
-            Concert non trouvé
-          </h1>
-          <p className="text-gray-600">
-            Ce concert n&apos;a pas pu être trouvé dans la base de données.
-          </p>
-        </div>
-      </main>
-    );
+    return <div>Concert non trouvé</div>;
   }
 
-  return <ConcertPageClient project={project} />;
-};
+  const structuredData = generateStructuredData(project, slug);
 
-export default ProjectPage;
+  return (
+    <>
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      )}
+      <ConcertPageClient project={project} />
+    </>
+  );
+}
