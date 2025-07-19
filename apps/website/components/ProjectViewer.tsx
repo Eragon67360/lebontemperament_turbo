@@ -57,9 +57,9 @@ const ProjectViewer = () => {
           <div className="lg:col-span-2">
             <Link
               href={`/concerts/${latestProjects[1]?.slug || ""}`}
-              className="flex h-full grow items-center gap-8 overflow-hidden rounded-lg border border-black/5 bg-white p-4 shadow-none transition-all duration-300 hover:shadow-md"
+              className="flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border border-black/5 bg-white p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row"
             >
-              <div className="relative h-full w-1/2">
+              <div className="relative h-32 w-full md:h-full md:w-1/2">
                 <Image
                   src={latestProjects[1]?.image || ""}
                   alt={latestProjects[1]?.name || ""}
@@ -68,7 +68,7 @@ const ProjectViewer = () => {
                   sizes="(max-width: 768px) 100vw, 66vw"
                 />
               </div>
-              <div className="w-1/2 space-y-3 p-4">
+              <div className="w-full space-y-3 p-4 lg:w-1/2">
                 <div className="flex items-start justify-between">
                   <h4 className="overflow-hidden text-lg font-semibold text-gray-800">
                     <span className="block truncate">
