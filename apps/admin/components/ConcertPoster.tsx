@@ -11,7 +11,7 @@ export function ConcertPoster({ src, alt, className }: ConcertPosterProps) {
   return (
     <div
       className={
-        "relative w-52 overflow-hidden rounded-lg max-w-[200px] md:max-w-[250px] h-auto " +
+        "relative h-auto w-52 max-w-[200px] overflow-hidden rounded-lg md:max-w-[250px] " +
         className
       }
     >

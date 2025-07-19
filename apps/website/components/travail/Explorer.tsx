@@ -103,9 +103,9 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       {folderStack.length > 1 && (
         <button
           onClick={handleBackClick}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 transition-colors hover:text-gray-900"
         >
-          <IoArrowBack className="w-4 h-4" />
+          <IoArrowBack className="h-4 w-4" />
           <span>Retour</span>
         </button>
       )}
@@ -116,19 +116,19 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-lg" />
+              <div key={i} className="h-12 rounded-lg bg-gray-100" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {folders.map((folder) => (
               <button
                 key={folder.id}
                 onClick={() => handleFolderClick(folder.id!)}
-                className="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors text-left w-full"
+                className="flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
               >
-                <FaFolder className="w-5 h-5 text-blue-400" />
-                <span className="text-sm font-medium text-gray-900 truncate">
+                <FaFolder className="h-5 w-5 text-blue-400" />
+                <span className="truncate text-sm font-medium text-gray-900">
                   {folder.name}
                 </span>
               </button>
@@ -143,19 +143,19 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-lg" />
+              <div key={i} className="h-12 rounded-lg bg-gray-100" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {individualFiles.map((file) => (
               <button
                 key={file.id}
                 onClick={() => handleFileClick(file)}
-                className="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors text-left w-full group"
+                className="group flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
               >
-                <div className="w-5 h-5">{renderFileIcon(file.mimeType)}</div>
-                <span className="text-sm font-medium text-gray-900 truncate flex-1">
+                <div className="h-5 w-5">{renderFileIcon(file.mimeType)}</div>
+                <span className="flex-1 truncate text-sm font-medium text-gray-900">
                   {file.name}
                 </span>
               </button>
@@ -166,7 +166,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Empty States */}
       {!loading && folders.length === 0 && individualFiles.length === 0 && (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-sm text-gray-500">Ce dossier est vide</p>
         </div>
       )}

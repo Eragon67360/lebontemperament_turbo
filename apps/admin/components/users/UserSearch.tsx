@@ -34,9 +34,9 @@ export function UserSearch({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-      <div className="relative flex-1 max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+      <div className="relative max-w-sm flex-1">
+        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
           placeholder="Rechercher un utilisateur..."
           value={searchTerm}

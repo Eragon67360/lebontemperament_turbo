@@ -96,7 +96,7 @@ export default function BugReportsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Bug Reports</h1>
+      <h1 className="mb-6 text-2xl font-bold">Bug Reports</h1>
 
       <Table>
         <TableHeader>

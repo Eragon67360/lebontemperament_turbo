@@ -64,7 +64,7 @@ export default function UpdatePasswordForm() {
         <h1 className="text-2xl font-bold">
           Nouveau départ, nouveau mot de passe ! 🔐
         </h1>
-        <p className="text-balance text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm text-balance">
           Cette fois-ci, choisis-en un dont tu te souviendras... enfin, on
           espère ! 😉
         </p>
@@ -103,7 +103,7 @@ export default function UpdatePasswordForm() {
           )}
         </Button>
       </div>
-      <p className="text-xs text-center text-muted-foreground">
+      <p className="text-muted-foreground text-center text-xs">
         Pro tip : évite &quot;123456&quot; ou le nom de ton chat, c&apos;est pas
         top pour la sécurité ! 🐱
       </p>

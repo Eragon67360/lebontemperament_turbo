@@ -28,7 +28,7 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading }) => {
   return (
     <NavbarContent
       justify="center"
-      className="hidden lg:flex items-center text-[16px] uppercase gap-8 tracking-[2.4px] select-none"
+      className="hidden items-center gap-8 text-[16px] tracking-[2.4px] uppercase select-none lg:flex"
     >
       <NavbarItem>
         <Link

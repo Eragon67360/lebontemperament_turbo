@@ -375,7 +375,7 @@ export function InviteUserDialog({
         onOpenChange(open);
       }}
     >
-      <DialogContent className="max-w-xs sm:max-w-[800px] rounded-md">
+      <DialogContent className="max-w-xs rounded-md sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>Inviter des Utilisateurs</DialogTitle>
           <DialogDescription>
@@ -383,13 +383,13 @@ export function InviteUserDialog({
             invitations seront envoyées par lots.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-end mb-4">
+        <div className="mb-4 flex justify-end">
           <div className="relative">
             <input
               type="file"
               accept=".csv"
               onChange={handleCSVImport}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
             <Button variant="outline">
               <Upload className="mr-2 h-4 w-4" />
@@ -397,14 +397,14 @@ export function InviteUserDialog({
             </Button>
           </div>
         </div>
-        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 py-2 pl-2">
+        <div className="max-h-[400px] space-y-4 overflow-y-auto py-2 pr-4 pl-2">
           <div className="grid grid-cols-2 gap-4">
             <Label>Nom complet</Label>
             <Label>Email</Label>
           </div>
           {invitations.map((invitation, index) => (
             <div key={index} className="flex items-center gap-2">
-              <div className="flex-grow grid grid-cols-2 gap-4">
+              <div className="grid flex-grow grid-cols-2 gap-4">
                 <div>
                   <Input
                     id={`displayName-${index}`}
@@ -437,13 +437,13 @@ export function InviteUserDialog({
                     }
                   />
                   {invitation.status === "error" && invitation.errorMessage && (
-                    <p className="text-xs text-destructive mt-1">
+                    <p className="text-destructive mt-1 text-xs">
                       {invitation.errorMessage}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="w-[50px] flex items-center justify-center">
+              <div className="flex w-[50px] items-center justify-center">
                 {invitation.status === "pending" && (
                   <Button
                     variant="ghost"
@@ -473,18 +473,18 @@ export function InviteUserDialog({
           ))}
         </div>
 
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <Button variant="outline" onClick={addInvitationField}>
             <Plus className="mr-2 h-4 w-4" /> Ajouter un email
           </Button>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {invitations.length} personne{invitations.length > 1 ? "s" : ""}
           </p>
         </div>
         {isProcessing && (
           <div className="space-y-2">
             <Progress value={progress.percentage} />
-            <p className="text-sm text-center text-muted-foreground">
+            <p className="text-muted-foreground text-center text-sm">
               Traitement en cours : {progress.current} sur {progress.total} (
               {progress.percentage}%)
             </p>

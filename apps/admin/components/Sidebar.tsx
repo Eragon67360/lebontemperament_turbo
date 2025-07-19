@@ -54,13 +54,13 @@ export default function Sidebar({
         {
           href: "/dashboard/admin/users",
           label: "Utilisateurs",
-          icon: <Users className="w-4 h-4" />,
+          icon: <Users className="h-4 w-4" />,
           visible: true,
         },
         {
           href: "/dashboard/admin/ca",
           label: "Conseil d'administration",
-          icon: <Building2 className="w-4 h-4" />,
+          icon: <Building2 className="h-4 w-4" />,
           visible: false,
         },
       ],
@@ -71,13 +71,13 @@ export default function Sidebar({
         {
           href: "/dashboard/public/projets",
           label: "Projets",
-          icon: <LayoutDashboard className="w-4 h-4" />,
+          icon: <LayoutDashboard className="h-4 w-4" />,
           visible: false,
         },
         {
           href: "/dashboard/public/gallery",
           label: "Médias",
-          icon: <ImageIcon className="w-4 h-4" />,
+          icon: <ImageIcon className="h-4 w-4" />,
         },
       ],
     },
@@ -87,17 +87,17 @@ export default function Sidebar({
         {
           href: "/dashboard/public/concerts/prochains-concerts",
           label: "Concerts",
-          icon: <Music className="w-4 h-4" />,
+          icon: <Music className="h-4 w-4" />,
         },
         {
           href: "/dashboard/members/repetitions",
           label: "Répétitions",
-          icon: <Calendar className="w-4 h-4" />,
+          icon: <Calendar className="h-4 w-4" />,
         },
         {
           href: "/dashboard/members/evenements",
           label: "Événements",
-          icon: <Calendar className="w-4 h-4" />,
+          icon: <Calendar className="h-4 w-4" />,
         },
       ],
     },
@@ -130,27 +130,27 @@ export default function Sidebar({
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-primary/5",
+        "bg-primary/5 flex h-screen flex-col",
         mobile ? "w-full" : "w-64",
       )}
     >
       <Link
         href="/dashboard"
-        className="flex items-center p-3 hover:bg-primary/10"
+        className="hover:bg-primary/10 flex items-center p-3"
         onClick={onNavigate}
       >
-        <div className="relative size-8 sm:size-12 mr-3">
+        <div className="relative mr-3 size-8 sm:size-12">
           <Image fill alt="Logo" src="/picto.svg" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-primary">
+        <h1 className="text-primary text-xl font-bold sm:text-2xl">
           BT - Admin
         </h1>
       </Link>
 
-      <div className="px-2 py-2 space-y-1 overflow-y-auto">
+      <div className="space-y-1 overflow-y-auto px-2 py-2">
         {routes.map((route) => (
           <div key={route.label} className="space-y-0">
-            <div className="flex items-center p-2 text-sm font-medium text-muted-foreground">
+            <div className="text-muted-foreground flex items-center p-2 text-sm font-medium">
               <span className="ml-2 font-bold">{route.label}</span>
             </div>
             <div className="ml-4 space-y-1">
@@ -162,12 +162,12 @@ export default function Sidebar({
                       href={subroute.href}
                       onClick={onNavigate}
                       className={cn(
-                        "text-sm group flex p-2 w-full justify-start font-medium cursor-pointer hover:bg-primary/10 rounded-lg transition text-muted-foreground hover:text-primary",
+                        "group hover:bg-primary/10 text-muted-foreground hover:text-primary flex w-full cursor-pointer justify-start rounded-lg p-2 text-sm font-medium transition",
                         pathname === subroute.href &&
                           "bg-primary/10 text-primary",
                       )}
                     >
-                      <div className="flex items-center flex-1">
+                      <div className="flex flex-1 items-center">
                         {subroute.icon}
                         <span className="ml-3 text-sm">{subroute.label}</span>
                       </div>
@@ -184,7 +184,7 @@ export default function Sidebar({
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex h-fit gap-2 mt-auto py-2 mx-2 hover:bg-primary/10 hover:text-primary"
+              className="hover:bg-primary/10 hover:text-primary mx-2 mt-auto flex h-fit gap-2 py-2"
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage
@@ -196,10 +196,10 @@ export default function Sidebar({
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col text-start">
-                <span className="font-medium text-sm">
+                <span className="text-sm font-medium">
                   {user.user_metadata.display_name || user.user_metadata.name}
                 </span>
-                <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                <span className="text-muted-foreground max-w-[150px] truncate text-xs">
                   {user.email}
                 </span>
               </div>

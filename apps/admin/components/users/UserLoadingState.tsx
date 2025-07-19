@@ -5,7 +5,7 @@ export function UserLoadingState() {
     <div className="w-full space-y-4">
       {[1, 2, 3].map((i) => (
         <Card key={i} className="mb-4">
-          <CardContent className="flex items-center justify-between p-6  flex-wrap md:flex-nowrap">
+          <CardContent className="flex flex-wrap items-center justify-between p-6 md:flex-nowrap">
             <div className="flex items-center space-x-4">
               <Skeleton className="h-12 w-12 rounded-full" />
               <div className="space-y-2">
@@ -14,7 +14,7 @@ export function UserLoadingState() {
                 <Skeleton className="h-3 w-[100px]" />
               </div>
             </div>
-            <div className="flex items-center space-x-4 w-full md:w-fit mt-4 md:mt-0">
+            <div className="mt-4 flex w-full items-center space-x-4 md:mt-0 md:w-fit">
               <Skeleton className="h-6 w-[100px]" />
               <Skeleton className="h-8 w-8 rounded-full" />
             </div>

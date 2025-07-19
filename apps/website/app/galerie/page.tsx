@@ -38,21 +38,21 @@ export const metadata: Metadata = {
 
 const Galerie = () => {
   return (
-    <div className="container mx-auto flex flex-col mb-32 py-4 md:py-8 lg:py-16 px-8">
+    <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
       <div id="photos">
         <div className="">
-          <div className="flex justify-between items-end">
+          <div className="flex items-end justify-between">
             <div>
-              <h1 className="text-title text-primary/50 font-light leading-none">
+              <h1 className="text-title text-primary/50 leading-none font-light">
                 Galerie
               </h1>
-              <h2 className="text-title text-[#333] font-bold leading-none">
+              <h2 className="text-title leading-none font-bold text-[#333]">
                 Photos
               </h2>
             </div>
             <Link
               href="#videos"
-              className=" text-[#C4C4C4] hover:text-[#c4c4c4a2] text-xl md:text-2xl lg:text-3xl font-light p-2 flex rounded-lg justify-center items-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-lg p-2 text-xl font-light text-[#C4C4C4] hover:text-[#c4c4c4a2] md:text-2xl lg:text-3xl"
             >
               <span>Voir vidéos </span> <FaArrowDown />
             </Link>
@@ -66,18 +66,18 @@ const Galerie = () => {
 
       <div id="videos">
         <div className="py-4 md:py-8 lg:py-16">
-          <div className="flex justify-between items-end">
+          <div className="flex items-end justify-between">
             <div>
-              <h1 className="text-title text-primary/50 font-light leading-none">
+              <h1 className="text-title text-primary/50 leading-none font-light">
                 Galerie
               </h1>
-              <h2 className="text-title text-[#333] font-bold leading-none">
+              <h2 className="text-title leading-none font-bold text-[#333]">
                 Vidéos
               </h2>
             </div>
             <Link
               href="#photos"
-              className=" text-[#C4C4C4] hover:text-[#c4c4c4a2] text-xl md:text-2xl lg:text-3xl font-light p-2 flex rounded-lg justify-center items-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-lg p-2 text-xl font-light text-[#C4C4C4] hover:text-[#c4c4c4a2] md:text-2xl lg:text-3xl"
             >
               <span>Voir photos </span> <FaArrowUp />
             </Link>

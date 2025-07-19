@@ -1,16 +1,14 @@
 export interface Project {
   id: number;
-  display_order: number;
   name: string;
-  sub_name: string | null;
-  image: string | null;
+  subName: string;
+  date: string | Date;
+  image: string;
   slug: string;
-  explanation: string | null;
-  banniere: string | null;
-  image2: string | null;
-  image3: string | null;
-  text1: string | null;
-  text2: string | null;
-  created_at: string;
-  updated_at: string;
+  explanation: string;
+  banniere: string;
+  image2: string;
+  image3: string;
+  text1: string;
+  text2: string;
 }

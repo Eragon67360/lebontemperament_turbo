@@ -58,9 +58,9 @@ const nextConfig = {
   images: {
     remotePatterns: [
       new URL("https://res.cloudinary.com/dlt2j3dld/image/**"),
-      // eslint-disable-next-line no-undef
       new URL(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`
+        // eslint-disable-next-line no-undef
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`,
       ),
     ],
     formats: ["image/webp", "image/avif"],
@@ -113,11 +113,11 @@ const nextConfig = {
     optimizePackageImports: ["@heroui/react", "react-icons"],
   },
   compiler: {
+    // eslint-disable-next-line no-undef
     removeConsole: process.env.NODE_ENV === "production",
   },
   poweredByHeader: false,
   compress: true,
-  reactStrictMode: true,
 };
 
 export default nextConfig;

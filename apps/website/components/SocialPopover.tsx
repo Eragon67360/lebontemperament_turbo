@@ -23,34 +23,30 @@ export const SocialPopover = () => {
 
   return (
     !pathname.startsWith("/membres") && (
-      <div className="fixed bottom-8 right-8">
+      <div className="fixed right-8 bottom-8">
         <Popover>
           <PopoverTrigger>
             <Button
               size="md"
               isIconOnly
               variant="flat"
-              className="rounded-full bg-primary hover:scale-110 transition-all duration-500"
+              className="bg-primary rounded-full transition-all duration-500 hover:scale-110"
             >
               <span
-                className={`
-                text-white text-xl 
-                transition-opacity duration-400 ease-in-out
-                ${isTransitioning ? "opacity-0" : "opacity-100"}
-              `}
+                className={`text-xl text-white transition-opacity duration-400 ease-in-out ${isTransitioning ? "opacity-0" : "opacity-100"} `}
               >
                 {socials[currentIconIndex]?.icon}
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="flex flex-col gap-2 p-4 items-start">
+          <PopoverContent className="flex flex-col items-start gap-2 p-4">
             {socials.map((social) => (
               <a
                 key={social.name}
                 href={social.url}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 hover:text-primary transition-colors"
+                className="hover:text-primary flex items-center gap-2 transition-colors"
               >
                 {social.icon}
                 <span>{social.name}</span>

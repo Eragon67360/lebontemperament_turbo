@@ -1,6 +1,6 @@
-import CloudinaryImage from "@/components/CloudinaryImage";
+import ConcertPageClient from "@/components/ConcertPageClient";
 import projects from "@/public/json/projects.json";
-import { RoundedSize } from "@/utils/types";
+import { Project } from "@/types/projects";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -31,12 +31,14 @@ export async function generateMetadata({
       locale: "fr_FR",
       url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
       siteName: "Le Bon Tempérament",
+      title: `${project.name} ${project.subName} - Le Bon Tempérament`,
+      description: `${project?.explanation}`,
       images: [
         {
           url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-          width: 800,
-          height: 600,
-          alt: "Le Bon Tempérament",
+          width: 1200,
+          height: 630,
+          alt: `${project.name} ${project.subName} - Le Bon Tempérament`,
         },
       ],
     },
@@ -46,81 +48,64 @@ export async function generateMetadata({
   };
 }
 
-const ProjectPage = async ({
+// Generate structured data for events
+function generateStructuredData(project: Project, slug: string) {
+  const eventSchema = {
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    name: `${project.name} ${project.subName}`,
+    description: project.explanation,
+    url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
+    organizer: {
+      "@type": "Organization",
+      name: "Le Bon Tempérament",
+      url: process.env.NEXT_PUBLIC_BASE_URL,
+    },
+    performer: {
+      "@type": "MusicGroup",
+      name: "Le Bon Tempérament",
+      description: "Ensemble vocal et instrumental",
+    },
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    inLanguage: "fr-FR",
+    location: {
+      "@type": "Place",
+      name: "Saverne, France",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Saverne",
+        addressCountry: "FR",
+      },
+    },
+  };
+
+  return eventSchema;
+}
+
+export default async function ConcertPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) => {
+}) {
   const { slug } = await params;
-  const project = projects.find((p) => `${p.slug}` === slug);
+  const project = projects.find((p) => p.slug === slug);
 
   if (!project) {
-    return (
-      <div>Ce concert n&apos;a pas pu être trouvé dans la base de données</div>
-    );
+    return <div>Concert non trouvé</div>;
   }
+
+  const structuredData = generateStructuredData(project, slug);
 
   return (
     <>
-      <div className="container mx-auto w-full flex flex-col pb-8">
-        <div className="py-16">
-          <div>
-            <h1 className="text-title text-primary/50 font-light leading-none">
-              {project.name}
-            </h1>
-            <h2 className="text-title text-[#333] font-bold leading-none">
-              {project.subName}
-            </h2>
-            <hr className="mt-8" />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-12">
-          <div className="h-full">
-            <CloudinaryImage
-              src={project.banniere}
-              alt={project.name}
-              className="fill-image"
-              width={2000}
-              height={500}
-              rounded={RoundedSize.NONE}
-            />
-          </div>
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-0">
-            <div className="w-full lg:w-1/3 order-2 lg:order-1">
-              <CloudinaryImage
-                src={project.image2}
-                width={600}
-                alt={`Image de ${project.name} ${project.subName}`}
-                height={500}
-                rounded={RoundedSize.NONE}
-              />
-            </div>
-            <div
-              className="w-full lg:w-2/3 pl-0 lg:pl-8 text-justify order-1 lg:order-2"
-              dangerouslySetInnerHTML={{ __html: project.text1 }}
-            ></div>
-          </div>
-
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-0">
-            <div
-              className="w-full lg:w-2/3 pr-0 lg:pr-8 text-justify"
-              dangerouslySetInnerHTML={{ __html: project.text2 }}
-            ></div>
-            <div className="w-full lg:w-1/3">
-              <CloudinaryImage
-                src={project.image3}
-                width={600}
-                alt={`Image de ${project.name} ${project.subName}`}
-                height={500}
-                rounded={RoundedSize.NONE}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      )}
+      <ConcertPageClient project={project} />
     </>
   );
-};
-
-export default ProjectPage;
+}

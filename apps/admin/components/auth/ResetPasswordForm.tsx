@@ -53,7 +53,7 @@ export default function ResetPasswordForm() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">Email envoyé</h1>
-          <p className="text-balance text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm text-balance">
             Vérifiez votre boîte mail pour réinitialiser votre mot de passe.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function ResetPasswordForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Réinitialiser le mot de passe</h1>
-        <p className="text-balance text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm text-balance">
           Entrez votre email pour recevoir un lien de réinitialisation
         </p>
       </div>

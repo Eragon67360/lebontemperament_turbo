@@ -35,19 +35,19 @@ interface SoftwareCategory {
 }
 
 const Administration = () => {
-  const [selected, setSelected] = useState("archives");
+  const [selected, setSelected] = useState<string>("archives");
 
   const ArchivesSection = () => (
     <div className="space-y-2 lg:space-y-6">
       {/* CA Section */}
       <Card>
         <CardHeader className="flex gap-3">
-          <div className="p-2 bg-primary/10 rounded-md">
-            <MdOpenInNew className="w-5 h-5 text-primary" />
+          <div className="bg-primary/10 rounded-md p-2">
+            <MdOpenInNew className="text-primary h-5 w-5" />
           </div>
           <div>
             <h3 className="text-lg font-semibold">Comptes-rendus CA</h3>
-            <p className="text-sm text-default-500">
+            <p className="text-default-500 text-sm">
               Archives des réunions du conseil d&apos;administration
             </p>
           </div>
@@ -57,7 +57,7 @@ const Administration = () => {
           <Link
             href="https://drive.google.com/drive/folders/0B3HMykcVQJAVdmw2aTdyQUJyWUE?resourcekey=0-eSCStZ_H5-WvEpmFYk8sdQ"
             target="_blank"
-            className="mt-4 flex items-center gap-2 text-primary"
+            className="text-primary mt-4 flex items-center gap-2"
           >
             Voir toutes les archives <MdOpenInNew />
           </Link>
@@ -67,12 +67,12 @@ const Administration = () => {
       {/* AG Section */}
       <Card>
         <CardHeader className="flex gap-3">
-          <div className="p-2 bg-primary/10 rounded-md">
-            <MdOpenInNew className="w-5 h-5 text-primary" />
+          <div className="bg-primary/10 rounded-md p-2">
+            <MdOpenInNew className="text-primary h-5 w-5" />
           </div>
           <div>
             <h3 className="text-lg font-semibold">Comptes-rendus AG</h3>
-            <p className="text-sm text-default-500">
+            <p className="text-default-500 text-sm">
               Archives des assemblées générales
             </p>
           </div>
@@ -82,7 +82,7 @@ const Administration = () => {
           <Link
             href="https://drive.google.com/drive/folders/0B3HMykcVQJAVUGE3SllOZlRDMFk?resourcekey=0-KWWoenv1O_uTnu0GNE1t2Q"
             target="_blank"
-            className="mt-4 flex items-center gap-2 text-primary"
+            className="text-primary mt-4 flex items-center gap-2"
           >
             Voir toutes les archives <MdOpenInNew />
           </Link>
@@ -92,12 +92,12 @@ const Administration = () => {
       {/* Gazettes Section */}
       <Card>
         <CardHeader className="flex gap-3">
-          <div className="p-2 bg-primary/10 rounded-md">
-            <MdOpenInNew className="w-5 h-5 text-primary" />
+          <div className="bg-primary/10 rounded-md p-2">
+            <MdOpenInNew className="text-primary h-5 w-5" />
           </div>
           <div>
             <h3 className="text-lg font-semibold">Gazettes</h3>
-            <p className="text-sm text-default-500">Archives des gazettes</p>
+            <p className="text-default-500 text-sm">Archives des gazettes</p>
           </div>
         </CardHeader>
         <CardBody>
@@ -108,12 +108,12 @@ const Administration = () => {
       {/* Pêle-Mêle Section */}
       <Card>
         <CardHeader className="flex gap-3">
-          <div className="p-2 bg-primary/10 rounded-md">
-            <MdOpenInNew className="w-5 h-5 text-primary" />
+          <div className="bg-primary/10 rounded-md p-2">
+            <MdOpenInNew className="text-primary h-5 w-5" />
           </div>
           <div>
             <h3 className="text-lg font-semibold">Pêle-Mêle</h3>
-            <p className="text-sm text-default-500">Archives diverses</p>
+            <p className="text-default-500 text-sm">Archives diverses</p>
           </div>
         </CardHeader>
         <CardBody>
@@ -121,7 +121,7 @@ const Administration = () => {
           <Link
             href="https://drive.google.com/drive/folders/0B3HMykcVQJAVcG9Nd1JRa19tM3c?resourcekey=0-kSko9ElajKHa981AXkCz8Q"
             target="_blank"
-            className="mt-4 flex items-center gap-2 text-primary"
+            className="text-primary mt-4 flex items-center gap-2"
           >
             Voir toutes les archives <MdOpenInNew />
           </Link>
@@ -134,14 +134,14 @@ const Administration = () => {
     <div className="space-y-6">
       {/* Main Regulations Card */}
       <Card>
-        <CardHeader className="flex flex-col gap-2 lg:flex-row justify-between items-start lg:items-start">
-          <div className="flex gap-3 items-center">
-            <div className="p-2 bg-primary/10 rounded-md h-fit">
-              <IoDocumentText className="w-5 h-5 text-primary" />
+        <CardHeader className="flex flex-col items-start justify-between gap-2 lg:flex-row lg:items-start">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 h-fit rounded-md p-2">
+              <IoDocumentText className="text-primary h-5 w-5" />
             </div>
             <div>
               <h3 className="text-lg font-semibold">Règlement intérieur</h3>
-              <p className="text-sm text-default-500">
+              <p className="text-default-500 text-sm">
                 Extrait du règlement intérieur
               </p>
             </div>
@@ -162,8 +162,8 @@ const Administration = () => {
             {/* Répétitions */}
             <Card>
               <CardBody>
-                <h4 className="font-medium mb-2">Répétitions</h4>
-                <p className="text-sm text-default-500 italic">
+                <h4 className="mb-2 font-medium">Répétitions</h4>
+                <p className="text-default-500 text-sm italic">
                   Le Bon Tempérament répète un dimanche par mois et part en
                   tournée dix jours en été. Les répétitions de pupitres, hommes
                   et femmes, ont lieu tous les 15 jours.
@@ -174,8 +174,8 @@ const Administration = () => {
             {/* Commission de solidarité */}
             <Card>
               <CardBody>
-                <h4 className="font-medium mb-2">Commission de solidarité</h4>
-                <p className="text-sm text-default-500 italic">
+                <h4 className="mb-2 font-medium">Commission de solidarité</h4>
+                <p className="text-default-500 text-sm italic">
                   Une commission de solidarité est mise en place. Le fonds de
                   solidarité est alimenté par des dons et par le produit de
                   certaines manifestations auxquelles l&apos;association
@@ -190,15 +190,15 @@ const Administration = () => {
       </Card>
 
       {/* Additional Documents */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card isPressable as={Link} href="/pdf/charte_BT.pdf" target="_blank">
           <CardBody className="flex items-start gap-4">
-            <div className="p-2 bg-primary/10 rounded-md">
-              <IoDocumentText className="w-5 h-5 text-primary" />
+            <div className="bg-primary/10 rounded-md p-2">
+              <IoDocumentText className="text-primary h-5 w-5" />
             </div>
             <div>
               <h4 className="font-medium">Charte des séjours</h4>
-              <p className="text-sm text-default-500">
+              <p className="text-default-500 text-sm">
                 Consultez la charte complète sur les séjours BT
               </p>
             </div>
@@ -212,12 +212,12 @@ const Administration = () => {
           target="_blank"
         >
           <CardBody className="flex items-start gap-4">
-            <div className="p-2 bg-primary/10 rounded-md">
-              <IoDocumentText className="w-5 h-5 text-primary" />
+            <div className="bg-primary/10 rounded-md p-2">
+              <IoDocumentText className="text-primary h-5 w-5" />
             </div>
             <div>
               <h4 className="font-medium">Statuts de l&apos;association</h4>
-              <p className="text-sm text-default-500">
+              <p className="text-default-500 text-sm">
                 Consultez les statuts complets du Bon Tempérament
               </p>
             </div>
@@ -296,14 +296,14 @@ const Administration = () => {
         {softwareCategories.map((category) => (
           <Card key={category.title}>
             <CardHeader className="flex gap-3">
-              <div className="p-2 bg-primary/10 rounded-md">
-                <category.icon className="w-5 h-5 text-primary" />
+              <div className="bg-primary/10 rounded-md p-2">
+                <category.icon className="text-primary h-5 w-5" />
               </div>
               <h3 className="text-lg font-semibold">{category.title}</h3>
             </CardHeader>
             <Divider />
             <CardBody>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {category.items.map((item) => (
                   <Card
                     key={item.name}
@@ -314,7 +314,7 @@ const Administration = () => {
                   >
                     <CardBody className="flex flex-col items-center p-4">
                       {item.imageType === "icon" && item.icon ? (
-                        <item.icon className="w-12 h-12 mb-3" />
+                        <item.icon className="mb-3 h-12 w-12" />
                       ) : (
                         <CloudinaryImage
                           src={item.image!}
@@ -338,15 +338,15 @@ const Administration = () => {
         <Card>
           <CardHeader>
             <div className="flex gap-3">
-              <div className="p-2 bg-primary/10 rounded-md">
-                <FaTools className="w-5 h-5 text-primary" />
+              <div className="bg-primary/10 rounded-md p-2">
+                <FaTools className="text-primary h-5 w-5" />
               </div>
               <h3 className="text-lg font-semibold">Trucs et astuces</h3>
             </div>
           </CardHeader>
           <Divider />
           <CardBody>
-            <p className="text-sm text-default-500">
+            <p className="text-default-500 text-sm">
               Windows Media Player permet de modifier la vitesse de lecture
               d&apos;un enregistrement sans modifier la tessiture...{" "}
               {/* Rest of the content */}
@@ -358,15 +358,15 @@ const Administration = () => {
   };
 
   return (
-    <div className="p-2 md:p-4 lg:p-6 w-full">
+    <div className="w-full p-2 md:p-4 lg:p-6">
       <Card>
         <CardHeader className="flex gap-3">
-          <div className="p-2 bg-primary/10 rounded-md">
-            <MdAdminPanelSettings className="w-5 h-5 text-primary" />
+          <div className="bg-primary/10 rounded-md p-2">
+            <MdAdminPanelSettings className="text-primary h-5 w-5" />
           </div>
           <div>
             <h2 className="text-lg font-semibold">Administration</h2>
-            <p className="text-sm text-default-500">
+            <p className="text-default-500 text-sm">
               Documents et ressources administratives
             </p>
           </div>
@@ -375,6 +375,7 @@ const Administration = () => {
         <CardBody>
           <Tabs
             selectedKey={selected}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onSelectionChange={setSelected as any}
             aria-label="Administration sections"
           >

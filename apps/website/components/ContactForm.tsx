@@ -140,17 +140,17 @@ const ContactForm = () => {
 
   return (
     <section
-      className="mt-[120px] px-8 lg:px-24"
+      className="w-full bg-white px-8 py-16 lg:px-24"
       id="contact"
       aria-labelledby="contact-title"
     >
       <h2
         id="contact-title"
-        className="text-primary/50 font-light text-title leading-none"
+        className="text-primary/50 text-title leading-none font-light"
       >
         Nous contacter
       </h2>
-      <div className="mt-[30px] flex gap-[30px] justify-between">
+      <div className="mt-[30px] flex justify-between gap-[30px]">
         <div className="w-full lg:w-1/2">
           <form
             className="flex flex-col gap-4"
@@ -245,14 +245,14 @@ const ContactForm = () => {
               aria-required="true"
             />
 
-            <div className="flex justify-start mt-6 gap-4">
+            <div className="mt-6 flex justify-start gap-4">
               <button
                 type="submit"
                 disabled={isButtonDisabled || loading}
-                className="justify-end px-[20px] py-[18px] bg-[#333] text-white border-[#333] border hover:bg-white hover:text-[#333] transition-all flex items-center space-x-[18px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-end space-x-[18px] border border-[#333] bg-[#333] px-[20px] py-[18px] text-white transition-all hover:bg-white hover:text-[#333] disabled:cursor-not-allowed disabled:opacity-50"
                 aria-describedby={isButtonDisabled ? "submit-help" : undefined}
               >
-                <span className="uppercase text-[12px] tracking-[2.4px]">
+                <span className="text-[12px] tracking-[2.4px] uppercase">
                   {loading ? "Envoi en cours..." : "Envoyer un mail"}
                 </span>
                 {!loading && (
@@ -276,7 +276,7 @@ const ContactForm = () => {
           </form>
         </div>
 
-        <div className="w-1/2 hidden lg:flex justify-end">
+        <div className="hidden w-1/2 justify-end lg:flex">
           <CldImage
             src={"Site/logo"}
             alt="Logo Le Bon Tempérament - Contact"

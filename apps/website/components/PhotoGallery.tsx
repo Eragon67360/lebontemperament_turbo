@@ -79,7 +79,7 @@ export default function PhotoGallery() {
           title={
             <p className="text-xl md:text-2xl lg:text-4xl">Nos concerts</p>
           }
-          className="font-bold text-xl md:text-2xl lg:text-4xl"
+          className="text-xl font-bold md:text-2xl lg:text-4xl"
         >
           <MasonryPhotoAlbum
             columns={columns}
@@ -93,7 +93,7 @@ export default function PhotoGallery() {
           title={
             <p className="text-xl md:text-2xl lg:text-4xl">La vie au BT</p>
           }
-          className="font-bold text-xl md:text-2xl lg:text-4xl"
+          className="text-xl font-bold md:text-2xl lg:text-4xl"
         >
           <MasonryPhotoAlbum
             columns={columns}
