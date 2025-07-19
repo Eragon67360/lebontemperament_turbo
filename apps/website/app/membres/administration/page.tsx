@@ -35,7 +35,7 @@ interface SoftwareCategory {
 }
 
 const Administration = () => {
-  const [selected, setSelected] = useState("archives");
+  const [selected, setSelected] = useState<string>("archives");
 
   const ArchivesSection = () => (
     <div className="space-y-2 lg:space-y-6">
@@ -375,6 +375,7 @@ const Administration = () => {
         <CardBody>
           <Tabs
             selectedKey={selected}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onSelectionChange={setSelected as any}
             aria-label="Administration sections"
           >

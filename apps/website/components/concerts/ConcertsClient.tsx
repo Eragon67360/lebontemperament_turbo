@@ -437,7 +437,7 @@ const ConcertsClient = () => {
                     {projet.name} {projet.subName}
                   </h3>
                   <p
-                    className="line-clamp-4 flex-1 overflow-hidden text-sm text-gray-500"
+                    className="flex-1 overflow-hidden text-sm text-gray-500"
                     dangerouslySetInnerHTML={{ __html: projet.explanation }}
                   ></p>
                   <div className="flex">

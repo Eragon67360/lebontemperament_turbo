@@ -67,6 +67,22 @@ const Header = () => {
     },
   };
 
+  // Helper function to get page title
+  const getPageTitle = (path: string): string => {
+    const titleMap: { [key: string]: string } = {
+      "/concerts": "Nos Concerts",
+      "/concerts/autres": "CDs",
+      "/decouvrir": "Nous Découvrir",
+      "/galerie": "Galerie",
+      "/contact": "Contact",
+      "/impressum": "Impressum",
+      "/politique-de-confidentialite": "Politique de Confidentialité",
+      "/membres": "Espace Membres",
+    };
+
+    return titleMap[path] || "Page";
+  };
+
   // Breadcrumb structured data
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -136,21 +152,5 @@ const Header = () => {
     </Head>
   );
 };
-
-// Helper function to get page title for breadcrumbs
-function getPageTitle(pathname: string): string {
-  const pageTitles: Record<string, string> = {
-    "/decouvrir": "Nous découvrir",
-    "/concerts": "Nos concerts",
-    "/concerts/autres": "Autres concerts",
-    "/galerie": "Galerie",
-    "/contact": "Contact",
-    "/membres": "Espace membres",
-    "/impressum": "Impressum",
-    "/politique-de-confidentialite": "Politique de confidentialité",
-  };
-
-  return pageTitles[pathname] || "Page";
-}
 
 export default Header;
