@@ -13,6 +13,7 @@ export interface Concert {
   created_by: string;
   affiche: string | null;
   tour_id?: string | null;
+  related_link?: string | null;
 }
 
 export interface CreateConcertDTO {
