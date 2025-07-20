@@ -121,17 +121,19 @@ const ConcertsClient = () => {
                 Concerts
               </h2>
             </div>
-            <button
+            <Button
+              variant="light"
+              radius="sm"
               onClick={() => {
                 const el = document.getElementById("projects-section");
                 if (el) el.scrollIntoView({ behavior: "smooth" });
               }}
-              className="flex items-center justify-center gap-2 rounded-lg border-none bg-transparent p-2 text-xl font-light text-gray-400 hover:text-gray-500 md:text-2xl lg:text-3xl"
+              className="flex items-center gap-2 text-xl font-light text-gray-400 hover:text-gray-500 md:text-2xl lg:text-3xl"
               aria-label="Voir les projets"
             >
               <span>Voir projets</span>
               <IoIosArrowRoundDown />
-            </button>
+            </Button>
           </div>
           <hr className="mt-8" />
         </div>
@@ -189,11 +191,14 @@ const ConcertsClient = () => {
                             content="Voir l'affiche"
                             className="shrink-0"
                           >
-                            <button
+                            <Button
+                              isIconOnly
+                              variant="light"
+                              radius="sm"
                               onClick={() =>
                                 handleImageClick(tour.tour_poster as string)
                               }
-                              className="cursor-zoom-in"
+                              className="h-20 w-20 cursor-zoom-in rounded-lg p-0 shadow-md sm:h-24 sm:w-24 lg:h-[120px] lg:w-[120px]"
                               aria-label="Voir l'affiche du concert"
                             >
                               <Image
@@ -203,7 +208,7 @@ const ConcertsClient = () => {
                                 height={120}
                                 className="h-20 w-20 rounded-lg shadow-md sm:h-24 sm:w-24 lg:h-[120px] lg:w-[120px]"
                               />
-                            </button>
+                            </Button>
                           </Tooltip>
                         )}
 
@@ -267,17 +272,21 @@ const ConcertsClient = () => {
                               </h4>
                               {concert.affiche && (
                                 <Tooltip content="Voir l'affiche">
-                                  <button
+                                  <Button
+                                    isIconOnly
+                                    variant="light"
+                                    radius="sm"
+                                    size="sm"
                                     onClick={() =>
                                       handleImageClick(
                                         concert.affiche as string,
                                       )
                                     }
-                                    className="hover:bg-primary/10 ml-2 rounded-full bg-gray-100 p-2 transition-colors"
+                                    className="ml-2"
                                     aria-label="Voir l'affiche du concert"
                                   >
                                     <IoEye className="text-primary h-4 w-4" />
-                                  </button>
+                                  </Button>
                                 </Tooltip>
                               )}
                             </div>
@@ -504,8 +513,10 @@ const ConcertsClient = () => {
                       href={`/concerts/${projet.slug}`}
                       aria-label={`Lien vers ${projet.name} ${projet.subName}`}
                       color="primary"
+                      variant="light"
+                      radius="sm"
                       size="sm"
-                      className="flex items-center justify-start space-x-[18px] uppercase"
+                      className="flex items-center gap-2"
                     >
                       <span>Voir plus</span>
                       <IoIosArrowRoundForward className="scale-110" />
@@ -540,14 +551,19 @@ const ConcertsClient = () => {
                   et de notre engagement envers la musique classique.
                 </p>
                 <div className="flex">
-                  <Link
+                  <Button
+                    as={Link}
                     href={`/concerts/autres`}
                     aria-label={`Lien vers autres projets`}
-                    className="bg-primary flex items-center justify-start space-x-[18px] rounded-lg px-[20px] py-[10px] text-xs tracking-[2.4px] text-white uppercase transition-all hover:bg-[#333]"
+                    color="primary"
+                    variant="light"
+                    radius="sm"
+                    size="sm"
+                    className="flex items-center gap-2"
                   >
                     <span>Voir plus</span>
                     <IoIosArrowRoundForward className="scale-110" />
-                  </Link>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -658,7 +674,7 @@ const ConcertsClient = () => {
 
         {/* Rehearsals Section */}
         <section
-          className="w-full bg-gray-100 px-8 py-16 lg:px-24"
+          className="mb-8 w-full bg-gray-100 px-8 py-16 lg:px-24"
           aria-labelledby="rehearsals-title"
         >
           <h2

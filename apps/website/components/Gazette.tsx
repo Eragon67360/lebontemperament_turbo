@@ -1,7 +1,8 @@
 "use client";
 
+import { Button } from "@heroui/react";
 import { RoundedSize } from "@/utils/types";
-import Link from "next/link";
+import NextLink from "next/link";
 import { useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
 import CloudinaryImage from "./CloudinaryImage";
@@ -24,27 +25,33 @@ const Gazette = () => {
       />
       {isHovered && (
         <div className="absolute inset-0 flex flex-col items-center justify-evenly bg-black/70 py-4 transition duration-300 lg:flex-row">
-          <Link
+          <Button
+            as={NextLink}
             href={"/img/gazettes/gazette_2023_03_05.pdf"}
             target="_blank"
             rel="noopener"
-            className="flex items-center gap-2 border border-black bg-white p-4 text-black transition hover:border-black/50 hover:text-black/50"
+            variant="bordered"
+            radius="sm"
+            className="flex items-center gap-2 border-white bg-white text-black hover:border-white/50 hover:text-black/50"
           >
-            <span className="text-[12px] tracking-[2.4px] uppercase">
+            <span className="text-xs tracking-[2.4px] uppercase">
               Voir la dernière gazette
             </span>
             <IoIosArrowRoundForward className="scale-110" />
-          </Link>
+          </Button>
           <div className="hidden h-full w-[1px] bg-white lg:block"></div>
-          <Link
+          <Button
+            as={NextLink}
             href={"/membres/administration#archives"}
-            className="flex items-center gap-2 border border-black bg-white p-4 text-black transition hover:border-black/50 hover:text-black/50"
+            variant="bordered"
+            radius="sm"
+            className="flex items-center gap-2 border-white bg-white text-black hover:border-white/50 hover:text-black/50"
           >
-            <span className="text-[12px] tracking-[2.4px] uppercase">
+            <span className="text-xs tracking-[2.4px] uppercase">
               Voir toutes les gazettes
             </span>
             <IoIosArrowRoundForward className="scale-110" />
-          </Link>
+          </Button>
         </div>
       )}
     </div>
