@@ -28,7 +28,7 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading }) => {
   return (
     <NavbarContent
       justify="center"
-      className="hidden items-center gap-8 text-[16px] tracking-[2.4px] uppercase select-none lg:flex"
+      className="hidden items-center gap-6 text-[16px] tracking-[2.4px] uppercase select-none lg:flex"
     >
       <NavbarItem>
         <Link
@@ -45,7 +45,7 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading }) => {
           aria-label="Aller à la page Nos Concerts"
           className={getLinkClassName("/concerts")}
         >
-          Nos concerts
+          Nos prochains concerts
         </Link>
       </NavbarItem>
       <NavbarItem>
