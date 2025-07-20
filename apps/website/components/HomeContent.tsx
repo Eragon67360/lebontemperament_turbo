@@ -51,7 +51,6 @@ const HomeContent = () => {
                   radius="sm"
                   color="primary"
                   aria-label="Voir nos concerts"
-                  className=""
                 >
                   Nos concerts
                   <IoIosArrowRoundForward
@@ -66,7 +65,6 @@ const HomeContent = () => {
                   radius="sm"
                   variant="bordered"
                   aria-label="Aller à la section Contact"
-                  className=""
                 >
                   Nous contacter
                 </Button>
@@ -93,8 +91,9 @@ const HomeContent = () => {
                 as={Link}
                 href="/concerts#projects-section"
                 color="primary"
+                radius="sm"
                 aria-label="Voir tous nos projets"
-                className="mx-auto uppercase"
+                className="mx-auto"
               >
                 Voir tous nos projets <IoIosArrowRoundForward />
               </Button>
@@ -152,19 +151,22 @@ const HomeContent = () => {
                   membres avec le plus grand nombre.
                 </p>
               </div>
-              <Link
+              <Button
+                as={Link}
                 href={"/decouvrir"}
+                variant="bordered"
+                radius="sm"
                 aria-label="Aller à la page Nous Découvrir pour en apprendre plus sur l'association"
-                className="mt-8 flex items-center justify-start space-x-[18px] bg-white px-[20px] py-[18px] text-[#333] transition-all hover:bg-[#333] hover:text-[#F2F2F2] lg:mt-0"
+                className="mt-8 lg:mt-0"
               >
-                <span className="text-[12px] tracking-[2.4px] uppercase">
+                <span className="text-xs tracking-[2.4px] uppercase">
                   En apprendre plus
                 </span>
                 <IoIosArrowRoundForward
                   className="scale-110"
                   aria-hidden="true"
                 />
-              </Link>
+              </Button>
             </div>
           </section>
 
@@ -183,10 +185,12 @@ const HomeContent = () => {
               <ConcertPhotos />
 
               <div className="mt-[30px] flex justify-end">
-                <Link
+                <Button
+                  as={Link}
                   href={"/concerts"}
+                  variant="bordered"
+                  radius="sm"
                   aria-label="Voir tous nos concerts"
-                  className="flex items-center justify-end space-x-[18px] border border-[#333] bg-[#333] px-[20px] py-[18px] text-white transition-all hover:bg-white hover:text-[#333]"
                 >
                   <span className="text-xs tracking-[2.4px] uppercase">
                     Voir tous les concerts
@@ -195,7 +199,7 @@ const HomeContent = () => {
                     className="scale-110"
                     aria-hidden="true"
                   />
-                </Link>
+                </Button>
               </div>
             </div>
           </section>
@@ -215,10 +219,12 @@ const HomeContent = () => {
               <CDPochettePhotos />
 
               <div className="mt-[30px] flex justify-end">
-                <Link
+                <Button
+                  as={Link}
                   href={"/concerts/autres"}
+                  variant="bordered"
+                  radius="sm"
                   aria-label="Voir nos CDs actuellement en vente"
-                  className="flex items-center justify-end space-x-[18px] border border-[#333] bg-[#333] px-[20px] py-[18px] text-white transition-all hover:bg-white hover:text-[#333]"
                 >
                   <span className="text-xs tracking-[2.4px] uppercase">
                     Acheter nos CDs
@@ -227,7 +233,7 @@ const HomeContent = () => {
                     className="scale-110"
                     aria-hidden="true"
                   />
-                </Link>
+                </Button>
               </div>
             </div>
           </section>
