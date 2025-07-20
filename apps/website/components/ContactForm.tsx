@@ -1,6 +1,6 @@
 "use client";
 import { ContactFormProps } from "@/types/contactFormData";
-import { Input, Spinner, Textarea, addToast } from "@heroui/react";
+import { Button, Input, Spinner, Textarea, addToast } from "@heroui/react";
 import { CldImage } from "next-cloudinary";
 import React, { useEffect, useState, useCallback } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
@@ -150,63 +150,58 @@ const ContactForm = () => {
       >
         Nous contacter
       </h2>
-      <div className="mt-[30px] flex justify-between gap-[30px]">
+      <div className="mt-12 flex justify-between gap-12">
         <div className="w-full lg:w-1/2">
           <form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-6"
             onSubmit={handleSubmit}
             noValidate
             aria-label="Formulaire de contact"
           >
-            <Input
-              type="text"
-              label="Nom de famille"
-              name="lastName"
-              value={formData.lastName}
-              variant="flat"
-              isInvalid={!!errors.lastName}
-              errorMessage={errors.lastName}
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
-              onValueChange={(value) => handleFieldChange("lastName", value)}
-              onBlur={() => handleFieldBlur("lastName", formData.lastName)}
-              aria-describedby={errors.lastName ? "lastName-error" : undefined}
-            />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <Input
+                type="text"
+                label="Nom de famille"
+                name="lastName"
+                value={formData.lastName}
+                variant="bordered"
+                radius="sm"
+                isInvalid={!!errors.lastName}
+                errorMessage={errors.lastName}
+                onValueChange={(value) => handleFieldChange("lastName", value)}
+                onBlur={() => handleFieldBlur("lastName", formData.lastName)}
+                aria-describedby={
+                  errors.lastName ? "lastName-error" : undefined
+                }
+              />
 
-            <Input
-              type="text"
-              label="Prénom"
-              name="firstName"
-              value={formData.firstName}
-              variant="flat"
-              isInvalid={!!errors.firstName}
-              errorMessage={errors.firstName}
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
-              onValueChange={(value) => handleFieldChange("firstName", value)}
-              onBlur={() => handleFieldBlur("firstName", formData.firstName)}
-              aria-describedby={
-                errors.firstName ? "firstName-error" : undefined
-              }
-            />
+              <Input
+                type="text"
+                label="Prénom"
+                name="firstName"
+                value={formData.firstName}
+                variant="bordered"
+                radius="sm"
+                isInvalid={!!errors.firstName}
+                errorMessage={errors.firstName}
+                onValueChange={(value) => handleFieldChange("firstName", value)}
+                onBlur={() => handleFieldBlur("firstName", formData.firstName)}
+                aria-describedby={
+                  errors.firstName ? "firstName-error" : undefined
+                }
+              />
+            </div>
 
             <Input
               type="email"
               label="Email"
               name="email"
               value={formData.email}
-              variant="flat"
+              variant="bordered"
+              radius="sm"
               isRequired
               isInvalid={!!errors.email}
               errorMessage={errors.email}
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
               onValueChange={(value) => handleFieldChange("email", value)}
               onBlur={() => handleFieldBlur("email", formData.email)}
               aria-describedby={errors.email ? "email-error" : undefined}
@@ -218,53 +213,50 @@ const ContactForm = () => {
               label="Sujet"
               name="subject"
               value={formData.subject}
-              variant="flat"
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
+              variant="bordered"
+              radius="sm"
               onValueChange={(value) => handleFieldChange("subject", value)}
             />
 
             <Textarea
-              type="textarea"
               label="Message"
               name="message"
               value={formData.message}
-              variant="flat"
+              variant="bordered"
+              radius="sm"
               isRequired
               isInvalid={!!errors.message}
               errorMessage={errors.message}
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3] min-h-[200px]",
-                inputWrapper: "rounded-none",
-              }}
+              minRows={6}
               onValueChange={(value) => handleFieldChange("message", value)}
               onBlur={() => handleFieldBlur("message", formData.message)}
               aria-describedby={errors.message ? "message-error" : undefined}
               aria-required="true"
             />
 
-            <div className="mt-6 flex justify-start gap-4">
-              <button
+            <div className="flex items-center gap-4">
+              <Button
                 type="submit"
+                color="primary"
+                radius="sm"
                 disabled={isButtonDisabled || loading}
-                className="flex items-center justify-end space-x-[18px] border border-[#333] bg-[#333] px-[20px] py-[18px] text-white transition-all hover:bg-white hover:text-[#333] disabled:cursor-not-allowed disabled:opacity-50"
                 aria-describedby={isButtonDisabled ? "submit-help" : undefined}
+                className="flex items-center gap-2"
               >
-                <span className="text-[12px] tracking-[2.4px] uppercase">
-                  {loading ? "Envoi en cours..." : "Envoyer un mail"}
-                </span>
-                {!loading && (
-                  <IoIosArrowRoundForward
-                    className="scale-110"
-                    aria-hidden="true"
-                  />
+                {loading ? (
+                  <>
+                    <Spinner size="sm" color="current" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs tracking-[2.4px] uppercase">
+                      Envoyer un mail
+                    </span>
+                    <IoIosArrowRoundForward className="scale-110" />
+                  </>
                 )}
-              </button>
-              {loading && (
-                <Spinner color="primary" aria-label="Chargement en cours" />
-              )}
+              </Button>
             </div>
 
             {isButtonDisabled && (
