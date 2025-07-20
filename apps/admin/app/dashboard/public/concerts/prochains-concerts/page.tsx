@@ -40,6 +40,7 @@ import {
   Tags,
   Trash2,
   Users,
+  Link,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -561,6 +562,9 @@ export default function ProchainsConcerts() {
                       "Tournée"
                     }
                   />
+                )}
+                {concert.related_link && (
+                  <InfoItem icon={Link} text={concert.related_link} />
                 )}
               </div>
             </div>
