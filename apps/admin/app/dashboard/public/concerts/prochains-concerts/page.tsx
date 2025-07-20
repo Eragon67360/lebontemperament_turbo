@@ -40,6 +40,7 @@ import {
   Tags,
   Trash2,
   Users,
+  Link,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -141,6 +142,7 @@ export default function ProchainsConcerts() {
         context: form.context.value,
         name: form.concertName.value,
         additional_informations: form.additional_informations.value,
+        related_link: form.related_link.value,
       };
 
       const response = await fetch("/api/prochains-concerts", {
@@ -184,6 +186,7 @@ export default function ProchainsConcerts() {
       additional_informations: formData.get(
         "additional_informations",
       ) as string,
+      related_link: formData.get("related_link"),
     };
 
     try {
@@ -559,6 +562,9 @@ export default function ProchainsConcerts() {
                       "Tournée"
                     }
                   />
+                )}
+                {concert.related_link && (
+                  <InfoItem icon={Link} text={concert.related_link} />
                 )}
               </div>
             </div>

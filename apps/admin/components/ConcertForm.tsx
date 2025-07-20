@@ -153,6 +153,15 @@ export function ConcertForm({
           currentImageUrl={initialData?.affiche || null}
         />
       </div>
+      <div>
+        <Label htmlFor="related_link">Lien connexe (optionnel)</Label>
+        <Input
+          id="related_link"
+          name="related_link"
+          type="text"
+          defaultValue={initialData?.related_link || ""}
+        />
+      </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Chargement..." : submitLabel}
       </Button>
