@@ -88,6 +88,17 @@ const HomeContent = () => {
               Nos derniers projets
             </h2>
             <ProjectViewer />
+            <div className="mt-4 flex justify-center">
+              <Button
+                as={Link}
+                href="/concerts#projects-section"
+                color="primary"
+                aria-label="Voir tous nos projets"
+                className="mx-auto uppercase"
+              >
+                Voir tous nos projets <IoIosArrowRoundForward />
+              </Button>
+            </div>
           </div>
         </section>
 
