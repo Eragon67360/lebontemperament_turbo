@@ -6,6 +6,7 @@ import { Event } from "@/types/events";
 import { Rehearsal } from "@/types/rehearsals";
 import { RoundedSize } from "@/utils/types";
 import {
+  Button,
   Modal,
   ModalBody,
   ModalContent,
@@ -498,14 +499,17 @@ const ConcertsClient = () => {
                     dangerouslySetInnerHTML={{ __html: projet.explanation }}
                   ></p>
                   <div className="flex">
-                    <Link
+                    <Button
+                      as={Link}
                       href={`/concerts/${projet.slug}`}
                       aria-label={`Lien vers ${projet.name} ${projet.subName}`}
-                      className="bg-primary flex items-center justify-start space-x-[18px] rounded-lg px-[20px] py-[10px] text-xs tracking-[2.4px] text-white uppercase transition-all hover:bg-[#333]"
+                      color="primary"
+                      size="sm"
+                      className="flex items-center justify-start space-x-[18px] uppercase"
                     >
                       <span>Voir plus</span>
                       <IoIosArrowRoundForward className="scale-110" />
-                    </Link>
+                    </Button>
                   </div>
                 </div>
               </div>
