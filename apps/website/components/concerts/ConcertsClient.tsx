@@ -179,40 +179,72 @@ const ConcertsClient = () => {
                 return (
                   <div key={tour.id} className="space-y-6">
                     {/* Tour Header */}
-                    <div className="from-primary/10 to-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-r p-8">
-                      <div className="relative z-10">
-                        <h3 className="mb-2 text-3xl font-bold text-gray-800">
-                          {tour.name}
-                        </h3>
-                        {tour.description && (
-                          <p className="mb-4 text-gray-600">
-                            {tour.description}
-                          </p>
+                    <div className="from-primary/10 to-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-r p-4 sm:p-6 lg:p-8">
+                      <div className="relative z-10 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-start sm:gap-6">
+                        {/* Tour Poster */}
+
+                        {tour.tour_poster && (
+                          <Tooltip
+                            content="Voir l'affiche"
+                            className="shrink-0"
+                          >
+                            <button
+                              onClick={() =>
+                                handleImageClick(tour.tour_poster as string)
+                              }
+                              className="cursor-zoom-in"
+                              aria-label="Voir l'affiche du concert"
+                            >
+                              <Image
+                                src={tour.tour_poster}
+                                alt={`Affiche de la tournée ${tour.name}`}
+                                width={120}
+                                height={120}
+                                className="h-20 w-20 rounded-lg shadow-md sm:h-24 sm:w-24 lg:h-[120px] lg:w-[120px]"
+                              />
+                            </button>
+                          </Tooltip>
                         )}
-                        <div className="flex items-center gap-6 text-sm">
-                          {tour.start_date && tour.end_date && (
-                            <div className="flex items-center gap-2">
-                              <IoCalendarClear className="text-primary" />
-                              <span className="text-gray-600">
-                                Du{" "}
-                                {format(new Date(tour.start_date), "dd MMMM", {
-                                  locale: fr,
-                                })}{" "}
-                                au{" "}
-                                {format(
-                                  new Date(tour.end_date),
-                                  "dd MMMM yyyy",
-                                  { locale: fr },
-                                )}
-                              </span>
-                            </div>
+
+                        {/* Tour Info */}
+                        <div className="flex flex-1 flex-col items-center text-center sm:items-start md:text-start">
+                          <h3 className="mb-2 text-2xl font-bold text-gray-800 sm:text-3xl">
+                            {tour.name}
+                          </h3>
+                          {tour.description && (
+                            <p className="mb-4 text-sm text-gray-600 sm:text-base">
+                              {tour.description}
+                            </p>
                           )}
-                          <span className="text-primary inline-block rounded-full bg-white/80 px-4 py-1.5 text-xs font-medium">
-                            {tour.context === "orchestre_et_choeur"
-                              ? "Orchestre et Chœur"
-                              : tour.context.charAt(0).toUpperCase() +
-                                tour.context.slice(1)}
-                          </span>
+                          <div className="flex flex-col items-center gap-3 text-sm sm:flex-row sm:gap-6">
+                            {tour.start_date && tour.end_date && (
+                              <div className="flex items-center gap-2">
+                                <IoCalendarClear className="text-primary" />
+                                <span className="text-gray-600">
+                                  Du{" "}
+                                  {format(
+                                    new Date(tour.start_date),
+                                    "dd MMMM",
+                                    {
+                                      locale: fr,
+                                    },
+                                  )}{" "}
+                                  au{" "}
+                                  {format(
+                                    new Date(tour.end_date),
+                                    "dd MMMM yyyy",
+                                    { locale: fr },
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-primary inline-block rounded-full bg-white/80 px-4 py-1.5 text-xs font-medium">
+                              {tour.context === "orchestre_et_choeur"
+                                ? "Orchestre et Chœur"
+                                : tour.context.charAt(0).toUpperCase() +
+                                  tour.context.slice(1)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       {/* Decorative element */}
