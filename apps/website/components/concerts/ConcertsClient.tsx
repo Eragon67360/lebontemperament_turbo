@@ -21,9 +21,10 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { IoIosArrowRoundDown, IoIosArrowRoundForward } from "react-icons/io";
 import {
   IoCalendarClear,
+  IoEye,
+  IoGlobeSharp,
   IoLocationSharp,
   IoTime,
-  IoEye,
 } from "react-icons/io5";
 import CloudinaryImage from "../CloudinaryImage";
 
@@ -273,6 +274,18 @@ const ConcertsClient = () => {
                                   {concert.place}
                                 </span>
                               </div>
+                              {concert.related_link && (
+                                <div className="flex items-center gap-2">
+                                  <IoGlobeSharp className="text-primary shrink-0" />
+                                  <Link
+                                    href={concert.related_link}
+                                    target="_blank"
+                                    className="hover:text-primary font-medium"
+                                  >
+                                    Lien connexe
+                                  </Link>
+                                </div>
+                              )}
                             </div>
 
                             {concert.additional_informations && (
@@ -376,6 +389,18 @@ const ConcertsClient = () => {
                                   {concert.place}
                                 </span>
                               </div>
+                              {concert.related_link && (
+                                <div className="flex items-center gap-2">
+                                  <IoGlobeSharp className="text-primary shrink-0" />
+                                  <Link
+                                    href={concert.related_link}
+                                    target="_blank"
+                                    className="hover:text-primary font-medium"
+                                  >
+                                    Lien connexe
+                                  </Link>
+                                </div>
+                              )}
                             </div>
                             <div className="pt-2">
                               <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">

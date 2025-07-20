@@ -141,6 +141,7 @@ export default function ProchainsConcerts() {
         context: form.context.value,
         name: form.concertName.value,
         additional_informations: form.additional_informations.value,
+        related_link: form.related_link.value,
       };
 
       const response = await fetch("/api/prochains-concerts", {
@@ -184,6 +185,7 @@ export default function ProchainsConcerts() {
       additional_informations: formData.get(
         "additional_informations",
       ) as string,
+      related_link: formData.get("related_link"),
     };
 
     try {
