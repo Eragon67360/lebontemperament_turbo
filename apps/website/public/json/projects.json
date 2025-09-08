@@ -82,5 +82,20 @@
     "image3": "Site/concerts/freres-jacques/image_2",
     "text1": "<p>Le quatuor vocal des Frères Jacques, actif de 1946 à 1982, a marqué la scène française par son esprit satirique et théâtral. Le Bon Tempérament revisite certaines de leurs plus célèbres interprétations, comme <em>La queue du chat</em> de Robert Marcy, <em>À la Saint Médard</em> de Rudi Revil et Michel Vaucaire, ou encore la parodie du lied de Schubert <em>Le complexe de la truite</em>.</p><p>À travers ces œuvres, le chœur explore des histoires cocasses, des contes poétiques et des chansons sociales, tout en jouant sur les contrastes entre la légèreté apparente et les sous-textes profonds.</p>",
     "text2": "<p>Le concert inclut également <em>La lune est morte</em> de Georges Liferman (1969), <em>L'Orgue de Barbarie</em> et <em>Les Deux escargots</em> de Joseph Kosma, et <em>Le Poinçonneur des Lilas</em> de Serge Gainsbourg.</p><p>Le final rend hommage à La Fontaine avec deux mises en musique du <em>Corbeau et le Renard</em> : l&apos;une de Jacques Frochot, l&apos;autre <em>La Fugue du Renard</em> de Pierre-Gérard Verny, figure du jazz vocal. Les pièces sont accompagnées au piano ou par de petits ensembles instrumentaux, pour une atmosphère intimiste et enjouée.</p>"
+  },
+  {
+    "id": 6,
+    "name": "Entre Terre et Ciel",
+    "subName": "Requiem de Mozart",
+    "date": "2025-08-16",
+    "image": "https://res.cloudinary.com/dlt2j3dld/image/upload/f_auto,q_auto/v1/Site/home/concerts/entre_terre_et_ciel",
+    "slug": "entre-terre-et-ciel",
+    "explanation": "Entre Terre et Ciel, le concert qui explore les thèmes de la vie et de la mort, se concentre sur le chef-d'œuvre intemporel de Mozart, son Requiem. Les deux parties du concert offrent une exploration musicale riche et variée.",
+    "banniere": "Site/concerts/bannieres/entre_terre_et_ciel",
+    "image2": "Site/concerts/entre-terre-et-ciel/image_1",
+    "image3": "Site/concerts/entre-terre-et-ciel/image_2",
+    "text1": "<p>Dans la première partie de ce concert alterneront <strong>Chœur des jeunes</strong> et <strong>Chœur des enfants</strong>. Les jeunes interprètent le touchant <strong>Hallelujah</strong>, Louange en hébreu, chanson écrite par le Canadien <em>Leonard Cohen</em>. <strong>Wolfgang et moi</strong>, sur une musique de <em>Marie Paule Belle</em> et des paroles de <em>Françoise Mallet-Joris</em> et <em>Michel Grisolia</em>, évoque de façon humoristique la figure de <strong>Nannerl</strong>, sœur aînée de Mozart, comme lui musicienne prodige et qui aurait écrit de nombreuses œuvres de son frère. Le chœur des enfants poursuit avec cette <strong>Polonaise pour W.A. de Mozart</strong>, arrangée par <em>Henry O. Millsby</em> dans un esprit de jazz vocal. <strong>Un Poco Loco</strong> (un peu fou en espagnol) est une chanson du film d&apos;animation <em>Coco</em>. Le jour de la Fête des morts, le héros, <strong>Miguel</strong> doit solliciter l&apos;aide de ses ancêtres pour rentrer auprès de ses proches. Peu à peu, nous entrons dans la thématique de ce concert, à savoir la <strong>messe des morts</strong>. Ainsi la <strong>Danse macabre</strong>, poème symphonique composé en 1874 par <em>Camille Saint-Saëns</em> d&apos;après le poème d&apos;<em>Henri Cazalis</em>, <strong>Égalité-Fraternité</strong> évoque-t-elle la mort : minuit sonne, Satan va conduire le bal, la Mort paraît, accorde son violon, et la ronde commence, presque furtivement au début, s&apos;anime, semble s&apos;apaiser et repart avec une rage accrue qui ne cessera qu&apos;au chant du coq. L&apos;arrangement orchestral est de <em>Chloé Rozaire</em> qui dirige le <strong>Chœur des jeunes</strong>.</p>",
+
+    "text2": "<p>La deuxième partie de ce concert est consacrée à de larges extraits du <strong>Requiem de Mozart</strong>, pour solistes, chœur et orchestre, une des œuvres les plus célèbres du répertoire religieux de tous les temps. Et le fait que <em>Mozart</em> ait composé cette œuvre alors que sa mort approchait renforce encore le côté dramatique de ce pathétique Requiem.</p>"
   }
 ]

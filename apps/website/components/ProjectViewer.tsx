@@ -1,10 +1,9 @@
 "use client";
 import projects from "@/public/json/projects.json";
 import { Button } from "@heroui/react";
-import Link from "next/link";
-import React from "react";
-import { IoIosArrowRoundForward } from "react-icons/io";
 import Image from "next/image";
+import Link from "next/link";
+import { IoIosArrowRoundForward } from "react-icons/io";
 
 const ProjectViewer = () => {
   // Sort projects by date (newest first) and take the latest 4
@@ -22,7 +21,7 @@ const ProjectViewer = () => {
                 href={`/concerts/${latestProjects[0]?.slug || ""}`}
                 className="block"
               >
-                <div className="relative h-32">
+                <div className="relative !h-32 overflow-hidden">
                   <Image
                     src={latestProjects[0]?.image || ""}
                     alt={latestProjects[0]?.name || ""}
