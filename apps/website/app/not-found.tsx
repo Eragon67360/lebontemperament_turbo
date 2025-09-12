@@ -30,7 +30,7 @@ export default function NotFound() {
             href="/"
             color="primary"
             size="lg"
-            startContent={<IoHome />}
+            startContent={<IoHome className="shrink-0" />}
             aria-label="Retour à la page d'accueil"
           >
             Retour à l&apos;accueil
@@ -39,7 +39,7 @@ export default function NotFound() {
           <Button
             variant="bordered"
             size="lg"
-            startContent={<IoArrowBack />}
+            startContent={<IoArrowBack className="shrink-0" />}
             onPress={() => window.history.back()}
             aria-label="Retour à la page précédente"
           >
