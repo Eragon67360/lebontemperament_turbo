@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/membres/*",
         "/api/*",
+        "/download",
         "/copie-de-contact",
         "/copie-de-nous-decouvrir",
         "/videos",
