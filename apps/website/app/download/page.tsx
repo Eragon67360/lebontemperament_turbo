@@ -13,7 +13,7 @@ export default function DownloadPage() {
     const startDownload = async () => {
       try {
         const response = await fetch(
-          "/pdf/Programmes/Entre_Ciel_et_Terre_2025.pdf",
+          "/pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf",
         );
         if (!response.ok) {
           throw new Error("Failed to fetch file");
@@ -23,7 +23,7 @@ export default function DownloadPage() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "Entre_Ciel_et_Terre_2025.pdf";
+        link.download = "Entre_Terre_et_Ciel_2025.pdf";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -44,7 +44,7 @@ export default function DownloadPage() {
   const handleManualDownload = async () => {
     try {
       const response = await fetch(
-        "/pdf/Programmes/Entre_Ciel_et_Terre_2025.pdf",
+        "/pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf",
       );
       if (!response.ok) {
         throw new Error("Failed to fetch file");
@@ -79,7 +79,7 @@ export default function DownloadPage() {
             id="download-title"
             className="text-primary/50 text-title mb-4 leading-none font-light"
           >
-            Entre Ciel et Terre
+            Entre Terre et Ciel
           </h1>
           <p className="mb-8 text-base font-light text-gray-500 md:text-lg lg:text-xl">
             Programme 2025
