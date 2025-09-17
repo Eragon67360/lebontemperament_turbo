@@ -7,15 +7,11 @@ import { IoHome, IoArrowBack } from "react-icons/io5";
 export default function NotFound() {
   return (
     <div
-      className="relative flex min-h-screen w-full flex-col items-center justify-center bg-cover bg-center text-gray-800"
-      style={{ backgroundImage: "url(/img/not_found.webp)" }}
+      className="relative flex min-h-screen w-full flex-col items-center justify-center bg-gray-100 text-gray-800"
       role="main"
       aria-labelledby="error-title"
     >
-      {/* Overlay for better text readability */}
-      <div className="bg-opacity-40 absolute inset-0 bg-black"></div>
-
-      <div className="bg-opacity-95 relative z-10 mx-4 max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
+      <div className="relative z-10 mx-4 max-w-md rounded-lg bg-white p-8 text-center shadow-md">
         <h1 id="error-title" className="mb-4 text-4xl font-bold text-gray-800">
           404 - Page non trouvée
         </h1>

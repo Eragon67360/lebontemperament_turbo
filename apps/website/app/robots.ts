@@ -32,7 +32,7 @@ export default function robots(): MetadataRoute.Robots {
         "/&",
         "/auth",
         "pub-concerts",
-        "_next/*"
+        "_next/*",
       ],
     },
     sitemap: `${WEBSITE_URL}/sitemap.xml`,
