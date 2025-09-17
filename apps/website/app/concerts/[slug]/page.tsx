@@ -2,6 +2,8 @@ import ConcertPageClient from "@/components/ConcertPageClient";
 import projects from "@/public/json/projects.json";
 import { Project } from "@/types/projects";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { IoIosArrowRoundBack } from "react-icons/io";
 
 export async function generateMetadata({
   params,
@@ -93,7 +95,22 @@ export default async function ConcertPage({
   const project = projects.find((p) => p.slug === slug);
 
   if (!project) {
-    return <div>Concert non trouvé</div>;
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 px-4 text-center">
+        <h1 className="text-4xl font-bold text-gray-800">Concert non trouvé</h1>
+        <p className="mt-4 text-lg text-gray-600">
+          Désolé, le concert que vous recherchez n'existe pas ou n'est plus
+          disponible.
+        </p>
+        <Link
+          href="/concerts"
+          className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white"
+        >
+          <IoIosArrowRoundBack className="text-xl" />
+          Retourner aux concerts
+        </Link>
+      </div>
+    );
   }
 
   const structuredData = generateStructuredData(project, slug);
