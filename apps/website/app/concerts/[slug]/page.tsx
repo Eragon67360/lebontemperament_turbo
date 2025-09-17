@@ -56,6 +56,7 @@ function generateStructuredData(project: Project, slug: string) {
     name: `${project.name} ${project.subName}`,
     description: project.explanation,
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
+    startDate: project.date,
     organizer: {
       "@type": "Organization",
       name: "Le Bon Tempérament",
