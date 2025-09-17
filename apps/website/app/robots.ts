@@ -31,7 +31,8 @@ export default function robots(): MetadataRoute.Robots {
         "/copie-de-nous-decouvrir?*",
         "/&",
         "/auth",
-        "pub-concerts"
+        "pub-concerts",
+        "_next/*"
       ],
     },
     sitemap: `${WEBSITE_URL}/sitemap.xml`,
