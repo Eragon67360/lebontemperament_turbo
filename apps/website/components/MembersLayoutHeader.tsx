@@ -35,7 +35,7 @@ export default function MembersLayoutHeader({
   const getFirstName = (fullName: string) => {
     if (!fullName) return "";
 
-    const matches = fullName.match(/^([A-Za-z]+(?:-[A-Za-z]+)*)/);
+    const matches = fullName.match(/^([\p{L}]+(?:-[\p{L}]+)*)/u);
 
     if (matches) {
       return matches[0];
