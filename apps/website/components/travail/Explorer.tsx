@@ -5,6 +5,7 @@ import { IoArrowBack } from "react-icons/io5";
 import { SiMusescore } from "react-icons/si";
 import { DriveFile } from "@/utils/types";
 import { toast } from "sonner";
+import { Button } from "@heroui/react";
 
 interface ExplorerProps {
   initialFolderId: string;
@@ -62,33 +63,12 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
     }
   };
 
-  const handleFileClick = (file: DriveFile) => {
-    const baseFileUrl = `https://drive.google.com/uc?id=${file.id}`;
-    const audioUrl = `https://drive.google.com/file/d/${file.id}/preview`;
-    const downloadUrl = `${baseFileUrl}&export=download`;
-
-    if (file.mimeType === "application/pdf") {
-      window.open(baseFileUrl, "_blank");
-    } else if (file.mimeType.startsWith("audio/")) {
-      const audioPlayerUrl = `/membres/travail/audioplayer?fileUrl=${encodeURIComponent(
-        audioUrl,
-      )}&fileName=${file.name}`;
-      window.open(audioPlayerUrl, "_blank");
-    } else {
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   const renderFileIcon = (mimeType: string) => {
     switch (mimeType) {
       case "application/pdf":
         return <FaRegFilePdf className="text-red-500" />;
       case "audio/mpeg":
+      case "audio/wav":
         return <FaMusic className="text-blue-500" />;
       case "application/x-musescore":
         return <SiMusescore className="text-purple-500" />;
@@ -149,16 +129,31 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
         ) : (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {individualFiles.map((file) => (
-              <button
+              <div
                 key={file.id}
-                onClick={() => handleFileClick(file)}
                 className="group flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
               >
                 <div className="h-5 w-5">{renderFileIcon(file.mimeType)}</div>
                 <span className="flex-1 truncate text-sm font-medium text-gray-900">
                   {file.name}
                 </span>
-              </button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => {
+                    const downloadUrl = `https://drive.google.com/uc?id=${file.id}&export=download`;
+                    const link = document.createElement("a");
+                    link.href = downloadUrl;
+                    link.download = file.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="cursor-pointer rounded-lg bg-blue-500 px-3 py-1 text-sm text-black transition-colors hover:bg-blue-600"
+                >
+                  Télécharger
+                </Button>
+              </div>
             ))}
           </div>
         )}

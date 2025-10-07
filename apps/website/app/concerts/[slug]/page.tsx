@@ -99,7 +99,7 @@ export default async function ConcertPage({
       <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 px-4 text-center">
         <h1 className="text-4xl font-bold text-gray-800">Concert non trouvé</h1>
         <p className="mt-4 text-lg text-gray-600">
-          Désolé, le concert que vous recherchez n'existe pas ou n'est plus
+          Désolé, le concert que vous recherchez n&apos;existe pas ou n&apos;est plus
           disponible.
         </p>
         <Link

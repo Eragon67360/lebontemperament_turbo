@@ -7,12 +7,15 @@
   * {
     @apply border-border focus-visible:ring-primary outline-primary;
   }
+
   body {
     @apply scroll-smooth;
   }
+
   html {
     @apply scroll-smooth;
   }
+
 
   /* Accessibility improvements */
   :focus-visible {
@@ -51,6 +54,7 @@
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -119,6 +123,10 @@
   --heroui-focus: var(--color-primary);
 }
 
+button {
+  @apply cursor-pointer;
+}
+
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -126,7 +134,7 @@
 }
 
 .text-title {
-  @apply text-[clamp(24px,4.44vw,64px)];
+  font-size: clamp(24px, 4.44vw, 64px);
 }
 
 .gallery img {
@@ -136,14 +144,12 @@
 }
 
 .crossed {
-  background: linear-gradient(
-    to top left,
-    rgba(189, 189, 189, 0) 0%,
-    rgba(189, 189, 189, 0) calc(50% - 0.8px),
-    rgba(189, 189, 189, 1) 50%,
-    rgba(189, 189, 189, 0) calc(50% + 0.8px),
-    rgba(189, 189, 189, 0) 100%
-  );
+  background: linear-gradient(to top left,
+      rgba(189, 189, 189, 0) 0%,
+      rgba(189, 189, 189, 0) calc(50% - 0.8px),
+      rgba(189, 189, 189, 1) 50%,
+      rgba(189, 189, 189, 0) calc(50% + 0.8px),
+      rgba(189, 189, 189, 0) 100%);
 }
 
 .audio-player .rhap_container,
@@ -169,6 +175,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -178,6 +185,7 @@
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
