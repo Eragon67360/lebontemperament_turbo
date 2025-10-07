@@ -89,7 +89,7 @@ const FileExplorer: React.FC = () => {
               <button
                 key={index}
                 onClick={() => setActiveTab(tab)}
-                className={`flex items-center gap-3 rounded-lg p-3 transition-all duration-200 ${
+                className={`flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-all duration-200 ${
                   activeTab.id === tab.id
                     ? "bg-primary/5 text-primary"
                     : "hover:bg-gray-50"
