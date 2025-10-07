@@ -149,7 +149,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                     link.click();
                     document.body.removeChild(link);
                   }}
-                  className="cursor-pointer rounded-lg bg-blue-500 px-3 py-1 text-sm text-black transition-colors hover:bg-blue-600"
+                  className="cursor-pointer"
                 >
                   Télécharger
                 </Button>
