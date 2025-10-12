@@ -174,6 +174,7 @@ export function TourForm({
           onFileClear={() => setSelectedFile(null)}
           value={selectedFile}
           currentImageUrl={initialData?.tour_poster || null}
+          mode="image"
         />
       </div>
 
