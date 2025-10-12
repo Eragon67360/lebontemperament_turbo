@@ -32,9 +32,12 @@ const MembresConcertsEvents = () => {
       );
 
       // Filter out past events
-      const futureEvents = eventsData.filter((event: Event) =>
-        isAfter(new Date(event.date_from), today),
-      );
+      const futureEvents = eventsData.filter((event: Event) => {
+        const eventEnd = event.date_to
+          ? new Date(event.date_to)
+          : new Date(event.date_from);
+        return isAfter(eventEnd, today);
+      });
 
       // Sort concerts by date
       const sortedConcerts = futureConcerts.sort(
