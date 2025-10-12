@@ -178,7 +178,7 @@ export default function RehearsalsList() {
         />
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
+            <Button className="w-full rounded-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Ajouter une répétition</span>
               <span className="inline sm:hidden">Ajouter</span>

@@ -61,7 +61,7 @@ export default function Sidebar({
           href: "/dashboard/admin/ca",
           label: "Conseil d'administration",
           icon: <Building2 className="h-4 w-4" />,
-          visible: false,
+          visible: true,
         },
       ],
     },

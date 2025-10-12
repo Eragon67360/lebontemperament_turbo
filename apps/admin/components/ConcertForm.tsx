@@ -151,6 +151,7 @@ export function ConcertForm({
           onFileClear={() => setSelectedFile(null)}
           value={selectedFile}
           currentImageUrl={initialData?.affiche || null}
+          mode="image"
         />
       </div>
       <div>
