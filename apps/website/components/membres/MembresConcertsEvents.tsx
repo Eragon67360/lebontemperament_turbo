@@ -170,7 +170,7 @@ const MembresConcertsEvents = () => {
                     {concert.context === "orchestre_et_choeur"
                       ? "Orchestre et Chœur"
                       : concert.context.charAt(0).toUpperCase() +
-                        concert.context.slice(1)}
+                      concert.context.slice(1)}
                   </span>
                 </div>
               </div>
@@ -235,7 +235,13 @@ const MembresConcertsEvents = () => {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {event.responsible_email && (
                     <span className="rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-600">
-                      Contact: {event.responsible_name}
+                      Contact:{" "}
+                      <a
+                        href={`mailto:${event.responsible_email}`}
+                        className="text-blue-500"
+                      >
+                        {event.responsible_name || event.responsible_email}
+                      </a>
                     </span>
                   )}
                   {event.link && (
