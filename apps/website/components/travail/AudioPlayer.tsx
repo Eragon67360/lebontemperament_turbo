@@ -25,7 +25,7 @@ const AudioPlayer = () => {
                 className="w-full rounded-full shadow-md"
                 aria-label={`Lecture audio de ${fileName}`}
               >
-                Votre navigateur ne supporte pas l'élément audio.
+                Votre navigateur ne supporte pas l&apos;élément audio.
               </audio>
               <Button
                 variant="solid"
