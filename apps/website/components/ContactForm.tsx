@@ -7,6 +7,8 @@ import { IoIosArrowRoundForward } from "react-icons/io";
 import ReCAPTCHA from "react-google-recaptcha";
 
 const ContactForm = () => {
+  console.log("SITE KEY : ", process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
+
   // Global reCAPTCHA error handler
   useEffect(() => {
     const handleRecaptchaError = (event: any) => {
@@ -35,6 +37,15 @@ const ContactForm = () => {
   const [honeypot, setHoneypot] = useState<string>("");
   const [captchaValue, setCaptchaValue] = useState<string | null>(null); // State for CAPTCHA value
   const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+  useEffect(() => {
+    if (!siteKey) {
+      console.warn(
+        "reCAPTCHA site key missing. Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and rebuild to enable CAPTCHA.",
+      );
+    }
+  }, [siteKey]);
 
   // Validate email format
   const isValidEmail = (email: string) => {
@@ -77,10 +88,10 @@ const ContactForm = () => {
 
     setIsButtonDisabled(
       !formData.email ||
-        !formData.message ||
-        Boolean(emailError) ||
-        Boolean(messageError) ||
-        !captchaValue, // Disable button if CAPTCHA is not verified
+      !formData.message ||
+      Boolean(emailError) ||
+      Boolean(messageError) ||
+      !captchaValue, // Disable button if CAPTCHA is not verified
     );
   }, [formData, validateField, captchaValue]);
 
@@ -286,21 +297,31 @@ const ContactForm = () => {
               className="hidden"
             />
 
-            <ReCAPTCHA
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
-              ref={recaptchaRef}
-              onChange={(value) => {
-                console.log("reCAPTCHA onChange triggered with value:", value);
-                setCaptchaValue(value);
-              }}
-              onExpired={() => {
-                console.log("reCAPTCHA expired");
-                setCaptchaValue(null);
-              }}
-              theme="light"
-              size="normal"
-              type="image"
-            />
+            {siteKey ? (
+              <ReCAPTCHA
+                sitekey={siteKey}
+                ref={recaptchaRef}
+                onChange={(value) => {
+                  console.log(
+                    "reCAPTCHA onChange triggered with value:",
+                    value,
+                  );
+                  setCaptchaValue(value);
+                }}
+                onExpired={() => {
+                  console.log("reCAPTCHA expired");
+                  setCaptchaValue(null);
+                }}
+                theme="light"
+                size="normal"
+                type="image"
+              />
+            ) : (
+              <div className="text-sm text-red-600">
+                reCAPTCHA non configuré — le formulaire est protégé côté
+                serveur. Veuillez contacter l&apos;administrateur.
+              </div>
+            )}
 
             <div className="flex items-center gap-4">
               <Button
