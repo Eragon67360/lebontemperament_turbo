@@ -170,7 +170,7 @@ const MembresConcertsEvents = () => {
                     {concert.context === "orchestre_et_choeur"
                       ? "Orchestre et Chœur"
                       : concert.context.charAt(0).toUpperCase() +
-                      concert.context.slice(1)}
+                        concert.context.slice(1)}
                   </span>
                 </div>
               </div>

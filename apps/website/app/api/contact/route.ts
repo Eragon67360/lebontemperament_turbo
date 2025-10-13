@@ -15,8 +15,57 @@ export async function POST(request: NextRequest) {
     const username = process.env.NEXT_PUBLIC_BURNER_USERNAME;
     const password = process.env.NEXT_PUBLIC_BURNER_PASSWORD;
 
-    const { firstName, lastName, email, subject, message } =
+    const { firstName, lastName, email, subject, message, captchaValue } =
       await parseRequestBody(request);
+
+    // Verify reCAPTCHA token
+    if (!captchaValue) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Veuillez vérifier que vous n'êtes pas un robot",
+        },
+        { status: 400 },
+      );
+    }
+
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error("RECAPTCHA_SECRET_KEY not found in environment variables");
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Configuration du serveur incomplète",
+        },
+        { status: 500 },
+      );
+    }
+
+    // Verify reCAPTCHA with Google
+    const recaptchaResponse = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaValue}`,
+      {
+        method: "POST",
+      },
+    );
+
+    const recaptchaResult = await recaptchaResponse.json();
+
+    if (!recaptchaResult.success) {
+      console.error(
+        "reCAPTCHA verification failed:",
+        recaptchaResult["error-codes"],
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Échec de la vérification reCAPTCHA",
+          errorCodes: recaptchaResult["error-codes"],
+        },
+        { status: 400 },
+      );
+    }
 
     const transporter = nodemailer.createTransport({
       service: "Gmail",

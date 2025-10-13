@@ -2,10 +2,27 @@
 import { ContactFormProps } from "@/types/contactFormData";
 import { Button, Input, Spinner, Textarea, addToast } from "@heroui/react";
 import { CldImage } from "next-cloudinary";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const ContactForm = () => {
+  console.log("SITE KEY : ", process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
+
+  // Global reCAPTCHA error handler
+  useEffect(() => {
+    const handleRecaptchaError = (event: any) => {
+      console.error("Global reCAPTCHA error:", event);
+    };
+
+    // Listen for reCAPTCHA errors
+    window.addEventListener("recaptcha-error", handleRecaptchaError);
+
+    return () => {
+      window.removeEventListener("recaptcha-error", handleRecaptchaError);
+    };
+  }, []);
+
   const [formData, setFormData] = useState<ContactFormProps>({
     lastName: "",
     firstName: "",
@@ -17,6 +34,18 @@ const ContactForm = () => {
   const [loading, setLoading] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
   const [errors, setErrors] = useState<Partial<ContactFormProps>>({});
+  const [honeypot, setHoneypot] = useState<string>("");
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null); // State for CAPTCHA value
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+  useEffect(() => {
+    if (!siteKey) {
+      console.warn(
+        "reCAPTCHA site key missing. Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and rebuild to enable CAPTCHA.",
+      );
+    }
+  }, [siteKey]);
 
   // Validate email format
   const isValidEmail = (email: string) => {
@@ -59,11 +88,12 @@ const ContactForm = () => {
 
     setIsButtonDisabled(
       !formData.email ||
-        !formData.message ||
-        Boolean(emailError) ||
-        Boolean(messageError),
+      !formData.message ||
+      Boolean(emailError) ||
+      Boolean(messageError) ||
+      !captchaValue, // Disable button if CAPTCHA is not verified
     );
-  }, [formData, validateField]);
+  }, [formData, validateField, captchaValue]);
 
   const handleFieldChange = (name: keyof ContactFormProps, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -79,16 +109,36 @@ const ContactForm = () => {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Validate all fields
+    if (honeypot) {
+      addToast({
+        title: "Erreur",
+        description: "Soumission invalide.",
+        color: "danger",
+      });
+      return;
+    }
+
+    if (!captchaValue) {
+      addToast({
+        title: "Erreur",
+        description: "Veuillez vérifier que vous n'êtes pas un robot.",
+        color: "danger",
+      });
+      return;
+    }
+
     const newErrors: Partial<ContactFormProps> = {};
     Object.keys(formData).forEach((key) => {
       const fieldName = key as keyof ContactFormProps;
-      const error = validateField(fieldName, formData[fieldName]);
-      if (error) {
-        newErrors[fieldName] = error;
+      const value = formData[fieldName];
+      if (value !== undefined && typeof value === "string") {
+        const error = validateField(fieldName, value);
+        if (error) {
+          newErrors[fieldName] = error;
+        }
       }
     });
 
@@ -105,7 +155,7 @@ const ContactForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, captchaValue }), // Send CAPTCHA value to the server
       });
 
       if (!response.ok) {
@@ -121,6 +171,8 @@ const ContactForm = () => {
         message: "",
       });
       setErrors({});
+      setCaptchaValue(null); // Reset CAPTCHA value
+      recaptchaRef.current?.reset(); // Reset reCAPTCHA widget
       addToast({
         title: "Succès",
         description: "Votre demande a bien été envoyée",
@@ -128,6 +180,9 @@ const ContactForm = () => {
       });
     } catch (err) {
       console.error(err);
+      // Reset reCAPTCHA on error
+      setCaptchaValue(null);
+      recaptchaRef.current?.reset();
       addToast({
         title: "Erreur",
         description: "Votre demande n'a pas pu être envoyée",
@@ -136,7 +191,7 @@ const ContactForm = () => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <section
@@ -234,6 +289,40 @@ const ContactForm = () => {
               aria-required="true"
             />
 
+            <Input
+              type="text"
+              name="honeypot"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              className="hidden"
+            />
+
+            {siteKey ? (
+              <ReCAPTCHA
+                sitekey={siteKey}
+                ref={recaptchaRef}
+                onChange={(value) => {
+                  console.log(
+                    "reCAPTCHA onChange triggered with value:",
+                    value,
+                  );
+                  setCaptchaValue(value);
+                }}
+                onExpired={() => {
+                  console.log("reCAPTCHA expired");
+                  setCaptchaValue(null);
+                }}
+                theme="light"
+                size="normal"
+                type="image"
+              />
+            ) : (
+              <div className="text-sm text-red-600">
+                reCAPTCHA non configuré — le formulaire est protégé côté
+                serveur. Veuillez contacter l&apos;administrateur.
+              </div>
+            )}
+
             <div className="flex items-center gap-4">
               <Button
                 type="submit"
@@ -262,7 +351,8 @@ const ContactForm = () => {
             {isButtonDisabled && (
               <p id="submit-help" className="text-sm text-gray-600">
                 Veuillez remplir tous les champs obligatoires (email et message)
-                pour pouvoir envoyer le formulaire.
+                et compléter la vérification reCAPTCHA pour pouvoir envoyer le
+                formulaire.
               </p>
             )}
           </form>
