@@ -5,7 +5,8 @@ export type ActivityType =
   | "concert_updated"
   | "concert_deleted"
   | "poster_updated"
-  | "group_updated";
+  | "group_updated"
+  | "ca_created";
 
 export type Activity = {
   id: string;

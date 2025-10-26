@@ -22,11 +22,20 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
+    // Get the file extension
     const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
 
+    // Determine bucket based on file type
+    let bucket = "concert-posters"; // default
+
+    // If PDF, use ca-documents bucket
+    if (fileExt?.toLowerCase() === "pdf") {
+      bucket = "ca-documents";
+    }
+
     const { error: uploadError } = await supabase.storage
-      .from("concert-posters")
+      .from(bucket)
       .upload(fileName, file);
 
     if (uploadError) {
@@ -35,7 +44,7 @@ export async function POST(request: Request) {
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from("concert-posters").getPublicUrl(fileName);
+    } = supabase.storage.from(bucket).getPublicUrl(fileName);
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {
