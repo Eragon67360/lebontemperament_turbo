@@ -100,7 +100,7 @@ export default function Evenements() {
       setOpen(false);
       setSelectedFile(null);
       setDateFrom(undefined);
-      e.currentTarget.reset();
+      // e.currentTarget.reset();
       await fetchCA();
     } catch (error) {
       toast.error("Erreur lors de l'ajout du CA");
