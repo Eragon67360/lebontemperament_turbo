@@ -1,6 +1,7 @@
 "use client";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import PdfList from "@/components/PdfList";
+import CAMinutesList from "@/components/CAMinutesList";
 import { RoundedSize } from "@/utils/types";
 import {
   Button,
@@ -53,7 +54,7 @@ const Administration = () => {
           </div>
         </CardHeader>
         <CardBody>
-          <PdfList jsonFileName="pdf_filesCA" context={"CA"} />
+          <CAMinutesList />
           <Link
             href="https://drive.google.com/drive/folders/0B3HMykcVQJAVdmw2aTdyQUJyWUE?resourcekey=0-eSCStZ_H5-WvEpmFYk8sdQ"
             target="_blank"

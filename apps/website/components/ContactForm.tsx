@@ -88,10 +88,10 @@ const ContactForm = () => {
 
     setIsButtonDisabled(
       !formData.email ||
-      !formData.message ||
-      Boolean(emailError) ||
-      Boolean(messageError) ||
-      !captchaValue, // Disable button if CAPTCHA is not verified
+        !formData.message ||
+        Boolean(emailError) ||
+        Boolean(messageError) ||
+        !captchaValue, // Disable button if CAPTCHA is not verified
     );
   }, [formData, validateField, captchaValue]);
 
