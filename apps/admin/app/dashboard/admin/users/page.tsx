@@ -317,7 +317,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="container px-4 py-8 sm:px-6 lg:px-8">
+    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <UserHeader
         isAddUserOpen={isAddUserOpen}
         setIsAddUserOpen={setIsAddUserOpen}
@@ -333,29 +333,30 @@ export default function UsersPage() {
         sortConfig={sortConfig}
         setSortConfig={setSortConfig}
       />
-
-      {isLoading ? (
-        <UserLoadingState />
-      ) : error ? (
-        <div className="py-8 text-center text-red-500">
-          <p>{error}</p>
-        </div>
-      ) : users.length === 0 ? (
-        <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
-      ) : (
-        <div className="space-y-4">
-          {sortedUsers.map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              currentUser={currentUser}
-              onEdit={setEditingUser}
-              onDelete={setUserToDelete}
-              onRoleChange={handleRoleChange}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 md:pr-2">
+        {isLoading ? (
+          <UserLoadingState />
+        ) : error ? (
+          <div className="py-8 text-center text-red-500">
+            <p>{error}</p>
+          </div>
+        ) : users.length === 0 ? (
+          <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
+        ) : (
+          <div className="space-y-2 md:space-y-4">
+            {sortedUsers.map((user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                currentUser={currentUser}
+                onEdit={setEditingUser}
+                onDelete={setUserToDelete}
+                onRoleChange={handleRoleChange}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <AddUserDialog
         isOpen={isAddUserOpen}

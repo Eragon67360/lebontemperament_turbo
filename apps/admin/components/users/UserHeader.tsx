@@ -22,16 +22,16 @@ export function UserHeader({
   approvedInvites,
 }: UserHeaderProps) {
   return (
-    <div className="border-border/40 relative mb-8 border-b pb-8">
+    <div className="border-border/40 relative mb-4 border-b pb-4 md:mb-8 md:pb-8">
       <div className="">
-        <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+        <div className="flex flex-col items-start justify-between gap-2 md:gap-6 lg:flex-row lg:items-center">
           {/* Header Text */}
-          <div className="space-y-2">
+          <div className="flex flex-col gap-1 md:gap-2">
             <DashboardPageHeader
               title="Gestion des utilisateurs"
               description="Gérez les comptes utilisateurs et leurs permissions"
             />
-            <div className="mt-2 flex gap-4">
+            <div className="flex gap-4">
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
                   {pendingInvites} en attente
@@ -49,11 +49,11 @@ export function UserHeader({
               <DialogTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="hover:bg-primary/10 h-11 w-full justify-start rounded-full border px-6 transition-colors sm:w-auto sm:justify-center md:border-none"
+                  className="hover:bg-primary/10 h-8 w-full justify-start rounded-full border px-4 text-xs transition-colors sm:w-auto sm:justify-center md:h-11 md:border-none md:px-6 md:text-base"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 rounded-full p-2">
-                      <UserPlus className="text-primary h-4 w-4" />
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="bg-primary/10 rounded-full p-1 md:p-2">
+                      <UserPlus className="text-primary size-3 md:size-4" />
                     </div>
                     <span>Inviter des Utilisateurs</span>
                   </div>
@@ -63,10 +63,10 @@ export function UserHeader({
 
             <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
               <DialogTrigger asChild>
-                <Button className="h-11 w-full justify-start rounded-full px-6 sm:w-auto sm:justify-center">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-white/20 p-2">
-                      <Plus className="h-4 w-4" />
+                <Button className="h-8 w-full justify-start rounded-full px-4 text-xs sm:w-auto sm:justify-center md:h-11 md:px-6 md:text-base">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="rounded-full bg-white/20 p-1 md:p-2">
+                      <Plus className="size-3 md:size-4" />
                     </div>
                     <span>Nouvel Utilisateur</span>
                   </div>
