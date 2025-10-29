@@ -157,10 +157,10 @@ export default function DashboardPage() {
   }, []);
   return (
     <>
-      <div className="container px-4 py-8 sm:px-6 lg:px-8">
+      <div className="flex w-full flex-col items-center gap-2 px-4 py-8 sm:px-6 md:gap-8 lg:px-8">
         <DashboardWelcomeHeader />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl dark:bg-black/50">
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+          <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 dark:bg-black/50">
             <div className="p-6">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -227,9 +227,8 @@ export default function DashboardPage() {
             </div>
           </Card>
 
-          {/* Current Program Card */}
           {/* Program Card */}
-          <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl dark:bg-black/50">
+          <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 dark:bg-black/50">
             <div className="p-6">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -299,82 +298,81 @@ export default function DashboardPage() {
               </div>
             </div>
           </Card>
-
-          {/* Concerts Card */}
-          <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl dark:bg-black/50">
-            <div className="p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 rounded-full p-2">
-                    <Calendar className="text-primary size-5" />
-                  </div>
-                  <div>
-                    {isLoadingConcerts ? (
-                      <Skeleton className="h-6 w-[200px]" />
-                    ) : (
-                      <h3 className="text-lg font-semibold">
-                        Prochains concerts
-                        <span className="text-muted-foreground ml-2 text-sm">
-                          ({concerts.length})
-                        </span>
-                      </h3>
-                    )}
-                  </div>
-                </div>
-                <Link href={RouteNames.DASHBOARD.PUBLIC.PROCHAINS_CONCERTS}>
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-primary/10 rounded-full"
-                  >
-                    Planifier
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="space-y-1">
-                {isLoadingConcerts ? (
-                  <div className="space-y-2">
-                    {[...Array(5)].map((_, index) => (
-                      <ConcertRowSkeleton key={index} />
-                    ))}
-                  </div>
-                ) : concerts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Calendar className="text-primary/30 mb-4 h-12 w-12" />
-                    <p className="text-muted-foreground text-sm">
-                      Aucun concert planifié
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    {concerts.map((concert) => (
-                      <div
-                        key={concert.id}
-                        className="hover:bg-primary/5 rounded-xl p-3 transition-colors"
-                      >
-                        {concert.name && (
-                          <p className="mb-1 text-sm font-semibold">
-                            {concert.name}
-                          </p>
-                        )}
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">{concert.place}</p>
-                          <p className="text-muted-foreground text-sm">
-                            {format(
-                              new Date(`${concert.date}T${concert.time}`),
-                              "d MMMM yyyy 'à' HH'h'mm",
-                              { locale: fr },
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
         </div>
+        {/* Concerts Card */}
+        <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 dark:bg-black/50">
+          <div className="p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 rounded-full p-2">
+                  <Calendar className="text-primary size-5" />
+                </div>
+                <div>
+                  {isLoadingConcerts ? (
+                    <Skeleton className="h-6 w-[200px]" />
+                  ) : (
+                    <h3 className="text-lg font-semibold">
+                      Prochains concerts
+                      <span className="text-muted-foreground ml-2 text-sm">
+                        ({concerts.length})
+                      </span>
+                    </h3>
+                  )}
+                </div>
+              </div>
+              <Link href={RouteNames.DASHBOARD.PUBLIC.PROCHAINS_CONCERTS}>
+                <Button
+                  variant="ghost"
+                  className="hover:bg-primary/10 rounded-full"
+                >
+                  Planifier
+                </Button>
+              </Link>
+            </div>
+
+            <div className="space-y-1">
+              {isLoadingConcerts ? (
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, index) => (
+                    <ConcertRowSkeleton key={index} />
+                  ))}
+                </div>
+              ) : concerts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Calendar className="text-primary/30 mb-4 h-12 w-12" />
+                  <p className="text-muted-foreground text-sm">
+                    Aucun concert planifié
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {concerts.map((concert) => (
+                    <div
+                      key={concert.id}
+                      className="hover:bg-primary/5 rounded-xl p-3 transition-colors"
+                    >
+                      {concert.name && (
+                        <p className="mb-1 text-sm font-semibold">
+                          {concert.name}
+                        </p>
+                      )}
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{concert.place}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {format(
+                            new Date(`${concert.date}T${concert.time}`),
+                            "d MMMM yyyy 'à' HH'h'mm",
+                            { locale: fr },
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
       </div>
     </>
   );
