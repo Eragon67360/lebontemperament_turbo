@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const Travail = () => {
   return (
     <>
-      <div className="w-full p-6">
+      <div className="w-full p-0 md:p-6">
         <FileExplorer />
       </div>
     </>
