@@ -23,7 +23,7 @@ export function MobileSidebar({ className }: { className?: string }) {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className={cn("fixed top-4 left-4 z-40 md:hidden", className)}
+          className={cn("fixed top-0 left-0 z-40 md:hidden", className)}
         >
           <Menu className="h-6 w-6" />
         </Button>

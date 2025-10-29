@@ -52,21 +52,21 @@ export function UserCard({
   onRoleChange,
 }: UserCardProps) {
   return (
-    <Card className="mb-4 overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl dark:bg-black/50">
-      <div className="p-6">
+    <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 transition-shadow hover:shadow-md dark:bg-black/50">
+      <div className="p-2 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4 md:flex-nowrap">
           {/* User Info Section */}
           <div className="flex items-center gap-4">
-            <Avatar className="ring-border/50 h-12 w-12 ring-2">
+            <Avatar className="ring-border/50 size-6 ring-2 md:size-12">
               <AvatarImage src={user.avatar} />
-              <AvatarFallback className="bg-primary/10 text-primary font-medium">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium md:text-base">
                 {user.display_name?.[0] || user?.email[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
-            <div className="space-y-1">
+            <div className="space-y-0 md:space-y-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium">
+                <h3 className="text-sm font-medium md:text-base">
                   {user.display_name || user.email.split("@")[0]}
                 </h3>
                 <TooltipProvider>
@@ -77,12 +77,14 @@ export function UserCard({
                       />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Status: {user.invite_status}</p>
+                      <p>Statut: {user.invite_status}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <p className="text-muted-foreground text-sm">{user.email}</p>
+              <p className="text-muted-foreground text-xs md:text-sm">
+                {user.email}
+              </p>
               <p className="text-muted-foreground text-xs">
                 Créé le {new Date(user.created_at).toLocaleDateString("fr-FR")}
               </p>
@@ -90,7 +92,7 @@ export function UserCard({
           </div>
 
           {/* Actions Section */}
-          <div className="flex w-full items-center justify-end gap-3 md:w-auto">
+          <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end">
             {user.id === currentUser || user.role === "superadmin" ? (
               <Badge
                 variant={getRoleBadgeVariant(user.role)}
@@ -105,7 +107,7 @@ export function UserCard({
                   onRoleChange(user.id, value)
                 }
               >
-                <SelectTrigger className="bg-primary/5 w-[140px] rounded-full border-0">
+                <SelectTrigger className="bg-primary/5 w-fit gap-2 rounded-full border-0 text-xs md:text-sm">
                   <SelectValue>{getRoleLabel(user.role)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>

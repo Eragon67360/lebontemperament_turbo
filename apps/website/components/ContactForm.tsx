@@ -7,8 +7,6 @@ import { IoIosArrowRoundForward } from "react-icons/io";
 import ReCAPTCHA from "react-google-recaptcha";
 
 const ContactForm = () => {
-  console.log("SITE KEY : ", process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
-
   // Global reCAPTCHA error handler
   useEffect(() => {
     const handleRecaptchaError = (event: any) => {

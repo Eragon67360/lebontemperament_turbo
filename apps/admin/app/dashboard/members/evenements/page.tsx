@@ -240,7 +240,7 @@ export default function Evenements() {
   };
 
   return (
-    <div className="container px-4 py-8 sm:px-6 lg:px-8">
+    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
         <div className="space-y-1.5">
           <DashboardPageHeader
@@ -273,87 +273,88 @@ export default function Evenements() {
           </DialogContent>
         </Dialog>
       </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 md:pr-2">
+        {loading ? (
+          <LoadingState />
+        ) : events.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="space-y-4">
+            {events.map((event) => (
+              <Card
+                key={event.id}
+                className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl transition-all duration-200 hover:shadow-xl dark:bg-black/50"
+              >
+                <div className="p-6">
+                  <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-semibold">{event.title}</h3>
+                        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {formatEventDate(event)} à{" "}
+                            {event.time.slice(0, 5).replace(":", "h")}
+                          </span>
+                        </div>
+                      </div>
 
-      {loading ? (
-        <LoadingState />
-      ) : events.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="space-y-4">
-          {events.map((event) => (
-            <Card
-              key={event.id}
-              className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl transition-all duration-200 hover:shadow-xl dark:bg-black/50"
-            >
-              <div className="p-6">
-                <div className="flex flex-col justify-between gap-4 sm:flex-row">
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold">{event.title}</h3>
-                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          {formatEventDate(event)} à{" "}
-                          {event.time.slice(0, 5).replace(":", "h")}
-                        </span>
+                      <div className="space-y-2">
+                        <p className="font-medium">{event.location}</p>
+                        <p className="text-muted-foreground text-sm">
+                          Responsable : {event.responsible_name}
+                          {event.responsible_email && (
+                            <span className="text-primary/70">
+                              {` (${event.responsible_email})`}
+                            </span>
+                          )}
+                        </p>
+                        {event.description && (
+                          <p className="text-muted-foreground text-sm">
+                            {event.description}
+                          </p>
+                        )}
+                        {event.link && (
+                          <a
+                            href={event.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
+                          >
+                            Voir plus
+                          </a>
+                        )}
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <p className="font-medium">{event.location}</p>
-                      <p className="text-muted-foreground text-sm">
-                        Responsable : {event.responsible_name}
-                        {event.responsible_email && (
-                          <span className="text-primary/70">
-                            {` (${event.responsible_email})`}
-                          </span>
-                        )}
-                      </p>
-                      {event.description && (
-                        <p className="text-muted-foreground text-sm">
-                          {event.description}
-                        </p>
-                      )}
-                      {event.link && (
-                        <a
-                          href={event.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
-                        >
-                          Voir plus
-                        </a>
-                      )}
+                    <div className="flex gap-2 sm:flex-col">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingEvent(event);
+                          setEditDialogOpen(true);
+                        }}
+                        className="hover:bg-primary/10 rounded-full"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(event.id)}
+                        className="hover:bg-destructive/10 text-destructive rounded-full"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex gap-2 sm:flex-col">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setEditingEvent(event);
-                        setEditDialogOpen(true);
-                      }}
-                      className="hover:bg-primary/10 rounded-full"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(event.id)}
-                      className="hover:bg-destructive/10 text-destructive rounded-full"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
