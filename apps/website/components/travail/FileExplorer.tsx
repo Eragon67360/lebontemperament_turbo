@@ -66,9 +66,9 @@ const FileExplorer: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabContent>(tabs[0]!);
 
   return (
-    <div className="rounded-xl bg-white shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
       {/* Header */}
-      <div className="border-b p-6">
+      <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 md:px-6 md:py-4">
         <div className="flex items-center gap-3">
           <CloudinaryImage
             src={"Site/membres/logos/drive"}
@@ -77,19 +77,21 @@ const FileExplorer: React.FC = () => {
             height={24}
             rounded={RoundedSize.NONE}
           />
-          <h2 className="text-lg font-semibold text-gray-900">Drive</h2>
+          <h2 className="text-base font-semibold text-gray-800 md:text-lg">
+            Drive
+          </h2>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
-        <div className="w-full border-r border-gray-100 p-4 lg:w-72">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+        <div className="w-full border-r border-gray-100 p-2 md:p-4 lg:w-72">
+          <div className="grid grid-cols-2 gap-1.5 md:gap-3 lg:grid-cols-1">
             {tabs.map((tab, index) => (
               <button
                 key={index}
                 onClick={() => setActiveTab(tab)}
-                className={`flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-all duration-200 ${
+                className={`flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-all duration-200 md:p-3 ${
                   activeTab.id === tab.id
                     ? "bg-primary/5 text-primary"
                     : "hover:bg-gray-50"
@@ -97,7 +99,7 @@ const FileExplorer: React.FC = () => {
               >
                 <div
                   className={`rounded-md p-2`}
-                  style={{ backgroundColor: `#${tab.iconColor}1e` }}
+                  style={{ backgroundColor: `#${tab.iconColor}0e` }}
                 >
                   <tab.icon
                     className={`h-4 w-4`}
@@ -109,7 +111,7 @@ const FileExplorer: React.FC = () => {
             ))}
           </div>
 
-          <div className="mt-6 border-t pt-6">
+          <div className="mt-2 border-t pt-2 md:mt-6 md:pt-6">
             <Link
               href="https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
               target="_blank"
@@ -123,11 +125,11 @@ const FileExplorer: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-2 md:p-6">
           <div className="mb-6 flex items-center gap-3">
             <div
               className={`rounded-md p-2`}
-              style={{ backgroundColor: `#${activeTab.iconColor}1e` }}
+              style={{ backgroundColor: `#${activeTab.iconColor}0e` }}
             >
               <activeTab.icon
                 className={`h-5 w-5`}
@@ -139,7 +141,9 @@ const FileExplorer: React.FC = () => {
             </h2>
           </div>
 
-          <div className="rounded-lg bg-gray-50 p-4">{activeTab.component}</div>
+          <div className="rounded-lg bg-gray-50 p-2 md:p-4">
+            {activeTab.component}
+          </div>
         </div>
       </div>
     </div>
