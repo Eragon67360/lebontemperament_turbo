@@ -34,7 +34,7 @@ export function UserSearch({
   };
 
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+    <div className="mb-2 flex flex-col gap-2 sm:flex-row md:mb-6 md:gap-4">
       <div className="relative max-w-sm flex-1">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input

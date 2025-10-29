@@ -607,7 +607,7 @@ export default function ProchainsConcerts() {
   const TourCard = ({ tour }: { tour: Tour }) => (
     <div className="border-border/50 overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:bg-black">
       <div className="p-6">
-        <div className="mb-4 flex items-start justify-between">
+        <div className="mb-4 flex flex-col items-start gap-4 md:flex-row md:justify-between">
           <div>
             <h3 className="text-xl font-medium tracking-tight">{tour.name}</h3>
             {tour.description && (
@@ -623,7 +623,7 @@ export default function ProchainsConcerts() {
           </Badge>
         </div>
 
-        <div className="text-muted-foreground mb-4 flex items-center gap-4 text-sm">
+        <div className="text-muted-foreground mb-4 flex flex-col items-start gap-2 text-sm md:flex-row md:items-center md:gap-4">
           {tour.start_date && tour.end_date && (
             <div className="flex items-center">
               <CalendarDays className="mr-2 h-4 w-4" />
@@ -794,38 +794,43 @@ export default function ProchainsConcerts() {
   );
 
   return (
-    <div className="container px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex items-center justify-between">
+    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <header className="mb-8 flex flex-shrink-0 flex-col items-start md:flex-row md:items-center md:justify-between">
         <DashboardPageHeader
           title="Gestion des concerts"
           description="Gérez les concerts à venir, leur date et leur lieu."
         />
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-4 md:flex-row md:gap-2">
           <AddTourButton />
           <AddConcertButton />
         </div>
       </header>
-      {tours.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-lg font-medium">Tournées</h2>
-          <div className="space-y-4">
-            {tours.map((tour) => (
-              <TourCard key={tour.id} tour={tour} />
-            ))}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:pr-2">
+        {tours.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-2 text-sm font-semibold">Tournées</h2>
+            <div className="space-y-4">
+              {tours.map((tour) => (
+                <TourCard key={tour.id} tour={tour} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-      {loading ? (
-        <LoadingState />
-      ) : concerts.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="space-y-6">
-          {concerts.map((concert) => (
-            <ConcertCard key={concert.id} concert={concert} />
-          ))}
-        </div>
-      )}
+        )}
+        {loading ? (
+          <LoadingState />
+        ) : concerts.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="mb-8">
+            <h2 className="mb-2 text-sm font-semibold">Concerts</h2>
+            <div className="space-y-4">
+              {concerts.map((concert) => (
+                <ConcertCard key={concert.id} concert={concert} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Alert Dialog for Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

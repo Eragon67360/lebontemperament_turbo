@@ -239,8 +239,8 @@ export default function Evenements() {
   }
 
   return (
-    <div className="container px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
+    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-4 flex flex-col items-center justify-between gap-6 sm:flex-row md:mb-8">
         <div className="space-y-1.5">
           <DashboardPageHeader
             title="Compte-rendus de CA"
@@ -333,67 +333,71 @@ export default function Evenements() {
           </DialogContent>
         </Dialog>
       </div>
-      {cas.length === 0 ? (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
-          <div className="space-y-4 text-center">
-            <FileText className="text-primary/30 mx-auto h-16 w-16" />
-            <h2 className="text-xl font-medium">Aucun compte-rendu de CA</h2>
-            <p className="text-muted-foreground max-w-sm text-sm">
-              Commencez par ajouter votre premier compte-rendu de CA
-            </p>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:pr-2">
+        {cas.length === 0 ? (
+          <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
+            <div className="space-y-4 text-center">
+              <FileText className="text-primary/30 mx-auto h-16 w-16" />
+              <h2 className="text-xl font-medium">Aucun compte-rendu de CA</h2>
+              <p className="text-muted-foreground max-w-sm text-sm">
+                Commencez par ajouter votre premier compte-rendu de CA
+              </p>
+            </div>
+            <Button className="rounded-full px-6" onClick={() => setOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter un CA
+            </Button>
           </div>
-          <Button className="rounded-full px-6" onClick={() => setOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter un CA
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {cas.map((ca) => (
-            <div
-              key={ca.id}
-              className="border-border/50 overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:bg-black"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 space-y-3">
-                    <h3 className="text-xl font-medium">{ca.title}</h3>
-                    <div className="text-muted-foreground flex items-center text-sm">
-                      <CalendarIcon className="text-muted-foreground/70 mr-2 h-4 w-4" />
-                      <span>
-                        {format(new Date(ca.date_from), "dd MMMM yyyy", {
-                          locale: fr,
-                        })}
-                      </span>
-                    </div>
-                    {ca.file_url && (
-                      <div>
-                        <a
-                          href={ca.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary flex items-center gap-2 hover:underline"
-                        >
-                          <FileText className="h-4 w-4" />
-                          Voir le compte-rendu (PDF)
-                        </a>
+        ) : (
+          <div className="space-y-4">
+            {cas.map((ca) => (
+              <div
+                key={ca.id}
+                className="border-border/50 overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:bg-black"
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-3">
+                      <h3 className="text-sm font-medium md:text-lg">
+                        {ca.title}
+                      </h3>
+                      <div className="text-muted-foreground flex items-center text-xs md:text-sm">
+                        <CalendarIcon className="text-muted-foreground/70 mr-2 h-4 w-4" />
+                        <span>
+                          {format(new Date(ca.date_from), "dd MMMM yyyy", {
+                            locale: fr,
+                          })}
+                        </span>
                       </div>
-                    )}
+                      {ca.file_url && (
+                        <div>
+                          <a
+                            href={ca.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary flex items-center gap-2 text-sm hover:underline md:text-base"
+                          >
+                            <FileText className="h-4 w-4" />
+                            Voir le compte-rendu (PDF)
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive rounded-full"
+                      onClick={() => handleDelete(ca.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive rounded-full"
-                    onClick={() => handleDelete(ca.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
