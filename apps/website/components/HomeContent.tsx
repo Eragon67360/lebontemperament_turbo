@@ -1,5 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useReducedMotion,
+} from "motion/react";
+
 import CDPochettePhotos from "@/components/CDPochettePhotos";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import ConcertPhotos from "@/components/ConcertPhotos";
@@ -9,37 +17,67 @@ import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
 import { Button, Link } from "@heroui/react";
 import { IoIosArrowRoundForward } from "react-icons/io";
+import Footer from "./Footer";
 
 const HomeContent = () => {
+  const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
+    typeof window !== "undefined"
+      ? Math.max(window.innerHeight * 0.6, 200)
+      : 600,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () =>
+      setMaxScrollPx(Math.max(window.innerHeight * 0.6, 200));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const { scrollY } = useScroll();
+  const prefersReduced = useReducedMotion();
+  const scale = prefersReduced
+    ? 1
+    : useTransform(scrollY, [0, maxScrollPx], [1, 0.82]);
+  const opacity = prefersReduced
+    ? 1
+    : useTransform(scrollY, [0, maxScrollPx], [1, 0.2]);
+
   return (
     <>
-      <div className="flex w-full flex-col items-center">
+      <div className="relative flex w-full flex-col items-center">
         {/* Hero Section */}
         <section
-          className="flex justify-center bg-white"
+          className="fixed top-0 left-0 z-0 flex h-screen w-full justify-center bg-[url('/img/entre_terre_et_ciel.jpg')] bg-cover bg-fixed bg-center"
           aria-labelledby="hero-title"
         >
-          <div className="flex w-full max-w-[1600px] justify-between gap-32 px-4 py-16">
-            <div className="hidden lg:col-span-5 lg:mt-0 lg:flex">
-              <CloudinaryImage
-                src={"Site/logo"}
-                alt="Logo Le Bon Tempérament - Ensemble vocal et instrumental"
-                className="scale-75"
-                width={600}
-                height={574}
-                rounded={RoundedSize.NONE}
-                priority={true}
-              />
-            </div>
-            <div className="mr-auto w-full place-self-center px-8 md:px-16 lg:col-span-7 lg:px-32">
+          <div aria-hidden className="absolute inset-0 z-10 bg-black/90" />
+          <motion.div
+            className="relative z-20 flex w-full justify-between gap-32 px-4 py-16"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            transition={{ duration: 0.5 }}
+            style={{
+              scale,
+              opacity,
+              transformOrigin: "center",
+              willChange: "transform, opacity",
+            }}
+          >
+            <div className="mx-auto flex w-full flex-col items-center justify-center px-8 md:w-2/3 md:px-16 lg:col-span-7 lg:px-8">
               <h1
                 id="hero-title"
-                className="mb-2 max-w-2xl text-xl leading-none font-extrabold tracking-tight md:text-2xl lg:text-3xl"
+                className="mb-2 text-center leading-none font-extrabold tracking-tight text-white"
               >
-                Bienvenue sur le site du <br />{" "}
-                <span className="text-primary">Bon Tempérament</span>
+                <span className="text-base font-light md:text-lg lg:text-xl">
+                  Bienvenue sur le site du <br />{" "}
+                </span>
+                <span className="text-primary text-4xl md:text-5xl lg:text-8xl">
+                  Bon Tempérament
+                </span>
               </h1>
-              <p className="mb-8 max-w-2xl text-base font-light text-gray-500 md:text-lg lg:text-xl">
+              <p className="mb-8 max-w-2xl text-sm font-light text-white/75 md:text-lg lg:text-xl">
                 Un ensemble vocal et instrumental
               </p>
 
@@ -63,19 +101,19 @@ const HomeContent = () => {
                   href="#contact"
                   size="lg"
                   radius="sm"
-                  variant="bordered"
+                  variant="solid"
                   aria-label="Aller à la section Contact"
                 >
                   Nous contacter
                 </Button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Projects Section */}
         <section
-          className="flex w-full justify-center bg-[#f2f2f2] py-16"
+          className="relative z-10 mt-[100dvh] flex w-full justify-center bg-[#f2f2f2] py-16"
           aria-labelledby="projects-title"
         >
           <div className="w-full max-w-[1440px] px-8 lg:px-24">
@@ -102,13 +140,13 @@ const HomeContent = () => {
         </section>
 
         {/* Main Content Container */}
-        <div className="mx-0 flex w-full max-w-[1440px] flex-col">
+        <div className="z-10 mx-0 flex w-full flex-col bg-white">
           {/* About Section */}
           <section
-            className="mt-16 flex w-full flex-col bg-[#F2F2F2] lg:flex-row"
+            className="mx-auto mt-16 flex w-full max-w-[1440px] flex-col lg:flex-row"
             aria-labelledby="about-title"
           >
-            <div className="relative flex w-full gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]">
+            <div className="relative flex w-full max-w-[1440px] gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]">
               <div className="flex w-1/2 flex-col gap-8">
                 <CloudinaryImage
                   src={"Site/home/home2"}
@@ -172,7 +210,7 @@ const HomeContent = () => {
 
           {/* Concerts Section */}
           <section
-            className="mt-16 w-full bg-white px-8 py-16 lg:px-24"
+            className="mx-auto mt-16 w-full max-w-[1440px] bg-white px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
           >
             <h2
@@ -206,7 +244,7 @@ const HomeContent = () => {
 
           {/* CDs Section */}
           <section
-            className="w-full bg-[#f8f8f8] px-8 py-16 lg:px-24"
+            className="mx-auto w-full max-w-[1440px] bg-[#f8f8f8] px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
           >
             <h2
@@ -240,6 +278,7 @@ const HomeContent = () => {
 
           {/* Contact Section */}
           <ContactForm />
+          <Footer />
         </div>
       </div>
     </>

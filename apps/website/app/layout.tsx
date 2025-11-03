@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import { FooterClientWrapper } from "@/components/FooterClientWrapper";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700", "900"],
@@ -128,7 +129,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
       </head>
-      <body className="bg-white">
+      <body className="z-10 bg-white">
         <Header />
         <Providers>
           <EasterEgg />
@@ -151,8 +152,8 @@ export default function RootLayout({
             <SocialPopover />
             <Analytics />
             <SpeedInsights />
+            <FooterClientWrapper />
           </main>
-          <Footer />
         </Providers>
         <GoogleAnalytics gaId="G-J893T7P26M" />
         <GoogleTagManager gtmId="G-J893T7P26M" />
