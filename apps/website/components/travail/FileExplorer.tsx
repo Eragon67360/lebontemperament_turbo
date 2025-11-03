@@ -6,6 +6,7 @@ import { JSX, useState } from "react";
 import { IconType } from "react-icons";
 import { FaPerson } from "react-icons/fa6";
 import { GiTrumpet } from "react-icons/gi";
+import { FaMusic } from "react-icons/fa";
 import { LuBaby, LuExternalLink } from "react-icons/lu";
 import CloudinaryImage from "../CloudinaryImage";
 import Explorer from "./Explorer";
@@ -59,6 +60,13 @@ const tabs: TabContent[] = [
     icon: GiTrumpet,
     iconColor: "41EDBA",
     component: <Explorer initialFolderId={orchestreId} />,
+  },
+  {
+    id: 5,
+    title: "Cahier 30 ans",
+    icon: FaMusic,
+    iconColor: "eb4034",
+    component: <Explorer initialFolderId="1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB" />,
   },
 ];
 
