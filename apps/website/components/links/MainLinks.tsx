@@ -8,16 +8,18 @@ import React from "react";
 
 interface MainLinksProps {
   user: User | null;
+  isLight?: boolean;
   isLoading: boolean;
 }
 
-const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading }) => {
+const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
   const pathname = usePathname();
 
   const isActive = (href: string) => pathname === href;
 
   const getLinkClassName = (path: string) => `
         py-1 px-2 transition-all duration-300 
+        ${isLight ? "text-white" : "text-foreground"}
         ${
           isActive(path)
             ? "border-primary/65 border-y-2"

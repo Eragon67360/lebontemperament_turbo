@@ -1,5 +1,15 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useReducedMotion,
+  useInView,
+  Variants,
+} from "motion/react";
+
 import CDPochettePhotos from "@/components/CDPochettePhotos";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import ConcertPhotos from "@/components/ConcertPhotos";
@@ -9,37 +19,82 @@ import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
 import { Button, Link } from "@heroui/react";
 import { IoIosArrowRoundForward } from "react-icons/io";
+import Footer from "./Footer";
 
 const HomeContent = () => {
+  const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
+    typeof window !== "undefined"
+      ? Math.max(window.innerHeight * 0.6, 200)
+      : 600,
+  );
+
+  // Refs for each section
+  const projectsRef = useRef(null);
+  const aboutRef = useRef(null);
+  const concertsRef = useRef(null);
+  const cdsRef = useRef(null);
+  const contactRef = useRef(null);
+
+  // In view detection for each section
+  const projectsInView = useInView(projectsRef, { once: true, amount: 0.3 });
+  const aboutInView = useInView(aboutRef, { once: true, amount: 0.3 });
+  const concertsInView = useInView(concertsRef, { once: true, amount: 0.3 });
+  const cdsInView = useInView(cdsRef, { once: true, amount: 0.3 });
+  const contactInView = useInView(contactRef, { once: true, amount: 0.3 });
+
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () =>
+      setMaxScrollPx(Math.max(window.innerHeight * 0.6, 200));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const { scrollY } = useScroll();
+  const scale = prefersReducedMotion
+    ? 1
+    : useTransform(scrollY, [0, maxScrollPx], [1, 0.82]);
+  const opacity = prefersReducedMotion
+    ? 1
+    : useTransform(scrollY, [0, maxScrollPx], [1, 0.2]);
+
   return (
     <>
-      <div className="flex w-full flex-col items-center">
+      <div className="relative flex w-full flex-col items-center">
         {/* Hero Section */}
         <section
-          className="flex justify-center bg-white"
+          className="fixed top-0 left-0 z-0 flex h-screen w-full justify-center bg-[url('/img/entre_terre_et_ciel.jpg')] bg-cover bg-fixed bg-center"
           aria-labelledby="hero-title"
         >
-          <div className="flex w-full max-w-[1600px] justify-between gap-32 px-4 py-16">
-            <div className="hidden lg:col-span-5 lg:mt-0 lg:flex">
-              <CloudinaryImage
-                src={"Site/logo"}
-                alt="Logo Le Bon Tempérament - Ensemble vocal et instrumental"
-                className="scale-75"
-                width={600}
-                height={574}
-                rounded={RoundedSize.NONE}
-                priority={true}
-              />
-            </div>
-            <div className="mr-auto w-full place-self-center px-8 md:px-16 lg:col-span-7 lg:px-32">
+          <div aria-hidden className="absolute inset-0 z-10 bg-black/90" />
+          <motion.div
+            className="relative z-20 flex w-full justify-between gap-32 px-4 py-16"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            transition={{ duration: 0.5 }}
+            style={{
+              scale,
+              opacity,
+              transformOrigin: "center",
+              willChange: "transform, opacity",
+            }}
+          >
+            <div className="mx-auto flex w-full flex-col items-center justify-center px-8 md:w-2/3 md:px-16 lg:col-span-7 lg:px-8">
               <h1
                 id="hero-title"
-                className="mb-2 max-w-2xl text-xl leading-none font-extrabold tracking-tight md:text-2xl lg:text-3xl"
+                className="mb-2 text-center leading-none font-extrabold tracking-tight text-white"
               >
-                Bienvenue sur le site du <br />{" "}
-                <span className="text-primary">Bon Tempérament</span>
+                <span className="text-base font-light md:text-lg lg:text-xl">
+                  Bienvenue sur le site du <br />{" "}
+                </span>
+                <span className="text-primary text-4xl md:text-5xl lg:text-8xl">
+                  Bon Tempérament
+                </span>
               </h1>
-              <p className="mb-8 max-w-2xl text-base font-light text-gray-500 md:text-lg lg:text-xl">
+              <p className="mb-8 max-w-2xl text-sm font-light text-white/75 md:text-lg lg:text-xl">
                 Un ensemble vocal et instrumental
               </p>
 
@@ -63,30 +118,59 @@ const HomeContent = () => {
                   href="#contact"
                   size="lg"
                   radius="sm"
-                  variant="bordered"
+                  variant="solid"
                   aria-label="Aller à la section Contact"
                 >
                   Nous contacter
                 </Button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Projects Section */}
-        <section
-          className="flex w-full justify-center bg-[#f2f2f2] py-16"
+        <motion.section
+          ref={projectsRef}
+          className="relative z-10 mt-[100dvh] flex w-full justify-center bg-[#f2f2f2] py-16"
           aria-labelledby="projects-title"
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+          animate={
+            projectsInView
+              ? { opacity: 1, y: 0 }
+              : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+          }
+          transition={{
+            duration: prefersReducedMotion ? 0.1 : 0.8,
+            ease: "easeOut",
+          }}
         >
           <div className="w-full max-w-[1440px] px-8 lg:px-24">
-            <h2
+            <motion.h2
               id="projects-title"
               className="text-primary/50 text-title mb-14 leading-none font-light"
+              initial={{ opacity: 0, x: -30 }}
+              animate={
+                projectsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos derniers projets
-            </h2>
-            <ProjectViewer />
-            <div className="mt-4 flex justify-center">
+            </motion.h2>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                projectsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <ProjectViewer />
+            </motion.div>
+            <motion.div
+              className="mt-4 flex justify-center"
+              initial={{ opacity: 0 }}
+              animate={projectsInView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
               <Button
                 as={Link}
                 href="/concerts#projects-section"
@@ -97,35 +181,68 @@ const HomeContent = () => {
               >
                 Voir tous nos projets <IoIosArrowRoundForward />
               </Button>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Main Content Container */}
-        <div className="mx-0 flex w-full max-w-[1440px] flex-col">
+        <div className="z-10 mx-0 flex w-full flex-col bg-white">
           {/* About Section */}
-          <section
-            className="mt-16 flex w-full flex-col bg-[#F2F2F2] lg:flex-row"
+          <motion.section
+            ref={aboutRef}
+            className="mx-auto mt-16 flex w-full max-w-[1440px] flex-col lg:flex-row"
             aria-labelledby="about-title"
+            initial={{ opacity: 0 }}
+            animate={aboutInView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="relative flex w-full gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]">
+            <div className="relative flex w-full max-w-[1440px] gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]">
               <div className="flex w-1/2 flex-col gap-8">
-                <CloudinaryImage
-                  src={"Site/home/home2"}
-                  alt="Performance de l'ensemble Le Bon Tempérament"
-                  width={500}
-                  height={270}
-                  rounded={RoundedSize.NONE}
-                />
-                <CloudinaryImage
-                  src={"Site/home/home1"}
-                  alt="Membres de l'ensemble en concert"
-                  width={500}
-                  height={270}
-                  rounded={RoundedSize.NONE}
-                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={
+                    aboutInView
+                      ? { opacity: 1, scale: 1 }
+                      : { opacity: 0, scale: 0.9 }
+                  }
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <CloudinaryImage
+                    src={"Site/home/home2"}
+                    alt="Performance de l'ensemble Le Bon Tempérament"
+                    width={500}
+                    height={270}
+                    rounded={RoundedSize.NONE}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={
+                    aboutInView
+                      ? { opacity: 1, scale: 1 }
+                      : { opacity: 0, scale: 0.9 }
+                  }
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  <CloudinaryImage
+                    src={"Site/home/home1"}
+                    alt="Membres de l'ensemble en concert"
+                    width={500}
+                    height={270}
+                    rounded={RoundedSize.NONE}
+                  />
+                </motion.div>
               </div>
-              <div className="w-1/2 pt-8">
+              <motion.div
+                className="w-1/2 pt-8"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={
+                  aboutInView
+                    ? { opacity: 1, scale: 1 }
+                    : { opacity: 0, scale: 0.9 }
+                }
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
                 <CloudinaryImage
                   src={"Site/home/home3"}
                   alt="Répétition de l'ensemble vocal et instrumental"
@@ -133,9 +250,16 @@ const HomeContent = () => {
                   height={270}
                   rounded={RoundedSize.NONE}
                 />
-              </div>
+              </motion.div>
             </div>
-            <div className="flex w-full flex-col items-start justify-between py-8 pr-8 pl-8 lg:w-2/5 lg:pr-16 lg:pl-0">
+            <motion.div
+              className="flex w-full flex-col items-start justify-between py-8 pr-8 pl-8 lg:w-2/5 lg:pr-16 lg:pl-0"
+              initial={{ opacity: 0, x: 50 }}
+              animate={
+                aboutInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }
+              }
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
               <div className="flex flex-col gap-[20px]">
                 <h2
                   id="about-title"
@@ -145,7 +269,7 @@ const HomeContent = () => {
                   Nous découvrir
                 </h2>
                 <p className="text-xs leading-[25px] font-light md:text-sm lg:text-base">
-                  L&apos;association Le Bon Tempérament est un ensemble vocal et
+                  L'association Le Bon Tempérament est un ensemble vocal et
                   instrumental dirigé par Simone Duclos depuis sa création en
                   1987 qui vise à partager la passion pour la musique de ses
                   membres avec le plus grand nombre.
@@ -167,21 +291,44 @@ const HomeContent = () => {
                   aria-hidden="true"
                 />
               </Button>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* Concerts Section */}
-          <section
-            className="mt-16 w-full bg-white px-8 py-16 lg:px-24"
+          <motion.section
+            ref={concertsRef}
+            className="mx-auto mt-16 w-full max-w-[1440px] bg-white px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              concertsInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+            }}
           >
-            <h2
+            <motion.h2
               id="concerts-title"
               className="text-primary/50 text-title leading-none font-light"
+              initial={{ opacity: 0, x: -30 }}
+              animate={
+                concertsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos concerts
-            </h2>
-            <div className="mt-14">
+            </motion.h2>
+            <motion.div
+              className="mt-14"
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                concertsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               <ConcertPhotos />
 
               <div className="mt-[30px] flex justify-end">
@@ -201,21 +348,42 @@ const HomeContent = () => {
                   />
                 </Button>
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* CDs Section */}
-          <section
-            className="w-full bg-[#f8f8f8] px-8 py-16 lg:px-24"
+          <motion.section
+            ref={cdsRef}
+            className="mx-auto w-full max-w-[1440px] bg-[#f8f8f8] px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              cdsInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+            }}
           >
-            <h2
+            <motion.h2
               id="cds-title"
               className="text-primary/50 text-title leading-none font-light"
+              initial={{ opacity: 0, x: -30 }}
+              animate={
+                cdsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos CDs
-            </h2>
-            <div className="mt-14">
+            </motion.h2>
+            <motion.div
+              className="mt-14"
+              initial={{ opacity: 0, y: 30 }}
+              animate={cdsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               <CDPochettePhotos />
 
               <div className="mt-[30px] flex justify-end">
@@ -235,11 +403,27 @@ const HomeContent = () => {
                   />
                 </Button>
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* Contact Section */}
-          <ContactForm />
+          <motion.div
+            ref={contactRef}
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              contactInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+            }}
+          >
+            <ContactForm />
+          </motion.div>
+
+          <Footer />
         </div>
       </div>
     </>

@@ -36,7 +36,7 @@
     "gsap": "^3.13.0",
     "micro": "^10.0.1",
     "micro-cors": "^0.1.1",
-    "motion": "^12.23.6",
+    "motion": "^12.23.24",
     "next-cloudinary": "^6.16.0",
     "next-nprogress-bar": "^2.4.7",
     "next-seo": "^6.6.0",

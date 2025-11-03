@@ -1,7 +1,13 @@
 "use client";
 import { RoundedSize } from "@/utils/types";
-import { motion, useReducedMotion } from "motion/react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
 import CloudinaryImage from "./CloudinaryImage";
+import { useState, useEffect } from "react";
 
 interface HeroProps {
   title: string;
@@ -21,6 +27,29 @@ const Hero: React.FC<HeroProps> = ({
   dataTestId = "hero",
 }) => {
   const prefersReducedMotion = useReducedMotion();
+  const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
+    typeof window !== "undefined"
+      ? Math.max(window.innerHeight * 0.6, 200)
+      : 600,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () =>
+      setMaxScrollPx(Math.max(window.innerHeight * 0.6, 200));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const { scrollY } = useScroll();
+  const prefersReduced = useReducedMotion();
+
+  const scale = prefersReduced
+    ? 1
+    : useTransform(scrollY, [0, maxScrollPx], [1, 0.82]);
+  const opacity = prefersReduced
+    ? 1
+    : useTransform(scrollY, [0, maxScrollPx], [1, 0.2]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -74,7 +103,7 @@ const Hero: React.FC<HeroProps> = ({
 
   return (
     <motion.section
-      className="relative flex min-h-[calc(100dvh-64px)] items-center justify-center overflow-hidden"
+      className="fixed top-0 left-0 z-0 flex h-screen w-full items-center justify-center overflow-hidden"
       data-testid={dataTestId}
       variants={containerVariants}
       initial="hidden"
@@ -82,7 +111,6 @@ const Hero: React.FC<HeroProps> = ({
       role="banner"
       aria-labelledby="hero-title"
     >
-      {/* Background Image or Gradient Fallback */}
       {bannerSrc ? (
         <motion.div
           className="absolute inset-0 z-0"
@@ -101,7 +129,7 @@ const Hero: React.FC<HeroProps> = ({
             priority={true}
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-black/70" aria-hidden="true" />
+          <div className="absolute inset-0 bg-black/75" aria-hidden="true" />
         </motion.div>
       ) : (
         <div
@@ -114,8 +142,17 @@ const Hero: React.FC<HeroProps> = ({
       )}
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 text-center">
-        <motion.div className="mx-auto max-w-4xl" variants={textVariants}>
+      <div className="relative z-0 container mx-auto px-4 text-center">
+        <motion.div
+          className="mx-auto max-w-4xl"
+          style={{
+            scale,
+            opacity,
+            transformOrigin: "center",
+            willChange: "transform, opacity",
+          }}
+          variants={textVariants}
+        >
           <h1
             id="hero-title"
             className="text-title mb-4 leading-none font-light text-white drop-shadow-lg"

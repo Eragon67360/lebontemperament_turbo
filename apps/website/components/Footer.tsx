@@ -15,11 +15,11 @@ const Footer = () => {
   }
   return (
     <footer
-      className="flex w-full flex-col justify-center bg-[#f8f8f8] select-none"
+      className="z-50 flex w-full flex-col justify-center bg-[#f8f8f8] select-none"
       role="contentinfo"
       aria-label="Pied de page"
     >
-      <div className="mx-8 flex h-full max-w-7xl flex-col items-center justify-evenly gap-12 py-16 lg:flex-row lg:items-start lg:px-24">
+      <div className="z-50 mx-auto flex h-full max-w-[1440px] flex-col items-center justify-evenly gap-12 py-16 lg:flex-row lg:items-start lg:px-24">
         <div className="flex flex-col items-center gap-6 lg:items-start">
           <CldImage
             src={"Site/logo"}

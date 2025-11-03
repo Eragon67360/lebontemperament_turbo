@@ -193,7 +193,7 @@ const ContactForm = () => {
 
   return (
     <section
-      className="w-full bg-white px-8 py-16 lg:px-24"
+      className="mx-auto w-full max-w-[1440px] bg-white px-8 py-16 lg:px-24"
       id="contact"
       aria-labelledby="contact-title"
     >

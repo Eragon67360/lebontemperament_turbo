@@ -42,9 +42,21 @@ const Navigation = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [hasScrolled, setHasScrolled] = useState(false);
   const isMembresSection = pathname.startsWith("/membres");
+  const isSpecialPath = pathname === "/" || pathname.startsWith("/concerts/");
   const supabase = createClient();
   const router = useRouter();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY >= window.innerHeight;
+      setHasScrolled(scrolled);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -110,7 +122,9 @@ const Navigation = () => {
       <Navbar
         maxWidth="full"
         onMenuOpenChange={setIsMenuOpen}
-        className="bg-background/50"
+        className={`transition-colors ${
+          isSpecialPath && !hasScrolled ? "bg-background/0" : "bg-background/50"
+        }`}
         role="navigation"
         aria-label="Navigation principale"
       >
@@ -118,7 +132,11 @@ const Navigation = () => {
           aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={isMenuOpen}
           aria-controls="main-menu"
-          className="lg:hidden"
+          className={
+            isSpecialPath && !hasScrolled
+              ? "text-white lg:hidden"
+              : "text-black lg:hidden"
+          }
         />
         <NavbarBrand>
           <Link
@@ -136,7 +154,11 @@ const Navigation = () => {
           </Link>
         </NavbarBrand>
 
-        <MainLinks user={user} isLoading={isLoading} />
+        <MainLinks
+          user={user}
+          isLoading={isLoading}
+          isLight={isSpecialPath && !hasScrolled}
+        />
 
         <NavbarContent justify="end">
           {user ? (
