@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   motion,
   useScroll,
   useTransform,
   useReducedMotion,
+  useInView,
 } from "motion/react";
 
 import CDPochettePhotos from "@/components/CDPochettePhotos";
@@ -26,6 +27,22 @@ const HomeContent = () => {
       : 600,
   );
 
+  // Refs for each section
+  const projectsRef = useRef(null);
+  const aboutRef = useRef(null);
+  const concertsRef = useRef(null);
+  const cdsRef = useRef(null);
+  const contactRef = useRef(null);
+
+  // In view detection for each section
+  const projectsInView = useInView(projectsRef, { once: true, amount: 0.3 });
+  const aboutInView = useInView(aboutRef, { once: true, amount: 0.3 });
+  const concertsInView = useInView(concertsRef, { once: true, amount: 0.3 });
+  const cdsInView = useInView(cdsRef, { once: true, amount: 0.3 });
+  const contactInView = useInView(contactRef, { once: true, amount: 0.3 });
+
+  const prefersReducedMotion = useReducedMotion();
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onResize = () =>
@@ -35,13 +52,43 @@ const HomeContent = () => {
   }, []);
 
   const { scrollY } = useScroll();
-  const prefersReduced = useReducedMotion();
-  const scale = prefersReduced
+  const scale = prefersReducedMotion
     ? 1
     : useTransform(scrollY, [0, maxScrollPx], [1, 0.82]);
-  const opacity = prefersReduced
+  const opacity = prefersReducedMotion
     ? 1
     : useTransform(scrollY, [0, maxScrollPx], [1, 0.2]);
+
+  // Animation variants
+  const sectionVariants = {
+    hidden: {
+      opacity: 0,
+      y: prefersReducedMotion ? 0 : 50,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: prefersReducedMotion ? 0.1 : 0.8,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const imageVariants = {
+    hidden: {
+      opacity: 0,
+      scale: prefersReducedMotion ? 1 : 0.9,
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: prefersReducedMotion ? 0.1 : 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
 
   return (
     <>
@@ -112,19 +159,51 @@ const HomeContent = () => {
         </section>
 
         {/* Projects Section */}
-        <section
+        <motion.section
+          ref={projectsRef}
           className="relative z-10 mt-[100dvh] flex w-full justify-center bg-[#f2f2f2] py-16"
           aria-labelledby="projects-title"
+          initial="hidden"
+          animate={projectsInView ? "visible" : "hidden"}
+          variants={sectionVariants}
         >
           <div className="w-full max-w-[1440px] px-8 lg:px-24">
-            <h2
+            <motion.h2
               id="projects-title"
               className="text-primary/50 text-title mb-14 leading-none font-light"
+              variants={{
+                hidden: { opacity: 0, x: -30 },
+                visible: {
+                  opacity: 1,
+                  x: 0,
+                  transition: { duration: 0.6, delay: 0.2 },
+                },
+              }}
             >
               Nos derniers projets
-            </h2>
-            <ProjectViewer />
-            <div className="mt-4 flex justify-center">
+            </motion.h2>
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { duration: 0.6, delay: 0.4 },
+                },
+              }}
+            >
+              <ProjectViewer />
+            </motion.div>
+            <motion.div
+              className="mt-4 flex justify-center"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { duration: 0.6, delay: 0.6 },
+                },
+              }}
+            >
               <Button
                 as={Link}
                 href="/concerts#projects-section"
@@ -135,35 +214,65 @@ const HomeContent = () => {
               >
                 Voir tous nos projets <IoIosArrowRoundForward />
               </Button>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Main Content Container */}
         <div className="z-10 mx-0 flex w-full flex-col bg-white">
           {/* About Section */}
-          <section
+          <motion.section
+            ref={aboutRef}
             className="mx-auto mt-16 flex w-full max-w-[1440px] flex-col lg:flex-row"
             aria-labelledby="about-title"
+            initial="hidden"
+            animate={aboutInView ? "visible" : "hidden"}
           >
-            <div className="relative flex w-full max-w-[1440px] gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]">
-              <div className="flex w-1/2 flex-col gap-8">
-                <CloudinaryImage
-                  src={"Site/home/home2"}
-                  alt="Performance de l'ensemble Le Bon Tempérament"
-                  width={500}
-                  height={270}
-                  rounded={RoundedSize.NONE}
-                />
-                <CloudinaryImage
-                  src={"Site/home/home1"}
-                  alt="Membres de l'ensemble en concert"
-                  width={500}
-                  height={270}
-                  rounded={RoundedSize.NONE}
-                />
-              </div>
-              <div className="w-1/2 pt-8">
+            <motion.div
+              className="relative flex w-full max-w-[1440px] gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.2,
+                    delayChildren: 0.1,
+                  },
+                },
+              }}
+            >
+              <motion.div
+                className="flex w-1/2 flex-col gap-8"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.2,
+                    },
+                  },
+                }}
+              >
+                <motion.div variants={imageVariants}>
+                  <CloudinaryImage
+                    src={"Site/home/home2"}
+                    alt="Performance de l'ensemble Le Bon Tempérament"
+                    width={500}
+                    height={270}
+                    rounded={RoundedSize.NONE}
+                  />
+                </motion.div>
+                <motion.div variants={imageVariants}>
+                  <CloudinaryImage
+                    src={"Site/home/home1"}
+                    alt="Membres de l'ensemble en concert"
+                    width={500}
+                    height={270}
+                    rounded={RoundedSize.NONE}
+                  />
+                </motion.div>
+              </motion.div>
+              <motion.div className="w-1/2 pt-8" variants={imageVariants}>
                 <CloudinaryImage
                   src={"Site/home/home3"}
                   alt="Répétition de l'ensemble vocal et instrumental"
@@ -171,9 +280,19 @@ const HomeContent = () => {
                   height={270}
                   rounded={RoundedSize.NONE}
                 />
-              </div>
-            </div>
-            <div className="flex w-full flex-col items-start justify-between py-8 pr-8 pl-8 lg:w-2/5 lg:pr-16 lg:pl-0">
+              </motion.div>
+            </motion.div>
+            <motion.div
+              className="flex w-full flex-col items-start justify-between py-8 pr-8 pl-8 lg:w-2/5 lg:pr-16 lg:pl-0"
+              variants={{
+                hidden: { opacity: 0, x: 50 },
+                visible: {
+                  opacity: 1,
+                  x: 0,
+                  transition: { duration: 0.8, ease: "easeOut" },
+                },
+              }}
+            >
               <div className="flex flex-col gap-[20px]">
                 <h2
                   id="about-title"
@@ -183,7 +302,7 @@ const HomeContent = () => {
                   Nous découvrir
                 </h2>
                 <p className="text-xs leading-[25px] font-light md:text-sm lg:text-base">
-                  L&apos;association Le Bon Tempérament est un ensemble vocal et
+                  L'association Le Bon Tempérament est un ensemble vocal et
                   instrumental dirigé par Simone Duclos depuis sa création en
                   1987 qui vise à partager la passion pour la musique de ses
                   membres avec le plus grand nombre.
@@ -205,21 +324,43 @@ const HomeContent = () => {
                   aria-hidden="true"
                 />
               </Button>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* Concerts Section */}
-          <section
+          <motion.section
+            ref={concertsRef}
             className="mx-auto mt-16 w-full max-w-[1440px] bg-white px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
+            initial="hidden"
+            animate={concertsInView ? "visible" : "hidden"}
+            variants={sectionVariants}
           >
-            <h2
+            <motion.h2
               id="concerts-title"
               className="text-primary/50 text-title leading-none font-light"
+              variants={{
+                hidden: { opacity: 0, x: -30 },
+                visible: {
+                  opacity: 1,
+                  x: 0,
+                  transition: { duration: 0.6, delay: 0.2 },
+                },
+              }}
             >
               Nos concerts
-            </h2>
-            <div className="mt-14">
+            </motion.h2>
+            <motion.div
+              className="mt-14"
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { duration: 0.6, delay: 0.4 },
+                },
+              }}
+            >
               <ConcertPhotos />
 
               <div className="mt-[30px] flex justify-end">
@@ -239,21 +380,43 @@ const HomeContent = () => {
                   />
                 </Button>
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* CDs Section */}
-          <section
+          <motion.section
+            ref={cdsRef}
             className="mx-auto w-full max-w-[1440px] bg-[#f8f8f8] px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
+            initial="hidden"
+            animate={cdsInView ? "visible" : "hidden"}
+            variants={sectionVariants}
           >
-            <h2
+            <motion.h2
               id="cds-title"
               className="text-primary/50 text-title leading-none font-light"
+              variants={{
+                hidden: { opacity: 0, x: -30 },
+                visible: {
+                  opacity: 1,
+                  x: 0,
+                  transition: { duration: 0.6, delay: 0.2 },
+                },
+              }}
             >
               Nos CDs
-            </h2>
-            <div className="mt-14">
+            </motion.h2>
+            <motion.div
+              className="mt-14"
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { duration: 0.6, delay: 0.4 },
+                },
+              }}
+            >
               <CDPochettePhotos />
 
               <div className="mt-[30px] flex justify-end">
@@ -273,11 +436,19 @@ const HomeContent = () => {
                   />
                 </Button>
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* Contact Section */}
-          <ContactForm />
+          <motion.div
+            ref={contactRef}
+            initial="hidden"
+            animate={contactInView ? "visible" : "hidden"}
+            variants={sectionVariants}
+          >
+            <ContactForm />
+          </motion.div>
+
           <Footer />
         </div>
       </div>
