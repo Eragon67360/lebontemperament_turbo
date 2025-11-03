@@ -7,6 +7,7 @@ import {
   useTransform,
   useReducedMotion,
   useInView,
+  Variants,
 } from "motion/react";
 
 import CDPochettePhotos from "@/components/CDPochettePhotos";
@@ -58,37 +59,6 @@ const HomeContent = () => {
   const opacity = prefersReducedMotion
     ? 1
     : useTransform(scrollY, [0, maxScrollPx], [1, 0.2]);
-
-  // Animation variants
-  const sectionVariants = {
-    hidden: {
-      opacity: 0,
-      y: prefersReducedMotion ? 0 : 50,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: prefersReducedMotion ? 0.1 : 0.8,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  const imageVariants = {
-    hidden: {
-      opacity: 0,
-      scale: prefersReducedMotion ? 1 : 0.9,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: prefersReducedMotion ? 0.1 : 0.6,
-        ease: "easeOut",
-      },
-    },
-  };
 
   return (
     <>
@@ -163,46 +133,43 @@ const HomeContent = () => {
           ref={projectsRef}
           className="relative z-10 mt-[100dvh] flex w-full justify-center bg-[#f2f2f2] py-16"
           aria-labelledby="projects-title"
-          initial="hidden"
-          animate={projectsInView ? "visible" : "hidden"}
-          variants={sectionVariants}
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+          animate={
+            projectsInView
+              ? { opacity: 1, y: 0 }
+              : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+          }
+          transition={{
+            duration: prefersReducedMotion ? 0.1 : 0.8,
+            ease: "easeOut",
+          }}
         >
           <div className="w-full max-w-[1440px] px-8 lg:px-24">
             <motion.h2
               id="projects-title"
               className="text-primary/50 text-title mb-14 leading-none font-light"
-              variants={{
-                hidden: { opacity: 0, x: -30 },
-                visible: {
-                  opacity: 1,
-                  x: 0,
-                  transition: { duration: 0.6, delay: 0.2 },
-                },
-              }}
+              initial={{ opacity: 0, x: -30 }}
+              animate={
+                projectsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos derniers projets
             </motion.h2>
             <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 30 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: { duration: 0.6, delay: 0.4 },
-                },
-              }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                projectsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
               <ProjectViewer />
             </motion.div>
             <motion.div
               className="mt-4 flex justify-center"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: { duration: 0.6, delay: 0.6 },
-                },
-              }}
+              initial={{ opacity: 0 }}
+              animate={projectsInView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
             >
               <Button
                 as={Link}
@@ -225,35 +192,21 @@ const HomeContent = () => {
             ref={aboutRef}
             className="mx-auto mt-16 flex w-full max-w-[1440px] flex-col lg:flex-row"
             aria-labelledby="about-title"
-            initial="hidden"
-            animate={aboutInView ? "visible" : "hidden"}
+            initial={{ opacity: 0 }}
+            animate={aboutInView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <motion.div
-              className="relative flex w-full max-w-[1440px] gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.2,
-                    delayChildren: 0.1,
-                  },
-                },
-              }}
-            >
-              <motion.div
-                className="flex w-1/2 flex-col gap-8"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: {
-                      staggerChildren: 0.2,
-                    },
-                  },
-                }}
-              >
-                <motion.div variants={imageVariants}>
+            <div className="relative flex w-full max-w-[1440px] gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]">
+              <div className="flex w-1/2 flex-col gap-8">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={
+                    aboutInView
+                      ? { opacity: 1, scale: 1 }
+                      : { opacity: 0, scale: 0.9 }
+                  }
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
                   <CloudinaryImage
                     src={"Site/home/home2"}
                     alt="Performance de l'ensemble Le Bon Tempérament"
@@ -262,7 +215,15 @@ const HomeContent = () => {
                     rounded={RoundedSize.NONE}
                   />
                 </motion.div>
-                <motion.div variants={imageVariants}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={
+                    aboutInView
+                      ? { opacity: 1, scale: 1 }
+                      : { opacity: 0, scale: 0.9 }
+                  }
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
                   <CloudinaryImage
                     src={"Site/home/home1"}
                     alt="Membres de l'ensemble en concert"
@@ -271,8 +232,17 @@ const HomeContent = () => {
                     rounded={RoundedSize.NONE}
                   />
                 </motion.div>
-              </motion.div>
-              <motion.div className="w-1/2 pt-8" variants={imageVariants}>
+              </div>
+              <motion.div
+                className="w-1/2 pt-8"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={
+                  aboutInView
+                    ? { opacity: 1, scale: 1 }
+                    : { opacity: 0, scale: 0.9 }
+                }
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
                 <CloudinaryImage
                   src={"Site/home/home3"}
                   alt="Répétition de l'ensemble vocal et instrumental"
@@ -281,17 +251,14 @@ const HomeContent = () => {
                   rounded={RoundedSize.NONE}
                 />
               </motion.div>
-            </motion.div>
+            </div>
             <motion.div
               className="flex w-full flex-col items-start justify-between py-8 pr-8 pl-8 lg:w-2/5 lg:pr-16 lg:pl-0"
-              variants={{
-                hidden: { opacity: 0, x: 50 },
-                visible: {
-                  opacity: 1,
-                  x: 0,
-                  transition: { duration: 0.8, ease: "easeOut" },
-                },
-              }}
+              initial={{ opacity: 0, x: 50 }}
+              animate={
+                aboutInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }
+              }
+              transition={{ duration: 0.8, ease: "easeOut" }}
             >
               <div className="flex flex-col gap-[20px]">
                 <h2
@@ -332,34 +299,35 @@ const HomeContent = () => {
             ref={concertsRef}
             className="mx-auto mt-16 w-full max-w-[1440px] bg-white px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
-            initial="hidden"
-            animate={concertsInView ? "visible" : "hidden"}
-            variants={sectionVariants}
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              concertsInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+            }}
           >
             <motion.h2
               id="concerts-title"
               className="text-primary/50 text-title leading-none font-light"
-              variants={{
-                hidden: { opacity: 0, x: -30 },
-                visible: {
-                  opacity: 1,
-                  x: 0,
-                  transition: { duration: 0.6, delay: 0.2 },
-                },
-              }}
+              initial={{ opacity: 0, x: -30 }}
+              animate={
+                concertsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos concerts
             </motion.h2>
             <motion.div
               className="mt-14"
-              variants={{
-                hidden: { opacity: 0, y: 30 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: { duration: 0.6, delay: 0.4 },
-                },
-              }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                concertsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
               <ConcertPhotos />
 
@@ -388,34 +356,33 @@ const HomeContent = () => {
             ref={cdsRef}
             className="mx-auto w-full max-w-[1440px] bg-[#f8f8f8] px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
-            initial="hidden"
-            animate={cdsInView ? "visible" : "hidden"}
-            variants={sectionVariants}
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              cdsInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+            }}
           >
             <motion.h2
               id="cds-title"
               className="text-primary/50 text-title leading-none font-light"
-              variants={{
-                hidden: { opacity: 0, x: -30 },
-                visible: {
-                  opacity: 1,
-                  x: 0,
-                  transition: { duration: 0.6, delay: 0.2 },
-                },
-              }}
+              initial={{ opacity: 0, x: -30 }}
+              animate={
+                cdsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos CDs
             </motion.h2>
             <motion.div
               className="mt-14"
-              variants={{
-                hidden: { opacity: 0, y: 30 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: { duration: 0.6, delay: 0.4 },
-                },
-              }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={cdsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
               <CDPochettePhotos />
 
@@ -442,9 +409,16 @@ const HomeContent = () => {
           {/* Contact Section */}
           <motion.div
             ref={contactRef}
-            initial="hidden"
-            animate={contactInView ? "visible" : "hidden"}
-            variants={sectionVariants}
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              contactInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+            }}
           >
             <ContactForm />
           </motion.div>
