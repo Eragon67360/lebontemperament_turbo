@@ -101,18 +101,20 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => handleFolderClick(folder.id!)}
-                className="flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
-              >
-                <FaFolder className="h-5 w-5 text-blue-400" />
-                <span className="truncate text-sm font-medium text-gray-900">
-                  {folder.name}
-                </span>
-              </button>
-            ))}
+            {folders
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((folder) => (
+                <button
+                  key={folder.id}
+                  onClick={() => handleFolderClick(folder.id!)}
+                  className="flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
+                >
+                  <FaFolder className="h-5 w-5 text-blue-400" />
+                  <span className="truncate text-sm font-medium text-gray-900">
+                    {folder.name}
+                  </span>
+                </button>
+              ))}
           </div>
         )}
       </div>
@@ -128,33 +130,35 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-            {individualFiles.map((file) => (
-              <div
-                key={file.id}
-                className="group flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
-              >
-                <div className="h-5 w-5">{renderFileIcon(file.mimeType)}</div>
-                <span className="flex-1 truncate text-sm font-medium text-gray-900">
-                  {file.name}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onPress={() => {
-                    const downloadUrl = `https://drive.google.com/uc?id=${file.id}&export=download`;
-                    const link = document.createElement("a");
-                    link.href = downloadUrl;
-                    link.download = file.name;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }}
-                  className="cursor-pointer"
+            {individualFiles
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((file) => (
+                <div
+                  key={file.id}
+                  className="group flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
                 >
-                  Télécharger
-                </Button>
-              </div>
-            ))}
+                  <div className="h-5 w-5">{renderFileIcon(file.mimeType)}</div>
+                  <span className="flex-1 truncate text-sm font-medium text-gray-900">
+                    {file.name}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onPress={() => {
+                      const downloadUrl = `https://drive.google.com/uc?id=${file.id}&export=download`;
+                      const link = document.createElement("a");
+                      link.href = downloadUrl;
+                      link.download = file.name;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    Télécharger
+                  </Button>
+                </div>
+              ))}
           </div>
         )}
       </div>
