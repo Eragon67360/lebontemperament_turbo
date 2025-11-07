@@ -122,7 +122,7 @@ const Navigation = () => {
       <Navbar
         maxWidth="full"
         onMenuOpenChange={setIsMenuOpen}
-        className={`transition-colors ${
+        className={`w-full overflow-x-hidden transition-colors ${
           isSpecialPath && !hasScrolled ? "bg-background/0" : "bg-background/50"
         }`}
         role="navigation"

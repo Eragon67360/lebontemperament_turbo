@@ -30,7 +30,11 @@ export const metadata: Metadata = {
 };
 
 const Home = () => {
-  return <HomeContent />;
+  return (
+    <>
+      <HomeContent />;
+    </>
+  );
 };
 
 export default Home;
