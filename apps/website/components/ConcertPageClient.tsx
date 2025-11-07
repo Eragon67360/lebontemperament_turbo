@@ -43,7 +43,7 @@ const ConcertPageClient: React.FC<ConcertPageClientProps> = ({ project }) => {
       />
 
       <div className="relative z-10 mx-auto mt-[100dvh] flex w-full flex-col bg-white py-8">
-        <div className="container mx-auto flex flex-col pb-8 lg:px-24">
+        <div className="container mx-auto flex flex-col px-4 pb-8 lg:px-24">
           {(hasText1 || hasImage2) && (
             <MotionSection
               className="mb-12 flex flex-col gap-4 lg:flex-row lg:gap-8"

@@ -62,13 +62,16 @@ const HomeContent = () => {
 
   return (
     <>
-      <div className="relative flex w-full flex-col items-center">
+      <div className="relative flex h-full w-full flex-col items-center overflow-x-hidden">
         {/* Hero Section */}
         <section
-          className="fixed top-0 left-0 z-0 flex h-screen w-full justify-center bg-[url('/img/entre_terre_et_ciel.jpg')] bg-cover bg-fixed bg-center"
+          className="fixed top-0 left-0 z-0 flex h-full w-full justify-center bg-[url('/img/entre_terre_et_ciel.jpg')] bg-cover bg-fixed bg-center"
           aria-labelledby="hero-title"
         >
-          <div aria-hidden className="absolute inset-0 z-10 bg-black/90" />
+          <div
+            aria-hidden
+            className="absolute inset-0 z-10 h-full bg-black/90"
+          />
           <motion.div
             className="relative z-20 flex w-full justify-between gap-32 px-4 py-16"
             initial={{ opacity: 0, y: 30 }}
@@ -186,7 +189,7 @@ const HomeContent = () => {
         </motion.section>
 
         {/* Main Content Container */}
-        <div className="z-10 mx-0 flex w-full flex-col bg-white">
+        <div className="z-10 mx-0 flex h-full w-full flex-col bg-white">
           {/* About Section */}
           <motion.section
             ref={aboutRef}
