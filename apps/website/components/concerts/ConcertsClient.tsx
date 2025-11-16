@@ -27,6 +27,7 @@ import {
   IoLocationSharp,
   IoTime,
   IoMusicalNotes,
+  IoImageOutline,
 } from "react-icons/io5";
 import CloudinaryImage from "../CloudinaryImage";
 
@@ -422,14 +423,17 @@ const ConcertsClient = () => {
                             </Tooltip>
                           ) : (
                             <div
-                              className={`flex w-full items-center justify-center ${
+                              className={`flex w-full flex-col items-center justify-center gap-3 ${
                                 index === 0 && tours.length === 0
                                   ? "h-[400px] md:h-[600px]"
                                   : "h-48"
-                              } bg-gray-200`}
+                              } bg-gradient-to-br from-gray-50 to-gray-100`}
                             >
-                              <span className="text-gray-400">
-                                Aucune affiche disponible
+                              <div className="bg-primary/10 flex items-center justify-center rounded-full p-4">
+                                <IoImageOutline className="text-primary/60 h-8 w-8 sm:h-10 sm:w-10" />
+                              </div>
+                              <span className="text-primary/80 text-center text-sm font-medium sm:text-base">
+                                Affiche en cours de création...
                               </span>
                             </div>
                           )}
