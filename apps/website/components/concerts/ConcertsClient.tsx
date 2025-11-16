@@ -26,6 +26,8 @@ import {
   IoGlobeSharp,
   IoLocationSharp,
   IoTime,
+  IoMusicalNotes,
+  IoImageOutline,
 } from "react-icons/io5";
 import CloudinaryImage from "../CloudinaryImage";
 
@@ -167,8 +169,45 @@ const ConcertsClient = () => {
               ))}
             </div>
           ) : concerts.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">
-              Aucun concert à venir
+            <div className="flex flex-col items-center justify-center px-4 py-8 sm:py-12 md:py-16">
+              <div className="bg-primary/10 mb-4 flex h-16 w-16 items-center justify-center rounded-full sm:mb-6 sm:h-20 sm:w-20">
+                <IoMusicalNotes className="text-primary h-8 w-8 sm:h-10 sm:w-10" />
+              </div>
+              <h3 className="mb-3 text-center text-xl font-semibold text-gray-800 sm:mb-4 sm:text-2xl">
+                Aucun concert à venir pour le moment
+              </h3>
+              <div className="w-full max-w-2xl space-y-3 text-center text-sm text-gray-600 sm:space-y-4 sm:text-base">
+                <p className="text-base sm:text-lg">
+                  Ne vous inquiétez pas, les prochains concerts arriveront très
+                  vite !
+                </p>
+                <p className="leading-relaxed">
+                  En attendant, vous pouvez{" "}
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById("projects-section");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="text-primary font-medium hover:underline"
+                  >
+                    suivre nos projets
+                  </button>
+                  , ou bien{" "}
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById("rehearsals-title");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="text-primary font-medium hover:underline"
+                  >
+                    voir quand sont nos prochaines répétitions
+                  </button>
+                  .
+                </p>
+                <p className="text-primary text-sm font-medium sm:text-base">
+                  Restez attentif, les prochains concerts viendront très vite !
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-12">
@@ -384,14 +423,17 @@ const ConcertsClient = () => {
                             </Tooltip>
                           ) : (
                             <div
-                              className={`flex w-full items-center justify-center ${
+                              className={`flex w-full flex-col items-center justify-center gap-3 ${
                                 index === 0 && tours.length === 0
                                   ? "h-[400px] md:h-[600px]"
                                   : "h-48"
-                              } bg-gray-200`}
+                              } bg-gradient-to-br from-gray-50 to-gray-100`}
                             >
-                              <span className="text-gray-400">
-                                Aucune affiche disponible
+                              <div className="bg-primary/10 flex items-center justify-center rounded-full p-4">
+                                <IoImageOutline className="text-primary/60 h-8 w-8 sm:h-10 sm:w-10" />
+                              </div>
+                              <span className="text-primary/80 text-center text-sm font-medium sm:text-base">
+                                Affiche en cours de création...
                               </span>
                             </div>
                           )}
