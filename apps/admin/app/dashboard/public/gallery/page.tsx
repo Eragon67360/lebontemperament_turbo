@@ -17,6 +17,7 @@ export default function GalleryPage() {
       title="Galerie Multimédia"
       description="Gérez vos contenus photos et vidéos pour mettre en valeur vos événements."
       className="px-4 py-8 sm:px-6 lg:px-8"
+      theme="public"
     >
       {/* Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2">

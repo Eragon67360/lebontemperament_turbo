@@ -15,6 +15,7 @@ import { PageShell } from "@/components/layouts/PageShell";
 export default function ConcertsPage() {
   return (
     <PageShell
+      theme="public"
       className="px-4 py-8 sm:px-6 lg:px-8"
       title="Concerts & Projets"
       description="Gérez les concerts à venir et les projets artistiques."

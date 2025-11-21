@@ -13,7 +13,9 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import {
+  AlertCircle,
   Building2,
+  Bug,
   Calendar,
   ChevronDown,
   Image as ImageIcon,
@@ -26,6 +28,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { JSX, useEffect, useState } from "react";
+import { BugReportDialog } from "@/components/BugReportDialog";
 
 type Route = {
   label: string;
@@ -48,6 +51,8 @@ export default function Sidebar({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [bugReportDialogOpen, setBugReportDialogOpen] = useState(false);
   const supabase = createClient();
   const router = useRouter();
   const routes: Route[] = [
@@ -106,6 +111,17 @@ export default function Sidebar({
         },
       ],
     },
+    {
+      label: "Superadmin",
+      subroutes: [
+        {
+          href: "/dashboard/admin/bug-reports",
+          label: "Rapports de bugs",
+          icon: <Bug className="h-4 w-4" />,
+        },
+      ],
+      visible: isSuperAdmin,
+    },
   ];
 
   useEffect(() => {
@@ -113,6 +129,15 @@ export default function Sidebar({
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
         setUser(data.user);
+
+        // Check if user is superadmin
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
+
+        setIsSuperAdmin(profile?.role === "superadmin");
       }
     };
     getUser();
@@ -241,6 +266,17 @@ export default function Sidebar({
               <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                className="cursor-pointer rounded-lg"
+                onClick={() => {
+                  setBugReportDialogOpen(true);
+                  onNavigate?.();
+                }}
+              >
+                <AlertCircle className="mr-2 h-4 w-4" />
+                <span>Signaler un problème</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
                 className="cursor-pointer rounded-lg text-red-600 focus:bg-red-50 focus:text-red-700"
                 onClick={() => {
                   handleLogout();
@@ -257,6 +293,10 @@ export default function Sidebar({
           </DropdownMenu>
         </div>
       )}
+      <BugReportDialog
+        open={bugReportDialogOpen}
+        onOpenChange={setBugReportDialogOpen}
+      />
     </div>
   );
 }

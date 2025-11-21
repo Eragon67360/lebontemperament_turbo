@@ -6,6 +6,7 @@ import { PageShell } from "@/components/layouts/PageShell";
 export default function MembersDashboardPage() {
   return (
     <PageShell
+      theme="members"
       className="px-4 py-8 sm:px-6 lg:px-8"
       title="Espace Membres"
       description="Gérez l'espace réservé aux membres."

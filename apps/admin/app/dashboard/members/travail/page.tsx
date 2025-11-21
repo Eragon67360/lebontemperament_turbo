@@ -10,7 +10,11 @@ import { PageShell } from "@/components/layouts/PageShell";
 
 export default function TravailPage() {
   return (
-    <PageShell title="Espace de Travail" className="px-4 py-8 sm:px-6 lg:px-8">
+    <PageShell
+      theme="members"
+      title="Espace de Travail"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+    >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Link href="">
           <Card className="cursor-pointer transition-shadow hover:shadow-lg">

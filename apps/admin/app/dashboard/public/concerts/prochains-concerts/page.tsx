@@ -797,8 +797,9 @@ export default function ProchainsConcerts() {
   return (
     <PageShell
       fullHeight
+      theme="public"
       className="px-4 py-8 sm:px-6 lg:px-8"
-      title="Gestion des concerts"
+      title="Prochains concerts"
       description="Gérez les concerts à venir, leur date et leur lieu."
       headerAction={
         <div className="flex flex-col gap-4 md:flex-row md:gap-2">

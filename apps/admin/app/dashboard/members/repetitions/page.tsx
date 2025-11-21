@@ -12,6 +12,7 @@ export default function Repetitions() {
   return (
     <PageShell
       fullHeight
+      theme="members"
       className="px-4 py-8 sm:px-6 lg:px-8"
       title="Gestion des répétitions"
       description="Gérez les prochaines répètes."

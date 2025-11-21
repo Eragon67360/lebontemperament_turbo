@@ -96,7 +96,11 @@ export default function BugReportsPage() {
   };
 
   return (
-    <PageShell className="px-4 py-8 sm:px-6 lg:px-8" title="Bug Reports">
+    <PageShell
+      theme="admin"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Rapports de bugs"
+    >
       <Table>
         <TableHeader>
           <TableRow>

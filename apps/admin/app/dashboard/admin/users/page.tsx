@@ -324,9 +324,10 @@ export default function UsersPage() {
   return (
     <PageShell
       fullHeight
+      theme="admin"
       className="px-4 py-8 sm:px-6 lg:px-8"
       title="Gestion des utilisateurs"
-      description="Gérez les comptes utilisateurs et leurs permissions"
+      description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
       headerAction={
         <div className="flex flex-shrink-0 gap-2">
           {/* Invite Users Button */}

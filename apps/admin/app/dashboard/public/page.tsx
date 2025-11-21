@@ -7,8 +7,9 @@ import { PageShell } from "@/components/layouts/PageShell";
 export default function PublicDashboardPage() {
   return (
     <PageShell
-      title="Site Public"
+      theme="public"
       className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Espace Public"
       description="Gérez le contenu public de votre site web."
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

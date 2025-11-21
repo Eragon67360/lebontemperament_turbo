@@ -144,6 +144,7 @@ export default function Evenements() {
     return (
       <PageShell
         fullHeight
+        theme="admin"
         className="px-4 py-8 sm:px-6 lg:px-8"
         title="Compte-rendus de CA"
         description="Importez les compte-rendus de CA"
@@ -187,6 +188,7 @@ export default function Evenements() {
   return (
     <PageShell
       fullHeight
+      theme="admin"
       className="px-4 py-8 sm:px-6 lg:px-8"
       title="Compte-rendus de CA"
       description="Importez les compte-rendus de CA"
