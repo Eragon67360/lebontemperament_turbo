@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { createClient } from "@/utils/supabase/client";
 import { useCallback, useEffect, useState } from "react";
+import { PageShell } from "@/components/layouts/PageShell";
 
 type BugReport = {
   id: string;
@@ -95,9 +96,7 @@ export default function BugReportsPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="mb-6 text-2xl font-bold">Bug Reports</h1>
-
+    <PageShell className="px-4 py-8 sm:px-6 lg:px-8" title="Bug Reports">
       <Table>
         <TableHeader>
           <TableRow>
@@ -138,6 +137,6 @@ export default function BugReportsPage() {
           ))}
         </TableBody>
       </Table>
-    </div>
+    </PageShell>
   );
 }

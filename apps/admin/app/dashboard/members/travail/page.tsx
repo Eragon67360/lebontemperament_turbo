@@ -6,12 +6,11 @@ import {
 } from "@/components/ui/card";
 import { Baby, Music, UserRound, Users } from "lucide-react";
 import Link from "next/link";
+import { PageShell } from "@/components/layouts/PageShell";
 
 export default function TravailPage() {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="mb-8 text-3xl font-bold">Espace de Travail</h1>
-
+    <PageShell title="Espace de Travail" className="px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Link href="">
           <Card className="cursor-pointer transition-shadow hover:shadow-lg">
@@ -65,6 +64,6 @@ export default function TravailPage() {
           </Card>
         </Link>
       </div>
-    </div>
+    </PageShell>
   );
 }

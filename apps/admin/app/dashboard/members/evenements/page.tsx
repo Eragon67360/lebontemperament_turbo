@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardPageHeader } from "@/components/DashboardPageHeader";
 import { EventForm } from "@/components/EventForm";
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +28,7 @@ import { fr } from "date-fns/locale";
 import { Calendar, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const loadingMessages = [
   "Préparation des événements... 📅",
@@ -217,7 +218,7 @@ export default function Evenements() {
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="rounded-full px-6">
+          <Button variant="outline" className="px-6">
             <Plus className="mr-2 h-4 w-4" />
             Ajouter un événement
           </Button>
@@ -240,17 +241,15 @@ export default function Evenements() {
   };
 
   return (
-    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
-        <div className="space-y-1.5">
-          <DashboardPageHeader
-            title="Gestion des événements"
-            description="Gérez vos événements et leur programmation."
-          />
-        </div>
+    <PageShell
+      fullHeight
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Gestion des événements"
+      description="Gérez vos événements et leur programmation."
+      headerAction={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="rounded-full px-6">
+            <Button className="px-6">
               <Plus className="mr-2 h-4 w-4" />
               Ajouter un événement
             </Button>
@@ -272,8 +271,9 @@ export default function Evenements() {
             />
           </DialogContent>
         </Dialog>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 md:pr-2">
+      }
+    >
+      <ScrollArea className="pr-2">
         {loading ? (
           <LoadingState />
         ) : events.length === 0 ? (
@@ -354,7 +354,7 @@ export default function Evenements() {
             ))}
           </div>
         )}
-      </div>
+      </ScrollArea>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -393,6 +393,6 @@ export default function Evenements() {
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }

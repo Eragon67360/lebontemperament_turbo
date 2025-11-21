@@ -9,17 +9,15 @@ import {
 import RouteNames from "@/utils/routes";
 import { Image as ImageIcon, Video } from "lucide-react";
 import Link from "next/link";
+import { PageShell } from "@/components/layouts/PageShell";
 
 export default function GalleryPage() {
   return (
-    <div className="container px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header Section */}
-      <DashboardPageHeader
-        title="Galerie Multimédia"
-        description=" Gérez vos contenus photos et vidéos pour mettre en valeur vos
-          événements."
-      />
-
+    <PageShell
+      title="Galerie Multimédia"
+      description="Gérez vos contenus photos et vidéos pour mettre en valeur vos événements."
+      className="px-4 py-8 sm:px-6 lg:px-8"
+    >
       {/* Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Photos Card */}
@@ -64,6 +62,6 @@ export default function GalleryPage() {
           </Card>
         </Link>
       </div>
-    </div>
+    </PageShell>
   );
 }

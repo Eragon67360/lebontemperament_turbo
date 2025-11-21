@@ -1,17 +1,15 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users, Briefcase, Calendar, LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { PageShell } from "@/components/layouts/PageShell";
 // app/dashboard/members/page.tsx
 export default function MembersDashboardPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Espace Membres</h2>
-        <p className="text-muted-foreground">
-          Gérez l&apos;espace réservé aux membres.
-        </p>
-      </div>
-
+    <PageShell
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Espace Membres"
+      description="Gérez l'espace réservé aux membres."
+    >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <DashboardCard
           title="Gestion Membres"
@@ -36,7 +34,7 @@ export default function MembersDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard title="Membres actifs" value="42" icon={Users} />
       </div>
-    </div>
+    </PageShell>
   );
 }
 

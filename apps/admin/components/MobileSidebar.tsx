@@ -23,17 +23,19 @@ export function MobileSidebar({ className }: { className?: string }) {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className={cn("fixed top-0 left-0 z-40 md:hidden", className)}
+          className={cn("fixed top-2 left-2 z-40 md:hidden", className)}
+          size="icon"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Ouvrir le menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0">
+      <SheetContent side="left" className="w-72 border-r border-gray-200 p-0">
         <SheetHeader>
           <VisuallyHidden>
-            <SheetTitle>Nav Content</SheetTitle>
-            <SheetDescription className="flex h-[300px] flex-col items-center justify-between">
-              {/* Descrciption Logic */}
+            <SheetTitle>Menu de navigation</SheetTitle>
+            <SheetDescription>
+              Navigation principale de l'application
             </SheetDescription>
           </VisuallyHidden>
         </SheetHeader>

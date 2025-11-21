@@ -1,6 +1,6 @@
 import ProtectedLayout from "@/components/layouts/ProtectedLayout";
+import { DashboardMainContent } from "@/components/DashboardMainContent";
 import { MobileSidebar } from "@/components/MobileSidebar";
-import { PageTransition } from "@/components/PageTransition";
 import Sidebar from "@/components/Sidebar";
 
 export default function DashboardLayout({
@@ -10,17 +10,19 @@ export default function DashboardLayout({
 }) {
   return (
     <ProtectedLayout>
-      <div className="flex min-h-screen">
-        {/* Add a Sheet component for mobile navigation */}
-        <div className="hidden md:block">
-          <Sidebar />
-        </div>
-        <MobileSidebar className="md:hidden" />
-        <main className="container mx-auto max-h-screen flex-1 overflow-y-hidden px-2 sm:px-4">
-          <div className="max-h-screen overflow-y-hidden">
-            <PageTransition>{children}</PageTransition>
+      <div className="from-primary/10 to-primary/50 flex h-screen gap-4 overflow-hidden bg-gradient-to-br p-2 md:p-4">
+        {/* Sidebar for desktop */}
+        <div className="hidden md:block md:w-64 md:flex-shrink-0">
+          <div className="h-full">
+            <Sidebar />
           </div>
-        </main>
+        </div>
+
+        {/* Mobile Sidebar */}
+        <MobileSidebar />
+
+        {/* Main Content */}
+        <DashboardMainContent>{children}</DashboardMainContent>
       </div>
     </ProtectedLayout>
   );

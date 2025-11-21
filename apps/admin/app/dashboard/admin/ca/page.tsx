@@ -26,6 +26,16 @@ import { fr } from "date-fns/locale";
 import { Calendar as CalendarIcon, FileText, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PageShell } from "@/components/layouts/PageShell";
 
 export default function Evenements() {
   const [cas, setCas] = useState<CA[]>([]);
@@ -132,124 +142,58 @@ export default function Evenements() {
 
   if (loading) {
     return (
-      <div className="container px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
-          <div className="space-y-1.5">
-            <DashboardPageHeader
-              title="Compte-rendus de CA"
-              description="Importez les compte-rendus de CA"
-            />
-          </div>
+      <PageShell
+        fullHeight
+        className="px-4 py-8 sm:px-6 lg:px-8"
+        title="Compte-rendus de CA"
+        description="Importez les compte-rendus de CA"
+        headerAction={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-full px-6">
+              <Button className="px-6" disabled>
                 <Plus className="mr-2 h-4 w-4" />
                 Ajouter un CA
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] md:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle className="text-lg md:text-xl">
-                  Ajouter un nouveau CA
-                </DialogTitle>
-                <DialogDescription className="text-sm md:text-base">
-                  Entrez les informations pour ce CA
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={(e) => handleCreate(e, dateFrom)}>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="title">
-                      Titre du CA (ex. CA du 25 mai 2025)
-                    </Label>
-                    <Input id="title" name="title" required defaultValue={""} />
-                  </div>
-                  <div>
-                    <Label>Date du CA</Label>
-                    <Popover modal>
-                      <PopoverTrigger asChild>
-                        <Button
-                          type="button"
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !dateFrom && "text-muted-foreground",
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {dateFrom ? (
-                            format(dateFrom, "PPP", { locale: fr })
-                          ) : (
-                            <span>Choisir une date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={dateFrom}
-                          onSelect={setDateFrom}
-                          initialFocus
-                          locale={fr}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div>
-                    <Label>Compte-rendu (fichier PDF)</Label>
-                    <FileUpload
-                      onFileSelect={(file) => setSelectedFile(file)}
-                      onFileClear={() => setSelectedFile(null)}
-                      value={selectedFile}
-                      currentImageUrl={null}
-                      mode="pdf"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setOpen(false);
-                        setSelectedFile(null);
-                        setDateFrom(undefined);
-                      }}
-                    >
-                      Annuler
-                    </Button>
-                    <Button type="submit" disabled={isCreating}>
-                      {isCreating ? "Enregistrement..." : "Ajouter"}
-                    </Button>
+          </Dialog>
+        }
+      >
+        <ScrollArea className="pr-4">
+          <div className="space-y-4 px-1">
+            {/* Skeleton loading cards */}
+            {[1, 2, 3].map((i) => (
+              <Card
+                key={i}
+                className="animate-pulse overflow-hidden rounded-2xl"
+              >
+                <div className="px-6 py-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-1 flex-col gap-2">
+                      <div className="h-5 w-3/4 rounded bg-gray-200"></div>
+                      <div className="h-4 w-1/2 rounded bg-gray-200"></div>
+                      <div className="h-4 w-2/3 rounded bg-gray-200"></div>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-gray-200"></div>
                   </div>
                 </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="space-y-4 text-center">
-            <FileText className="text-primary/50 mx-auto h-12 w-12 animate-pulse" />
-            <p className="text-muted-foreground text-sm">
-              Chargement des comptes-rendus...
-            </p>
+              </Card>
+            ))}
           </div>
-        </div>
-      </div>
+        </ScrollArea>
+      </PageShell>
     );
   }
 
   return (
-    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-4 flex flex-col items-center justify-between gap-6 sm:flex-row md:mb-8">
-        <div className="space-y-1.5">
-          <DashboardPageHeader
-            title="Compte-rendus de CA"
-            description="Importez les compte-rendus de CA"
-          />
-        </div>
+    <PageShell
+      fullHeight
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Compte-rendus de CA"
+      description="Importez les compte-rendus de CA"
+      headerAction={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="rounded-full px-6">
+            <Button className="px-6">
               <Plus className="mr-2 h-4 w-4" />
               Ajouter un CA
             </Button>
@@ -332,8 +276,9 @@ export default function Evenements() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:pr-2">
+      }
+    >
+      <ScrollArea className="pr-4">
         {cas.length === 0 ? (
           <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
             <div className="space-y-4 text-center">
@@ -343,21 +288,21 @@ export default function Evenements() {
                 Commencez par ajouter votre premier compte-rendu de CA
               </p>
             </div>
-            <Button className="rounded-full px-6" onClick={() => setOpen(true)}>
+            <Button className="px-6">
               <Plus className="mr-2 h-4 w-4" />
               Ajouter un CA
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 px-1">
             {cas.map((ca) => (
-              <div
+              <Card
                 key={ca.id}
-                className="border-border/50 overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:bg-black"
+                className="overflow-hidden rounded-2xl transition-all duration-300 dark:bg-black"
               >
-                <div className="p-6">
+                <div className="px-6 py-4">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-3">
+                    <div className="flex flex-col gap-2">
                       <h3 className="text-sm font-medium md:text-lg">
                         {ca.title}
                       </h3>
@@ -393,11 +338,11 @@ export default function Evenements() {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </ScrollArea>
+    </PageShell>
   );
 }
