@@ -57,42 +57,36 @@ export default function Sidebar({
   const router = useRouter();
   const routes: Route[] = [
     {
-      label: "Administration",
+      label: "Général",
       subroutes: [
         {
-          href: "/dashboard/admin/users",
-          label: "Utilisateurs",
-          icon: <Users className="h-4 w-4" />,
-          visible: true,
-        },
-        {
-          href: "/dashboard/admin/ca",
-          label: "Conseil d'administration",
-          icon: <Building2 className="h-4 w-4" />,
+          href: "/dashboard",
+          label: "Tableau de bord",
+          icon: <LayoutDashboard className="h-4 w-4" />,
           visible: true,
         },
       ],
     },
     {
-      label: "Site Public",
+      label: "Contenu public",
       subroutes: [
         {
           href: "/dashboard/public/projets",
           label: "Projets",
           icon: <LayoutDashboard className="h-4 w-4" />,
-          visible: false,
+          visible: true,
         },
         {
           href: "/dashboard/public/gallery",
           label: "Médias",
           icon: <ImageIcon className="h-4 w-4" />,
-          visible: false,
+          visible: true,
         },
       ],
       visible: false,
     },
     {
-      label: "Organisation",
+      label: "Concerts & Événements",
       subroutes: [
         {
           href: "/dashboard/public/concerts/prochains-concerts",
@@ -112,15 +106,27 @@ export default function Sidebar({
       ],
     },
     {
-      label: "Superadmin",
+      label: "Administration",
       subroutes: [
+        {
+          href: "/dashboard/admin/users",
+          label: "Utilisateurs",
+          icon: <Users className="h-4 w-4" />,
+          visible: true,
+        },
+        {
+          href: "/dashboard/admin/ca",
+          label: "Conseil d'administration",
+          icon: <Building2 className="h-4 w-4" />,
+          visible: true,
+        },
         {
           href: "/dashboard/admin/bug-reports",
           label: "Rapports de bugs",
           icon: <Bug className="h-4 w-4" />,
+          visible: isSuperAdmin,
         },
       ],
-      visible: isSuperAdmin,
     },
   ];
 
