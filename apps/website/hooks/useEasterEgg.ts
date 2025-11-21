@@ -1,33 +1,50 @@
 // hooks/useEasterEgg.ts
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useEasterEgg = (callback: () => void) => {
   const [pressedKeys, setPressedKeys] = useState(new Set<string>());
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [tapCount, setTapCount] = useState(0);
   const [lastTapTime, setLastTapTime] = useState(0);
+  const tapCountRef = useRef(0);
+  const lastTapTimeRef = useRef(0);
 
-  const TAP_TIMEOUT = 500;
-  const REQUIRED_TAPS = 4;
+  // Keep refs in sync with state (for initial render and any external state changes)
+  useEffect(() => {
+    tapCountRef.current = tapCount;
+    lastTapTimeRef.current = lastTapTime;
+  }, [tapCount, lastTapTime]);
+
+  const TAP_TIMEOUT = 250; // Reduced from 500ms - taps must be faster
+  const REQUIRED_TAPS = 6; // Increased from 4 - more taps required
   const HOLD_DURATION = 2000; // 2 seconds hold time
 
   const handleTap = useCallback(() => {
     const currentTime = Date.now();
+    let newTapCount: number;
 
-    if (currentTime - lastTapTime > TAP_TIMEOUT) {
-      setTapCount(1);
+    // Use refs for synchronous access to current values
+    if (currentTime - lastTapTimeRef.current > TAP_TIMEOUT) {
+      newTapCount = 1;
     } else {
-      setTapCount((prev) => prev + 1);
+      newTapCount = tapCountRef.current + 1;
     }
 
+    // Update both state and refs
+    tapCountRef.current = newTapCount;
+    lastTapTimeRef.current = currentTime;
+    setTapCount(newTapCount);
     setLastTapTime(currentTime);
 
-    if (tapCount + 1 >= REQUIRED_TAPS) {
+    // Check with the new count value
+    if (newTapCount >= REQUIRED_TAPS) {
       callback();
+      tapCountRef.current = 0;
+      lastTapTimeRef.current = 0;
       setTapCount(0);
       setLastTapTime(0);
     }
-  }, [tapCount, lastTapTime, callback]);
+  }, [callback]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

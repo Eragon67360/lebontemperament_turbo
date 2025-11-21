@@ -16,10 +16,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -34,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -52,12 +51,10 @@ import {
   ChevronDown,
   Clock,
   MapPin,
-  Plus,
   User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { DashboardPageHeader } from "./DashboardPageHeader";
 
 const formatTime = (time: string) => {
   return time.split(":").slice(0, 2).join(":");
@@ -72,17 +69,29 @@ type RehearsalFormData = {
   group_type: GroupType;
 };
 
-export default function RehearsalsList() {
+interface RehearsalsListProps {
+  isAddDialogOpen?: boolean;
+  onAddDialogChange?: (open: boolean) => void;
+}
+
+export default function RehearsalsList({
+  isAddDialogOpen: externalIsAddDialogOpen,
+  onAddDialogChange,
+}: RehearsalsListProps = {}) {
   const [rehearsals, setRehearsals] = useState<Rehearsal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [internalIsAddDialogOpen, setInternalIsAddDialogOpen] = useState(false);
   const [editingRehearsal, setEditingRehearsal] = useState<Rehearsal | null>(
     null,
   );
   const [rehearsalToDelete, setRehearsalToDelete] = useState<string | null>(
     null,
   );
+
+  // Use external state if provided, otherwise use internal state
+  const isAddDialogOpen = externalIsAddDialogOpen ?? internalIsAddDialogOpen;
+  const setIsAddDialogOpen = onAddDialogChange ?? setInternalIsAddDialogOpen;
 
   const loadRehearsals = async () => {
     try {
@@ -171,33 +180,7 @@ export default function RehearsalsList() {
 
   return (
     <div className="flex max-h-screen flex-col overflow-hidden">
-      <div className="mb-2 flex flex-shrink-0 flex-col items-start md:mb-0 md:flex-row md:items-center md:justify-between">
-        <DashboardPageHeader
-          title="Gestion des répétitions"
-          description="Gérez les prochaines répètes."
-        />
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full rounded-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Ajouter une répétition</span>
-              <span className="inline sm:hidden">Ajouter</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">
-                Nouvelle répétition
-              </DialogTitle>
-              <DialogDescription className="text-sm sm:text-base">
-                Ajouter une répétition
-              </DialogDescription>
-            </DialogHeader>
-            <RehearsalForm onSubmit={handleSubmit} />
-          </DialogContent>
-        </Dialog>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 md:pr-2">
+      <ScrollArea className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 md:pr-2">
         {loading ? (
           "Chargement..."
         ) : rehearsals.length === 0 ? (
@@ -209,96 +192,141 @@ export default function RehearsalsList() {
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {Object.entries(groupRehearsalsByMonth(rehearsals)).map(
               ([month, monthRehearsals]) => (
-                <div key={month} className="space-y-4">
-                  <h2 className="text-2xl font-semibold capitalize">{month}</h2>
-                  <div className="space-y-4">
+                <div key={month} className="space-y-2">
+                  <h2 className="px-1 text-sm font-semibold tracking-wide text-gray-500 uppercase">
+                    {month}
+                  </h2>
+                  <div className="space-y-2 px-1">
                     {monthRehearsals.map((rehearsal) => {
                       const rehearsalDate = new Date(rehearsal.date);
                       const isToday = isSameDay(rehearsalDate, new Date());
 
                       return (
-                        <Card key={rehearsal.id} className="w-full">
-                          <CardContent className="flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:gap-0 sm:p-6">
-                            {/* Column 1: Date */}
-                            <div
-                              className={cn(
-                                "min-w-[80px] text-center sm:min-w-[100px]",
-                                isToday ? "text-primary" : "text-black",
-                              )}
-                            >
-                              <div className="text-xl capitalize sm:text-2xl">
-                                {format(rehearsalDate, "EEE", { locale: fr })}
+                        <Card
+                          key={rehearsal.id}
+                          className={cn(
+                            "w-full transition-all",
+                            isToday && "border-primary/50 bg-primary/5",
+                          )}
+                        >
+                          <CardContent className="p-3 md:p-4">
+                            <div className="flex items-center gap-3 md:gap-4">
+                              {/* Compact Date Display */}
+                              <div
+                                className={cn(
+                                  "flex w-12 flex-shrink-0 flex-col items-center justify-center md:w-14",
+                                  isToday ? "text-primary" : "text-gray-700",
+                                )}
+                              >
+                                <div className="text-xs font-medium uppercase">
+                                  {format(rehearsalDate, "EEE", { locale: fr })}
+                                </div>
+                                <div className="text-2xl leading-none font-bold md:text-3xl">
+                                  {format(rehearsalDate, "dd")}
+                                </div>
                               </div>
-                              <div className="text-3xl font-bold sm:text-5xl">
-                                {format(rehearsalDate, "dd")}
-                              </div>
-                            </div>
 
-                            {/* Vertical Separator */}
-                            <div className="bg-border mx-6 hidden h-16 w-px sm:block" />
+                              {/* Divider */}
+                              <div className="h-12 w-px bg-gray-200" />
 
-                            {/* Column 2: Time and Place */}
-                            <div className="w-full sm:mr-16 sm:w-auto">
-                              <div className="flex items-center gap-2">
-                                <Clock className="text-muted-foreground h-4 w-4" />
-                                <span className="text-sm sm:text-base">
-                                  {formatTime(rehearsal.start_time)} -{" "}
-                                  {formatTime(rehearsal.end_time)}
-                                </span>
-                              </div>
-                              <div className="mt-2 flex items-center gap-2">
-                                <MapPin className="text-muted-foreground h-4 w-4" />
-                                <span className="text-sm sm:text-base">
-                                  {rehearsal.place}
-                                </span>
-                              </div>
-                            </div>
+                              {/* Main Content */}
+                              <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 md:grid-cols-3">
+                                {/* Name & Group */}
+                                <div className="min-w-0">
+                                  <div className="truncate text-sm font-medium text-gray-900">
+                                    {rehearsal.name}
+                                  </div>
+                                  <div className="mt-0.5 flex items-center gap-1.5">
+                                    <User className="h-3 w-3 flex-shrink-0 text-gray-400" />
+                                    <span className="truncate text-xs text-gray-500">
+                                      {rehearsal.group_type}
+                                    </span>
+                                  </div>
+                                </div>
 
-                            {/* Column 3: Name and Group */}
-                            <div className="w-full flex-1 sm:w-auto">
-                              <div className="text-sm font-medium sm:text-base">
-                                {rehearsal.name}
-                              </div>
-                              <div className="mt-2 flex items-center gap-2">
-                                <User className="text-muted-foreground h-4 w-4" />
-                                <span className="text-sm sm:text-base">
-                                  {rehearsal.group_type}
-                                </span>
-                              </div>
-                            </div>
+                                {/* Time */}
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <Clock className="h-3 w-3 flex-shrink-0 text-gray-400" />
+                                    <span className="text-xs text-gray-600">
+                                      {formatTime(rehearsal.start_time)} -{" "}
+                                      {formatTime(rehearsal.end_time)}
+                                    </span>
+                                  </div>
+                                  <div className="mt-0.5 flex items-center gap-1.5">
+                                    <MapPin className="h-3 w-3 flex-shrink-0 text-gray-400" />
+                                    <span className="truncate text-xs text-gray-500">
+                                      {rehearsal.place}
+                                    </span>
+                                  </div>
+                                </div>
 
-                            {/* Column 4: Actions */}
-                            <div className="w-full self-end sm:w-auto sm:self-center">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="w-full sm:w-auto"
-                                  >
-                                    Éditer
-                                    <ChevronDown className="ml-2 h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      setEditingRehearsal(rehearsal)
-                                    }
-                                  >
-                                    Modifier
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-destructive"
-                                    onClick={() => handleDelete(rehearsal.id)}
-                                  >
-                                    Supprimer
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                                {/* Actions - Hidden on small screens, shown on md+ */}
+                                <div className="hidden items-center justify-end md:flex">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 px-2"
+                                      >
+                                        Éditer
+                                        <ChevronDown className="ml-1 h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          setEditingRehearsal(rehearsal)
+                                        }
+                                      >
+                                        Modifier
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={() =>
+                                          handleDelete(rehearsal.id)
+                                        }
+                                      >
+                                        Supprimer
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </div>
+
+                              {/* Mobile Actions Button */}
+                              <div className="flex-shrink-0 md:hidden">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        setEditingRehearsal(rehearsal)
+                                      }
+                                    >
+                                      Modifier
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      onClick={() => handleDelete(rehearsal.id)}
+                                    >
+                                      Supprimer
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -310,7 +338,17 @@ export default function RehearsalsList() {
             )}
           </div>
         )}
-      </div>
+      </ScrollArea>
+
+      {/* Add Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter une répétition</DialogTitle>
+          </DialogHeader>
+          <RehearsalForm onSubmit={(data) => handleSubmit(data, false)} />
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog

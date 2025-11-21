@@ -42,8 +42,10 @@ import {
   Users,
   Link,
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { PageShell } from "@/components/layouts/PageShell";
 
 const loadingMessages = [
   "La musique se réchauffe... 🎵",
@@ -462,7 +464,7 @@ export default function ProchainsConcerts() {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" className="rounded-full px-6">
+        <Button variant="outline" className="px-6">
           <Plus className="mr-2 h-4 w-4" />
           Ajouter un concert
         </Button>
@@ -488,7 +490,7 @@ export default function ProchainsConcerts() {
   const AddTourButton = () => (
     <Dialog open={tourDialogOpen} onOpenChange={setTourDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="rounded-full px-6">
+        <Button variant="outline" className="px-6">
           <Plus className="mr-2 h-4 w-4" />
           Ajouter une tournée
         </Button>
@@ -644,7 +646,6 @@ export default function ProchainsConcerts() {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
             onClick={() => {
               setSelectedTourForConcerts(tour);
               setAddConcertToTourDialogOpen(true);
@@ -794,18 +795,20 @@ export default function ProchainsConcerts() {
   );
 
   return (
-    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-shrink-0 flex-col items-start md:flex-row md:items-center md:justify-between">
-        <DashboardPageHeader
-          title="Gestion des concerts"
-          description="Gérez les concerts à venir, leur date et leur lieu."
-        />
+    <PageShell
+      fullHeight
+      theme="public"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Prochains concerts"
+      description="Gérez les concerts à venir, leur date et leur lieu."
+      headerAction={
         <div className="flex flex-col gap-4 md:flex-row md:gap-2">
           <AddTourButton />
           <AddConcertButton />
         </div>
-      </header>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:pr-2">
+      }
+    >
+      <ScrollArea className="pr-4">
         {tours.length > 0 && (
           <div className="mb-8">
             <h2 className="mb-2 text-sm font-semibold">Tournées</h2>
@@ -830,24 +833,22 @@ export default function ProchainsConcerts() {
             </div>
           </div>
         )}
-      </div>
-
+      </ScrollArea>
       {/* Alert Dialog for Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce concert ?</AlertDialogTitle>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action ne peut pas être annulée.
+              Êtes-vous sûr de vouloir supprimer ce concert ? Cette action est
+              irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-full">
-              Annuler
-            </AlertDialogCancel>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Supprimer
             </AlertDialogAction>
@@ -855,21 +856,24 @@ export default function ProchainsConcerts() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Dialog */}
+      {/* Edit Concert Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="rounded-2xl sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Modifier le concert</DialogTitle>
+            <DialogTitle className="text-xl">Modifier le concert</DialogTitle>
             <DialogDescription>
               Modifiez les informations du concert
             </DialogDescription>
           </DialogHeader>
-          <ConcertForm
-            onSubmit={handleEdit}
-            loading={isEditingConcert}
-            initialData={editingConcert}
-            submitLabel="Enregistrer"
-          />
+          {editingConcert && (
+            <ConcertForm
+              onSubmit={handleEdit}
+              loading={isEditingConcert}
+              initialData={editingConcert}
+              submitLabel="Sauvegarder"
+              onClose={() => setEditDialogOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -877,26 +881,24 @@ export default function ProchainsConcerts() {
       <Dialog open={editTourDialogOpen} onOpenChange={setEditTourDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Modifier la tournée</DialogTitle>
+            <DialogTitle className="text-xl">Modifier la tournée</DialogTitle>
             <DialogDescription>
               Modifiez les informations de la tournée
             </DialogDescription>
           </DialogHeader>
-          <TourForm
-            onSubmit={handleEditTour}
-            loading={isEditingTour}
-            initialData={editingTour}
-            submitLabel="Enregistrer"
-            onClose={() => {
-              setEditTourDialogOpen(false);
-              setEditingTour(null);
-            }}
-          />
+          {editingTour && (
+            <TourForm
+              onSubmit={handleEditTour}
+              loading={isEditingTour}
+              initialData={editingTour}
+              submitLabel="Sauvegarder"
+              onClose={() => setEditTourDialogOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Add Concert Selection Dialog */}
       <ConcertSelectionDialog />
-    </div>
+    </PageShell>
   );
 }

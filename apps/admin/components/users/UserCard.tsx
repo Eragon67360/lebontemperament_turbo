@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -32,7 +32,7 @@ const getStatusColor = (status: string) => {
     case "approuvé":
       return "bg-green-500";
     default:
-      return "bg-gray-500";
+      return "bg-gray-300";
   }
 };
 
@@ -52,111 +52,106 @@ export function UserCard({
   onRoleChange,
 }: UserCardProps) {
   return (
-    <Card className="overflow-hidden rounded-2xl border-0 bg-white/50 transition-shadow hover:shadow-md dark:bg-black/50">
-      <div className="p-2 md:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 md:flex-nowrap">
-          {/* User Info Section */}
-          <div className="flex items-center gap-4">
-            <Avatar className="ring-border/50 size-6 ring-2 md:size-12">
+    <Card className="transition-all">
+      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* User Info Section */}
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Avatar className="h-10 w-10 border border-gray-200">
               <AvatarImage src={user.avatar} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium md:text-base">
+              <AvatarFallback className="bg-gray-50 text-sm font-medium text-gray-600">
                 {user.display_name?.[0] || user?.email[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white ${getStatusColor(user.invite_status)}`}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Statut: {user.invite_status}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
-            <div className="space-y-0 md:space-y-1">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-medium md:text-base">
-                  {user.display_name || user.email.split("@")[0]}
-                </h3>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div
-                        className={`h-2.5 w-2.5 rounded-full ${getStatusColor(user.invite_status)}`}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Statut: {user.invite_status}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <p className="text-muted-foreground text-xs md:text-sm">
-                {user.email}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                Créé le {new Date(user.created_at).toLocaleDateString("fr-FR")}
-              </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-sm font-medium text-gray-900">
+                {user.display_name || user.email.split("@")[0]}
+              </h3>
             </div>
+            <p className="truncate text-xs text-gray-500">{user.email}</p>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Ajouté le {new Date(user.created_at).toLocaleDateString("fr-FR")}
+            </p>
           </div>
+        </div>
 
-          {/* Actions Section */}
-          <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end">
-            {user.id === currentUser || user.role === "superadmin" ? (
-              <Badge
-                variant={getRoleBadgeVariant(user.role)}
-                className="rounded-full px-4 py-1"
-              >
-                {getRoleLabel(user.role)}
-              </Badge>
-            ) : (
-              <Select
-                value={user.role}
-                onValueChange={(value: "user" | "admin") =>
-                  onRoleChange(user.id, value)
-                }
-              >
-                <SelectTrigger className="bg-primary/5 w-fit gap-2 rounded-full border-0 text-xs md:text-sm">
-                  <SelectValue>{getRoleLabel(user.role)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">{getRoleLabel("user")}</SelectItem>
-                  <SelectItem value="admin">{getRoleLabel("admin")}</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
+        {/* Actions Section */}
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          {user.id === currentUser || user.role === "superadmin" ? (
+            <Badge
+              variant="outline"
+              className="border-gray-200 bg-gray-50 font-normal text-gray-600"
+            >
+              {getRoleLabel(user.role)}
+            </Badge>
+          ) : (
+            <Select
+              value={user.role}
+              onValueChange={(value: "user" | "admin") =>
+                onRoleChange(user.id, value)
+              }
+            >
+              <SelectTrigger className="h-8 w-[110px] border-gray-200 bg-white text-xs">
+                <SelectValue>{getRoleLabel(user.role)}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">{getRoleLabel("user")}</SelectItem>
+                <SelectItem value="admin">{getRoleLabel("admin")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
-            {user.id !== currentUser && user.role !== "superadmin" && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-primary/10 rounded-full"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-[200px] rounded-xl"
+          {user.id !== currentUser && user.role !== "superadmin" && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-gray-600"
                 >
-                  <DropdownMenuItem
-                    onClick={() =>
-                      onEdit({
-                        id: user.id,
-                        display_name:
-                          user.display_name ||
-                          (user.email.split("@")[0] as string),
-                      })
-                    }
-                    className="gap-2 py-2.5"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Modifier
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onDelete(user)}
-                    className="text-destructive gap-2 py-2.5"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Supprimer
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  onClick={() =>
+                    onEdit({
+                      id: user.id,
+                      display_name:
+                        user.display_name ||
+                        (user.email.split("@")[0] as string),
+                    })
+                  }
+                  className="gap-2 text-xs"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Modifier
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(user)}
+                  className="gap-2 text-xs text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </Card>
