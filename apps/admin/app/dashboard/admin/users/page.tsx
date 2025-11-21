@@ -1,12 +1,7 @@
 // pages/users/index.tsx
 "use client";
 
-import { AddUserDialog } from "@/components/users/AddUserDialog";
-import { UserCard } from "@/components/users/UserCard";
-import { UserEmptyState } from "@/components/users/UserEmptyState";
-import { UserHeader } from "@/components/users/UserHeader";
-import { UserLoadingState } from "@/components/users/UserLoadingState";
-import { UserSearch } from "@/components/users/UserSearch";
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +12,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AddUserDialog } from "@/components/users/AddUserDialog";
+import { EditUserDialog } from "@/components/users/EditUserDialog";
+import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
+import { UserCard } from "@/components/users/UserCard";
+import { UserEmptyState } from "@/components/users/UserEmptyState";
+import { UserHeader } from "@/components/users/UserHeader";
+import { UserLoadingState } from "@/components/users/UserLoadingState";
+import { UserSearch } from "@/components/users/UserSearch";
+import { SortConfig, User } from "@/types/user";
 import { createClient } from "@/utils/supabase/client";
+import { Plus, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { EditUserDialog } from "@/components/users/EditUserDialog";
-import { SortConfig, User } from "@/types/user";
-import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
 
 export default function UsersPage() {
   // State declarations
@@ -317,12 +322,37 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="container mx-auto flex h-full max-h-screen grow flex-col overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <PageShell
+      fullHeight
+      theme="admin"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Gestion des utilisateurs"
+      description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
+      headerAction={
+        <div className="flex flex-shrink-0 gap-2">
+          {/* Invite Users Button */}
+          <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 px-3">
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden md:inline">Inviter</span>
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+
+          {/* Add User Button */}
+          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="h-9 px-3">
+                <Plus className="h-4 w-4" />
+                <span className="hidden md:inline">Nouvel utilisateur</span>
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+        </div>
+      }
+    >
       <UserHeader
-        isAddUserOpen={isAddUserOpen}
-        setIsAddUserOpen={setIsAddUserOpen}
-        isInviteOpen={isInviteOpen}
-        setIsInviteOpen={setIsInviteOpen}
         pendingInvites={inviteCounts.pending}
         approvedInvites={inviteCounts.approved}
       />
@@ -333,7 +363,7 @@ export default function UsersPage() {
         sortConfig={sortConfig}
         setSortConfig={setSortConfig}
       />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 md:pr-2">
+      <ScrollArea className="pr-4">
         {isLoading ? (
           <UserLoadingState />
         ) : error ? (
@@ -343,7 +373,7 @@ export default function UsersPage() {
         ) : users.length === 0 ? (
           <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
         ) : (
-          <div className="space-y-2 md:space-y-4">
+          <div className="space-y-2 px-1 md:space-y-4">
             {sortedUsers.map((user) => (
               <UserCard
                 key={user.id}
@@ -356,7 +386,7 @@ export default function UsersPage() {
             ))}
           </div>
         )}
-      </div>
+      </ScrollArea>
 
       <AddUserDialog
         isOpen={isAddUserOpen}
@@ -405,6 +435,6 @@ export default function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageShell>
   );
 }

@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Calendar, Mail, Search, User, Clock } from "lucide-react";
+import { ArrowUpDown, Calendar, Clock, Mail, Search, User } from "lucide-react";
 
+import { SortBy, SortConfig } from "@/types/user";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { SortConfig, SortBy } from "@/types/user";
 
 // components/users/UserSearch.tsx
 interface UserSearchProps {
@@ -34,23 +34,29 @@ export function UserSearch({
   };
 
   return (
-    <div className="mb-2 flex flex-col gap-2 sm:flex-row md:mb-6 md:gap-4">
-      <div className="relative max-w-sm flex-1">
+    <div className="mb-2 flex flex-col gap-2 sm:flex-row md:mb-4 md:gap-3">
+      <div className="relative flex-1">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
           placeholder="Rechercher un utilisateur..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9"
+          className="h-9 pl-9"
         />
       </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-[200px]">
-            <ArrowUpDown className="mr-2 h-4 w-4" />
-            Trier par {getSortLabel(sortConfig.sortBy)}
-            {sortConfig.sortOrder === "asc" ? " ↑" : " ↓"}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-full justify-start sm:w-[180px]"
+          >
+            <ArrowUpDown className="mr-2 h-3.5 w-3.5" />
+            <span className="truncate">
+              {getSortLabel(sortConfig.sortBy)}
+              {sortConfig.sortOrder === "asc" ? " ↑" : " ↓"}
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[200px]">

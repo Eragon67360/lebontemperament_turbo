@@ -164,7 +164,7 @@ export default function VideosPage() {
   const AddVideoButton = () => (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="rounded-full px-6">
+        <Button variant="outline" className="px-6">
           <Plus className="mr-2 h-4 w-4" />
           Ajouter une vidéo
         </Button>

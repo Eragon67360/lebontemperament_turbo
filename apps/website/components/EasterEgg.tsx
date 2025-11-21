@@ -9,7 +9,7 @@ const emulateTaps = () => {
   if (process.env.NODE_ENV === "development") {
     let tapCount = 0;
     const interval = setInterval(() => {
-      if (tapCount < 4) {
+      if (tapCount < 6) {
         window.dispatchEvent(new Event("touchstart"));
         tapCount++;
       } else {
