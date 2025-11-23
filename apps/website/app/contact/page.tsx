@@ -39,19 +39,27 @@ const Contact = () => {
           <h2 className="text-title text-foreground leading-none font-bold">
             Informations
           </h2>
-          <hr className="mt-8" />
-          <h3 className="mt-8 font-bold">Où nous trouver</h3>
-          <p>
+          <hr className="border-divider mt-8" />
+          <h3 className="text-foreground mt-8 font-bold">Où nous trouver</h3>
+          <p className="text-foreground">
             3 Rue Clemenceau,
             <br />
             67700 SAVERNE, France
           </p>
-          <h3 className="mt-2 font-bold">Email</h3>
-          <a href="mailto:lebontemperament@gmail.com">
+          <h3 className="text-foreground mt-2 font-bold">Email</h3>
+          <a
+            href="mailto:lebontemperament@gmail.com"
+            className="text-foreground hover:text-primary"
+          >
             lebontemperament@gmail.com
           </a>
-          <h3 className="mt-2 font-bold">Téléphone</h3>
-          <a href="tel:+33952395789">(+33) 09 52 39 57 89</a>
+          <h3 className="text-foreground mt-2 font-bold">Téléphone</h3>
+          <a
+            href="tel:+33952395789"
+            className="text-foreground hover:text-primary"
+          >
+            (+33) 09 52 39 57 89
+          </a>
         </div>
 
         <div className="ml-[178px] hidden w-1/2 flex-wrap lg:flex">
@@ -235,17 +243,19 @@ const Contact = () => {
           </div>
 
           <div className="flex w-full flex-col lg:w-1/2">
-            <div className="text-[18px] font-extrabold uppercase">
+            <div className="text-foreground text-[18px] font-extrabold uppercase">
               Recevez notre
             </div>
             <div className="from-primary inline-block bg-gradient-to-r to-[#00F1AE] bg-clip-text text-[32px] font-extrabold text-transparent uppercase">
               Newsletter
             </div>
-            <div className="mt-8">
+            <div className="text-foreground mt-8">
               Les dernières nouvelles du Bon Tempérament dans votre boite
               mail.{" "}
             </div>
-            <div className="text-lg font-extrabold">Abonnez-vous !</div>
+            <div className="text-foreground text-lg font-extrabold">
+              Abonnez-vous !
+            </div>
           </div>
         </div>
         <Subscribe />
