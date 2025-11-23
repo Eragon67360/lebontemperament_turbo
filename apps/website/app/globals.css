@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @plugin '../hero.ts';
 @source '../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
 
 @layer base {
   * {
@@ -15,7 +16,6 @@
   html {
     @apply scroll-smooth;
   }
-
 
   /* Accessibility improvements */
   :focus-visible {
@@ -121,6 +121,14 @@
   --color-primary: oklch(0.57 0.0911 200.74);
   --color-border: oklch(0.922 0 0);
   --heroui-focus: var(--color-primary);
+  --heroui-background: 255 255 255;
+  --heroui-foreground: 37 37 37;
+  --heroui-content1: 255 255 255;
+  --heroui-content2: 245 245 245;
+  --heroui-content3: 232 232 232;
+  --heroui-content4: 212 212 212;
+  --heroui-default: 255 255 255;
+  --heroui-default-foreground: 37 37 37;
 }
 
 button {

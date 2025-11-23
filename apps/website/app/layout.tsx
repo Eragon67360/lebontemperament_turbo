@@ -1,5 +1,4 @@
 import { EasterEgg } from "@/components/EasterEgg";
-import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { SocialPopover } from "@/components/SocialPopover";
@@ -113,7 +112,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={roboto.className}>
+    <html lang="fr" className={roboto.className} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#333333" />
@@ -129,7 +128,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
       </head>
-      <body className="z-10 bg-white">
+      <body className="bg-background text-foreground z-10 transition-colors duration-200">
         <Header />
         <Providers>
           <EasterEgg />

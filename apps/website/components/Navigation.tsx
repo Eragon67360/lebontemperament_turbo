@@ -28,6 +28,7 @@ import CloudinaryImage from "./CloudinaryImage";
 import MainLinks from "./links/MainLinks";
 import MainMenuLinks from "./links/MainMenuLinks";
 import { useAuth } from "./providers/AuthProvider";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 type UserProfile = {
   id: string;
@@ -134,8 +135,8 @@ const Navigation = () => {
           aria-controls="main-menu"
           className={
             isSpecialPath && !hasScrolled
-              ? "text-white lg:hidden"
-              : "text-black lg:hidden"
+              ? "text-white lg:hidden dark:text-white"
+              : "text-black lg:hidden dark:text-white"
           }
         />
         <NavbarBrand>
@@ -161,6 +162,9 @@ const Navigation = () => {
         />
 
         <NavbarContent justify="end">
+          {/* Theme Switcher - Always visible */}
+          <ThemeSwitcher />
+
           {user ? (
             <div className="flex items-center gap-4">
               <Tooltip content="Accéder au drive Google">
@@ -171,7 +175,7 @@ const Navigation = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Ouvrir le drive Google dans un nouvel onglet"
-                  className="bg-primary/20 hover:bg-primary/40 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
+                  className="bg-primary/20 hover:bg-primary/40 dark:bg-primary/30 dark:hover:bg-primary/50 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
                 >
                   <CloudinaryImage
                     src={"Site/membres/logos/drive"}
@@ -210,7 +214,9 @@ const Navigation = () => {
                       <span className="truncate font-semibold">
                         {userProfile?.display_name}
                       </span>
-                      <span className="truncate text-xs">{user.email}</span>
+                      <span className="text-default-500 truncate text-xs">
+                        {user.email}
+                      </span>
                     </div>
                   </div>
                   <Button

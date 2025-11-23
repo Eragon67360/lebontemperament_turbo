@@ -47,7 +47,7 @@ export const MembersFooter = () => {
   ];
 
   return (
-    <div className="border-foreground/20 mx-4 flex w-full max-w-[96%] items-center justify-between gap-2 border-t px-8 py-4 text-sm md:mx-8 lg:mx-16">
+    <div className="border-divider mx-4 flex w-full max-w-[96%] items-center justify-between gap-2 border-t px-8 py-4 text-sm md:mx-8 lg:mx-16">
       <div>©&nbsp;{year}&nbsp;Le Bon Tempérament</div>
 
       <Dropdown className="capitalize">
