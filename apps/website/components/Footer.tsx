@@ -204,6 +204,14 @@ const Footer = () => {
         >
           Politique de Confidentialité
         </Link>
+        <span className="hidden lg:block">&nbsp;|&nbsp;</span>
+        <Link
+          href={"/impressum"}
+          className="hover:text-default-700 underline transition-colors"
+          aria-label="Voir les mentions légales"
+        >
+          Impressum
+        </Link>
       </div>
     </footer>
   );
