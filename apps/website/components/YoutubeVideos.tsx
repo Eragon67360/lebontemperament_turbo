@@ -29,12 +29,12 @@ export const YoutubeVideos = () => {
             <div className="space-y-8">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex flex-col gap-8 lg:flex-row">
-                  <div className="h-[45dvw] w-[80dvw] rounded bg-gray-200 lg:h-[281px] lg:w-[500px]"></div>
+                  <div className="bg-default-200 h-[45dvw] w-[80dvw] rounded lg:h-[281px] lg:w-[500px]"></div>
                   <div className="w-full space-y-4 lg:w-1/2">
-                    <div className="h-12 w-3/4 rounded bg-gray-200"></div>
-                    <div className="h-6 w-1/2 rounded bg-gray-200"></div>
-                    <div className="h-6 w-1/2 rounded bg-gray-200"></div>
-                    <div className="h-6 w-1/2 rounded bg-gray-200"></div>
+                    <div className="bg-default-200 h-12 w-3/4 rounded"></div>
+                    <div className="bg-default-200 h-6 w-1/2 rounded"></div>
+                    <div className="bg-default-200 h-6 w-1/2 rounded"></div>
+                    <div className="bg-default-200 h-6 w-1/2 rounded"></div>
                   </div>
                 </div>
               ))}
@@ -50,14 +50,14 @@ export const YoutubeVideos = () => {
             >
               <YouTubeVideo videoId={extractYouTubeId(video.youtube_url)} />
               <div className="flex flex-col pt-8">
-                <h2 className="text-xl font-light text-[#BDBDBD] md:text-2xl lg:text-4xl">
+                <h2 className="text-default-500 text-xl font-light md:text-2xl lg:text-4xl">
                   {video.title}
                 </h2>
-                <h2 className="mt-8 text-sm font-bold md:text-base lg:text-lg">
+                <h2 className="text-foreground mt-8 text-sm font-bold md:text-base lg:text-lg">
                   Auteur/Compositeur :{" "}
                   <span className="font-normal">{video.composer}</span>
                 </h2>
-                <h2 className="text-sm font-bold md:text-base lg:text-lg">
+                <h2 className="text-foreground text-sm font-bold md:text-base lg:text-lg">
                   Date :{" "}
                   <span className="font-normal">
                     {new Date(video.performance_date).toLocaleDateString(
@@ -65,11 +65,11 @@ export const YoutubeVideos = () => {
                     )}
                   </span>
                 </h2>
-                <h2 className="text-sm font-bold md:text-base lg:text-lg">
+                <h2 className="text-foreground text-sm font-bold md:text-base lg:text-lg">
                   Lieu : <span className="font-normal">{video.venue}</span>
                 </h2>
                 {video.soloists && video.soloists.length > 0 && (
-                  <h2 className="text-sm font-bold md:text-base lg:text-lg">
+                  <h2 className="text-foreground text-sm font-bold md:text-base lg:text-lg">
                     Solistes :{" "}
                     <span className="font-normal">
                       {video.soloists.join(", ")}
