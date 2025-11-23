@@ -11,7 +11,7 @@ export default function NotFound() {
       role="main"
       aria-labelledby="error-title"
     >
-      <div className="bg-content1 relative z-10 mx-4 max-w-md rounded-lg p-8 text-center shadow-md">
+      <div className="bg-background relative z-10 mx-4 max-w-md rounded-lg p-8 text-center shadow-md">
         <h1
           id="error-title"
           className="text-foreground mb-4 text-4xl font-bold"

@@ -16,7 +16,7 @@ const ProjectViewer = () => {
       <div className="my-8 flex flex-col">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-1">
-            <div className="border-divider bg-content1 block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
+            <div className="border-divider bg-background block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
               <Link
                 href={`/concerts/${latestProjects[0]?.slug || ""}`}
                 className="block"
@@ -67,7 +67,7 @@ const ProjectViewer = () => {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="border-divider bg-content1 flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
+            <div className="border-divider bg-background flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
               <Link
                 href={`/concerts/${latestProjects[1]?.slug || ""}`}
                 className="relative h-32 w-full md:h-full md:w-1/2"
@@ -117,7 +117,7 @@ const ProjectViewer = () => {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="border-divider bg-content1 flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
+            <div className="border-divider bg-background flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
               <Link
                 href={`/concerts/${latestProjects[2]?.slug || ""}`}
                 className="relative h-32 w-full md:h-full md:w-1/2"
@@ -166,7 +166,7 @@ const ProjectViewer = () => {
             </div>
           </div>
           <div className="lg:col-span-1">
-            <div className="border-divider bg-content1 block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
+            <div className="border-divider bg-background block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
               <Link
                 href={`/concerts/${latestProjects[3]?.slug || ""}`}
                 className="block"

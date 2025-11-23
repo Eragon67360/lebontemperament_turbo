@@ -24,10 +24,10 @@ import {
   IoCalendarClear,
   IoEye,
   IoGlobeSharp,
-  IoLocationSharp,
-  IoTime,
-  IoMusicalNotes,
   IoImageOutline,
+  IoLocationSharp,
+  IoMusicalNotes,
+  IoTime,
 } from "react-icons/io5";
 import CloudinaryImage from "../CloudinaryImage";
 
@@ -112,14 +112,14 @@ const ConcertsClient = () => {
   return (
     <div className="flex w-full flex-col items-center">
       {/* Hero Section */}
-      <section className="flex w-full justify-center bg-white py-16">
+      <section className="bg-background flex w-full justify-center py-16">
         <div className="w-full max-w-[1440px] px-8 lg:px-24">
           <div className="flex items-end justify-between">
             <div>
               <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
                 Nos
               </h1>
-              <h2 className="text-title leading-none font-bold text-[#333]">
+              <h2 className="text-title text-foreground leading-none font-bold">
                 Concerts
               </h2>
             </div>
@@ -130,14 +130,14 @@ const ConcertsClient = () => {
                 const el = document.getElementById("projects-section");
                 if (el) el.scrollIntoView({ behavior: "smooth" });
               }}
-              className="flex items-center gap-2 text-xl font-light text-gray-400 hover:text-gray-500 md:text-2xl lg:text-3xl"
+              className="text-default-400 hover:text-default-500 flex items-center gap-2 text-xl font-light md:text-2xl lg:text-3xl"
               aria-label="Voir les projets"
             >
               <span>Voir projets</span>
               <IoIosArrowRoundDown />
             </Button>
           </div>
-          <hr className="mt-8" />
+          <hr className="border-divider mt-8" />
         </div>
       </section>
 
@@ -145,7 +145,7 @@ const ConcertsClient = () => {
       <div className="mx-0 flex w-full max-w-[1440px] flex-col">
         {/* Upcoming Concerts Section with Tours */}
         <section
-          className="w-full bg-gray-100 px-8 py-16 lg:px-24"
+          className="bg-default-50 w-full px-8 py-16 lg:px-24"
           aria-labelledby="upcoming-concerts-title"
         >
           <h2
@@ -159,11 +159,11 @@ const ConcertsClient = () => {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="h-48 rounded-lg bg-gray-200"></div>
-                  <div className="mt-4 space-y-3 rounded-lg bg-gray-100 p-4">
-                    <div className="h-4 w-3/4 rounded bg-gray-200"></div>
-                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
-                    <div className="h-4 w-2/3 rounded bg-gray-200"></div>
+                  <div className="bg-default-200 h-48 rounded-lg"></div>
+                  <div className="bg-default-100 mt-4 space-y-3 rounded-lg p-4">
+                    <div className="bg-default-200 h-4 w-3/4 rounded"></div>
+                    <div className="bg-default-200 h-4 w-1/2 rounded"></div>
+                    <div className="bg-default-200 h-4 w-2/3 rounded"></div>
                   </div>
                 </div>
               ))}
@@ -173,10 +173,10 @@ const ConcertsClient = () => {
               <div className="bg-primary/10 mb-4 flex h-16 w-16 items-center justify-center rounded-full sm:mb-6 sm:h-20 sm:w-20">
                 <IoMusicalNotes className="text-primary h-8 w-8 sm:h-10 sm:w-10" />
               </div>
-              <h3 className="mb-3 text-center text-xl font-semibold text-gray-800 sm:mb-4 sm:text-2xl">
+              <h3 className="text-foreground mb-3 text-center text-xl font-semibold sm:mb-4 sm:text-2xl">
                 Aucun concert à venir pour le moment
               </h3>
-              <div className="w-full max-w-2xl space-y-3 text-center text-sm text-gray-600 sm:space-y-4 sm:text-base">
+              <div className="text-default-600 w-full max-w-2xl space-y-3 text-center text-sm sm:space-y-4 sm:text-base">
                 <p className="text-base sm:text-lg">
                   Ne vous inquiétez pas, les prochains concerts arriveront très
                   vite !
@@ -253,11 +253,11 @@ const ConcertsClient = () => {
 
                         {/* Tour Info */}
                         <div className="flex flex-1 flex-col items-center text-center sm:items-start md:text-start">
-                          <h3 className="mb-2 text-2xl font-bold text-gray-800 sm:text-3xl">
+                          <h3 className="text-foreground mb-2 text-2xl font-bold sm:text-3xl">
                             {tour.name}
                           </h3>
                           {tour.description && (
-                            <p className="mb-4 text-sm text-gray-600 sm:text-base">
+                            <p className="text-default-600 mb-4 text-sm sm:text-base">
                               {tour.description}
                             </p>
                           )}
@@ -265,7 +265,7 @@ const ConcertsClient = () => {
                             {tour.start_date && tour.end_date && (
                               <div className="flex items-center gap-2">
                                 <IoCalendarClear className="text-primary" />
-                                <span className="text-gray-600">
+                                <span className="text-default-600">
                                   Du{" "}
                                   {format(
                                     new Date(tour.start_date),
@@ -302,11 +302,11 @@ const ConcertsClient = () => {
                       {tourConcerts.map((concert) => (
                         <div
                           key={concert.id}
-                          className="group relative overflow-hidden rounded-lg border border-black/5 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-lg"
+                          className="group border-divider bg-background relative overflow-hidden rounded-lg border p-6 shadow-sm transition-all duration-300 hover:shadow-lg"
                         >
                           <div className="space-y-4">
                             <div className="flex items-start justify-between">
-                              <h4 className="group-hover:text-primary line-clamp-2 text-lg font-semibold text-gray-800 transition-colors">
+                              <h4 className="group-hover:text-primary text-foreground line-clamp-2 text-lg font-semibold transition-colors">
                                 {concert.name || `Concert à ${concert.place}`}
                               </h4>
                               {concert.affiche && (
@@ -370,7 +370,7 @@ const ConcertsClient = () => {
                             </div>
 
                             {concert.additional_informations && (
-                              <p className="border-t border-gray-100 pt-2 text-sm whitespace-pre-wrap text-gray-500 italic">
+                              <p className="border-divider text-default-500 border-t pt-2 text-sm whitespace-pre-wrap italic">
                                 {concert.additional_informations}
                               </p>
                             )}
@@ -390,7 +390,7 @@ const ConcertsClient = () => {
                 return (
                   <div className="space-y-6">
                     {tours.length > 0 && (
-                      <h3 className="text-2xl font-semibold text-gray-800">
+                      <h3 className="text-foreground text-2xl font-semibold">
                         Autres concerts
                       </h3>
                     )}
@@ -398,7 +398,7 @@ const ConcertsClient = () => {
                       {standaloneConcerts.map((concert, index) => (
                         <div
                           key={concert.id}
-                          className={`relative flex flex-col overflow-hidden rounded-lg border border-black/5 bg-white shadow-sm transition-all duration-300 hover:shadow-md ${
+                          className={`border-divider bg-background relative flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-md ${
                             index === 0 && tours.length === 0
                               ? "md:col-span-2 md:row-span-2"
                               : ""
@@ -427,7 +427,7 @@ const ConcertsClient = () => {
                                 index === 0 && tours.length === 0
                                   ? "h-[400px] md:h-[600px]"
                                   : "h-48"
-                              } bg-gradient-to-br from-gray-50 to-gray-100`}
+                              } from-default-50 to-default-100 bg-gradient-to-br`}
                             >
                               <div className="bg-primary/10 flex items-center justify-center rounded-full p-4">
                                 <IoImageOutline className="text-primary/60 h-8 w-8 sm:h-10 sm:w-10" />
@@ -438,7 +438,7 @@ const ConcertsClient = () => {
                             </div>
                           )}
                           <div className="flex flex-1 flex-col justify-start space-y-3 p-6">
-                            <h4 className="line-clamp-2 text-lg font-semibold text-gray-800">
+                            <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
                               {concert.name ||
                                 `Concert du ${format(
                                   new Date(concert.date),
@@ -495,7 +495,7 @@ const ConcertsClient = () => {
                               </span>
                             </div>
                             {concert.additional_informations && (
-                              <p className="text-sm whitespace-pre-wrap text-gray-500 italic">
+                              <p className="text-default-500 text-sm whitespace-pre-wrap italic">
                                 {concert.additional_informations}
                               </p>
                             )}
@@ -513,7 +513,7 @@ const ConcertsClient = () => {
         {/* Projects Section */}
         <section
           id="projects-section"
-          className="w-full bg-white px-8 py-16 lg:px-24"
+          className="bg-background w-full px-8 py-16 lg:px-24"
           aria-labelledby="projects-title"
         >
           <h2
@@ -525,7 +525,7 @@ const ConcertsClient = () => {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((projet) => (
               <div
-                className="flex flex-col overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md"
+                className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
                 key={projet.slug}
               >
                 <Link
@@ -542,11 +542,11 @@ const ConcertsClient = () => {
                   />
                 </Link>
                 <div className="flex flex-1 flex-col gap-4 p-4">
-                  <h3 className="line-clamp-2 text-lg font-semibold text-gray-800">
+                  <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
                     {projet.name} {projet.subName}
                   </h3>
                   <p
-                    className="flex-1 overflow-hidden text-sm text-gray-500"
+                    className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light"
                     dangerouslySetInnerHTML={{ __html: projet.explanation }}
                   ></p>
                   <div className="flex">
@@ -567,7 +567,7 @@ const ConcertsClient = () => {
                 </div>
               </div>
             ))}
-            <div className="flex flex-col overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md">
+            <div className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md">
               <Link
                 href={`/concerts/autres`}
                 className="relative block h-48 w-full"
@@ -582,10 +582,10 @@ const ConcertsClient = () => {
                 />
               </Link>
               <div className="flex flex-1 flex-col gap-4 p-4">
-                <h3 className="line-clamp-2 text-lg font-semibold text-gray-800">
+                <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
                   Autres concerts
                 </h3>
-                <p className="line-clamp-4 flex-1 overflow-hidden text-sm text-gray-500">
+                <p className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light">
                   Découvrez notre riche histoire musicale avec la section dédiée
                   aux concerts antérieurs à 2022 du Bon Tempérament. Revivez les
                   moments forts et explorez les performances mémorables qui ont
@@ -604,7 +604,7 @@ const ConcertsClient = () => {
                     className="flex items-center gap-2"
                   >
                     <span>Voir plus</span>
-                    <IoIosArrowRoundForward className="scale-110" />
+                    <IoIosArrowRoundForward className="scale-110 font-bold" />
                   </Button>
                 </div>
               </div>
@@ -614,7 +614,7 @@ const ConcertsClient = () => {
 
         {/* Other Events Section */}
         <section
-          className="w-full bg-white px-8 py-16 lg:px-24"
+          className="bg-background w-full px-8 py-16 lg:px-24"
           aria-labelledby="other-events-title"
         >
           <h2
@@ -628,16 +628,16 @@ const ConcertsClient = () => {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="space-y-3 rounded-lg bg-gray-100 p-4">
-                    <div className="h-4 w-3/4 rounded bg-gray-200"></div>
-                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
-                    <div className="h-4 w-2/3 rounded bg-gray-200"></div>
+                  <div className="bg-default-100 space-y-3 rounded-lg p-4">
+                    <div className="bg-default-200 h-4 w-3/4 rounded"></div>
+                    <div className="bg-default-200 h-4 w-1/2 rounded"></div>
+                    <div className="bg-default-200 h-4 w-2/3 rounded"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : events.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">
+            <div className="text-default-500 py-8 text-center">
               Aucun événement public à venir
             </div>
           ) : (
@@ -645,11 +645,11 @@ const ConcertsClient = () => {
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className="overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md"
+                  className="border-divider bg-background overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
                 >
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between">
-                      <h4 className="line-clamp-2 text-lg font-semibold text-gray-800">
+                      <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
                         {event.title}
                       </h4>
                       <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
@@ -691,7 +691,7 @@ const ConcertsClient = () => {
                     </div>
 
                     {event.description && (
-                      <p className="text-sm whitespace-pre-wrap text-gray-500">
+                      <p className="text-default-500 text-sm whitespace-pre-wrap">
                         {event.description}
                       </p>
                     )}
@@ -716,7 +716,7 @@ const ConcertsClient = () => {
 
         {/* Rehearsals Section */}
         <section
-          className="mb-8 w-full bg-gray-100 px-8 py-16 lg:px-24"
+          className="bg-default-50 mb-8 w-full px-8 py-16 lg:px-24"
           aria-labelledby="rehearsals-title"
         >
           <h2
@@ -730,16 +730,16 @@ const ConcertsClient = () => {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="space-y-3 rounded-lg bg-gray-100 p-4">
-                    <div className="h-4 w-3/4 rounded bg-gray-200"></div>
-                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
-                    <div className="h-4 w-2/3 rounded bg-gray-200"></div>
+                  <div className="bg-default-100 space-y-3 rounded-lg p-4">
+                    <div className="bg-default-200 h-4 w-3/4 rounded"></div>
+                    <div className="bg-default-200 h-4 w-1/2 rounded"></div>
+                    <div className="bg-default-200 h-4 w-2/3 rounded"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : rehearsals.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">
+            <div className="text-default-500 py-8 text-center">
               Aucune répétition à venir
             </div>
           ) : (
@@ -747,11 +747,11 @@ const ConcertsClient = () => {
               {rehearsals.map((rehearsal) => (
                 <div
                   key={rehearsal.id}
-                  className="overflow-hidden rounded-lg border border-black/5 bg-white shadow-none transition-all duration-300 hover:shadow-md"
+                  className="border-divider bg-background overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
                 >
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between">
-                      <h4 className="line-clamp-2 text-lg font-semibold text-gray-800">
+                      <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
                         {rehearsal.name}
                       </h4>
                       <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
@@ -759,7 +759,7 @@ const ConcertsClient = () => {
                       </span>
                     </div>
 
-                    <div className="space-y-2 text-sm text-gray-600">
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-2">
                         <IoCalendarClear className="text-primary" />
                         <span>

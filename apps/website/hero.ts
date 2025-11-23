@@ -47,6 +47,16 @@ export default heroui({
           foreground: "#FFFFFF", // Light text on dark teal for better accessibility
         },
         focus: "#26a5ad",
+        default: {
+          50: "#142323", // More teal-tinted for better contrast with background
+          100: "#1a2c2c",
+          200: "#203535",
+          300: "#263e3e",
+          400: "#2c4747",
+          500: "#325050",
+          DEFAULT: "#1a2c2c",
+          foreground: "#ECEDEE",
+        },
       },
     },
   },
