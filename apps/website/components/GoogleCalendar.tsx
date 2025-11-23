@@ -14,7 +14,7 @@ interface GoogleCalendarProps {
 
 const GoogleCalendar: React.FC<GoogleCalendarProps> = () => {
   return (
-    <div className="rounded bg-white p-4 shadow">
+    <div className="bg-content1 rounded p-4 shadow">
       <FullCalendar
         plugins={[dayGridPlugin, googleCalendarPlugin]}
         initialView="dayGridMonth"

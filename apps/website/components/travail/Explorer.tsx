@@ -66,14 +66,14 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   const renderFileIcon = (mimeType: string) => {
     switch (mimeType) {
       case "application/pdf":
-        return <FaRegFilePdf className="text-red-500" />;
+        return <FaRegFilePdf className="text-red-500 dark:text-red-400" />;
       case "audio/mpeg":
       case "audio/wav":
-        return <FaMusic className="text-blue-500" />;
+        return <FaMusic className="text-blue-500 dark:text-blue-400" />;
       case "application/x-musescore":
-        return <SiMusescore className="text-purple-500" />;
+        return <SiMusescore className="text-purple-500 dark:text-purple-400" />;
       default:
-        return <FaFile className="text-gray-500" />;
+        return <FaFile className="text-default-500" />;
     }
   };
 
@@ -83,7 +83,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       {folderStack.length > 1 && (
         <button
           onClick={handleBackClick}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 transition-colors hover:text-gray-900"
+          className="text-default-600 hover:text-foreground flex items-center gap-2 px-3 py-2 text-sm transition-colors"
         >
           <IoArrowBack className="h-4 w-4" />
           <span>Retour</span>
@@ -92,11 +92,11 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Folders Section */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-500">Dossiers</h3>
+        <h3 className="text-default-500 text-sm font-medium">Dossiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 rounded-lg bg-gray-100" />
+              <div key={i} className="bg-default-100 h-12 rounded-lg" />
             ))}
           </div>
         ) : (
@@ -107,10 +107,10 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                 <button
                   key={folder.id}
                   onClick={() => handleFolderClick(folder.id!)}
-                  className="flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
+                  className="bg-content2 hover:bg-content3 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
                 >
-                  <FaFolder className="h-5 w-5 text-blue-400" />
-                  <span className="truncate text-sm font-medium text-gray-900">
+                  <FaFolder className="h-5 w-5 text-blue-400 dark:text-blue-300" />
+                  <span className="text-foreground truncate text-sm font-medium">
                     {folder.name}
                   </span>
                 </button>
@@ -121,11 +121,11 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Files Section */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-500">Fichiers</h3>
+        <h3 className="text-default-500 text-sm font-medium">Fichiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 rounded-lg bg-gray-100" />
+              <div key={i} className="bg-default-100 h-12 rounded-lg" />
             ))}
           </div>
         ) : (
@@ -135,10 +135,10 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
               .map((file) => (
                 <div
                   key={file.id}
-                  className="group flex w-full items-center gap-3 rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50"
+                  className="group bg-content2 hover:bg-content3 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
                 >
                   <div className="h-5 w-5">{renderFileIcon(file.mimeType)}</div>
-                  <span className="flex-1 truncate text-sm font-medium text-gray-900">
+                  <span className="text-foreground flex-1 truncate text-sm font-medium">
                     {file.name}
                   </span>
                   <Button
@@ -166,7 +166,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       {/* Empty States */}
       {!loading && folders.length === 0 && individualFiles.length === 0 && (
         <div className="py-12 text-center">
-          <p className="text-sm text-gray-500">Ce dossier est vide</p>
+          <p className="text-default-500 text-sm">Ce dossier est vide</p>
         </div>
       )}
     </div>
