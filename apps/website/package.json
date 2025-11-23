@@ -28,7 +28,7 @@
     "@repo/ui": "*",
     "@stripe/stripe-js": "^7.2.0",
     "@vercel/speed-insights": "^1.2.0",
-    "cloudinary": "^2.6.0",
+    "cloudinary": "^2.8.0",
     "dotenv": "^16.5.0",
     "gapi-client": "^0.0.3",
     "googleapis": "^148.0.0",

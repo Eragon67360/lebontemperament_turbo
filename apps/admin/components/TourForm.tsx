@@ -102,7 +102,7 @@ export function TourForm({
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Date de début</Label>
           <Popover>
@@ -178,7 +178,7 @@ export function TourForm({
         />
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
         {onClose && (
           <Button type="button" variant="outline" onClick={onClose}>
             Annuler
