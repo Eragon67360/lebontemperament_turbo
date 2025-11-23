@@ -30,7 +30,7 @@ export default heroui({
     },
     dark: {
       colors: {
-        background: "#000000",
+        background: "#0d1616", // Very dark teal-tinted background instead of pure black
         foreground: "#ECEDEE",
         primary: {
           50: "#E6F4F5",

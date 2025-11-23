@@ -43,7 +43,7 @@ const Galerie = () => {
         <div className="">
           <div className="flex items-end justify-between">
             <div>
-              <h1 className="text-title text-primary/50 leading-none font-light">
+              <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
                 Galerie
               </h1>
               <h2 className="text-title leading-none font-bold text-[#333]">
@@ -68,7 +68,7 @@ const Galerie = () => {
         <div className="py-4 md:py-8 lg:py-16">
           <div className="flex items-end justify-between">
             <div>
-              <h1 className="text-title text-primary/50 leading-none font-light">
+              <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
                 Galerie
               </h1>
               <h2 className="text-title leading-none font-bold text-[#333]">

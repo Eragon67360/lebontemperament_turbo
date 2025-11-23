@@ -84,7 +84,7 @@ const page = () => {
       <div className="container mx-auto flex w-full flex-col pb-8">
         <div className="py-16">
           <div>
-            <h1 className="text-title text-primary/50 leading-none font-light">
+            <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
               Concerts
             </h1>
             <h2 className="text-title leading-none font-bold text-[#333]">

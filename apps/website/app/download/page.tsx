@@ -77,7 +77,7 @@ export default function DownloadPage() {
           {/* Title */}
           <h1
             id="download-title"
-            className="text-primary/50 text-title mb-4 leading-none font-light"
+            className="text-primary/50 dark:text-primary text-title mb-4 leading-none font-light"
           >
             Entre Terre et Ciel
           </h1>

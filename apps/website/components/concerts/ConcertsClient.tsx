@@ -116,7 +116,7 @@ const ConcertsClient = () => {
         <div className="w-full max-w-[1440px] px-8 lg:px-24">
           <div className="flex items-end justify-between">
             <div>
-              <h1 className="text-title text-primary/50 leading-none font-light">
+              <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
                 Nos
               </h1>
               <h2 className="text-title leading-none font-bold text-[#333]">
@@ -150,7 +150,7 @@ const ConcertsClient = () => {
         >
           <h2
             id="upcoming-concerts-title"
-            className="text-primary/50 text-title mb-14 leading-none font-light"
+            className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
           >
             Prochains concerts
           </h2>
@@ -518,7 +518,7 @@ const ConcertsClient = () => {
         >
           <h2
             id="projects-title"
-            className="text-primary/50 text-title mb-14 leading-none font-light"
+            className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
           >
             Nos projets
           </h2>
@@ -619,7 +619,7 @@ const ConcertsClient = () => {
         >
           <h2
             id="other-events-title"
-            className="text-primary/50 text-title mb-14 leading-none font-light"
+            className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
           >
             Autres événements
           </h2>
@@ -721,7 +721,7 @@ const ConcertsClient = () => {
         >
           <h2
             id="rehearsals-title"
-            className="text-primary/50 text-title mb-14 leading-none font-light"
+            className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
           >
             Prochaines répétitions
           </h2>

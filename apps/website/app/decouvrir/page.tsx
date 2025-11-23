@@ -33,7 +33,7 @@ const Decouvrir = () => {
   return (
     <div className="container mx-auto mb-8 flex w-full flex-col">
       <div className="px-8 py-4 md:py-8 lg:py-16">
-        <h1 className="text-title text-primary/50 leading-none font-light">
+        <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
           Nous
         </h1>
         <h2 className="text-title leading-none font-bold text-[#333]">

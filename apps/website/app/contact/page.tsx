@@ -33,10 +33,10 @@ const Contact = () => {
     <div className="container mx-auto flex h-screen w-full flex-col">
       <div className="flex flex-col justify-between lg:flex-row">
         <div className="px-8 py-4 md:py-8 lg:py-16">
-          <h1 className="text-title text-primary/50 leading-none font-light">
+          <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
             Contact
           </h1>
-          <h2 className="text-title leading-none font-bold text-[#333]">
+          <h2 className="text-title text-foreground leading-none font-bold">
             Informations
           </h2>
           <hr className="mt-8" />
@@ -59,7 +59,7 @@ const Contact = () => {
         </div>
       </div>
 
-      <div className="my-20 flex w-full flex-col rounded-lg bg-[#F2F2F2] p-8 shadow-lg lg:w-1/2">
+      <div className="bg-default-50 my-20 flex w-full flex-col rounded-lg p-8 shadow-lg lg:w-1/2">
         <div className="flex gap-8 py-4 lg:py-12">
           <div className="hidden w-1/2 scale-125 items-center justify-center lg:flex">
             <svg
