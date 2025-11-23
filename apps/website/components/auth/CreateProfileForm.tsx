@@ -104,11 +104,11 @@ export default function CreateProfileForm() {
 
   if (invalidLink) {
     return (
-      <div className="text-destructive flex flex-col items-center gap-4 text-center">
-        <h1 className="text-2xl font-bold">
+      <div className="text-danger flex flex-col items-center gap-4 text-center">
+        <h1 className="text-foreground text-2xl font-bold">
           Oups ! Le lien n&apos;est pas valide 😕
         </h1>
-        <p className="text-balance">
+        <p className="text-foreground text-balance">
           Il semblerait que ce lien ait expiré ou soit invalide. Tu peux
           contacter l&apos;administrateur pour obtenir un nouveau lien !
         </p>
@@ -119,7 +119,7 @@ export default function CreateProfileForm() {
           className="mt-2"
         >
           <span className="mr-2">
-            <CiMail className="text-muted-foreground" />
+            <CiMail className="text-default-500" />
           </span>
           Contacter l&apos;administrateur
         </Button>
@@ -130,10 +130,10 @@ export default function CreateProfileForm() {
   return (
     <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-foreground text-2xl font-bold">
           Bienvenue dans l&apos;équipe ! 🎉
         </h1>
-        <p className="text-muted-foreground text-sm text-balance">
+        <p className="text-default-500 text-sm text-balance">
           Choisis un mot de passe qui en jette !
         </p>
       </div>
