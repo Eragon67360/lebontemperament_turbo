@@ -129,6 +129,43 @@ const HomeContent = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Pulsing Arrow */}
+          <div
+            className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 transform cursor-pointer"
+            onClick={() => {
+              window.scrollBy({
+                top: window.innerHeight,
+                behavior: "smooth",
+              });
+            }}
+            aria-label="Scroll down"
+          >
+            <motion.div
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
+              animate={{ y: [0, 10, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <svg
+                className="h-6 w-6 text-black"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </motion.div>
+          </div>
         </section>
 
         {/* Projects Section */}
