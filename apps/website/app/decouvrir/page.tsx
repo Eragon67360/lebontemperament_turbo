@@ -33,22 +33,22 @@ const Decouvrir = () => {
   return (
     <div className="container mx-auto mb-8 flex w-full flex-col">
       <div className="px-8 py-4 md:py-8 lg:py-16">
-        <h1 className="text-title text-primary/50 leading-none font-light">
+        <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
           Nous
         </h1>
-        <h2 className="text-title leading-none font-bold text-[#333]">
+        <h2 className="text-title text-foreground leading-none font-bold">
           Découvrir
         </h2>
-        <hr className="mt-2 md:mt-4 lg:mt-8" />
+        <hr className="border-divider mt-2 md:mt-4 lg:mt-8" />
       </div>
 
       <div className="flex flex-col gap-16 text-justify">
-        <div className="flex w-full flex-col gap-8 bg-[#f2f2f2] p-8 lg:flex-row">
+        <div className="bg-default-50 flex w-full flex-col gap-8 p-8 lg:flex-row">
           <div className="flex w-full flex-col lg:w-3/5">
-            <h2 className="text-title leading-none font-light text-[#BDBDBD]">
+            <h2 className="text-title text-default-500 leading-none font-light">
               Notre histoire
             </h2>
-            <p className="text-small lg:text-medium mt-8">
+            <p className="text-small lg:text-medium text-foreground mt-8">
               L&apos;association <i>Le Bon Tempérament</i> est un ensemble vocal
               et instrumental dirigé par Simone Duclos depuis sa création en
               1987. Le Bon Tempérament se distingue par le mélange des
@@ -106,7 +106,7 @@ const Decouvrir = () => {
               />
             </div>
           </div>
-          <p className="text-small lg:text-medium mt-0 flex w-full items-center lg:w-2/5">
+          <p className="text-small lg:text-medium text-foreground mt-0 flex w-full items-center lg:w-2/5">
             C&apos;est notamment au cours des séjours organisés chaque été dans
             une autre région de France que se peaufine le programme de
             l&apos;année et que se tissent les liens si particuliers entre les
@@ -123,7 +123,7 @@ const Decouvrir = () => {
           </p>
         </div>
 
-        <div className="flex w-full flex-col gap-8 bg-[#f2f2f2] p-8 lg:flex-row">
+        <div className="bg-default-50 flex w-full flex-col gap-8 p-8 lg:flex-row">
           <div className="flex w-full lg:w-2/5">
             <CloudinaryImage
               src={"Site/découvrir/choeurs/choeur"}
@@ -134,10 +134,10 @@ const Decouvrir = () => {
             />
           </div>
           <div className="flex w-full flex-col lg:w-3/5">
-            <h2 className="text-title leading-none font-light text-[#BDBDBD]">
+            <h2 className="text-title text-default-500 leading-none font-light">
               Structure
             </h2>
-            <p className="text-small lg:text-medium mt-8">
+            <p className="text-small lg:text-medium text-foreground mt-8">
               Le Bon Tempérament réunit des choristes amateurs, des chanteurs
               solistes professionnels et des instrumentistes de tous horizons.
               Les différentes générations évoluent dans un chœur d&apos;adultes,
@@ -149,7 +149,7 @@ const Decouvrir = () => {
         </div>
 
         <div className="flex w-full flex-col gap-8 p-8 lg:flex-row">
-          <h2 className="text-title w-full leading-none font-light text-[#BDBDBD] lg:w-2/5">
+          <h2 className="text-title text-default-500 w-full leading-none font-light lg:w-2/5">
             La direction
           </h2>
           <div className="flex w-full flex-col gap-4 lg:w-3/5 lg:flex-row">
@@ -179,7 +179,7 @@ const Decouvrir = () => {
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-8 bg-[#f2f2f2] p-8 lg:flex-row">
+        <div className="bg-default-50 flex w-full flex-col gap-8 p-8 lg:flex-row">
           <div className="flex w-full lg:w-2/5">
             <CloudinaryImage
               src={"Site/découvrir/orchestre/orchestre_4"}
@@ -190,10 +190,10 @@ const Decouvrir = () => {
             />
           </div>
           <div className="flex w-full flex-col lg:w-3/5">
-            <h2 className="text-title leading-none font-light text-[#BDBDBD]">
+            <h2 className="text-title text-default-500 leading-none font-light">
               Notre orchestre
             </h2>
-            <p className="text-small lg:text-medium mt-8">
+            <p className="text-small lg:text-medium text-foreground mt-8">
               L&apos;orchestre du Bon Tempérament est dirigé par{" "}
               <strong>Charlotte Lienhard</strong> (<i>voir photo ci-dessous</i>
               ). Cet ensemble a été créé en 2023 et regroupe des instrumentistes

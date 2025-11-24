@@ -7,15 +7,18 @@ import { IoHome, IoArrowBack } from "react-icons/io5";
 export default function NotFound() {
   return (
     <div
-      className="relative flex min-h-screen w-full flex-col items-center justify-center bg-gray-100 text-gray-800"
+      className="bg-default-50 relative flex min-h-screen w-full flex-col items-center justify-center"
       role="main"
       aria-labelledby="error-title"
     >
-      <div className="relative z-10 mx-4 max-w-md rounded-lg bg-white p-8 text-center shadow-md">
-        <h1 id="error-title" className="mb-4 text-4xl font-bold text-gray-800">
+      <div className="bg-background relative z-10 mx-4 max-w-md rounded-lg p-8 text-center shadow-md">
+        <h1
+          id="error-title"
+          className="text-foreground mb-4 text-4xl font-bold"
+        >
           404 - Page non trouvée
         </h1>
-        <p className="mb-8 text-lg text-gray-600">
+        <p className="text-default-600 mb-8 text-lg">
           Désolé, la page que vous recherchez n&apos;existe pas ou a été
           déplacée.
         </p>
@@ -43,7 +46,7 @@ export default function NotFound() {
           </Button>
         </div>
 
-        <div className="mt-8 text-sm text-gray-500">
+        <div className="text-default-500 mt-8 text-sm">
           <p>Vous pouvez également :</p>
           <ul className="mt-2 space-y-1">
             <li>

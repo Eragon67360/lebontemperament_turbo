@@ -134,7 +134,7 @@ const HomeContent = () => {
         {/* Projects Section */}
         <motion.section
           ref={projectsRef}
-          className="relative z-10 mt-[100dvh] flex w-full justify-center bg-[#f2f2f2] py-16"
+          className="bg-default-50 relative z-10 mt-[100dvh] flex w-full justify-center py-16"
           aria-labelledby="projects-title"
           initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
           animate={
@@ -150,7 +150,7 @@ const HomeContent = () => {
           <div className="w-full max-w-[1440px] px-8 lg:px-24">
             <motion.h2
               id="projects-title"
-              className="text-primary/50 text-title mb-14 leading-none font-light"
+              className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 projectsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -189,7 +189,7 @@ const HomeContent = () => {
         </motion.section>
 
         {/* Main Content Container */}
-        <div className="z-10 mx-0 flex h-full w-full flex-col bg-white">
+        <div className="bg-background z-10 mx-0 flex h-full w-full flex-col">
           {/* About Section */}
           <motion.section
             ref={aboutRef}
@@ -266,12 +266,12 @@ const HomeContent = () => {
               <div className="flex flex-col gap-[20px]">
                 <h2
                   id="about-title"
-                  className="text-primary/50 text-title leading-none font-[300]"
+                  className="text-primary/50 dark:text-primary text-title leading-none font-[300]"
                   style={{ fontWeight: 300 }}
                 >
                   Nous découvrir
                 </h2>
-                <p className="text-xs leading-[25px] font-light md:text-sm lg:text-base">
+                <p className="text-foreground text-xs leading-[25px] font-light md:text-sm lg:text-base">
                   L'association Le Bon Tempérament est un ensemble vocal et
                   instrumental dirigé par Simone Duclos depuis sa création en
                   1987 qui vise à partager la passion pour la musique de ses
@@ -300,7 +300,7 @@ const HomeContent = () => {
           {/* Concerts Section */}
           <motion.section
             ref={concertsRef}
-            className="mx-auto mt-16 w-full max-w-[1440px] bg-white px-8 py-16 lg:px-24"
+            className="bg-background mx-auto mt-16 w-full max-w-[1440px] px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -315,7 +315,7 @@ const HomeContent = () => {
           >
             <motion.h2
               id="concerts-title"
-              className="text-primary/50 text-title leading-none font-light"
+              className="text-primary/50 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 concertsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -357,7 +357,7 @@ const HomeContent = () => {
           {/* CDs Section */}
           <motion.section
             ref={cdsRef}
-            className="mx-auto w-full max-w-[1440px] bg-[#f8f8f8] px-8 py-16 lg:px-24"
+            className="bg-default-50 mx-auto w-full max-w-[1440px] px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -372,7 +372,7 @@ const HomeContent = () => {
           >
             <motion.h2
               id="cds-title"
-              className="text-primary/50 text-title leading-none font-light"
+              className="text-primary/50 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 cdsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }

@@ -26,7 +26,7 @@ const MusicList = () => {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white">
+    <div className="bg-content1 overflow-hidden rounded-xl">
       {/* Album Header */}
       <div className="from-primary bg-gradient-to-r to-[#43475e] p-4">
         <div className="flex items-center gap-4">
@@ -54,12 +54,12 @@ const MusicList = () => {
       </div>
 
       {/* Tracks List */}
-      <div className="divide-y divide-gray-100">
+      <div className="divide-divider divide-y">
         {musicDetails.map((file, index) => (
           <button
             key={index}
             onClick={() => setCurrentSong(getMusicSrc(file.name))}
-            className={`flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50 ${
+            className={`hover:bg-default-50 flex w-full items-center gap-3 px-4 py-3 transition-colors ${
               currentSong === getMusicSrc(file.name)
                 ? "bg-primary/5"
                 : "bg-transparent"
@@ -74,13 +74,13 @@ const MusicList = () => {
             </div>
 
             <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-foreground text-sm font-medium">
                 {cleanDisplayName(file.name)}
               </p>
-              <p className="text-xs text-gray-500">Le Bon Tempérament</p>
+              <p className="text-default-500 text-xs">Le Bon Tempérament</p>
             </div>
 
-            <span className="text-xs text-gray-400">{file.duration}</span>
+            <span className="text-default-400 text-xs">{file.duration}</span>
           </button>
         ))}
       </div>

@@ -16,7 +16,7 @@ const ProjectViewer = () => {
       <div className="my-8 flex flex-col">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-1">
-            <div className="block overflow-hidden rounded-lg border border-black/5 bg-white p-4 shadow-none transition-all duration-300 hover:shadow-md">
+            <div className="border-divider bg-background block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
               <Link
                 href={`/concerts/${latestProjects[0]?.slug || ""}`}
                 className="block"
@@ -32,7 +32,7 @@ const ProjectViewer = () => {
                 </div>
                 <div className="space-y-3 p-4">
                   <div className="flex items-start justify-between">
-                    <h4 className="overflow-hidden text-lg font-semibold text-gray-800">
+                    <h4 className="text-foreground overflow-hidden text-lg font-semibold">
                       <span className="block truncate">
                         {latestProjects[0]?.name || ""}{" "}
                         {latestProjects[0]?.subName || ""}
@@ -44,7 +44,7 @@ const ProjectViewer = () => {
                         : ""}
                     </span>
                   </div>
-                  <p className="line-clamp-4 overflow-hidden text-sm text-gray-500">
+                  <p className="text-default-600 line-clamp-4 overflow-hidden text-sm">
                     {latestProjects[0]?.explanation || ""}
                   </p>
                 </div>
@@ -67,7 +67,7 @@ const ProjectViewer = () => {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border border-black/5 bg-white p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
+            <div className="border-divider bg-background flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
               <Link
                 href={`/concerts/${latestProjects[1]?.slug || ""}`}
                 className="relative h-32 w-full md:h-full md:w-1/2"
@@ -82,7 +82,7 @@ const ProjectViewer = () => {
               </Link>
               <div className="w-full space-y-3 p-4 lg:w-1/2">
                 <div className="flex items-start justify-between">
-                  <h4 className="overflow-hidden text-lg font-semibold text-gray-800">
+                  <h4 className="text-foreground overflow-hidden text-lg font-semibold">
                     <span className="block truncate">
                       {latestProjects[1]?.name || ""}{" "}
                       {latestProjects[1]?.subName || ""}
@@ -95,7 +95,7 @@ const ProjectViewer = () => {
                   </span>
                 </div>
                 <p
-                  className="line-clamp-6 overflow-hidden text-sm text-gray-500"
+                  className="text-default-600 line-clamp-6 overflow-hidden text-sm"
                   dangerouslySetInnerHTML={{
                     __html: latestProjects[1]?.explanation || "",
                   }}
@@ -117,7 +117,7 @@ const ProjectViewer = () => {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border border-black/5 bg-white p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
+            <div className="border-divider bg-background flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
               <Link
                 href={`/concerts/${latestProjects[2]?.slug || ""}`}
                 className="relative h-32 w-full md:h-full md:w-1/2"
@@ -132,7 +132,7 @@ const ProjectViewer = () => {
               </Link>
               <div className="w-full space-y-3 p-4 lg:w-1/2">
                 <div className="flex items-start justify-between">
-                  <h4 className="overflow-hidden text-lg font-semibold text-gray-800">
+                  <h4 className="text-foreground overflow-hidden text-lg font-semibold">
                     <span className="block truncate">
                       {latestProjects[2]?.name || ""}{" "}
                       {latestProjects[2]?.subName || ""}
@@ -145,7 +145,7 @@ const ProjectViewer = () => {
                   </span>
                 </div>
                 <p
-                  className="line-clamp-6 overflow-hidden text-sm text-gray-500"
+                  className="text-default-600 line-clamp-6 overflow-hidden text-sm"
                   dangerouslySetInnerHTML={{
                     __html: latestProjects[2]?.explanation || "",
                   }}
@@ -166,7 +166,7 @@ const ProjectViewer = () => {
             </div>
           </div>
           <div className="lg:col-span-1">
-            <div className="block overflow-hidden rounded-lg border border-black/5 bg-white p-4 shadow-none transition-all duration-300 hover:shadow-md">
+            <div className="border-divider bg-background block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
               <Link
                 href={`/concerts/${latestProjects[3]?.slug || ""}`}
                 className="block"
@@ -182,7 +182,7 @@ const ProjectViewer = () => {
                 </div>
                 <div className="space-y-3 p-4">
                   <div className="flex items-start justify-between">
-                    <h4 className="overflow-hidden text-lg font-semibold text-gray-800">
+                    <h4 className="text-foreground overflow-hidden text-lg font-semibold">
                       <span className="block truncate">
                         {latestProjects[3]?.name || ""}{" "}
                         {latestProjects[3]?.subName || ""}
@@ -194,7 +194,7 @@ const ProjectViewer = () => {
                         : ""}
                     </span>
                   </div>
-                  <p className="line-clamp-4 overflow-hidden text-sm text-gray-500">
+                  <p className="text-default-600 line-clamp-4 overflow-hidden text-sm">
                     {latestProjects[3]?.explanation || ""}
                   </p>
                 </div>

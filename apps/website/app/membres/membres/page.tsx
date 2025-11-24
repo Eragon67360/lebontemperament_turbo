@@ -47,16 +47,16 @@ const Membres = () => {
 
   return (
     <div className="w-full p-2 md:p-4 lg:p-6">
-      <div className="rounded-xl bg-white shadow-sm">
+      <div className="bg-content1 rounded-xl shadow-sm">
         {/* Header */}
-        <div className="border-b p-4 lg:p-6">
+        <div className="border-divider border-b p-4 lg:p-6">
           <div className="flex items-center gap-3">
             <div className="bg-primary/10 rounded-md p-2">
               <IoPersonCircle className="text-primary h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Membres</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-foreground text-lg font-semibold">Membres</h2>
+              <p className="text-default-500 text-sm">
                 Liste des membres du Bon Tempérament
               </p>
             </div>
@@ -64,7 +64,7 @@ const Membres = () => {
         </div>
 
         {/* Search and Stats */}
-        <div className="border-b p-4 lg:p-6">
+        <div className="border-divider border-b p-4 lg:p-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="relative w-full sm:w-64">
               <input
@@ -72,11 +72,11 @@ const Membres = () => {
                 placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="focus:ring-primary/20 w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-2 focus:outline-none"
+                className="focus:ring-primary/20 border-divider bg-content2 text-foreground w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-2 focus:outline-none"
               />
-              <FaSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <FaSearch className="text-default-400 absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-default-500 text-sm">
               {filteredData.length} membre{filteredData.length !== 1 && "s"}
             </div>
           </div>
@@ -87,7 +87,7 @@ const Membres = () => {
           {loading ? (
             <div className="animate-pulse space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 rounded bg-gray-100" />
+                <div key={i} className="bg-default-100 h-12 rounded" />
               ))}
             </div>
           ) : (
@@ -98,23 +98,23 @@ const Membres = () => {
                     {columns.map((column) => (
                       <th
                         key={column}
-                        className="border-b px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                        className="border-divider text-default-500 border-b px-4 py-3 text-left text-xs font-medium tracking-wider uppercase"
                       >
                         {column}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-divider divide-y">
                   {filteredData.map((row, index) => (
                     <tr
                       key={index}
-                      className="transition-colors hover:bg-gray-50"
+                      className="hover:bg-default-50 transition-colors"
                     >
                       {columns.map((column) => (
                         <td
                           key={column}
-                          className="px-4 py-3 text-sm whitespace-nowrap text-gray-900"
+                          className="text-foreground px-4 py-3 text-sm whitespace-nowrap"
                         >
                           {row[column]}
                         </td>
@@ -125,7 +125,7 @@ const Membres = () => {
               </table>
 
               {filteredData.length === 0 && (
-                <div className="py-12 text-center text-gray-500">
+                <div className="text-default-500 py-12 text-center">
                   Aucun résultat trouvé
                 </div>
               )}

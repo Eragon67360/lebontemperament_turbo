@@ -5,8 +5,17 @@ import { CldImage } from "next-cloudinary";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
 import ReCAPTCHA from "react-google-recaptcha";
+import { useTheme } from "next-themes";
 
 const ContactForm = () => {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Track mounted state for theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Global reCAPTCHA error handler
   useEffect(() => {
     const handleRecaptchaError = (event: any) => {
@@ -193,13 +202,13 @@ const ContactForm = () => {
 
   return (
     <section
-      className="mx-auto w-full max-w-[1440px] bg-white px-8 py-16 lg:px-24"
+      className="bg-background mx-auto w-full max-w-[1440px] px-8 py-16 lg:px-24"
       id="contact"
       aria-labelledby="contact-title"
     >
       <h2
         id="contact-title"
-        className="text-primary/50 text-title leading-none font-light"
+        className="text-primary/50 dark:text-primary text-title leading-none font-light"
       >
         Nous contacter
       </h2>
@@ -295,7 +304,7 @@ const ContactForm = () => {
               className="hidden"
             />
 
-            {siteKey ? (
+            {siteKey && mounted ? (
               <ReCAPTCHA
                 sitekey={siteKey}
                 ref={recaptchaRef}
@@ -310,12 +319,14 @@ const ContactForm = () => {
                   console.log("reCAPTCHA expired");
                   setCaptchaValue(null);
                 }}
-                theme="light"
+                theme={resolvedTheme === "dark" ? "dark" : "light"}
                 size="normal"
                 type="image"
               />
+            ) : siteKey ? (
+              <div className="bg-default-100 h-[78px] w-[304px] animate-pulse rounded" />
             ) : (
-              <div className="text-sm text-red-600">
+              <div className="text-danger text-sm">
                 reCAPTCHA non configuré — le formulaire est protégé côté
                 serveur. Veuillez contacter l&apos;administrateur.
               </div>
@@ -347,7 +358,7 @@ const ContactForm = () => {
             </div>
 
             {isButtonDisabled && (
-              <p id="submit-help" className="text-sm text-gray-600">
+              <p id="submit-help" className="text-default-600 text-sm">
                 Veuillez remplir tous les champs obligatoires (email et message)
                 et compléter la vérification reCAPTCHA pour pouvoir envoyer le
                 formulaire.

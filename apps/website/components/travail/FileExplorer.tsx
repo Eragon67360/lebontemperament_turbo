@@ -74,9 +74,9 @@ const FileExplorer: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabContent>(tabs[0]!);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div className="border-divider bg-content1 rounded-lg border shadow-sm">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 md:px-6 md:py-4">
+      <div className="border-divider bg-default-50 border-b px-4 py-3 md:px-6 md:py-4">
         <div className="flex items-center gap-3">
           <CloudinaryImage
             src={"Site/membres/logos/drive"}
@@ -85,7 +85,7 @@ const FileExplorer: React.FC = () => {
             height={24}
             rounded={RoundedSize.NONE}
           />
-          <h2 className="text-base font-semibold text-gray-800 md:text-lg">
+          <h2 className="text-foreground text-base font-semibold md:text-lg">
             Drive
           </h2>
         </div>
@@ -93,7 +93,7 @@ const FileExplorer: React.FC = () => {
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
-        <div className="w-full border-r border-gray-100 p-2 md:p-4 lg:w-72">
+        <div className="border-divider w-full border-r p-2 md:p-4 lg:w-72">
           <div className="grid grid-cols-2 gap-1.5 md:gap-3 lg:grid-cols-1">
             {tabs.map((tab, index) => (
               <button
@@ -102,7 +102,7 @@ const FileExplorer: React.FC = () => {
                 className={`flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-all duration-200 md:p-3 ${
                   activeTab.id === tab.id
                     ? "bg-primary/5 text-primary"
-                    : "hover:bg-gray-50"
+                    : "text-foreground hover:bg-default-100"
                 }`}
               >
                 <div
@@ -119,12 +119,12 @@ const FileExplorer: React.FC = () => {
             ))}
           </div>
 
-          <div className="mt-2 border-t pt-2 md:mt-6 md:pt-6">
+          <div className="border-divider mt-2 border-t pt-2 md:mt-6 md:pt-6">
             <Link
               href="https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
               target="_blank"
               rel="noopener"
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+              className="bg-default-100 text-foreground hover:bg-default-200 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
             >
               Accès direct au drive
               <LuExternalLink className="h-4 w-4" />
@@ -144,12 +144,12 @@ const FileExplorer: React.FC = () => {
                 style={{ color: `#${activeTab.iconColor}` }}
               />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-foreground text-xl font-semibold">
               {activeTab.title}
             </h2>
           </div>
 
-          <div className="rounded-lg bg-gray-50 p-2 md:p-4">
+          <div className="bg-default-50 rounded-lg p-2 md:p-4">
             {activeTab.component}
           </div>
         </div>
