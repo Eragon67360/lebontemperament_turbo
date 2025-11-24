@@ -23,9 +23,7 @@ import Footer from "./Footer";
 
 const HomeContent = () => {
   const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
-    typeof window !== "undefined"
-      ? Math.max(window.innerHeight * 0.6, 200)
-      : 600,
+    typeof window !== "undefined" ? Math.max(window.innerHeight, 200) : 600,
   );
 
   // Refs for each section
@@ -46,8 +44,7 @@ const HomeContent = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const onResize = () =>
-      setMaxScrollPx(Math.max(window.innerHeight * 0.6, 200));
+    const onResize = () => setMaxScrollPx(Math.max(window.innerHeight, 200));
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -58,15 +55,16 @@ const HomeContent = () => {
     : useTransform(scrollY, [0, maxScrollPx], [1, 0.82]);
   const opacity = prefersReducedMotion
     ? 1
-    : useTransform(scrollY, [0, maxScrollPx], [1, 0.2]);
+    : useTransform(scrollY, [0, maxScrollPx], [1, 0]);
 
   return (
     <>
-      <div className="relative flex h-full w-full flex-col items-center overflow-x-hidden">
+      <div className="relative flex min-h-screen w-full flex-col items-center overflow-x-hidden">
         {/* Hero Section */}
-        <section
+        <motion.section
           className="fixed top-0 left-0 z-0 flex h-full w-full justify-center bg-[url('/img/entre_terre_et_ciel.jpg')] bg-cover bg-fixed bg-center"
           aria-labelledby="hero-title"
+          style={{ opacity }}
         >
           <div
             aria-hidden
@@ -80,7 +78,6 @@ const HomeContent = () => {
             transition={{ duration: 0.5 }}
             style={{
               scale,
-              opacity,
               transformOrigin: "center",
               willChange: "transform, opacity",
             }}
@@ -166,7 +163,7 @@ const HomeContent = () => {
               </svg>
             </motion.div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Projects Section */}
         <motion.section
@@ -226,7 +223,7 @@ const HomeContent = () => {
         </motion.section>
 
         {/* Main Content Container */}
-        <div className="bg-background z-10 mx-0 flex h-full w-full flex-col">
+        <div className="bg-background z-10 mx-0 flex w-full flex-col">
           {/* About Section */}
           <motion.section
             ref={aboutRef}
