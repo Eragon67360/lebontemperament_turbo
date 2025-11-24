@@ -153,7 +153,7 @@ const FeaturedVideosBubble = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsOpen(true)}
-            className="group bg-primary hover:bg-primary/90 relative flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-colors"
+            className="group bg-primary hover:bg-primary/90 relative flex size-10 items-center justify-center rounded-full text-white shadow-lg transition-colors md:size-14"
           >
             <span className="absolute -top-1 -right-1 flex h-4 w-4">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
