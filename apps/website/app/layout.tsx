@@ -1,7 +1,7 @@
 import { EasterEgg } from "@/components/EasterEgg";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
-import { SocialPopover } from "@/components/SocialPopover";
+import { BubbleContainer } from "@/components/BubbleContainer";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -148,7 +148,7 @@ export default function RootLayout({
             <Navigation />
 
             {children}
-            <SocialPopover />
+            <BubbleContainer />
             <Analytics />
             <SpeedInsights />
             <FooterClientWrapper />

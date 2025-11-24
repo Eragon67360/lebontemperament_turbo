@@ -367,12 +367,13 @@ const ContactForm = () => {
           </form>
         </div>
 
-        <div className="hidden w-1/2 justify-end lg:flex">
+        <div className="hidden w-1/2 shrink-0 justify-end lg:flex">
           <CldImage
             src={"Site/logo"}
             alt="Logo Le Bon Tempérament - Contact"
-            width={600}
-            height={600}
+            className="h-auto w-full shrink-0 object-contain"
+            width={632}
+            height={624}
           />
         </div>
       </div>
