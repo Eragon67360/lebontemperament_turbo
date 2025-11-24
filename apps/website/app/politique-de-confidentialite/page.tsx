@@ -38,11 +38,11 @@ export default function PrivacyPolicy() {
         </h1>
 
         <div className="space-y-8">
-          <section className="border-b border-gray-200 pb-8">
+          <section className="border-divider border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Introduction
             </h2>
-            <p className="text-gray-800">
+            <p className="text-foreground">
               Votre vie privée est importante pour nous. Cette politique de
               confidentialité explique quelles informations nous recueillons,
               comment nous les utilisons et quelles options vous avez concernant
@@ -50,15 +50,15 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
-          <section className="border-b border-gray-200 pb-8">
+          <section className="border-divider border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Informations que nous recueillons
             </h2>
-            <p className="mb-4 text-gray-800">
+            <p className="text-foreground mb-4">
               Nous recueillons différents types d&apos;informations pour divers
               objectifs, y compris pour vous fournir et améliorer notre service.
             </p>
-            <ul className="list-disc pl-5 text-gray-800">
+            <ul className="text-foreground list-disc pl-5">
               <li className="mb-2">
                 Informations personnelles (nom, adresse email, numéro de
                 téléphone, etc.)
@@ -70,15 +70,15 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
-          <section className="border-b border-gray-200 pb-8">
+          <section className="border-divider border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Utilisation des données
             </h2>
-            <p className="mb-4 text-gray-800">
+            <p className="text-foreground mb-4">
               Nous utilisons les données recueillies pour divers objectifs, tels
               que :
             </p>
-            <ul className="list-disc pl-5 text-gray-800">
+            <ul className="text-foreground list-disc pl-5">
               <li className="mb-2">Fournir et maintenir notre service</li>
               <li className="mb-2">
                 Vous notifier des changements de notre service
@@ -90,11 +90,11 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
-          <section className="border-b border-gray-200 pb-8">
+          <section className="border-divider border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Partage des données
             </h2>
-            <p className="text-gray-800">
+            <p className="text-foreground">
               Nous ne vendons ni ne louons vos informations personnelles à des
               tiers. Nous pouvons partager vos informations avec des
               fournisseurs de services tiers pour faciliter notre service,
@@ -107,7 +107,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Vos droits
             </h2>
-            <p className="text-gray-800">
+            <p className="text-foreground">
               Vous avez le droit d&apos;accéder, de corriger ou de supprimer les
               informations personnelles que nous avons sur vous. Si vous
               souhaitez exercer ces droits, veuillez nous contacter à

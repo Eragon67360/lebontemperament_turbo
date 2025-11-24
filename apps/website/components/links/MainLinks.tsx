@@ -19,18 +19,18 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
 
   const getLinkClassName = (path: string) => `
         py-1 px-2 transition-all duration-300 
-        ${isLight ? "text-white" : "text-foreground"}
+        ${isLight ? "text-white dark:text-white" : "text-foreground dark:text-foreground"}
         ${
           isActive(path)
-            ? "border-primary/65 border-y-2"
-            : "border-transparent hover:border-primary/65 border-y-2"
+            ? "border-primary/65 dark:border-primary/80 border-y-2"
+            : "border-transparent hover:border-primary/65 dark:hover:border-primary/80 border-y-2"
         }
     `;
 
   return (
     <NavbarContent
       justify="center"
-      className="hidden items-center gap-6 text-[16px] tracking-[2.4px] uppercase select-none lg:flex"
+      className="text-foreground dark:text-foreground hidden items-center gap-6 text-[16px] tracking-[2.4px] uppercase select-none lg:flex"
     >
       <NavbarItem>
         <Link

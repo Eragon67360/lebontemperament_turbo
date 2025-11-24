@@ -12,7 +12,11 @@ type MemberCardProps = {
 
 const MemberCard: FC<MemberCardProps> = ({ role, name, src, quote }) => {
   return (
-    <Card isFooterBlurred radius="lg" className="border-none">
+    <Card
+      isFooterBlurred
+      radius="lg"
+      className="bg-background dark:bg-foreground/5 border-none"
+    >
       <CardHeader className="flex-col items-start px-4 pt-2 pb-0">
         <h3 className="text-tiny font-bold uppercase">{role}</h3>
         <h4 className="text-large font-bold">{name}</h4>

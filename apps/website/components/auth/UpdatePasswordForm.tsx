@@ -61,10 +61,10 @@ export default function UpdatePasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-foreground text-2xl font-bold">
           Nouveau départ, nouveau mot de passe ! 🔐
         </h1>
-        <p className="text-muted-foreground text-sm text-balance">
+        <p className="text-default-500 text-sm text-balance">
           Cette fois-ci, choisis-en un dont tu te souviendras... enfin, on
           espère ! 😉
         </p>
@@ -103,7 +103,7 @@ export default function UpdatePasswordForm() {
           )}
         </Button>
       </div>
-      <p className="text-muted-foreground text-center text-xs">
+      <p className="text-default-500 text-center text-xs">
         Pro tip : évite &quot;123456&quot; ou le nom de ton chat, c&apos;est pas
         top pour la sécurité ! 🐱
       </p>

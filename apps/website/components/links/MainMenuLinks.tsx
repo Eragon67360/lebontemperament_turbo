@@ -10,7 +10,7 @@ interface MainMenuLinksProps {
 
 const MainMenuLinks: React.FC<MainMenuLinksProps> = ({ user, isLoading }) => {
   return (
-    <NavbarMenu>
+    <NavbarMenu className="pt-6">
       <NavbarMenuItem>
         <Link href={RouteNames.ROOT} className="w-full" color="foreground">
           Accueil

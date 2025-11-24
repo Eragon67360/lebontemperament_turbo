@@ -86,12 +86,17 @@ const MembresConcertsEvents = () => {
   };
   const getEventTypeColor = (type: string) => {
     const colors = {
-      concert: "bg-blue-100 text-blue-700",
-      repetition: "bg-green-100 text-green-700",
-      vente: "bg-purple-100 text-purple-700",
-      autre: "bg-gray-100 text-gray-700",
+      concert:
+        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+      repetition:
+        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+      vente:
+        "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+      autre: "bg-default-100 text-default-700",
     };
-    return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-700";
+    return (
+      colors[type as keyof typeof colors] || "bg-default-100 text-default-700"
+    );
   };
 
   const SectionTitle = ({
@@ -102,18 +107,18 @@ const MembresConcertsEvents = () => {
     title: string;
   }) => (
     <div className="mb-6">
-      <p className="text-sm text-gray-500">{subtitle}</p>
-      <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+      <p className="text-default-500 text-sm">{subtitle}</p>
+      <h2 className="text-foreground text-xl font-semibold">{title}</h2>
     </div>
   );
 
   const LoadingCard = () => (
-    <div className="animate-pulse rounded-lg bg-white p-4 shadow-md">
-      <div className="mb-4 h-6 w-3/4 rounded bg-gray-200"></div>
+    <div className="bg-content1 animate-pulse rounded-lg p-4 shadow-md">
+      <div className="bg-default-200 mb-4 h-6 w-3/4 rounded"></div>
       <div className="space-y-3">
-        <div className="h-4 w-1/2 rounded bg-gray-200"></div>
-        <div className="h-4 w-2/3 rounded bg-gray-200"></div>
-        <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+        <div className="bg-default-200 h-4 w-1/2 rounded"></div>
+        <div className="bg-default-200 h-4 w-2/3 rounded"></div>
+        <div className="bg-default-200 h-4 w-3/4 rounded"></div>
       </div>
     </div>
   );
@@ -121,10 +126,10 @@ const MembresConcertsEvents = () => {
   return (
     <div className="container mx-auto flex w-full flex-col space-y-8 p-2 md:p-4 lg:p-6">
       {/* Concerts Section */}
-      <section className="rounded-xl bg-white p-4 shadow-sm md:p-4 lg:p-6">
+      <section className="bg-content1 rounded-xl p-4 shadow-sm md:p-4 lg:p-6">
         <SectionTitle subtitle="Agenda" title="Prochains concerts" />
         {!loading && concerts.length === 0 && (
-          <div className="py-8 text-center text-gray-500">
+          <div className="text-default-500 py-8 text-center">
             Aucun concert à venir pour le moment.
           </div>
         )}
@@ -139,14 +144,14 @@ const MembresConcertsEvents = () => {
             {concerts.map((concert, index) => (
               <div
                 key={index}
-                className="hover:border-primary/20 rounded-lg border border-gray-100 p-4 transition-all duration-300"
+                className="hover:border-primary/20 border-divider bg-content2 rounded-lg border p-4 transition-all duration-300"
               >
-                <h3 className="mb-3 text-base font-medium text-gray-800">
+                <h3 className="text-foreground mb-3 text-base font-medium">
                   {concert.name ||
                     `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
                 </h3>
 
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="text-default-600 space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <IoCalendarClear className="text-primary h-4 w-4" />
                     <span>
@@ -180,10 +185,10 @@ const MembresConcertsEvents = () => {
       </section>
 
       {/* Events Section */}
-      <section className="rounded-xl bg-white p-4 shadow-sm md:p-4 lg:p-6">
+      <section className="bg-content1 rounded-xl p-4 shadow-sm md:p-4 lg:p-6">
         <SectionTitle subtitle="Calendrier" title="Événements à venir" />
         {!loading && events.length === 0 && (
-          <div className="py-8 text-center text-gray-500">
+          <div className="text-default-500 py-8 text-center">
             Aucun événement à venir pour le moment.
           </div>
         )}
@@ -198,10 +203,10 @@ const MembresConcertsEvents = () => {
             {events.map((event, index) => (
               <div
                 key={index}
-                className="hover:border-primary/20 rounded-lg border border-gray-100 p-4 transition-all duration-300"
+                className="hover:border-primary/20 border-divider bg-content2 rounded-lg border p-4 transition-all duration-300"
               >
                 <div className="mb-3 flex items-start justify-between">
-                  <h3 className="text-base font-medium text-gray-800">
+                  <h3 className="text-foreground text-base font-medium">
                     {event.title}
                   </h3>
                   <span
@@ -211,7 +216,7 @@ const MembresConcertsEvents = () => {
                   </span>
                 </div>
 
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="text-default-600 space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <IoCalendarClear className="text-primary h-4 w-4" />
                     <span>{formatEventDate(event)}</span>
@@ -227,18 +232,18 @@ const MembresConcertsEvents = () => {
                 </div>
 
                 {event.description && (
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="text-default-500 mt-2 text-xs">
                     {event.description}
                   </p>
                 )}
 
                 <div className="mt-3 flex flex-wrap gap-2">
                   {event.responsible_email && (
-                    <span className="rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-600">
+                    <span className="bg-default-100 text-default-600 rounded-md px-2 py-1 text-xs">
                       Contact:{" "}
                       <a
                         href={`mailto:${event.responsible_email}`}
-                        className="text-blue-500"
+                        className="text-primary hover:underline"
                       >
                         {event.responsible_name || event.responsible_email}
                       </a>
@@ -249,7 +254,7 @@ const MembresConcertsEvents = () => {
                       href={event.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
+                      className="bg-default-100 text-default-600 hover:bg-default-200 flex items-center gap-1 rounded-md px-2 py-1 text-xs"
                     >
                       <span>Infos</span> <MdOpenInNew className="h-3 w-3" />
                     </a>
@@ -262,9 +267,9 @@ const MembresConcertsEvents = () => {
       </section>
 
       {/* Anniversary Concert Section */}
-      <section className="rounded-xl bg-white p-4 shadow-sm md:p-4 lg:p-6">
+      <section className="bg-content1 rounded-xl p-4 shadow-sm md:p-4 lg:p-6">
         <SectionTitle subtitle="Archives" title="Concert Anniversaire" />
-        <p className="mb-6 text-sm text-gray-600">
+        <p className="text-default-600 mb-6 text-sm">
           Enregistrement du concert anniversaire pour les 20 ans du Bon
           Tempérament
         </p>
