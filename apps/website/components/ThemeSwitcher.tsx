@@ -17,7 +17,7 @@ import { FiMoon, FiSun, FiMonitor } from "react-icons/fi";
  * - Accessible keyboard navigation
  * - Prevents hydration mismatch
  */
-export function ThemeSwitcher() {
+export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
@@ -37,8 +37,12 @@ export function ThemeSwitcher() {
     );
   }
 
-  const buttonBaseClasses =
-    "min-w-7 h-7 w-7 p-0 data-[hover=true]:bg-default-100";
+  // Dynamic classes based on isLight prop
+  const buttonBaseClasses = isLight
+    ? "min-w-7 h-7 w-7 p-0 data-[hover=true]:bg-white/20"
+    : "min-w-7 h-7 w-7 p-0 data-[hover=true]:bg-default-100";
+
+  const iconClasses = isLight ? "text-white" : "";
 
   return (
     <div className="flex items-center gap-0.5 rounded-md bg-transparent p-0.5">
@@ -54,7 +58,7 @@ export function ThemeSwitcher() {
         aria-pressed={theme === "light"}
         title="Thème clair"
       >
-        <FiSun className="h-3.5 w-3.5" />
+        <FiSun className={`h-3.5 w-3.5 ${iconClasses}`} />
       </Button>
 
       {/* Dark Theme Button */}
@@ -69,7 +73,7 @@ export function ThemeSwitcher() {
         aria-pressed={theme === "dark"}
         title="Thème sombre"
       >
-        <FiMoon className="h-3.5 w-3.5" />
+        <FiMoon className={`h-3.5 w-3.5 ${iconClasses}`} />
       </Button>
 
       {/* System Theme Button */}
@@ -84,7 +88,7 @@ export function ThemeSwitcher() {
         aria-pressed={theme === "system"}
         title="Thème système"
       >
-        <FiMonitor className="h-3.5 w-3.5" />
+        <FiMonitor className={`h-3.5 w-3.5 ${iconClasses}`} />
       </Button>
     </div>
   );

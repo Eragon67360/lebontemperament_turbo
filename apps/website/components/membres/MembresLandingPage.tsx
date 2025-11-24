@@ -141,8 +141,8 @@ export const MembresLandingPage = () => {
                   whileTap="active"
                   className="group relative h-full overflow-hidden rounded-xl"
                 >
-                  <div className="from-primary/10 absolute inset-0 bg-gradient-to-r to-purple-500/10 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100"></div>
-                  <div className="bg-default-100 group-hover:bg-default-200 relative z-10 h-full px-3 py-2 backdrop-blur-md transition-all md:px-4 md:py-5 lg:px-6 lg:py-8">
+                  <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/90 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"></div>
+                  <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 h-full px-3 py-2 backdrop-blur-sm transition-all md:px-4 md:py-5 lg:px-6 lg:py-8">
                     <motion.p
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}

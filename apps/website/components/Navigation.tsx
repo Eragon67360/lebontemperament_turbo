@@ -163,7 +163,7 @@ const Navigation = () => {
 
         <NavbarContent justify="end">
           {/* Theme Switcher - Always visible */}
-          <ThemeSwitcher />
+          <ThemeSwitcher isLight={isSpecialPath && !hasScrolled} />
 
           {user ? (
             <div className="flex items-center gap-4">

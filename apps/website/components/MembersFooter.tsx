@@ -9,6 +9,7 @@ import {
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export const MembersFooter = () => {
   const pathname = usePathname();
@@ -39,6 +40,7 @@ export const MembersFooter = () => {
 
   const links = [
     { href: "/", label: "SITE PUBLIC" },
+    { href: "/membres", label: "accueil membres" },
     { href: "/membres/travail", label: "travail" },
     { href: "/membres/concerts", label: "concerts & évènements" },
     { href: "/membres/calendrier", label: "répétitions (calendrier)" },
@@ -48,11 +50,19 @@ export const MembersFooter = () => {
 
   return (
     <div className="border-divider mx-4 flex w-full max-w-[96%] items-center justify-between gap-2 border-t px-8 py-4 text-sm md:mx-8 lg:mx-16">
-      <div>©&nbsp;{year}&nbsp;Le Bon Tempérament</div>
+      <div className="flex items-center gap-4">
+        <div>©&nbsp;{year}&nbsp;Le Bon Tempérament</div>
+        <div className="hidden lg:block">
+          <ThemeSwitcher />
+        </div>
+      </div>
 
       <Dropdown className="capitalize">
         <DropdownTrigger className="block lg:hidden">Liens</DropdownTrigger>
-        <DropdownMenu aria-label="liens de la partie membres">
+        <DropdownMenu
+          aria-label="liens de la partie membres"
+          className="bg-content1"
+        >
           {links.map((link) => (
             <DropdownItem key={link.href} className="p-0">
               <NavLink href={link.href}>{link.label}</NavLink>
