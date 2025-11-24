@@ -113,7 +113,7 @@ export const SocialPopover = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-500 ${
+        className={`group relative flex size-10 items-center justify-center rounded-full shadow-lg transition-all duration-500 md:size-14 ${
           isOpen
             ? "text-foreground bg-white dark:bg-zinc-900 dark:text-white"
             : `${currentSocial?.bgClass || "bg-primary"} text-white`
