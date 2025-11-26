@@ -37,6 +37,7 @@ const ConcertsClient = () => {
   const [rehearsals, setRehearsals] = useState<Array<Rehearsal>>([]);
   const [tours, setTours] = useState<Array<Tour>>([]);
   const [loading, setLoading] = useState(true);
+  const [showRehearsals, setShowRehearsals] = useState(true);
   const [selectedConcertImage, setSelectedConcertImage] = useState<
     string | null
   >(null);
@@ -50,9 +51,19 @@ const ConcertsClient = () => {
         | Dispatch<SetStateAction<Event[]>>
         | Dispatch<SetStateAction<Rehearsal[]>>
         | Dispatch<SetStateAction<Tour[]>>,
+      isRehearsalEndpoint = false,
     ) => {
       try {
         const response = await fetch(endpoint);
+        // If unauthorized (401), skip setting data without error
+        // This allows public users to view concerts without seeing rehearsals
+        if (response.status === 401) {
+          if (isRehearsalEndpoint) {
+            setShowRehearsals(false);
+          }
+          return;
+        }
+
         const data = await response.json();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -100,7 +111,7 @@ const ConcertsClient = () => {
 
     fetchData("/api/prochains-concerts", setConcerts);
     fetchData("/api/events", setEvents);
-    fetchData("/api/rehearsals", setRehearsals);
+    fetchData("/api/rehearsals", setRehearsals, true);
     fetchTours();
   }, []);
 
@@ -192,16 +203,21 @@ const ConcertsClient = () => {
                   >
                     suivre nos projets
                   </button>
-                  , ou bien{" "}
-                  <button
-                    onClick={() => {
-                      const el = document.getElementById("rehearsals-title");
-                      if (el) el.scrollIntoView({ behavior: "smooth" });
-                    }}
-                    className="text-primary font-medium hover:underline"
-                  >
-                    voir quand sont nos prochaines répétitions
-                  </button>
+                  {showRehearsals && (
+                    <>
+                      , ou bien{" "}
+                      <button
+                        onClick={() => {
+                          const el =
+                            document.getElementById("rehearsals-title");
+                          if (el) el.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        className="text-primary font-medium hover:underline"
+                      >
+                        voir quand sont nos prochaines répétitions
+                      </button>
+                    </>
+                  )}
                   .
                 </p>
                 <p className="text-primary text-sm font-medium sm:text-base">
@@ -715,79 +731,81 @@ const ConcertsClient = () => {
         </section>
 
         {/* Rehearsals Section */}
-        <section
-          className="bg-default-50 mb-8 w-full px-8 py-16 lg:px-24"
-          aria-labelledby="rehearsals-title"
-        >
-          <h2
-            id="rehearsals-title"
-            className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
+        {showRehearsals && (
+          <section
+            className="bg-default-50 mb-8 w-full px-8 py-16 lg:px-24"
+            aria-labelledby="rehearsals-title"
           >
-            Prochaines répétitions
-          </h2>
+            <h2
+              id="rehearsals-title"
+              className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
+            >
+              Prochaines répétitions
+            </h2>
 
-          {loading ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="bg-default-100 space-y-3 rounded-lg p-4">
-                    <div className="bg-default-200 h-4 w-3/4 rounded"></div>
-                    <div className="bg-default-200 h-4 w-1/2 rounded"></div>
-                    <div className="bg-default-200 h-4 w-2/3 rounded"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : rehearsals.length === 0 ? (
-            <div className="text-default-500 py-8 text-center">
-              Aucune répétition à venir
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {rehearsals.map((rehearsal) => (
-                <div
-                  key={rehearsal.id}
-                  className="border-divider bg-background overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
-                >
-                  <div className="space-y-3 p-4">
-                    <div className="flex items-start justify-between">
-                      <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
-                        {rehearsal.name}
-                      </h4>
-                      <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
-                        {rehearsal.group_type}
-                      </span>
+            {loading ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-default-100 space-y-3 rounded-lg p-4">
+                      <div className="bg-default-200 h-4 w-3/4 rounded"></div>
+                      <div className="bg-default-200 h-4 w-1/2 rounded"></div>
+                      <div className="bg-default-200 h-4 w-2/3 rounded"></div>
                     </div>
-
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                      <div className="flex items-center gap-2">
-                        <IoCalendarClear className="text-primary" />
-                        <span>
-                          {format(new Date(rehearsal.date), "dd MMMM yyyy", {
-                            locale: fr,
-                          })}
+                  </div>
+                ))}
+              </div>
+            ) : rehearsals.length === 0 ? (
+              <div className="text-default-500 py-8 text-center">
+                Aucune répétition à venir
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {rehearsals.map((rehearsal) => (
+                  <div
+                    key={rehearsal.id}
+                    className="border-divider bg-background overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
+                  >
+                    <div className="space-y-3 p-4">
+                      <div className="flex items-start justify-between">
+                        <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
+                          {rehearsal.name}
+                        </h4>
+                        <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
+                          {rehearsal.group_type}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <IoTime className="text-primary" />
-                        <span>
-                          {rehearsal.start_time.slice(0, 5).replace(":", "h")} -
-                          {rehearsal.end_time.slice(0, 5).replace(":", "h")}
-                        </span>
-                      </div>
+                      <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2">
+                          <IoCalendarClear className="text-primary" />
+                          <span>
+                            {format(new Date(rehearsal.date), "dd MMMM yyyy", {
+                              locale: fr,
+                            })}
+                          </span>
+                        </div>
 
-                      <div className="flex items-center gap-2">
-                        <IoLocationSharp className="text-primary" />
-                        <span className="font-medium">{rehearsal.place}</span>
+                        <div className="flex items-center gap-2">
+                          <IoTime className="text-primary" />
+                          <span>
+                            {rehearsal.start_time.slice(0, 5).replace(":", "h")}{" "}
+                            -{rehearsal.end_time.slice(0, 5).replace(":", "h")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <IoLocationSharp className="text-primary" />
+                          <span className="font-medium">{rehearsal.place}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>

@@ -1,8 +1,18 @@
 import { createClient } from "@/utils/supabase/server";
+import { checkAuthorization } from "@/utils/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    // Check if user is authenticated
+    const authCheck = await checkAuthorization();
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { error: authCheck.error },
+        { status: authCheck.status },
+      );
+    }
+
     const supabase = await createClient();
 
     const { data, error } = await supabase
