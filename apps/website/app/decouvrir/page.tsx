@@ -45,7 +45,7 @@ const Decouvrir = () => {
       <div className="flex flex-col gap-16 text-justify">
         <div className="bg-default-50 flex w-full flex-col gap-8 p-8 lg:flex-row">
           <div className="flex w-full flex-col lg:w-3/5">
-            <h2 className="text-title text-default-500 leading-none font-light">
+            <h2 className="text-title text-default-500 dark:text-primary leading-none font-light">
               Notre histoire
             </h2>
             <p className="text-small lg:text-medium text-foreground mt-8">
