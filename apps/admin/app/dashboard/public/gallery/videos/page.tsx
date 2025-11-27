@@ -1,7 +1,7 @@
 // app/dashboard/public/videos/page.tsx
 "use client";
 
-import { DashboardPageHeader } from "@/components/DashboardPageHeader";
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -236,16 +236,13 @@ export default function VideosPage() {
   };
 
   return (
-    <div className="container px-4 py-8 sm:px-6 lg:px-8">
-      <header className="flex items-center justify-between">
-        <DashboardPageHeader
-          title="Vidéos"
-          description="Ajoutez ici les vidéos depuis YouTube que vous souhaitez voir apparaître sur le site."
-        />
-
-        <AddVideoButton />
-      </header>
-
+    <PageShell
+      theme="public"
+      title="Vidéos"
+      description="Ajoutez ici les vidéos depuis YouTube que vous souhaitez voir apparaître sur le site."
+      headerAction={<AddVideoButton />}
+      className="px-4 py-8 sm:px-6 lg:px-8"
+    >
       {loading ? (
         <LoadingState />
       ) : videos.length === 0 ? (
@@ -290,6 +287,6 @@ export default function VideosPage() {
           <VideoForm onSubmit={handleEdit} initialData={editingVideo} />
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }
