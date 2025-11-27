@@ -1,5 +1,4 @@
 // components/modals/project-modal.tsx
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,9 +7,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Project } from "@/types/projects";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface ProjectFormData {

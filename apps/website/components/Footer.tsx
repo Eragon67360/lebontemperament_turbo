@@ -1,12 +1,11 @@
 "use client";
-import React from "react";
-import Link from "next/link";
-import { IoLocationOutline } from "react-icons/io5";
-import { FiPhone } from "react-icons/fi";
-import { CiMail } from "react-icons/ci";
-import { FaFacebookF, FaTiktok, FaInstagram, FaYoutube } from "react-icons/fa";
 import { CldImage } from "next-cloudinary";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CiMail } from "react-icons/ci";
+import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
+import { FiPhone } from "react-icons/fi";
+import { IoLocationOutline } from "react-icons/io5";
 
 const Footer = () => {
   const path = usePathname();

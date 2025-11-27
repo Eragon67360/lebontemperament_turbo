@@ -1,8 +1,8 @@
 "use client";
 import Papa from "papaparse";
 import { useEffect, useState } from "react";
-import { IoPersonCircle } from "react-icons/io5"; // Add this import
 import { FaSearch } from "react-icons/fa"; // Add this import
+import { IoPersonCircle } from "react-icons/io5"; // Add this import
 
 interface MemberData {
   [key: string]: string; // This allows for dynamic column names

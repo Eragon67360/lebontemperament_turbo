@@ -1,7 +1,7 @@
 "use client";
-import React, { FC } from "react";
-import { CldImage } from "next-cloudinary";
 import { RoundedSize } from "@/utils/types";
+import { CldImage } from "next-cloudinary";
+import { FC } from "react";
 
 type CloudinaryImageProps = {
   src: string;

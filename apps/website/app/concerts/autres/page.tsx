@@ -1,4 +1,3 @@
-import React from "react";
 import CDsViewer from "@/components/cds/CDsViewer";
 import cds from "@/public/json/cds.json";
 import type { Metadata } from "next";

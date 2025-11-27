@@ -1,5 +1,5 @@
 // utils/api.ts
-import { Rehearsal, CreateRehearsalDTO } from "@/types/rehearsals";
+import { CreateRehearsalDTO, Rehearsal } from "@/types/rehearsals";
 
 export const rehearsalAPI = {
   async getAll(): Promise<Rehearsal[]> {

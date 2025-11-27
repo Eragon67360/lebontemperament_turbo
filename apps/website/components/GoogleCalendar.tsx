@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
-import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import googleCalendarPlugin from "@fullcalendar/google-calendar";
+import FullCalendar from "@fullcalendar/react";
+import React from "react";
 
 // Update CSS imports
 // import '@fullcalendar/core/main.css';

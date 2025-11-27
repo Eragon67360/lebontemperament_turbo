@@ -3,7 +3,7 @@
 import { Button } from "@heroui/react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { FiMoon, FiSun, FiMonitor } from "react-icons/fi";
+import { FiMonitor, FiMoon, FiSun } from "react-icons/fi";
 
 /**
  * ThemeSwitcher Component

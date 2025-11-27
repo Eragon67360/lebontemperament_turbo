@@ -1,7 +1,6 @@
-import React from "react";
 import Map from "@/components/Maps";
-import { Metadata } from "next";
 import Subscribe from "@/components/newsletter/Subscribe";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact",

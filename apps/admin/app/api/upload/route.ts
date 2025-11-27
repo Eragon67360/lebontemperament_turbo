@@ -1,6 +1,6 @@
 // app/api/upload/route.ts
-import { createClient } from "@/utils/supabase/server";
 import { checkAuthorization } from "@/utils/auth";
+import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

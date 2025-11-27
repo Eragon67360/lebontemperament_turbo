@@ -1,10 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useState, useEffect, useRef } from "react";
-import { FaFacebook, FaTiktok, FaInstagram, FaYoutube } from "react-icons/fa";
+import { useEffect, useRef, useState } from "react";
+import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
 import { IoShareSocial } from "react-icons/io5";
-import { Button } from "@heroui/react";
 
 const socials = [
   {

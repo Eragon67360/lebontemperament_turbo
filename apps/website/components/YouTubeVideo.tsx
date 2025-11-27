@@ -1,5 +1,3 @@
-import React from "react";
-
 const YouTubeVideo = ({ videoId }: { videoId: string }) => {
   const src = `https://www.youtube.com/embed/${videoId}`;
 
