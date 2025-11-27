@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { Button } from "@/components/ui/button";
 import RouteNames from "@/utils/routes";
+import { createClient } from "@/utils/supabase/client";
+import { AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function UnauthorizedPage() {
   const router = useRouter();

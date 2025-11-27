@@ -1,7 +1,8 @@
+import { BubbleContainer } from "@/components/BubbleContainer";
 import { EasterEgg } from "@/components/EasterEgg";
+import { FooterClientWrapper } from "@/components/FooterClientWrapper";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
-import { BubbleContainer } from "@/components/BubbleContainer";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -9,7 +10,6 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import { FooterClientWrapper } from "@/components/FooterClientWrapper";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700", "900"],

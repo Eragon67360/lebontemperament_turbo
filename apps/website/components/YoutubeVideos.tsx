@@ -1,9 +1,9 @@
 "use client";
 
 import { Video } from "@/types/videos";
-import React, { useEffect, useState } from "react";
-import YouTubeVideo from "./YouTubeVideo";
 import { extractYouTubeId } from "@/utils/youtube";
+import { useEffect, useState } from "react";
+import YouTubeVideo from "./YouTubeVideo";
 
 export const YoutubeVideos = () => {
   const [videos, setVideos] = useState<Video[]>([]);

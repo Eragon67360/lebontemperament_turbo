@@ -2,10 +2,10 @@
 import { ContactFormProps } from "@/types/contactFormData";
 import { Button, Input, Spinner, Textarea, addToast } from "@heroui/react";
 import { CldImage } from "next-cloudinary";
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { IoIosArrowRoundForward } from "react-icons/io";
-import ReCAPTCHA from "react-google-recaptcha";
 import { useTheme } from "next-themes";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
+import { IoIosArrowRoundForward } from "react-icons/io";
 
 const ContactForm = () => {
   const { theme, resolvedTheme } = useTheme();

@@ -1,8 +1,8 @@
 // app/api/invite-users/route.ts
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createAdminClient } from "@/utils/supabase/admin";
 // Input validation schema
 const invitationSchema = z.object({
   emails: z.array(

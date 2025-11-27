@@ -2,8 +2,8 @@
 "use client";
 
 import { BugReportDetailsDialog } from "@/components/BugReportDetailsDialog";
+import { PageShell } from "@/components/layouts/PageShell";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -12,23 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient } from "@/utils/supabase/client";
-import { AlertCircle, Clock, CheckCircle2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { PageShell } from "@/components/layouts/PageShell";
-
-type BugReport = {
-  id: string;
-  title: string;
-  description: string;
-  status: "pending" | "in_progress" | "resolved";
-  reported_by: string;
-  created_at: string;
-  is_read: boolean;
-  profiles: {
-    email: string;
-  };
-};
+import {
+  useBugReports,
+  useMarkBugReportsAsRead,
+  useUpdateBugReportStatus,
+} from "@/hooks/useBugReports";
+import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { useEffect } from "react";
 
 const getStatusConfig = (status: string) => {
   const config = {
@@ -52,64 +42,28 @@ const getStatusConfig = (status: string) => {
 };
 
 export default function BugReportsPage() {
-  const [reports, setReports] = useState<BugReport[]>([]);
-  const supabase = createClient();
-
-  const fetchReports = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("bug_reports")
-      .select(
-        `
-                *,
-                profiles:reported_by(email)
-            `,
-      )
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching reports:", error);
-      return;
-    }
-
-    if (data) {
-      setReports(data as BugReport[]);
-      // Mark all as read
-      await supabase
-        .from("bug_reports")
-        .update({ is_read: true })
-        .eq("is_read", false);
-    }
-  }, [supabase]);
+  const { data: reports = [], isLoading } = useBugReports();
+  const updateStatus = useUpdateBugReportStatus();
+  const markAsRead = useMarkBugReportsAsRead();
 
   useEffect(() => {
-    fetchReports();
-
-    const subscription = supabase
-      .channel("bug_reports_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bug_reports" },
-        fetchReports,
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [fetchReports, supabase]);
-
-  const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from("bug_reports")
-      .update({ status })
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error updating status:", error);
-      return;
+    if (reports.length > 0) {
+      const hasUnread = reports.some((r) => !r.is_read);
+      if (hasUnread) {
+        markAsRead.mutate();
+      }
     }
+  }, [reports, markAsRead]);
 
-    fetchReports();
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      await updateStatus.mutateAsync({
+        id,
+        status: status as "pending" | "in_progress" | "resolved",
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
   };
 
   return (
@@ -119,7 +73,11 @@ export default function BugReportsPage() {
       title="Rapports de bugs"
       description="Gérez les rapports de bugs et demandes de fonctionnalités soumis par l'équipe."
     >
-      {reports.length === 0 ? (
+      {isLoading ? (
+        <div className="flex min-h-[400px] items-center justify-center">
+          <p className="text-muted-foreground">Chargement des rapports...</p>
+        </div>
+      ) : reports.length === 0 ? (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <AlertCircle className="mb-4 h-12 w-12 text-gray-400" />
           <h3 className="mb-2 text-lg font-semibold text-gray-900">
@@ -158,7 +116,8 @@ export default function BugReportsPage() {
                     <p className="text-xs text-gray-500">
                       Rapporté par{" "}
                       <span className="font-medium text-gray-700">
-                        {report.profiles?.email}
+                        {report.profiles?.display_name ||
+                          report.profiles?.email}
                       </span>
                     </p>
                     <p className="text-xs text-gray-400">
@@ -181,7 +140,9 @@ export default function BugReportsPage() {
                   <div className="flex items-center gap-2 border-t pt-4">
                     <Select
                       value={report.status}
-                      onValueChange={(value) => updateStatus(report.id, value)}
+                      onValueChange={(value) =>
+                        handleUpdateStatus(report.id, value)
+                      }
                     >
                       <SelectTrigger className="h-8 w-[140px] text-xs">
                         <SelectValue />

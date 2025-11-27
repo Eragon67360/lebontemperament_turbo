@@ -1,5 +1,4 @@
 // app/galerie/loading.tsx
-import React from "react";
 
 const Loading = () => {
   return (

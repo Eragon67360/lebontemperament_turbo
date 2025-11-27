@@ -1,4 +1,3 @@
-import React from "react";
 import FileExplorer from "@/components/travail/FileExplorer";
 import { Metadata } from "next";
 

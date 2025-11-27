@@ -6,8 +6,8 @@ import {
   useScroll,
   useTransform,
 } from "motion/react";
+import { useEffect, useState } from "react";
 import CloudinaryImage from "./CloudinaryImage";
-import { useState, useEffect } from "react";
 
 interface HeroProps {
   title: string;

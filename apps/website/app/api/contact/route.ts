@@ -1,7 +1,7 @@
 // route.ts
-import { NextResponse, NextRequest } from "next/server";
-import nodemailer from "nodemailer";
 import { ContactFormProps } from "@/types/contactFormData";
+import { NextRequest, NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 async function parseRequestBody(
   request: NextRequest,

@@ -1,8 +1,8 @@
 // app/dashboard/public/page.tsx
+import { PageShell } from "@/components/layouts/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Home, Image, LucideIcon, Phone } from "lucide-react";
 import Link from "next/link";
-import { PageShell } from "@/components/layouts/PageShell";
 
 export default function PublicDashboardPage() {
   return (

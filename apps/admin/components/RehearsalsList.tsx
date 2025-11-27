@@ -40,9 +40,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  useCreateRehearsal,
+  useDeleteRehearsal,
+  useRehearsals,
+  useUpdateRehearsal,
+} from "@/hooks/useRehearsals";
 import { cn } from "@/lib/utils";
 import { GROUP_TYPES, GroupType, Rehearsal } from "@/types/rehearsals";
-import { rehearsalAPI } from "@/utils/api";
 import { format, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -53,7 +58,7 @@ import {
   MapPin,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const formatTime = (time: string) => {
@@ -78,9 +83,14 @@ export default function RehearsalsList({
   isAddDialogOpen: externalIsAddDialogOpen,
   onAddDialogChange,
 }: RehearsalsListProps = {}) {
-  const [rehearsals, setRehearsals] = useState<Rehearsal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Queries
+  const { data: rehearsals = [], isLoading: loading, error } = useRehearsals();
+
+  // Mutations
+  const createRehearsal = useCreateRehearsal();
+  const updateRehearsal = useUpdateRehearsal();
+  const deleteRehearsal = useDeleteRehearsal();
+
   const [internalIsAddDialogOpen, setInternalIsAddDialogOpen] = useState(false);
   const [editingRehearsal, setEditingRehearsal] = useState<Rehearsal | null>(
     null,
@@ -92,23 +102,6 @@ export default function RehearsalsList({
   // Use external state if provided, otherwise use internal state
   const isAddDialogOpen = externalIsAddDialogOpen ?? internalIsAddDialogOpen;
   const setIsAddDialogOpen = onAddDialogChange ?? setInternalIsAddDialogOpen;
-
-  const loadRehearsals = async () => {
-    try {
-      setLoading(true);
-      const data = await rehearsalAPI.getAll();
-      setRehearsals(data);
-    } catch (err) {
-      setError("Failed to load rehearsals");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadRehearsals();
-  }, []);
 
   const groupRehearsalsByMonth = (rehearsals: Rehearsal[]) => {
     return rehearsals
@@ -134,7 +127,8 @@ export default function RehearsalsList({
   ) => {
     try {
       if (isEditing && editingRehearsal) {
-        await rehearsalAPI.update(editingRehearsal.id, {
+        await updateRehearsal.mutateAsync({
+          id: editingRehearsal.id,
           ...formData,
           date: format(formData.date, "yyyy-MM-dd"),
         });
@@ -142,7 +136,7 @@ export default function RehearsalsList({
           description: "La répétition a été mise à jour",
         });
       } else {
-        await rehearsalAPI.create({
+        await createRehearsal.mutateAsync({
           ...formData,
           date: format(formData.date, "yyyy-MM-dd"),
         });
@@ -150,7 +144,6 @@ export default function RehearsalsList({
           description: "La répétition a été créée",
         });
       }
-      await loadRehearsals();
       setIsAddDialogOpen(false);
       setEditingRehearsal(null);
     } catch (error) {
@@ -163,11 +156,10 @@ export default function RehearsalsList({
 
   const handleDelete = async (id: string) => {
     try {
-      await rehearsalAPI.delete(id);
+      await deleteRehearsal.mutateAsync(id);
       toast.success("Succès", {
         description: "La répétition a été supprimée",
       });
-      await loadRehearsals();
     } catch (error) {
       toast.error("Erreur", {
         description: "Impossible de supprimer la répétition",
@@ -176,7 +168,7 @@ export default function RehearsalsList({
     }
   };
 
-  if (error) return <div>Erreur: {error}</div>;
+  if (error) return <div>Erreur: {error.message}</div>;
 
   return (
     <div className="flex max-h-screen flex-col overflow-hidden">

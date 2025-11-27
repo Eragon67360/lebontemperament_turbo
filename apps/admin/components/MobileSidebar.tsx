@@ -11,11 +11,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-export function MobileSidebar({ className }: { className?: string }) {
+export function MobileSidebar({
+  className,
+  setMessagesDialogOpen,
+  setBugReportDialogOpen,
+}: {
+  className?: string;
+  setMessagesDialogOpen?: (open: boolean) => void;
+  setBugReportDialogOpen?: (open: boolean) => void;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -39,7 +47,12 @@ export function MobileSidebar({ className }: { className?: string }) {
             </SheetDescription>
           </VisuallyHidden>
         </SheetHeader>
-        <Sidebar mobile onNavigate={() => setOpen(false)} />
+        <Sidebar
+          mobile
+          onNavigate={() => setOpen(false)}
+          setMessagesDialogOpen={setMessagesDialogOpen}
+          setBugReportDialogOpen={setBugReportDialogOpen}
+        />
       </SheetContent>
     </Sheet>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { Button, Card, CardBody, CardHeader } from "@heroui/react";
+import { useSearchParams } from "next/navigation";
 
 const AudioPlayer = () => {
   const searchParams = useSearchParams();

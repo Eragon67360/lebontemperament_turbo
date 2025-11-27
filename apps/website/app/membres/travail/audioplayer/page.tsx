@@ -1,5 +1,5 @@
-import React, { Suspense } from "react";
 import AudioPlayer from "@/components/travail/AudioPlayer";
+import { Suspense } from "react";
 
 const AudioplayerPage = () => {
   return (

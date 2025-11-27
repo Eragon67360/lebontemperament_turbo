@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import {
   motion,
+  useInView,
+  useReducedMotion,
   useScroll,
   useTransform,
-  useReducedMotion,
-  useInView,
-  Variants,
 } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 import CDPochettePhotos from "@/components/CDPochettePhotos";
 import CloudinaryImage from "@/components/CloudinaryImage";

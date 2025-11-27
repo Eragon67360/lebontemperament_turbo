@@ -1,26 +1,27 @@
-import { useEffect, useState } from "react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { createClient } from "@/utils/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export function useUnreadBugReports() {
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-  const supabase = createClient();
+  const { data: user } = useCurrentUser();
 
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      const { data, error } = await supabase
+  return useQuery({
+    queryKey: ["unread-bug-reports", user?.id],
+    queryFn: async () => {
+      const supabase = createClient();
+      const { count, error } = await supabase
         .from("bug_reports")
-        .select("id", { count: "exact" })
+        .select("*", { count: "exact", head: true })
         .eq("is_read", false);
 
       if (error) {
-        console.error("Error fetching unread bug reports:", error);
-      } else {
-        setUnreadCount(data.length);
+        return 0;
       }
-    };
 
-    fetchUnreadCount();
-  }, [supabase]);
-
-  return unreadCount;
+      return count || 0;
+    },
+    // Refetch every minute to keep the count fresh
+    refetchInterval: 60 * 1000,
+    enabled: !!user,
+  });
 }

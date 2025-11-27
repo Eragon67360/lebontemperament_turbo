@@ -2,7 +2,7 @@
 
 import { ConcertForm } from "@/components/ConcertForm";
 import { ConcertPoster } from "@/components/ConcertPoster";
-import { DashboardPageHeader } from "@/components/DashboardPageHeader";
+import { PageShell } from "@/components/layouts/PageShell";
 import { TourForm } from "@/components/TourForm";
 import {
   AlertDialog,
@@ -24,6 +24,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  useConcerts,
+  useCreateConcert,
+  useDeleteConcert,
+  useUpdateConcert,
+} from "@/hooks/useConcerts";
+import {
+  useCreateTour,
+  useDeleteTour,
+  useTours,
+  useUpdateTour,
+} from "@/hooks/useTours";
 import { Concert, Context } from "@/types/concerts";
 import { Tour } from "@/types/tours";
 import { format } from "date-fns";
@@ -32,6 +45,7 @@ import {
   Calendar,
   CalendarDays,
   Clock,
+  Link,
   LucideIcon,
   MapPin,
   Music2,
@@ -40,12 +54,9 @@ import {
   Tags,
   Trash2,
   Users,
-  Link,
 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PageShell } from "@/components/layouts/PageShell";
 
 const loadingMessages = [
   "La musique se réchauffe... 🎵",
@@ -57,52 +68,31 @@ const loadingMessages = [
 ];
 
 export default function ProchainsConcerts() {
-  const [concerts, setConcerts] = useState<Concert[]>([]);
-  const [tours, setTours] = useState<Tour[]>([]);
+  // Queries
+  const { data: concerts = [], isLoading: loadingConcerts } = useConcerts();
+  const { data: tours = [], isLoading: loadingTours } = useTours();
+  const loading = loadingConcerts || loadingTours;
+
+  // Mutations
+  const createConcert = useCreateConcert();
+  const updateConcert = useUpdateConcert();
+  const deleteConcert = useDeleteConcert();
+  const createTour = useCreateTour();
+  const updateTour = useUpdateTour();
+  const deleteTour = useDeleteTour();
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [concertToDelete, setConcertToDelete] = useState<string | null>(null);
   const [editingConcert, setEditingConcert] = useState<Concert | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [isEditingConcert, setIsEditingConcert] = useState(false);
-  const [isCreatingConcert, setIsCreatingConcert] = useState(false);
   const [tourDialogOpen, setTourDialogOpen] = useState(false);
-  const [isCreatingTour, setIsCreatingTour] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const [editTourDialogOpen, setEditTourDialogOpen] = useState(false);
-  const [isEditingTour, setIsEditingTour] = useState(false);
   const [addConcertToTourDialogOpen, setAddConcertToTourDialogOpen] =
     useState(false);
   const [selectedTourForConcerts, setSelectedTourForConcerts] =
     useState<Tour | null>(null);
-
-  const fetchConcerts = async () => {
-    try {
-      const response = await fetch("/api/prochains-concerts");
-      const data = await response.json();
-      setConcerts(data);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchTours = async () => {
-    try {
-      const response = await fetch("/api/tours");
-      const data = await response.json();
-      setTours(data);
-    } catch (error) {
-      console.error("Error fetching tours:", error);
-      toast.error("Erreur lors du chargement des tournées");
-    }
-  };
-
-  useEffect(() => {
-    Promise.all([fetchConcerts(), fetchTours()]);
-    setIsEditingConcert(false);
-    setIsCreatingConcert(false);
-  }, []);
 
   const handleDeleteClick = (id: string) => {
     setConcertToDelete(id);
@@ -115,7 +105,6 @@ export default function ProchainsConcerts() {
     selectedFile: File | null,
   ) => {
     e.preventDefault();
-    setIsCreatingConcert(true);
 
     try {
       let affiche = null;
@@ -147,25 +136,16 @@ export default function ProchainsConcerts() {
         related_link: form.related_link.value,
       };
 
-      const response = await fetch("/api/prochains-concerts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...concertData,
-          affiche,
-        }),
+      await createConcert.mutateAsync({
+        ...concertData,
+        affiche,
       });
 
-      if (!response.ok) throw new Error("Erreur lors de l'ajout du concert");
-
-      await fetchConcerts();
       toast.success("Concert ajouté avec succès");
       setOpen(false);
     } catch (error) {
       toast.error("Erreur lors de l'ajout du concert");
       console.error(error);
-    } finally {
-      setIsCreatingConcert(false);
     }
   };
 
@@ -175,7 +155,6 @@ export default function ProchainsConcerts() {
     selectedFile: File | null,
   ) => {
     e.preventDefault();
-    setIsEditingConcert(true);
 
     const formData = new FormData(e.currentTarget);
     const concertData = {
@@ -188,7 +167,7 @@ export default function ProchainsConcerts() {
       additional_informations: formData.get(
         "additional_informations",
       ) as string,
-      related_link: formData.get("related_link"),
+      related_link: formData.get("related_link") as string,
     };
 
     try {
@@ -209,26 +188,17 @@ export default function ProchainsConcerts() {
         affiche = url;
       }
 
-      const response = await fetch("/api/prochains-concerts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...concertData,
-          affiche,
-        }),
+      await updateConcert.mutateAsync({
+        ...concertData,
+        affiche,
       });
-
-      if (!response.ok) throw new Error("Erreur lors de la modification");
 
       toast.success("Concert modifié avec succès");
       setEditDialogOpen(false);
       setEditingConcert(null);
-      fetchConcerts();
     } catch (error) {
       toast.error("Erreur lors de la modification");
       console.error(error);
-    } finally {
-      setIsEditingConcert(false);
     }
   };
 
@@ -239,7 +209,6 @@ export default function ProchainsConcerts() {
     selectedFile: File | null,
   ) => {
     e.preventDefault();
-    setIsCreatingTour(true);
 
     try {
       let tour_poster = null;
@@ -263,27 +232,18 @@ export default function ProchainsConcerts() {
         name: form.tourName.value,
         description: form.description.value,
         context: form.context.value,
-        start_date: startDate ? format(startDate, "yyyy-MM-dd") : null,
-        end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
+        start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         tour_poster,
       };
 
-      const response = await fetch("/api/tours", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tourData),
-      });
+      await createTour.mutateAsync(tourData);
 
-      if (!response.ok) throw new Error("Erreur lors de l'ajout de la tournée");
-
-      await fetchTours();
       toast.success("Tournée ajoutée avec succès");
       setTourDialogOpen(false);
     } catch (error) {
       toast.error("Erreur lors de l'ajout de la tournée");
       console.error(error);
-    } finally {
-      setIsCreatingTour(false);
     }
   };
 
@@ -294,7 +254,6 @@ export default function ProchainsConcerts() {
     selectedFile: File | null,
   ) => {
     e.preventDefault();
-    setIsEditingTour(true);
 
     try {
       const form = e.target as HTMLFormElement;
@@ -319,29 +278,19 @@ export default function ProchainsConcerts() {
         name: form.tourName.value,
         description: form.description.value,
         context: form.context.value,
-        start_date: startDate ? format(startDate, "yyyy-MM-dd") : null,
-        end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
+        start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         tour_poster,
       };
 
-      const response = await fetch("/api/tours", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tourData),
-      });
+      await updateTour.mutateAsync(tourData);
 
-      if (!response.ok)
-        throw new Error("Erreur lors de la modification de la tournée");
-
-      await fetchTours();
       toast.success("Tournée modifiée avec succès");
       setEditTourDialogOpen(false);
       setEditingTour(null);
     } catch (error) {
       toast.error("Erreur lors de la modification de la tournée");
       console.error(error);
-    } finally {
-      setIsEditingTour(false);
     }
   };
 
@@ -349,16 +298,9 @@ export default function ProchainsConcerts() {
     if (!concertToDelete) return;
 
     try {
-      const response = await fetch("/api/prochains-concerts", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: concertToDelete }),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
+      await deleteConcert.mutateAsync(concertToDelete);
 
       toast.success("Concert supprimé avec succès");
-      fetchConcerts();
     } catch (error) {
       toast.error("Erreur lors de la suppression");
       console.error(error);
@@ -370,17 +312,8 @@ export default function ProchainsConcerts() {
 
   const handleDeleteTour = async (tourId: string) => {
     try {
-      const response = await fetch("/api/tours", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: tourId }),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
-
+      await deleteTour.mutateAsync(tourId);
       toast.success("Tournée supprimée avec succès");
-      await fetchTours();
-      await fetchConcerts(); // Refresh concerts to update their tour_id display
     } catch (error) {
       toast.error("Erreur lors de la suppression de la tournée");
       console.error(error);
@@ -391,13 +324,9 @@ export default function ProchainsConcerts() {
     try {
       // Update each selected concert with the tour_id
       const updatePromises = concertIds.map((concertId) =>
-        fetch("/api/prochains-concerts", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: concertId,
-            tour_id: selectedTourForConcerts?.id,
-          }),
+        updateConcert.mutateAsync({
+          id: concertId,
+          tour_id: selectedTourForConcerts?.id,
         }),
       );
 
@@ -406,8 +335,6 @@ export default function ProchainsConcerts() {
       toast.success(`${concertIds.length} concert(s) ajouté(s) à la tournée`);
       setAddConcertToTourDialogOpen(false);
       setSelectedTourForConcerts(null);
-      await fetchConcerts();
-      await fetchTours();
     } catch (error) {
       toast.error("Erreur lors de l'ajout des concerts à la tournée");
       console.error(error);
@@ -478,7 +405,7 @@ export default function ProchainsConcerts() {
         </DialogHeader>
         <ConcertForm
           onSubmit={handleCreate}
-          loading={isCreatingConcert}
+          loading={createConcert.isPending}
           initialData={null}
           submitLabel="Ajouter"
           onClose={() => setOpen(false)}
@@ -504,7 +431,7 @@ export default function ProchainsConcerts() {
         </DialogHeader>
         <TourForm
           onSubmit={handleCreateTour}
-          loading={isCreatingTour}
+          loading={createTour.isPending}
           initialData={null}
           submitLabel="Créer la tournée"
           onClose={() => setTourDialogOpen(false)}
@@ -560,7 +487,7 @@ export default function ProchainsConcerts() {
                   <InfoItem
                     icon={Users}
                     text={
-                      tours.find((t) => t.id === concert.tour_id)?.name ||
+                      tours.find((t: Tour) => t.id === concert.tour_id)?.name ||
                       "Tournée"
                     }
                   />
@@ -867,11 +794,14 @@ export default function ProchainsConcerts() {
           </DialogHeader>
           {editingConcert && (
             <ConcertForm
-              onSubmit={handleEdit}
-              loading={isEditingConcert}
               initialData={editingConcert}
-              submitLabel="Sauvegarder"
-              onClose={() => setEditDialogOpen(false)}
+              onSubmit={handleEdit}
+              loading={updateConcert.isPending}
+              submitLabel="Modifier"
+              onClose={() => {
+                setEditDialogOpen(false);
+                setEditingConcert(null);
+              }}
             />
           )}
         </DialogContent>
@@ -888,11 +818,14 @@ export default function ProchainsConcerts() {
           </DialogHeader>
           {editingTour && (
             <TourForm
-              onSubmit={handleEditTour}
-              loading={isEditingTour}
               initialData={editingTour}
-              submitLabel="Sauvegarder"
-              onClose={() => setEditTourDialogOpen(false)}
+              onSubmit={handleEditTour}
+              loading={updateTour.isPending}
+              submitLabel="Modifier la tournée"
+              onClose={() => {
+                setEditTourDialogOpen(false);
+                setEditingTour(null);
+              }}
             />
           )}
         </DialogContent>

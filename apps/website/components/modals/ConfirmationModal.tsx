@@ -1,12 +1,12 @@
-import { FC } from "react";
 import {
-  Modal,
   Button,
+  Modal,
   ModalBody,
+  ModalContent,
   ModalFooter,
   ModalHeader,
-  ModalContent,
 } from "@heroui/react";
+import { FC } from "react";
 
 interface ConfirmationModalProps {
   visible: boolean;

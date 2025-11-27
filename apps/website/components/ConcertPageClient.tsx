@@ -1,17 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useReducedMotion,
-} from "motion/react";
 import CloudinaryImage from "@/components/CloudinaryImage";
+import Hero from "@/components/Hero";
 import MotionSection from "@/components/MotionSection";
 import SkeletonImage from "@/components/SkeletonImage";
 import { RoundedSize } from "@/utils/types";
-import Hero from "@/components/Hero";
 
 interface ConcertPageClientProps {
   project: {

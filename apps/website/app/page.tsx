@@ -1,5 +1,5 @@
-import { Metadata } from "next";
 import HomeContent from "@/components/HomeContent";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Accueil | Le Bon Tempérament",

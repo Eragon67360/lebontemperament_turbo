@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
 import { cloudinary } from "@/cloudinary.config";
 import { ImageResourceProps, PhotoData } from "@/utils/types";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

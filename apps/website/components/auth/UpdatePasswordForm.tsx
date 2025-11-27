@@ -1,13 +1,12 @@
 "use client";
 
-import { Button } from "@heroui/react";
-import { Input } from "@heroui/react";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
+import { Button, Input } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import { FiLoader } from "react-icons/fi";
+import { toast } from "sonner";
 
 export default function UpdatePasswordForm() {
   const [password, setPassword] = useState("");
