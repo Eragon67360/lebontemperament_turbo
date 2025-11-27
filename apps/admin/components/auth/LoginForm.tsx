@@ -4,11 +4,11 @@ import { login } from "@/app/auth/login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition, useEffect } from "react";
-import { toast } from "sonner";
 import { ERROR_MESSAGES } from "@/consts/errorMessages";
 import { Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();

@@ -1,9 +1,10 @@
 "use client";
 
-import { DashboardPageHeader } from "@/components/DashboardPageHeader";
 import { FileUpload } from "@/components/FileUpload";
+import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -19,49 +20,25 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CA } from "@/types/ca";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar as CalendarIcon, FileText, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { PageShell } from "@/components/layouts/PageShell";
+
+import { useCAs, useCreateCA, useDeleteCA } from "@/hooks/useCAs";
 
 export default function Evenements() {
-  const [cas, setCas] = useState<CA[]>([]);
+  const { data: cas = [], isLoading: loading } = useCAs();
+  const createCA = useCreateCA();
+  const deleteCA = useDeleteCA();
+
   const [open, setOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState<Date>();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchCA = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/cas");
-      const data = await response.json();
-      setCas(data);
-    } catch (error) {
-      console.error("Error fetching CA:", error);
-      toast.error("Erreur lors du chargement des CA");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCA();
-  }, []);
 
   const handleCreate = async (
     e: React.FormEvent<HTMLFormElement>,
@@ -98,20 +75,12 @@ export default function Evenements() {
         file_url,
       };
 
-      const response = await fetch("/api/cas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(caData),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de l'ajout du CA");
+      await createCA.mutateAsync(caData);
 
       toast.success("CA ajouté avec succès");
       setOpen(false);
       setSelectedFile(null);
       setDateFrom(undefined);
-      // e.currentTarget.reset();
-      await fetchCA();
     } catch (error) {
       toast.error("Erreur lors de l'ajout du CA");
       console.error(error);
@@ -124,16 +93,9 @@ export default function Evenements() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce CA ?")) return;
 
     try {
-      const response = await fetch("/api/cas", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
+      await deleteCA.mutateAsync(id);
 
       toast.success("CA supprimé avec succès");
-      await fetchCA();
     } catch (error) {
       toast.error("Erreur lors de la suppression");
       console.error(error);

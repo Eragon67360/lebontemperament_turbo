@@ -12,9 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertCircle } from "lucide-react";
-import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { useState } from "react";
 
 interface BugReportDialogProps {
   open?: boolean;

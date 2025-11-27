@@ -1,6 +1,6 @@
 // app/dashboard/travail/[programId]/[groupSlug]/page.tsx
-import { createClient } from "@/utils/supabase/server";
 import { FileExplorer } from "@/components/FileExplorer";
+import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 
 interface WorkPageProps {

@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Folder, FileRecord } from "@/types/files";
+import { FileRecord, Folder } from "@/types/files";
 
 interface DeleteAlertDialogProps {
   open: boolean;

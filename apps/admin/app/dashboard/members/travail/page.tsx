@@ -1,3 +1,4 @@
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   Card,
   CardDescription,
@@ -6,7 +7,6 @@ import {
 } from "@/components/ui/card";
 import { Baby, Music, UserRound, Users } from "lucide-react";
 import Link from "next/link";
-import { PageShell } from "@/components/layouts/PageShell";
 
 export default function TravailPage() {
   return (

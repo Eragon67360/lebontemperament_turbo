@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { RoundedSize } from "@/utils/types";
+import { Button } from "@heroui/react";
 import NextLink from "next/link";
 import { useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";

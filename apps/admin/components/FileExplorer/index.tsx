@@ -1,17 +1,17 @@
 // components/FileExplorer/index.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Folder, FileRecord } from "@/types/files";
-import { toast } from "sonner";
-import { Loader2, FolderPlus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CreateFolderDialog } from "./CreateFolderDialog";
-import { UploadFileDialog } from "./UploadFileDialog";
-import { FileList } from "./FileList";
-import { BreadcrumbNav } from "./BreadcrumbNav";
+import { FileRecord, Folder } from "@/types/files";
 import { createClient } from "@/utils/supabase/client";
+import { FolderPlus, Loader2, Upload } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { BreadcrumbNav } from "./BreadcrumbNav";
+import { CreateFolderDialog } from "./CreateFolderDialog";
 import { DeleteAlertDialog } from "./DeleteAlertDialog";
+import { FileList } from "./FileList";
+import { UploadFileDialog } from "./UploadFileDialog";
 
 interface FileExplorerProps {
   programId: string;

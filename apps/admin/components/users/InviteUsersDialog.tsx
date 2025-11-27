@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InvitationProgress } from "@/types/user";
-import { Check, Plus, RefreshCw, Send, X, Upload } from "lucide-react";
+import { Check, Plus, RefreshCw, Send, Upload, X } from "lucide-react";
 import Papa from "papaparse";
 import { useState } from "react";
 import { toast } from "sonner";

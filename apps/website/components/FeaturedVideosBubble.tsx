@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { IoClose, IoPlay, IoVideocam } from "react-icons/io5";
-import { extractYouTubeId } from "@/utils/youtube";
 import { Video } from "@/types/videos";
+import { extractYouTubeId } from "@/utils/youtube";
 import { Button } from "@heroui/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { IoClose, IoPlay } from "react-icons/io5";
 
 const FeaturedVideosBubble = () => {
   const [isOpen, setIsOpen] = useState(false);

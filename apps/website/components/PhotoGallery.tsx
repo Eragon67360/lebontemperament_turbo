@@ -1,14 +1,13 @@
 "use client";
-import React from "react";
-import { useEffect, useState } from "react";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
-import { MasonryPhotoAlbum } from "react-photo-album";
-import "react-photo-album/masonry.css";
-import { Accordion, AccordionItem } from "@heroui/react";
 import { setColumns } from "@/utils/setColumns";
 import { PhotoData } from "@/utils/types";
-import { motion, AnimatePresence } from "motion/react";
+import { Accordion, AccordionItem } from "@heroui/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { MasonryPhotoAlbum } from "react-photo-album";
+import "react-photo-album/masonry.css";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
 
 export default function PhotoGallery() {
   const [imagesConcerts, setImagesConcerts] = useState<PhotoData[]>([]);

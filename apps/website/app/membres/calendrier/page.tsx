@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
 import GoogleCalendar from "@/components/GoogleCalendar";
-import { IoCalendarClear, IoList } from "react-icons/io5";
-import { MdCalendarMonth } from "react-icons/md";
+import { GroupType, Rehearsal } from "@/types/rehearsals"; // adjust import path
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Rehearsal, GroupType } from "@/types/rehearsals"; // adjust import path
+import { useEffect, useState } from "react";
+import { IoCalendarClear, IoList } from "react-icons/io5";
+import { MdCalendarMonth } from "react-icons/md";
 
 const Calendrier = () => {
   const [showGoogleCalendar, setShowGoogleCalendar] = useState(false);

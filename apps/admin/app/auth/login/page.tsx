@@ -1,9 +1,9 @@
 import LoginForm from "@/components/auth/LoginForm";
 import RouteNames from "@/utils/routes";
+import { Music2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Music2, Sparkles } from "lucide-react";
 
 const LoadingSpinner = () => (
   <div className="from-primary/10 via-primary/5 to-background flex min-h-screen items-center justify-center bg-gradient-to-br">

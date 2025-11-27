@@ -1,7 +1,7 @@
 "use client";
+import CAMinutesList from "@/components/CAMinutesList";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import PdfList from "@/components/PdfList";
-import CAMinutesList from "@/components/CAMinutesList";
 import { RoundedSize } from "@/utils/types";
 import {
   Button,

@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { toast } from "sonner";
 import React from "react";
+import { toast } from "sonner";
 
 interface ButtonWithToastProps {
   message: string;

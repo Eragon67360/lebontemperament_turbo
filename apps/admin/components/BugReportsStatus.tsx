@@ -2,12 +2,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { Bug } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import RouteNames from "@/utils/routes";
 
 export function BugReportStatus() {
   const [unreadCount, setUnreadCount] = useState(0);

@@ -22,13 +22,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Event } from "@/types/events";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
+import {
+  useCreateEvent,
+  useDeleteEvent,
+  useEvents,
+  useUpdateEvent,
+} from "@/hooks/useEvents";
 
 const loadingMessages = [
   "Préparation des événements... 📅",
@@ -39,9 +46,17 @@ const loadingMessages = [
 ];
 
 export default function Evenements() {
-  const [events, setEvents] = useState<Event[]>([]);
+  // Queries
+  const { data: events = [], isLoading: loadingEvents } = useEvents();
+
+  // Mutations
+  const createEvent = useCreateEvent();
+  const updateEvent = useUpdateEvent();
+  const deleteEvent = useDeleteEvent();
+
+  const loading = loadingEvents;
+
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState<string | undefined>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
@@ -58,24 +73,6 @@ export default function Evenements() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch("/api/events");
-      const data = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error(error);
-
-      toast.error("Erreur lors du chargement des événements");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
   const handleDeleteClick = (id: string) => {
     setEventToDelete(id);
     setDeleteDialogOpen(true);
@@ -87,7 +84,6 @@ export default function Evenements() {
     dateTo: Date | null | undefined,
   ) => {
     e.preventDefault();
-    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const eventData = {
@@ -98,30 +94,20 @@ export default function Evenements() {
       location: formData.get("location") as string,
       responsible_name: formData.get("responsible_name") as string,
       responsible_email: (formData.get("responsible_email") as string) || null,
-      event_type: formData.get("event_type") as string,
+      event_type: formData.get("event_type") as Event["event_type"],
       description: (formData.get("description") as string) || null,
       link: (formData.get("link") as string) || null,
       is_public: formData.get("is_public") === "on",
     };
 
     try {
-      const response = await fetch("/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok)
-        throw new Error("Erreur lors de l'ajout de l'événement");
+      await createEvent.mutateAsync(eventData);
 
       toast.success("Événement ajouté avec succès");
       setOpen(false);
-      fetchEvents();
     } catch (error) {
       toast.error("Erreur lors de l'ajout de l'événement");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -131,7 +117,6 @@ export default function Evenements() {
     dateTo: Date | null | undefined,
   ) => {
     e.preventDefault();
-    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const eventData = {
@@ -143,30 +128,21 @@ export default function Evenements() {
       location: formData.get("location") as string,
       responsible_name: formData.get("responsible_name") as string,
       responsible_email: (formData.get("responsible_email") as string) || null,
-      event_type: formData.get("event_type") as string,
+      event_type: formData.get("event_type") as Event["event_type"],
       description: (formData.get("description") as string) || null,
       link: (formData.get("link") as string) || null,
       is_public: formData.get("is_public") === "on",
     };
 
     try {
-      const response = await fetch("/api/events", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la modification");
+      await updateEvent.mutateAsync(eventData);
 
       toast.success("Événement modifié avec succès");
       setEditDialogOpen(false);
       setEditingEvent(null);
-      fetchEvents();
     } catch (error) {
       toast.error("Erreur lors de la modification");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -174,16 +150,9 @@ export default function Evenements() {
     if (!eventToDelete) return;
 
     try {
-      const response = await fetch("/api/events", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: eventToDelete }),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
+      await deleteEvent.mutateAsync(eventToDelete);
 
       toast.success("Événement supprimé avec succès");
-      fetchEvents();
     } catch (error) {
       toast.error("Erreur lors de la suppression");
       console.error(error);
@@ -266,7 +235,7 @@ export default function Evenements() {
             </DialogHeader>
             <EventForm
               onSubmit={handleCreate}
-              loading={loading}
+              loading={createEvent.isPending}
               initialData={null}
               submitLabel="Ajouter l'événement"
             />
@@ -388,7 +357,7 @@ export default function Evenements() {
           </DialogHeader>
           <EventForm
             onSubmit={handleEdit}
-            loading={loading}
+            loading={updateEvent.isPending}
             initialData={editingEvent}
             submitLabel="Modifier l'événement"
           />

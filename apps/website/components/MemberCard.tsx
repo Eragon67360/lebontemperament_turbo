@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardHeader, CardBody, CardFooter } from "@heroui/react";
+import { Card, CardBody, CardFooter, CardHeader } from "@heroui/react";
 import { CldImage } from "next-cloudinary";
 import React, { FC } from "react";
 

@@ -1,6 +1,5 @@
 "use client";
-import { motion } from "motion/react";
-import { useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 
 interface MotionSectionProps {
   children: React.ReactNode;

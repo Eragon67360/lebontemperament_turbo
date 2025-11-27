@@ -9,18 +9,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMyBugReports } from "@/hooks/useMyBugReports";
+import { useUnreadBugReports } from "@/hooks/useUnreadBugReports";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import {
   AlertCircle,
-  Building2,
   Bug,
+  Building2,
   Calendar,
   ChevronDown,
   Image as ImageIcon,
   LayoutDashboard,
   LogOut,
+  MessageCircle,
   Music,
   Users,
 } from "lucide-react";
@@ -28,7 +31,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { JSX, useEffect, useState } from "react";
-import { BugReportDialog } from "@/components/BugReportDialog";
 
 type Route = {
   label: string;
@@ -37,6 +39,7 @@ type Route = {
     label: string;
     icon: JSX.Element;
     visible?: boolean;
+    badge?: React.ReactNode;
   }[];
   visible?: boolean;
 };
@@ -44,17 +47,28 @@ type Route = {
 export default function Sidebar({
   mobile,
   onNavigate,
+  setMessagesDialogOpen,
+  setBugReportDialogOpen,
 }: {
   mobile?: boolean;
   onNavigate?: () => void;
+  setMessagesDialogOpen?: (open: boolean) => void;
+  setBugReportDialogOpen?: (open: boolean) => void;
 }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [bugReportDialogOpen, setBugReportDialogOpen] = useState(false);
+  const { data: unreadCount = 0 } = useUnreadBugReports();
+  const { data: myBugReports = [] } = useMyBugReports();
   const supabase = createClient();
   const router = useRouter();
+
+  // Calculate unread messages count
+  const unreadMessagesCount = myBugReports.reduce(
+    (total, report) => total + (report.unread_count || 0),
+    0,
+  );
   const routes: Route[] = [
     {
       label: "Général",
@@ -64,6 +78,23 @@ export default function Sidebar({
           label: "Tableau de bord",
           icon: <LayoutDashboard className="h-4 w-4" />,
           visible: true,
+        },
+      ],
+    },
+    {
+      label: "Communication",
+      subroutes: [
+        {
+          href: "#messages",
+          label: "Messages",
+          icon: <MessageCircle className="h-4 w-4" />,
+          visible: true,
+          badge:
+            unreadMessagesCount > 0 ? (
+              <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-semibold text-white">
+                {unreadMessagesCount}
+              </span>
+            ) : null,
         },
       ],
     },
@@ -125,6 +156,13 @@ export default function Sidebar({
           label: "Rapports de bugs",
           icon: <Bug className="h-4 w-4" />,
           visible: isSuperAdmin,
+          badge:
+            unreadCount > 0 ? (
+              <span className="relative ml-auto flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+              </span>
+            ) : null,
         },
       ],
     },
@@ -203,7 +241,26 @@ export default function Sidebar({
                   <div className="space-y-1">
                     {route.subroutes?.map(
                       (subroute) =>
-                        subroute.visible !== false && (
+                        subroute.visible !== false &&
+                        (subroute.href === "#messages" ? (
+                          <button
+                            key={subroute.href}
+                            onClick={() => {
+                              setMessagesDialogOpen?.(true);
+                              // Delay closing sidebar to let dialog open first
+                              setTimeout(() => onNavigate?.(), 0);
+                            }}
+                            className={cn(
+                              "group flex w-full items-center rounded-xl px-4 py-2.5 text-sm font-medium text-gray-600 transition-all duration-200 ease-in-out hover:bg-gray-50 hover:text-gray-900",
+                            )}
+                          >
+                            <span className="mr-3 h-5 w-5 text-gray-400 transition-colors group-hover:text-gray-500">
+                              {subroute.icon}
+                            </span>
+                            {subroute.label}
+                            {subroute.badge}
+                          </button>
+                        ) : (
                           <Link
                             key={subroute.href}
                             href={subroute.href}
@@ -226,8 +283,9 @@ export default function Sidebar({
                               {subroute.icon}
                             </span>
                             {subroute.label}
+                            {subroute.badge}
                           </Link>
-                        ),
+                        )),
                     )}
                   </div>
                 </div>
@@ -274,8 +332,9 @@ export default function Sidebar({
               <DropdownMenuItem
                 className="cursor-pointer rounded-lg"
                 onClick={() => {
-                  setBugReportDialogOpen(true);
-                  onNavigate?.();
+                  setBugReportDialogOpen?.(true);
+                  // Delay closing sidebar to let dialog open first
+                  setTimeout(() => onNavigate?.(), 0);
                 }}
               >
                 <AlertCircle className="mr-2 h-4 w-4" />
@@ -299,10 +358,6 @@ export default function Sidebar({
           </DropdownMenu>
         </div>
       )}
-      <BugReportDialog
-        open={bugReportDialogOpen}
-        onOpenChange={setBugReportDialogOpen}
-      />
     </div>
   );
 }

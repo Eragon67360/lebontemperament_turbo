@@ -1,17 +1,17 @@
 // components/NotificationsPopover.tsx
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
 import { Notification } from "@/types/notifications";
+import { createClient } from "@/utils/supabase/client";
+import { Bell } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
 export function NotificationsPopover() {
   const [notifications, setNotifications] = useState<Notification[]>([]);

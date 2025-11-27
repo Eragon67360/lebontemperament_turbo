@@ -1,5 +1,5 @@
-import { MetadataRoute } from "next";
 import projects from "@/public/json/projects.json";
+import { MetadataRoute } from "next";
 
 const WEBSITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://www.lebontemperament.com";

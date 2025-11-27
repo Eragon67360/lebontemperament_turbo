@@ -1,7 +1,6 @@
 "use client";
 import Head from "next/head";
 import { usePathname } from "next/navigation";
-import React from "react";
 
 const Header = () => {
   const pathname = usePathname();

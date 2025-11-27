@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
-import Link from "next/link";
 import { Button } from "@heroui/react";
-import { IoHome, IoArrowBack } from "react-icons/io5";
+import Link from "next/link";
+import { IoArrowBack, IoHome } from "react-icons/io5";
 
 export default function NotFound() {
   return (

@@ -1,6 +1,5 @@
 // app/dashboard/public/concerts/page.tsx
-import { DashboardPageHeader } from "@/components/DashboardPageHeader";
-import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   Card,
   CardDescription,
@@ -10,7 +9,6 @@ import {
 import RouteNames from "@/utils/routes";
 import { ArrowRight, Calendar, Music } from "lucide-react";
 import Link from "next/link";
-import { PageShell } from "@/components/layouts/PageShell";
 
 export default function ConcertsPage() {
   return (

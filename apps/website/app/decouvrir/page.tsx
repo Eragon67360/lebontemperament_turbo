@@ -1,8 +1,7 @@
-import React from "react";
-import type { Metadata } from "next";
-import MemberCard from "@/components/MemberCard";
 import CloudinaryImage from "@/components/CloudinaryImage";
+import MemberCard from "@/components/MemberCard";
 import { RoundedSize } from "@/utils/types";
+import type { Metadata } from "next";
 import { keyword } from "../layout";
 
 export const metadata: Metadata = {

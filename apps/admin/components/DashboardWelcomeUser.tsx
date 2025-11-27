@@ -1,21 +1,9 @@
 "use client";
-import { createClient } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
 
 export function DashboardWelcomeHeader() {
-  const [user, setUser] = useState<User | null>(null);
-  const supabase = createClient();
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUser(data.user);
-      }
-    };
-    getUser();
-  }, [supabase]);
+  const { data: user } = useCurrentUser();
 
   const displayName =
     user?.user_metadata.display_name || user?.user_metadata.name;

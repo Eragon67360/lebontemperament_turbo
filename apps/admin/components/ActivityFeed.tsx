@@ -1,12 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, UserPlus, Music, Users2, Calendar } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useActivities } from "@/hooks/useActivities";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Activity } from "@/types/activities";
+import { Bell, Calendar, Music, UserPlus, Users2 } from "lucide-react";
 
 function getActivityIcon(type: string) {
   const iconClasses = "h-4 w-4 text-primary";
@@ -36,26 +35,7 @@ function ActivityRowSkeleton() {
   );
 }
 export function ActivityFeed() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchActivities = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/activities?limit=50");
-        if (!response.ok) throw new Error("Failed to fetch activities");
-        const data = await response.json();
-        setActivities(data);
-      } catch (error) {
-        console.error("Error fetching activities:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchActivities();
-  }, []);
+  const { data: activities = [], isLoading } = useActivities(50);
 
   return (
     <Card className="flex h-full flex-col rounded-2xl bg-white">
