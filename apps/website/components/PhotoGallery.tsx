@@ -89,22 +89,21 @@ export default function PhotoGallery() {
     </div>
   );
 
-  // Custom render function for photo album with animation
-  const renderPhoto = ({ photo, wrapperStyle, renderDefaultPhoto }: any) => {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          duration: 0.5,
-          ease: "easeOut",
-        }}
-        style={wrapperStyle}
-      >
-        {renderDefaultPhoto({ wrapped: true })}
-      </motion.div>
-    );
-  };
+  // Custom render function for the interactive button wrapper to add motion
+  const renderAnimatedButton = ({ ref, children, ...restProps }: any) => (
+    <motion.button
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{
+        duration: 0.5,
+        ease: "easeOut",
+      }}
+      {...restProps}
+    >
+      {children}
+    </motion.button>
+  );
 
   return (
     <>
@@ -140,7 +139,7 @@ export default function PhotoGallery() {
                   onClick={({ index: current }) =>
                     setPhotoIndexConcerts(current)
                   }
-                  render={{ photo: renderPhoto }}
+                  render={{ button: renderAnimatedButton }}
                 />
               </motion.div>
             )}
@@ -175,7 +174,7 @@ export default function PhotoGallery() {
                   columns={columns}
                   photos={imagesVieBT}
                   onClick={({ index: current }) => setPhotoIndexVieBT(current)}
-                  render={{ photo: renderPhoto }}
+                  render={{ button: renderAnimatedButton }}
                 />
               </motion.div>
             )}
