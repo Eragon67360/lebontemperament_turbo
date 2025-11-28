@@ -103,7 +103,7 @@ export default function RejoindrePage() {
               <IoPeople className="text-primary text-3xl" />
               Qui peut nous rejoindre?
             </h2>
-            <p className="text-default-600 dark:text-default-400 mb-4 text-base leading-relaxed">
+            <p className="text-default-600 dark:text-default-300 mb-4 text-base leading-relaxed">
               Le Bon Tempérament est ouvert à tous ceux qui partagent notre
               passion pour la musique, quel que soit leur niveau ou leur
               parcours musical.

@@ -43,17 +43,21 @@ export default heroui({
           700: "#176368",
           800: "#0F4245",
           900: "#082123",
-          DEFAULT: "#26a5ad",
+          DEFAULT: "#66BDC3", // Lighter teal for better contrast on dark background
           foreground: "#FFFFFF", // Light text on dark teal for better accessibility
         },
-        focus: "#26a5ad",
+        focus: "#66BDC3", // Match primary DEFAULT for consistency
         default: {
           50: "#142323", // More teal-tinted for better contrast with background
           100: "#1a2c2c",
           200: "#203535",
           300: "#263e3e",
-          400: "#2c4747",
+          400: "#B8C5C6", // Lighter for better text contrast in dark mode
           500: "#325050",
+          600: "#D1D9DA", // Even lighter for better contrast when using text-default-600
+          700: "#E0E6E7",
+          800: "#E8EDEE",
+          900: "#F0F3F4",
           DEFAULT: "#1a2c2c",
           foreground: "#ECEDEE",
         },
