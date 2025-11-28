@@ -203,9 +203,13 @@ const FileExplorer: React.FC = () => {
                   />
                 </motion.div>
                 <h2
-                  className="bg-gradient-to-r bg-clip-text text-xl font-extrabold text-transparent md:text-2xl"
+                  className="text-xl font-extrabold md:text-2xl"
                   style={{
-                    backgroundImage: `linear-gradient(to right, #${activeTab.iconColor}, var(--foreground))`,
+                    background: `linear-gradient(to right, #${activeTab.iconColor} 0%, #${activeTab.iconColor}88 50%, hsl(var(--heroui-foreground) / 1) 100%)`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    color: "transparent",
                   }}
                 >
                   {activeTab.title}
