@@ -1,83 +1,22 @@
 // components/MembersFooter.tsx
 "use client";
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
-import NextLink from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export const MembersFooter = () => {
-  const pathname = usePathname();
-  const [year, setYear] = useState<number | null>(null);
-
-  useEffect(() => {
-    setYear(new Date().getFullYear());
-  }, []);
-
-  const NavLink = ({
-    href,
-    children,
-  }: {
-    href: string;
-    children: React.ReactNode;
-  }) => (
-    <NextLink
-      href={href}
-      className={`m-o block p-2 transition ${
-        pathname === href
-          ? "text-primary"
-          : "text-foreground/50 hover:text-primary/80"
-      }`}
-    >
-      {children}
-    </NextLink>
-  );
-
-  const links = [
-    { href: "/", label: "SITE PUBLIC" },
-    { href: "/membres", label: "accueil membres" },
-    { href: "/membres/travail", label: "travail" },
-    { href: "/membres/concerts", label: "concerts & évènements" },
-    { href: "/membres/calendrier", label: "répétitions (calendrier)" },
-    { href: "/membres/membres", label: "membres" },
-    { href: "/membres/administration", label: "autres" },
-  ];
+  const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <div className="border-divider mx-4 flex w-full max-w-[96%] items-center justify-between gap-2 border-t px-8 py-4 text-sm md:mx-8 lg:mx-16">
-      <div className="flex items-center gap-4">
-        <div>©&nbsp;{year}&nbsp;Le Bon Tempérament</div>
-        <div className="hidden lg:block">
-          <ThemeSwitcher />
+    <footer className="border-divider mx-auto flex w-full max-w-7xl items-center justify-between border-t px-4 py-3 text-xs sm:px-6 sm:text-sm lg:px-8">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <div className="text-foreground/70">
+          ©&nbsp;{year}&nbsp;Le Bon Tempérament
         </div>
       </div>
 
-      <Dropdown className="capitalize">
-        <DropdownTrigger className="block lg:hidden">Liens</DropdownTrigger>
-        <DropdownMenu
-          aria-label="liens de la partie membres"
-          className="bg-content1"
-        >
-          {links.map((link) => (
-            <DropdownItem key={link.href} className="p-0">
-              <NavLink href={link.href}>{link.label}</NavLink>
-            </DropdownItem>
-          ))}
-        </DropdownMenu>
-      </Dropdown>
-
-      <div className="mt-2 hidden flex-col gap-1 uppercase md:flex-row lg:flex lg:gap-4">
-        {links.map((link) => (
-          <NavLink key={link.href} href={link.href}>
-            {link.label}
-          </NavLink>
-        ))}
+      <div className="flex items-center gap-2 sm:gap-4">
+        <ThemeSwitcher />
       </div>
-    </div>
+    </footer>
   );
 };

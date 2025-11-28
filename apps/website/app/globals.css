@@ -54,6 +54,7 @@
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -114,6 +115,16 @@
     height: 1px;
     overflow: hidden;
   }
+
+  /* Hide scrollbar while maintaining scroll functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @theme {
@@ -151,14 +162,12 @@ button {
 }
 
 .crossed {
-  background: linear-gradient(
-    to top left,
-    rgba(189, 189, 189, 0) 0%,
-    rgba(189, 189, 189, 0) calc(50% - 0.8px),
-    rgba(189, 189, 189, 1) 50%,
-    rgba(189, 189, 189, 0) calc(50% + 0.8px),
-    rgba(189, 189, 189, 0) 100%
-  );
+  background: linear-gradient(to top left,
+      rgba(189, 189, 189, 0) 0%,
+      rgba(189, 189, 189, 0) calc(50% - 0.8px),
+      rgba(189, 189, 189, 1) 50%,
+      rgba(189, 189, 189, 0) calc(50% + 0.8px),
+      rgba(189, 189, 189, 0) 100%);
 }
 
 .audio-player .rhap_container,
