@@ -58,8 +58,8 @@ export async function generateMetadata({
 }
 
 // Generate structured data for events
-function generateStructuredData(project: ConcertProject, slug: string) {
-  const eventSchema = {
+function generateEventSchema(project: ConcertProject, slug: string) {
+  return {
     "@context": "https://schema.org",
     "@type": "MusicEvent",
     name: `${project.name} ${project.subName}`,
@@ -101,8 +101,108 @@ function generateStructuredData(project: ConcertProject, slug: string) {
       audienceType: "Tous publics",
     },
   };
+}
 
-  return eventSchema;
+// Generate Article schema for concert pages
+function generateArticleSchema(project: ConcertProject, slug: string) {
+  const articleUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: `${project.name} ${project.subName}`,
+    description:
+      project.explanation ||
+      `${project.name} ${project.subName} - Concert par Le Bon Tempérament`,
+    url: articleUrl,
+    author: {
+      "@type": project.author ? "Person" : "Organization",
+      name: project.author?.name || "Le Bon Tempérament",
+    },
+    datePublished: project.date,
+    dateModified: project.date, // Using date as modified date since no updatedAt field
+    publisher: {
+      "@type": "Organization",
+      name: "Le Bon Tempérament",
+      url: process.env.NEXT_PUBLIC_BASE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": articleUrl,
+    },
+    image: project.banniere?.url
+      ? `https://res.cloudinary.com/dlt2j3dld/image/upload/${project.banniere.url}`
+      : "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
+    inLanguage: "fr-FR",
+    keywords:
+      "musique classique, opéra, baroque, concert, Saverne, Alsace, Le Bon Tempérament",
+  };
+}
+
+// Helper function to find related projects
+function findRelatedProjects(
+  currentProject: ConcertProject,
+  allProjects: ConcertProject[],
+  limit: number = 3,
+): ConcertProject[] {
+  const currentYear = new Date(currentProject.date).getFullYear();
+  const currentName = currentProject.name.toLowerCase();
+  const currentExplanation = (currentProject.explanation || "").toLowerCase();
+
+  // Keywords to identify themes
+  const themes = {
+    opera: [
+      "opéra",
+      "opera",
+      "monteverdi",
+      "mozart",
+      "puccini",
+      "bizet",
+      "carmen",
+    ],
+    baroque: ["baroque", "purcell", "monteverdi", "telemann"],
+    latino: ["latino", "espagne", "espagnol", "argentine", "misa criolla"],
+    tzigane: ["tzigane", "bohémien", "gitane", "brahms", "sarasate"],
+  };
+
+  // Find projects from same year or similar themes
+  const related = allProjects
+    .filter((p) => p.slug !== currentProject.slug)
+    .map((project) => {
+      let score = 0;
+      const projectYear = new Date(project.date).getFullYear();
+      const projectExplanation = (project.explanation || "").toLowerCase();
+      const projectName = project.name.toLowerCase();
+
+      // Same year = high score
+      if (projectYear === currentYear) score += 10;
+
+      // Similar themes = medium score
+      Object.values(themes).forEach((keywords) => {
+        const currentHasTheme = keywords.some(
+          (kw) => currentExplanation.includes(kw) || currentName.includes(kw),
+        );
+        const projectHasTheme = keywords.some(
+          (kw) => projectExplanation.includes(kw) || projectName.includes(kw),
+        );
+        if (currentHasTheme && projectHasTheme) score += 5;
+      });
+
+      // Same year range (±1 year) = low score
+      if (Math.abs(projectYear - currentYear) <= 1) score += 2;
+
+      return { project, score };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((item) => item.project);
+
+  return related;
 }
 
 export default async function ConcertPage({
@@ -134,17 +234,25 @@ export default async function ConcertPage({
     );
   }
 
-  const structuredData = generateStructuredData(project, slug);
+  // Find related projects
+  const relatedProjects = findRelatedProjects(project, projects, 3);
+
+  const eventSchema = generateEventSchema(project, slug);
+  const articleSchema = generateArticleSchema(project, slug);
 
   return (
     <>
-      {structuredData && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
-      )}
-      <ConcertPageClient project={project} />
+      {/* MusicEvent Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}
+      />
+      {/* Article Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <ConcertPageClient project={project} relatedProjects={relatedProjects} />
     </>
   );
 }
