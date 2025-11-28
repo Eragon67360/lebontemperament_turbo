@@ -23,10 +23,22 @@ const CloudinaryImage: FC<CloudinaryImageProps> = ({
   rounded,
   className,
   priority = false,
-  sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
+  sizes,
   quality = 75,
 }) => {
   const combinedClassName = `${rounded} ${className ? className : ""}`.trim();
+
+  // Smart default sizes based on width
+  // For full-width images (>= 1000px), use full viewport
+  // For medium images (500-999px), use responsive sizing
+  // For small images (< 500px), use fixed width
+  const defaultSizes =
+    sizes ||
+    (width >= 1000
+      ? "(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+      : width >= 500
+        ? "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+        : "(max-width: 768px) 100vw, 500px");
 
   return (
     <CldImage
@@ -38,7 +50,7 @@ const CloudinaryImage: FC<CloudinaryImageProps> = ({
       className={combinedClassName}
       loading={priority ? "eager" : "lazy"}
       quality={quality}
-      sizes={sizes}
+      sizes={defaultSizes}
       placeholder="blur"
       blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
       onError={(e) => {

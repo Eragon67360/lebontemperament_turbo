@@ -3,11 +3,11 @@ import Subscribe from "@/components/newsletter/Subscribe";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Contact - Le Bon Tempérament | Saverne",
   description:
-    "Rejoignez l'équipe de Le Bon Tempérament pour toute question, demande de renseignements ou proposition de collaboration. Faites le premier pas vers une belle aventure musicale ensemble.",
+    "Contactez Le Bon Tempérament à Saverne. Email, téléphone et adresse pour rejoindre l'ensemble, réserver des places ou obtenir des informations sur nos concerts.",
   keywords:
-    "Contact Le Bon Tempérament, email Le Bon Tempérament, téléphone Le Bon Tempérament, adresse Le Bon Tempérament, formulaire de contact musique",
+    "contact Le Bon Tempérament Saverne, adresse ensemble vocal Alsace, email chœur musique classique, téléphone Le Bon Tempérament",
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -66,6 +66,13 @@ const Contact = () => {
             Vous avez des questions? Consultez notre{" "}
             <a href="/faq" className="text-primary font-medium hover:underline">
               page de questions fréquentes
+            </a>
+            . Vous souhaitez nous rejoindre? Découvrez notre{" "}
+            <a
+              href="/rejoindre"
+              className="text-primary font-medium hover:underline"
+            >
+              page dédiée
             </a>
             .
           </p>

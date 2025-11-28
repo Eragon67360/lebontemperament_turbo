@@ -1,12 +1,20 @@
+# FAQ Page Template - Ready to Implement
+
+This is a template for creating the FAQ page at `/app/faq/page.tsx`
+
+---
+
+## Complete FAQ Page Implementation
+
+```typescript
 import { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "FAQ - Questions Fréquentes | Le Bon Tempérament",
+  title: "Questions fréquentes",
   description:
-    "FAQ Le Bon Tempérament : réponses aux questions sur nos concerts, comment rejoindre l'ensemble, répétitions, tarifs et informations pratiques à Saverne.",
+    "Trouvez les réponses aux questions les plus fréquentes sur Le Bon Tempérament, nos concerts, comment nous rejoindre, et plus encore.",
   keywords:
-    "FAQ Le Bon Tempérament, questions fréquentes chœur Saverne, comment rejoindre ensemble vocal, informations concerts musique classique",
+    "FAQ Le Bon Tempérament, questions fréquentes, rejoindre chœur Saverne, concerts musique classique, informations pratiques",
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -43,7 +51,7 @@ const faqData = [
   {
     question: "Comment rejoindre Le Bon Tempérament?",
     answer:
-      "Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Pour nous rejoindre, consultez notre page dédiée pour toutes les informations sur le processus d'adhésion, ou contactez-nous directement par email à lebontemperament@gmail.com ou par téléphone au (+33) 09 52 39 57 89. Nous serons ravis de vous accueillir et de discuter de votre intégration dans l'ensemble.",
+      "Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Pour nous rejoindre, contactez-nous par email à lebontemperament@gmail.com ou par téléphone au (+33) 09 52 39 57 89. Nous serons ravis de vous accueillir et de discuter de votre intégration dans l'ensemble.",
   },
   {
     question: "Faut-il avoir de l'expérience musicale pour rejoindre?",
@@ -125,12 +133,12 @@ export default function FAQPage() {
             Trouvez ci-dessous les réponses aux questions les plus fréquemment
             posées sur Le Bon Tempérament. Si vous ne trouvez pas la réponse à
             votre question, n&apos;hésitez pas à{" "}
-            <Link
+            <a
               href="/contact"
-              className="text-primary font-medium hover:underline"
+              className="text-primary hover:underline font-medium"
             >
               nous contacter
-            </Link>
+            </a>
             .
           </p>
         </div>
@@ -155,26 +163,7 @@ export default function FAQPage() {
                 itemType="https://schema.org/Answer"
                 itemProp="acceptedAnswer"
               >
-                {faq.question === "Comment rejoindre Le Bon Tempérament?" ? (
-                  <p itemProp="text">
-                    Le Bon Tempérament accueille des choristes amateurs, des
-                    chanteurs solistes professionnels et des instrumentistes de
-                    tous horizons. Pour nous rejoindre, consultez notre{" "}
-                    <Link
-                      href="/rejoindre"
-                      className="text-primary font-medium hover:underline"
-                    >
-                      page dédiée
-                    </Link>{" "}
-                    pour toutes les informations sur le processus
-                    d&apos;adhésion, ou contactez-nous directement par email à
-                    lebontemperament@gmail.com ou par téléphone au (+33) 09 52
-                    39 57 89. Nous serons ravis de vous accueillir et de
-                    discuter de votre intégration dans l&apos;ensemble.
-                  </p>
-                ) : (
-                  <p itemProp="text">{faq.answer}</p>
-                )}
+                <p itemProp="text">{faq.answer}</p>
               </div>
             </div>
           ))}
@@ -188,14 +177,51 @@ export default function FAQPage() {
             N&apos;hésitez pas à nous contacter, nous serons ravis de vous
             répondre!
           </p>
-          <Link
+          <a
             href="/contact"
             className="bg-primary hover:bg-primary/90 inline-block rounded-md px-6 py-3 text-white transition-colors"
           >
             Nous contacter
-          </Link>
+          </a>
         </div>
       </div>
     </>
   );
 }
+```
+
+---
+
+## Next Steps After Creating FAQ Page
+
+1. **Add to Navigation:**
+   - Add FAQ link to main navigation or footer
+   - Link from contact page
+   - Link from homepage (maybe in a "Questions?" section)
+
+2. **Update Sitemap:**
+   - Add FAQ page to sitemap.ts with priority 0.7
+
+3. **Test:**
+   - Validate schema with Google Rich Results Test
+   - Check mobile responsiveness
+   - Test all links
+
+4. **Monitor:**
+   - Track FAQ page in Google Search Console
+   - Monitor which questions get the most impressions
+   - Add more questions based on search queries
+
+---
+
+## Tips for FAQ Content
+
+1. **Use Natural Language:** Write answers as if talking to someone
+2. **Be Specific:** Include dates, locations, contact info when relevant
+3. **Keep It Updated:** Review and update FAQs regularly
+4. **Add Internal Links:** Link to relevant pages (concerts, contact, etc.)
+5. **Think Like a User:** What would someone searching for this actually ask?
+
+---
+
+**Ready to implement?** Copy the code above into `/app/faq/page.tsx` and customize the questions/answers as needed!

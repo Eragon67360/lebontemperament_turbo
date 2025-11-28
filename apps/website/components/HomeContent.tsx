@@ -16,7 +16,8 @@ import ContactForm from "@/components/ContactForm";
 import ProjectViewer from "@/components/ProjectViewer";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
-import { Button, Link } from "@heroui/react";
+import { Button } from "@heroui/react";
+import Link from "next/link";
 import { IoIosArrowRoundForward } from "react-icons/io";
 import Footer from "./Footer";
 
@@ -327,8 +328,14 @@ const HomeContent = () => {
                     chant, la pratique instrumentale et l'interprétation de
                     spectacles musicaux. Depuis 2023, nous nous sommes enrichis
                     d'un orchestre symphonique dirigé par Charlotte Lienhard,
-                    qui se produit seul ou avec la chorale lors des différents
-                    concerts de l'année.
+                    qui se produit seul ou avec la chorale lors des différents{" "}
+                    <Link
+                      href="/concerts"
+                      className="text-primary font-medium hover:underline"
+                    >
+                      concerts
+                    </Link>{" "}
+                    de l&apos;année.
                   </p>
                 </div>
               </div>
@@ -395,10 +402,17 @@ const HomeContent = () => {
               </p>
               <p>
                 Chaque été, nous organisons des séjours dans différentes régions
-                de France, où se peaufine le programme de l'année et où se
+                de France, où se peaufine le programme de l&apos;année et où se
                 tissent les liens si particuliers entre les membres. Ces moments
                 de partage et de convivialité renforcent notre cohésion et notre
-                passion commune pour la musique.
+                passion commune pour la musique. Découvrez nos{" "}
+                <Link
+                  href="/concerts"
+                  className="text-primary font-medium hover:underline"
+                >
+                  concerts et événements
+                </Link>{" "}
+                pour voir le résultat de ces répétitions.
               </p>
               <p>
                 En 2023, une nouvelle page s'est ouverte avec la création de
@@ -464,13 +478,13 @@ const HomeContent = () => {
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                   <Button
                     as={Link}
-                    href={"/contact"}
+                    href={"/rejoindre"}
                     color="primary"
                     radius="sm"
                     size="lg"
-                    aria-label="Nous contacter pour rejoindre l'ensemble"
+                    aria-label="Découvrir comment rejoindre l'ensemble"
                   >
-                    Nous contacter
+                    Rejoindre l&apos;ensemble
                     <IoIosArrowRoundForward className="scale-110" />
                   </Button>
                   <Button
@@ -498,7 +512,7 @@ const HomeContent = () => {
                 >
                   <CloudinaryImage
                     src={"Site/découvrir/choeurs/choeur"}
-                    alt="Structure du chœur Le Bon Tempérament"
+                    alt="Structure du chœur Le Bon Tempérament - Chœurs adultes, jeunes et enfants"
                     width={500}
                     height={400}
                     rounded={RoundedSize.MD}

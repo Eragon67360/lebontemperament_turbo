@@ -67,6 +67,13 @@ const Footer = () => {
               Nous découvrir
             </Link>
             <Link
+              href={"/rejoindre"}
+              aria-label="Découvrir comment rejoindre l'ensemble"
+              className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
+            >
+              Rejoindre
+            </Link>
+            <Link
               href={"/concerts"}
               aria-label="Aller à la page Nos Concerts"
               className="hover:text-primary dark:hover:text-primary transition-colors duration-200"

@@ -58,6 +58,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${WEBSITE_URL}/rejoindre`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "monthly" as ChangeFrequency,
+      priority: 0.8,
+    },
+    {
       url: `${WEBSITE_URL}/impressum`,
       lastModified: new Date().toISOString(),
       changeFrequency: "yearly" as ChangeFrequency,
