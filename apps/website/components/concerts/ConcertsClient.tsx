@@ -183,7 +183,7 @@ const ConcertsClient = () => {
                 <h3 className="text-foreground mb-3 text-center text-xl font-semibold sm:mb-4 sm:text-2xl">
                   Aucun concert à venir pour le moment
                 </h3>
-                <div className="text-default-600 w-full max-w-2xl space-y-3 text-center text-sm sm:space-y-4 sm:text-base">
+                <div className="text-default-600 dark:text-default-400 w-full max-w-2xl space-y-3 text-center text-sm sm:space-y-4 sm:text-base">
                   <p className="text-base sm:text-lg">
                     Ne vous inquiétez pas, les prochains concerts arriveront
                     très vite !
@@ -551,7 +551,7 @@ const ConcertsClient = () => {
                       className="relative block h-48 w-full"
                     >
                       <CloudinaryImage
-                        src={projet.banniere}
+                        src={projet.banniere.url}
                         alt={`Image bannière ${projet.name} ${projet.subName}`}
                         className="h-full w-full object-cover object-left"
                         width={1000}

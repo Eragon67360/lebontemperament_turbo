@@ -4,123 +4,359 @@ import CloudinaryImage from "@/components/CloudinaryImage";
 import Hero from "@/components/Hero";
 import MotionSection from "@/components/MotionSection";
 import SkeletonImage from "@/components/SkeletonImage";
+import { ConcertProject } from "@/types/projects";
 import { RoundedSize } from "@/utils/types";
+import { Button, Link, Tooltip } from "@heroui/react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import {
+  IoCalendarClear,
+  IoCamera,
+  IoLogoFacebook,
+  IoLogoLinkedin,
+  IoLogoTwitter,
+  IoLogoWhatsapp,
+  IoNewspaper,
+  IoPencil,
+  IoShareSocial,
+  IoTime,
+} from "react-icons/io5";
+import ReactMarkdown from "react-markdown";
 
 interface ConcertPageClientProps {
-  project: {
-    name: string;
-    subName?: string;
-    explanation?: string;
-    banniere?: string;
-    text1?: string;
-    text2?: string;
-    image2?: string;
-    image3?: string;
-  };
+  project: ConcertProject;
 }
 
 const ConcertPageClient: React.FC<ConcertPageClientProps> = ({ project }) => {
   const hasText1 = project.text1 && project.text1.trim().length > 0;
   const hasText2 = project.text2 && project.text2.trim().length > 0;
-  const hasImage2 = project.image2 && project.image2.trim().length > 0;
-  const hasImage3 = project.image3 && project.image3.trim().length > 0;
+  const hasImage2 =
+    project.image2 &&
+    project.image2.url &&
+    project.image2.url.trim().length > 0;
+  const hasImage3 =
+    project.image3 &&
+    project.image3.url &&
+    project.image3.url.trim().length > 0;
+
+  // Collect all unique photographers from all images
+  const getAllPhotographers = () => {
+    const photographers: Array<{ name: string; url: string }> = [];
+    const seen = new Set<string>();
+
+    [project.banniere, project.image2, project.image3].forEach((image) => {
+      if (image?.photographer && !seen.has(image.photographer.name)) {
+        photographers.push(image.photographer);
+        seen.add(image.photographer.name);
+      }
+    });
+
+    return photographers;
+  };
+
+  const photographers = getAllPhotographers();
+
+  // Calculate read time (approx 200 words per minute)
+  const calculateReadTime = () => {
+    const text = (project.text1 || "") + (project.text2 || "");
+    const words = text.replace(/<[^>]*>/g, "").split(/\s+/).length;
+    const minutes = Math.ceil(words / 200);
+    return minutes;
+  };
+
+  const readTime = calculateReadTime();
+
+  // Construct the share URL using the project slug
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/concerts/${project.slug}`
+      : "";
+
+  const handleShare = (platform: string) => {
+    if (typeof window === "undefined") return;
+
+    const text = `Découvrez le concert ${project.name} ${project.subName} par Le Bon Tempérament`;
+    let url = "";
+
+    switch (platform) {
+      case "twitter":
+        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case "facebook":
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        break;
+      case "linkedin":
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case "whatsapp":
+        url = `https://wa.me/?text=${encodeURIComponent(text + " " + shareUrl)}`;
+        break;
+    }
+
+    if (url) window.open(url, "_blank");
+  };
 
   return (
-    <main className="relative min-h-screen w-full bg-gray-100">
+    <main className="dark:bg-background relative min-h-screen w-full bg-gray-50">
       <Hero
         title={project.name ?? "Concert"}
         subtitle={project.subName}
         description={project.explanation}
-        bannerSrc={project.banniere}
+        bannerSrc={project.banniere?.url}
         dataTestId="hero"
       />
 
-      <div className="relative z-10 mx-auto mt-[100dvh] flex w-full flex-col bg-white py-8">
-        <div className="container mx-auto flex flex-col px-4 pb-8 lg:px-24">
-          {(hasText1 || hasImage2) && (
-            <MotionSection
-              className="mb-12 flex flex-col gap-4 lg:flex-row lg:gap-8"
-              dataTestId="section1"
-            >
-              {/* Image */}
-              <div className="order-2 w-full lg:order-1 lg:w-1/3">
-                {hasImage2 && project.image2 ? (
-                  <CloudinaryImage
-                    src={project.image2}
-                    width={600}
-                    alt={`Image du concert ${project.name} ${project.subName || ""}`}
-                    height={500}
-                    rounded={RoundedSize.SM}
-                  />
-                ) : (
-                  <SkeletonImage
-                    width={600}
-                    height={500}
-                    dataTestId="skeleton-image-2"
-                  />
-                )}
+      <div className="dark:bg-background relative z-10 mx-auto mt-[100dvh] flex w-full flex-col bg-white py-12 lg:py-20">
+        <div className="container mx-auto max-w-5xl px-4">
+          {/* Article Header */}
+          <MotionSection className="border-divider mb-12 border-b pb-8">
+            <div className="text-default-500 flex flex-wrap items-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <IoCalendarClear className="text-primary text-lg" />
+                <span className="text-foreground font-medium">
+                  {format(new Date(project.date), "d MMMM yyyy", {
+                    locale: fr,
+                  })}
+                </span>
               </div>
-
-              {/* Text */}
-              {hasText1 && (
-                <div className="order-1 w-full text-justify lg:order-2 lg:w-2/3 lg:pl-8">
-                  <div
-                    className="prose prose-lg max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: project.text1 as string,
-                    }}
-                  />
-                </div>
-              )}
-            </MotionSection>
-          )}
-
-          {/* Second Content Section */}
-          {(hasText2 || hasImage3) && (
-            <MotionSection
-              className="flex flex-col gap-4 lg:flex-row lg:gap-8"
-              dataTestId="section2"
-              delay={0.2}
-            >
-              {/* Text */}
-              {hasText2 && (
-                <div className="order-1 w-full text-justify lg:w-2/3 lg:pr-8">
-                  <div
-                    className="prose prose-lg max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: project.text2 as string,
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Image */}
-              <div className="order-2 w-full lg:w-1/3">
-                {hasImage3 && project.image3 ? (
-                  <CloudinaryImage
-                    src={project.image3}
-                    width={600}
-                    alt={`Image du concert ${project.name} ${project.subName || ""}`}
-                    height={500}
-                    rounded={RoundedSize.SM}
-                  />
-                ) : (
-                  <SkeletonImage
-                    width={600}
-                    height={500}
-                    dataTestId="skeleton-image-3"
-                  />
-                )}
+              <div className="bg-foreground/50 h-1 w-1 rounded-full" />
+              <div className="flex items-center gap-2">
+                <IoTime className="text-primary text-lg" />
+                <span className="text-foreground/50">
+                  {readTime} min de lecture
+                </span>
               </div>
-            </MotionSection>
-          )}
-
-          {/* Status message for screen readers when content is missing */}
-          {!hasText1 && !hasText2 && (
-            <div className="sr-only" role="status" aria-live="polite">
-              Aucun contenu textuel disponible pour ce concert.
+              {project.author && (
+                <>
+                  <div className="bg-foreground/50 h-1 w-1 rounded-full" />
+                  <div className="flex items-center gap-2">
+                    <IoPencil className="text-primary text-lg" />
+                    <p className="text-foreground/50">
+                      Article par{" "}
+                      <span className="text-primary font-medium hover:underline">
+                        {project.author.name}
+                      </span>
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+          </MotionSection>
+
+          <div className="flex flex-col lg:flex-row lg:gap-12">
+            {/* Main Content */}
+            <div className="w-full lg:w-3/4">
+              {(hasText1 || hasImage2) && (
+                <MotionSection
+                  className="mb-12 flex flex-col gap-8"
+                  dataTestId="section1"
+                >
+                  {/* Text 1 */}
+                  {hasText1 && (
+                    <div className="prose prose-lg dark:prose-invert max-w-none text-justify leading-relaxed">
+                      <ReactMarkdown>{project.text1 as string}</ReactMarkdown>
+                    </div>
+                  )}
+
+                  {/* Image 2 */}
+                  <div className="my-4">
+                    {hasImage2 && project.image2 ? (
+                      <figure>
+                        <CloudinaryImage
+                          src={project.image2.url}
+                          width={1000}
+                          alt={`Image du concert ${project.name} ${project.subName || ""}`}
+                          height={600}
+                          rounded={RoundedSize.MD}
+                          className="w-full shadow-lg"
+                        />
+                        {project.image2.photographer && (
+                          <figcaption className="text-foreground/50 mt-2 text-right text-xs italic">
+                            Photo : {project.image2.photographer.name}
+                          </figcaption>
+                        )}
+                      </figure>
+                    ) : (
+                      <SkeletonImage
+                        width={1000}
+                        height={600}
+                        dataTestId="skeleton-image-2"
+                      />
+                    )}
+                  </div>
+                </MotionSection>
+              )}
+
+              {(hasText2 || hasImage3) && (
+                <MotionSection
+                  className="flex flex-col gap-8"
+                  dataTestId="section2"
+                  delay={0.2}
+                >
+                  {/* Text 2 */}
+                  {hasText2 && (
+                    <div className="prose prose-lg dark:prose-invert max-w-none text-justify leading-relaxed">
+                      <ReactMarkdown>{project.text2 as string}</ReactMarkdown>
+                    </div>
+                  )}
+
+                  {/* Image 3 */}
+                  <div className="my-4">
+                    {hasImage3 && project.image3 ? (
+                      <figure>
+                        <CloudinaryImage
+                          src={project.image3.url}
+                          width={1000}
+                          alt={`Image du concert ${project.name} ${project.subName || ""}`}
+                          height={600}
+                          rounded={RoundedSize.MD}
+                          className="w-full shadow-lg"
+                        />
+                        {project.image3.photographer && (
+                          <figcaption className="text-foreground/50 mt-2 text-right text-xs italic">
+                            Photo : {project.image3.photographer.name}
+                          </figcaption>
+                        )}
+                      </figure>
+                    ) : (
+                      <SkeletonImage
+                        width={1000}
+                        height={600}
+                        dataTestId="skeleton-image-3"
+                      />
+                    )}
+                  </div>
+                </MotionSection>
+              )}
+
+              {/* Status message for screen readers when content is missing */}
+              {!hasText1 && !hasText2 && (
+                <div className="sr-only" role="status" aria-live="polite">
+                  Aucun contenu textuel disponible pour ce concert.
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="mt-12 w-full space-y-8 lg:sticky lg:top-24 lg:mt-0 lg:w-1/4 lg:self-start">
+              {/* Share Section */}
+              <div className="border-divider bg-default-50 dark:bg-default-50 rounded-xl border p-6">
+                <h3 className="text-foreground mb-4 flex items-center gap-2 text-lg font-semibold">
+                  <IoShareSocial className="text-primary" />
+                  Partager
+                </h3>
+                <div className="grid grid-cols-4 gap-2 lg:grid-cols-2 xl:grid-cols-4">
+                  <Tooltip content="Partager sur X">
+                    <Button
+                      isIconOnly
+                      variant="flat"
+                      className="text-foreground bg-black/10 dark:bg-white/10"
+                      onClick={() => handleShare("twitter")}
+                    >
+                      <IoLogoTwitter className="text-xl" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Partager sur Facebook">
+                    <Button
+                      isIconOnly
+                      variant="flat"
+                      className="bg-blue-600/10 text-blue-600 dark:text-blue-400"
+                      onClick={() => handleShare("facebook")}
+                    >
+                      <IoLogoFacebook className="text-xl" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Partager sur LinkedIn">
+                    <Button
+                      isIconOnly
+                      variant="flat"
+                      className="bg-blue-700/10 text-blue-700 dark:text-blue-500"
+                      onClick={() => handleShare("linkedin")}
+                    >
+                      <IoLogoLinkedin className="text-xl" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Partager sur WhatsApp">
+                    <Button
+                      isIconOnly
+                      variant="flat"
+                      className="bg-green-500/10 text-green-600 dark:text-green-500"
+                      onClick={() => handleShare("whatsapp")}
+                    >
+                      <IoLogoWhatsapp className="text-xl" />
+                    </Button>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Credits Section */}
+              {(photographers.length > 0 || project.author) && (
+                <div className="border-divider bg-default-50 dark:bg-default-50 rounded-xl border p-6">
+                  <h3 className="text-foreground mb-4 flex items-center gap-2 text-lg font-semibold">
+                    <IoCamera className="text-primary" />
+                    Crédits
+                  </h3>
+                  <div className="space-y-4">
+                    {photographers.length > 0 && (
+                      <div className="flex flex-col">
+                        <span className="text-foreground/50 text-xs tracking-wider uppercase">
+                          Photographies
+                        </span>
+                        {photographers.map((photographer, index) => (
+                          <Link
+                            key={index}
+                            href={photographer.url}
+                            target="_blank"
+                            className="text-foreground hover:text-primary font-medium transition-colors"
+                          >
+                            {photographer.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                    {project.author && (
+                      <div className="flex flex-col">
+                        <span className="text-foreground/50 text-xs tracking-wider uppercase">
+                          Rédaction
+                        </span>
+                        <p className="text-foreground hover:text-primary font-medium transition-colors">
+                          {" "}
+                          {project.author.name}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Press Section */}
+              {project.press_articles && project.press_articles.length > 0 && (
+                <div className="border-divider bg-default-50 dark:bg-default-50 rounded-xl border p-6">
+                  <h3 className="text-foreground mb-4 flex items-center gap-2 text-lg font-semibold">
+                    <IoNewspaper className="text-primary" />
+                    Ils parlent de nous
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {project.press_articles.map((article, index) => (
+                      <Link
+                        key={index}
+                        href={article.url}
+                        target="_blank"
+                        className="group bg-background hover:border-primary/20 flex flex-col rounded-lg border border-transparent p-3 shadow-sm transition-all hover:shadow-md"
+                      >
+                        <span className="text-foreground group-hover:text-primary line-clamp-2 font-medium transition-colors">
+                          {article.title}
+                        </span>
+                        <span className="text-default-500 mt-1 text-xs">
+                          {article.source}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </main>

@@ -54,7 +54,6 @@
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
-
     *,
     *::before,
     *::after {
@@ -152,12 +151,14 @@ button {
 }
 
 .crossed {
-  background: linear-gradient(to top left,
-      rgba(189, 189, 189, 0) 0%,
-      rgba(189, 189, 189, 0) calc(50% - 0.8px),
-      rgba(189, 189, 189, 1) 50%,
-      rgba(189, 189, 189, 0) calc(50% + 0.8px),
-      rgba(189, 189, 189, 0) 100%);
+  background: linear-gradient(
+    to top left,
+    rgba(189, 189, 189, 0) 0%,
+    rgba(189, 189, 189, 0) calc(50% - 0.8px),
+    rgba(189, 189, 189, 1) 50%,
+    rgba(189, 189, 189, 0) calc(50% + 0.8px),
+    rgba(189, 189, 189, 0) 100%
+  );
 }
 
 .audio-player .rhap_container,
@@ -261,7 +262,6 @@ button {
 
 /* Prose styles for better typography and accessibility */
 .prose {
-  color: oklch(0.145 0 0);
   line-height: 1.75;
 }
 
@@ -271,7 +271,6 @@ button {
 .prose h4,
 .prose h5,
 .prose h6 {
-  color: oklch(0.145 0 0);
   font-weight: 600;
   line-height: 1.25;
   margin-top: 1.5em;
@@ -308,7 +307,6 @@ button {
 
 .prose strong {
   font-weight: 600;
-  color: oklch(0.145 0 0);
 }
 
 .prose em {
