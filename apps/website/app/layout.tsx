@@ -1,4 +1,5 @@
 import { BubbleContainer } from "@/components/BubbleContainer";
+import { DeveloperFootprint } from "@/components/DeveloperFootprint";
 import { EasterEgg } from "@/components/EasterEgg";
 import { FooterClientWrapper } from "@/components/FooterClientWrapper";
 import Header from "@/components/Header";
@@ -114,8 +115,43 @@ export default function RootLayout({
   return (
     <html lang="fr" className={roboto.className} suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+/*
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   👨‍💻 Crafted with ❤️ by Thomas Moser                         ║
+║                                                               ║
+║   GitHub: https://github.com/Eragon67360                     ║
+║   Developer & Cat Enthusiast 🐱                               ║
+║                                                               ║
+║   This website was built with much love and dedication        ║
+║   for Le Bon Tempérament music ensemble.                     ║
+║                                                               ║
+║   Tech Stack:                                                 ║
+║   • Next.js 16                                                ║
+║   • React & TypeScript                                        ║
+║   • Supabase                                                  ║
+║   • TailwindCSS                                               ║
+║   • Framer Motion                                             ║
+║                                                               ║
+║   🐈 Fun fact: I LOVE CATS! 🐈                                 ║
+║                                                               ║
+║   💡 Psst... type "CATS" anywhere on the site!                ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+*/
+`,
+          }}
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#333333" />
+        <meta
+          name="developer"
+          content="Thomas Moser - https://github.com/Eragon67360"
+        />
+        <meta name="made-with" content="❤️ and 🐱" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/logo.png" />
         <link rel="manifest" href="/manifest.json" />
@@ -131,6 +167,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground z-10 transition-colors duration-200">
         <Header />
         <Providers>
+          <DeveloperFootprint />
           <EasterEgg />
 
           {/* Skip to main content link for accessibility */}
