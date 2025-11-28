@@ -16,7 +16,8 @@ import ContactForm from "@/components/ContactForm";
 import ProjectViewer from "@/components/ProjectViewer";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
-import { Button, Link } from "@heroui/react";
+import { Button } from "@heroui/react";
+import Link from "next/link";
 import { IoIosArrowRoundForward } from "react-icons/io";
 import Footer from "./Footer";
 
@@ -304,12 +305,39 @@ const HomeContent = () => {
                 >
                   Nous découvrir
                 </h2>
-                <p className="text-foreground text-xs leading-[25px] font-light md:text-sm lg:text-base">
-                  L'association Le Bon Tempérament est un ensemble vocal et
-                  instrumental dirigé par Simone Duclos depuis sa création en
-                  1987 qui vise à partager la passion pour la musique de ses
-                  membres avec le plus grand nombre.
-                </p>
+                <div className="text-foreground space-y-4 text-xs leading-[25px] font-light md:text-sm lg:text-base">
+                  <p>
+                    L'association Le Bon Tempérament est un ensemble vocal et
+                    instrumental renommé dirigé par Simone Duclos depuis sa
+                    création en 1987. Basé à Saverne, en Alsace, notre ensemble
+                    se distingue par le mélange des générations, la diversité
+                    des parcours des chanteurs et des instrumentistes, et
+                    l'esprit de convivialité qui l'anime.
+                  </p>
+                  <p>
+                    Nous visons à partager la passion pour la musique classique,
+                    l'opéra baroque, et les œuvres chorales avec le plus grand
+                    nombre. Notre répertoire varié couvre une large période
+                    musicale de la Renaissance à nos jours, incluant des œuvres
+                    de musique classique sacrée et profane, ainsi que des pièces
+                    populaires et folkloriques.
+                  </p>
+                  <p>
+                    L'association accorde une place toute particulière aux
+                    familles. Les enfants y découvrent la musique à travers le
+                    chant, la pratique instrumentale et l'interprétation de
+                    spectacles musicaux. Depuis 2023, nous nous sommes enrichis
+                    d'un orchestre symphonique dirigé par Charlotte Lienhard,
+                    qui se produit seul ou avec la chorale lors des différents{" "}
+                    <Link
+                      href="/concerts"
+                      className="text-primary font-medium hover:underline"
+                    >
+                      concerts
+                    </Link>{" "}
+                    de l&apos;année.
+                  </p>
+                </div>
               </div>
               <Button
                 as={Link}
@@ -327,6 +355,170 @@ const HomeContent = () => {
                   aria-hidden="true"
                 />
               </Button>
+            </motion.div>
+          </motion.section>
+
+          {/* Notre Histoire Section */}
+          <motion.section
+            className="bg-default-50 mx-auto mt-16 w-full max-w-[1440px] px-8 py-16 lg:px-24"
+            aria-labelledby="history-title"
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              aboutInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+              delay: 0.2,
+            }}
+          >
+            <motion.h2
+              id="history-title"
+              className="text-primary/50 dark:text-primary text-title mb-8 leading-none font-light"
+              initial={{ opacity: 0, x: -30 }}
+              animate={
+                aboutInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+              }
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              Notre histoire
+            </motion.h2>
+            <motion.div
+              className="text-foreground space-y-4 text-sm leading-relaxed font-light md:text-base lg:text-lg"
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                aboutInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <p>
+                Fondé en 1987 par Simone Duclos, Le Bon Tempérament a évolué au
+                fil des décennies pour devenir un ensemble reconnu dans la
+                région alsacienne et au-delà. Notre histoire est marquée par
+                plusieurs moments clés qui ont façonné notre identité musicale
+                et notre esprit communautaire.
+              </p>
+              <p>
+                Chaque été, nous organisons des séjours dans différentes régions
+                de France, où se peaufine le programme de l&apos;année et où se
+                tissent les liens si particuliers entre les membres. Ces moments
+                de partage et de convivialité renforcent notre cohésion et notre
+                passion commune pour la musique. Découvrez nos{" "}
+                <Link
+                  href="/concerts"
+                  className="text-primary font-medium hover:underline"
+                >
+                  concerts et événements
+                </Link>{" "}
+                pour voir le résultat de ces répétitions.
+              </p>
+              <p>
+                En 2023, une nouvelle page s'est ouverte avec la création de
+                notre orchestre symphonique sous la direction de Charlotte
+                Lienhard. Cette évolution nous permet d'enrichir notre
+                répertoire et d'offrir des performances encore plus variées,
+                alliant la puissance vocale de nos chœurs à la richesse
+                instrumentale de notre orchestre.
+              </p>
+            </motion.div>
+          </motion.section>
+
+          {/* Rejoignez-nous Section */}
+          <motion.section
+            className="bg-background mx-auto mt-16 w-full max-w-[1440px] px-8 py-16 lg:px-24"
+            aria-labelledby="join-title"
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
+            animate={
+              aboutInView
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: prefersReducedMotion ? 0 : 50 }
+            }
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.8,
+              ease: "easeOut",
+              delay: 0.4,
+            }}
+          >
+            <motion.div
+              className="flex flex-col gap-8 lg:flex-row lg:items-center"
+              initial={{ opacity: 0 }}
+              animate={aboutInView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <div className="flex-1">
+                <h2
+                  id="join-title"
+                  className="text-primary/50 dark:text-primary text-title mb-6 leading-none font-light"
+                >
+                  Rejoignez-nous
+                </h2>
+                <div className="text-foreground space-y-4 text-sm leading-relaxed font-light md:text-base">
+                  <p>
+                    Le Bon Tempérament accueille des choristes amateurs, des
+                    chanteurs solistes professionnels et des instrumentistes de
+                    tous horizons. Que vous soyez débutant ou expérimenté,
+                    passionné de musique classique ou d'opéra baroque, vous
+                    trouverez votre place dans notre ensemble.
+                  </p>
+                  <p>
+                    Nous avons différents chœurs adaptés à tous les niveaux : un
+                    chœur d'adultes, un chœur de jeunes, et un chœur des
+                    tout-jeunes. L'important est la motivation et l'envie de
+                    partager la passion pour la musique dans un esprit convivial
+                    et familial.
+                  </p>
+                  <p className="font-medium">
+                    Répétitions : Un dimanche par mois, avec des répétitions de
+                    pupitres tous les 15 jours. Tournée estivale de dix jours
+                    chaque été.
+                  </p>
+                </div>
+                <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                  <Button
+                    as={Link}
+                    href={"/rejoindre"}
+                    color="primary"
+                    radius="sm"
+                    size="lg"
+                    aria-label="Découvrir comment rejoindre l'ensemble"
+                  >
+                    Rejoindre l&apos;ensemble
+                    <IoIosArrowRoundForward className="scale-110" />
+                  </Button>
+                  <Button
+                    as={Link}
+                    href={"/faq"}
+                    variant="bordered"
+                    radius="sm"
+                    size="lg"
+                    aria-label="Consulter les questions fréquentes"
+                  >
+                    Questions fréquentes
+                    <IoIosArrowRoundForward className="scale-110" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-1 justify-center lg:justify-end">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={
+                    aboutInView
+                      ? { opacity: 1, scale: 1 }
+                      : { opacity: 0, scale: 0.9 }
+                  }
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
+                  <CloudinaryImage
+                    src={"Site/découvrir/choeurs/choeur"}
+                    alt="Structure du chœur Le Bon Tempérament - Chœurs adultes, jeunes et enfants"
+                    width={500}
+                    height={400}
+                    rounded={RoundedSize.MD}
+                  />
+                </motion.div>
+              </div>
             </motion.div>
           </motion.section>
 

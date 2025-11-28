@@ -52,6 +52,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
     {
+      url: `${WEBSITE_URL}/faq`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "monthly" as ChangeFrequency,
+      priority: 0.7,
+    },
+    {
+      url: `${WEBSITE_URL}/rejoindre`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "monthly" as ChangeFrequency,
+      priority: 0.8,
+    },
+    {
       url: `${WEBSITE_URL}/impressum`,
       lastModified: new Date().toISOString(),
       changeFrequency: "yearly" as ChangeFrequency,
@@ -65,12 +77,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const dynamicRoutes = projects.map((project: { slug: string }) => ({
-    url: `${WEBSITE_URL}/concerts/${project.slug}`,
-    lastModified: new Date().toISOString(),
-    changeFrequency: "monthly" as ChangeFrequency,
-    priority: 0.6,
-  }));
+  const dynamicRoutes = projects.map(
+    (project: { slug: string; date?: string }) => {
+      // Use project date if available, otherwise use current date
+      const lastModified = project.date
+        ? new Date(project.date).toISOString()
+        : new Date().toISOString();
+
+      return {
+        url: `${WEBSITE_URL}/concerts/${project.slug}`,
+        lastModified,
+        changeFrequency: "monthly" as ChangeFrequency,
+        priority: 0.6,
+      };
+    },
+  );
 
   return [...staticRoutes, ...dynamicRoutes];
 }

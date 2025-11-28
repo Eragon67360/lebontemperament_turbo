@@ -3,11 +3,11 @@ import Subscribe from "@/components/newsletter/Subscribe";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Contact - Le Bon Tempérament | Saverne",
   description:
-    "Rejoignez l'équipe de Le Bon Tempérament pour toute question, demande de renseignements ou proposition de collaboration. Faites le premier pas vers une belle aventure musicale ensemble.",
+    "Contactez Le Bon Tempérament à Saverne. Email, téléphone et adresse pour rejoindre l'ensemble, réserver des places ou obtenir des informations sur nos concerts.",
   keywords:
-    "Contact Le Bon Tempérament, email Le Bon Tempérament, téléphone Le Bon Tempérament, adresse Le Bon Tempérament, formulaire de contact musique",
+    "contact Le Bon Tempérament Saverne, adresse ensemble vocal Alsace, email chœur musique classique, téléphone Le Bon Tempérament",
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -59,6 +59,23 @@ const Contact = () => {
           >
             (+33) 09 52 39 57 89
           </a>
+          <h3 className="text-foreground mt-8 font-bold">
+            Questions fréquentes
+          </h3>
+          <p className="text-foreground mb-2">
+            Vous avez des questions? Consultez notre{" "}
+            <a href="/faq" className="text-primary font-medium hover:underline">
+              page de questions fréquentes
+            </a>
+            . Vous souhaitez nous rejoindre? Découvrez notre{" "}
+            <a
+              href="/rejoindre"
+              className="text-primary font-medium hover:underline"
+            >
+              page dédiée
+            </a>
+            .
+          </p>
         </div>
 
         <div className="ml-[178px] hidden w-1/2 flex-wrap lg:flex">
@@ -259,6 +276,37 @@ const Contact = () => {
         </div>
         <Subscribe />
       </div>
+      {/* LocalBusiness Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#localbusiness`,
+            name: "Le Bon Tempérament",
+            image:
+              "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+            url: process.env.NEXT_PUBLIC_BASE_URL,
+            telephone: "+33-09-52-39-57-89",
+            email: "lebontemperament@gmail.com",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "3 Rue Clemenceau",
+              addressLocality: "Saverne",
+              addressRegion: "Alsace",
+              postalCode: "67700",
+              addressCountry: "FR",
+            },
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: "48.7417",
+              longitude: "7.3622",
+            },
+            priceRange: "€€",
+          }),
+        }}
+      />
     </div>
   );
 };

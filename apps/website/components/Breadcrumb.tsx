@@ -55,35 +55,64 @@ const Breadcrumb = () => {
 
   const breadcrumbs = generateBreadcrumbs();
 
+  // Generate breadcrumb schema
+  const generateBreadcrumbSchema = (breadcrumbs: BreadcrumbItem[]) => {
+    const baseUrl =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_BASE_URL ||
+          "https://www.lebontemperament.com";
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumbs.map((crumb, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: crumb.label,
+        item: `${baseUrl}${crumb.href}`,
+      })),
+    };
+  };
+
   return (
-    <nav aria-label="Fil d'Ariane" className="bg-gray-50 px-8 py-4 lg:px-24">
-      <ol className="flex items-center space-x-2 text-sm">
-        {breadcrumbs.map((breadcrumb, index) => (
-          <li key={breadcrumb.href} className="flex items-center">
-            {index > 0 && (
-              <IoChevronForward
-                className="mx-2 text-gray-400"
-                size={16}
-                aria-hidden="true"
-              />
-            )}
-            {breadcrumb.current ? (
-              <span className="font-medium text-gray-600" aria-current="page">
-                {breadcrumb.label}
-              </span>
-            ) : (
-              <Link
-                href={breadcrumb.href}
-                className="text-gray-500 transition-colors hover:text-gray-700"
-                aria-label={`Aller à ${breadcrumb.label}`}
-              >
-                {breadcrumb.label}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <>
+      {typeof window !== "undefined" && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(generateBreadcrumbSchema(breadcrumbs)),
+          }}
+        />
+      )}
+      <nav aria-label="Fil d'Ariane" className="bg-gray-50 px-8 py-4 lg:px-24">
+        <ol className="flex items-center space-x-2 text-sm">
+          {breadcrumbs.map((breadcrumb, index) => (
+            <li key={breadcrumb.href} className="flex items-center">
+              {index > 0 && (
+                <IoChevronForward
+                  className="mx-2 text-gray-400"
+                  size={16}
+                  aria-hidden="true"
+                />
+              )}
+              {breadcrumb.current ? (
+                <span className="font-medium text-gray-600" aria-current="page">
+                  {breadcrumb.label}
+                </span>
+              ) : (
+                <Link
+                  href={breadcrumb.href}
+                  className="text-gray-500 transition-colors hover:text-gray-700"
+                  aria-label={`Aller à ${breadcrumb.label}`}
+                >
+                  {breadcrumb.label}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </>
   );
 };
 
