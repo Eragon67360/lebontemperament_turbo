@@ -59,6 +59,19 @@ const Contact = () => {
           >
             (+33) 09 52 39 57 89
           </a>
+          <h3 className="text-foreground mt-8 font-bold">
+            Questions fréquentes
+          </h3>
+          <p className="text-foreground mb-2">
+            Vous avez des questions? Consultez notre{" "}
+            <a
+              href="/faq"
+              className="text-primary hover:underline font-medium"
+            >
+              page de questions fréquentes
+            </a>
+            .
+          </p>
         </div>
 
         <div className="ml-[178px] hidden w-1/2 flex-wrap lg:flex">
