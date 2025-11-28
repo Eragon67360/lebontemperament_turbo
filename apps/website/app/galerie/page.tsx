@@ -8,11 +8,11 @@ import Link from "next/link";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 export const metadata: Metadata = {
-  title: "Galerie",
+  title: "Galerie - Photos et Vidéos | Le Bon Tempérament",
   description:
-    "Explorez la galerie de Le Bon Tempérament pour une immersion dans nos moments musicaux les plus mémorables. Photos et vidéos de concerts, événements et répétitions, témoignant de notre passion pour la musique.",
+    "Galerie photos et vidéos de Le Bon Tempérament : concerts, événements et répétitions. Découvrez nos performances musicales à Saverne et en Alsace.",
   keywords:
-    " Galerie Le Bon Tempérament, photos musique, vidéos concerts, événements musique française, moments musicaux",
+    "galerie Le Bon Tempérament, photos concerts musique classique, vidéos ensemble vocal Saverne, galerie photos musique Alsace",
   openGraph: {
     type: "website",
     locale: "fr_FR",
