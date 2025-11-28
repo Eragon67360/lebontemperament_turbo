@@ -80,6 +80,13 @@ const Footer = () => {
             >
               Contact
             </Link>
+            <Link
+              href={"/faq"}
+              aria-label="Aller à la page Questions fréquentes"
+              className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
+            >
+              FAQ
+            </Link>
           </nav>
 
           {/* Contact Information */}
