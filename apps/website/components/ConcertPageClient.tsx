@@ -12,22 +12,30 @@ import { fr } from "date-fns/locale";
 import {
   IoCalendarClear,
   IoCamera,
+  IoHelpCircle,
+  IoLocationSharp,
   IoLogoFacebook,
   IoLogoLinkedin,
   IoLogoTwitter,
   IoLogoWhatsapp,
+  IoMusicalNotes,
   IoNewspaper,
   IoPencil,
   IoShareSocial,
+  IoTicket,
   IoTime,
 } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 
 interface ConcertPageClientProps {
   project: ConcertProject;
+  relatedProjects?: ConcertProject[];
 }
 
-const ConcertPageClient: React.FC<ConcertPageClientProps> = ({ project }) => {
+const ConcertPageClient: React.FC<ConcertPageClientProps> = ({
+  project,
+  relatedProjects = [],
+}) => {
   const hasText1 = project.text1 && project.text1.trim().length > 0;
   const hasText2 = project.text2 && project.text2.trim().length > 0;
   const hasImage2 =
@@ -65,6 +73,16 @@ const ConcertPageClient: React.FC<ConcertPageClientProps> = ({ project }) => {
   };
 
   const readTime = calculateReadTime();
+
+  // Check if concert is in the past
+  const isPastConcert = () => {
+    const concertDate = new Date(project.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return concertDate < today;
+  };
+
+  const isPast = isPastConcert();
 
   // Construct the share URL using the project slug
   const shareUrl =
@@ -234,6 +252,381 @@ const ConcertPageClient: React.FC<ConcertPageClientProps> = ({ project }) => {
                 <div className="sr-only" role="status" aria-live="polite">
                   Aucun contenu textuel disponible pour ce concert.
                 </div>
+              )}
+
+              {/* Informations pratiques - Q&A Section */}
+              <MotionSection
+                className="bg-default-50 border-divider mt-12 flex flex-col gap-6 rounded-xl border p-8"
+                dataTestId="practical-info"
+                delay={0.3}
+              >
+                <h2 className="text-foreground mb-4 flex items-center gap-3 text-2xl font-semibold">
+                  <IoHelpCircle className="text-primary text-3xl" />
+                  Informations pratiques
+                </h2>
+                <div
+                  className="space-y-6"
+                  itemScope
+                  itemType="https://schema.org/FAQPage"
+                >
+                  {/* Question 1: Quand */}
+                  <div
+                    className="border-divider bg-background rounded-lg border p-6"
+                    itemScope
+                    itemType="https://schema.org/Question"
+                  >
+                    <h3
+                      className="text-foreground mb-3 flex items-center gap-2 text-lg font-semibold"
+                      itemProp="name"
+                    >
+                      <IoCalendarClear className="text-primary shrink-0" />
+                      {isPast
+                        ? "Quand a eu lieu ce concert?"
+                        : "Quand a lieu ce concert?"}
+                    </h3>
+                    <div
+                      className="text-default-600 dark:text-default-400 text-base leading-relaxed"
+                      itemScope
+                      itemType="https://schema.org/Answer"
+                      itemProp="acceptedAnswer"
+                    >
+                      <p itemProp="text">
+                        {isPast ? (
+                          <>
+                            Ce concert a eu lieu le{" "}
+                            <strong className="text-foreground font-semibold">
+                              {format(new Date(project.date), "d MMMM yyyy", {
+                                locale: fr,
+                              })}
+                            </strong>
+                            . Pour découvrir nos prochains concerts, consultez
+                            notre{" "}
+                            <Link
+                              href="/concerts"
+                              className="text-primary font-medium hover:underline"
+                            >
+                              page concerts
+                            </Link>{" "}
+                            ou{" "}
+                            <Link
+                              href="/contact"
+                              className="text-primary font-medium hover:underline"
+                            >
+                              contactez-nous
+                            </Link>{" "}
+                            pour être informé de nos prochaines dates.
+                          </>
+                        ) : (
+                          <>
+                            Ce concert aura lieu le{" "}
+                            <strong className="text-foreground font-semibold">
+                              {format(new Date(project.date), "d MMMM yyyy", {
+                                locale: fr,
+                              })}
+                            </strong>
+                            . Pour connaître l&apos;heure exacte et les détails
+                            du programme, nous vous invitons à{" "}
+                            <Link
+                              href="/contact"
+                              className="text-primary font-medium hover:underline"
+                            >
+                              nous contacter
+                            </Link>{" "}
+                            ou à consulter notre{" "}
+                            <Link
+                              href="/concerts"
+                              className="text-primary font-medium hover:underline"
+                            >
+                              page concerts
+                            </Link>{" "}
+                            pour les dernières informations.
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Question 2: Où */}
+                  <div
+                    className="border-divider bg-background hidden rounded-lg border p-6"
+                    itemScope
+                    itemType="https://schema.org/Question"
+                  >
+                    <h3
+                      className="text-foreground mb-3 flex items-center gap-2 text-lg font-semibold"
+                      itemProp="name"
+                    >
+                      <IoLocationSharp className="text-primary shrink-0" />
+                      {isPast
+                        ? "Où s'est déroulé ce concert?"
+                        : "Où se déroule le concert?"}
+                    </h3>
+                    <div
+                      className="text-default-600 dark:text-default-400 text-base leading-relaxed"
+                      itemScope
+                      itemType="https://schema.org/Answer"
+                      itemProp="acceptedAnswer"
+                    >
+                      <p itemProp="text">
+                        {isPast ? (
+                          <>
+                            Ce concert s&apos;est déroulé à{" "}
+                            <strong className="text-foreground font-semibold">
+                              Saverne ou dans la région Alsace
+                            </strong>
+                            . Le Bon Tempérament organise ses concerts
+                            principalement dans cette région, mais peut
+                            également se produire dans d&apos;autres régions de
+                            France lors de tournées. Nos concerts peuvent avoir
+                            lieu dans des églises, des salles de spectacle, ou
+                            lors de festivals. Pour connaître les lieux de nos
+                            prochains concerts, consultez notre{" "}
+                            <Link
+                              href="/concerts"
+                              className="text-primary font-medium hover:underline"
+                            >
+                              page concerts
+                            </Link>{" "}
+                            ou{" "}
+                            <Link
+                              href="/contact"
+                              className="text-primary font-medium hover:underline"
+                            >
+                              contactez-nous
+                            </Link>
+                            .
+                          </>
+                        ) : (
+                          <>
+                            Nos concerts se déroulent principalement à{" "}
+                            <strong className="text-foreground font-semibold">
+                              Saverne et dans la région Alsace
+                            </strong>
+                            . Le lieu exact de ce concert sera indiqué sur
+                            l&apos;affiche du concert et communiqué lors de la
+                            réservation. Certains concerts peuvent également
+                            avoir lieu dans des églises, des salles de
+                            spectacle, ou lors de festivals. Pour connaître le
+                            lieu précis, contactez-nous ou consultez notre page
+                            concerts.
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Question 3: Comment réserver / En savoir plus */}
+                  <div
+                    className="border-divider bg-background rounded-lg border p-6"
+                    itemScope
+                    itemType="https://schema.org/Question"
+                  >
+                    <h3
+                      className="text-foreground mb-3 flex items-center gap-2 text-lg font-semibold"
+                      itemProp="name"
+                    >
+                      <IoTicket className="text-primary shrink-0" />
+                      {isPast
+                        ? "Où puis-je en savoir plus sur ce concert?"
+                        : "Comment réserver?"}
+                    </h3>
+                    <div
+                      className="text-default-600 dark:text-default-400 text-base leading-relaxed"
+                      itemScope
+                      itemType="https://schema.org/Answer"
+                      itemProp="acceptedAnswer"
+                    >
+                      {isPast ? (
+                        <p itemProp="text">
+                          Pour en savoir plus sur ce concert passé, vous pouvez
+                          consulter les détails sur cette page. Si vous
+                          souhaitez découvrir nos prochains concerts et
+                          événements, n&apos;hésitez pas à{" "}
+                          <Link
+                            href="/contact"
+                            className="text-primary font-medium hover:underline"
+                          >
+                            nous contacter
+                          </Link>{" "}
+                          ou à consulter notre{" "}
+                          <Link
+                            href="/concerts"
+                            className="text-primary font-medium hover:underline"
+                          >
+                            page concerts
+                          </Link>{" "}
+                          pour connaître nos prochaines dates. Vous pouvez
+                          également consulter notre{" "}
+                          <Link
+                            href="/galerie"
+                            className="text-primary font-medium hover:underline"
+                          >
+                            galerie
+                          </Link>{" "}
+                          pour voir des photos et vidéos de nos concerts.
+                        </p>
+                      ) : (
+                        <>
+                          <p itemProp="text" className="mb-3">
+                            Pour réserver votre place, vous pouvez :
+                          </p>
+                          <ul className="text-default-600 dark:text-default-400 ml-6 list-disc space-y-2">
+                            <li>
+                              Nous{" "}
+                              <Link
+                                href="/contact"
+                                className="text-primary font-medium hover:underline"
+                              >
+                                contacter par email
+                              </Link>{" "}
+                              à lebontemperament@gmail.com
+                            </li>
+                            <li>
+                              Nous appeler au{" "}
+                              <a
+                                href="tel:+33952395789"
+                                className="text-primary font-medium hover:underline"
+                              >
+                                (+33) 09 52 39 57 89
+                              </a>
+                            </li>
+                            <li>
+                              Consulter les informations sur l&apos;affiche du
+                              concert pour les modalités de réservation
+                              spécifiques
+                            </li>
+                          </ul>
+                          <p itemProp="text" className="mt-3">
+                            Les tarifs et modalités de réservation varient selon
+                            les concerts. Certains événements sont gratuits,
+                            d&apos;autres nécessitent une réservation avec un
+                            tarif d&apos;entrée.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Question 4: Programme */}
+                  <div
+                    className="border-divider bg-background rounded-lg border p-6"
+                    itemScope
+                    itemType="https://schema.org/Question"
+                  >
+                    <h3
+                      className="text-foreground mb-3 flex items-center gap-2 text-lg font-semibold"
+                      itemProp="name"
+                    >
+                      <IoTime className="text-primary shrink-0" />
+                      {isPast
+                        ? "Quel était le programme de ce concert?"
+                        : "Quel est le programme de ce concert?"}
+                    </h3>
+                    <div
+                      className="text-default-600 dark:text-default-400 text-base leading-relaxed"
+                      itemScope
+                      itemType="https://schema.org/Answer"
+                      itemProp="acceptedAnswer"
+                    >
+                      <p itemProp="text" className="mb-3">
+                        {project.explanation ? (
+                          <>
+                            <strong className="text-foreground font-semibold">
+                              {project.name} {project.subName}
+                            </strong>{" "}
+                            : {project.explanation}
+                          </>
+                        ) : (
+                          <>
+                            {isPast
+                              ? "Le programme de ce concert passé est détaillé ci-dessus. "
+                              : "Le programme détaillé de ce concert sera disponible prochainement. "}
+                            Pour plus d&apos;informations sur le répertoire et
+                            les œuvres interprétées, n&apos;hésitez pas à{" "}
+                            <Link
+                              href="/contact"
+                              className="text-primary font-medium hover:underline"
+                            >
+                              nous contacter
+                            </Link>
+                            .
+                          </>
+                        )}
+                      </p>
+                      {project.explanation && (
+                        <p itemProp="text" className="mt-3">
+                          {isPast ? (
+                            <>
+                              Ce concert faisait partie du répertoire varié du
+                              Bon Tempérament, allant de la musique classique
+                              sacrée et profane à des pièces populaires et
+                              folkloriques, couvrant une large période musicale
+                              de la Renaissance à nos jours. Pour découvrir nos
+                              prochains concerts, consultez notre{" "}
+                              <Link
+                                href="/concerts"
+                                className="text-primary font-medium hover:underline"
+                              >
+                                page concerts
+                              </Link>
+                              .
+                            </>
+                          ) : (
+                            <>
+                              Le Bon Tempérament interprète un répertoire varié
+                              allant de la musique classique sacrée et profane à
+                              des pièces populaires et folkloriques, couvrant
+                              une large période musicale de la Renaissance à nos
+                              jours.
+                            </>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </MotionSection>
+
+              {/* Related Projects Section - Only show if there are related projects */}
+              {relatedProjects.length > 0 && (
+                <MotionSection
+                  className="mt-12 flex flex-col gap-6"
+                  dataTestId="related-projects"
+                  delay={0.4}
+                >
+                  <h2 className="text-foreground mb-4 flex items-center gap-3 text-2xl font-semibold">
+                    <IoMusicalNotes className="text-primary text-3xl" />
+                    Concerts similaires
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {relatedProjects.map((relatedProject) => (
+                      <Link
+                        key={relatedProject.slug}
+                        href={`/concerts/${relatedProject.slug}`}
+                        className="group border-divider bg-default-50 hover:bg-default-100 flex flex-col rounded-lg border p-6 transition-all duration-300 hover:shadow-md"
+                      >
+                        <h3 className="group-hover:text-primary text-foreground mb-2 line-clamp-2 text-lg font-semibold transition-colors">
+                          {relatedProject.name} {relatedProject.subName}
+                        </h3>
+                        <p className="text-default-600 dark:text-default-400 mb-3 line-clamp-2 text-sm">
+                          {relatedProject.explanation}
+                        </p>
+                        <div className="text-default-500 mt-auto flex items-center gap-2 text-xs">
+                          <IoCalendarClear className="text-primary shrink-0" />
+                          <span>
+                            {format(
+                              new Date(relatedProject.date),
+                              "d MMMM yyyy",
+                              {
+                                locale: fr,
+                              },
+                            )}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </MotionSection>
               )}
             </div>
 

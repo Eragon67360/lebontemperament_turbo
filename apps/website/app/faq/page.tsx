@@ -127,7 +127,7 @@ export default function FAQPage() {
             votre question, n&apos;hésitez pas à{" "}
             <Link
               href="/contact"
-              className="text-primary hover:underline font-medium"
+              className="text-primary font-medium hover:underline"
             >
               nous contacter
             </Link>

@@ -64,10 +64,7 @@ const Contact = () => {
           </h3>
           <p className="text-foreground mb-2">
             Vous avez des questions? Consultez notre{" "}
-            <a
-              href="/faq"
-              className="text-primary hover:underline font-medium"
-            >
+            <a href="/faq" className="text-primary font-medium hover:underline">
               page de questions fréquentes
             </a>
             .
