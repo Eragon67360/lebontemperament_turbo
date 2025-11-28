@@ -115,6 +115,16 @@
     height: 1px;
     overflow: hidden;
   }
+
+  /* Hide scrollbar while maintaining scroll functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @theme {
@@ -261,7 +271,6 @@ button {
 
 /* Prose styles for better typography and accessibility */
 .prose {
-  color: oklch(0.145 0 0);
   line-height: 1.75;
 }
 
@@ -271,7 +280,6 @@ button {
 .prose h4,
 .prose h5,
 .prose h6 {
-  color: oklch(0.145 0 0);
   font-weight: 600;
   line-height: 1.25;
   margin-top: 1.5em;
@@ -308,7 +316,6 @@ button {
 
 .prose strong {
   font-weight: 600;
-  color: oklch(0.145 0 0);
 }
 
 .prose em {

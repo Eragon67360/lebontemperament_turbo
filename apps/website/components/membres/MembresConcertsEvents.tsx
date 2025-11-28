@@ -5,6 +5,7 @@ import { Concert } from "@/types/concerts";
 import { Event } from "@/types/events";
 import { format, isAfter, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { IoCalendarClear, IoLocationSharp, IoTime } from "react-icons/io5";
 import { MdOpenInNew } from "react-icons/md";
@@ -106,32 +107,48 @@ const MembresConcertsEvents = () => {
     subtitle: string;
     title: string;
   }) => (
-    <div className="mb-6">
-      <p className="text-default-500 text-sm">{subtitle}</p>
-      <h2 className="text-foreground text-xl font-semibold">{title}</h2>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="mb-6"
+    >
+      <p className="text-foreground/60 text-sm md:text-base">{subtitle}</p>
+      <h2 className="from-primary via-foreground mt-1 bg-gradient-to-r to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl">
+        {title}
+      </h2>
+    </motion.div>
   );
 
   const LoadingCard = () => (
-    <div className="bg-content1 animate-pulse rounded-lg p-4 shadow-md">
-      <div className="bg-default-200 mb-4 h-6 w-3/4 rounded"></div>
+    <div className="bg-default-100/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
+      <div className="bg-default-200/80 mb-4 h-6 w-3/4 rounded-lg"></div>
       <div className="space-y-3">
-        <div className="bg-default-200 h-4 w-1/2 rounded"></div>
-        <div className="bg-default-200 h-4 w-2/3 rounded"></div>
-        <div className="bg-default-200 h-4 w-3/4 rounded"></div>
+        <div className="bg-default-200/80 h-4 w-1/2 rounded-lg"></div>
+        <div className="bg-default-200/80 h-4 w-2/3 rounded-lg"></div>
+        <div className="bg-default-200/80 h-4 w-3/4 rounded-lg"></div>
       </div>
     </div>
   );
 
   return (
-    <div className="container mx-auto flex w-full flex-col space-y-8 p-2 md:p-4 lg:p-6">
+    <div className="container mx-auto flex w-full flex-col space-y-8 px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">
       {/* Concerts Section */}
-      <section className="bg-content1 rounded-xl p-4 shadow-sm md:p-4 lg:p-6">
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="rounded-xl"
+      >
         <SectionTitle subtitle="Agenda" title="Prochains concerts" />
         {!loading && concerts.length === 0 && (
-          <div className="text-default-500 py-8 text-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-foreground/60 bg-default-100/80 rounded-xl py-12 text-center backdrop-blur-sm"
+          >
             Aucun concert à venir pour le moment.
-          </div>
+          </motion.div>
         )}
         {loading ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -142,55 +159,71 @@ const MembresConcertsEvents = () => {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {concerts.map((concert, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="hover:border-primary/20 border-divider bg-content2 rounded-lg border p-4 transition-all duration-300"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="group relative overflow-hidden rounded-xl"
               >
-                <h3 className="text-foreground mb-3 text-base font-medium">
-                  {concert.name ||
-                    `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
-                </h3>
+                <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
+                  <h3 className="text-foreground mb-4 text-lg font-bold">
+                    {concert.name ||
+                      `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
+                  </h3>
 
-                <div className="text-default-600 space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <IoCalendarClear className="text-primary h-4 w-4" />
-                    <span>
-                      {format(new Date(concert.date), "dd MMM yyyy", {
-                        locale: fr,
-                      })}
+                  <div className="text-foreground/70 space-y-3 text-sm md:text-base">
+                    <div className="flex items-center gap-3">
+                      <IoCalendarClear className="text-primary h-5 w-5" />
+                      <span>
+                        {format(new Date(concert.date), "dd MMM yyyy", {
+                          locale: fr,
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <IoTime className="text-primary h-5 w-5" />
+                      <span>{concert.time.slice(0, 5).replace(":", "h")}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <IoLocationSharp className="text-primary h-5 w-5" />
+                      <span>{concert.place}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <span className="from-primary/20 text-primary inline-block rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-semibold md:text-sm">
+                      {concert.context === "orchestre_et_choeur"
+                        ? "Orchestre et Chœur"
+                        : concert.context.charAt(0).toUpperCase() +
+                          concert.context.slice(1)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <IoTime className="text-primary h-4 w-4" />
-                    <span>{concert.time.slice(0, 5).replace(":", "h")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <IoLocationSharp className="text-primary h-4 w-4" />
-                    <span>{concert.place}</span>
-                  </div>
                 </div>
-
-                <div className="mt-3">
-                  <span className="bg-primary/10 text-primary inline-block rounded-md px-2 py-1 text-xs font-medium">
-                    {concert.context === "orchestre_et_choeur"
-                      ? "Orchestre et Chœur"
-                      : concert.context.charAt(0).toUpperCase() +
-                        concert.context.slice(1)}
-                  </span>
-                </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* Events Section */}
-      <section className="bg-content1 rounded-xl p-4 shadow-sm md:p-4 lg:p-6">
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="rounded-xl"
+      >
         <SectionTitle subtitle="Calendrier" title="Événements à venir" />
         {!loading && events.length === 0 && (
-          <div className="text-default-500 py-8 text-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-foreground/60 bg-default-100/80 rounded-xl py-12 text-center backdrop-blur-sm"
+          >
             Aucun événement à venir pour le moment.
-          </div>
+          </motion.div>
         )}
         {loading ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -201,80 +234,95 @@ const MembresConcertsEvents = () => {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="hover:border-primary/20 border-divider bg-content2 rounded-lg border p-4 transition-all duration-300"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="group relative overflow-hidden rounded-xl"
               >
-                <div className="mb-3 flex items-start justify-between">
-                  <h3 className="text-foreground text-base font-medium">
-                    {event.title}
-                  </h3>
-                  <span
-                    className={`rounded-md px-2 py-1 text-xs font-medium ${getEventTypeColor(event.event_type)}`}
-                  >
-                    {getEventTypeLabel(event.event_type)}
-                  </span>
-                </div>
-
-                <div className="text-default-600 space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <IoCalendarClear className="text-primary h-4 w-4" />
-                    <span>{formatEventDate(event)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <IoTime className="text-primary h-4 w-4" />
-                    <span>{event.time.slice(0, 5).replace(":", "h")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <IoLocationSharp className="text-primary h-4 w-4" />
-                    <span>{event.location}</span>
-                  </div>
-                </div>
-
-                {event.description && (
-                  <p className="text-default-500 mt-2 text-xs">
-                    {event.description}
-                  </p>
-                )}
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {event.responsible_email && (
-                    <span className="bg-default-100 text-default-600 rounded-md px-2 py-1 text-xs">
-                      Contact:{" "}
-                      <a
-                        href={`mailto:${event.responsible_email}`}
-                        className="text-primary hover:underline"
-                      >
-                        {event.responsible_name || event.responsible_email}
-                      </a>
-                    </span>
-                  )}
-                  {event.link && (
-                    <a
-                      href={event.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="bg-default-100 text-default-600 hover:bg-default-200 flex items-center gap-1 rounded-md px-2 py-1 text-xs"
+                <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <h3 className="text-foreground flex-1 text-lg font-bold">
+                      {event.title}
+                    </h3>
+                    <span
+                      className={`rounded-lg px-2 py-1 text-xs font-medium whitespace-nowrap ${getEventTypeColor(event.event_type)}`}
                     >
-                      <span>Infos</span> <MdOpenInNew className="h-3 w-3" />
-                    </a>
+                      {getEventTypeLabel(event.event_type)}
+                    </span>
+                  </div>
+
+                  <div className="text-foreground/70 space-y-3 text-sm md:text-base">
+                    <div className="flex items-center gap-3">
+                      <IoCalendarClear className="text-primary h-5 w-5" />
+                      <span>{formatEventDate(event)}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <IoTime className="text-primary h-5 w-5" />
+                      <span>{event.time.slice(0, 5).replace(":", "h")}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <IoLocationSharp className="text-primary h-5 w-5" />
+                      <span>{event.location}</span>
+                    </div>
+                  </div>
+
+                  {event.description && (
+                    <p className="text-foreground/60 mt-3 text-sm">
+                      {event.description}
+                    </p>
                   )}
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {event.responsible_email && (
+                      <span className="bg-default-50/80 text-foreground/70 rounded-lg px-3 py-1.5 text-xs">
+                        Contact:{" "}
+                        <a
+                          href={`mailto:${event.responsible_email}`}
+                          className="text-primary font-medium hover:underline"
+                        >
+                          {event.responsible_name || event.responsible_email}
+                        </a>
+                      </span>
+                    )}
+                    {event.link && (
+                      <a
+                        href={event.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="from-primary/20 hover:from-primary/30 text-primary flex items-center gap-1 rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-medium transition-all hover:to-purple-500/30"
+                      >
+                        <span>Infos</span> <MdOpenInNew className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* Anniversary Concert Section */}
-      <section className="bg-content1 rounded-xl p-4 shadow-sm md:p-4 lg:p-6">
-        <SectionTitle subtitle="Archives" title="Concert Anniversaire" />
-        <p className="text-default-600 mb-6 text-sm">
-          Enregistrement du concert anniversaire pour les 20 ans du Bon
-          Tempérament
-        </p>
-        <MusicList />
-      </section>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+        className="group relative overflow-hidden rounded-xl"
+      >
+        <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6 lg:p-8">
+          <SectionTitle subtitle="Archives" title="Concert Anniversaire" />
+          <p className="text-foreground/70 mb-6 text-sm md:text-base">
+            Enregistrement du concert anniversaire pour les 20 ans du Bon
+            Tempérament
+          </p>
+          <MusicList />
+        </div>
+      </motion.section>
     </div>
   );
 };

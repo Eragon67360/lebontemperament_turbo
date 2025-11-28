@@ -37,7 +37,6 @@ const ConcertsClient = () => {
   const [rehearsals, setRehearsals] = useState<Array<Rehearsal>>([]);
   const [tours, setTours] = useState<Array<Tour>>([]);
   const [loading, setLoading] = useState(true);
-  const [showRehearsals, setShowRehearsals] = useState(true);
   const [selectedConcertImage, setSelectedConcertImage] = useState<
     string | null
   >(null);
@@ -51,19 +50,9 @@ const ConcertsClient = () => {
         | Dispatch<SetStateAction<Event[]>>
         | Dispatch<SetStateAction<Rehearsal[]>>
         | Dispatch<SetStateAction<Tour[]>>,
-      isRehearsalEndpoint = false,
     ) => {
       try {
         const response = await fetch(endpoint);
-        // If unauthorized (401), skip setting data without error
-        // This allows public users to view concerts without seeing rehearsals
-        if (response.status === 401) {
-          if (isRehearsalEndpoint) {
-            setShowRehearsals(false);
-          }
-          return;
-        }
-
         const data = await response.json();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -111,7 +100,7 @@ const ConcertsClient = () => {
 
     fetchData("/api/prochains-concerts", setConcerts);
     fetchData("/api/events", setEvents);
-    fetchData("/api/rehearsals", setRehearsals, true);
+    fetchData("/api/rehearsals", setRehearsals);
     fetchTours();
   }, []);
 
@@ -183,7 +172,7 @@ const ConcertsClient = () => {
                 <h3 className="text-foreground mb-3 text-center text-xl font-semibold sm:mb-4 sm:text-2xl">
                   Aucun concert à venir pour le moment
                 </h3>
-                <div className="text-default-600 w-full max-w-2xl space-y-3 text-center text-sm sm:space-y-4 sm:text-base">
+                <div className="text-default-600 dark:text-default-400 w-full max-w-2xl space-y-3 text-center text-sm sm:space-y-4 sm:text-base">
                   <p className="text-base sm:text-lg">
                     Ne vous inquiétez pas, les prochains concerts arriveront
                     très vite !
@@ -199,21 +188,16 @@ const ConcertsClient = () => {
                     >
                       suivre nos projets
                     </button>
-                    {showRehearsals && (
-                      <>
-                        , ou bien{" "}
-                        <button
-                          onClick={() => {
-                            const el =
-                              document.getElementById("rehearsals-title");
-                            if (el) el.scrollIntoView({ behavior: "smooth" });
-                          }}
-                          className="text-primary font-medium hover:underline"
-                        >
-                          voir quand sont nos prochaines répétitions
-                        </button>
-                      </>
-                    )}
+                    , ou bien{" "}
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById("rehearsals-title");
+                        if (el) el.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="text-primary font-medium hover:underline"
+                    >
+                      voir quand sont nos prochaines répétitions
+                    </button>
                     .
                   </p>
                   <p className="text-primary text-sm font-medium sm:text-base">
@@ -536,50 +520,55 @@ const ConcertsClient = () => {
               Nos projets
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {projects.map((projet) => (
-                <div
-                  className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
-                  key={projet.slug}
-                >
-                  <Link
-                    href={`/concerts/${projet.slug}`}
-                    className="relative block h-48 w-full"
+              {[...projects]
+                .sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime(),
+                )
+                .map((projet) => (
+                  <div
+                    className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
+                    key={projet.slug}
                   >
-                    <CloudinaryImage
-                      src={projet.banniere}
-                      alt={`Image bannière ${projet.name} ${projet.subName}`}
-                      className="h-full w-full object-cover object-left"
-                      width={1000}
-                      height={500}
-                      rounded={RoundedSize.NONE}
-                    />
-                  </Link>
-                  <div className="flex flex-1 flex-col gap-4 p-4">
-                    <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
-                      {projet.name} {projet.subName}
-                    </h3>
-                    <p
-                      className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light"
-                      dangerouslySetInnerHTML={{ __html: projet.explanation }}
-                    ></p>
-                    <div className="flex">
-                      <Button
-                        as={Link}
-                        href={`/concerts/${projet.slug}`}
-                        aria-label={`Lien vers ${projet.name} ${projet.subName}`}
-                        color="primary"
-                        variant="light"
-                        radius="sm"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        <span>Voir plus</span>
-                        <IoIosArrowRoundForward className="scale-110" />
-                      </Button>
+                    <Link
+                      href={`/concerts/${projet.slug}`}
+                      className="relative block h-48 w-full"
+                    >
+                      <CloudinaryImage
+                        src={projet.banniere.url}
+                        alt={`Image bannière ${projet.name} ${projet.subName}`}
+                        className="h-full w-full object-cover object-left"
+                        width={1000}
+                        height={500}
+                        rounded={RoundedSize.NONE}
+                      />
+                    </Link>
+                    <div className="flex flex-1 flex-col gap-4 p-4">
+                      <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
+                        {projet.name} {projet.subName}
+                      </h3>
+                      <p
+                        className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light"
+                        dangerouslySetInnerHTML={{ __html: projet.explanation }}
+                      ></p>
+                      <div className="flex">
+                        <Button
+                          as={Link}
+                          href={`/concerts/${projet.slug}`}
+                          aria-label={`Lien vers ${projet.name} ${projet.subName}`}
+                          color="primary"
+                          variant="light"
+                          radius="sm"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <span>Voir plus</span>
+                          <IoIosArrowRoundForward className="scale-110" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
               <div className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md">
                 <Link
                   href={`/concerts/autres`}
@@ -731,90 +720,79 @@ const ConcertsClient = () => {
           </section>
 
           {/* Rehearsals Section */}
-          {showRehearsals && (
-            <section
-              className="bg-default-50 mb-8 w-full p-8"
-              aria-labelledby="rehearsals-title"
+          <section
+            className="bg-default-50 mb-8 w-full p-8"
+            aria-labelledby="rehearsals-title"
+          >
+            <h2
+              id="rehearsals-title"
+              className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
             >
-              <h2
-                id="rehearsals-title"
-                className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
-              >
-                Prochaines répétitions
-              </h2>
+              Prochaines répétitions
+            </h2>
 
-              {loading ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="bg-default-100 space-y-3 rounded-lg p-4">
-                        <div className="bg-default-200 h-4 w-3/4 rounded"></div>
-                        <div className="bg-default-200 h-4 w-1/2 rounded"></div>
-                        <div className="bg-default-200 h-4 w-2/3 rounded"></div>
-                      </div>
+            {loading ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-default-100 space-y-3 rounded-lg p-4">
+                      <div className="bg-default-200 h-4 w-3/4 rounded"></div>
+                      <div className="bg-default-200 h-4 w-1/2 rounded"></div>
+                      <div className="bg-default-200 h-4 w-2/3 rounded"></div>
                     </div>
-                  ))}
-                </div>
-              ) : rehearsals.length === 0 ? (
-                <div className="text-default-500 py-8 text-center">
-                  Aucune répétition à venir
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {rehearsals.map((rehearsal) => (
-                    <div
-                      key={rehearsal.id}
-                      className="border-divider bg-background overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
-                    >
-                      <div className="space-y-3 p-4">
-                        <div className="flex items-start justify-between">
-                          <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
-                            {rehearsal.name}
-                          </h4>
-                          <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
-                            {rehearsal.group_type}
+                  </div>
+                ))}
+              </div>
+            ) : rehearsals.length === 0 ? (
+              <div className="text-default-500 py-8 text-center">
+                Aucune répétition à venir
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {rehearsals.map((rehearsal) => (
+                  <div
+                    key={rehearsal.id}
+                    className="border-divider bg-background overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
+                  >
+                    <div className="space-y-3 p-4">
+                      <div className="flex items-start justify-between">
+                        <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
+                          {rehearsal.name}
+                        </h4>
+                        <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-xs font-medium">
+                          {rehearsal.group_type}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2">
+                          <IoCalendarClear className="text-primary" />
+                          <span>
+                            {format(new Date(rehearsal.date), "dd MMMM yyyy", {
+                              locale: fr,
+                            })}
                           </span>
                         </div>
 
-                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                          <div className="flex items-center gap-2">
-                            <IoCalendarClear className="text-primary" />
-                            <span>
-                              {format(
-                                new Date(rehearsal.date),
-                                "dd MMMM yyyy",
-                                {
-                                  locale: fr,
-                                },
-                              )}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <IoTime className="text-primary" />
+                          <span>
+                            {rehearsal.start_time.slice(0, 5).replace(":", "h")}{" "}
+                            -{rehearsal.end_time.slice(0, 5).replace(":", "h")}
+                          </span>
+                        </div>
 
-                          <div className="flex items-center gap-2">
-                            <IoTime className="text-primary" />
-                            <span>
-                              {rehearsal.start_time
-                                .slice(0, 5)
-                                .replace(":", "h")}{" "}
-                              -
-                              {rehearsal.end_time.slice(0, 5).replace(":", "h")}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <IoLocationSharp className="text-primary" />
-                            <span className="font-medium">
-                              {rehearsal.place}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <IoLocationSharp className="text-primary" />
+                          <span className="font-medium">{rehearsal.place}</span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
 
         <Modal isOpen={isOpen} onOpenChange={onOpenChange}>

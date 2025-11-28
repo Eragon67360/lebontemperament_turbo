@@ -26,6 +26,7 @@ import {
   MessageCircle,
   Music,
   Users,
+  Video,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -105,16 +106,22 @@ export default function Sidebar({
           href: "/dashboard/public/projets",
           label: "Projets",
           icon: <LayoutDashboard className="h-4 w-4" />,
-          visible: true,
+          visible: false,
         },
         {
           href: "/dashboard/public/gallery",
           label: "Médias",
           icon: <ImageIcon className="h-4 w-4" />,
+          visible: false,
+        },
+        {
+          href: "/dashboard/public/gallery/videos",
+          label: "Vidéos",
+          icon: <Video className="h-4 w-4" />,
           visible: true,
         },
       ],
-      visible: false,
+      visible: true,
     },
     {
       label: "Concerts & Événements",
