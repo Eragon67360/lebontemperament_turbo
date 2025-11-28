@@ -1,6 +1,6 @@
 import ConcertPageClient from "@/components/ConcertPageClient";
 import projects from "@/public/json/projects.json";
-import { Project } from "@/types/projects";
+import { ConcertProject } from "@/types/projects";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IoIosArrowRoundBack } from "react-icons/io";
@@ -51,7 +51,7 @@ export async function generateMetadata({
 }
 
 // Generate structured data for events
-function generateStructuredData(project: Project, slug: string) {
+function generateStructuredData(project: ConcertProject, slug: string) {
   const eventSchema = {
     "@context": "https://schema.org",
     "@type": "MusicEvent",
@@ -96,15 +96,17 @@ export default async function ConcertPage({
 
   if (!project) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 px-4 text-center">
-        <h1 className="text-4xl font-bold text-gray-800">Concert non trouvé</h1>
-        <p className="mt-4 text-lg text-gray-600">
+      <div className="dark:bg-background flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
+        <h1 className="text-foreground text-4xl font-bold">
+          Concert non trouvé
+        </h1>
+        <p className="text-default-600 dark:text-default-400 mt-4 text-lg">
           Désolé, le concert que vous recherchez n&apos;existe pas ou n&apos;est
           plus disponible.
         </p>
         <Link
           href="/concerts"
-          className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white"
+          className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
         >
           <IoIosArrowRoundBack className="text-xl" />
           Retourner aux concerts
