@@ -536,50 +536,55 @@ const ConcertsClient = () => {
               Nos projets
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {projects.map((projet) => (
-                <div
-                  className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
-                  key={projet.slug}
-                >
-                  <Link
-                    href={`/concerts/${projet.slug}`}
-                    className="relative block h-48 w-full"
+              {[...projects]
+                .sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime(),
+                )
+                .map((projet) => (
+                  <div
+                    className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md"
+                    key={projet.slug}
                   >
-                    <CloudinaryImage
-                      src={projet.banniere}
-                      alt={`Image bannière ${projet.name} ${projet.subName}`}
-                      className="h-full w-full object-cover object-left"
-                      width={1000}
-                      height={500}
-                      rounded={RoundedSize.NONE}
-                    />
-                  </Link>
-                  <div className="flex flex-1 flex-col gap-4 p-4">
-                    <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
-                      {projet.name} {projet.subName}
-                    </h3>
-                    <p
-                      className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light"
-                      dangerouslySetInnerHTML={{ __html: projet.explanation }}
-                    ></p>
-                    <div className="flex">
-                      <Button
-                        as={Link}
-                        href={`/concerts/${projet.slug}`}
-                        aria-label={`Lien vers ${projet.name} ${projet.subName}`}
-                        color="primary"
-                        variant="light"
-                        radius="sm"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        <span>Voir plus</span>
-                        <IoIosArrowRoundForward className="scale-110" />
-                      </Button>
+                    <Link
+                      href={`/concerts/${projet.slug}`}
+                      className="relative block h-48 w-full"
+                    >
+                      <CloudinaryImage
+                        src={projet.banniere}
+                        alt={`Image bannière ${projet.name} ${projet.subName}`}
+                        className="h-full w-full object-cover object-left"
+                        width={1000}
+                        height={500}
+                        rounded={RoundedSize.NONE}
+                      />
+                    </Link>
+                    <div className="flex flex-1 flex-col gap-4 p-4">
+                      <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
+                        {projet.name} {projet.subName}
+                      </h3>
+                      <p
+                        className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light"
+                        dangerouslySetInnerHTML={{ __html: projet.explanation }}
+                      ></p>
+                      <div className="flex">
+                        <Button
+                          as={Link}
+                          href={`/concerts/${projet.slug}`}
+                          aria-label={`Lien vers ${projet.name} ${projet.subName}`}
+                          color="primary"
+                          variant="light"
+                          radius="sm"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <span>Voir plus</span>
+                          <IoIosArrowRoundForward className="scale-110" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
               <div className="border-divider bg-background flex flex-col overflow-hidden rounded-lg border shadow-none transition-all duration-300 hover:shadow-md">
                 <Link
                   href={`/concerts/autres`}
