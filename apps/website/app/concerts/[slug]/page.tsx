@@ -5,6 +5,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IoIosArrowRoundBack } from "react-icons/io";
 
+export async function generateStaticParams() {
+  const projectsData = await import("@/public/json/projects.json");
+  return projectsData.default.map((project: { slug: string }) => ({
+    slug: project.slug,
+  }));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -80,6 +87,18 @@ function generateStructuredData(project: ConcertProject, slug: string) {
         addressLocality: "Saverne",
         addressCountry: "FR",
       },
+    },
+    offers: {
+      "@type": "Offer",
+      availability: "https://schema.org/InStock",
+      price: "0",
+      priceCurrency: "EUR",
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}/contact`,
+    },
+    keywords: "musique classique, opéra, baroque, concert, Saverne, Alsace",
+    audience: {
+      "@type": "Audience",
+      audienceType: "Tous publics",
     },
   };
 

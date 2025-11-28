@@ -193,6 +193,49 @@ export default function RootLayout({
         </Providers>
         <GoogleAnalytics gaId="G-J893T7P26M" />
         <GoogleTagManager gtmId="G-J893T7P26M" />
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#organization`,
+              name: "Le Bon Tempérament",
+              alternateName: "BT",
+              url: process.env.NEXT_PUBLIC_BASE_URL,
+              logo: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+              description:
+                "Ensemble vocal et instrumental renommé à Saverne, France, depuis 1987",
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: "3 Rue Clemenceau",
+                addressLocality: "Saverne",
+                postalCode: "67700",
+                addressCountry: "FR",
+              },
+              contactPoint: {
+                "@type": "ContactPoint",
+                telephone: "+33-09-52-39-57-89",
+                contactType: "customer service",
+                email: "lebontemperament@gmail.com",
+                areaServed: "FR",
+                availableLanguage: "fr",
+              },
+              sameAs: [
+                "https://www.facebook.com/p/Le-Bon-Temp%C3%A9rament-100063069588507/",
+                "https://www.instagram.com/lebontemperament_",
+                "https://www.youtube.com/@lebontemperament",
+                "https://www.tiktok.com/@lebontemperament",
+              ],
+              foundingDate: "1987",
+              founder: {
+                "@type": "Person",
+                name: "Simone Duclos",
+              },
+            }),
+          }}
+        />
       </body>
     </html>
   );

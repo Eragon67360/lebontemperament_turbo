@@ -259,6 +259,37 @@ const Contact = () => {
         </div>
         <Subscribe />
       </div>
+      {/* LocalBusiness Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#localbusiness`,
+            name: "Le Bon Tempérament",
+            image:
+              "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+            url: process.env.NEXT_PUBLIC_BASE_URL,
+            telephone: "+33-09-52-39-57-89",
+            email: "lebontemperament@gmail.com",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "3 Rue Clemenceau",
+              addressLocality: "Saverne",
+              addressRegion: "Alsace",
+              postalCode: "67700",
+              addressCountry: "FR",
+            },
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: "48.7417",
+              longitude: "7.3622",
+            },
+            priceRange: "€€",
+          }),
+        }}
+      />
     </div>
   );
 };
