@@ -49,7 +49,6 @@ const Membres = () => {
               Voix: member.Voix?.trim() || "",
               photoUrl: member.photoUrl,
             }));
-          console.log("validData", validData);
           setData(validData);
         }
       } catch (error) {
