@@ -1,7 +1,7 @@
 "use client";
 import GoogleCalendar from "@/components/GoogleCalendar";
 import { GroupType, Rehearsal } from "@/types/rehearsals";
-import { format, isAfter, isSameDay, parseISO, startOfDay } from "date-fns";
+import { format, isAfter, isSameDay, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -30,9 +30,24 @@ const Calendrier = () => {
 
   const today = startOfDay(new Date());
 
+  // Helper function to parse date string as local date (not UTC)
+  // Dates are stored as "YYYY-MM-DD" strings and should be treated as local dates
+  const parseLocalDate = (dateString: string): Date => {
+    const parts = dateString.split("-");
+    if (parts.length !== 3) {
+      // Fallback to current date if format is invalid
+      return new Date();
+    }
+    const year = parseInt(parts[0]!, 10);
+    const month = parseInt(parts[1]!, 10);
+    const day = parseInt(parts[2]!, 10);
+    return new Date(year, month - 1, day);
+  };
+
   const filteredRehearsals = rehearsals.filter((rehearsal) => {
     // Filter by date: only show today's and future rehearsals
-    const rehearsalDate = startOfDay(parseISO(rehearsal.date));
+    // Parse as local date to avoid timezone issues
+    const rehearsalDate = startOfDay(parseLocalDate(rehearsal.date));
     const isTodayOrFuture =
       isSameDay(rehearsalDate, today) || isAfter(rehearsalDate, today);
 
@@ -187,9 +202,13 @@ const Calendrier = () => {
                     <div className="text-foreground/70 mt-4 flex flex-wrap items-center gap-4 text-sm md:text-base">
                       <div className="flex items-center gap-2">
                         <IoCalendarClear className="text-primary h-5 w-5" />
-                        {format(parseISO(rehearsal.date), "dd MMMM yyyy", {
-                          locale: fr,
-                        })}
+                        {format(
+                          parseLocalDate(rehearsal.date),
+                          "dd MMMM yyyy",
+                          {
+                            locale: fr,
+                          },
+                        )}
                       </div>
                       <div className="font-medium">
                         {rehearsal.start_time.slice(0, 5)} -{" "}
