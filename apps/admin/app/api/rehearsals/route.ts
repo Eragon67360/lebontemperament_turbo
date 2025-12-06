@@ -30,18 +30,42 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const json = await request.json();
 
-    // Validate the request body here if needed
-    const { name, place, date, start_time, end_time, group_type } = json;
+    // Check if it's an array (bulk insert) or single object
+    const isBulk = Array.isArray(json);
 
-    const { data, error } = await supabase
-      .from("rehearsals")
-      .insert([{ name, place, date, start_time, end_time, group_type }])
-      .select()
-      .single();
+    if (isBulk) {
+      // Bulk insert
+      const rehearsals = json.map((item: any) => ({
+        name: item.name,
+        place: item.place,
+        date: item.date,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        group_type: item.group_type,
+      }));
 
-    if (error) throw error;
+      const { data, error } = await supabase
+        .from("rehearsals")
+        .insert(rehearsals)
+        .select();
 
-    return NextResponse.json(data, { status: 201 });
+      if (error) throw error;
+
+      return NextResponse.json(data, { status: 201 });
+    } else {
+      // Single insert
+      const { name, place, date, start_time, end_time, group_type } = json;
+
+      const { data, error } = await supabase
+        .from("rehearsals")
+        .insert([{ name, place, date, start_time, end_time, group_type }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return NextResponse.json(data, { status: 201 });
+    }
   } catch (error) {
     console.error(error);
 

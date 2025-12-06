@@ -18,7 +18,7 @@ export function useCreateRehearsal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateRehearsalDTO) => {
+    mutationFn: async (data: CreateRehearsalDTO | CreateRehearsalDTO[]) => {
       const response = await fetch("/api/rehearsals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
