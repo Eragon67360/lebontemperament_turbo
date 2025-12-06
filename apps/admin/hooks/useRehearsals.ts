@@ -18,7 +18,7 @@ export function useCreateRehearsal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateRehearsalDTO) => {
+    mutationFn: async (data: CreateRehearsalDTO | CreateRehearsalDTO[]) => {
       const response = await fetch("/api/rehearsals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,10 +44,11 @@ export function useUpdateRehearsal() {
 
   return useMutation({
     mutationFn: async (data: Partial<CreateRehearsalDTO> & { id: string }) => {
-      const response = await fetch("/api/rehearsals", {
+      const { id, ...updateData } = data;
+      const response = await fetch(`/api/rehearsals/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
