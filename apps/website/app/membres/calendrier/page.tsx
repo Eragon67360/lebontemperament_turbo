@@ -1,7 +1,7 @@
 "use client";
 import GoogleCalendar from "@/components/GoogleCalendar";
 import { GroupType, Rehearsal } from "@/types/rehearsals";
-import { format, parseISO } from "date-fns";
+import { format, isAfter, isSameDay, parseISO, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -28,10 +28,20 @@ const Calendrier = () => {
     fetchRehearsals();
   }, []);
 
-  const filteredRehearsals = rehearsals.filter(
-    (rehearsal) =>
-      selectedGroup === "all" || rehearsal.group_type === selectedGroup,
-  );
+  const today = startOfDay(new Date());
+
+  const filteredRehearsals = rehearsals.filter((rehearsal) => {
+    // Filter by date: only show today's and future rehearsals
+    const rehearsalDate = startOfDay(parseISO(rehearsal.date));
+    const isTodayOrFuture =
+      isSameDay(rehearsalDate, today) || isAfter(rehearsalDate, today);
+
+    // Filter by group type
+    const matchesGroup =
+      selectedGroup === "all" || rehearsal.group_type === selectedGroup;
+
+    return isTodayOrFuture && matchesGroup;
+  });
 
   const groupColors: Record<GroupType, string> = {
     Orchestre:

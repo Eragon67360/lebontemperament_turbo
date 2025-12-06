@@ -69,7 +69,7 @@ export function useDeleteRehearsal() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/rehearsals?id=${id}`, {
+      const response = await fetch(`/api/rehearsals/${id}`, {
         method: "DELETE",
       });
 
@@ -78,7 +78,8 @@ export function useDeleteRehearsal() {
         throw new Error(error.error || "Failed to delete rehearsal");
       }
 
-      return response.json();
+      // DELETE returns 204 No Content, so no JSON to parse
+      return;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rehearsals"] });
