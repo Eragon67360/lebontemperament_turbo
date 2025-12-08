@@ -67,6 +67,6 @@
     "tw-colors": "^4.0.0-beta.1"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   }
 }
