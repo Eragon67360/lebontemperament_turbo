@@ -10,6 +10,17 @@ function generateCollectionPageSchema() {
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${project.slug}`,
     startDate: project.date,
     description: project.explanation,
+    organizer: {
+      "@type": "Organization",
+      name: "Le Bon Tempérament",
+      url: process.env.NEXT_PUBLIC_BASE_URL,
+    },
+    performer: {
+      "@type": "MusicGroup",
+      name: "Le Bon Tempérament",
+      description: "Ensemble vocal et instrumental",
+    },
+    eventStatus: "https://schema.org/EventScheduled",
   }));
 
   return {
