@@ -32,22 +32,51 @@ export const metadata: Metadata = {
   },
 };
 
+// Helper function to format date as ISO 8601 with timezone
+function formatDateWithTimezone(dateString: string): string {
+  if (!dateString) return new Date().toISOString();
+
+  // If the date string is already in ISO format with timezone, return it
+  if (
+    dateString.includes("T") &&
+    (dateString.includes("Z") || dateString.includes("+"))
+  ) {
+    return dateString;
+  }
+
+  // Parse the date string and convert to ISO 8601 with timezone
+  // Handle date-only strings (YYYY-MM-DD) by adding time and timezone
+  const date = new Date(dateString);
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return new Date().toISOString();
+  }
+
+  // Return ISO 8601 format with timezone (UTC)
+  return date.toISOString();
+}
+
 // Generate VideoObject schema for videos
 function generateVideoSchemas(videos: Video[]) {
   return videos.map((video) => {
     const videoId = extractYouTubeId(video.youtube_url);
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 
-    return {
+    // Use performance_date if available, otherwise created_at
+    const uploadDate = formatDateWithTimezone(
+      video.performance_date || video.created_at,
+    );
+
+    const schema: any = {
       "@context": "https://schema.org",
       "@type": "VideoObject",
       name: video.title,
       description: `${video.title} par Le Bon Tempérament. Compositeur: ${video.composer}. Lieu: ${video.venue}.`,
       thumbnailUrl: thumbnailUrl,
-      uploadDate: video.performance_date || video.created_at,
+      uploadDate: uploadDate,
       contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
       embedUrl: `https://www.youtube.com/embed/${videoId}`,
-      duration: "PT0M0S", // Duration not available, using placeholder
       publisher: {
         "@type": "Organization",
         name: "Le Bon Tempérament",
@@ -64,6 +93,12 @@ function generateVideoSchemas(videos: Video[]) {
         },
       }),
     };
+
+    // Only include duration if we have valid duration data
+    // Since we don't have duration, we omit it rather than using invalid "PT0M0S"
+    // Google prefers no duration over invalid duration
+
+    return schema;
   });
 }
 
