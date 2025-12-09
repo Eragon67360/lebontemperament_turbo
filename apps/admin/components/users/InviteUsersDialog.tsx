@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { InvitationProgress } from "@/types/user";
 import { Check, Plus, RefreshCw, Send, Upload, X } from "lucide-react";
 import Papa from "papaparse";
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Progress } from "../ui/progress";
@@ -35,6 +35,10 @@ interface InviteUserDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  initialInvitations?: Array<{
+    email: string;
+    displayName: string;
+  }>;
 }
 interface InvitationResult {
   success: boolean;
@@ -52,6 +56,7 @@ export function InviteUserDialog({
   isOpen,
   onOpenChange,
   onSuccess,
+  initialInvitations,
 }: InviteUserDialogProps) {
   const [invitations, setInvitations] = useState<InvitationEntry[]>([
     { email: "", displayName: "", role: "user", status: "pending" },
@@ -70,6 +75,26 @@ export function InviteUserDialog({
     setIsProcessing(false);
     setProgress({ current: 0, total: 0, percentage: 0 });
   };
+
+  // Load initial invitations when dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialInvitations && initialInvitations.length > 0) {
+        setInvitations(
+          initialInvitations.map((inv) => ({
+            email: inv.email,
+            displayName: inv.displayName,
+            role: "user" as const,
+            status: "pending" as const,
+          })),
+        );
+      } else {
+        // Reset to empty if no initial data
+        resetState();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialInvitations]);
 
   const addInvitationField = () => {
     setInvitations([

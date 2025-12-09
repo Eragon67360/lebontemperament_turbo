@@ -8,6 +8,11 @@ type User = {
   created_at: string;
   invite_status: "en attente" | "approuvé";
   avatar?: string;
+  address?: string | null;
+  home_phone?: string | null;
+  mobile_phone?: string | null;
+  isMissingInExcel?: boolean;
+  isMissingInDatabase?: boolean;
 };
 
 interface UseUsersOptions {
@@ -139,6 +144,72 @@ export function useUpdateUserDisplayName() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       // Also invalidate current user in case they updated their own name
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
+  });
+}
+
+// SYNC users with Excel
+export function useSyncUsers() {
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: ["users-sync"],
+    queryFn: async () => {
+      const response = await fetch("/api/users/sync");
+      if (!response.ok) throw new Error("Failed to fetch sync data");
+      return response.json();
+    },
+  });
+}
+
+// SYNC users mutation (patch users with Excel data)
+export function useSyncUsersMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userIds: string[]) => {
+      const response = await fetch("/api/users/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to sync users");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users-sync"] });
+    },
+  });
+}
+
+// SYNC all user data from Excel
+export function useSyncAllUserData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/users/sync-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: [] }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to sync user data");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users-sync"] });
     },
   });
 }

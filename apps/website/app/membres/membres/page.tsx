@@ -1,7 +1,6 @@
 "use client";
 import { motion } from "motion/react";
-import Papa from "papaparse";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import {
   IoCallOutline,
@@ -22,35 +21,57 @@ interface Member {
   photoUrl?: string; // Optional field for future photo implementation
 }
 
+// Extract all unique words from voice values (e.g., "jeune", "basse", "orchestre" from "jeune & basse" or "orchestre & ténor")
+const extractVoiceWords = (voices: string[]): string[] => {
+  const words = new Set<string>();
+
+  voices.forEach((voice) => {
+    if (!voice) return;
+    // Split by common separators and extract individual words
+    const parts = voice
+      .toLowerCase()
+      .split(/[&\s,]+/)
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+
+    parts.forEach((word) => {
+      words.add(word);
+    });
+  });
+
+  return Array.from(words).sort();
+};
+
 const Membres = () => {
   const [data, setData] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedVoice, setSelectedVoice] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdoIYE2BEV1E3qXW65BpTDsxzgDwFeaC4lvbQ3UNWXZOPfpRtqKfhmG05ElyByDp0442WTARufKmHg/pub?gid=0&single=true&output=csv",
-        );
-        const text = await response.text();
-        const result = Papa.parse<Member>(text, { header: true });
-
-        if (result.data) {
-          // Filter out empty rows and trim all fields
-          const validData = result.data
-            .filter((member) => member["NOM Prénom"]?.trim())
-            .map((member) => ({
-              "NOM Prénom": member["NOM Prénom"]?.trim() || "",
-              "Adresse mail": member["Adresse mail"]?.trim() || "",
-              "Adresse postale": member["Adresse postale"]?.trim() || "",
-              Domicile: member.Domicile?.trim() || "",
-              Portable: member.Portable?.trim() || "",
-              Voix: member.Voix?.trim() || "",
-              photoUrl: member.photoUrl,
-            }));
-          setData(validData);
+        const response = await fetch("/api/membres");
+        if (!response.ok) {
+          throw new Error("Failed to fetch members");
         }
+
+        const members = await response.json();
+
+        // Filter out empty rows and normalize data
+        const validData = members
+          .filter((member: Member) => member["NOM Prénom"]?.trim())
+          .map((member: Member) => ({
+            "NOM Prénom": member["NOM Prénom"]?.trim() || "",
+            "Adresse mail": member["Adresse mail"]?.trim() || "",
+            "Adresse postale": member["Adresse postale"]?.trim() || "",
+            Domicile: member.Domicile?.trim() || "",
+            Portable: member.Portable?.trim() || "",
+            Voix: member.Voix?.trim() || "",
+            photoUrl: member.photoUrl,
+          }));
+
+        setData(validData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -61,11 +82,37 @@ const Membres = () => {
     fetchData();
   }, []);
 
-  const filteredData = data.filter((member) =>
-    Object.values(member).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase()),
-    ),
-  );
+  // Get all unique words from voice values - memoized to recompute when data changes
+  const voiceWords = useMemo(() => {
+    if (data.length === 0) return [];
+
+    const uniqueVoices = Array.from(
+      new Set(
+        data
+          .map((member) => member.Voix?.trim())
+          .filter((voix) => voix && voix.length > 0),
+      ),
+    ).sort();
+
+    return extractVoiceWords(uniqueVoices);
+  }, [data]);
+  const filteredData = data.filter((member) => {
+    // Filter by search term
+    const matchesSearch =
+      searchTerm === "" ||
+      Object.values(member).some((value) =>
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+
+    // Filter by voice (case-insensitive substring match)
+    const matchesVoice =
+      selectedVoice === "" ||
+      (member.Voix?.trim() || "")
+        .toLowerCase()
+        .includes(selectedVoice.trim().toLowerCase());
+
+    return matchesSearch && matchesVoice;
+  });
 
   const getVoiceColor = (voix: string) => {
     const voixLower = voix?.toLowerCase() || "";
@@ -131,29 +178,49 @@ const Membres = () => {
         </div>
       </motion.div>
 
-      {/* Search and Stats */}
+      {/* Search, Filter and Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+        className="mb-6 flex flex-col gap-4"
       >
-        <div className="relative w-full sm:w-80">
-          <input
-            type="text"
-            placeholder="Rechercher un membre..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full rounded-xl border-0 py-3 pr-4 pl-12 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none md:text-base"
-          />
-          <FaSearch className="text-foreground/40 absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2" />
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-80">
+              <input
+                type="text"
+                placeholder="Rechercher un membre..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full rounded-xl border-0 py-3 pr-4 pl-12 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none md:text-base"
+              />
+              <FaSearch className="text-foreground/40 absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2" />
+            </div>
+            <div className="relative w-full sm:w-64">
+              <select
+                value={selectedVoice}
+                onChange={(e) => setSelectedVoice(e.target.value)}
+                disabled={voiceWords.length === 0}
+                className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full appearance-none rounded-xl border-0 py-3 pr-10 pl-4 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-base"
+              >
+                <option value="">Toutes les voix</option>
+                {voiceWords.map((word) => (
+                  <option key={word} value={word}>
+                    {word.charAt(0).toUpperCase() + word.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <IoMusicalNotesOutline className="text-foreground/40 pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2" />
+            </div>
+          </div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="from-primary shrink-0 rounded-xl bg-gradient-to-r to-purple-500 px-5 py-3 font-medium text-white shadow-lg"
+          >
+            {filteredData.length} membre{filteredData.length !== 1 && "s"}
+          </motion.div>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="from-primary rounded-xl bg-gradient-to-r to-purple-500 px-5 py-3 font-medium text-white shadow-lg"
-        >
-          {filteredData.length} membre{filteredData.length !== 1 && "s"}
-        </motion.div>
       </motion.div>
 
       {/* Member Cards Grid */}
@@ -224,7 +291,7 @@ const Membres = () => {
                 {/* Contact Info */}
                 <div className="text-foreground/70 space-y-2 text-sm">
                   {member["Adresse mail"] && (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-2">
                       <IoMailOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`mailto:${member["Adresse mail"]}`}
@@ -236,7 +303,7 @@ const Membres = () => {
                   )}
 
                   {member.Portable && (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-2">
                       <IoPhonePortraitOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`tel:${member.Portable.replace(/\s/g, "")}`}
@@ -248,7 +315,7 @@ const Membres = () => {
                   )}
 
                   {member.Domicile && (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-2">
                       <IoCallOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`tel:${member.Domicile.replace(/\s/g, "")}`}
@@ -260,7 +327,7 @@ const Membres = () => {
                   )}
 
                   {member["Adresse postale"] && (
-                    <div className="flex items-start gap-2">
+                    <div className="my-auto flex h-fit items-center gap-2">
                       <IoHomeOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <span className="text-foreground/70 text-xs">
                         {member["Adresse postale"]}
