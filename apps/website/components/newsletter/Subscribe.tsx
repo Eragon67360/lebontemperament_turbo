@@ -31,7 +31,8 @@ const Subscribe = () => {
         const data = await response.json();
 
         if (response.ok) {
-          toast(message_success, { description: description_success });
+          toast.success(message_success, { description: description_success });
+          setEmail(""); // Clear the input on success
         } else {
           console.error("Failed to subscribe:", data.error);
           toast.error(

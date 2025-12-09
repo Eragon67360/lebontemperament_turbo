@@ -25,7 +25,6 @@ export default function CreateProfileForm() {
 
         const refreshToken = urlParams.get("refresh_token");
         const accessToken = urlParams.get("access_token");
-
         if (!refreshToken || !accessToken) {
           setInvalidLink(true);
           return;
