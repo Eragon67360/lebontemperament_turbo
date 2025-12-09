@@ -14,6 +14,7 @@ const nextConfig = {
         port: "",
         pathname: "/storage/v1/object/public/**",
       },
+      new URL("https://res.cloudinary.com/dlt2j3dld/image/**"),
     ],
   },
 };

@@ -1,19 +1,50 @@
 // app/api/projects/route.ts
+import { DatabaseProject } from "@/types/projects";
+import { transformProjectForFrontend } from "@/utils/projects";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
+    const { searchParams } = new URL(request.url);
+    const slug = searchParams.get("slug");
 
-    const { data: projects, error } = await supabase
-      .from("projects")
-      .select("*")
-      .order("display_order", { ascending: true });
+    let projects: DatabaseProject | DatabaseProject[] | null;
+    let error;
+
+    if (slug) {
+      const { data, error: queryError } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
+      projects = data;
+      error = queryError;
+    } else {
+      const { data, error: queryError } = await supabase
+        .from("projects")
+        .select("*")
+        .order("display_order", { ascending: false })
+        .order("date", { ascending: false });
+      projects = data;
+      error = queryError;
+    }
 
     if (error) throw error;
 
-    return NextResponse.json(projects);
+    if (!projects) {
+      return NextResponse.json([]);
+    }
+
+    // Transform database projects to frontend format
+    const transformedProjects = Array.isArray(projects)
+      ? projects.map((p: DatabaseProject) => transformProjectForFrontend(p))
+      : [transformProjectForFrontend(projects as DatabaseProject)];
+
+    return NextResponse.json(
+      Array.isArray(projects) ? transformedProjects : transformedProjects[0],
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json(

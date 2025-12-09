@@ -20,9 +20,10 @@ const RouteNames = {
       CONCERTS: "/dashboard/public/concerts",
       PROCHAINS_CONCERTS: "/dashboard/public/concerts/prochains-concerts",
       PROJETS: {
-        ROOT: "/dashboard/public/projets",
-        CREATE: "/dashboard/public/projets/create",
-        PROJET: (projectId: string) => `/dashboard/public/projets/${projectId}`,
+        ROOT: "/dashboard/public/concerts/projets",
+        CREATE: "/dashboard/public/concerts/projets/create",
+        PROJET: (projectId: string) =>
+          `/dashboard/public/concerts/projets/${projectId}`,
       },
       HOME: {
         ROOT: "/dashboard/public/home",
