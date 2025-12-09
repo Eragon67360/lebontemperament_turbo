@@ -106,12 +106,6 @@ export default function Sidebar({
       label: "Contenu public",
       subroutes: [
         {
-          href: "/dashboard/public/projets",
-          label: "Projets",
-          icon: <LayoutDashboard className="h-4 w-4" />,
-          visible: false,
-        },
-        {
           href: "/dashboard/public/gallery",
           label: "Médias",
           icon: <ImageIcon className="h-4 w-4" />,
@@ -130,7 +124,7 @@ export default function Sidebar({
       label: "Concerts & Événements",
       subroutes: [
         {
-          href: "/dashboard/public/concerts/prochains-concerts",
+          href: "/dashboard/public/concerts",
           label: "Concerts",
           icon: <Music className="h-4 w-4" />,
         },
