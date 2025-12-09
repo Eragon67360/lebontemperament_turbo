@@ -19,6 +19,11 @@ export type User = {
   created_at: string;
   invite_status: "en attente" | "approuvé";
   avatar?: string;
+  address?: string | null;
+  home_phone?: string | null;
+  mobile_phone?: string | null;
+  isMissingInExcel?: boolean; // Flag to indicate user is not in Excel
+  isMissingInDatabase?: boolean; // Flag to indicate user is missing from database
 };
 
 export interface InvitationProgress {

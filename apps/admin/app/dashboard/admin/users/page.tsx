@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
+import { SyncUsersDialog } from "@/components/users/SyncUsersDialog";
 import { UserCard } from "@/components/users/UserCard";
 import { UserEmptyState } from "@/components/users/UserEmptyState";
 import { UserHeader } from "@/components/users/UserHeader";
@@ -27,6 +28,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   useCreateUser,
   useDeleteUser,
+  useSyncUsers,
   useUpdateUserDisplayName,
   useUpdateUserRole,
   useUsers,
@@ -34,7 +36,7 @@ import {
 import { SortConfig, User } from "@/types/user";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, UserPlus } from "lucide-react";
+import { Plus, RefreshCw, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -45,6 +47,10 @@ export default function UsersPage() {
   // UI State
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isSyncOpen, setIsSyncOpen] = useState(false);
+  const [pendingInvitations, setPendingInvitations] = useState<
+    Array<{ email: string; displayName: string }>
+  >([]);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<{
     id: string;
@@ -82,6 +88,21 @@ export default function UsersPage() {
   });
   const { data: currentUserData } = useCurrentUser();
   const currentUser = currentUserData?.id || null;
+  const { data: syncData } = useSyncUsers();
+
+  // Mark users that are missing in Excel
+  const usersWithSyncStatus = useMemo(() => {
+    if (!syncData) return users;
+    const typedSyncData = syncData as {
+      missingInExcel: Array<{ id: string }>;
+    };
+    return users.map((user) => ({
+      ...user,
+      isMissingInExcel: typedSyncData.missingInExcel.some(
+        (m) => m.id === user.id,
+      ),
+    }));
+  }, [users, syncData]);
 
   // Mutations
   const createUser = useCreateUser();
@@ -114,7 +135,7 @@ export default function UsersPage() {
 
   // Sorted users - computed from query data
   const sortedUsers = useMemo(() => {
-    return [...users].sort((a, b) => {
+    return [...usersWithSyncStatus].sort((a, b) => {
       switch (sortConfig.sortBy) {
         case "invite_status":
           if (sortConfig.sortOrder === "asc") {
@@ -145,7 +166,7 @@ export default function UsersPage() {
           return 0;
       }
     });
-  }, [users, sortConfig]);
+  }, [usersWithSyncStatus, sortConfig]);
 
   // Invite counts - computed from query data
   const inviteCounts = useMemo(() => {
@@ -273,6 +294,25 @@ export default function UsersPage() {
       description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
       headerAction={
         <div className="flex flex-shrink-0 gap-2">
+          {/* Sync Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-3"
+            onClick={() => setIsSyncOpen(true)}
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span className="hidden md:inline">Synchroniser</span>
+            {syncData &&
+              (syncData.missingInDatabase.length > 0 ||
+                syncData.missingInExcel.length > 0) && (
+                <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs font-medium text-white">
+                  {syncData.missingInDatabase.length +
+                    syncData.missingInExcel.length}
+                </span>
+              )}
+          </Button>
+
           {/* Invite Users Button */}
           <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
             <DialogTrigger asChild>
@@ -346,10 +386,33 @@ export default function UsersPage() {
         newUserDisplayName={newUserDisplayName}
         setNewUserDisplayName={setNewUserDisplayName}
       />
+      <SyncUsersDialog
+        isOpen={isSyncOpen}
+        onOpenChange={setIsSyncOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          queryClient.invalidateQueries({ queryKey: ["users-sync"] });
+        }}
+        onPrepareInvitations={(invitations) => {
+          setPendingInvitations(invitations);
+          setIsSyncOpen(false);
+          setIsInviteOpen(true);
+        }}
+      />
       <InviteUserDialog
         isOpen={isInviteOpen}
-        onOpenChange={setIsInviteOpen}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
+        onOpenChange={(open) => {
+          setIsInviteOpen(open);
+          if (!open) {
+            // Clear pending invitations when dialog closes
+            setPendingInvitations([]);
+          }
+        }}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          setPendingInvitations([]);
+        }}
+        initialInvitations={pendingInvitations}
       />
       <EditUserDialog
         editingUser={editingUser}

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { User } from "@/types/user";
 import { getRoleLabel } from "@/utils/roleUtils";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -82,6 +82,18 @@ export function UserCard({
               <h3 className="truncate text-sm font-medium text-gray-900">
                 {user.display_name || user.email.split("@")[0]}
               </h3>
+              {user.isMissingInExcel && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Cet utilisateur n'est pas dans la liste Excel</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             <p className="truncate text-xs text-gray-500">{user.email}</p>
             <p className="mt-0.5 text-xs text-gray-400">
