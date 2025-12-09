@@ -58,6 +58,9 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
+    null,
+  );
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const { data: unreadCount = 0 } = useUnreadBugReports();
@@ -181,14 +184,16 @@ export default function Sidebar({
       if (data?.user) {
         setUser(data.user);
 
-        // Check if user is superadmin
+        // Get profile data including profile picture
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, profile_picture_url")
           .eq("id", data.user.id)
           .single();
 
         setIsSuperAdmin(profile?.role === "superadmin");
+        // Set profile picture URL if it exists
+        setProfilePictureUrl(profile?.profile_picture_url || null);
       }
     };
     getUser();
@@ -312,7 +317,9 @@ export default function Sidebar({
                 <Avatar className="h-9 w-9 border border-gray-200">
                   <AvatarImage
                     src={
-                      user.user_metadata?.avatar_url || "/default-avatar.png"
+                      profilePictureUrl ||
+                      user.user_metadata?.avatar_url ||
+                      "/default-avatar.png"
                     }
                     alt="User Avatar"
                   />

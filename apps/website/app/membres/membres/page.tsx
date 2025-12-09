@@ -261,6 +261,23 @@ const Membres = () => {
                           src={member.photoUrl}
                           alt={member["NOM Prénom"]}
                           className="h-full w-full rounded-full object-cover"
+                          crossOrigin="anonymous"
+                          loading="lazy"
+                          onError={(e) => {
+                            // If image fails to load, hide it and show initials
+                            const img = e.currentTarget;
+                            img.style.display = "none";
+                            const parent = img.parentElement;
+                            if (parent && !parent.querySelector("span")) {
+                              const fallback = document.createElement("span");
+                              fallback.className =
+                                "text-primary text-2xl font-bold";
+                              fallback.textContent = getInitials(
+                                member["NOM Prénom"],
+                              );
+                              parent.appendChild(fallback);
+                            }
+                          }}
                         />
                       ) : (
                         <span className="text-primary text-2xl font-bold">

@@ -10,7 +10,7 @@ export async function GET() {
     const { data: profiles, error } = await supabase
       .from("profiles")
       .select(
-        "id, email, display_name, address, home_phone, mobile_phone, voice",
+        "id, email, display_name, address, home_phone, mobile_phone, voice, profile_picture_url",
       )
       .order("display_name", { ascending: true, nullsFirst: false });
 
@@ -36,7 +36,7 @@ export async function GET() {
         Domicile: profile.home_phone || "",
         Portable: profile.mobile_phone || "",
         Voix: profile.voice || "",
-        photoUrl: undefined, // Profile picture not stored yet
+        photoUrl: profile.profile_picture_url || undefined,
       }));
 
     return NextResponse.json(members);
