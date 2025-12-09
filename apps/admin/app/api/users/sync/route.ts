@@ -236,7 +236,7 @@ export async function POST(request: Request) {
     // Fetch users to sync
     const { data: profiles, error: profilesError } = await supabaseAdmin
       .from("profiles")
-      .select("id, email")
+      .select("id, email, address, home_phone, mobile_phone, voice")
       .in("id", userIds);
 
     if (profilesError) throw profilesError;
@@ -247,6 +247,8 @@ export async function POST(request: Request) {
 
     // Sync each user with Excel data
     const updates: string[] = [];
+    const unchanged: string[] = [];
+
     for (const profile of profiles) {
       const excelMember = excelMembers.find(
         (em) => em.email === profile.email?.toLowerCase(),
@@ -259,18 +261,30 @@ export async function POST(request: Request) {
           mobile_phone?: string;
           voice?: string;
         } = {};
-        // Always update address and phone if available in Excel
-        if (excelMember.address) {
-          updateData.address = excelMember.address;
+
+        // Only include fields that are different from current values
+        const currentAddress = (profile.address || "").trim();
+        const excelAddress = (excelMember.address || "").trim();
+        if (excelAddress && currentAddress !== excelAddress) {
+          updateData.address = excelAddress;
         }
-        if (excelMember.homePhone) {
-          updateData.home_phone = excelMember.homePhone;
+
+        const currentHomePhone = (profile.home_phone || "").trim();
+        const excelHomePhone = (excelMember.homePhone || "").trim();
+        if (excelHomePhone && currentHomePhone !== excelHomePhone) {
+          updateData.home_phone = excelHomePhone;
         }
-        if (excelMember.mobilePhone) {
-          updateData.mobile_phone = excelMember.mobilePhone;
+
+        const currentMobilePhone = (profile.mobile_phone || "").trim();
+        const excelMobilePhone = (excelMember.mobilePhone || "").trim();
+        if (excelMobilePhone && currentMobilePhone !== excelMobilePhone) {
+          updateData.mobile_phone = excelMobilePhone;
         }
-        if (excelMember.voice) {
-          updateData.voice = excelMember.voice;
+
+        const currentVoice = (profile.voice || "").trim();
+        const excelVoice = (excelMember.voice || "").trim();
+        if (excelVoice && currentVoice !== excelVoice) {
+          updateData.voice = excelVoice;
         }
 
         if (Object.keys(updateData).length > 0) {
@@ -284,6 +298,9 @@ export async function POST(request: Request) {
           } else {
             updates.push(profile.id);
           }
+        } else {
+          // No changes needed - data already matches
+          unchanged.push(profile.id);
         }
       }
     }
@@ -291,6 +308,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       message: `${updates.length} utilisateur(s) synchronisé(s)`,
       updated: updates.length,
+      unchanged: unchanged.length,
     });
   } catch (error) {
     console.error("Error syncing users:", error);

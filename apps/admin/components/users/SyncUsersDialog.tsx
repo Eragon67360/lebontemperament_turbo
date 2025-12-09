@@ -132,8 +132,24 @@ export function SyncUsersDialog({
       }
 
       const result = await response.json();
+      const parts: string[] = [];
+      if (result.updated > 0) {
+        parts.push(`${result.updated} mis à jour`);
+      }
+      if (result.unchanged > 0) {
+        parts.push(
+          `${result.unchanged} inchangé${result.unchanged > 1 ? "s" : ""}`,
+        );
+      }
+      if (result.skipped > 0) {
+        parts.push(`${result.skipped} ignoré${result.skipped > 1 ? "s" : ""}`);
+      }
+
       toast.success("Synchronisation réussie", {
-        description: `${result.updated} utilisateur(s) mis à jour avec les données Excel`,
+        description:
+          parts.length > 0
+            ? parts.join(", ")
+            : "Aucune modification nécessaire",
       });
       refetch();
       onSuccess?.();
