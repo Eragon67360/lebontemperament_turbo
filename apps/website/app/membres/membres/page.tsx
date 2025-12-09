@@ -1,6 +1,5 @@
 "use client";
 import { motion } from "motion/react";
-import Papa from "papaparse";
 import { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import {
@@ -26,31 +25,32 @@ const Membres = () => {
   const [data, setData] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedVoice, setSelectedVoice] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdoIYE2BEV1E3qXW65BpTDsxzgDwFeaC4lvbQ3UNWXZOPfpRtqKfhmG05ElyByDp0442WTARufKmHg/pub?gid=0&single=true&output=csv",
-        );
-        const text = await response.text();
-        const result = Papa.parse<Member>(text, { header: true });
-
-        if (result.data) {
-          // Filter out empty rows and trim all fields
-          const validData = result.data
-            .filter((member) => member["NOM Prénom"]?.trim())
-            .map((member) => ({
-              "NOM Prénom": member["NOM Prénom"]?.trim() || "",
-              "Adresse mail": member["Adresse mail"]?.trim() || "",
-              "Adresse postale": member["Adresse postale"]?.trim() || "",
-              Domicile: member.Domicile?.trim() || "",
-              Portable: member.Portable?.trim() || "",
-              Voix: member.Voix?.trim() || "",
-              photoUrl: member.photoUrl,
-            }));
-          setData(validData);
+        const response = await fetch("/api/membres");
+        if (!response.ok) {
+          throw new Error("Failed to fetch members");
         }
+
+        const members = await response.json();
+
+        // Filter out empty rows and normalize data
+        const validData = members
+          .filter((member: Member) => member["NOM Prénom"]?.trim())
+          .map((member: Member) => ({
+            "NOM Prénom": member["NOM Prénom"]?.trim() || "",
+            "Adresse mail": member["Adresse mail"]?.trim() || "",
+            "Adresse postale": member["Adresse postale"]?.trim() || "",
+            Domicile: member.Domicile?.trim() || "",
+            Portable: member.Portable?.trim() || "",
+            Voix: member.Voix?.trim() || "",
+            photoUrl: member.photoUrl,
+          }));
+
+        setData(validData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -61,11 +61,29 @@ const Membres = () => {
     fetchData();
   }, []);
 
-  const filteredData = data.filter((member) =>
-    Object.values(member).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase()),
+  // Get unique voice types from data
+  const uniqueVoices = Array.from(
+    new Set(
+      data
+        .map((member) => member.Voix?.trim())
+        .filter((voix) => voix && voix.length > 0),
     ),
-  );
+  ).sort();
+
+  const filteredData = data.filter((member) => {
+    // Filter by search term
+    const matchesSearch =
+      searchTerm === "" ||
+      Object.values(member).some((value) =>
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+
+    // Filter by voice
+    const matchesVoice =
+      selectedVoice === "" || (member.Voix?.trim() || "") === selectedVoice;
+
+    return matchesSearch && matchesVoice;
+  });
 
   const getVoiceColor = (voix: string) => {
     const voixLower = voix?.toLowerCase() || "";
@@ -131,29 +149,50 @@ const Membres = () => {
         </div>
       </motion.div>
 
-      {/* Search and Stats */}
+      {/* Search, Filter and Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+        className="mb-6 flex flex-col gap-4"
       >
-        <div className="relative w-full sm:w-80">
-          <input
-            type="text"
-            placeholder="Rechercher un membre..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full rounded-xl border-0 py-3 pr-4 pl-12 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none md:text-base"
-          />
-          <FaSearch className="text-foreground/40 absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2" />
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-80">
+              <input
+                type="text"
+                placeholder="Rechercher un membre..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full rounded-xl border-0 py-3 pr-4 pl-12 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none md:text-base"
+              />
+              <FaSearch className="text-foreground/40 absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2" />
+            </div>
+            {uniqueVoices.length > 0 && (
+              <div className="relative w-full sm:w-64">
+                <select
+                  value={selectedVoice}
+                  onChange={(e) => setSelectedVoice(e.target.value)}
+                  className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full appearance-none rounded-xl border-0 py-3 pr-10 pl-4 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none md:text-base"
+                >
+                  <option value="">Toutes les voix</option>
+                  {uniqueVoices.map((voice) => (
+                    <option key={voice} value={voice}>
+                      {voice}
+                    </option>
+                  ))}
+                </select>
+                <IoMusicalNotesOutline className="text-foreground/40 pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2" />
+              </div>
+            )}
+          </div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="from-primary rounded-xl bg-gradient-to-r to-purple-500 px-5 py-3 font-medium text-white shadow-lg"
+          >
+            {filteredData.length} membre{filteredData.length !== 1 && "s"}
+          </motion.div>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="from-primary rounded-xl bg-gradient-to-r to-purple-500 px-5 py-3 font-medium text-white shadow-lg"
-        >
-          {filteredData.length} membre{filteredData.length !== 1 && "s"}
-        </motion.div>
       </motion.div>
 
       {/* Member Cards Grid */}
