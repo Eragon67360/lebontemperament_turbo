@@ -150,6 +150,12 @@ export default function Sidebar({
           visible: true,
         },
         {
+          href: "/dashboard/admin/google-groups",
+          label: "Groupes Google",
+          icon: <Users className="h-4 w-4" />,
+          visible: true,
+        },
+        {
           href: "/dashboard/admin/ca",
           label: "Conseil d'administration",
           icon: <Building2 className="h-4 w-4" />,
