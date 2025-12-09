@@ -1,6 +1,7 @@
 import ConcertPageClient from "@/components/ConcertPageClient";
 import { ConcertProject, DatabaseProject } from "@/types/projects";
 import { transformProjectForFrontend } from "@/utils/projects";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,7 +9,8 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 
 export async function generateStaticParams() {
   try {
-    const supabase = await createClient();
+    // Use admin client for static generation (no cookies needed)
+    const supabase = createAdminClient();
     const { data: projects } = await supabase.from("projects").select("slug");
 
     if (!projects) return [];
@@ -30,7 +32,8 @@ export async function generateMetadata({
   const { slug } = await params;
 
   try {
-    const supabase = await createClient();
+    // Use admin client for metadata generation (no cookies needed)
+    const supabase = createAdminClient();
     const { data: dbProject } = await supabase
       .from("projects")
       .select("*")
