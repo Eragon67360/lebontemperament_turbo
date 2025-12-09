@@ -203,8 +203,19 @@ function main() {
   }
 
   if (hasChanges) {
+    console.log("\n📦 Running npm install to update package-lock.json...");
+    try {
+      execSync("npm install", {
+        stdio: "inherit",
+        cwd: path.join(__dirname, ".."),
+      });
+      console.log("✅ package-lock.json updated successfully!");
+    } catch (error) {
+      console.error("❌ Failed to run npm install:", error.message);
+      process.exit(1);
+    }
     console.log(
-      "\n📝 Version bumps completed! Don't forget to commit the updated package.json files."
+      "\n📝 Version bumps completed! Don't forget to commit the updated package.json and package-lock.json files."
     );
   } else {
     console.log("\n✨ No version bumps needed.");
