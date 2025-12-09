@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Bump versions for changed apps
+echo "📦 Bumping versions for changed apps..."
+node scripts/bump-versions.js
+
+# Add version-bumped package.json files to staging (only if they exist and were modified)
+if [ -f apps/website/package.json ] || [ -f apps/admin/package.json ]; then
+  git add apps/website/package.json apps/admin/package.json 2>/dev/null || true
+fi
+
+# Run format
+echo "📝 Formatting code..."
+npm run format
+
+# Add formatted files back to staging
+git add -A
+
+# Run build
+echo "🏗️  Building projects..."
+npm run build
+
+echo "✅ Pre-commit checks passed!"
