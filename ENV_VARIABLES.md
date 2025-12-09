@@ -80,6 +80,7 @@ This document lists all environment variables required for both the **admin** an
 - `NEXT_PUBLIC_GOOGLE_CALENDAR_API_KEY` - Google Calendar API key (for calendar display)
 - `NEXT_PUBLIC_GOOGLE_CALENDAR_ID` - Google Calendar ID (format: `calendar-id@group.calendar.google.com`)
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - Google Maps API key (for maps display)
+- `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` - Google Maps Map ID (optional, required for AdvancedMarkerElement. If not provided, falls back to regular markers)
 - `GOOGLE_SITE_VERIFICATION` - Google Search Console verification code
 
 #### Google Drive Folder IDs (Optional - for FileExplorer)
