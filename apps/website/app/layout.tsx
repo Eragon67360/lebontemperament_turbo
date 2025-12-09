@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -191,6 +192,7 @@ export default function RootLayout({
             <FooterClientWrapper />
           </main>
         </Providers>
+        <Toaster position="top-right" richColors />
         <GoogleAnalytics gaId="G-J893T7P26M" />
         <GoogleTagManager gtmId="G-J893T7P26M" />
         {/* Organization Schema */}

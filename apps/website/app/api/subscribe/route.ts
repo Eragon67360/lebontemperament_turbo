@@ -1,65 +1,140 @@
-import { addGroupMember } from "@/lib/googleApi";
-import { NextResponse } from "next/server";
-// const addEmailToGroupIfNotExists = async (email: string): Promise<void> => {
+import { NextRequest, NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
-//     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-//     const clientId = process.env.GOOGLE_CLIENT_ID;
-//     const auth_uri = "https://accounts.google.com/o/oauth2/auth";
-//     const redirectUri = "https://developers.google.com/oauthplayground";
-//     const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-//     const authClient = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+async function parseRequestBody(
+  request: NextRequest,
+): Promise<{ email: string }> {
+  const body = await request.json();
+  return body as { email: string };
+}
 
-//     authClient.setCredentials({ refresh_token: refreshToken });
-
-//     // const authClient: OAuth2Client = await auth.getClient();
-//     const admin = google.admin('directory_v1');
-//     google.options({ auth: authClient });
-
-//     const groupKey = 'btnewsletter@googlegroups.com';
-
-//     try {
-
-//         await admin.members.get({
-//             groupKey: groupKey,
-//             memberKey: email,
-//         });
-//         const res = await admin.members.list({
-//             groupKey,
-//         });
-//         const members = res.data.members || [];
-
-//     } catch (error) {
-//         if (error instanceof Error && 'response' in error && error.response) {
-//             // Email is not a member, so add it
-//             const res = await admin.members.insert({
-//                 groupKey: groupKey,
-//                 requestBody: {
-//                     email: email,
-//                     role: 'MEMBER',
-//                 },
-//             });
-//         } else {
-//             // Handle other errors
-//             console.error('Error checking or adding member:', error);
-//             throw error;
-//         }
-//     }
-// };
-
-// async function parseRequestBody(request: NextRequest): Promise<string> {
-//     const email = await request.json();
-//     return email as string;
-// }
-
-export async function POST() {
-  const groupEmail = process.env.GOOGLE_GROUP_EMAIL!;
-  // const email = await parseRequestBody(req);
-  const email = "thomas-moser@orange.fr";
+export async function POST(request: NextRequest) {
+  const welcomeEmailTemplate = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #f4f4f4; padding: 20px; text-align: center; }
+    .content { padding: 20px; }
+    .footer { background-color: #f4f4f4; padding: 10px; text-align: center; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Bienvenue à notre newsletter !</h1>
+    </div>
+    <div class="content">
+      <p>Bonjour,</p>
+      <p>Merci de vous être inscrit(e) à notre newsletter.</p>
+      <p>Vous recevrez bientôt nos dernières actualités.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
 
   try {
-    await addGroupMember(groupEmail, email);
-    return NextResponse.json({ message: "Subscribed successfully!" });
-  } catch (error) {
-    return NextResponse.json({ message: "Failed to subscribe", error });
+    const { email } = await parseRequestBody(request);
+
+    // Validation de l'adresse email
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      return NextResponse.json(
+        { error: "Une adresse email valide est requise" },
+        { status: 400 },
+      );
+    }
+
+    // Configuration du service d'envoi d'emails
+    const username = process.env.NEXT_PUBLIC_BURNER_USERNAME; // Pas de NEXT_PUBLIC_ !
+    const password = process.env.NEXT_PUBLIC_BURNER_PASSWORD; // Mot de passe spécifique à l'application recommandé
+
+    if (!username || !password) {
+      return NextResponse.json(
+        { error: "Service d'email non configuré" },
+        { status: 500 },
+      );
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) {
+      return NextResponse.json(
+        { error: "Email de l'administrateur non configuré" },
+        { status: 500 },
+      );
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: username,
+        pass: password,
+      },
+    });
+
+    // Envoyer une notification à l'administrateur concernant le nouvel abonné
+    await transporter.sendMail({
+      from: username,
+      to: adminEmail,
+      subject: "Nouvel abonné à la newsletter",
+      html: `
+        <h3>Nouvel abonné à la newsletter</h3>
+        <p><strong>Email :</strong> ${email}</p>
+        <p><strong>Date d'inscription :</strong> ${new Date().toLocaleString("fr-FR")}</p>
+        <hr>
+        <p><em>Veuillez ajouter ce membre au Google Group manuellement via la Console d'administration.</em></p>
+      `,
+    });
+
+    // Envoyer un email de bienvenue à l'abonné
+    await transporter.sendMail({
+      from: username,
+      to: email,
+      subject: "Bienvenue à notre newsletter !",
+      html: welcomeEmailTemplate,
+    });
+
+    return NextResponse.json({
+      message: "Inscription réussie ! Vérifiez votre boîte de réception.",
+    });
+  } catch (error: unknown) {
+    console.error("Erreur lors de l'envoi des emails :", error);
+
+    // Gestion des erreurs spécifiques
+    if (error instanceof Error) {
+      if (error.message.includes("Invalid login")) {
+        return NextResponse.json(
+          {
+            error: "Échec de l'inscription",
+            message: "Erreur d'authentification du service email",
+          },
+          { status: 500 },
+        );
+      }
+      if (error.message.includes("ECONNECTION")) {
+        return NextResponse.json(
+          {
+            error: "Échec de l'inscription",
+            message: "Impossible de se connecter au serveur email",
+          },
+          { status: 500 },
+        );
+      }
+    }
+
+    return NextResponse.json(
+      {
+        error: "Échec de l'inscription",
+        message:
+          "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.",
+      },
+      { status: 500 },
+    );
   }
 }
