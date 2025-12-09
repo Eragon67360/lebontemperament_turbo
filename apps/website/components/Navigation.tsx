@@ -33,6 +33,7 @@ import { ThemeSwitcher } from "./ThemeSwitcher";
 type UserProfile = {
   id: string;
   display_name: string | null;
+  profile_picture_url: string | null;
 };
 
 const Navigation = () => {
@@ -71,7 +72,7 @@ const Navigation = () => {
           setUser(currentUser);
           const { data: profile, error } = await supabase
             .from("profiles")
-            .select("id, display_name")
+            .select("id, display_name, profile_picture_url")
             .eq("id", currentUser.id)
             .single();
 
@@ -196,7 +197,10 @@ const Navigation = () => {
                 >
                   <Avatar
                     className="h-8 w-8 rounded-lg"
-                    src={user.user_metadata?.avatar_url}
+                    src={
+                      userProfile?.profile_picture_url ||
+                      user.user_metadata?.avatar_url
+                    }
                     alt={`Avatar de ${userProfile?.display_name || user.email}`}
                   />
                 </PopoverTrigger>

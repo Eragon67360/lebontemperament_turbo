@@ -23,7 +23,13 @@ import {
 } from "@/components/ui/tooltip";
 import { User } from "@/types/user";
 import { getRoleLabel } from "@/utils/roleUtils";
-import { AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Image,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -42,6 +48,7 @@ interface UserCardProps {
   onEdit: (user: { id: string; display_name: string }) => void;
   onDelete: (user: User) => void;
   onRoleChange: (userId: string, newRole: "user" | "admin") => void;
+  onProfilePicture?: (user: User) => void;
 }
 
 export function UserCard({
@@ -50,6 +57,7 @@ export function UserCard({
   onEdit,
   onDelete,
   onRoleChange,
+  onProfilePicture,
 }: UserCardProps) {
   return (
     <Card className="transition-all">
@@ -89,7 +97,7 @@ export function UserCard({
                       <AlertTriangle className="h-4 w-4 text-orange-500" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Cet utilisateur n'est pas dans la liste Excel</p>
+                      <p>Cet utilisateur n&apos;est pas dans la liste Excel</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -139,7 +147,7 @@ export function UserCard({
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
                   onClick={() =>
                     onEdit({
@@ -154,6 +162,15 @@ export function UserCard({
                   <Pencil className="h-3.5 w-3.5" />
                   Modifier
                 </DropdownMenuItem>
+                {onProfilePicture && (
+                  <DropdownMenuItem
+                    onClick={() => onProfilePicture(user)}
+                    className="gap-2 text-xs"
+                  >
+                    <Image className="h-3.5 w-3.5" />
+                    Photo de profil
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={() => onDelete(user)}
                   className="gap-2 text-xs text-red-600 focus:text-red-600"

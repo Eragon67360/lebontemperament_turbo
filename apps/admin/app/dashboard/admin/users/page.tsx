@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
+import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
 import { SyncUsersDialog } from "@/components/users/SyncUsersDialog";
 import { UserCard } from "@/components/users/UserCard";
 import { UserEmptyState } from "@/components/users/UserEmptyState";
@@ -56,6 +57,9 @@ export default function UsersPage() {
     id: string;
     display_name: string;
   } | null>(null);
+  const [profilePictureUser, setProfilePictureUser] = useState<User | null>(
+    null,
+  );
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     sortBy: "created_at",
     sortOrder: "desc",
@@ -366,6 +370,7 @@ export default function UsersPage() {
                 onEdit={setEditingUser}
                 onDelete={setUserToDelete}
                 onRoleChange={handleRoleChange}
+                onProfilePicture={setProfilePictureUser}
               />
             ))}
           </div>
@@ -418,6 +423,17 @@ export default function UsersPage() {
         editingUser={editingUser}
         onClose={() => setEditingUser(null)}
         onSubmit={handleUpdateDisplayName}
+      />
+      <ProfilePictureDialog
+        userId={profilePictureUser?.id || ""}
+        currentAvatar={profilePictureUser?.avatar}
+        displayName={profilePictureUser?.display_name || ""}
+        email={profilePictureUser?.email || ""}
+        isOpen={!!profilePictureUser}
+        onOpenChange={(open) => !open && setProfilePictureUser(null)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        }}
       />
       <AlertDialog
         open={!!userToDelete}
