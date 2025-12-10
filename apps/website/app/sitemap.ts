@@ -1,4 +1,4 @@
-import projects from "@/public/json/projects.json";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { MetadataRoute } from "next";
 
 const WEBSITE_URL =
@@ -13,7 +13,7 @@ type ChangeFrequency =
   | "yearly"
   | "never";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     {
       url: `${WEBSITE_URL}`,
@@ -77,21 +77,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const dynamicRoutes = projects.map(
-    (project: { slug: string; date?: string }) => {
-      // Use project date if available, otherwise use current date
-      const lastModified = project.date
-        ? new Date(project.date).toISOString()
-        : new Date().toISOString();
+  // Fetch projects from database
+  let dynamicRoutes: MetadataRoute.Sitemap = [];
+  try {
+    // Use admin client for sitemap generation (no cookies needed)
+    const supabase = createAdminClient();
+    const { data: projects } = await supabase
+      .from("projects")
+      .select("slug, date, updated_at");
 
-      return {
-        url: `${WEBSITE_URL}/concerts/${project.slug}`,
-        lastModified,
-        changeFrequency: "monthly" as ChangeFrequency,
-        priority: 0.6,
-      };
-    },
-  );
+    if (projects) {
+      dynamicRoutes = projects.map(
+        (project: { slug: string; date?: string; updated_at?: string }) => {
+          // Use updated_at if available, otherwise use date, otherwise use current date
+          const lastModified = project.updated_at
+            ? new Date(project.updated_at).toISOString()
+            : project.date
+              ? new Date(project.date).toISOString()
+              : new Date().toISOString();
+
+          return {
+            url: `${WEBSITE_URL}/concerts/${project.slug}`,
+            lastModified,
+            changeFrequency: "monthly" as ChangeFrequency,
+            priority: 0.6,
+          };
+        },
+      );
+    }
+  } catch (error) {
+    console.error("Error fetching projects for sitemap:", error);
+  }
 
   return [...staticRoutes, ...dynamicRoutes];
 }

@@ -67,13 +67,35 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
   async headers() {
+    // Get admin URL from environment or default to localhost:3002
+    const adminUrl =
+      // eslint-disable-next-line no-undef
+      process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3002";
+    const adminOrigin = new URL(adminUrl).origin;
+
+    // Build frame-ancestors directive
+    const frameAncestors = [
+      "'self'",
+      adminOrigin,
+      "http://localhost:3002",
+      "https://localhost:3002",
+      "http://127.0.0.1:3002",
+      "https://127.0.0.1:3002",
+    ]
+      .filter((origin, index, self) => self.indexOf(origin) === index) // Remove duplicates
+      .join(" ");
+
     return [
       {
         source: "/(.*)",
         headers: [
           {
+            key: "Content-Security-Policy",
+            value: `frame-ancestors ${frameAncestors};`,
+          },
+          {
             key: "X-Frame-Options",
-            value: "DENY",
+            value: "SAMEORIGIN",
           },
           {
             key: "X-Content-Type-Options",

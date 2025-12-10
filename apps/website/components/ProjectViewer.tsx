@@ -1,15 +1,40 @@
 "use client";
-import projects from "@/public/json/projects.json";
+import { ConcertProject } from "@/types/projects";
 import { Button } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
 
 const ProjectViewer = () => {
+  const [projects, setProjects] = useState<ConcertProject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch("/api/projects");
+        if (!response.ok) throw new Error("Failed to fetch projects");
+        const data = await response.json();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
   // Sort projects by date (newest first) and take the latest 4
   const latestProjects = projects
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 4);
+
+  if (loading) {
+    return <div className="w-full">Chargement...</div>;
+  }
 
   return (
     <div className="w-full">

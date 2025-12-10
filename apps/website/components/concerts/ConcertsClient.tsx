@@ -1,8 +1,8 @@
 "use client";
 
-import projects from "@/public/json/projects.json";
 import { Concert, Tour } from "@/types/concerts";
 import { Event } from "@/types/events";
+import { ConcertProject } from "@/types/projects";
 import { Rehearsal } from "@/types/rehearsals";
 import { RoundedSize } from "@/utils/types";
 import {
@@ -36,6 +36,7 @@ const ConcertsClient = () => {
   const [events, setEvents] = useState<Array<Event>>([]);
   const [rehearsals, setRehearsals] = useState<Array<Rehearsal>>([]);
   const [tours, setTours] = useState<Array<Tour>>([]);
+  const [projects, setProjects] = useState<Array<ConcertProject>>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConcertImage, setSelectedConcertImage] = useState<
     string | null
@@ -102,6 +103,20 @@ const ConcertsClient = () => {
     fetchData("/api/events", setEvents);
     fetchData("/api/rehearsals", setRehearsals);
     fetchTours();
+
+    // Fetch projects
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch("/api/projects");
+        if (!response.ok) throw new Error("Failed to fetch projects");
+        const data = await response.json();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchProjects();
   }, []);
 
   const handleImageClick = (imageUrl: string) => {
@@ -534,28 +549,38 @@ const ConcertsClient = () => {
                       href={`/concerts/${projet.slug}`}
                       className="relative block h-48 w-full"
                     >
-                      <CloudinaryImage
-                        src={projet.banniere.url}
-                        alt={`Image bannière ${projet.name} ${projet.subName}`}
-                        className="h-full w-full object-cover object-left"
-                        width={1000}
-                        height={500}
-                        rounded={RoundedSize.NONE}
-                      />
+                      {projet.banniere?.url ? (
+                        <CloudinaryImage
+                          src={projet.banniere.url}
+                          alt={`Image bannière ${projet.name} ${projet.subName || ""}`}
+                          className="h-full w-full object-cover object-left"
+                          width={1000}
+                          height={500}
+                          rounded={RoundedSize.NONE}
+                        />
+                      ) : (
+                        <div className="bg-default-100 flex h-full w-full items-center justify-center">
+                          <IoImageOutline className="text-default-400 h-12 w-12" />
+                        </div>
+                      )}
                     </Link>
                     <div className="flex flex-1 flex-col gap-4 p-4">
                       <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
-                        {projet.name} {projet.subName}
+                        {projet.name} {projet.subName || ""}
                       </h3>
-                      <p
-                        className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light"
-                        dangerouslySetInnerHTML={{ __html: projet.explanation }}
-                      ></p>
+                      {projet.explanation && (
+                        <p
+                          className="text-default-500 dark:text-foreground flex-1 overflow-hidden text-sm font-normal dark:font-light"
+                          dangerouslySetInnerHTML={{
+                            __html: projet.explanation,
+                          }}
+                        ></p>
+                      )}
                       <div className="flex">
                         <Button
                           as={Link}
                           href={`/concerts/${projet.slug}`}
-                          aria-label={`Lien vers ${projet.name} ${projet.subName}`}
+                          aria-label={`Lien vers ${projet.name} ${projet.subName || ""}`}
                           color="primary"
                           variant="light"
                           radius="sm"

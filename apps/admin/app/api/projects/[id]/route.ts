@@ -1,4 +1,6 @@
 // app/api/projects/[id]/route.ts
+import { cloudinary } from "@/lib/cloudinary";
+import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -63,10 +65,46 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
     const { id } = await params;
 
+    // First, get the project to retrieve image paths
+    const { data: project, error: fetchError } = await supabase
+      .from("projects")
+      .select("image, banniere, image2, image3")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Delete images from Cloudinary
+    const imageFields = [
+      project?.image,
+      project?.banniere,
+      project?.image2,
+      project?.image3,
+    ].filter((img): img is string => Boolean(img));
+
+    if (imageFields.length > 0) {
+      const deletePromises = imageFields.map((publicId) =>
+        cloudinary.uploader.destroy(publicId).catch((error) => {
+          console.error(`Failed to delete ${publicId} from Cloudinary:`, error);
+          // Continue even if deletion fails
+        }),
+      );
+      await Promise.all(deletePromises);
+    }
+
+    // Delete from database
     const { error } = await supabase.from("projects").delete().eq("id", id);
 
     if (error) throw error;

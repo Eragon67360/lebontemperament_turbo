@@ -37,7 +37,7 @@ export default function ConcertsPage() {
           </Card>
         </Link>
 
-        <Link href={RouteNames.DASHBOARD.PUBLIC.PROJETS.ROOT}>
+        <Link href="/dashboard/public/concerts/projets">
           <Card className="group hover:border-primary/50 border-gray-200 bg-white shadow-sm transition-all hover:shadow-md">
             <CardHeader>
               <div className="bg-primary/10 text-primary group-hover:bg-primary mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-colors group-hover:text-white">

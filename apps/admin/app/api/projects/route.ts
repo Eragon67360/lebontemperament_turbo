@@ -1,4 +1,5 @@
 // app/api/projects/route.ts
+import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -24,14 +25,28 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
     const json = await request.json();
 
+    // Ensure slug is unique and valid
+    if (!json.slug) {
+      return NextResponse.json({ error: "Slug is required" }, { status: 400 });
+    }
+
     const { data, error } = await supabase
       .from("projects")
       .insert(json)
-      .select();
+      .select()
+      .single();
 
     if (error) throw error;
 
