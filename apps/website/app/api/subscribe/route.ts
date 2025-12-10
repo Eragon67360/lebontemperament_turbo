@@ -48,6 +48,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if email is already in the Google Group
+    const GOOGLE_APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL;
+    const GROUP_EMAIL =
+      process.env.GOOGLE_GROUP_EMAIL || "btnewsletter@googlegroups.com";
+
+    if (GOOGLE_APPS_SCRIPT_URL) {
+      try {
+        const checkUrl = new URL(GOOGLE_APPS_SCRIPT_URL);
+        checkUrl.searchParams.append("groupEmail", GROUP_EMAIL);
+
+        const checkResponse = await fetch(checkUrl.toString(), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          if (checkData.success && checkData.data) {
+            const members = checkData.data;
+            const isMember = members.some((member: unknown) => {
+              const memberEmail =
+                typeof member === "string"
+                  ? member
+                  : (member as { email: string }).email;
+              return memberEmail.toLowerCase() === email.toLowerCase();
+            });
+
+            if (isMember) {
+              return NextResponse.json(
+                {
+                  error: "already_member",
+                  message:
+                    "Cette adresse email est déjà abonnée à la newsletter",
+                },
+                { status: 400 },
+              );
+            }
+          }
+        }
+      } catch (checkError) {
+        // If check fails, continue with subscription (fail open)
+        console.error("Error checking group membership:", checkError);
+      }
+    }
+
     // Configuration du service d'envoi d'emails
     const username = process.env.NEXT_PUBLIC_BURNER_USERNAME; // Pas de NEXT_PUBLIC_ !
     const password = process.env.NEXT_PUBLIC_BURNER_PASSWORD; // Mot de passe spécifique à l'application recommandé
