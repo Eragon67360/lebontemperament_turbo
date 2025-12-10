@@ -20,6 +20,22 @@ const Subscribe = () => {
   const handleSubscribe = async () => {
     if (email) {
       try {
+        // First check if email is already in the group
+        const checkResponse = await fetch(
+          `/api/check-group-member?email=${encodeURIComponent(email)}`,
+        );
+        const checkData = await checkResponse.json();
+
+        if (checkData.isMember) {
+          toast.info("Vous êtes déjà abonné(e) à notre newsletter !", {
+            description:
+              "Cette adresse email est déjà dans notre liste de diffusion.",
+          });
+          setEmail(""); // Clear the input
+          return;
+        }
+
+        // If not a member, proceed with subscription
         const response = await fetch("/api/subscribe", {
           method: "POST",
           headers: {
@@ -34,10 +50,19 @@ const Subscribe = () => {
           toast.success(message_success, { description: description_success });
           setEmail(""); // Clear the input on success
         } else {
-          console.error("Failed to subscribe:", data.error);
-          toast.error(
-            "Une erreur s'est produite, veuillez réessayer plus tard!",
-          );
+          // Handle specific error for already member (backup check)
+          if (data.error === "already_member") {
+            toast.info("Vous êtes déjà abonné(e) à notre newsletter !", {
+              description:
+                "Cette adresse email est déjà dans notre liste de diffusion.",
+            });
+            setEmail(""); // Clear the input
+          } else {
+            console.error("Failed to subscribe:", data.error);
+            toast.error(
+              "Une erreur s'est produite, veuillez réessayer plus tard!",
+            );
+          }
         }
       } catch (error) {
         console.error("Failed to subscribe:", error);
