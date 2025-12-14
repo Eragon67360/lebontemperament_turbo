@@ -64,8 +64,29 @@ export function SyncUsersDialog({
   const [selectedUsersToDelete, setSelectedUsersToDelete] = useState<string[]>(
     [],
   );
+  const [selectedAcceptedUsersToDelete, setSelectedAcceptedUsersToDelete] =
+    useState<string[]>([]);
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [activeTab, setActiveTab] = useState("invite");
+
+  // Split missingInExcel into two categories based on invite_status
+  const pendingUsersNotInExcel =
+    typedSyncData?.missingInExcel.filter(
+      (u) =>
+        u.invite_status?.toLowerCase() === "pending" ||
+        u.invite_status?.toLowerCase() === "en attente" ||
+        u.invite_status?.toLowerCase() === "en_attente" ||
+        !u.invite_status ||
+        u.invite_status === "",
+    ) || [];
+
+  const acceptedUsersNotInExcel =
+    typedSyncData?.missingInExcel.filter(
+      (u) =>
+        u.invite_status?.toLowerCase() === "accepted" ||
+        u.invite_status?.toLowerCase() === "accepté" ||
+        u.invite_status?.toLowerCase() === "accepte",
+    ) || [];
 
   const handleSelectAllMissing = () => {
     if (
@@ -80,31 +101,47 @@ export function SyncUsersDialog({
   };
 
   const handleSelectAllToDelete = () => {
-    if (selectedUsersToDelete.length === typedSyncData?.missingInExcel.length) {
+    if (selectedUsersToDelete.length === pendingUsersNotInExcel.length) {
       setSelectedUsersToDelete([]);
     } else {
-      setSelectedUsersToDelete(
-        typedSyncData?.missingInExcel.map((u) => u.id) || [],
+      setSelectedUsersToDelete(pendingUsersNotInExcel.map((u) => u.id) || []);
+    }
+  };
+
+  const handleSelectAllAcceptedToDelete = () => {
+    if (
+      selectedAcceptedUsersToDelete.length === acceptedUsersNotInExcel.length
+    ) {
+      setSelectedAcceptedUsersToDelete([]);
+    } else {
+      setSelectedAcceptedUsersToDelete(
+        acceptedUsersNotInExcel.map((u) => u.id) || [],
       );
     }
   };
 
   const handleDeleteUsers = async () => {
-    if (selectedUsersToDelete.length === 0) {
+    const allUsersToDelete = [
+      ...selectedUsersToDelete,
+      ...selectedAcceptedUsersToDelete,
+    ];
+
+    if (allUsersToDelete.length === 0) {
       toast.error("Aucun utilisateur sélectionné");
       return;
     }
 
     try {
       // Delete users one by one
-      for (const userId of selectedUsersToDelete) {
+      for (const userId of allUsersToDelete) {
         await deleteUser.mutateAsync(userId);
       }
 
       toast.success("Suppression réussie", {
-        description: `${selectedUsersToDelete.length} utilisateur(s) supprimé(s)`,
+        description: `${allUsersToDelete.length} utilisateur(s) supprimé(s)`,
       });
       setSelectedUsersToDelete([]);
+      setSelectedAcceptedUsersToDelete([]);
       refetch();
       onSuccess?.();
     } catch (error) {
@@ -169,7 +206,8 @@ export function SyncUsersDialog({
   const getDefaultTab = () => {
     if (!typedSyncData) return "invite";
     if (typedSyncData.missingInDatabase.length > 0) return "invite";
-    if (typedSyncData.missingInExcel.length > 0) return "delete";
+    if (pendingUsersNotInExcel.length > 0 || acceptedUsersNotInExcel.length > 0)
+      return "delete";
     return "sync";
   };
 
@@ -215,9 +253,12 @@ export function SyncUsersDialog({
                   className="relative min-w-0 flex-1 text-xs sm:flex-none sm:text-sm"
                 >
                   <span className="truncate">Supprimer</span>
-                  {typedSyncData.missingInExcel.length > 0 && (
+                  {pendingUsersNotInExcel.length +
+                    acceptedUsersNotInExcel.length >
+                    0 && (
                     <span className="ml-1.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white sm:ml-2">
-                      {typedSyncData.missingInExcel.length}
+                      {pendingUsersNotInExcel.length +
+                        acceptedUsersNotInExcel.length}
                     </span>
                   )}
                 </TabsTrigger>
@@ -345,100 +386,223 @@ export function SyncUsersDialog({
                 value="delete"
                 className="flex min-h-0 flex-1 flex-col space-y-2 overflow-hidden sm:space-y-4"
               >
-                {typedSyncData.missingInExcel.length > 0 ? (
-                  <>
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-2 sm:p-4">
-                      <div className="flex items-center gap-1.5 sm:gap-3 md:items-start">
-                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-600 sm:h-5 sm:w-5" />
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-xs font-semibold text-red-900 sm:text-sm">
-                            Utilisateurs à supprimer
-                          </h3>
-                          <p className="mt-0.5 hidden text-xs text-red-700 sm:mt-1 sm:block">
-                            {typedSyncData.missingInExcel.length} utilisateur(s)
-                            présent(s) en base de données avec le statut
-                            &quot;en attente&quot; mais absent(s) de la liste
-                            Excel. Sélectionnez ceux que vous souhaitez
-                            supprimer s&apos;ils ne sont plus membres.
-                          </p>
-                          <p className="mt-0.5 text-[10px] text-red-700 sm:hidden">
-                            {typedSyncData.missingInExcel.length} utilisateur(s)
-                            à supprimer
-                          </p>
+                {pendingUsersNotInExcel.length > 0 ||
+                acceptedUsersNotInExcel.length > 0 ? (
+                  <div className="flex min-h-0 flex-1 flex-col space-y-6 overflow-y-auto">
+                    {/* Section 1: Pending users not in Excel */}
+                    {pendingUsersNotInExcel.length > 0 && (
+                      <div className="flex min-h-0 flex-1 flex-col space-y-2 rounded-lg border border-red-200 bg-red-50/30 p-3 sm:space-y-4 sm:p-4">
+                        <div className="rounded-lg border-2 border-red-300 bg-red-50 p-2 sm:p-4">
+                          <div className="flex items-center gap-1.5 sm:gap-3 md:items-start">
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-600 sm:h-5 sm:w-5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-xs font-semibold text-red-900 sm:text-sm">
+                                Utilisateurs en attente à supprimer
+                              </h3>
+                              <p className="mt-0.5 hidden text-xs text-red-700 sm:mt-1 sm:block">
+                                {pendingUsersNotInExcel.length} utilisateur(s)
+                                présent(s) en base de données avec le statut
+                                &quot;en attente&quot; mais absent(s) de la
+                                liste Excel. Sélectionnez ceux que vous
+                                souhaitez supprimer s&apos;ils ne sont plus
+                                membres.
+                              </p>
+                              <p className="mt-0.5 text-[10px] text-red-700 sm:hidden">
+                                {pendingUsersNotInExcel.length} utilisateur(s)
+                                en attente à supprimer
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-gray-700 sm:text-sm">
-                        {selectedUsersToDelete.length} sélectionné(s)
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleSelectAllToDelete}
-                        className="h-7 text-[10px] sm:h-8 sm:text-xs"
-                      >
-                        {selectedUsersToDelete.length ===
-                        typedSyncData.missingInExcel.length
-                          ? "Tout désélectionner"
-                          : "Tout sélectionner"}
-                      </Button>
-                    </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-medium text-gray-700 sm:text-sm">
+                            {selectedUsersToDelete.length} sélectionné(s)
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSelectAllToDelete}
+                            className="h-7 text-[10px] sm:h-8 sm:text-xs"
+                          >
+                            {selectedUsersToDelete.length ===
+                            pendingUsersNotInExcel.length
+                              ? "Tout désélectionner"
+                              : "Tout sélectionner"}
+                          </Button>
+                        </div>
 
-                    <ScrollArea className="max-h-[400px] min-h-[120px] flex-1 overflow-y-auto rounded-lg border border-red-200 sm:max-h-[500px] sm:min-h-[200px]">
-                      <div className="space-y-0.5 p-1 sm:space-y-1 sm:p-2">
-                        {typedSyncData.missingInExcel.map(
-                          (user: {
-                            id: string;
-                            email: string;
-                            display_name: string | null;
-                          }) => {
-                            const isSelected = selectedUsersToDelete.includes(
-                              user.id,
-                            );
-                            return (
-                              <div
-                                key={user.id}
-                                className={`flex cursor-pointer items-center gap-1.5 rounded-md p-2 transition-colors sm:gap-3 sm:p-3 ${
-                                  isSelected
-                                    ? "border border-red-200 bg-red-50"
-                                    : "hover:bg-gray-50"
-                                }`}
-                                onClick={() => {
-                                  if (isSelected) {
-                                    setSelectedUsersToDelete(
-                                      selectedUsersToDelete.filter(
-                                        (id) => id !== user.id,
-                                      ),
-                                    );
-                                  } else {
-                                    setSelectedUsersToDelete([
-                                      ...selectedUsersToDelete,
-                                      user.id,
-                                    ]);
-                                  }
-                                }}
-                              >
-                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-600 sm:h-4 sm:w-4" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="truncate text-xs font-medium text-gray-900 sm:text-sm">
-                                    {user.display_name || user.email}
+                        <ScrollArea className="max-h-[300px] min-h-[100px] flex-1 overflow-y-auto rounded-lg border border-red-200 sm:max-h-[400px] sm:min-h-[150px]">
+                          <div className="space-y-0.5 p-1 sm:space-y-1 sm:p-2">
+                            {pendingUsersNotInExcel.map(
+                              (user: {
+                                id: string;
+                                email: string;
+                                display_name: string | null;
+                                invite_status: string;
+                              }) => {
+                                const isSelected =
+                                  selectedUsersToDelete.includes(user.id);
+                                return (
+                                  <div
+                                    key={user.id}
+                                    className={`flex cursor-pointer items-center gap-1.5 rounded-md p-2 transition-colors sm:gap-3 sm:p-3 ${
+                                      isSelected
+                                        ? "border border-red-200 bg-red-50"
+                                        : "hover:bg-gray-50"
+                                    }`}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setSelectedUsersToDelete(
+                                          selectedUsersToDelete.filter(
+                                            (id) => id !== user.id,
+                                          ),
+                                        );
+                                      } else {
+                                        setSelectedUsersToDelete([
+                                          ...selectedUsersToDelete,
+                                          user.id,
+                                        ]);
+                                      }
+                                    }}
+                                  >
+                                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-600 sm:h-4 sm:w-4" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="truncate text-xs font-medium text-gray-900 sm:text-sm">
+                                        {user.display_name || user.email}
+                                      </div>
+                                      <div className="truncate text-[10px] text-gray-500 sm:text-xs">
+                                        {user.email}
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle2 className="ml-1 h-4 w-4 shrink-0 text-red-600 sm:ml-2 sm:h-5 sm:w-5" />
+                                    )}
                                   </div>
-                                  <div className="truncate text-[10px] text-gray-500 sm:text-xs">
-                                    {user.email}
-                                  </div>
-                                </div>
-                                {isSelected && (
-                                  <CheckCircle2 className="ml-1 h-4 w-4 shrink-0 text-red-600 sm:ml-2 sm:h-5 sm:w-5" />
-                                )}
-                              </div>
-                            );
-                          },
-                        )}
+                                );
+                              },
+                            )}
+                          </div>
+                        </ScrollArea>
                       </div>
-                    </ScrollArea>
-                  </>
+                    )}
+
+                    {/* Visual Divider between sections */}
+                    {pendingUsersNotInExcel.length > 0 &&
+                      acceptedUsersNotInExcel.length > 0 && (
+                        <div className="relative my-2 sm:my-4">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t-2 border-gray-300"></div>
+                          </div>
+                          <div className="relative flex justify-center">
+                            <span className="bg-gray-50 px-3 text-xs font-semibold text-gray-600 sm:px-4 sm:text-sm">
+                              OU
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Section 2: Accepted users not in Excel */}
+                    {acceptedUsersNotInExcel.length > 0 && (
+                      <div className="flex min-h-0 flex-1 flex-col space-y-2 rounded-lg border border-orange-200 bg-orange-50/30 p-3 sm:space-y-4 sm:p-4">
+                        <div className="rounded-lg border-2 border-orange-300 bg-orange-50 p-2 sm:p-4">
+                          <div className="flex items-center gap-1.5 sm:gap-3 md:items-start">
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-orange-600 sm:h-5 sm:w-5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-xs font-semibold text-orange-900 sm:text-sm">
+                                Utilisateurs acceptés à supprimer
+                              </h3>
+                              <p className="mt-0.5 hidden text-xs text-orange-700 sm:mt-1 sm:block">
+                                {acceptedUsersNotInExcel.length} utilisateur(s)
+                                ayant accepté l&apos;invitation mais absent(s)
+                                de la liste Excel. Ces utilisateurs sont actifs
+                                dans le système. Sélectionnez ceux que vous
+                                souhaitez supprimer s&apos;ils ne sont plus
+                                membres de votre association.
+                              </p>
+                              <p className="mt-0.5 text-[10px] text-orange-700 sm:hidden">
+                                {acceptedUsersNotInExcel.length} utilisateur(s)
+                                accepté(s) à supprimer
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-medium text-gray-700 sm:text-sm">
+                            {selectedAcceptedUsersToDelete.length}{" "}
+                            sélectionné(s)
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSelectAllAcceptedToDelete}
+                            className="h-7 text-[10px] sm:h-8 sm:text-xs"
+                          >
+                            {selectedAcceptedUsersToDelete.length ===
+                            acceptedUsersNotInExcel.length
+                              ? "Tout désélectionner"
+                              : "Tout sélectionner"}
+                          </Button>
+                        </div>
+
+                        <ScrollArea className="max-h-[300px] min-h-[100px] flex-1 overflow-y-auto rounded-lg border border-orange-200 sm:max-h-[400px] sm:min-h-[150px]">
+                          <div className="space-y-0.5 p-1 sm:space-y-1 sm:p-2">
+                            {acceptedUsersNotInExcel.map(
+                              (user: {
+                                id: string;
+                                email: string;
+                                display_name: string | null;
+                                invite_status: string;
+                              }) => {
+                                const isSelected =
+                                  selectedAcceptedUsersToDelete.includes(
+                                    user.id,
+                                  );
+                                return (
+                                  <div
+                                    key={user.id}
+                                    className={`flex cursor-pointer items-center gap-1.5 rounded-md p-2 transition-colors sm:gap-3 sm:p-3 ${
+                                      isSelected
+                                        ? "border border-orange-200 bg-orange-50"
+                                        : "hover:bg-gray-50"
+                                    }`}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setSelectedAcceptedUsersToDelete(
+                                          selectedAcceptedUsersToDelete.filter(
+                                            (id) => id !== user.id,
+                                          ),
+                                        );
+                                      } else {
+                                        setSelectedAcceptedUsersToDelete([
+                                          ...selectedAcceptedUsersToDelete,
+                                          user.id,
+                                        ]);
+                                      }
+                                    }}
+                                  >
+                                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-orange-600 sm:h-4 sm:w-4" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="truncate text-xs font-medium text-gray-900 sm:text-sm">
+                                        {user.display_name || user.email}
+                                      </div>
+                                      <div className="truncate text-[10px] text-gray-500 sm:text-xs">
+                                        {user.email}
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle2 className="ml-1 h-4 w-4 shrink-0 text-orange-600 sm:ml-2 sm:h-5 sm:w-5" />
+                                    )}
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <CheckCircle2 className="h-12 w-12 text-green-500" />
@@ -446,8 +610,7 @@ export function SyncUsersDialog({
                       Aucun utilisateur à supprimer
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                      Tous les utilisateurs en attente sont présents dans la
-                      liste Excel.
+                      Tous les utilisateurs sont présents dans la liste Excel.
                     </p>
                   </div>
                 )}
@@ -591,7 +754,9 @@ export function SyncUsersDialog({
             <Button
               onClick={handleDeleteUsers}
               disabled={
-                selectedUsersToDelete.length === 0 || deleteUser.isPending
+                (selectedUsersToDelete.length === 0 &&
+                  selectedAcceptedUsersToDelete.length === 0) ||
+                deleteUser.isPending
               }
               variant="destructive"
               className="w-full gap-2 sm:w-auto"
@@ -605,10 +770,16 @@ export function SyncUsersDialog({
                 <>
                   <Trash2 className="h-4 w-4" />
                   <span className="hidden sm:inline">
-                    Supprimer ces utilisateurs ({selectedUsersToDelete.length})
+                    Supprimer ces utilisateurs (
+                    {selectedUsersToDelete.length +
+                      selectedAcceptedUsersToDelete.length}
+                    )
                   </span>
                   <span className="sm:hidden">
-                    Supprimer ({selectedUsersToDelete.length})
+                    Supprimer (
+                    {selectedUsersToDelete.length +
+                      selectedAcceptedUsersToDelete.length}
+                    )
                   </span>
                 </>
               )}
