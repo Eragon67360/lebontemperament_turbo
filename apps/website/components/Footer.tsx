@@ -206,8 +206,7 @@ const Footer = () => {
       <hr className="border-divider" />
       <div className="text-default-500 flex flex-col items-center justify-center gap-2 py-6 text-center text-sm lg:flex-row">
         <p>
-          © {new Date().getFullYear()} Tous droits réservés - Le Bon
-          Tempérament
+          © {new Date().getFullYear()} Tous droits réservés - Le Bon Tempérament
         </p>
         <span className="hidden lg:block">&nbsp;|&nbsp;</span>
         <Link
