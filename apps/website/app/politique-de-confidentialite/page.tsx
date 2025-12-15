@@ -1,3 +1,4 @@
+import CookiePreferencesButton from "@/components/cookies/CookiePreferencesButton";
 import { Metadata } from "next";
 import Head from "next/head";
 
@@ -125,10 +126,6 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="text-foreground mb-6 list-disc pl-5">
               <li className="mb-2">
-                <strong>__cf_bm</strong> (clerk.lebontemperament.com) : Utilisé
-                pour distinguer les humains des robots. Durée : 1 jour
-              </li>
-              <li className="mb-2">
                 <strong>CookieConsent</strong> (lebontemperament.com) : Stocke
                 l&apos;état de consentement aux cookies de l&apos;utilisateur.
                 Durée : 1 an
@@ -136,11 +133,6 @@ export default function PrivacyPolicy() {
               <li className="mb-2">
                 <strong>SERVERID</strong> (lebontemperament.com) : Utilisé pour
                 l&apos;équilibrage de charge. Durée : Session
-              </li>
-              <li className="mb-2">
-                <strong>__clerk_db_jwt</strong> (lebontemperament.com) : Cookie
-                d&apos;authentification pour les fonctionnalités membres. Durée
-                : Session
               </li>
             </ul>
 
@@ -204,9 +196,19 @@ export default function PrivacyPolicy() {
             </h3>
             <p className="text-foreground mb-4">
               Vous pouvez modifier vos préférences de cookies à tout moment en
-              cliquant sur le lien &quot;Gérer les préférences&quot; dans le
-              bandeau de consentement aux cookies, ou en utilisant le lien
-              disponible dans le pied de page de chaque page.
+              utilisant le bouton ci-dessous ou le lien disponible dans le pied
+              de page de chaque page :
+            </p>
+            <div className="mb-4">
+              <CookiePreferencesButton className="text-primary hover:text-primary/80 cursor-pointer border-none bg-transparent p-0 font-medium text-inherit underline transition-colors">
+                Gérer les préférences de cookies
+              </CookiePreferencesButton>
+            </div>
+            <p className="text-foreground mb-4">
+              Vous pouvez également accéder aux préférences en cliquant sur le
+              bouton &quot;Gérer les préférences&quot; dans le bandeau de
+              consentement aux cookies qui apparaît lors de votre première
+              visite.
             </p>
             <p className="text-foreground">
               Pour plus d&apos;informations sur la façon dont nous utilisons les
