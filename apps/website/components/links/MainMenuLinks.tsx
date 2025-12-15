@@ -52,6 +52,14 @@ const MainMenuLinks: React.FC<MainMenuLinksProps> = ({ user, isLoading }) => {
           Contact
         </Link>
       </NavbarMenuItem>
+      <NavbarMenuItem>
+        <Link
+          href="/40-ans"
+          className="w-full rounded-lg bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] px-4 py-2 text-center font-bold text-white shadow-lg"
+        >
+          🎉 40 ans du Bon Tempérament
+        </Link>
+      </NavbarMenuItem>
       {!isLoading && user && (
         <NavbarMenuItem>
           <Link

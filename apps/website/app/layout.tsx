@@ -1,3 +1,5 @@
+import AnniversaryBanner from "@/components/anniversary/AnniversaryBanner";
+import FloatingAnniversaryButton from "@/components/anniversary/FloatingAnniversaryButton";
 import { BubbleContainer } from "@/components/BubbleContainer";
 import ConditionalGoogleAnalytics from "@/components/cookies/ConditionalGoogleAnalytics";
 import ConditionalVercelAnalytics from "@/components/cookies/ConditionalVercelAnalytics";
@@ -185,9 +187,10 @@ export default function RootLayout({
             className="flex min-h-dvh flex-col justify-center"
           >
             <Navigation />
-
+            <AnniversaryBanner />
             {children}
             <BubbleContainer />
+            <FloatingAnniversaryButton />
             <ConditionalVercelAnalytics />
             <FooterClientWrapper />
           </main>

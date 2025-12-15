@@ -77,6 +77,17 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
           Contact
         </Link>
       </NavbarItem>
+      <NavbarItem>
+        <Link
+          href="/40-ans"
+          aria-label="Célébrer 40 ans du Bon Tempérament"
+          className={`rounded-full bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] px-3 py-1 text-sm font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+            isActive("/40-ans") ? "ring-2 ring-white/50" : ""
+          }`}
+        >
+          🎉 40 ans
+        </Link>
+      </NavbarItem>
 
       {!isLoading && user && (
         <NavbarItem>
