@@ -97,63 +97,83 @@ const AnniversaryNavigation = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {navigationCards.map((card, index) => (
-            <motion.div
-              key={card.id}
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={
-                isInView
-                  ? { opacity: 1, y: 0, scale: 1 }
-                  : { opacity: 0, y: 50, scale: 0.9 }
-              }
-              transition={{
-                delay: index * 0.1,
-                duration: 0.6,
-                type: "spring",
-                stiffness: 100,
-              }}
-              whileHover={{ scale: 1.05, y: -10 }}
-              whileTap={{ scale: 0.95 }}
-              className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800"
-            >
-              {/* Gradient background on hover */}
-              <div
-                className={`absolute inset-0 ${card.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-10`}
-              />
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+          {navigationCards.map((card, index) => {
+            const randomRotation = (index % 3) * 0.5 - 0.5;
+            const randomDelay = index * 0.12 + (index % 2) * 0.04;
+            const randomOffset = ((index * 13) % 15) - 7;
 
-              {/* Icon */}
+            return (
               <motion.div
-                className={`mb-6 inline-flex rounded-2xl ${card.gradient} p-4 text-white shadow-lg`}
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
+                key={card.id}
+                initial={{
+                  opacity: 0,
+                  y: 50,
+                  scale: 0.9,
+                  rotate: randomRotation,
+                  x: randomOffset,
+                }}
+                animate={
+                  isInView
+                    ? { opacity: 1, y: 0, scale: 1, rotate: 0, x: 0 }
+                    : { opacity: 0, y: 50, scale: 0.9 }
+                }
+                transition={{
+                  delay: randomDelay,
+                  duration: 0.65 + (index % 3) * 0.08,
+                  type: "spring",
+                  stiffness: 110 + index * 8,
+                  damping: 11,
+                }}
+                whileHover={{
+                  scale: 1.06,
+                  y: -12,
+                  rotate: randomRotation * 0.3,
+                }}
+                whileTap={{ scale: 0.96 }}
+                className="group relative overflow-hidden rounded-2xl bg-white p-7 shadow-lg transition-all duration-300 hover:shadow-2xl md:p-8 dark:bg-gray-800"
               >
-                <card.icon className="text-3xl" />
+                {/* Gradient background on hover */}
+                <div
+                  className={`absolute inset-0 ${card.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-10`}
+                />
+
+                {/* Icon */}
+                <motion.div
+                  className={`mb-6 inline-flex rounded-2xl ${card.gradient} p-4 text-white shadow-lg`}
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <card.icon className="text-3xl" />
+                </motion.div>
+
+                {/* Content */}
+                <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+                  {card.title}
+                </h3>
+                <p className="mb-6 text-gray-600 dark:text-gray-400">
+                  {card.description}
+                </p>
+
+                {/* Button */}
+                <Button
+                  onClick={() => scrollToSection(card.id)}
+                  className={`w-full ${card.gradient} text-white`}
+                  endContent={<FaRocket />}
+                >
+                  Découvrir
+                </Button>
+
+                {/* Decorative corner */}
+                <div
+                  className={`absolute -top-8 -right-8 h-24 w-24 rounded-full ${card.gradient} opacity-20 blur-2xl`}
+                  style={{
+                    transform: `rotate(${index * 15}deg)`,
+                  }}
+                />
               </motion.div>
-
-              {/* Content */}
-              <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
-                {card.title}
-              </h3>
-              <p className="mb-6 text-gray-600 dark:text-gray-400">
-                {card.description}
-              </p>
-
-              {/* Button */}
-              <Button
-                onClick={() => scrollToSection(card.id)}
-                className={`w-full ${card.gradient} text-white`}
-                endContent={<FaRocket />}
-              >
-                Découvrir
-              </Button>
-
-              {/* Decorative corner */}
-              <div
-                className={`absolute -top-8 -right-8 h-24 w-24 rounded-full ${card.gradient} opacity-20 blur-2xl`}
-              />
-            </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

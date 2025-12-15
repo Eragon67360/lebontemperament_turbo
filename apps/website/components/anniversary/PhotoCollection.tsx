@@ -157,55 +157,67 @@ const PhotoCollection = () => {
           ))}
         </motion.div>
 
-        {/* Photo grid - Masonry style */}
-        <div className="columns-1 gap-4 md:columns-2 lg:columns-3">
-          {filteredPhotos.map((photo, index) => (
-            <motion.div
-              key={photo.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: index * 0.05, duration: 0.6 }}
-              whileHover={{ scale: 1.02 }}
-              className="group relative mb-4 overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800"
-              onClick={() => setSelectedPhoto(photo)}
-            >
-              {/* Image */}
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={photo.imageUrl}
-                  alt={photo.title}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        {/* Photo grid - Masonry style with variations */}
+        <div className="columns-1 gap-3 md:columns-2 md:gap-4 lg:columns-3">
+          {filteredPhotos.map((photo, index) => {
+            const randomRotation = (index % 5) * 0.4 - 0.8; // -0.8 à 0.8
+            const randomDelay = index * 0.07 + (index % 4) * 0.02;
+            const columnSpan =
+              index % 7 === 2 ? "md:col-span-2 lg:col-span-1" : "";
 
-                {/* Overlay content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <h3 className="mb-1 text-lg font-bold text-white">
-                    {photo.title}
-                  </h3>
+            return (
+              <motion.div
+                key={photo.id}
+                initial={{ opacity: 0, y: 50, rotate: randomRotation }}
+                animate={isInView ? { opacity: 1, y: 0, rotate: 0 } : {}}
+                transition={{
+                  delay: randomDelay,
+                  duration: 0.55 + (index % 4) * 0.05,
+                  type: "spring",
+                  stiffness: 120 + index * 8,
+                }}
+                whileHover={{ scale: 1.04, rotate: randomRotation * 0.4 }}
+                className={`group relative mb-3 overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-2xl md:mb-4 dark:bg-gray-800 ${columnSpan}`}
+                onClick={() => setSelectedPhoto(photo)}
+              >
+                {/* Image */}
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.title}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                  {/* Overlay content */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <h3 className="mb-1 text-lg font-bold text-white">
+                      {photo.title}
+                    </h3>
+                    {photo.year && (
+                      <p className="text-sm text-white/90">{photo.year}</p>
+                    )}
+                    {photo.description && (
+                      <p className="mt-2 text-xs text-white/80">
+                        {photo.description}
+                      </p>
+                    )}
+                    <div className="mt-2 flex items-center gap-2 text-white">
+                      <FaExpand className="text-sm" />
+                      <span className="text-xs">Cliquer pour agrandir</span>
+                    </div>
+                  </div>
+
+                  {/* Year badge */}
                   {photo.year && (
-                    <p className="text-sm text-white/90">{photo.year}</p>
+                    <div className="absolute top-4 right-4 rounded-full bg-green-500 px-3 py-1 text-sm font-bold text-white">
+                      {photo.year}
+                    </div>
                   )}
-                  {photo.description && (
-                    <p className="mt-2 text-xs text-white/80">
-                      {photo.description}
-                    </p>
-                  )}
-                  <div className="mt-2 flex items-center gap-2 text-white">
-                    <FaExpand className="text-sm" />
-                    <span className="text-xs">Cliquer pour agrandir</span>
-                  </div>
                 </div>
-
-                {/* Year badge */}
-                {photo.year && (
-                  <div className="absolute top-4 right-4 rounded-full bg-green-500 px-3 py-1 text-sm font-bold text-white">
-                    {photo.year}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Load more */}

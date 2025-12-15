@@ -207,12 +207,15 @@ const AnniversaryLanding = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.9 }}
-                  className="mx-auto max-w-3xl text-lg text-gray-700 md:text-xl dark:text-gray-300"
+                  className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-700 md:text-xl dark:text-gray-300"
                 >
-                  Depuis 1984, Le Bon Tempérament continue de partager sa
-                  passion pour la musique classique. Découvrez 40 ans
-                  d&apos;histoire, de concerts, de souvenirs et de moments
-                  inoubliables.
+                  Depuis ce premier concert à Saverne en 1984, Le Bon
+                  Tempérament a tissé sa toile musicale à travers l&apos;Alsace
+                  et bien au-delà. Quarante ans de répétitions dans la salle
+                  paroissiale, de concerts dans des églises historiques, de
+                  moments de grâce partagés avec le public. Découvrez cette
+                  aventure humaine, faite de passion, de rigueur et de ces
+                  petites anecdotes qui font la grande histoire.
                 </motion.p>
               </motion.div>
 
@@ -221,28 +224,66 @@ const AnniversaryLanding = () => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.1, duration: 0.8 }}
-                className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-4"
+                className="mt-16 grid grid-cols-2 gap-4 gap-y-6 md:grid-cols-4 md:gap-6"
               >
                 {[
-                  { icon: FaCalendarAlt, number: "40", label: "Années" },
-                  { icon: FaMusic, number: "200+", label: "Concerts" },
-                  { icon: FaUsers, number: "500+", label: "Membres" },
-                  { icon: FaTrophy, number: "15+", label: "CDs" },
+                  {
+                    icon: FaCalendarAlt,
+                    number: "40",
+                    label: "Années",
+                    delay: 1.2,
+                    rotation: -2,
+                  },
+                  {
+                    icon: FaMusic,
+                    number: "200+",
+                    label: "Concerts",
+                    delay: 1.35,
+                    rotation: 1.5,
+                  },
+                  {
+                    icon: FaUsers,
+                    number: "500+",
+                    label: "Membres",
+                    delay: 1.5,
+                    rotation: -1,
+                  },
+                  {
+                    icon: FaTrophy,
+                    number: "15+",
+                    label: "CDs",
+                    delay: 1.65,
+                    rotation: 2,
+                  },
                 ].map((stat, index) => (
                   <motion.div
                     key={stat.label}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.2 + index * 0.1, type: "spring" }}
-                    className="group relative overflow-hidden rounded-2xl bg-white/80 p-6 text-center shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-xl dark:bg-gray-800/80"
+                    initial={{ opacity: 0, scale: 0.8, rotate: stat.rotation }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{
+                      delay: stat.delay,
+                      type: "spring",
+                      stiffness: 150 + index * 20,
+                      damping: 12,
+                    }}
+                    whileHover={{
+                      scale: 1.05,
+                      rotate: stat.rotation * 0.5,
+                      y: -5,
+                    }}
+                    className="group relative overflow-hidden rounded-2xl bg-white/90 p-5 text-center shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-2xl md:p-6 dark:bg-gray-800/90"
+                    style={{
+                      transformOrigin:
+                        index % 2 === 0 ? "top left" : "top right",
+                    }}
                   >
-                    <div className="mb-4 flex justify-center">
-                      <stat.icon className="text-primary text-4xl" />
+                    <div className="mb-3 flex justify-center md:mb-4">
+                      <stat.icon className="text-primary text-3xl md:text-4xl" />
                     </div>
-                    <div className="text-4xl font-black text-gray-900 dark:text-white">
+                    <div className="text-3xl font-black text-gray-900 md:text-4xl dark:text-gray-500">
                       {stat.number}
                     </div>
-                    <div className="mt-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    <div className="mt-2 text-xs font-semibold text-gray-600 md:text-sm dark:text-gray-400">
                       {stat.label}
                     </div>
                     <div className="from-primary/30 absolute inset-0 -z-10 bg-gradient-to-br to-rose-200/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

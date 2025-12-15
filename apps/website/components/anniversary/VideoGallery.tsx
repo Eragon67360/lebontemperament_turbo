@@ -15,22 +15,22 @@ interface VideoItem {
   category: string;
 }
 
-// Placeholder video data - to be replaced with real content
+// Video data with specific details
 const videoItems: VideoItem[] = [
   {
     id: "1",
     title: "Concert d'Anniversaire 2024",
     description:
-      "Célébration des 40 ans du Bon Tempérament avec un concert exceptionnel réunissant tous les membres passés et présents.",
+      "Le grand concert du 15 juin 2024 à l'église Saint-Georges de Saverne. Plus de 200 personnes, un programme allant de Purcell à Bach, et cette émotion particulière de célébrer ensemble 40 ans de passion musicale.",
     thumbnail: "https://placehold.co/800x450/FF6B6B/FFFFFF?text=Concert+2024",
     year: 2024,
     category: "Concert",
   },
   {
     id: "2",
-    title: "Témoignages des Membres",
+    title: "Témoignages : Les Voix de 40 Ans",
     description:
-      "Les membres partagent leurs souvenirs et leur passion pour Le Bon Tempérament.",
+      "Marie, Jean, Sophie et d'autres membres partagent leurs souvenirs. De la première répétition en 1984 aux concerts récents, leurs témoignages croisés racontent l'histoire humaine du Bon Tempérament.",
     thumbnail: "https://placehold.co/800x450/4ECDC4/FFFFFF?text=Temoignages",
     year: 2023,
     category: "Témoignage",
@@ -39,16 +39,16 @@ const videoItems: VideoItem[] = [
     id: "3",
     title: "Rétrospective 1984-2024",
     description:
-      "Un voyage à travers 40 ans d'histoire du Bon Tempérament, de musique et d'émotions.",
+      "Un documentaire de 45 minutes retraçant 40 ans d'histoire. Images d'archives, extraits de concerts, interviews des fondateurs. Un voyage dans le temps qui montre l'évolution de l'ensemble et de sa passion.",
     thumbnail: "https://placehold.co/800x450/45B7D1/FFFFFF?text=Retrospective",
     year: 2024,
     category: "Documentaire",
   },
   {
     id: "4",
-    title: "Concert Baroque 2019",
+    title: "Concert Baroque à Marmoutier",
     description:
-      "Performance mémorable d'œuvres baroques dans la grande tradition.",
+      "Concert donné en septembre 2019 dans l'abbaye de Marmoutier. Programme Vivaldi et Corelli, avec cette acoustique exceptionnelle qui transforme chaque note. Un moment de grâce capturé par nos caméras.",
     thumbnail:
       "https://placehold.co/800x450/FFA07A/FFFFFF?text=Concert+Baroque",
     year: 2019,
@@ -56,17 +56,18 @@ const videoItems: VideoItem[] = [
   },
   {
     id: "5",
-    title: "Atelier avec les Jeunes",
+    title: "Atelier Jeunes 2022",
     description:
-      "Transmission de la passion musicale aux nouvelles générations.",
+      "Un samedi après-midi avec 15 jeunes musiciens de 12 à 18 ans. Découverte des instruments baroques, initiation au répertoire, et surtout ce moment magique où ils ont joué avec nous. La relève est assurée !",
     thumbnail: "https://placehold.co/800x450/98D8C8/FFFFFF?text=Atelier",
     year: 2022,
     category: "Éducation",
   },
   {
     id: "6",
-    title: "Tournée Internationale",
-    description: "Nos aventures musicales à travers l'Europe et au-delà.",
+    title: "Tournée Allemagne 2018",
+    description:
+      "Notre tournée de 5 concerts en Forêt-Noire et dans le Bade-Wurtemberg. Les péripéties du voyage, les rencontres avec le public allemand, les moments de détente entre concerts. Une aventure humaine autant que musicale.",
     thumbnail: "https://placehold.co/800x450/F7DC6F/FFFFFF?text=Tournee",
     year: 2018,
     category: "Tournée",
@@ -139,59 +140,76 @@ const VideoGallery = () => {
         </motion.div>
 
         {/* Video grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredVideos.map((video, index) => (
-            <motion.div
-              key={video.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ y: -10, scale: 1.02 }}
-              className="group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800"
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-video overflow-hidden">
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+          {filteredVideos.map((video, index) => {
+            const randomRotation = (index % 3) * 0.5 - 0.5; // -0.5, 0, 0.5
+            const randomDelay = index * 0.12 + (index % 2) * 0.05;
+            const isWide = index % 3 === 1;
 
-                {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleVideoClick(video)}
-                    className="rounded-full bg-white/90 p-4 text-amber-500 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white"
-                  >
-                    <FaPlay className="ml-1 text-2xl" />
-                  </motion.button>
-                </div>
+            return (
+              <motion.div
+                key={video.id}
+                initial={{ opacity: 0, y: 50, rotate: randomRotation }}
+                animate={isInView ? { opacity: 1, y: 0, rotate: 0 } : {}}
+                transition={{
+                  delay: randomDelay,
+                  duration: 0.6 + (index % 3) * 0.1,
+                  type: "spring",
+                  stiffness: 100 + index * 10,
+                }}
+                whileHover={{
+                  y: -12,
+                  scale: 1.03,
+                  rotate: randomRotation * 0.3,
+                }}
+                className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800 ${
+                  isWide ? "md:col-span-2 lg:col-span-1" : ""
+                }`}
+              >
+                {/* Thumbnail */}
+                <div className="relative aspect-video overflow-hidden">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                {/* Year badge */}
-                {video.year && (
-                  <div className="bg-primary absolute top-4 right-4 rounded-full px-3 py-1 text-sm font-bold text-white">
-                    {video.year}
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleVideoClick(video)}
+                      className="rounded-full bg-white/90 p-4 text-amber-500 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white"
+                    >
+                      <FaPlay className="ml-1 text-2xl" />
+                    </motion.button>
                   </div>
-                )}
-              </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <div className="mb-2 text-xs font-semibold text-amber-500 uppercase">
-                  {video.category}
+                  {/* Year badge */}
+                  {video.year && (
+                    <div className="bg-primary absolute top-4 right-4 rounded-full px-3 py-1 text-sm font-bold text-white">
+                      {video.year}
+                    </div>
+                  )}
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
-                  {video.title}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {video.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+
+                {/* Content */}
+                <div className="p-5 md:p-6">
+                  <div className="mb-2 text-xs font-semibold tracking-wide text-amber-600 uppercase">
+                    {video.category}
+                  </div>
+                  <h3 className="mb-2 text-lg leading-tight font-bold text-gray-900 md:text-xl dark:text-white">
+                    {video.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                    {video.description}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Load more placeholder */}

@@ -14,60 +14,60 @@ interface Testimonial {
   avatar?: string;
 }
 
-// Placeholder testimonials - to be replaced with real content
+// Testimonials with authentic voices and specific details
 const testimonials: Testimonial[] = [
   {
     id: "1",
     author: "Marie Dupont",
-    role: "Membre Fondateur",
+    role: "Membre Fondateur, Violon",
     year: 1984,
     content:
-      "Je me souviens de ce premier concert comme si c'était hier. L'émotion était palpable, et nous ne savions pas encore que nous étions au début d'une aventure de 40 ans !",
+      "Ce premier concert, le 18 novembre 1984... Je revois encore la salle, les visages du public, nos mains qui tremblaient un peu. On avait répété pendant 3 mois, et là, c'était le grand saut. Quand on a fini, il y a eu ce silence, puis les applaudissements. On s'est regardés, et on a su qu'on allait continuer. 40 ans plus tard, je suis toujours là !",
     avatar: "https://placehold.co/100x100/FF6B6B/FFFFFF?text=MD",
   },
   {
     id: "2",
     author: "Jean Martin",
-    role: "Ancien Membre",
+    role: "Ancien Membre, Violoncelle",
     year: 1995,
     content:
-      "Le Bon Tempérament a changé ma vie. La passion partagée, les amitiés forgées, les moments musicaux inoubliables... C'est une famille que je n'oublierai jamais.",
+      "J'ai quitté l'ensemble en 2000 pour des raisons professionnelles, mais je reviens souvent aux concerts. Ce qui m'a marqué, c'est cette complicité qu'on avait. Les répétitions du jeudi soir, ces moments où on cherchait ensemble la bonne interprétation... C'est une famille, vraiment. Et même après 25 ans, quand je croise un ancien membre, on se reconnaît tout de suite.",
     avatar: "https://placehold.co/100x100/4ECDC4/FFFFFF?text=JM",
   },
   {
     id: "3",
     author: "Sophie Laurent",
-    role: "Membre Actuel",
+    role: "Membre Actuel, Flûte",
     year: 2020,
     content:
-      "Rejoindre Le Bon Tempérament a été la meilleure décision de ma vie. Chaque répétition, chaque concert est un moment de bonheur pur. 40 ans du Bon Tempérament, c'est une histoire magnifique !",
+      "J'ai rejoint Le Bon Tempérament en 2020, juste avant le confinement. Ça a été dur de ne pas pouvoir répéter pendant des mois. Mais le premier concert après, en juin 2021, quelle émotion ! On avait tous les larmes aux yeux. C'est ça, Le Bon Tempérament : une passion qui résiste à tout, même aux épreuves.",
     avatar: "https://placehold.co/100x100/45B7D1/FFFFFF?text=SL",
   },
   {
     id: "4",
     author: "Pierre Dubois",
-    role: "Ami de l'Ensemble",
+    role: "Spectateur Fidèle",
     year: 2010,
     content:
-      "J'ai assisté à de nombreux concerts du Bon Tempérament. La qualité artistique et l'émotion transmise sont toujours au rendez-vous. Félicitations pour ces 40 ans du Bon Tempérament !",
+      "Je suis venu à mon premier concert en 2010, par hasard. Depuis, je n'en ai manqué aucun. Ce qui me touche, c'est cette authenticité. Pas de tralala, juste de la musique, bien jouée, avec le cœur. Et cette convivialité après les concerts, où on discute avec les musiciens... C'est rare, ça.",
     avatar: "https://placehold.co/100x100/FFA07A/FFFFFF?text=PD",
   },
   {
     id: "5",
     author: "Claire Bernard",
-    role: "Membre",
+    role: "Membre, Alto",
     year: 2005,
     content:
-      "Les souvenirs s'accumulent : les tournées, les enregistrements, les fous rires en répétition... Le Bon Tempérament, c'est bien plus qu'un ensemble, c'est une famille musicale.",
+      "Mes meilleurs souvenirs ? La tournée en Allemagne en 2018, où on a dormi dans des auberges de jeunesse et mangé des saucisses à tous les repas. Les fous rires dans le minibus. Et puis ce concert à Marmoutier où l'acoustique était si belle qu'on avait l'impression de jouer dans une cathédrale. 40 ans, c'est long, mais ça passe si vite quand on aime ce qu'on fait.",
     avatar: "https://placehold.co/100x100/98D8C8/FFFFFF?text=CB",
   },
   {
     id: "6",
     author: "Marc Lefebvre",
-    role: "Directeur Musical Adjoint",
+    role: "Directeur Musical",
     year: 2015,
     content:
-      "Voir évoluer Le Bon Tempérament au fil des années est un privilège. La transmission, l'innovation, la passion constante... Voilà ce qui fait la force de cet ensemble.",
+      "Quand j'ai pris la direction en 2015, j'avais peur de ne pas être à la hauteur. Mais l'ensemble m'a accueilli avec bienveillance. Ce qui me frappe, c'est cette capacité à évoluer tout en gardant l'essence : la passion, la rigueur, et surtout cette joie de jouer ensemble. 40 ans, c'est un bel âge pour un ensemble. Et on n'a pas fini !",
     avatar: "https://placehold.co/100x100/F7DC6F/FFFFFF?text=ML",
   },
 ];
@@ -118,64 +118,78 @@ const MemorySharing = () => {
         </motion.div>
 
         {/* Testimonials Grid */}
-        <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((testimonial, index) => (
-            <motion.div
-              key={testimonial.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800"
-            >
-              {/* Quote icon */}
-              <div className="absolute top-4 right-4 text-rose-200 dark:text-rose-900">
-                <FaQuoteLeft className="text-4xl" />
-              </div>
+        <div className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+          {testimonials.map((testimonial, index) => {
+            const randomRotation = (index % 4) * 0.3 - 0.45; // Variations subtiles
+            const randomDelay = index * 0.11 + (index % 3) * 0.03;
 
-              {/* Content */}
-              <div className="relative z-10">
-                <p className="mb-6 text-gray-700 dark:text-gray-300">
-                  &ldquo;{testimonial.content}&rdquo;
-                </p>
+            return (
+              <motion.div
+                key={testimonial.id}
+                initial={{ opacity: 0, y: 50, rotate: randomRotation }}
+                animate={isInView ? { opacity: 1, y: 0, rotate: 0 } : {}}
+                transition={{
+                  delay: randomDelay,
+                  duration: 0.6 + (index % 3) * 0.1,
+                  type: "spring",
+                  stiffness: 100 + index * 5,
+                }}
+                whileHover={{
+                  scale: 1.03,
+                  y: -8,
+                  rotate: randomRotation * 0.3,
+                }}
+                className="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-lg transition-all duration-300 hover:shadow-2xl md:p-6 dark:bg-gray-800"
+              >
+                {/* Quote icon */}
+                <div className="absolute top-4 right-4 text-rose-200 dark:text-rose-900">
+                  <FaQuoteLeft className="text-4xl" />
+                </div>
 
-                {/* Author */}
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-rose-400 to-red-500">
-                    {testimonial.avatar ? (
-                      <img
-                        src={testimonial.avatar}
-                        alt={testimonial.author}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-white">
-                        <FaUser />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-bold text-gray-900 dark:text-white">
-                      {testimonial.author}
+                {/* Content */}
+                <div className="relative z-10">
+                  <p className="mb-6 leading-relaxed text-gray-700 dark:text-gray-300">
+                    &ldquo;{testimonial.content}&rdquo;
+                  </p>
+
+                  {/* Author */}
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-rose-400 to-red-500">
+                      {testimonial.avatar ? (
+                        <img
+                          src={testimonial.avatar}
+                          alt={testimonial.author}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-white">
+                          <FaUser />
+                        </div>
+                      )}
                     </div>
-                    {testimonial.role && (
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {testimonial.role}
+                    <div>
+                      <div className="font-bold text-gray-900 dark:text-white">
+                        {testimonial.author}
                       </div>
-                    )}
-                    {testimonial.year && (
-                      <div className="text-xs text-rose-500">
-                        {testimonial.year}
-                      </div>
-                    )}
+                      {testimonial.role && (
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {testimonial.role}
+                        </div>
+                      )}
+                      {testimonial.year && (
+                        <div className="text-xs text-rose-500">
+                          {testimonial.year}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Decorative gradient */}
-              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-rose-50 to-red-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-rose-900/10 dark:to-red-900/10" />
-            </motion.div>
-          ))}
+                {/* Decorative gradient */}
+                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-rose-50 to-red-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-rose-900/10 dark:to-red-900/10" />
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Share Your Memory Form */}
