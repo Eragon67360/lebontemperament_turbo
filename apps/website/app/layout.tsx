@@ -1,12 +1,12 @@
 import { BubbleContainer } from "@/components/BubbleContainer";
+import ConditionalGoogleAnalytics from "@/components/cookies/ConditionalGoogleAnalytics";
+import ConditionalVercelAnalytics from "@/components/cookies/ConditionalVercelAnalytics";
+import CookieConsentComponent from "@/components/cookies/CookieConsent";
 import { DeveloperFootprint } from "@/components/DeveloperFootprint";
 import { EasterEgg } from "@/components/EasterEgg";
 import { FooterClientWrapper } from "@/components/FooterClientWrapper";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
-import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
@@ -166,6 +166,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
       </head>
       <body className="bg-background text-foreground z-10 transition-colors duration-200">
+        <CookieConsentComponent />
         <Header />
         <Providers>
           <DeveloperFootprint />
@@ -187,14 +188,12 @@ export default function RootLayout({
 
             {children}
             <BubbleContainer />
-            <Analytics />
-            <SpeedInsights />
+            <ConditionalVercelAnalytics />
             <FooterClientWrapper />
           </main>
         </Providers>
         <Toaster position="top-right" richColors />
-        <GoogleAnalytics gaId="G-J893T7P26M" />
-        <GoogleTagManager gtmId="G-J893T7P26M" />
+        <ConditionalGoogleAnalytics />
         {/* Organization Schema */}
         <script
           type="application/ld+json"

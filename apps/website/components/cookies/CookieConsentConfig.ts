@@ -31,19 +31,11 @@ const getConfig = () => {
         autoClear: {
           cookies: [
             {
-              name: "__cf_bm",
-              domain: "clerk.lebontemperament.com",
-            },
-            {
               name: "CookieConsent",
               domain: "lebontemperament.com",
             },
             {
               name: "SERVERID",
-              domain: "lebontemperament.com",
-            },
-            {
-              name: "__clerk_db_jwt",
               domain: "lebontemperament.com",
             },
           ],
@@ -376,13 +368,6 @@ const getConfig = () => {
                     expiry: "Expiration",
                   },
                   body: [
-                    {
-                      name: "__cf_bm",
-                      domain: "clerk.lebontemperament.com",
-                      desc: "Ce cookie est utilisé pour distinguer les humains des robots.",
-                      type: "HTTP",
-                      expiry: "1 jour",
-                    },
                     {
                       name: "CookieConsent",
                       domain: "lebontemperament.com",

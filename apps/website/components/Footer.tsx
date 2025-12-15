@@ -1,4 +1,5 @@
 "use client";
+import CookiePreferencesButton from "@/components/cookies/CookiePreferencesButton";
 import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -208,6 +209,10 @@ const Footer = () => {
         <p>
           © {new Date().getFullYear()} Tous droits réservés - Le Bon Tempérament
         </p>
+        <span className="hidden lg:block">&nbsp;|&nbsp;</span>
+        <CookiePreferencesButton className="hover:text-default-700 cursor-pointer border-none bg-transparent p-0 text-inherit underline transition-colors">
+          Gérer les cookies
+        </CookiePreferencesButton>
         <span className="hidden lg:block">&nbsp;|&nbsp;</span>
         <Link
           href={"/politique-de-confidentialite"}
