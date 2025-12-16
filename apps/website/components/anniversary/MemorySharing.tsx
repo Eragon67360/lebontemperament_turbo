@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { motion, useInView } from "motion/react";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import { FaHeart, FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
 
@@ -23,7 +23,7 @@ const testimonials: Testimonial[] = [
     year: 1984,
     content:
       "Ce premier concert, le 18 novembre 1984... Je revois encore la salle, les visages du public, nos mains qui tremblaient un peu. On avait répété pendant 3 mois, et là, c'était le grand saut. Quand on a fini, il y a eu ce silence, puis les applaudissements. On s'est regardés, et on a su qu'on allait continuer. 40 ans plus tard, je suis toujours là !",
-    avatar: "https://placehold.co/100x100/FF6B6B/FFFFFF?text=MD",
+    avatar: "https://placehold.co/100x100/1A878D/FFFFFF?text=MD",
   },
   {
     id: "2",
@@ -32,7 +32,7 @@ const testimonials: Testimonial[] = [
     year: 1995,
     content:
       "J'ai quitté l'ensemble en 2000 pour des raisons professionnelles, mais je reviens souvent aux concerts. Ce qui m'a marqué, c'est cette complicité qu'on avait. Les répétitions du jeudi soir, ces moments où on cherchait ensemble la bonne interprétation... C'est une famille, vraiment. Et même après 25 ans, quand je croise un ancien membre, on se reconnaît tout de suite.",
-    avatar: "https://placehold.co/100x100/4ECDC4/FFFFFF?text=JM",
+    avatar: "https://placehold.co/100x100/0D6B70/FFFFFF?text=JM",
   },
   {
     id: "3",
@@ -41,7 +41,7 @@ const testimonials: Testimonial[] = [
     year: 2020,
     content:
       "J'ai rejoint Le Bon Tempérament en 2020, juste avant le confinement. Ça a été dur de ne pas pouvoir répéter pendant des mois. Mais le premier concert après, en juin 2021, quelle émotion ! On avait tous les larmes aux yeux. C'est ça, Le Bon Tempérament : une passion qui résiste à tout, même aux épreuves.",
-    avatar: "https://placehold.co/100x100/45B7D1/FFFFFF?text=SL",
+    avatar: "https://placehold.co/100x100/1A878D/FFFFFF?text=SL",
   },
   {
     id: "4",
@@ -50,7 +50,7 @@ const testimonials: Testimonial[] = [
     year: 2010,
     content:
       "Je suis venu à mon premier concert en 2010, par hasard. Depuis, je n'en ai manqué aucun. Ce qui me touche, c'est cette authenticité. Pas de tralala, juste de la musique, bien jouée, avec le cœur. Et cette convivialité après les concerts, où on discute avec les musiciens... C'est rare, ça.",
-    avatar: "https://placehold.co/100x100/FFA07A/FFFFFF?text=PD",
+    avatar: "https://placehold.co/100x100/0D6B70/FFFFFF?text=PD",
   },
   {
     id: "5",
@@ -59,7 +59,7 @@ const testimonials: Testimonial[] = [
     year: 2005,
     content:
       "Mes meilleurs souvenirs ? La tournée en Allemagne en 2018, où on a dormi dans des auberges de jeunesse et mangé des saucisses à tous les repas. Les fous rires dans le minibus. Et puis ce concert à Marmoutier où l'acoustique était si belle qu'on avait l'impression de jouer dans une cathédrale. 40 ans, c'est long, mais ça passe si vite quand on aime ce qu'on fait.",
-    avatar: "https://placehold.co/100x100/98D8C8/FFFFFF?text=CB",
+    avatar: "https://placehold.co/100x100/1A878D/FFFFFF?text=CB",
   },
   {
     id: "6",
@@ -68,7 +68,7 @@ const testimonials: Testimonial[] = [
     year: 2015,
     content:
       "Quand j'ai pris la direction en 2015, j'avais peur de ne pas être à la hauteur. Mais l'ensemble m'a accueilli avec bienveillance. Ce qui me frappe, c'est cette capacité à évoluer tout en gardant l'essence : la passion, la rigueur, et surtout cette joie de jouer ensemble. 40 ans, c'est un bel âge pour un ensemble. Et on n'a pas fini !",
-    avatar: "https://placehold.co/100x100/F7DC6F/FFFFFF?text=ML",
+    avatar: "https://placehold.co/100x100/0D6B70/FFFFFF?text=ML",
   },
 ];
 
@@ -82,6 +82,9 @@ const MemorySharing = () => {
     year: "",
   });
 
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 1000], [30, -30]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Placeholder: In real implementation, this would submit to an API
@@ -94,67 +97,98 @@ const MemorySharing = () => {
     <section
       id="memories"
       ref={sectionRef}
-      className="relative bg-gradient-to-b from-rose-50 to-red-50 py-20 dark:from-gray-900 dark:to-gray-800"
+      className="bg-background relative overflow-hidden py-16"
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-8">
+      {/* Parallax background orb */}
+      <motion.div
+        style={{ y }}
+        className="bg-primary/8 absolute top-1/3 left-1/3 h-[500px] w-[500px] rounded-full blur-[100px]"
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          <div className="mb-4 flex justify-center">
-            <div className="rounded-full bg-gradient-to-br from-rose-500 to-red-500 p-4">
-              <FaHeart className="text-4xl text-white" />
+          <motion.div
+            className="mb-6 flex justify-center"
+            whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="relative">
+              {/* Glow effect with heartbeat animation */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.5, 0.3],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="bg-primary/30 absolute inset-0 scale-110 rounded-full blur-2xl"
+              />
+
+              {/* Glass icon */}
+              <div className="from-primary to-primary/80 shadow-primary/20 relative rounded-full bg-gradient-to-br p-5 shadow-xl">
+                <FaHeart className="text-5xl text-white" />
+              </div>
             </div>
+          </motion.div>
+
+          {/* Glass morphism title */}
+          <div className="relative mx-auto mb-6 inline-block">
+            <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br backdrop-blur-xl" />
+            <div
+              className="absolute inset-0 -z-10 rounded-2xl opacity-50"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(26, 135, 141, 0.15) 0%, rgba(13, 107, 112, 0.05) 100%)",
+                filter: "blur(15px)",
+              }}
+            />
+            <h2 className="text-title text-primary/50 dark:text-primary px-8 py-4 leading-none font-light">
+              Partagez Vos Souvenirs
+            </h2>
           </div>
-          <h2 className="mb-4 text-4xl font-black text-gray-900 md:text-5xl dark:text-white">
-            Partagez Vos Souvenirs
-          </h2>
-          <p className="mx-auto max-w-2xl text-lg text-gray-700 dark:text-gray-300">
+          <p className="text-foreground mx-auto max-w-2xl text-lg font-light">
             Vos témoignages font partie de notre histoire. Partagez vos moments
             mémorables avec Le Bon Tempérament !
           </p>
         </motion.div>
 
         {/* Testimonials Grid */}
-        <div className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+        <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => {
-            const randomRotation = (index % 4) * 0.3 - 0.45; // Variations subtiles
-            const randomDelay = index * 0.11 + (index % 3) * 0.03;
-
             return (
               <motion.div
                 key={testimonial.id}
-                initial={{ opacity: 0, y: 50, rotate: randomRotation }}
-                animate={isInView ? { opacity: 1, y: 0, rotate: 0 } : {}}
+                initial={{ opacity: 0, y: 30 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{
-                  delay: randomDelay,
-                  duration: 0.6 + (index % 3) * 0.1,
-                  type: "spring",
-                  stiffness: 100 + index * 5,
+                  delay: index * 0.1,
+                  duration: 0.6,
                 }}
-                whileHover={{
-                  scale: 1.03,
-                  y: -8,
-                  rotate: randomRotation * 0.3,
-                }}
-                className="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-lg transition-all duration-300 hover:shadow-2xl md:p-6 dark:bg-gray-800"
+                whileHover={{ y: -4 }}
+                className="border-divider bg-background group relative overflow-hidden rounded-lg border p-6 shadow-sm transition-all duration-300 hover:shadow-md"
               >
                 {/* Quote icon */}
-                <div className="absolute top-4 right-4 text-rose-200 dark:text-rose-900">
+                <div className="text-primary/20 absolute top-4 right-4">
                   <FaQuoteLeft className="text-4xl" />
                 </div>
 
                 {/* Content */}
                 <div className="relative z-10">
-                  <p className="mb-6 leading-relaxed text-gray-700 dark:text-gray-300">
+                  <p className="text-foreground/70 mb-6 leading-relaxed font-light">
                     &ldquo;{testimonial.content}&rdquo;
                   </p>
 
                   {/* Author */}
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-rose-400 to-red-500">
+                    <div className="bg-primary h-12 w-12 overflow-hidden rounded-full">
                       {testimonial.avatar ? (
                         <img
                           src={testimonial.avatar}
@@ -168,25 +202,22 @@ const MemorySharing = () => {
                       )}
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900 dark:text-white">
+                      <div className="text-foreground font-semibold">
                         {testimonial.author}
                       </div>
                       {testimonial.role && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="text-foreground/70 text-sm font-light">
                           {testimonial.role}
                         </div>
                       )}
                       {testimonial.year && (
-                        <div className="text-xs text-rose-500">
+                        <div className="text-primary text-xs font-semibold">
                           {testimonial.year}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-
-                {/* Decorative gradient */}
-                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-rose-50 to-red-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-rose-900/10 dark:to-red-900/10" />
               </motion.div>
             );
           })}
@@ -194,19 +225,19 @@ const MemorySharing = () => {
 
         {/* Share Your Memory Form */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-xl dark:bg-gray-800"
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="group border-primary/10 bg-background/50 relative mx-auto max-w-2xl overflow-hidden rounded-xl border p-8 shadow-lg backdrop-blur-sm"
         >
-          <h3 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-foreground mb-6 text-2xl font-semibold">
             Partagez Votre Témoignage
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="name"
-                className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                className="text-foreground mb-2 block text-sm font-semibold"
               >
                 Votre Nom
               </label>
@@ -218,7 +249,7 @@ const MemorySharing = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
                 placeholder="Votre nom"
               />
             </div>
@@ -226,7 +257,7 @@ const MemorySharing = () => {
             <div>
               <label
                 htmlFor="email"
-                className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                className="text-foreground mb-2 block text-sm font-semibold"
               >
                 Votre Email
               </label>
@@ -238,7 +269,7 @@ const MemorySharing = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
                 placeholder="votre@email.com"
               />
             </div>
@@ -246,7 +277,7 @@ const MemorySharing = () => {
             <div>
               <label
                 htmlFor="year"
-                className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                className="text-foreground mb-2 block text-sm font-semibold"
               >
                 Année (optionnel)
               </label>
@@ -259,7 +290,7 @@ const MemorySharing = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, year: e.target.value })
                 }
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
                 placeholder="1984-2024"
               />
             </div>
@@ -267,7 +298,7 @@ const MemorySharing = () => {
             <div>
               <label
                 htmlFor="message"
-                className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                className="text-foreground mb-2 block text-sm font-semibold"
               >
                 Votre Témoignage
               </label>
@@ -279,7 +310,7 @@ const MemorySharing = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, message: e.target.value })
                 }
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
                 placeholder="Partagez vos souvenirs, anecdotes, ou messages pour les 40 ans du Bon Tempérament..."
               />
             </div>
@@ -287,14 +318,16 @@ const MemorySharing = () => {
             <Button
               type="submit"
               size="lg"
-              className="w-full bg-gradient-to-r from-rose-500 to-red-500 text-white"
+              color="primary"
+              radius="sm"
+              className="w-full"
               endContent={<FaPaperPlane />}
             >
               Envoyer Mon Témoignage
             </Button>
           </form>
 
-          <p className="mt-4 text-center text-xs text-gray-600 dark:text-gray-400">
+          <p className="text-foreground/70 mt-4 text-center text-xs font-light">
             Les témoignages sont modérés avant publication. Merci de votre
             contribution !
           </p>

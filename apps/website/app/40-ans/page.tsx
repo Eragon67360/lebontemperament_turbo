@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 
 const AnniversaryPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="bg-background min-h-screen">
       <AnniversaryLanding />
       <AnniversaryNavigation />
       <AnniversaryTimeline />

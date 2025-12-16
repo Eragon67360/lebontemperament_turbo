@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useInView } from "motion/react";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
@@ -85,6 +85,9 @@ const AudioMemories = () => {
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const [playingId, setPlayingId] = useState<string | null>(null);
 
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 1000], [30, -30]);
+
   const handlePlay = (id: string) => {
     setPlayingId(id);
   };
@@ -97,85 +100,113 @@ const AudioMemories = () => {
     <section
       id="audio"
       ref={sectionRef}
-      className="relative bg-gradient-to-b from-purple-50 to-indigo-50 py-20 dark:from-gray-900 dark:to-gray-800"
+      className="bg-background relative overflow-hidden py-16"
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-8">
+      {/* Parallax background orb */}
+      <motion.div
+        style={{ y }}
+        className="bg-primary/5 absolute right-1/4 bottom-1/4 h-[500px] w-[500px] rounded-full blur-[100px]"
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          <div className="mb-4 flex justify-center">
-            <div className="rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 p-4">
-              <FaHeadphones className="text-4xl text-white" />
+          <motion.div
+            className="mb-6 flex justify-center"
+            whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="relative">
+              {/* Glow effect */}
+              <div className="bg-primary/30 absolute inset-0 scale-110 rounded-full blur-2xl" />
+
+              {/* Glass icon */}
+              <div className="from-primary to-primary/80 shadow-primary/20 relative rounded-full bg-gradient-to-br p-5 shadow-xl">
+                <FaHeadphones className="text-5xl text-white" />
+              </div>
             </div>
+          </motion.div>
+
+          {/* Glass morphism title */}
+          <div className="relative mx-auto mb-6 inline-block">
+            <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br backdrop-blur-xl" />
+            <div
+              className="absolute inset-0 -z-10 rounded-2xl opacity-50"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(26, 135, 141, 0.15) 0%, rgba(13, 107, 112, 0.05) 100%)",
+                filter: "blur(15px)",
+              }}
+            />
+            <h2 className="text-title text-primary/50 dark:text-primary px-8 py-4 leading-none font-light">
+              Mémoires Audio
+            </h2>
           </div>
-          <h2 className="mb-4 text-4xl font-black text-gray-900 md:text-5xl dark:text-white">
-            Mémoires Audio
-          </h2>
-          <p className="mx-auto max-w-2xl text-lg text-gray-700 dark:text-gray-300">
+          <p className="text-foreground mx-auto max-w-2xl text-lg font-light">
             Écoutez les voix et les sons qui ont marqué 40 ans d&apos;histoire
             du Bon Tempérament
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
           {audioMemories.map((memory, index) => {
-            const randomOffset = ((index * 11) % 20) - 10;
-            const randomDelay = index * 0.13 + (index % 2) * 0.04;
-
             return (
               <motion.div
                 key={memory.id}
                 initial={{
                   opacity: 0,
-                  x: index % 2 === 0 ? -60 : 60,
-                  y: randomOffset,
+                  y: 30,
                 }}
-                animate={isInView ? { opacity: 1, x: 0, y: 0 } : {}}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{
-                  delay: randomDelay,
-                  duration: 0.65 + (index % 3) * 0.08,
-                  type: "spring",
-                  stiffness: 90 + index * 8,
+                  delay: index * 0.1,
+                  duration: 0.6,
                 }}
-                whileHover={{
-                  scale: 1.03,
-                  y: -8,
-                  rotate: index % 2 === 0 ? 0.5 : -0.5,
-                }}
-                className="group overflow-hidden rounded-2xl bg-white p-5 shadow-lg transition-all duration-300 hover:shadow-2xl md:p-6 dark:bg-gray-800"
+                whileHover={{ y: -6, scale: 1.01 }}
+                className="group border-primary/10 bg-background/50 hover:shadow-primary/10 relative overflow-hidden rounded-xl border p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
               >
+                {/* Animated gradient on hover */}
+                <motion.div
+                  className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{
+                    background:
+                      "radial-gradient(circle at center, rgba(26, 135, 141, 0.05) 0%, transparent 70%)",
+                  }}
+                />
+
                 {/* Header */}
                 <div className="mb-4 flex items-start justify-between">
                   <div className="flex-1">
                     {memory.year && (
-                      <div className="mb-2 text-xs font-semibold text-purple-500 uppercase">
+                      <div className="text-primary mb-2 text-xs font-semibold uppercase">
                         {memory.year}
                       </div>
                     )}
-                    <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                    <h3 className="text-foreground mb-2 text-xl font-semibold">
                       {memory.title}
                     </h3>
                     {memory.speaker && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-foreground/70 text-sm font-light">
                         Par {memory.speaker}
                       </p>
                     )}
                   </div>
-                  <div className="ml-4 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 p-3 dark:from-purple-900/30 dark:to-indigo-900/30">
-                    <FaMusic className="text-purple-600 dark:text-purple-400" />
+                  <div className="bg-primary/10 ml-4 rounded-full p-3">
+                    <FaMusic className="text-primary" />
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="mb-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                <p className="text-foreground/70 mb-4 text-sm leading-relaxed font-light">
                   {memory.description}
                 </p>
 
                 {/* Audio Player */}
-                <div className="rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50 p-4 dark:from-gray-700 dark:to-gray-800">
+                <div className="bg-primary/5 rounded-lg p-4">
                   <AudioPlayer
                     src={memory.audioUrl}
                     onPlay={() => handlePlay(memory.id)}
@@ -192,7 +223,7 @@ const AudioMemories = () => {
 
                 {/* Duration badge */}
                 <div className="mt-3 text-right">
-                  <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+                  <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-semibold">
                     {memory.duration}
                   </span>
                 </div>
@@ -205,10 +236,10 @@ const AudioMemories = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.5 }}
-          className="mt-12 rounded-2xl bg-purple-100/50 p-6 text-center dark:bg-purple-900/20"
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="bg-primary/5 mt-12 rounded-lg p-6 text-center"
         >
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-foreground text-sm font-light">
             <strong>Note:</strong> Les fichiers audio sont actuellement des
             placeholders. Les enregistrements réels seront intégrés
             prochainement.

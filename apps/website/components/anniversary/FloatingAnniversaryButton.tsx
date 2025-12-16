@@ -2,16 +2,22 @@
 
 import { gsap } from "gsap";
 import { motion, useMotionValue, useSpring } from "motion/react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaBirthdayCake, FaStar } from "react-icons/fa";
 
 const FloatingAnniversaryButton = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Hide button on anniversary page
+  if (pathname === "/40-ans") {
+    return null;
+  }
 
   // Smooth spring animation for mouse following
   const mouseX = useMotionValue(0);
@@ -48,16 +54,16 @@ const FloatingAnniversaryButton = () => {
     setConfettiActive(true);
 
     const colors = [
-      "#FF6B6B",
-      "#4ECDC4",
-      "#45B7D1",
-      "#FFA07A",
-      "#98D8C8",
-      "#F7DC6F",
-      "#BB8FCE",
-      "#85C1E2",
-      "#FFB6C1",
-      "#FFD93D",
+      "#1A878D",
+      "#0D6B70",
+      "#1A878D",
+      "#0D6B70",
+      "#1A878D",
+      "#0D6B70",
+      "#1A878D",
+      "#0D6B70",
+      "#1A878D",
+      "#0D6B70",
     ];
 
     for (let i = 0; i < 50; i++) {
@@ -99,7 +105,7 @@ const FloatingAnniversaryButton = () => {
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group hover:shadow-primary/50 fixed bottom-8 left-8 z-50 hidden h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-[#1A878D] via-[#3D7CB2] to-[#9D609B] shadow-2xl transition-all duration-300 hover:scale-110 lg:flex"
+      className="bg-primary group hover:shadow-primary/50 fixed bottom-8 left-8 z-50 hidden h-24 w-24 items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110 lg:flex"
       style={{ x, y }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}

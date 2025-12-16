@@ -1,14 +1,13 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { motion, useInView } from "motion/react";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import {
   FaHeadphones,
   FaHeart,
   FaHistory,
   FaImages,
-  FaRocket,
   FaVideo,
 } from "react-icons/fa";
 
@@ -17,8 +16,6 @@ interface NavigationCard {
   title: string;
   description: string;
   icon: typeof FaVideo;
-  color: string;
-  gradient: string;
 }
 
 const navigationCards: NavigationCard[] = [
@@ -27,46 +24,39 @@ const navigationCards: NavigationCard[] = [
     title: "Notre Histoire",
     description: "Parcourez 40 ans de moments marquants du Bon Tempérament",
     icon: FaHistory,
-    color: "from-primary to-cyan-500",
-    gradient: "bg-gradient-to-br from-primary to-cyan-500",
   },
   {
     id: "videos",
     title: "Vidéos",
     description: "Revivez nos concerts et témoignages",
     icon: FaVideo,
-    color: "from-red-500 to-pink-500",
-    gradient: "bg-gradient-to-br from-red-500 to-pink-500",
   },
   {
     id: "audio",
     title: "Mémoires Audio",
     description: "Écoutez nos souvenirs sonores",
     icon: FaHeadphones,
-    color: "from-purple-500 to-indigo-500",
-    gradient: "bg-gradient-to-br from-purple-500 to-indigo-500",
   },
   {
     id: "photos",
     title: "Galerie Photo",
     description: "Explorez nos archives visuelles",
     icon: FaImages,
-    color: "from-green-500 to-emerald-500",
-    gradient: "bg-gradient-to-br from-green-500 to-emerald-500",
   },
   {
     id: "memories",
     title: "Témoignages",
     description: "Partagez vos souvenirs avec nous",
     icon: FaHeart,
-    color: "from-rose-500 to-red-500",
-    gradient: "bg-gradient-to-br from-rose-500 to-red-500",
   },
 ];
 
 const AnniversaryNavigation = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
+
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 1000], [50, -50]);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -79,98 +69,113 @@ const AnniversaryNavigation = () => {
     <section
       id="anniversary-navigation"
       ref={sectionRef}
-      className="relative py-20"
+      className="bg-default-50 relative overflow-hidden py-16"
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-8">
+      {/* Parallax background orb */}
+      <motion.div
+        style={{ y }}
+        className="bg-primary/10 absolute top-1/2 right-0 h-[400px] w-[400px] rounded-full blur-[100px]"
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          <h2 className="mb-4 text-4xl font-black text-gray-900 md:text-5xl dark:text-white">
-            Explorez Notre Célébration
-          </h2>
-          <p className="mx-auto max-w-2xl text-lg text-gray-700 dark:text-gray-300">
+          {/* Glass morphism title */}
+          <div className="relative mx-auto mb-6 inline-block">
+            <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br backdrop-blur-xl" />
+            <div
+              className="absolute inset-0 -z-10 rounded-2xl opacity-50"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(26, 135, 141, 0.15) 0%, rgba(13, 107, 112, 0.05) 100%)",
+                filter: "blur(15px)",
+              }}
+            />
+            <h2 className="text-title text-primary/50 dark:text-primary px-8 py-4 leading-none font-light">
+              Explorez Notre Célébration
+            </h2>
+          </div>
+          <p className="text-foreground mx-auto max-w-2xl text-lg font-light">
             Découvrez 40 ans d&apos;histoire du Bon Tempérament à travers
             différents médias et témoignages
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
           {navigationCards.map((card, index) => {
-            const randomRotation = (index % 3) * 0.5 - 0.5;
-            const randomDelay = index * 0.12 + (index % 2) * 0.04;
-            const randomOffset = ((index * 13) % 15) - 7;
-
             return (
               <motion.div
                 key={card.id}
                 initial={{
                   opacity: 0,
-                  y: 50,
-                  scale: 0.9,
-                  rotate: randomRotation,
-                  x: randomOffset,
+                  y: 30,
                 }}
                 animate={
-                  isInView
-                    ? { opacity: 1, y: 0, scale: 1, rotate: 0, x: 0 }
-                    : { opacity: 0, y: 50, scale: 0.9 }
+                  isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
                 }
                 transition={{
-                  delay: randomDelay,
-                  duration: 0.65 + (index % 3) * 0.08,
-                  type: "spring",
-                  stiffness: 110 + index * 8,
-                  damping: 11,
+                  delay: index * 0.1,
+                  duration: 0.6,
                 }}
-                whileHover={{
-                  scale: 1.06,
-                  y: -12,
-                  rotate: randomRotation * 0.3,
-                }}
-                whileTap={{ scale: 0.96 }}
-                className="group relative overflow-hidden rounded-2xl bg-white p-7 shadow-lg transition-all duration-300 hover:shadow-2xl md:p-8 dark:bg-gray-800"
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group border-primary/10 bg-background/50 hover:shadow-primary/10 relative overflow-hidden rounded-xl border p-8 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
               >
-                {/* Gradient background on hover */}
-                <div
-                  className={`absolute inset-0 ${card.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-10`}
+                {/* Animated gradient on hover */}
+                <motion.div
+                  className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{
+                    background:
+                      "radial-gradient(circle at center, rgba(26, 135, 141, 0.1) 0%, transparent 70%)",
+                  }}
                 />
 
-                {/* Icon */}
+                {/* Shimmer effect on hover */}
                 <motion.div
-                  className={`mb-6 inline-flex rounded-2xl ${card.gradient} p-4 text-white shadow-lg`}
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.6 }}
+                  className="absolute inset-0 -z-10"
+                  initial={{ x: "-100%", opacity: 0 }}
+                  whileHover={{ x: "100%", opacity: 1 }}
+                  transition={{ duration: 0.8 }}
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(26, 135, 141, 0.1), transparent)",
+                  }}
+                />
+
+                {/* Icon with glass effect */}
+                <motion.div
+                  className="relative mb-6 inline-flex"
+                  whileHover={{ rotate: [0, -5, 5, -5, 5, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <card.icon className="text-3xl" />
+                  <div className="from-primary/20 to-primary/10 absolute inset-0 -z-10 scale-110 rounded-xl bg-gradient-to-br blur-xl" />
+                  <div className="from-primary to-primary/80 shadow-primary/20 rounded-xl bg-gradient-to-br p-4 shadow-lg">
+                    <card.icon className="text-3xl text-white" />
+                  </div>
                 </motion.div>
 
                 {/* Content */}
-                <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-foreground mb-2 text-2xl font-semibold">
                   {card.title}
                 </h3>
-                <p className="mb-6 text-gray-600 dark:text-gray-400">
+                <p className="text-foreground/70 mb-6 font-light">
                   {card.description}
                 </p>
 
                 {/* Button */}
                 <Button
                   onClick={() => scrollToSection(card.id)}
-                  className={`w-full ${card.gradient} text-white`}
-                  endContent={<FaRocket />}
+                  color="primary"
+                  variant="bordered"
+                  radius="sm"
+                  className="group/btn relative w-full overflow-hidden"
                 >
-                  Découvrir
+                  <span className="relative z-10">Découvrir</span>
+                  <motion.div className="bg-primary absolute inset-0 -z-0 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-10" />
                 </Button>
-
-                {/* Decorative corner */}
-                <div
-                  className={`absolute -top-8 -right-8 h-24 w-24 rounded-full ${card.gradient} opacity-20 blur-2xl`}
-                  style={{
-                    transform: `rotate(${index * 15}deg)`,
-                  }}
-                />
               </motion.div>
             );
           })}
