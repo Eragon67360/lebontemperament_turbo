@@ -15,7 +15,7 @@ const FloatingAnniversaryButton = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Hide button on anniversary page
-  if (pathname === "/40-ans") {
+  if (pathname === "/40-ans" || pathname.startsWith("/membres")) {
     return null;
   }
 
