@@ -14,11 +14,6 @@ const FloatingAnniversaryButton = () => {
   const [confettiActive, setConfettiActive] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  // Hide button on anniversary page
-  if (pathname === "/40-ans" || pathname.startsWith("/membres")) {
-    return null;
-  }
-
   // Smooth spring animation for mouse following
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -98,6 +93,11 @@ const FloatingAnniversaryButton = () => {
       void router.push("/40-ans");
     }, 300);
   };
+
+  // Hide button on anniversary page or membres pages
+  if (pathname === "/40-ans" || pathname.startsWith("/membres")) {
+    return null;
+  }
 
   return (
     <motion.button

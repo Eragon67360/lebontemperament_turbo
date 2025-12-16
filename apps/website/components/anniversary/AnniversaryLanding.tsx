@@ -28,6 +28,19 @@ const AnniversaryLanding = () => {
   const y2 = useTransform(scrollY, [0, 500], [0, -50]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
+  // Hide scrollbar during intro animation
+  useEffect(() => {
+    if (showIntro) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showIntro]);
+
   useEffect(() => {
     if (skipped) {
       setShowIntro(false);
