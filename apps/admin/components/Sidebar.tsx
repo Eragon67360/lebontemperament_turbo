@@ -25,6 +25,7 @@ import {
   LogOut,
   MessageCircle,
   Music,
+  PartyPopper,
   Users,
   Video,
 } from "lucide-react";
@@ -139,6 +140,18 @@ export default function Sidebar({
           icon: <Calendar className="h-4 w-4" />,
         },
       ],
+    },
+    {
+      label: "Anniversaire 40 ans",
+      subroutes: [
+        {
+          href: "/dashboard/admin/anniversary",
+          label: "Gestion de la page",
+          icon: <PartyPopper className="h-4 w-4" />,
+          visible: isSuperAdmin,
+        },
+      ],
+      visible: isSuperAdmin,
     },
     {
       label: "Administration",

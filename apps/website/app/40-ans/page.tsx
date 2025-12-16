@@ -1,12 +1,7 @@
+import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
-
-import AnniversaryLanding from "@/components/anniversary/AnniversaryLanding";
-import AnniversaryNavigation from "@/components/anniversary/AnniversaryNavigation";
-import AnniversaryTimeline from "@/components/anniversary/AnniversaryTimeline";
-import AudioMemories from "@/components/anniversary/AudioMemories";
-import MemorySharing from "@/components/anniversary/MemorySharing";
-import PhotoCollection from "@/components/anniversary/PhotoCollection";
-import VideoGallery from "@/components/anniversary/VideoGallery";
+import { redirect } from "next/navigation";
+import AnniversaryPageClient from "./AnniversaryPageClient";
 
 export const metadata: Metadata = {
   title: "40 ans du Bon Tempérament | Le Bon Tempérament",
@@ -36,18 +31,35 @@ export const metadata: Metadata = {
   },
 };
 
-const AnniversaryPage = () => {
-  return (
-    <div className="bg-background min-h-screen">
-      <AnniversaryLanding />
-      <AnniversaryNavigation />
-      <AnniversaryTimeline />
-      <VideoGallery />
-      <AudioMemories />
-      <PhotoCollection />
-      <MemorySharing />
-    </div>
-  );
-};
+async function getAnniversaryFeatureStatus() {
+  const supabase = await createClient();
 
-export default AnniversaryPage;
+  try {
+    const { data, error } = await supabase
+      .from("feature_flags")
+      .select("is_enabled")
+      .eq("flag_key", "anniversary_40_years")
+      .single();
+
+    if (error) {
+      console.error("Error fetching feature flag:", error);
+      return false;
+    }
+
+    return data?.is_enabled || false;
+  } catch (error) {
+    console.error("Error fetching feature flag:", error);
+    return false;
+  }
+}
+
+export default async function AnniversaryPage() {
+  const isEnabled = await getAnniversaryFeatureStatus();
+
+  // Server-side redirect when feature is disabled
+  if (!isEnabled) {
+    redirect("/not-found");
+  }
+
+  return <AnniversaryPageClient />;
+}
