@@ -12,33 +12,12 @@ import {
   useTransform,
 } from "motion/react";
 import { useRef, useState } from "react";
-import { FaPlay, FaTimes, FaYoutube } from "react-icons/fa";
+import { FaPlay, FaYoutube } from "react-icons/fa";
+import { VideoModal } from "./VideoModal";
 
 interface VideoGalleryProps {
   videos: Video[];
 }
-
-// Helper function to convert video URLs to embed URLs
-const getEmbedUrl = (url: string): string => {
-  // YouTube patterns
-  if (url.includes("youtube.com/watch?v=")) {
-    const videoId = url.split("v=")[1]?.split("&")[0];
-    return `https://www.youtube.com/embed/${videoId}`;
-  }
-  if (url.includes("youtu.be/")) {
-    const videoId = url.split("youtu.be/")[1]?.split("?")[0];
-    return `https://www.youtube.com/embed/${videoId}`;
-  }
-
-  // Vimeo patterns
-  if (url.includes("vimeo.com/")) {
-    const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
-    return `https://player.vimeo.com/video/${videoId}`;
-  }
-
-  // If already an embed URL or unknown, return as is
-  return url;
-};
 
 const VideoGallery = ({ videos }: VideoGalleryProps) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -215,69 +194,10 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
       {/* Video Modal */}
       <AnimatePresence>
         {selectedVideo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4"
-            onClick={() => setSelectedVideo(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="relative w-full max-w-5xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close button */}
-              <button
-                onClick={() => setSelectedVideo(null)}
-                className="absolute -top-12 right-0 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20 md:top-0 md:-right-12"
-                aria-label="Fermer"
-              >
-                <FaTimes className="text-xl" />
-                <span className="text-sm font-semibold">Fermer</span>
-              </button>
-
-              {/* Video container with glass morphism */}
-              <div className="from-primary/10 to-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-br p-1 backdrop-blur-xl">
-                <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
-                  <iframe
-                    src={
-                      selectedVideo.video_url
-                        ? getEmbedUrl(selectedVideo.video_url)
-                        : ""
-                    }
-                    title={selectedVideo.title}
-                    className="absolute inset-0 h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-
-              {/* Video info */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
-                className="mt-6 text-center"
-              >
-                <div className="text-primary mb-2 text-xs font-semibold tracking-wide uppercase">
-                  {selectedVideo.category}
-                  {selectedVideo.year && ` • ${selectedVideo.year}`}
-                </div>
-                <h3 className="mb-2 text-2xl font-semibold text-white">
-                  {selectedVideo.title}
-                </h3>
-                <p className="mx-auto max-w-2xl text-white/70">
-                  {selectedVideo.description}
-                </p>
-              </motion.div>
-            </motion.div>
-          </motion.div>
+          <VideoModal
+            video={selectedVideo}
+            onClose={() => setSelectedVideo(null)}
+          />
         )}
       </AnimatePresence>
     </section>

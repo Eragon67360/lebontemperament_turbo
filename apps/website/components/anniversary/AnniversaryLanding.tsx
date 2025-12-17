@@ -10,7 +10,7 @@ import {
   useScroll,
   useTransform,
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   FaCalendarAlt,
   FaHeadphones,
@@ -57,18 +57,122 @@ const AnniversaryLanding = ({ hero, stats }: AnniversaryLandingProps) => {
   const y2 = useTransform(scrollY, [0, 500], [0, -50]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
-  // Hide scrollbar during intro animation
-  useEffect(() => {
-    if (showIntro) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+  // Prevent scrolling during intro animation - apply immediately on mount
+  useLayoutEffect(() => {
+    // Apply scroll prevention immediately if intro should be shown
+    if (showIntro && hero.enable_intro_animation) {
+      // Scroll to top immediately to prevent any initial scroll
+      window.scrollTo(0, 0);
 
-    return () => {
+      // Store current scroll position (should be 0, but just in case)
+      const scrollY = 0;
+
+      // Prevent scrolling on both body and html
+      document.documentElement.style.overflow = "hidden";
+      document.documentElement.style.position = "fixed";
+      document.documentElement.style.top = "0px";
+      document.documentElement.style.width = "100%";
+      document.documentElement.style.height = "100%";
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = "0px";
+      document.body.style.width = "100%";
+      document.body.style.height = "100%";
+
+      // Prevent touch scrolling
+      const preventTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+      };
+
+      // Prevent wheel scrolling
+      const preventWheel = (e: WheelEvent) => {
+        e.preventDefault();
+      };
+
+      // Prevent keyboard scrolling
+      const preventKeyboard = (e: KeyboardEvent) => {
+        if (
+          [
+            "ArrowUp",
+            "ArrowDown",
+            "PageUp",
+            "PageDown",
+            "Home",
+            "End",
+            " ",
+          ].includes(e.key)
+        ) {
+          e.preventDefault();
+        }
+      };
+
+      // Prevent scroll event
+      const preventScroll = (e: Event) => {
+        e.preventDefault();
+      };
+
+      // Add event listeners with capture phase for immediate prevention
+      document.addEventListener("touchmove", preventTouchMove, {
+        passive: false,
+        capture: true,
+      });
+      document.addEventListener("wheel", preventWheel, {
+        passive: false,
+        capture: true,
+      });
+      document.addEventListener("keydown", preventKeyboard, { capture: true });
+      document.addEventListener("scroll", preventScroll, {
+        passive: false,
+        capture: true,
+      });
+      window.addEventListener("scroll", preventScroll, {
+        passive: false,
+        capture: true,
+      });
+
+      return () => {
+        // Restore scrolling
+        document.documentElement.style.overflow = "";
+        document.documentElement.style.position = "";
+        document.documentElement.style.top = "";
+        document.documentElement.style.width = "";
+        document.documentElement.style.height = "";
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.height = "";
+
+        // Ensure we're at the top when intro ends
+        window.scrollTo(0, 0);
+
+        // Remove event listeners
+        document.removeEventListener("touchmove", preventTouchMove, {
+          capture: true,
+        });
+        document.removeEventListener("wheel", preventWheel, { capture: true });
+        document.removeEventListener("keydown", preventKeyboard, {
+          capture: true,
+        });
+        document.removeEventListener("scroll", preventScroll, {
+          capture: true,
+        });
+        window.removeEventListener("scroll", preventScroll, { capture: true });
+      };
+    } else {
+      // Clean up when intro is hidden
+      document.documentElement.style.overflow = "";
+      document.documentElement.style.position = "";
+      document.documentElement.style.top = "";
+      document.documentElement.style.width = "";
+      document.documentElement.style.height = "";
       document.body.style.overflow = "";
-    };
-  }, [showIntro]);
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
+    }
+  }, [showIntro, hero.enable_intro_animation]);
 
   useEffect(() => {
     // Skip intro animation if disabled in config
