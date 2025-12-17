@@ -14,7 +14,7 @@ import CloudinaryImage from "@/components/CloudinaryImage";
 import ConcertPhotos from "@/components/ConcertPhotos";
 import ContactForm from "@/components/ContactForm";
 import ProjectViewer from "@/components/ProjectViewer";
-import { useAnniversaryFeature } from "@/hooks/useFeatureFlag";
+import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
 import { Button } from "@heroui/react";
@@ -24,6 +24,7 @@ import Footer from "./Footer";
 
 const HomeContent = () => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
+  const { isAdmin } = useAdminStatus();
   const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
     typeof window !== "undefined" ? Math.max(window.innerHeight, 200) : 600,
   );
@@ -128,7 +129,7 @@ const HomeContent = () => {
               </div>
 
               {/* Anniversary CTA */}
-              {isAnniversaryEnabled && (
+              {(isAnniversaryEnabled || isAdmin) && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}

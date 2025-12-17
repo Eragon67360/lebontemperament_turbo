@@ -6,6 +6,7 @@ import AnniversaryTimeline from "@/components/anniversary/AnniversaryTimeline";
 import AudioMemories from "@/components/anniversary/AudioMemories";
 import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
+import PreviewBanner from "@/components/anniversary/PreviewBanner";
 import VideoGallery from "@/components/anniversary/VideoGallery";
 import type { AnniversaryPageData } from "@/types/anniversary";
 import { createClient } from "@/utils/supabase/client";
@@ -13,10 +14,12 @@ import { useEffect, useState } from "react";
 
 interface AnniversaryPageClientProps {
   data: AnniversaryPageData;
+  isPreview?: boolean;
 }
 
 export default function AnniversaryPageClient({
   data: initialData,
+  isPreview = false,
 }: AnniversaryPageClientProps) {
   const [data, setData] = useState<AnniversaryPageData>(initialData);
   const supabase = createClient();
@@ -336,6 +339,7 @@ export default function AnniversaryPageClient({
 
   return (
     <div className="bg-background min-h-screen">
+      <PreviewBanner isPreview={isPreview} />
       <AnniversaryLanding hero={data.hero} stats={data.heroStats} />
       <AnniversaryNavigation cards={data.navigationCards} />
       <AnniversaryTimeline events={data.timelineEvents} />

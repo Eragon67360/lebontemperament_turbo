@@ -1,6 +1,6 @@
 "use client";
 
-import { useAnniversaryFeature } from "@/hooks/useFeatureFlag";
+import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import { gsap } from "gsap";
 import { motion, useMotionValue, useSpring } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { FaBirthdayCake, FaStar } from "react-icons/fa";
 
 const FloatingAnniversaryButton = () => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
+  const { isAdmin } = useAdminStatus();
   const router = useRouter();
   const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -96,12 +97,14 @@ const FloatingAnniversaryButton = () => {
     }, 300);
   };
 
-  // Hide button on anniversary page, membres pages, or when feature is disabled
-  if (
-    !isAnniversaryEnabled ||
-    pathname === "/40-ans" ||
-    pathname.startsWith("/membres")
-  ) {
+  // Show button if feature is enabled OR user is admin
+  // Hide button on anniversary page or membres pages
+  const shouldShow =
+    (isAnniversaryEnabled || isAdmin) &&
+    pathname !== "/40-ans" &&
+    !pathname.startsWith("/membres");
+
+  if (!shouldShow) {
     return null;
   }
 

@@ -1,5 +1,5 @@
 // MainLinks.tsx
-import { useAnniversaryFeature } from "@/hooks/useFeatureFlag";
+import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import { NavbarContent, NavbarItem } from "@heroui/react";
 import { User } from "@supabase/supabase-js";
@@ -16,6 +16,7 @@ interface MainLinksProps {
 const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
   const pathname = usePathname();
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
+  const { isAdmin } = useAdminStatus();
 
   const isActive = (href: string) => pathname === href;
 
@@ -79,7 +80,7 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
           Contact
         </Link>
       </NavbarItem>
-      {isAnniversaryEnabled && (
+      {(isAnniversaryEnabled || isAdmin) && (
         <NavbarItem>
           <Link
             href="/40-ans"

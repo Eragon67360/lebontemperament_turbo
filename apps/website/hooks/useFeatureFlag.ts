@@ -125,3 +125,45 @@ export function useFeatureFlag(flagKey: string) {
 export function useAnniversaryFeature() {
   return useFeatureFlag("anniversary_40_years");
 }
+
+/**
+ * Hook to check if the current authenticated user is an admin
+ * @returns Object containing the admin status and loading state
+ */
+export function useAdminStatus() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchAdminStatus = async () => {
+      try {
+        const response = await fetch("/api/auth/check-admin");
+
+        if (!response.ok) {
+          console.error("Error fetching admin status");
+          setIsAdmin(false);
+        } else {
+          const data = await response.json();
+          setIsAdmin(data?.isAdmin || false);
+        }
+      } catch (error) {
+        console.error("Error fetching admin status:", error);
+        setIsAdmin(false);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchAdminStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return { isAdmin, isLoading };
+}

@@ -1,4 +1,5 @@
 import { getAnniversaryPageData } from "@/lib/anniversary";
+import { checkAdminAuth } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -59,9 +60,14 @@ export const revalidate = 60; // Cache page for 60 seconds
 export default async function AnniversaryPage() {
   const isEnabled = await getAnniversaryFeatureStatus();
 
-  // Server-side redirect when feature is disabled
+  // If feature is disabled, check if user is admin
   if (!isEnabled) {
-    redirect("/not-found");
+    const { isAdmin } = await checkAdminAuth();
+
+    // Only allow access if user is admin (preview mode)
+    if (!isAdmin) {
+      redirect("/not-found");
+    }
   }
 
   const data = await getAnniversaryPageData();
@@ -80,5 +86,8 @@ export default async function AnniversaryPage() {
     );
   }
 
-  return <AnniversaryPageClient data={data} />;
+  // Determine if this is preview mode (feature disabled but admin viewing)
+  const isPreview = !isEnabled;
+
+  return <AnniversaryPageClient data={data} isPreview={isPreview} />;
 }
