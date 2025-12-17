@@ -10,6 +10,14 @@ export interface AnniversaryHero {
   skip_button_text: string;
 }
 
+export interface HeroStat {
+  id: string;
+  icon_name: string;
+  number: string;
+  label: string;
+  display_order: number;
+}
+
 export interface NavigationCard {
   id: string;
   title: string;
@@ -85,6 +93,7 @@ export interface Memory {
 // Combined response types for API
 export interface AnniversaryPageData {
   hero: AnniversaryHero;
+  heroStats: HeroStat[];
   navigationCards: NavigationCard[];
   timelineEvents: TimelineEvent[];
   videos: Video[];

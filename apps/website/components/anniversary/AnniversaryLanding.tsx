@@ -1,6 +1,6 @@
 "use client";
 
-import type { AnniversaryHero } from "@/types/anniversary";
+import type { AnniversaryHero, HeroStat } from "@/types/anniversary";
 import { Button } from "@heroui/react";
 import { gsap } from "gsap";
 import {
@@ -11,14 +11,38 @@ import {
   useTransform,
 } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { FaCalendarAlt, FaMusic, FaTrophy, FaUsers } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaHeadphones,
+  FaHeart,
+  FaHistory,
+  FaImages,
+  FaMusic,
+  FaTrophy,
+  FaUsers,
+  FaVideo,
+} from "react-icons/fa";
 import { IoMusicalNote, IoMusicalNotes } from "react-icons/io5";
+
+// Icon mapping for hero stats
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  FaMusic,
+  FaTrophy,
+  FaUsers,
+  FaCalendarAlt,
+  FaHistory,
+  FaVideo,
+  FaHeadphones,
+  FaImages,
+  FaHeart,
+};
 
 interface AnniversaryLandingProps {
   hero: AnniversaryHero;
+  stats: HeroStat[];
 }
 
-const AnniversaryLanding = ({ hero }: AnniversaryLandingProps) => {
+const AnniversaryLanding = ({ hero, stats }: AnniversaryLandingProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -370,67 +394,49 @@ const AnniversaryLanding = ({ hero }: AnniversaryLandingProps) => {
               transition={{ delay: 0.8, duration: 0.6 }}
               className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8"
             >
-              {[
-                {
-                  icon: FaCalendarAlt,
-                  number: "40",
-                  label: "Années",
-                },
-                {
-                  icon: FaMusic,
-                  number: "200+",
-                  label: "Concerts",
-                },
-                {
-                  icon: FaUsers,
-                  number: "500+",
-                  label: "Membres",
-                },
-                {
-                  icon: FaTrophy,
-                  number: "15+",
-                  label: "CDs",
-                },
-              ].map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: 0.8 + index * 0.1,
-                    duration: 0.6,
-                  }}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="group border-primary/10 bg-background/50 hover:shadow-primary/10 relative overflow-hidden rounded-xl border p-6 text-center shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
-                >
-                  {/* Animated gradient on hover */}
-                  <div className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "radial-gradient(circle at center, rgba(26, 135, 141, 0.1) 0%, transparent 70%)",
-                      }}
-                    />
-                  </div>
-
+              {stats.map((stat, index) => {
+                const IconComponent = iconMap[stat.icon_name] || FaMusic;
+                return (
                   <motion.div
-                    className="mb-4 flex justify-center"
-                    whileHover={{ rotate: [0, -10, 10, -10, 10, 0] }}
-                    transition={{ duration: 0.5 }}
+                    key={stat.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: 0.8 + index * 0.1,
+                      duration: 0.6,
+                    }}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    className="group border-primary/10 bg-background/50 hover:shadow-primary/10 relative overflow-hidden rounded-xl border p-6 text-center shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
                   >
-                    <div className="from-primary to-primary/70 rounded-full bg-gradient-to-br p-3">
-                      <stat.icon className="text-3xl text-white" />
+                    {/* Animated gradient on hover */}
+                    <div className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "radial-gradient(circle at center, rgba(26, 135, 141, 0.1) 0%, transparent 70%)",
+                        }}
+                      />
+                    </div>
+
+                    <motion.div
+                      className="mb-4 flex justify-center"
+                      whileHover={{ rotate: [0, -10, 10, -10, 10, 0] }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <div className="from-primary to-primary/70 rounded-full bg-gradient-to-br p-3">
+                        <IconComponent className="text-3xl text-white" />
+                      </div>
+                    </motion.div>
+                    <div className="text-foreground text-4xl font-semibold">
+                      {stat.number}
+                    </div>
+                    <div className="text-foreground/70 mt-2 text-sm font-light">
+                      {stat.label}
                     </div>
                   </motion.div>
-                  <div className="text-foreground text-4xl font-semibold">
-                    {stat.number}
-                  </div>
-                  <div className="text-foreground/70 mt-2 text-sm font-light">
-                    {stat.label}
-                  </div>
-                </motion.div>
-              ))}
+                );
+              })}
             </motion.div>
 
             {/* CTA Button with glass effect */}

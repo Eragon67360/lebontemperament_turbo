@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     // 'all' means no filter
 
     const { data, error } = await query;
-
+    console.log(data);
     if (error) {
       console.error("Error fetching memories:", error);
       return NextResponse.json(

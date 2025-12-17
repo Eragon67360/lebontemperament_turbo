@@ -12,6 +12,7 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
     // Fetch all data in parallel for better performance
     const [
       heroResult,
+      heroStatsResult,
       navigationCardsResult,
       timelineEventsResult,
       videosResult,
@@ -22,6 +23,13 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
     ] = await Promise.all([
       // Hero (singleton)
       supabase.from("anniversary_hero").select("*").single(),
+
+      // Hero Stats (visible only, ordered)
+      supabase
+        .from("anniversary_hero_stats")
+        .select("*")
+        .eq("is_visible", true)
+        .order("display_order", { ascending: true }),
 
       // Navigation Cards (visible only, ordered)
       supabase
@@ -83,6 +91,8 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
     }
 
     // Log non-critical errors but continue
+    if (heroStatsResult.error)
+      console.error("Error fetching hero stats:", heroStatsResult.error);
     if (navigationCardsResult.error)
       console.error(
         "Error fetching navigation cards:",
@@ -108,6 +118,7 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
     // Construct response with fallbacks for optional data
     return {
       hero: heroResult.data,
+      heroStats: heroStatsResult.data || [],
       navigationCards: navigationCardsResult.data || [],
       timelineEvents: timelineEventsResult.data || [],
       videos: videosResult.data || [],

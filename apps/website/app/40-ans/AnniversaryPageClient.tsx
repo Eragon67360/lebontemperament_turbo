@@ -18,7 +18,7 @@ export default function AnniversaryPageClient({
 }: AnniversaryPageClientProps) {
   return (
     <div className="bg-background min-h-screen">
-      <AnniversaryLanding hero={data.hero} />
+      <AnniversaryLanding hero={data.hero} stats={data.heroStats} />
       <AnniversaryNavigation cards={data.navigationCards} />
       <AnniversaryTimeline events={data.timelineEvents} />
       <VideoGallery videos={data.videos} />

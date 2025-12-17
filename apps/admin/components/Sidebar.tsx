@@ -21,6 +21,7 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import {
   AlertCircle,
+  BarChart3,
   Bug,
   Building2,
   Calendar,
@@ -178,6 +179,12 @@ export default function Sidebar({
           href: "/dashboard/admin/anniversary/hero",
           label: "Section Hero",
           icon: <Sparkles className="h-4 w-4" />,
+          visible: isSuperAdmin,
+        },
+        {
+          href: "/dashboard/admin/anniversary/hero-stats",
+          label: "Statistiques Hero",
+          icon: <BarChart3 className="h-4 w-4" />,
           visible: isSuperAdmin,
         },
         {

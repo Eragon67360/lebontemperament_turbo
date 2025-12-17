@@ -104,7 +104,7 @@ export function ImageUploader({
             <button
               type="button"
               onClick={onRemove}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute top-2 right-2 rounded-full p-1.5 shadow-lg transition-all"
+              className="bg-destructive hover:bg-destructive/90 absolute top-2 right-2 rounded-full p-1.5 text-white shadow-lg transition-all"
             >
               <X className="h-4 w-4" />
             </button>

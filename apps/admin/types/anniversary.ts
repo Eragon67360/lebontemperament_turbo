@@ -15,6 +15,17 @@ export interface AnniversaryHero {
   updated_at: string;
 }
 
+export interface AnniversaryHeroStat {
+  id: string;
+  icon_name: string;
+  number: string;
+  label: string;
+  display_order: number;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AnniversaryNavigationCard {
   id: string;
   title: string;
@@ -119,6 +130,18 @@ export interface UpdateAnniversaryHeroDTO {
   cta_target_section?: string;
   enable_intro_animation?: boolean;
   skip_button_text?: string;
+}
+
+export interface CreateHeroStatDTO {
+  icon_name: string;
+  number: string;
+  label: string;
+  display_order: number;
+  is_visible?: boolean;
+}
+
+export interface UpdateHeroStatDTO extends Partial<CreateHeroStatDTO> {
+  id: string;
 }
 
 export interface CreateNavigationCardDTO {
