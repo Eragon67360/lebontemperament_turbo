@@ -1,3 +1,4 @@
+import { cloudinary } from "@/lib/cloudinary";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -140,6 +141,39 @@ export async function DELETE(request: Request) {
     }
 
     const supabase = await createClient();
+
+    // First, get the video record to retrieve the thumbnail_url (public_id)
+    const { data: videoRecord, error: fetchError } = await supabase
+      .from("anniversary_videos")
+      .select("thumbnail_url")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching video:", fetchError);
+      return NextResponse.json(
+        { error: "Failed to fetch video" },
+        { status: 500 },
+      );
+    }
+
+    // Delete thumbnail from Cloudinary if thumbnail_url exists
+    if (videoRecord?.thumbnail_url) {
+      try {
+        await cloudinary.uploader.destroy(videoRecord.thumbnail_url, {
+          resource_type: "image",
+        });
+        console.log(
+          "Deleted thumbnail from Cloudinary:",
+          videoRecord.thumbnail_url,
+        );
+      } catch (cloudinaryError) {
+        console.error("Error deleting from Cloudinary:", cloudinaryError);
+        // Continue with database deletion even if Cloudinary fails
+      }
+    }
+
+    // Delete from database
     const { error } = await supabase
       .from("anniversary_videos")
       .delete()

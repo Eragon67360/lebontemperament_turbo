@@ -1,3 +1,4 @@
+import { cloudinary } from "@/lib/cloudinary";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -133,6 +134,36 @@ export async function DELETE(request: Request) {
     }
 
     const supabase = await createClient();
+
+    // First, get the audio record to retrieve the audio_url (public_id)
+    const { data: audioRecord, error: fetchError } = await supabase
+      .from("anniversary_audio_memories")
+      .select("audio_url")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching audio memory:", fetchError);
+      return NextResponse.json(
+        { error: "Failed to fetch audio memory" },
+        { status: 500 },
+      );
+    }
+
+    // Delete from Cloudinary if audio_url exists
+    if (audioRecord?.audio_url) {
+      try {
+        await cloudinary.uploader.destroy(audioRecord.audio_url, {
+          resource_type: "raw", // Audio files are stored as 'raw' in Cloudinary
+        });
+        console.log("Deleted audio from Cloudinary:", audioRecord.audio_url);
+      } catch (cloudinaryError) {
+        console.error("Error deleting from Cloudinary:", cloudinaryError);
+        // Continue with database deletion even if Cloudinary fails
+      }
+    }
+
+    // Delete from database
     const { error } = await supabase
       .from("anniversary_audio_memories")
       .delete()

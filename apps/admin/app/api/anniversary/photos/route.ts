@@ -1,3 +1,4 @@
+import { cloudinary } from "@/lib/cloudinary";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -133,6 +134,36 @@ export async function DELETE(request: Request) {
     }
 
     const supabase = await createClient();
+
+    // First, get the photo record to retrieve the image_url (public_id)
+    const { data: photoRecord, error: fetchError } = await supabase
+      .from("anniversary_photos")
+      .select("image_url")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching photo:", fetchError);
+      return NextResponse.json(
+        { error: "Failed to fetch photo" },
+        { status: 500 },
+      );
+    }
+
+    // Delete from Cloudinary if image_url exists
+    if (photoRecord?.image_url) {
+      try {
+        await cloudinary.uploader.destroy(photoRecord.image_url, {
+          resource_type: "image",
+        });
+        console.log("Deleted image from Cloudinary:", photoRecord.image_url);
+      } catch (cloudinaryError) {
+        console.error("Error deleting from Cloudinary:", cloudinaryError);
+        // Continue with database deletion even if Cloudinary fails
+      }
+    }
+
+    // Delete from database
     const { error } = await supabase
       .from("anniversary_photos")
       .delete()

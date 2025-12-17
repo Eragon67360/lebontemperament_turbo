@@ -46,10 +46,24 @@ export async function PATCH(request: Request) {
 
     const supabase = await createClient();
 
-    // Update the singleton row (there should only be one)
+    // First, get the existing row ID
+    const { data: existingRow } = await supabase
+      .from("anniversary_form_config")
+      .select("id")
+      .single();
+
+    if (!existingRow) {
+      return NextResponse.json(
+        { error: "Form config not found" },
+        { status: 404 },
+      );
+    }
+
+    // Update the singleton row using its ID
     const { data, error } = await supabase
       .from("anniversary_form_config")
       .update(body)
+      .eq("id", existingRow.id)
       .select()
       .single();
 
