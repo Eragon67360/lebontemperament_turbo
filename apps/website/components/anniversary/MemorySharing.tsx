@@ -22,9 +22,27 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
     year: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState<string>("");
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [30, -30]);
+
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Check if form is valid
+  const isFormValid = (): boolean => {
+    return (
+      formData.name.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      validateEmail(formData.email) &&
+      formData.message.trim() !== "" &&
+      emailError === ""
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +66,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
 
       toast.success(config.success_message);
       setFormData({ name: "", email: "", message: "", year: "" });
+      setEmailError("");
     } catch (error) {
       console.error("Submit error:", error);
       toast.error("Une erreur est survenue. Veuillez réessayer.");
@@ -277,6 +296,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 className="w-full"
                 endContent={<FaPaperPlane />}
                 isLoading={isSubmitting}
+                isDisabled={!isFormValid() || isSubmitting}
               >
                 {config.submit_button_text}
               </Button>
