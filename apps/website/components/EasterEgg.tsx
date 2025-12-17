@@ -129,8 +129,6 @@ export const EasterEgg = () => {
   const correctCode = "PICONPASTIS";
 
   const handleEasterEgg = () => {
-    console.log("COMPLETE");
-
     setIsOpen(true);
     setShowInitialMessage(true);
     setIsError(false);
