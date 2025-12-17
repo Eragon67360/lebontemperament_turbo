@@ -1,101 +1,22 @@
 "use client";
 
+import CloudinaryImage from "@/components/CloudinaryImage";
+import type { Photo } from "@/types/anniversary";
+import { RoundedSize } from "@/utils/types";
 import { Button } from "@heroui/react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import { FaExpand, FaImages } from "react-icons/fa";
 
-interface PhotoItem {
-  id: string;
-  title: string;
-  year?: number;
-  category: string;
-  imageUrl: string; // Placeholder image URL
-  description?: string;
+interface PhotoCollectionProps {
+  photos: Photo[];
 }
 
-// Placeholder photo data - to be replaced with real content
-const photoCollections: PhotoItem[] = [
-  {
-    id: "1",
-    title: "Concert Inaugural 1984",
-    year: 1984,
-    category: "Concert",
-    imageUrl: "https://placehold.co/600x400/1A878D/FFFFFF?text=Concert+1984",
-    description: "Le tout premier concert du Bon Tempérament",
-  },
-  {
-    id: "2",
-    title: "Enregistrement Studio",
-    year: 1990,
-    category: "Studio",
-    imageUrl: "https://placehold.co/600x400/0D6B70/FFFFFF?text=Studio+1990",
-    description: "Séance d'enregistrement du premier CD",
-  },
-  {
-    id: "3",
-    title: "Tournée Européenne",
-    year: 1995,
-    category: "Tournée",
-    imageUrl: "https://placehold.co/600x400/1A878D/FFFFFF?text=Tournee+1995",
-    description: "Moments partagés lors de la tournée",
-  },
-  {
-    id: "4",
-    title: "Répétition Générale",
-    year: 2000,
-    category: "Répétition",
-    imageUrl: "https://placehold.co/600x400/0D6B70/FFFFFF?text=Repetition+2000",
-    description: "Préparation avant le grand concert",
-  },
-  {
-    id: "5",
-    title: "Anniversaire 25 Ans",
-    year: 2010,
-    category: "Événement",
-    imageUrl: "https://placehold.co/600x400/1A878D/FFFFFF?text=25+Ans",
-    description: "Célébration des 25 ans d'existence",
-  },
-  {
-    id: "6",
-    title: "Concert en Plein Air",
-    year: 2015,
-    category: "Concert",
-    imageUrl:
-      "https://placehold.co/600x400/0D6B70/FFFFFF?text=Concert+Exterieur",
-    description: "Performance mémorable en extérieur",
-  },
-  {
-    id: "7",
-    title: "Atelier Jeunes",
-    year: 2020,
-    category: "Éducation",
-    imageUrl: "https://placehold.co/600x400/1A878D/FFFFFF?text=Atelier",
-    description: "Transmission aux nouvelles générations",
-  },
-  {
-    id: "8",
-    title: "40 Ans - Célébration",
-    year: 2024,
-    category: "Événement",
-    imageUrl: "https://placehold.co/600x400/0D6B70/FFFFFF?text=40+Ans",
-    description: "Le grand anniversaire des 40 ans du Bon Tempérament",
-  },
-  {
-    id: "9",
-    title: "Portraits des Membres",
-    year: 2024,
-    category: "Portrait",
-    imageUrl: "https://placehold.co/600x400/1A878D/FFFFFF?text=Portraits",
-    description: "Galerie de portraits des membres",
-  },
-];
-
-const PhotoCollection = () => {
+const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
-  const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [40, -40]);
@@ -103,13 +24,13 @@ const PhotoCollection = () => {
 
   const categories = [
     "Tous",
-    ...Array.from(new Set(photoCollections.map((item) => item.category))),
+    ...Array.from(new Set(photos.map((item) => item.category))),
   ];
 
   const filteredPhotos =
     selectedCategory === "Tous"
-      ? photoCollections
-      : photoCollections.filter((item) => item.category === selectedCategory);
+      ? photos
+      : photos.filter((item) => item.category === selectedCategory);
 
   return (
     <section
@@ -209,9 +130,12 @@ const PhotoCollection = () => {
               >
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={photo.imageUrl}
+                  <CloudinaryImage
+                    src={photo.image_url}
                     alt={photo.title}
+                    width={800}
+                    height={600}
+                    rounded={RoundedSize.NONE}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -265,7 +189,7 @@ const PhotoCollection = () => {
         </motion.div>
       </div>
 
-      {/* Photo modal - placeholder for lightbox */}
+      {/* Photo modal - lightbox */}
       {selectedPhoto && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -277,13 +201,18 @@ const PhotoCollection = () => {
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className="relative max-h-[90vh] max-w-4xl"
+            className="relative flex max-h-[90vh] max-w-[90vw] items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={selectedPhoto.imageUrl}
+            <CloudinaryImage
+              src={selectedPhoto.image_url}
               alt={selectedPhoto.title}
-              className="h-auto w-full rounded-lg"
+              width={1600}
+              height={1200}
+              rounded={RoundedSize.LG}
+              className="max-h-[85vh] w-auto object-contain"
+              quality={90}
+              priority
             />
             <button
               onClick={() => setSelectedPhoto(null)}

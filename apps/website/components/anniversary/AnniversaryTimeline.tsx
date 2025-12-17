@@ -1,70 +1,38 @@
 "use client";
 
+import type { TimelineEvent } from "@/types/anniversary";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
-import { FaCalendarAlt, FaMusic, FaTrophy, FaUsers } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaHeadphones,
+  FaHeart,
+  FaHistory,
+  FaImages,
+  FaMusic,
+  FaTrophy,
+  FaUsers,
+  FaVideo,
+} from "react-icons/fa";
 
-interface TimelineEvent {
-  year: number;
-  title: string;
-  description: string;
-  icon: typeof FaMusic;
+// Icon mapping
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  FaMusic,
+  FaTrophy,
+  FaUsers,
+  FaCalendarAlt,
+  FaHistory,
+  FaVideo,
+  FaHeadphones,
+  FaImages,
+  FaHeart,
+};
+
+interface AnniversaryTimelineProps {
+  events: TimelineEvent[];
 }
 
-// Timeline data with specific details and anecdotes
-const timelineEvents: TimelineEvent[] = [
-  {
-    year: 1984,
-    title: "La Création",
-    description:
-      "Un dimanche de novembre 1984, Simone Duclos réunit une poignée de passionnés dans la salle paroissiale de Saverne. Le premier concert, donné dans l'église Saint-Georges, rassemble 80 personnes. Personne n'imaginait alors que cette aventure durerait 40 ans.",
-    icon: FaMusic,
-  },
-  {
-    year: 1990,
-    title: "Premier Enregistrement",
-    description:
-      "Sortie du premier CD « Vivaldi : Les Quatre Saisons » enregistré dans l'église de Marmoutier. L'ingénieur du son se souvient encore de la difficulté à capturer l'acoustique particulière du lieu. Ce disque marque notre entrée dans l'ère de la diffusion musicale.",
-    icon: FaTrophy,
-  },
-  {
-    year: 1995,
-    title: "Première Tournée",
-    description:
-      "Notre première tournée en Allemagne, à Fribourg-en-Brisgau. Le trajet en minibus, les répétitions dans des salles inconnues, l'accueil chaleureux du public allemand... Une expérience qui a forgé notre identité d'ensemble itinérant.",
-    icon: FaUsers,
-  },
-  {
-    year: 2000,
-    title: "Le Nouveau Millénaire",
-    description:
-      "Concert du millénaire à la cathédrale de Strasbourg. Plus de 500 personnes, un répertoire allant de Monteverdi à Bach. Ce soir-là, nous avons compris que notre mission dépassait le simple plaisir de jouer ensemble.",
-    icon: FaCalendarAlt,
-  },
-  {
-    year: 2010,
-    title: "Les 25 Ans",
-    description:
-      "Célébration des 25 ans avec un concert réunissant tous les anciens membres. Certains n'avaient pas joué depuis 15 ans, mais la complicité était intacte. Un moment d'émotion pure, avec des larmes dans les yeux et des rires dans les coulisses.",
-    icon: FaTrophy,
-  },
-  {
-    year: 2020,
-    title: "L'Adaptation",
-    description:
-      "Le confinement nous pousse à innover : répétitions en visio, concerts diffusés en ligne depuis l'église vide. Une période difficile mais qui a renforcé notre détermination. Le premier concert post-confinement, en juin 2021, restera gravé dans nos mémoires.",
-    icon: FaMusic,
-  },
-  {
-    year: 2024,
-    title: "40 Ans de Passion",
-    description:
-      "Aujourd'hui, nous célébrons 40 ans d'une aventure humaine exceptionnelle. Des milliers d'heures de répétition, des centaines de concerts, des amitiés indéfectibles. Le Bon Tempérament, c'est bien plus qu'un ensemble : c'est une famille musicale qui continue de grandir.",
-    icon: FaTrophy,
-  },
-];
-
-const AnniversaryTimeline = () => {
+const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
@@ -141,12 +109,13 @@ const AnniversaryTimeline = () => {
 
           {/* Timeline events */}
           <div className="space-y-12 md:space-y-16">
-            {timelineEvents.map((event, index) => {
+            {events.map((event, index) => {
               const isEven = index % 2 === 0;
+              const IconComponent = iconMap[event.icon_name] || FaMusic;
 
               return (
                 <motion.div
-                  key={event.year}
+                  key={event.id}
                   initial={{
                     opacity: 0,
                     x: isEven ? -30 : 30,
@@ -171,7 +140,7 @@ const AnniversaryTimeline = () => {
 
                       {/* Main badge */}
                       <div className="from-primary to-primary/80 shadow-primary/20 relative rounded-full bg-gradient-to-br p-6 shadow-xl">
-                        <event.icon className="relative z-10 text-3xl text-white" />
+                        <IconComponent className="relative z-10 text-3xl text-white" />
                       </div>
 
                       {/* Year label with glass effect */}

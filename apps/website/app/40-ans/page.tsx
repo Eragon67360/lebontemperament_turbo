@@ -1,3 +1,4 @@
+import { getAnniversaryPageData } from "@/lib/anniversary";
 import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -53,6 +54,8 @@ async function getAnniversaryFeatureStatus() {
   }
 }
 
+export const revalidate = 60; // Cache page for 60 seconds
+
 export default async function AnniversaryPage() {
   const isEnabled = await getAnniversaryFeatureStatus();
 
@@ -61,5 +64,21 @@ export default async function AnniversaryPage() {
     redirect("/not-found");
   }
 
-  return <AnniversaryPageClient />;
+  const data = await getAnniversaryPageData();
+
+  if (!data) {
+    // Show error state or fallback
+    return (
+      <div className="bg-background flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Erreur de chargement</h1>
+          <p className="text-muted-foreground mt-2">
+            Impossible de charger les données de la page anniversaire.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return <AnniversaryPageClient data={data} />;
 }

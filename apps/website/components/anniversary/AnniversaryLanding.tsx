@@ -1,5 +1,6 @@
 "use client";
 
+import type { AnniversaryHero } from "@/types/anniversary";
 import { Button } from "@heroui/react";
 import { gsap } from "gsap";
 import {
@@ -13,7 +14,11 @@ import { useEffect, useRef, useState } from "react";
 import { FaCalendarAlt, FaMusic, FaTrophy, FaUsers } from "react-icons/fa";
 import { IoMusicalNote, IoMusicalNotes } from "react-icons/io5";
 
-const AnniversaryLanding = () => {
+interface AnniversaryLandingProps {
+  hero: AnniversaryHero;
+}
+
+const AnniversaryLanding = ({ hero }: AnniversaryLandingProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -42,6 +47,13 @@ const AnniversaryLanding = () => {
   }, [showIntro]);
 
   useEffect(() => {
+    // Skip intro animation if disabled in config
+    if (!hero.enable_intro_animation) {
+      setShowIntro(false);
+      setShowContent(true);
+      return;
+    }
+
     if (skipped) {
       setShowIntro(false);
       setShowContent(true);
@@ -145,7 +157,7 @@ const AnniversaryLanding = () => {
               onClick={handleSkip}
               className="absolute top-4 right-4 z-50 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
             >
-              Passer l&apos;animation
+              {hero.skip_button_text}
             </button>
 
             {/* Floating musical notes container */}
@@ -189,7 +201,7 @@ const AnniversaryLanding = () => {
                         textShadow: "0 0 80px rgba(26, 135, 141, 0.5)",
                       }}
                     >
-                      40
+                      {hero.hero_number}
                     </span>
                   </div>
                 </div>
@@ -327,7 +339,7 @@ const AnniversaryLanding = () => {
                   }}
                 />
                 <h1 className="text-title text-primary/50 dark:text-primary px-12 py-8 leading-none font-light">
-                  40 ANS
+                  {hero.hero_number} ANS
                 </h1>
               </motion.div>
 
@@ -337,22 +349,18 @@ const AnniversaryLanding = () => {
                 transition={{ delay: 0.4, duration: 0.6 }}
                 className="text-foreground mb-4 text-2xl font-semibold md:text-4xl"
               >
-                De Passion Musicale
+                {hero.hero_subtitle}
               </motion.p>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.6 }}
-                className="text-foreground mx-auto max-w-3xl text-lg leading-relaxed font-light md:text-xl"
-              >
-                Depuis ce premier concert à Saverne en 1984, Le Bon Tempérament
-                a tissé sa toile musicale à travers l&apos;Alsace et bien
-                au-delà. Quarante ans de répétitions dans la salle paroissiale,
-                de concerts dans des églises historiques, de moments de grâce
-                partagés avec le public. Découvrez cette aventure humaine, faite
-                de passion, de rigueur et de ces petites anecdotes qui font la
-                grande histoire.
-              </motion.p>
+              {hero.description && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.6 }}
+                  className="text-foreground mx-auto max-w-3xl text-lg leading-relaxed font-light md:text-xl"
+                >
+                  {hero.description}
+                </motion.p>
+              )}
             </motion.div>
 
             {/* Stats cards with glass morphism */}
@@ -439,13 +447,11 @@ const AnniversaryLanding = () => {
                 className="group relative overflow-hidden backdrop-blur-sm"
                 onClick={() => {
                   document
-                    .getElementById("anniversary-navigation")
+                    .getElementById(hero.cta_target_section)
                     ?.scrollIntoView({ behavior: "smooth" });
                 }}
               >
-                <span className="relative z-10">
-                  Explorer 40 Ans d&apos;Histoire
-                </span>
+                <span className="relative z-10">{hero.cta_text}</span>
                 {/* Shimmer effect */}
                 <motion.div
                   className="absolute inset-0 -z-0"

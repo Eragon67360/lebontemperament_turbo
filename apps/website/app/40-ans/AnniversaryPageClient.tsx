@@ -7,17 +7,27 @@ import AudioMemories from "@/components/anniversary/AudioMemories";
 import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
 import VideoGallery from "@/components/anniversary/VideoGallery";
+import type { AnniversaryPageData } from "@/types/anniversary";
 
-export default function AnniversaryPageClient() {
+interface AnniversaryPageClientProps {
+  data: AnniversaryPageData;
+}
+
+export default function AnniversaryPageClient({
+  data,
+}: AnniversaryPageClientProps) {
   return (
     <div className="bg-background min-h-screen">
-      <AnniversaryLanding />
-      <AnniversaryNavigation />
-      <AnniversaryTimeline />
-      <VideoGallery />
-      <AudioMemories />
-      <PhotoCollection />
-      <MemorySharing />
+      <AnniversaryLanding hero={data.hero} />
+      <AnniversaryNavigation cards={data.navigationCards} />
+      <AnniversaryTimeline events={data.timelineEvents} />
+      <VideoGallery videos={data.videos} />
+      <AudioMemories audioMemories={data.audioMemories} />
+      <PhotoCollection photos={data.photos} />
+      <MemorySharing
+        config={data.formConfig}
+        featuredMemories={data.featuredMemories}
+      />
     </div>
   );
 }

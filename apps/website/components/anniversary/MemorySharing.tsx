@@ -1,78 +1,18 @@
 "use client";
 
+import type { FormConfig, Memory } from "@/types/anniversary";
 import { Button } from "@heroui/react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import { FaHeart, FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
+import { toast } from "sonner";
 
-interface Testimonial {
-  id: string;
-  author: string;
-  role?: string;
-  year?: number;
-  content: string;
-  avatar?: string;
+interface MemorySharingProps {
+  config: FormConfig;
+  featuredMemories: Memory[];
 }
 
-// Testimonials with authentic voices and specific details
-const testimonials: Testimonial[] = [
-  {
-    id: "1",
-    author: "Marie Dupont",
-    role: "Membre Fondateur, Violon",
-    year: 1984,
-    content:
-      "Ce premier concert, le 18 novembre 1984... Je revois encore la salle, les visages du public, nos mains qui tremblaient un peu. On avait répété pendant 3 mois, et là, c'était le grand saut. Quand on a fini, il y a eu ce silence, puis les applaudissements. On s'est regardés, et on a su qu'on allait continuer. 40 ans plus tard, je suis toujours là !",
-    avatar: "https://placehold.co/100x100/1A878D/FFFFFF?text=MD",
-  },
-  {
-    id: "2",
-    author: "Jean Martin",
-    role: "Ancien Membre, Violoncelle",
-    year: 1995,
-    content:
-      "J'ai quitté l'ensemble en 2000 pour des raisons professionnelles, mais je reviens souvent aux concerts. Ce qui m'a marqué, c'est cette complicité qu'on avait. Les répétitions du jeudi soir, ces moments où on cherchait ensemble la bonne interprétation... C'est une famille, vraiment. Et même après 25 ans, quand je croise un ancien membre, on se reconnaît tout de suite.",
-    avatar: "https://placehold.co/100x100/0D6B70/FFFFFF?text=JM",
-  },
-  {
-    id: "3",
-    author: "Sophie Laurent",
-    role: "Membre Actuel, Flûte",
-    year: 2020,
-    content:
-      "J'ai rejoint Le Bon Tempérament en 2020, juste avant le confinement. Ça a été dur de ne pas pouvoir répéter pendant des mois. Mais le premier concert après, en juin 2021, quelle émotion ! On avait tous les larmes aux yeux. C'est ça, Le Bon Tempérament : une passion qui résiste à tout, même aux épreuves.",
-    avatar: "https://placehold.co/100x100/1A878D/FFFFFF?text=SL",
-  },
-  {
-    id: "4",
-    author: "Pierre Dubois",
-    role: "Spectateur Fidèle",
-    year: 2010,
-    content:
-      "Je suis venu à mon premier concert en 2010, par hasard. Depuis, je n'en ai manqué aucun. Ce qui me touche, c'est cette authenticité. Pas de tralala, juste de la musique, bien jouée, avec le cœur. Et cette convivialité après les concerts, où on discute avec les musiciens... C'est rare, ça.",
-    avatar: "https://placehold.co/100x100/0D6B70/FFFFFF?text=PD",
-  },
-  {
-    id: "5",
-    author: "Claire Bernard",
-    role: "Membre, Alto",
-    year: 2005,
-    content:
-      "Mes meilleurs souvenirs ? La tournée en Allemagne en 2018, où on a dormi dans des auberges de jeunesse et mangé des saucisses à tous les repas. Les fous rires dans le minibus. Et puis ce concert à Marmoutier où l'acoustique était si belle qu'on avait l'impression de jouer dans une cathédrale. 40 ans, c'est long, mais ça passe si vite quand on aime ce qu'on fait.",
-    avatar: "https://placehold.co/100x100/1A878D/FFFFFF?text=CB",
-  },
-  {
-    id: "6",
-    author: "Marc Lefebvre",
-    role: "Directeur Musical",
-    year: 2015,
-    content:
-      "Quand j'ai pris la direction en 2015, j'avais peur de ne pas être à la hauteur. Mais l'ensemble m'a accueilli avec bienveillance. Ce qui me frappe, c'est cette capacité à évoluer tout en gardant l'essence : la passion, la rigueur, et surtout cette joie de jouer ensemble. 40 ans, c'est un bel âge pour un ensemble. Et on n'a pas fini !",
-    avatar: "https://placehold.co/100x100/0D6B70/FFFFFF?text=ML",
-  },
-];
-
-const MemorySharing = () => {
+const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const [formData, setFormData] = useState({
@@ -81,16 +21,39 @@ const MemorySharing = () => {
     message: "",
     year: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [30, -30]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder: In real implementation, this would submit to an API
-    console.log("Submitting memory:", formData);
-    alert("Merci pour votre témoignage ! Il sera publié après modération.");
-    setFormData({ name: "", email: "", message: "", year: "" });
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/anniversary/submit-memory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          year: formData.year || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit");
+      }
+
+      toast.success(config.success_message);
+      setFormData({ name: "", email: "", message: "", year: "" });
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast.error("Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -151,187 +114,180 @@ const MemorySharing = () => {
               }}
             />
             <h2 className="text-title text-primary/50 dark:text-primary px-8 py-4 leading-none font-light">
-              Partagez Vos Souvenirs
+              {config.section_title}
             </h2>
           </div>
           <p className="text-foreground mx-auto max-w-2xl text-lg font-light">
-            Vos témoignages font partie de notre histoire. Partagez vos moments
-            mémorables avec Le Bon Tempérament !
+            {config.section_description}
           </p>
         </motion.div>
 
-        {/* Testimonials Grid */}
-        <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-          {testimonials.map((testimonial, index) => {
-            return (
-              <motion.div
-                key={testimonial.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  delay: index * 0.1,
-                  duration: 0.6,
-                }}
-                whileHover={{ y: -4 }}
-                className="border-divider bg-background group relative overflow-hidden rounded-lg border p-6 shadow-sm transition-all duration-300 hover:shadow-md"
-              >
-                {/* Quote icon */}
-                <div className="text-primary/20 absolute top-4 right-4">
-                  <FaQuoteLeft className="text-4xl" />
-                </div>
+        {/* Featured Memories Grid */}
+        {featuredMemories.length > 0 && (
+          <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
+            {featuredMemories.map((memory, index) => {
+              return (
+                <motion.div
+                  key={memory.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{
+                    delay: index * 0.1,
+                    duration: 0.6,
+                  }}
+                  whileHover={{ y: -4 }}
+                  className="border-divider bg-background group relative overflow-hidden rounded-lg border p-6 shadow-sm transition-all duration-300 hover:shadow-md"
+                >
+                  {/* Quote icon */}
+                  <div className="text-primary/20 absolute top-4 right-4">
+                    <FaQuoteLeft className="text-4xl" />
+                  </div>
 
-                {/* Content */}
-                <div className="relative z-10">
-                  <p className="text-foreground/70 mb-6 leading-relaxed font-light">
-                    &ldquo;{testimonial.content}&rdquo;
-                  </p>
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <p className="text-foreground/70 mb-6 leading-relaxed font-light">
+                      &ldquo;{memory.message}&rdquo;
+                    </p>
 
-                  {/* Author */}
-                  <div className="flex items-center gap-4">
-                    <div className="bg-primary h-12 w-12 overflow-hidden rounded-full">
-                      {testimonial.avatar ? (
-                        <img
-                          src={testimonial.avatar}
-                          alt={testimonial.author}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-white">
-                          <FaUser />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-foreground font-semibold">
-                        {testimonial.author}
+                    {/* Author */}
+                    <div className="flex items-center gap-4">
+                      <div className="bg-primary flex h-12 w-12 items-center justify-center overflow-hidden rounded-full text-white">
+                        <FaUser />
                       </div>
-                      {testimonial.role && (
-                        <div className="text-foreground/70 text-sm font-light">
-                          {testimonial.role}
+                      <div>
+                        <div className="text-foreground font-semibold">
+                          {memory.name}
                         </div>
-                      )}
-                      {testimonial.year && (
-                        <div className="text-primary text-xs font-semibold">
-                          {testimonial.year}
-                        </div>
-                      )}
+                        {memory.year && (
+                          <div className="text-primary text-xs font-semibold">
+                            {memory.year}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Share Your Memory Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="group border-primary/10 bg-background/50 relative mx-auto max-w-2xl overflow-hidden rounded-xl border p-8 shadow-lg backdrop-blur-sm"
-        >
-          <h3 className="text-foreground mb-6 text-2xl font-semibold">
-            Partagez Votre Témoignage
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label
-                htmlFor="name"
-                className="text-foreground mb-2 block text-sm font-semibold"
+        {config.is_enabled && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="group border-primary/10 bg-background/50 relative mx-auto max-w-2xl overflow-hidden rounded-xl border p-8 shadow-lg backdrop-blur-sm"
+          >
+            <h3 className="text-foreground mb-6 text-2xl font-semibold">
+              Partagez Votre Témoignage
+            </h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="text-foreground mb-2 block text-sm font-semibold"
+                >
+                  {config.name_label}
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
+                  placeholder={config.name_label}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="text-foreground mb-2 block text-sm font-semibold"
+                >
+                  {config.email_label}
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
+                  placeholder={config.email_label}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="year"
+                  className="text-foreground mb-2 block text-sm font-semibold"
+                >
+                  {config.year_label}
+                </label>
+                <input
+                  type="number"
+                  id="year"
+                  min="1984"
+                  max="2100"
+                  value={formData.year}
+                  onChange={(e) =>
+                    setFormData({ ...formData, year: e.target.value })
+                  }
+                  className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
+                  placeholder={config.year_label}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="message"
+                  className="text-foreground mb-2 block text-sm font-semibold"
+                >
+                  {config.message_label}
+                </label>
+                <textarea
+                  id="message"
+                  required
+                  rows={6}
+                  value={formData.message}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
+                  className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
+                  placeholder={config.message_label}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                size="lg"
+                color="primary"
+                radius="sm"
+                className="w-full"
+                endContent={<FaPaperPlane />}
+                isLoading={isSubmitting}
               >
-                Votre Nom
-              </label>
-              <input
-                type="text"
-                id="name"
-                required
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
-                placeholder="Votre nom"
-              />
-            </div>
+                {config.submit_button_text}
+              </Button>
 
-            <div>
-              <label
-                htmlFor="email"
-                className="text-foreground mb-2 block text-sm font-semibold"
-              >
-                Votre Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                required
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
-                placeholder="votre@email.com"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="year"
-                className="text-foreground mb-2 block text-sm font-semibold"
-              >
-                Année (optionnel)
-              </label>
-              <input
-                type="number"
-                id="year"
-                min="1984"
-                max="2024"
-                value={formData.year}
-                onChange={(e) =>
-                  setFormData({ ...formData, year: e.target.value })
-                }
-                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
-                placeholder="1984-2024"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="message"
-                className="text-foreground mb-2 block text-sm font-semibold"
-              >
-                Votre Témoignage
-              </label>
-              <textarea
-                id="message"
-                required
-                rows={6}
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData({ ...formData, message: e.target.value })
-                }
-                className="border-divider bg-background text-foreground focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none"
-                placeholder="Partagez vos souvenirs, anecdotes, ou messages pour les 40 ans du Bon Tempérament..."
-              />
-            </div>
-
-            <Button
-              type="submit"
-              size="lg"
-              color="primary"
-              radius="sm"
-              className="w-full"
-              endContent={<FaPaperPlane />}
-            >
-              Envoyer Mon Témoignage
-            </Button>
-          </form>
-
-          <p className="text-foreground/70 mt-4 text-center text-xs font-light">
-            Les témoignages sont modérés avant publication. Merci de votre
-            contribution !
-          </p>
-        </motion.div>
+              <p className="text-foreground/70 mt-4 text-center text-xs font-light">
+                Les témoignages sont modérés avant publication. Merci de votre
+                contribution !
+              </p>
+            </form>
+          </motion.div>
+        )}
       </div>
     </section>
   );

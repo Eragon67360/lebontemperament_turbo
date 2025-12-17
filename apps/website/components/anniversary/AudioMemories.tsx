@@ -1,86 +1,17 @@
 "use client";
 
+import type { AudioMemory } from "@/types/anniversary";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
 import { FaHeadphones, FaMusic } from "react-icons/fa";
 
-interface AudioMemory {
-  id: string;
-  title: string;
-  description: string;
-  speaker?: string;
-  year?: number;
-  duration: string;
-  audioUrl: string; // Placeholder - will be replaced with real audio files
+interface AudioMemoriesProps {
+  audioMemories: AudioMemory[];
 }
 
-// Audio memories with specific details
-const audioMemories: AudioMemory[] = [
-  {
-    id: "1",
-    title: "Simone se souvient : Novembre 1984",
-    description:
-      "Simone Duclos raconte avec émotion cette première répétition dans la salle paroissiale. « On était 8, avec des instruments de toutes sortes. On ne savait pas si ça allait marcher, mais on avait cette envie folle de faire de la musique ensemble. »",
-    speaker: "Simone Duclos, Fondatrice",
-    year: 2024,
-    duration: "5:32",
-    audioUrl: "/placeholder-audio-1.mp3", // Placeholder
-  },
-  {
-    id: "2",
-    title: "Mon Premier Concert : Le Trac et la Grâce",
-    description:
-      "Jean-Pierre, violoniste depuis 1985, se souvient de son premier concert. « J'avais tellement peur que mes mains tremblent. Et puis, dès la première note, tout s'est apaisé. C'était comme si la musique prenait le dessus. »",
-    speaker: "Jean-Pierre M., Violoniste",
-    year: 2023,
-    duration: "4:15",
-    audioUrl: "/placeholder-audio-2.mp3", // Placeholder
-  },
-  {
-    id: "3",
-    title: "L'Évolution : De Vivaldi à Bach",
-    description:
-      "Marc, notre directeur musical depuis 2005, explique comment le répertoire a évolué. « On a commencé par les classiques, puis on a osé explorer des compositeurs moins connus. Chaque découverte est une aventure. »",
-    speaker: "Marc L., Directeur Musical",
-    year: 2024,
-    duration: "6:20",
-    audioUrl: "/placeholder-audio-3.mp3", // Placeholder
-  },
-  {
-    id: "4",
-    title: "Ce Concert à Fribourg",
-    description:
-      "Claire se souvient de ce concert en Allemagne en 1998. « Le public était debout, on a dû faire 3 rappels. En sortant, une dame nous a dit en français : 'Vous avez touché mon âme.' On en parle encore aujourd'hui. »",
-    speaker: "Claire B., Alto",
-    year: 2023,
-    duration: "3:45",
-    audioUrl: "/placeholder-audio-4.mp3", // Placeholder
-  },
-  {
-    id: "5",
-    title: "Extrait : Concert de 1995",
-    description:
-      "Enregistrement restauré d'un concert donné à l'abbaye de Marmoutier en 1995. On entend les Quatre Saisons de Vivaldi, avec cette fraîcheur et cette énergie de nos premières années. La qualité sonore a été améliorée, mais l'émotion reste intacte.",
-    speaker: "Ensemble Le Bon Tempérament",
-    year: 1995,
-    duration: "8:10",
-    audioUrl: "/placeholder-audio-5.mp3", // Placeholder
-  },
-  {
-    id: "6",
-    title: "Messages pour les 40 Ans",
-    description:
-      "Une compilation de messages enregistrés par d'anciens membres, des amis de l'ensemble, et des musiciens qui nous ont accompagnés. Des voix chargées d'émotion qui racontent 40 ans d'amitié et de musique partagées.",
-    speaker: "Communauté du Bon Tempérament",
-    year: 2024,
-    duration: "7:00",
-    audioUrl: "/placeholder-audio-6.mp3", // Placeholder
-  },
-];
-
-const AudioMemories = () => {
+const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -189,9 +120,9 @@ const AudioMemories = () => {
                     <h3 className="text-foreground mb-2 text-xl font-semibold">
                       {memory.title}
                     </h3>
-                    {memory.speaker && (
+                    {memory.speaker_name && (
                       <p className="text-foreground/70 text-sm font-light">
-                        Par {memory.speaker}
+                        Par {memory.speaker_name}
                       </p>
                     )}
                   </div>
@@ -208,7 +139,7 @@ const AudioMemories = () => {
                 {/* Audio Player */}
                 <div className="bg-primary/5 rounded-lg p-4">
                   <AudioPlayer
-                    src={memory.audioUrl}
+                    src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload/${memory.audio_url}`}
                     onPlay={() => handlePlay(memory.id)}
                     onPause={handlePause}
                     onEnded={handlePause}
@@ -231,20 +162,6 @@ const AudioMemories = () => {
             );
           })}
         </div>
-
-        {/* Note about placeholders */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="bg-primary/5 mt-12 rounded-lg p-6 text-center"
-        >
-          <p className="text-foreground text-sm font-light">
-            <strong>Note:</strong> Les fichiers audio sont actuellement des
-            placeholders. Les enregistrements réels seront intégrés
-            prochainement.
-          </p>
-        </motion.div>
       </div>
     </section>
   );

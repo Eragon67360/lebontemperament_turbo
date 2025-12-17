@@ -1,101 +1,68 @@
 "use client";
 
+import CloudinaryImage from "@/components/CloudinaryImage";
+import type { Video } from "@/types/anniversary";
+import { RoundedSize } from "@/utils/types";
 import { Button } from "@heroui/react";
-import { motion, useInView, useScroll, useTransform } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useScroll,
+  useTransform,
+} from "motion/react";
 import { useRef, useState } from "react";
-import { FaPlay, FaYoutube } from "react-icons/fa";
+import { FaPlay, FaTimes, FaYoutube } from "react-icons/fa";
 
-interface VideoItem {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail: string; // Placeholder image URL
-  videoUrl?: string; // YouTube or video URL
-  year?: number;
-  category: string;
+interface VideoGalleryProps {
+  videos: Video[];
 }
 
-// Video data with specific details
-const videoItems: VideoItem[] = [
-  {
-    id: "1",
-    title: "Concert d'Anniversaire 2024",
-    description:
-      "Le grand concert du 15 juin 2024 à l'église Saint-Georges de Saverne. Plus de 200 personnes, un programme allant de Purcell à Bach, et cette émotion particulière de célébrer ensemble 40 ans de passion musicale.",
-    thumbnail: "https://placehold.co/800x450/1A878D/FFFFFF?text=Concert+2024",
-    year: 2024,
-    category: "Concert",
-  },
-  {
-    id: "2",
-    title: "Témoignages : Les Voix de 40 Ans",
-    description:
-      "Marie, Jean, Sophie et d'autres membres partagent leurs souvenirs. De la première répétition en 1984 aux concerts récents, leurs témoignages croisés racontent l'histoire humaine du Bon Tempérament.",
-    thumbnail: "https://placehold.co/800x450/0D6B70/FFFFFF?text=Temoignages",
-    year: 2023,
-    category: "Témoignage",
-  },
-  {
-    id: "3",
-    title: "Rétrospective 1984-2024",
-    description:
-      "Un documentaire de 45 minutes retraçant 40 ans d'histoire. Images d'archives, extraits de concerts, interviews des fondateurs. Un voyage dans le temps qui montre l'évolution de l'ensemble et de sa passion.",
-    thumbnail: "https://placehold.co/800x450/1A878D/FFFFFF?text=Retrospective",
-    year: 2024,
-    category: "Documentaire",
-  },
-  {
-    id: "4",
-    title: "Concert Baroque à Marmoutier",
-    description:
-      "Concert donné en septembre 2019 dans l'abbaye de Marmoutier. Programme Vivaldi et Corelli, avec cette acoustique exceptionnelle qui transforme chaque note. Un moment de grâce capturé par nos caméras.",
-    thumbnail:
-      "https://placehold.co/800x450/0D6B70/FFFFFF?text=Concert+Baroque",
-    year: 2019,
-    category: "Concert",
-  },
-  {
-    id: "5",
-    title: "Atelier Jeunes 2022",
-    description:
-      "Un samedi après-midi avec 15 jeunes musiciens de 12 à 18 ans. Découverte des instruments baroques, initiation au répertoire, et surtout ce moment magique où ils ont joué avec nous. La relève est assurée !",
-    thumbnail: "https://placehold.co/800x450/1A878D/FFFFFF?text=Atelier",
-    year: 2022,
-    category: "Éducation",
-  },
-  {
-    id: "6",
-    title: "Tournée Allemagne 2018",
-    description:
-      "Notre tournée de 5 concerts en Forêt-Noire et dans le Bade-Wurtemberg. Les péripéties du voyage, les rencontres avec le public allemand, les moments de détente entre concerts. Une aventure humaine autant que musicale.",
-    thumbnail: "https://placehold.co/800x450/0D6B70/FFFFFF?text=Tournee",
-    year: 2018,
-    category: "Tournée",
-  },
-];
+// Helper function to convert video URLs to embed URLs
+const getEmbedUrl = (url: string): string => {
+  // YouTube patterns
+  if (url.includes("youtube.com/watch?v=")) {
+    const videoId = url.split("v=")[1]?.split("&")[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  if (url.includes("youtu.be/")) {
+    const videoId = url.split("youtu.be/")[1]?.split("?")[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
 
-const VideoGallery = () => {
+  // Vimeo patterns
+  if (url.includes("vimeo.com/")) {
+    const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
+    return `https://player.vimeo.com/video/${videoId}`;
+  }
+
+  // If already an embed URL or unknown, return as is
+  return url;
+};
+
+const VideoGallery = ({ videos }: VideoGalleryProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [50, -50]);
 
   const categories = [
     "Tous",
-    ...Array.from(new Set(videoItems.map((item) => item.category))),
+    ...Array.from(new Set(videos.map((item) => item.category))),
   ];
 
   const filteredVideos =
     selectedCategory === "Tous"
-      ? videoItems
-      : videoItems.filter((item) => item.category === selectedCategory);
+      ? videos
+      : videos.filter((item) => item.category === selectedCategory);
 
-  const handleVideoClick = (video: VideoItem) => {
-    // Placeholder: In real implementation, this would open a modal or navigate to video
-    console.log("Opening video:", video);
-    // Example: window.open(video.videoUrl, '_blank');
+  const handleVideoClick = (video: Video) => {
+    if (video.video_url) {
+      setSelectedVideo(video);
+    }
   };
 
   return (
@@ -174,9 +141,12 @@ const VideoGallery = () => {
               >
                 {/* Thumbnail */}
                 <div className="relative aspect-video overflow-hidden">
-                  <img
-                    src={video.thumbnail}
+                  <CloudinaryImage
+                    src={video.thumbnail_url}
                     alt={video.title}
+                    width={800}
+                    height={450}
+                    rounded={RoundedSize.NONE}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -241,6 +211,75 @@ const VideoGallery = () => {
           </Button>
         </motion.div>
       </div>
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {selectedVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4"
+            onClick={() => setSelectedVideo(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="relative w-full max-w-5xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedVideo(null)}
+                className="absolute -top-12 right-0 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20 md:top-0 md:-right-12"
+                aria-label="Fermer"
+              >
+                <FaTimes className="text-xl" />
+                <span className="text-sm font-semibold">Fermer</span>
+              </button>
+
+              {/* Video container with glass morphism */}
+              <div className="from-primary/10 to-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-br p-1 backdrop-blur-xl">
+                <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
+                  <iframe
+                    src={
+                      selectedVideo.video_url
+                        ? getEmbedUrl(selectedVideo.video_url)
+                        : ""
+                    }
+                    title={selectedVideo.title}
+                    className="absolute inset-0 h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+
+              {/* Video info */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="mt-6 text-center"
+              >
+                <div className="text-primary mb-2 text-xs font-semibold tracking-wide uppercase">
+                  {selectedVideo.category}
+                  {selectedVideo.year && ` • ${selectedVideo.year}`}
+                </div>
+                <h3 className="mb-2 text-2xl font-semibold text-white">
+                  {selectedVideo.title}
+                </h3>
+                <p className="mx-auto max-w-2xl text-white/70">
+                  {selectedVideo.description}
+                </p>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

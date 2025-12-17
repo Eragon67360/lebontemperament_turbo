@@ -1,57 +1,39 @@
 "use client";
 
+import type { NavigationCard } from "@/types/anniversary";
 import { Button } from "@heroui/react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import {
+  FaCalendarAlt,
   FaHeadphones,
   FaHeart,
   FaHistory,
   FaImages,
+  FaMusic,
+  FaTrophy,
+  FaUsers,
   FaVideo,
 } from "react-icons/fa";
 
-interface NavigationCard {
-  id: string;
-  title: string;
-  description: string;
-  icon: typeof FaVideo;
+// Icon mapping
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  FaMusic,
+  FaTrophy,
+  FaUsers,
+  FaCalendarAlt,
+  FaHistory,
+  FaVideo,
+  FaHeadphones,
+  FaImages,
+  FaHeart,
+};
+
+interface AnniversaryNavigationProps {
+  cards: NavigationCard[];
 }
 
-const navigationCards: NavigationCard[] = [
-  {
-    id: "timeline",
-    title: "Notre Histoire",
-    description: "Parcourez 40 ans de moments marquants du Bon Tempérament",
-    icon: FaHistory,
-  },
-  {
-    id: "videos",
-    title: "Vidéos",
-    description: "Revivez nos concerts et témoignages",
-    icon: FaVideo,
-  },
-  {
-    id: "audio",
-    title: "Mémoires Audio",
-    description: "Écoutez nos souvenirs sonores",
-    icon: FaHeadphones,
-  },
-  {
-    id: "photos",
-    title: "Galerie Photo",
-    description: "Explorez nos archives visuelles",
-    icon: FaImages,
-  },
-  {
-    id: "memories",
-    title: "Témoignages",
-    description: "Partagez vos souvenirs avec nous",
-    icon: FaHeart,
-  },
-];
-
-const AnniversaryNavigation = () => {
+const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
@@ -106,7 +88,9 @@ const AnniversaryNavigation = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-          {navigationCards.map((card, index) => {
+          {cards.map((card, index) => {
+            const IconComponent = iconMap[card.icon_name] || FaMusic;
+
             return (
               <motion.div
                 key={card.id}
@@ -153,7 +137,7 @@ const AnniversaryNavigation = () => {
                 >
                   <div className="from-primary/20 to-primary/10 absolute inset-0 -z-10 scale-110 rounded-xl bg-gradient-to-br blur-xl" />
                   <div className="from-primary to-primary/80 shadow-primary/20 rounded-xl bg-gradient-to-br p-4 shadow-lg">
-                    <card.icon className="text-3xl text-white" />
+                    <IconComponent className="text-3xl text-white" />
                   </div>
                 </motion.div>
 
@@ -167,7 +151,7 @@ const AnniversaryNavigation = () => {
 
                 {/* Button */}
                 <Button
-                  onClick={() => scrollToSection(card.id)}
+                  onClick={() => scrollToSection(card.target_section_id)}
                   color="primary"
                   variant="bordered"
                   radius="sm"
