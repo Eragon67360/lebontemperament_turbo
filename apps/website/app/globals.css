@@ -201,6 +201,26 @@ button {
   @apply cursor-pointer;
 }
 
+text-9xl {
+  font-size: 20rem;
+}
+
+text-8xl {
+  font-size: 8rem;
+}
+
+text-7xl {
+  font-size: 7rem;
+}
+
+text-6xl {
+  font-size: 6rem;
+}
+
+text-5xl {
+  font-size: 5rem;
+}
+
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

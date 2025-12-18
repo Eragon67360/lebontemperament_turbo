@@ -22,6 +22,9 @@ export default function AnniversaryPageClient({
   isPreview = false,
 }: AnniversaryPageClientProps) {
   const [data, setData] = useState<AnniversaryPageData>(initialData);
+  const [isIntroActive, setIsIntroActive] = useState(
+    initialData.hero.enable_intro_animation ?? true,
+  );
   const supabase = createClient();
 
   useEffect(() => {
@@ -339,8 +342,12 @@ export default function AnniversaryPageClient({
 
   return (
     <div className="bg-background min-h-screen">
-      <PreviewBanner isPreview={isPreview} />
-      <AnniversaryLanding hero={data.hero} stats={data.heroStats} />
+      <PreviewBanner isPreview={isPreview} hideDuringIntro={isIntroActive} />
+      <AnniversaryLanding
+        hero={data.hero}
+        stats={data.heroStats}
+        onIntroStateChange={setIsIntroActive}
+      />
       <AnniversaryNavigation cards={data.navigationCards} />
       <AnniversaryTimeline events={data.timelineEvents} />
       <VideoGallery videos={data.videos} />
