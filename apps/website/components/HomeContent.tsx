@@ -85,7 +85,7 @@ const HomeContent = () => {
               willChange: "transform, opacity",
             }}
           >
-            <div className="mx-auto flex w-full flex-col items-center justify-center px-8 md:w-2/3 md:px-16 lg:col-span-7 lg:px-8">
+            <div className="mx-auto flex w-full flex-col items-center justify-center px-2 md:w-2/3 md:px-8 lg:col-span-7 lg:px-16">
               <h1
                 id="hero-title"
                 className="mb-2 text-center leading-none font-extrabold tracking-tight text-white"
@@ -134,21 +134,25 @@ const HomeContent = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-                  className="mt-8"
+                  className="!md:max-w-md mt-8 flex w-fit overflow-hidden px-4"
                 >
                   <Button
                     as={Link}
                     href="/40-ans"
                     size="lg"
                     radius="full"
-                    className="hover:shadow-primary/50 bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105"
+                    className="hover:shadow-primary/50 flex w-fit max-w-fit bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] px-2 py-3 text-xs font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 sm:px-4 sm:text-sm md:w-fit md:max-w-fit md:text-base lg:px-6"
                     aria-label="Célébrer 40 ans du Bon Tempérament"
                   >
-                    <span className="text-xl">🎉</span>
-                    <span className="ml-2">
+                    <span className="hidden text-sm sm:text-base md:block md:text-xl">
+                      🎉
+                    </span>
+                    <span className="ml-1 text-center break-words sm:ml-2">
                       Célébrons les 40 ans du Bon Tempérament !
                     </span>
-                    <span className="ml-2 text-xl">🎉</span>
+                    <span className="ml-1 hidden text-sm sm:ml-2 sm:text-base md:block md:text-xl">
+                      🎉
+                    </span>
                   </Button>
                 </motion.div>
               )}
