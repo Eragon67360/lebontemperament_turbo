@@ -1,11 +1,9 @@
 "use client";
 
 import type { AnniversaryHero, HeroStat } from "@/types/anniversary";
-import { Button } from "@heroui/react";
 import {
   AnimatePresence,
   motion,
-  useMotionValue, // IMPROVEMENT: Import for mouse interactivity
   useScroll,
   useTransform,
   type Variants,
@@ -22,8 +20,8 @@ import {
   FaUsers,
   FaVideo,
 } from "react-icons/fa";
+import { IoMusicalNote, IoMusicalNotes } from "react-icons/io5";
 
-// ... (iconMap and component props are unchanged) ...
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FaMusic,
   FaTrophy,
@@ -47,19 +45,12 @@ const AnniversaryLanding = ({
   stats,
   onIntroStateChange,
 }: AnniversaryLandingProps) => {
-  // ... (All intro state and useEffect logic is unchanged) ...
-  const sectionRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const [showIntro, setShowIntro] = useState(true);
   const [showContent, setShowContent] = useState(false);
-
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 150]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -50]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
-
   const [phase, setPhase] = useState(0);
 
+  // --- Intro Animation Logic ---
   useLayoutEffect(() => {
     if (showIntro && hero.enable_intro_animation) {
       window.scrollTo(0, 0);
@@ -78,9 +69,7 @@ const AnniversaryLanding = ({
       return;
     }
 
-    // Notify parent that intro is starting
     onIntroStateChange?.(true);
-
     const runAnimation = async () => {
       setPhase(1);
       await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -94,10 +83,8 @@ const AnniversaryLanding = ({
       await new Promise((resolve) => setTimeout(resolve, 500));
       setShowIntro(false);
       setShowContent(true);
-      // Notify parent that intro is finished
       onIntroStateChange?.(false);
     };
-
     runAnimation();
   }, [hero.enable_intro_animation, onIntroStateChange]);
 
@@ -108,65 +95,43 @@ const AnniversaryLanding = ({
   };
 
   const numBatons = 80;
-  const angle = 360 / numBatons;
+  const introAngle = 360 / numBatons;
 
-  // --- IMPROVEMENT: Logic for interactive mouse-tilt effect ---
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  const { scrollY } = useScroll();
 
-  const rotateX = useTransform(mouseY, [-500, 500], [10, -10], {
-    clamp: false,
-  });
-  const rotateY = useTransform(mouseX, [-500, 500], [-10, 10], {
-    clamp: false,
-  });
+  const y1 = useTransform(scrollY, [0, 500], [0, 150]);
+  const y2 = useTransform(scrollY, [0, 500], [0, -100]);
 
-  const handleMouseMove = (event: React.MouseEvent) => {
-    if (heroRef.current) {
-      const { left, top, width, height } =
-        heroRef.current.getBoundingClientRect();
-      mouseX.set(event.clientX - left - width / 2);
-      mouseY.set(event.clientY - top - height / 2);
-    }
-  };
+  const scrollOpacity = useTransform(scrollY, [0, 300], [1, 0]);
 
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
-
-  // --- IMPROVEMENT: Animation variants for staggered reveal ---
-  const containerVariants: Variants = {
+  const staggerContainer: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2, // This will animate children 0.2s after one another
+        staggerChildren: 0.2, // Each child will start its animation 0.2s after the previous one
       },
     },
   };
 
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
+  const fadeInUp: Variants = {
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+      transition: { duration: 0.6, ease: "easeOut" },
     },
   };
 
   return (
     <>
-      {/* --- Intro Animation (Unchanged) --- */}
       <AnimatePresence>
         {showIntro && (
-          // ... The entire intro animation JSX is unchanged ...
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.8 } }}
             className="fixed inset-0 z-50 overflow-hidden bg-black"
           >
-            {/* Skip button */}
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -176,6 +141,7 @@ const AnniversaryLanding = ({
             >
               {hero.skip_button_text}
             </motion.button>
+
             {/* Phase 1: Drawing the Timeline */}
             {phase >= 1 && (
               <motion.div
@@ -254,6 +220,7 @@ const AnniversaryLanding = ({
                 </motion.svg>{" "}
               </motion.div>
             )}
+
             {/* Phase 2: Number Revelation */}
             {phase >= 2 && (
               <motion.div className="absolute inset-0 flex items-center justify-center">
@@ -353,6 +320,7 @@ const AnniversaryLanding = ({
                 </div>{" "}
               </motion.div>
             )}
+
             {/* Phase 3: Text Revelation */}
             {phase >= 3 && (
               <motion.div
@@ -444,40 +412,36 @@ const AnniversaryLanding = ({
                 />{" "}
               </motion.div>
             )}
-            {/* Phase 4: Spiral Firework */}
+
             {/* Phase 4: Spiral Firework */}
             {phase >= 4 && (
               <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                {" "}
                 <div className="relative h-1 w-1">
+                  {" "}
                   {[...Array(numBatons)].map((_, i) => (
                     <motion.div
                       key={i}
                       className="absolute inset-0"
-                      style={{ transform: `rotate(${i * angle}deg)` }}
+                      style={{ transform: `rotate(${i * introAngle}deg)` }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.1 }}
                     >
-                      {/* --- THIS IS THE PART THAT CHANGES --- */}
+                      {" "}
                       <motion.div
                         className="w-px origin-bottom bg-gradient-to-t from-transparent via-white/80 to-transparent"
-                        // Start with no height but full opacity
-                        initial={{ height: 0, opacity: 0 }}
-                        // Animate to a massive height and fade in completely
-                        animate={{
-                          height: "150vh", // Grow far beyond the screen edges
-                          opacity: 1,
-                        }}
+                        initial={{ height: 0, opacity: 1 }}
+                        animate={{ height: "150vh", opacity: 0 }}
                         transition={{
-                          duration: 3,
-                          delay: i * 0.015, // Slightly increased delay for a more pronounced spiral
-                          // A strong "easeOut" makes it feel more like a burst/explosion
+                          duration: 1.2,
+                          delay: i * 0.015,
                           ease: [0.22, 1, 0.36, 1],
                         }}
-                      />
+                      />{" "}
                     </motion.div>
-                  ))}
-                </div>
+                  ))}{" "}
+                </div>{" "}
               </div>
             )}
 
@@ -497,138 +461,164 @@ const AnniversaryLanding = ({
       {showContent && (
         <motion.section
           ref={heroRef}
-          onMouseMove={handleMouseMove} // IMPROVEMENT: Added mouse move handler
-          onMouseLeave={handleMouseLeave} // IMPROVEMENT: Added mouse leave handler
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="relative min-h-screen overflow-hidden pt-20"
-          style={{ perspective: "1000px" }} // IMPROVEMENT: Add perspective for 3D tilt effect
+          transition={{ duration: 1.5 }}
+          className="relative min-h-screen overflow-hidden bg-slate-50 pt-20 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
         >
-          {/* Parallax background with glass orbs */}
-          <motion.div
-            style={{ y: y1, opacity }}
-            className="bg-primary/20 absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full blur-[100px]"
-          />
-          <motion.div
-            style={{ y: y2, opacity }}
-            className="bg-primary/10 absolute top-1/3 right-1/4 h-[400px] w-[400px] rounded-full blur-[100px]"
-          />
+          {/* --- Background Elements --- */}
+          <div className="absolute inset-0 z-0">
+            {/* Parallax background orbs for subtle depth */}
+            <motion.div
+              style={{ y: y1, opacity: scrollOpacity }}
+              className="bg-primary/10 absolute -top-40 -left-40 h-[30rem] w-[30rem] rounded-full blur-3xl md:h-[40rem] md:w-[40rem]"
+            />
+            <motion.div
+              style={{ y: y2, opacity: scrollOpacity }}
+              className="absolute -right-40 -bottom-40 h-[30rem] w-[30rem] rounded-full bg-sky-400/10 blur-3xl md:h-[40rem] md:w-[40rem]"
+            />
 
-          {/* Floating music notes background (unchanged) */}
-          <div className="absolute inset-0 overflow-hidden">
-            {/* ... music notes map ... */}
+            <div className="absolute inset-0">
+              {[...Array(15)].map((_, i) => {
+                const startX = ((i * 37 + 17) % 95) + (i % 2) * 3;
+                const startY = ((i * 53 + 29) % 90) + (i % 3) * 5;
+                const endY = ((i * 71 + 41) % 85) + 5;
+                const endX1 = ((i * 89 + 13) % 88) + 6;
+                const endX2 = ((i * 97 + 31) % 83) + 8;
+                return (
+                  <motion.div
+                    key={i}
+                    className="absolute text-2xl"
+                    style={{
+                      left: `${startX}%`,
+                      top: `${startY}%`,
+                      color: "rgba(26, 135, 141, 0.35)",
+                    }}
+                    animate={{
+                      y: ["0%", "-10%", `${endY - startY}%`],
+                      x: ["0%", `${endX1 - startX}%`, `${endX2 - startX}%`],
+                      rotate: [0, 360],
+                    }}
+                    transition={{
+                      duration: Math.random() * 20 + 15,
+                      repeat: Infinity,
+                      delay: i * 0.3,
+                      ease: "linear",
+                    }}
+                  >
+                    {i % 3 === 0 ? <IoMusicalNote /> : <IoMusicalNotes />}
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* --- IMPROVEMENT: Main content wrapper now uses variants for staggered animation --- */}
+          {/* Main content container with staggered animations */}
           <motion.div
-            ref={sectionRef}
-            variants={containerVariants}
+            variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="relative z-10 mx-auto max-w-7xl px-4 py-20 md:px-8"
+            className="relative z-10 mx-auto max-w-7xl px-4 py-16 text-center md:py-24"
           >
-            <motion.div variants={itemVariants} className="text-center">
-              {/* --- IMPROVEMENT: Title card now has interactive tilt --- */}
-              <motion.div
-                style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-                className="relative mx-auto mb-8 inline-block"
-              >
-                <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br backdrop-blur-xl" />
+            {/* 1. Hero Text Content */}
+            <motion.div variants={fadeInUp}>
+              {/* The glass title card is perfect and remains unchanged */}
+              <div className="relative mx-auto mb-8 inline-block">
+                <div className="from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br backdrop-blur-lg" />
                 <div
                   className="absolute inset-0 -z-10 rounded-3xl opacity-50"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(26, 135, 141, 0.2) 0%, rgba(13, 107, 112, 0.1) 100%)",
-                    filter: "blur(20px)",
+                      "linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 100%)",
                   }}
                 />
-                <h1 className="text-title text-primary/50 dark:text-primary px-12 py-8 leading-none font-light">
+                <h1 className="text-title text-primary px-12 py-8 font-thin tracking-tight dark:text-white">
                   {hero.hero_number} ANS
                 </h1>
-              </motion.div>
-              <motion.p className="text-foreground mb-4 text-2xl font-semibold md:text-4xl">
+              </div>
+
+              {/* REFINED: Subtitle now uses a lighter font weight for a more elegant feel */}
+              <p className="mx-auto mt-6 max-w-3xl text-xl font-light text-slate-500 md:text-2xl dark:text-slate-400">
                 {hero.hero_subtitle}
-              </motion.p>
+              </p>
               {hero.description && (
-                <motion.p className="text-foreground mx-auto max-w-3xl text-lg leading-relaxed font-light md:text-xl">
+                <p className="mx-auto mt-4 max-w-2xl text-base font-light text-slate-400 dark:text-slate-500">
                   {hero.description}
-                </motion.p>
+                </p>
               )}
             </motion.div>
 
-            {/* --- IMPROVEMENT: Stats cards grid is now an item in the stagger sequence --- */}
+            {/* 2. REFINED Stats Grid for a "Thin" Design */}
             <motion.div
-              variants={itemVariants}
-              className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8"
+              variants={fadeInUp}
+              className="mt-16 grid grid-cols-2 gap-4 text-left md:grid-cols-4 md:gap-8"
             >
               {stats.map((stat) => {
                 const IconComponent = iconMap[stat.icon_name] || FaMusic;
                 return (
                   <motion.div
                     key={stat.id}
-                    whileHover={{ y: -8, scale: 1.02 }}
-                    // IMPROVEMENT: Enhanced hover effect with a glowing border
-                    className="group border-primary/10 bg-background/50 hover:shadow-primary/10 hover:border-primary/30 relative overflow-hidden rounded-xl border p-6 text-center shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
+                    whileHover={{ y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    // REFINED: Removed heavy shadows, using a very thin border and subtle hover effect
+                    className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-5 backdrop-blur-md transition-all duration-300 hover:border-slate-300/80 dark:border-slate-800/50 dark:bg-slate-900/30 dark:hover:border-slate-700/80"
                   >
-                    <div className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          background:
-                            "radial-gradient(circle at center, rgba(26, 135, 141, 0.1) 0%, transparent 70%)",
-                        }}
-                      />
-                    </div>
-                    <motion.div
-                      className="mb-4 flex justify-center"
-                      whileHover={{ rotate: [0, -10, 10, -10, 10, 0] }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="from-primary to-primary/70 rounded-full bg-gradient-to-br p-3">
-                        <IconComponent className="text-3xl text-white" />
+                    {/* Subtle inner glow on hover for a premium feel */}
+                    <div
+                      className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                      style={{
+                        background:
+                          "radial-gradient(circle at center, rgba(173, 216, 230, 0.1) 0%, transparent 80%)",
+                      }}
+                    />
+                    <div className="flex items-center gap-4">
+                      {/* REFINED: Softer, borderless icon background */}
+                      <div className="bg-primary/5 text-primary dark:bg-primary/10 rounded-lg p-3">
+                        <IconComponent className="text-xl" />
                       </div>
-                    </motion.div>
-                    <div className="text-foreground text-4xl font-semibold">
-                      {stat.number}
-                    </div>
-                    <div className="text-foreground/70 mt-2 text-sm font-light">
-                      {stat.label}
+                      <div>
+                        {/* REFINED: Kept number bold for emphasis, but softened other text */}
+                        <p className="text-2xl font-semibold text-slate-800 dark:text-white">
+                          {stat.number}
+                        </p>
+                        <p className="text-sm font-light text-slate-500 dark:text-slate-400">
+                          {stat.label}
+                        </p>
+                      </div>
                     </div>
                   </motion.div>
                 );
               })}
             </motion.div>
 
-            {/* --- IMPROVEMENT: CTA button is now an item in the stagger sequence --- */}
-            <motion.div
-              variants={itemVariants}
-              className="mt-12 flex justify-center"
-            >
-              <Button
-                color="primary"
-                size="lg"
-                radius="sm"
-                // --- FIX: Added semi-transparent bg and border for glass effect ---
-                className="group bg-primary/80 hover:bg-primary/50 relative overflow-hidden border border-white/20 backdrop-blur-sm transition-colors duration-300"
+            {/* 3. REFINED Call to Action Button */}
+            <motion.div variants={fadeInUp} className="mt-16">
+              <motion.button
+                variants={{
+                  initial: { color: "var(--color-primary)" },
+                  hover: { color: "#ffffff" },
+                }}
+                initial="initial"
+                whileHover="hover"
+                transition={{ duration: 0.3 }}
+                className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8! py-3 font-medium transition-colors duration-300"
                 onClick={() => {
                   document
                     .getElementById(hero.cta_target_section)
                     ?.scrollIntoView({ behavior: "smooth" });
                 }}
+                style={{ paddingInline: "40px" }}
               >
-                <span className="relative z-10">{hero.cta_text}</span>
                 <motion.div
-                  className="absolute inset-0 -z-0"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: "100%" }}
-                  transition={{ duration: 0.6 }}
-                  style={{
-                    background:
-                      "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+                  className="bg-primary absolute inset-0 -z-10"
+                  variants={{
+                    initial: { y: "100%" },
+                    hover: { y: "0%" },
                   }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                 />
-              </Button>
+                <motion.span>{hero.cta_text}</motion.span>
+              </motion.button>
             </motion.div>
           </motion.div>
         </motion.section>
