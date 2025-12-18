@@ -96,7 +96,6 @@ export async function POST() {
   try {
     // Fetch JSON data from the website's public folder
     const jsonUrl = `${process.env.NEXT_PUBLIC_WEBSITE_URL || "http://localhost:3002"}/json/projects.json`;
-    console.log("JSON URL:", jsonUrl);
     const response = await fetch(jsonUrl);
 
     if (!response.ok) {

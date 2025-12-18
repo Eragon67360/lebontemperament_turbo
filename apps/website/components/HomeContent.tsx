@@ -14,6 +14,7 @@ import CloudinaryImage from "@/components/CloudinaryImage";
 import ConcertPhotos from "@/components/ConcertPhotos";
 import ContactForm from "@/components/ContactForm";
 import ProjectViewer from "@/components/ProjectViewer";
+import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
 import { Button } from "@heroui/react";
@@ -22,6 +23,8 @@ import { IoIosArrowRoundForward } from "react-icons/io";
 import Footer from "./Footer";
 
 const HomeContent = () => {
+  const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
+  const { isAdmin } = useAdminStatus();
   const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
     typeof window !== "undefined" ? Math.max(window.innerHeight, 200) : 600,
   );
@@ -124,6 +127,31 @@ const HomeContent = () => {
                   Nous contacter
                 </Button>
               </div>
+
+              {/* Anniversary CTA */}
+              {(isAnniversaryEnabled || isAdmin) && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                  className="mt-8"
+                >
+                  <Button
+                    as={Link}
+                    href="/40-ans"
+                    size="lg"
+                    radius="full"
+                    className="hover:shadow-primary/50 bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105"
+                    aria-label="Célébrer 40 ans du Bon Tempérament"
+                  >
+                    <span className="text-xl">🎉</span>
+                    <span className="ml-2">
+                      Célébrons les 40 ans du Bon Tempérament !
+                    </span>
+                    <span className="ml-2 text-xl">🎉</span>
+                  </Button>
+                </motion.div>
+              )}
             </div>
           </motion.div>
 

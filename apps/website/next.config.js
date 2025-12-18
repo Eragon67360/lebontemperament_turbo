@@ -65,6 +65,7 @@ const nextConfig = {
     ],
     formats: ["image/webp", "image/avif"],
     minimumCacheTTL: 60,
+    qualities: [25, 50, 75, 90, 100],
   },
   async headers() {
     // Get admin URL from environment or default to localhost:3002

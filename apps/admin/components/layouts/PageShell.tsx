@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
-type Theme = "admin" | "members" | "public" | "default";
+type Theme = "admin" | "members" | "public" | "anniversary" | "default";
 
 interface PageShellProps {
   children: ReactNode;
@@ -45,6 +45,8 @@ export function PageShell({
         return "bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent";
       case "public":
         return "bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent";
+      case "anniversary":
+        return "bg-gradient-to-r from-teal-600 to-pink-500 bg-clip-text text-transparent";
       default:
         return "text-gray-900";
     }
