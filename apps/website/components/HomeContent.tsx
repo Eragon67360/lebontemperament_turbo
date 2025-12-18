@@ -85,7 +85,7 @@ const HomeContent = () => {
               willChange: "transform, opacity",
             }}
           >
-            <div className="mx-auto flex w-full flex-col items-center justify-center px-8 md:w-2/3 md:px-16 lg:col-span-7 lg:px-8">
+            <div className="mx-auto flex w-full flex-col items-center justify-center px-2 md:w-2/3 md:px-8 lg:col-span-7 lg:px-16">
               <h1
                 id="hero-title"
                 className="mb-2 text-center leading-none font-extrabold tracking-tight text-white"
@@ -134,21 +134,25 @@ const HomeContent = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-                  className="mt-8"
+                  className="!md:max-w-md mt-8 flex w-fit overflow-hidden px-4"
                 >
                   <Button
                     as={Link}
                     href="/40-ans"
                     size="lg"
                     radius="full"
-                    className="hover:shadow-primary/50 bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105"
+                    className="hover:shadow-primary/50 flex w-fit max-w-fit bg-linear-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] px-2 py-3 text-xs font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 sm:px-4 sm:text-sm md:w-fit md:max-w-fit md:text-base lg:px-6"
                     aria-label="Célébrer 40 ans du Bon Tempérament"
                   >
-                    <span className="text-xl">🎉</span>
-                    <span className="ml-2">
+                    <span className="hidden text-sm sm:text-base md:block md:text-xl">
+                      🎉
+                    </span>
+                    <span className="ml-1 text-center wrap-break-word sm:ml-2">
                       Célébrons les 40 ans du Bon Tempérament !
                     </span>
-                    <span className="ml-2 text-xl">🎉</span>
+                    <span className="ml-1 hidden text-sm sm:ml-2 sm:text-base md:block md:text-xl">
+                      🎉
+                    </span>
                   </Button>
                 </motion.div>
               )}
@@ -209,7 +213,7 @@ const HomeContent = () => {
             ease: "easeOut",
           }}
         >
-          <div className="w-full max-w-[1440px] px-8 lg:px-24">
+          <div className="w-full max-w-360 px-8 lg:px-24">
             <motion.h2
               id="projects-title"
               className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
@@ -255,13 +259,13 @@ const HomeContent = () => {
           {/* About Section */}
           <motion.section
             ref={aboutRef}
-            className="mx-auto mt-16 flex w-full max-w-[1440px] flex-col lg:flex-row"
+            className="mx-auto mt-16 flex w-full max-w-360 flex-col lg:flex-row"
             aria-labelledby="about-title"
             initial={{ opacity: 0 }}
             animate={aboutInView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="relative flex w-full max-w-[1440px] gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-[100px]">
+            <div className="relative flex w-full max-w-360 gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-25">
               <div className="flex w-1/2 flex-col gap-8">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -325,38 +329,39 @@ const HomeContent = () => {
               }
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <div className="flex flex-col gap-[20px]">
+              <div className="flex flex-col gap-5">
                 <h2
                   id="about-title"
-                  className="text-primary/50 dark:text-primary text-title leading-none font-[300]"
+                  className="text-primary/50 dark:text-primary text-title leading-none font-light"
                   style={{ fontWeight: 300 }}
                 >
                   Nous découvrir
                 </h2>
-                <div className="text-foreground space-y-4 text-xs leading-[25px] font-light md:text-sm lg:text-base">
+                <div className="text-foreground space-y-4 text-xs leading-6.25 font-light md:text-sm lg:text-base">
                   <p>
-                    L'association Le Bon Tempérament est un ensemble vocal et
-                    instrumental renommé dirigé par Simone Duclos depuis sa
+                    L&apos;association Le Bon Tempérament est un ensemble vocal
+                    et instrumental renommé dirigé par Simone Duclos depuis sa
                     création en 1987. Basé à Saverne, en Alsace, notre ensemble
                     se distingue par le mélange des générations, la diversité
                     des parcours des chanteurs et des instrumentistes, et
-                    l'esprit de convivialité qui l'anime.
+                    l&apos;esprit de convivialité qui l&apos;anime.
                   </p>
                   <p>
                     Nous visons à partager la passion pour la musique classique,
-                    l'opéra baroque, et les œuvres chorales avec le plus grand
-                    nombre. Notre répertoire varié couvre une large période
-                    musicale de la Renaissance à nos jours, incluant des œuvres
-                    de musique classique sacrée et profane, ainsi que des pièces
-                    populaires et folkloriques.
+                    l&apos;opéra baroque, et les œuvres chorales avec le plus
+                    grand nombre. Notre répertoire varié couvre une large
+                    période musicale de la Renaissance à nos jours, incluant des
+                    œuvres de musique classique sacrée et profane, ainsi que des
+                    pièces populaires et folkloriques.
                   </p>
                   <p>
-                    L'association accorde une place toute particulière aux
+                    L&apos;association accorde une place toute particulière aux
                     familles. Les enfants y découvrent la musique à travers le
-                    chant, la pratique instrumentale et l'interprétation de
+                    chant, la pratique instrumentale et l&apos;interprétation de
                     spectacles musicaux. Depuis 2023, nous nous sommes enrichis
-                    d'un orchestre symphonique dirigé par Charlotte Lienhard,
-                    qui se produit seul ou avec la chorale lors des différents{" "}
+                    d&apos;un orchestre symphonique dirigé par Charlotte
+                    Lienhard, qui se produit seul ou avec la chorale lors des
+                    différents{" "}
                     <Link
                       href="/concerts"
                       className="text-primary font-medium hover:underline"
@@ -388,7 +393,7 @@ const HomeContent = () => {
 
           {/* Notre Histoire Section */}
           <motion.section
-            className="bg-default-50 mx-auto mt-16 w-full max-w-[1440px] px-8 py-16 lg:px-24"
+            className="bg-default-50 mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="history-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -443,11 +448,11 @@ const HomeContent = () => {
                 pour voir le résultat de ces répétitions.
               </p>
               <p>
-                En 2023, une nouvelle page s'est ouverte avec la création de
-                notre orchestre symphonique sous la direction de Charlotte
-                Lienhard. Cette évolution nous permet d'enrichir notre
-                répertoire et d'offrir des performances encore plus variées,
-                alliant la puissance vocale de nos chœurs à la richesse
+                En 2023, une nouvelle page s&apos;est ouverte avec la création
+                de notre orchestre symphonique sous la direction de Charlotte
+                Lienhard. Cette évolution nous permet d&apos;enrichir notre
+                répertoire et d&apos;offrir des performances encore plus
+                variées, alliant la puissance vocale de nos chœurs à la richesse
                 instrumentale de notre orchestre.
               </p>
             </motion.div>
@@ -455,7 +460,7 @@ const HomeContent = () => {
 
           {/* Rejoignez-nous Section */}
           <motion.section
-            className="bg-background mx-auto mt-16 w-full max-w-[1440px] px-8 py-16 lg:px-24"
+            className="bg-background mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="join-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -487,15 +492,15 @@ const HomeContent = () => {
                     Le Bon Tempérament accueille des choristes amateurs, des
                     chanteurs solistes professionnels et des instrumentistes de
                     tous horizons. Que vous soyez débutant ou expérimenté,
-                    passionné de musique classique ou d'opéra baroque, vous
+                    passionné de musique classique ou d&apos;opéra baroque, vous
                     trouverez votre place dans notre ensemble.
                   </p>
                   <p>
                     Nous avons différents chœurs adaptés à tous les niveaux : un
-                    chœur d'adultes, un chœur de jeunes, et un chœur des
-                    tout-jeunes. L'important est la motivation et l'envie de
-                    partager la passion pour la musique dans un esprit convivial
-                    et familial.
+                    chœur d&apos;adultes, un chœur de jeunes, et un chœur des
+                    tout-jeunes. L&apos;important est la motivation et
+                    l&apos;envie de partager la passion pour la musique dans un
+                    esprit convivial et familial.
                   </p>
                   <p className="font-medium">
                     Répétitions : Un dimanche par mois, avec des répétitions de
@@ -553,7 +558,7 @@ const HomeContent = () => {
           {/* Concerts Section */}
           <motion.section
             ref={concertsRef}
-            className="bg-background mx-auto mt-16 w-full max-w-[1440px] px-8 py-16 lg:px-24"
+            className="bg-background mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -587,7 +592,7 @@ const HomeContent = () => {
             >
               <ConcertPhotos />
 
-              <div className="mt-[30px] flex justify-end">
+              <div className="mt-7.5 flex justify-end">
                 <Button
                   as={Link}
                   href={"/concerts"}
@@ -610,7 +615,7 @@ const HomeContent = () => {
           {/* CDs Section */}
           <motion.section
             ref={cdsRef}
-            className="bg-default-50 mx-auto w-full max-w-[1440px] px-8 py-16 lg:px-24"
+            className="bg-default-50 mx-auto w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -642,7 +647,7 @@ const HomeContent = () => {
             >
               <CDPochettePhotos />
 
-              <div className="mt-[30px] flex justify-end">
+              <div className="mt-7.5 flex justify-end">
                 <Button
                   as={Link}
                   href={"/concerts/autres"}

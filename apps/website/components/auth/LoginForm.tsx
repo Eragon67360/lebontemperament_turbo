@@ -5,7 +5,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { ERROR_MESSAGES } from "@/consts/errorMessages";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Input, addToast } from "@heroui/react";
+import { Button, Checkbox, Input, addToast } from "@heroui/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -29,6 +29,7 @@ export default function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [stayOnPublic, setStayOnPublic] = useState(false);
 
   useEffect(() => {
     const hashParams = window.location.hash;
@@ -129,7 +130,7 @@ export default function LoginForm() {
             color: "success",
           });
 
-          router.push(RouteNames.MEMBRES.ROOT);
+          router.push(stayOnPublic ? RouteNames.ROOT : RouteNames.MEMBRES.ROOT);
         }
       } catch (error) {
         console.error("Login error:", error);
@@ -186,6 +187,17 @@ export default function LoginForm() {
                 disabled={isPending}
               />
             </div>
+
+            <Checkbox
+              isSelected={stayOnPublic}
+              onValueChange={setStayOnPublic}
+              size="sm"
+              isDisabled={isPending}
+            >
+              <span className="text-sm">
+                Se connecter mais rester sur la partie publique
+              </span>
+            </Checkbox>
 
             <Button
               variant="solid"

@@ -101,6 +101,27 @@ export default function AnniversaryAdminPage() {
       theme="anniversary"
     >
       <div className="grid gap-6">
+        {/* Warning Card */}
+        <Card className="border-red-300 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex gap-3">
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500">
+                <span className="text-xs font-bold text-white">⚠</span>
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-sm font-bold text-red-900">
+                  ⚠️ ATTENTION - Ne pas activer sans autorisation
+                </p>
+                <p className="text-xs font-medium text-red-800 sm:text-sm">
+                  Cette fonctionnalité ne doit PAS être activée sans
+                  l'autorisation explicite de Thomas. Veuillez contacter Thomas
+                  avant toute activation.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Main Toggle Card */}
         <Card>
           <CardHeader>
@@ -212,6 +233,29 @@ export default function AnniversaryAdminPage() {
                 </span>
               </li>
             </ul>
+          </CardContent>
+        </Card>
+
+        {/* Admin Access Info */}
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="pt-6">
+            <div className="flex gap-3">
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500">
+                <span className="text-xs text-white">ℹ</span>
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-sm font-medium text-amber-900">
+                  Accès admin en version preview
+                </p>
+                <p className="text-xs text-amber-800 sm:text-sm">
+                  Même si le flag de fonctionnalité est désactivé, les
+                  administrateurs connectés peuvent toujours accéder à la page
+                  anniversaire sur le site web (version preview). Cette page
+                  reste accessible via l'URL directe pour les admins
+                  authentifiés.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
