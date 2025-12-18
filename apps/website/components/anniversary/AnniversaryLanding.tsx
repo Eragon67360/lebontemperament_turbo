@@ -130,7 +130,7 @@ const AnniversaryLanding = ({
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.8 } }}
-            className="fixed inset-0 z-50 overflow-hidden bg-black"
+            className="fixed inset-0 z-999 overflow-hidden bg-black"
           >
             <motion.button
               initial={{ opacity: 0 }}
