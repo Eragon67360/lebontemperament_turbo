@@ -130,6 +130,35 @@
     font-size: clamp(24px, 4.44vw, 64px);
   }
 
+  .h-125 {
+    height: 31.25rem;
+  }
+  .w-125 {
+    width: 31.25rem;
+  }
+  .h-75 {
+    height: 18.75rem;
+  }
+  .w-75 {
+    width: 18.75rem;
+  }
+  h-112\.5 {
+    height: 28.125rem;
+  }
+  .w-112\.5 {
+    width: 28.125rem;
+  }
+
+  .size-125 {
+    @apply h-125 w-125;
+  }
+  .size-75 {
+    @apply h-75 w-75;
+  }
+  .size-112\.5 {
+    @apply h-112.5 w-112.5;
+  }
+
   .fill-image {
     width: 100%;
     height: 100%;
@@ -174,7 +203,7 @@
   }
 
   /* --- Audio Player Custom Styles --- */
-  .audio-player .rhap_container,
+  /* .audio-player .rhap_container,
   .audio-player .rhap_main-controls,
   .audio-player .rhap_progress-container,
   .audio-player .rhap_time,
@@ -196,6 +225,50 @@
   .audio-player .rhap_progress-filled,
   .custom-audio-player .rhap_progress-filled {
     background: white !important;
+  } */
+
+  /* In globals.css, inside @layer components */
+
+  /* ==========================================================================
+   Custom Audio Player Styles ("thin" variant)
+   ========================================================================== */
+  .audio-player-thin .rhap_container {
+    @apply bg-transparent p-0 shadow-none;
+  }
+
+  /* --- Main Controls (Play/Pause) --- */
+  .audio-player-thin .rhap_button-clear {
+    @apply hover:text-primary dark:hover:text-primary text-slate-500 transition-colors duration-200 dark:text-slate-400;
+  }
+
+  /* --- Progress Bar --- */
+  .audio-player-thin .rhap_progress-container {
+    @apply mx-4;
+  }
+  .audio-player-thin .rhap_progress-bar {
+    @apply h-1 bg-slate-200 dark:bg-slate-700;
+  }
+  .audio-player-thin .rhap_progress-filled {
+    @apply bg-primary;
+  }
+  .audio-player-thin .rhap_progress-indicator {
+    @apply bg-primary h-3 w-3 shadow-none;
+  }
+
+  /* --- Time Stamps --- */
+  .audio-player-thin .rhap_time {
+    @apply text-xs font-light text-slate-400 dark:text-slate-500;
+  }
+
+  /* --- Volume Controls --- */
+  .audio-player-thin .rhap_volume-controls {
+    @apply justify-start;
+  }
+  .audio-player-thin .rhap_volume-bar {
+    @apply h-1 bg-slate-200 dark:bg-slate-700;
+  }
+  .audio-player-thin .rhap_volume-indicator {
+    @apply bg-primary h-3 w-3 border-0 shadow-none;
   }
 }
 

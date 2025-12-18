@@ -3,14 +3,7 @@
 import CloudinaryImage from "@/components/CloudinaryImage";
 import type { Video } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
-import { Button } from "@heroui/react";
-import {
-  AnimatePresence,
-  motion,
-  useInView,
-  useScroll,
-  useTransform,
-} from "motion/react";
+import { AnimatePresence, motion, useInView } from "motion/react";
 import { useRef, useState } from "react";
 import { FaPlay, FaYoutube } from "react-icons/fa";
 import { VideoModal } from "./VideoModal";
@@ -25,9 +18,6 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
 
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 1000], [50, -50]);
-
   const categories = [
     "Tous",
     ...Array.from(new Set(videos.map((item) => item.category))),
@@ -38,23 +28,15 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
       ? videos
       : videos.filter((item) => item.category === selectedCategory);
 
-  const handleVideoClick = (video: Video) => {
-    if (video.video_url) {
-      setSelectedVideo(video);
-    }
-  };
-
   return (
     <section
       id="videos"
       ref={sectionRef}
-      className="bg-default-50 relative overflow-hidden py-16"
+      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
     >
-      {/* Parallax background orb */}
-      <motion.div
-        style={{ y }}
-        className="bg-primary/10 absolute top-1/3 left-1/4 h-[400px] w-[400px] rounded-full blur-[100px]"
-      />
+      <div className="absolute inset-0 z-0">
+        <div className="bg-primary/5 absolute top-1/4 left-0 h-125 w-125 rounded-full blur-[100px]" />
+      </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
         <motion.div
@@ -63,62 +45,55 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          {/* Glass morphism title */}
-          <div className="relative mx-auto mb-6 inline-block">
-            <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br backdrop-blur-xl" />
-            <div
-              className="absolute inset-0 -z-10 rounded-2xl opacity-50"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(26, 135, 141, 0.15) 0%, rgba(13, 107, 112, 0.05) 100%)",
-                filter: "blur(15px)",
-              }}
-            />
-            <h2 className="text-title text-primary/50 dark:text-primary px-8 py-4 leading-none font-light">
-              Galerie Vidéo
-            </h2>
-          </div>
-          <p className="text-foreground mx-auto max-w-2xl text-lg font-light">
-            Revivez nos concerts, témoignages et moments mémorables en vidéo
+          <h2 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white">
+            Galerie Vidéo
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+            Revivez nos concerts, témoignages et moments mémorables en vidéo.
           </p>
         </motion.div>
 
-        {/* Category filter */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="mb-8 flex flex-wrap justify-center gap-3"
+          className="mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full bg-slate-200/50 p-1 dark:bg-slate-800/50"
         >
           {categories.map((category) => (
-            <Button
+            <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              variant={selectedCategory === category ? "solid" : "bordered"}
-              color={selectedCategory === category ? "primary" : "default"}
-              radius="sm"
+              className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${
+                selectedCategory === category
+                  ? "text-white"
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
             >
+              {selectedCategory === category && (
+                <motion.div
+                  layoutId="video-category-pill"
+                  className="bg-primary absolute inset-0 -z-10 rounded-full"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
               {category}
-            </Button>
+            </button>
           ))}
         </motion.div>
 
-        {/* Video grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-          {filteredVideos.map((video, index) => {
-            return (
+          <AnimatePresence>
+            {filteredVideos.map((video) => (
               <motion.div
+                layout
                 key={video.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  delay: index * 0.1,
-                  duration: 0.6,
-                }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group border-primary/10 bg-background/50 hover:shadow-primary/10 relative overflow-hidden rounded-xl border shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                onClick={() => setSelectedVideo(video)}
+                className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl dark:border-slate-800/50 dark:bg-slate-900/30"
               >
-                {/* Thumbnail */}
                 <div className="relative aspect-video overflow-hidden">
                   <CloudinaryImage
                     src={video.thumbnail_url}
@@ -128,70 +103,63 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
                     rounded={RoundedSize.NONE}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                  {/* Play button overlay with glass morphism */}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.button
-                      whileHover={{ scale: 1.15 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleVideoClick(video)}
-                      className="group/play relative"
-                    >
-                      {/* Glow effect */}
-                      <div className="bg-primary/40 absolute inset-0 scale-110 rounded-full blur-2xl" />
-
-                      {/* Glass button */}
-                      <div className="from-primary to-primary/80 shadow-primary/30 group-hover/play:shadow-primary/50 relative rounded-full bg-gradient-to-br p-5 shadow-2xl backdrop-blur-sm transition-all duration-300">
-                        <FaPlay className="ml-1 text-3xl text-white" />
-                      </div>
-                    </motion.button>
-                  </div>
-
-                  {/* Year badge */}
-                  {video.year && (
-                    <div className="bg-primary absolute top-4 right-4 rounded-full px-3 py-1 text-sm font-semibold text-white">
-                      {video.year}
+                    <div className="translate-y-4 rounded-full border border-white/20 bg-white/10 p-4 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                      <FaPlay className="ml-0.5 text-xl text-white" />
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  <div className="text-primary mb-2 text-xs font-semibold tracking-wide uppercase">
+                <div className="p-5">
+                  <p className="text-primary mb-2 text-xs font-semibold tracking-wider uppercase">
                     {video.category}
-                  </div>
-                  <h3 className="text-foreground mb-2 text-xl leading-tight font-semibold">
+                  </p>
+                  <h3 className="mb-2 text-lg font-medium text-slate-900 dark:text-white">
                     {video.title}
                   </h3>
-                  <p className="text-foreground/70 text-sm leading-relaxed font-light">
-                    {video.description}
-                  </p>
                 </div>
               </motion.div>
-            );
-          })}
+            ))}
+          </AnimatePresence>
         </div>
 
-        {/* Load more placeholder */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-12 text-center"
         >
-          <Button
-            size="lg"
-            color="primary"
-            radius="sm"
-            endContent={<FaYoutube />}
+          <motion.button
+            variants={{
+              initial: { color: "var(--color-primary)" },
+              hover: { color: "#ffffff" },
+            }}
+            initial="initial"
+            whileHover="hover"
+            transition={{ duration: 0.3 }}
+            className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8! py-3 font-medium transition-colors duration-300"
+
+            // onClick={() => console.log("Button clicked!")}
           >
-            Voir Plus de Vidéos
-          </Button>
+            {/* The filling div animates based on the parent's state */}
+            <motion.div
+              className="bg-primary absolute inset-0 -z-10"
+              variants={{
+                initial: { y: "100%" },
+                hover: { y: "0%" },
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            />
+
+            <motion.span className="flex items-center gap-2">
+              Voir Plus sur <FaYoutube />
+              {/* <FaImages /> */}
+            </motion.span>
+          </motion.button>
         </motion.div>
       </div>
 
-      {/* Video Modal */}
       <AnimatePresence>
         {selectedVideo && (
           <VideoModal

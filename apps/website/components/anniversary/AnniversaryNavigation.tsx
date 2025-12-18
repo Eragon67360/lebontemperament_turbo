@@ -1,7 +1,6 @@
 "use client";
 
 import type { NavigationCard } from "@/types/anniversary";
-import { Button } from "@heroui/react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import {
@@ -16,7 +15,7 @@ import {
   FaVideo,
 } from "react-icons/fa";
 
-// Icon mapping
+// Icon mapping (unchanged)
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FaMusic,
   FaTrophy,
@@ -37,26 +36,27 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
+  // Parallax scroll effect (unchanged)
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [50, -50]);
 
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
     <section
       id="anniversary-navigation"
       ref={sectionRef}
-      className="bg-default-50 relative overflow-hidden py-16"
+      // REFINED: Consistent light background with the parent section
+      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
     >
-      {/* Parallax background orb */}
+      {/* Parallax background orb (unchanged) */}
       <motion.div
         style={{ y }}
-        className="bg-primary/10 absolute top-1/2 right-0 h-[400px] w-[400px] rounded-full blur-[100px]"
+        className="bg-primary/10 absolute top-1/2 right-0 h-100 w-100 rounded-full blur-[100px]"
       />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
@@ -66,24 +66,14 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          {/* Glass morphism title */}
-          <div className="relative mx-auto mb-6 inline-block">
-            <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br backdrop-blur-xl" />
-            <div
-              className="absolute inset-0 -z-10 rounded-2xl opacity-50"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(26, 135, 141, 0.15) 0%, rgba(13, 107, 112, 0.05) 100%)",
-                filter: "blur(15px)",
-              }}
-            />
-            <h2 className="text-title text-primary/50 dark:text-primary px-8 py-4 leading-none font-light">
-              Explorez Notre Célébration
-            </h2>
-          </div>
-          <p className="text-foreground mx-auto max-w-2xl text-lg font-light">
+          {/* REFINED: Title now uses simple text, inheriting the clean style */}
+          <h2 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white">
+            Explorez Notre Célébration
+          </h2>
+          {/* REFINED: Lighter font weight for the description */}
+          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
             Découvrez 40 ans d&apos;histoire du Bon Tempérament à travers
-            différents médias et témoignages
+            différents médias et témoignages.
           </p>
         </motion.div>
 
@@ -94,72 +84,68 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
             return (
               <motion.div
                 key={card.id}
-                initial={{
-                  opacity: 0,
-                  y: 30,
-                }}
-                animate={
-                  isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
-                }
-                transition={{
-                  delay: index * 0.1,
-                  duration: 0.6,
-                }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group border-primary/10 bg-background/50 hover:shadow-primary/10 relative overflow-hidden rounded-xl border p-8 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
+                initial={{ opacity: 0, y: 30 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                // REFINED: Subtle hover, same as the hero's stat cards
+                whileHover={{ y: -5 }}
+                className="group flex flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-8 backdrop-blur-md transition-all duration-300 hover:border-slate-300/80 dark:border-slate-800/50 dark:bg-slate-900/30 dark:hover:border-slate-700/80"
               >
-                {/* Animated gradient on hover */}
-                <motion.div
+                {/* Subtle inner glow on hover */}
+                <div
                   className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                   style={{
                     background:
-                      "radial-gradient(circle at center, rgba(26, 135, 141, 0.1) 0%, transparent 70%)",
+                      "radial-gradient(circle at center, rgba(173, 216, 230, 0.1) 0%, transparent 80%)",
                   }}
                 />
 
-                {/* Shimmer effect on hover */}
-                <motion.div
-                  className="absolute inset-0 -z-10"
-                  initial={{ x: "-100%", opacity: 0 }}
-                  whileHover={{ x: "100%", opacity: 1 }}
-                  transition={{ duration: 0.8 }}
-                  style={{
-                    background:
-                      "linear-gradient(90deg, transparent, rgba(26, 135, 141, 0.1), transparent)",
-                  }}
-                />
-
-                {/* Icon with glass effect */}
-                <motion.div
-                  className="relative mb-6 inline-flex"
-                  whileHover={{ rotate: [0, -5, 5, -5, 5, 0], scale: 1.1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="from-primary/20 to-primary/10 absolute inset-0 -z-10 scale-110 rounded-xl bg-gradient-to-br blur-xl" />
-                  <div className="from-primary to-primary/80 shadow-primary/20 rounded-xl bg-gradient-to-br p-4 shadow-lg">
-                    <IconComponent className="text-3xl text-white" />
+                {/* REFINED: Icon is much lighter, no heavy background */}
+                <div className="mb-6">
+                  <div className="bg-primary/5 text-primary dark:bg-primary/10 inline-flex rounded-lg p-4">
+                    <IconComponent className="text-3xl" />
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Content */}
-                <h3 className="text-foreground mb-2 text-2xl font-semibold">
+                {/* REFINED: Font weights are lighter, title is medium, description is light */}
+                <h3 className="mb-2 text-2xl font-medium text-slate-900 dark:text-white">
                   {card.title}
                 </h3>
-                <p className="text-foreground/70 mb-6 font-light">
+                <p className="grow font-light text-slate-500 dark:text-slate-400">
                   {card.description}
                 </p>
 
-                {/* Button */}
-                <Button
-                  onClick={() => scrollToSection(card.target_section_id)}
-                  color="primary"
-                  variant="bordered"
-                  radius="sm"
-                  className="group/btn relative w-full overflow-hidden"
+                {/* REFINED: Button matches the elegant "ghost button" style from the hero */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={isInView ? { opacity: 1 } : {}}
+                  transition={{ delay: 0.5, duration: 0.6 }}
+                  className="mt-12 text-center"
                 >
-                  <span className="relative z-10">Découvrir</span>
-                  <motion.div className="bg-primary absolute inset-0 -z-0 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-10" />
-                </Button>
+                  <motion.button
+                    variants={{
+                      initial: { color: "var(--color-primary)" },
+                      hover: { color: "#ffffff" },
+                    }}
+                    initial="initial"
+                    whileHover="hover"
+                    transition={{ duration: 0.3 }}
+                    className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative w-full overflow-hidden rounded-md border bg-transparent px-8! py-3 font-medium transition-colors duration-300"
+                    onClick={() => scrollToSection(card.target_section_id)}
+                  >
+                    <motion.div
+                      className="bg-primary absolute inset-0 -z-10"
+                      variants={{
+                        initial: { y: "100%" },
+                        hover: { y: "0%" },
+                      }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    />
+
+                    <motion.span>Découvrir</motion.span>
+                  </motion.button>
+                </motion.div>
               </motion.div>
             );
           })}

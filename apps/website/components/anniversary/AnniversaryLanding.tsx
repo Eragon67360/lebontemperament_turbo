@@ -430,7 +430,7 @@ const AnniversaryLanding = ({
                     >
                       {" "}
                       <motion.div
-                        className="w-px origin-bottom bg-gradient-to-t from-transparent via-white/80 to-transparent"
+                        className="w-px origin-bottom bg-linear-to-t from-transparent via-white/80 to-transparent"
                         initial={{ height: 0, opacity: 1 }}
                         animate={{ height: "150vh", opacity: 0 }}
                         transition={{
@@ -471,11 +471,11 @@ const AnniversaryLanding = ({
             {/* Parallax background orbs for subtle depth */}
             <motion.div
               style={{ y: y1, opacity: scrollOpacity }}
-              className="bg-primary/10 absolute -top-40 -left-40 h-[30rem] w-[30rem] rounded-full blur-3xl md:h-[40rem] md:w-[40rem]"
+              className="bg-primary/10 absolute -top-40 -left-40 h-120 w-120 rounded-full blur-3xl md:h-160 md:w-160"
             />
             <motion.div
               style={{ y: y2, opacity: scrollOpacity }}
-              className="absolute -right-40 -bottom-40 h-[30rem] w-[30rem] rounded-full bg-sky-400/10 blur-3xl md:h-[40rem] md:w-[40rem]"
+              className="absolute -right-40 -bottom-40 h-120 w-120 rounded-full bg-sky-400/10 blur-3xl md:h-160 md:w-160"
             />
 
             <div className="absolute inset-0">
@@ -524,12 +524,12 @@ const AnniversaryLanding = ({
             <motion.div variants={fadeInUp}>
               {/* The glass title card is perfect and remains unchanged */}
               <div className="relative mx-auto mb-8 inline-block">
-                <div className="from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br backdrop-blur-lg" />
+                <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-3xl bg-linear-to-br backdrop-blur-lg dark:from-slate-800 dark:to-slate-900" />
                 <div
                   className="absolute inset-0 -z-10 rounded-3xl opacity-50"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 100%)",
+                      "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
                   }}
                 />
                 <h1 className="text-title text-primary px-12 py-8 font-thin tracking-tight dark:text-white">
