@@ -8,7 +8,7 @@ export function createAdminClient() {
     {
       auth: {
         autoRefreshToken: true,
-        persistSession: false,
+        persistSession: true,
       },
     },
   );

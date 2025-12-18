@@ -1,3 +1,4 @@
+import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import { Link, NavbarMenu, NavbarMenuItem } from "@heroui/react";
 import { User } from "@supabase/supabase-js";
@@ -9,6 +10,9 @@ interface MainMenuLinksProps {
 }
 
 const MainMenuLinks: React.FC<MainMenuLinksProps> = ({ user, isLoading }) => {
+  const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
+  const { isAdmin } = useAdminStatus();
+
   return (
     <NavbarMenu className="pt-6">
       <NavbarMenuItem>
@@ -52,6 +56,16 @@ const MainMenuLinks: React.FC<MainMenuLinksProps> = ({ user, isLoading }) => {
           Contact
         </Link>
       </NavbarMenuItem>
+      {(isAnniversaryEnabled || isAdmin) && (
+        <NavbarMenuItem>
+          <Link
+            href="/40-ans"
+            className="w-full rounded-lg bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] px-4 py-2 text-center font-bold text-white shadow-lg"
+          >
+            🎉 40 ans du Bon Tempérament
+          </Link>
+        </NavbarMenuItem>
+      )}
       {!isLoading && user && (
         <NavbarMenuItem>
           <Link
