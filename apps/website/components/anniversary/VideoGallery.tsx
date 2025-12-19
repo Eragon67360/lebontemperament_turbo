@@ -32,20 +32,20 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
     <section
       id="videos"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
+      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
     >
       <div className="absolute inset-0 z-0">
         <div className="bg-primary/5 absolute top-1/4 left-0 h-125 w-125 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          <h2 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
             Galerie Vidéo
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
@@ -111,7 +111,7 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
                   </div>
                 </div>
 
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                   <p className="text-primary mb-2 text-xs font-semibold tracking-wider uppercase">
                     {video.category}
                   </p>
@@ -138,11 +138,9 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
             initial="initial"
             whileHover="hover"
             transition={{ duration: 0.3 }}
-            className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8! py-3 font-medium transition-colors duration-300"
-
+            className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
             // onClick={() => console.log("Button clicked!")}
           >
-            {/* The filling div animates based on the parent's state */}
             <motion.div
               className="bg-primary absolute inset-0 -z-10"
               variants={{
@@ -151,10 +149,8 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
               }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             />
-
             <motion.span className="flex items-center gap-2">
               Voir Plus sur <FaYoutube />
-              {/* <FaImages /> */}
             </motion.span>
           </motion.button>
         </motion.div>

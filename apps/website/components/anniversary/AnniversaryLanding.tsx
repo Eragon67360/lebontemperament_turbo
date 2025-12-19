@@ -50,7 +50,6 @@ const AnniversaryLanding = ({
   const [showContent, setShowContent] = useState(false);
   const [phase, setPhase] = useState(0);
 
-  // --- Intro Animation Logic ---
   useLayoutEffect(() => {
     if (showIntro && hero.enable_intro_animation) {
       window.scrollTo(0, 0);
@@ -98,10 +97,8 @@ const AnniversaryLanding = ({
   const introAngle = 360 / numBatons;
 
   const { scrollY } = useScroll();
-
   const y1 = useTransform(scrollY, [0, 500], [0, 150]);
   const y2 = useTransform(scrollY, [0, 500], [0, -100]);
-
   const scrollOpacity = useTransform(scrollY, [0, 300], [1, 0]);
 
   const staggerContainer: Variants = {
@@ -109,7 +106,7 @@ const AnniversaryLanding = ({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2, // Each child will start its animation 0.2s after the previous one
+        staggerChildren: 0.2,
       },
     },
   };
@@ -137,26 +134,23 @@ const AnniversaryLanding = ({
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
               onClick={handleSkip}
-              className="absolute top-8 right-8 z-50 px-6 py-2 text-sm font-medium text-white/60 backdrop-blur-sm transition-all hover:text-white"
+              className="absolute top-4 right-4 z-50 px-4 py-2 text-sm font-medium text-white/60 backdrop-blur-sm transition-all hover:text-white sm:top-8 sm:right-8 sm:px-6"
             >
               {hero.skip_button_text}
             </motion.button>
 
-            {/* Phase 1: Drawing the Timeline */}
             {phase >= 1 && (
               <motion.div
                 className="absolute inset-0 flex items-center justify-center"
                 animate={{ opacity: phase >= 3 ? 0 : 1 }}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
               >
-                {" "}
                 <motion.svg
                   width="100%"
                   height="100%"
                   viewBox="0 0 1920 1080"
                   className="absolute inset-0"
                 >
-                  {" "}
                   <motion.path
                     d="M 0 540 Q 480 540 960 540 T 1920 540"
                     stroke="url(#timelineGradient)"
@@ -165,9 +159,8 @@ const AnniversaryLanding = ({
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
                     transition={{ duration: 1.5, ease: "easeInOut" }}
-                  />{" "}
+                  />
                   <defs>
-                    {" "}
                     <linearGradient
                       id="timelineGradient"
                       x1="0%"
@@ -175,58 +168,44 @@ const AnniversaryLanding = ({
                       x2="100%"
                       y2="0%"
                     >
-                      {" "}
-                      <stop
-                        offset="0%"
-                        stopColor="#ffffff"
-                        stopOpacity="0"
-                      />{" "}
-                      <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />{" "}
-                      <stop
-                        offset="100%"
-                        stopColor="#ffffff"
-                        stopOpacity="0"
-                      />{" "}
-                    </linearGradient>{" "}
-                  </defs>{" "}
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+                      <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
+                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
                   {[1987, 1997, 2007, 2017, 2027].map((year, index) => (
                     <motion.g key={year}>
-                      {" "}
                       <motion.circle
                         cx={384 + index * 288}
                         cy="540"
-                        r="4"
+                        r="6"
                         fill="#ffffff"
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
-                      />{" "}
+                      />
                       <motion.text
                         x={384 + index * 288}
-                        y="520"
+                        y="515"
                         textAnchor="middle"
                         fill="#ffffff"
-                        fontSize="14"
+                        fontSize="48"
                         fontWeight="300"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 0.5, y: 0 }}
                         transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
                       >
-                        {" "}
-                        {year}{" "}
-                      </motion.text>{" "}
+                        {year}
+                      </motion.text>
                     </motion.g>
-                  ))}{" "}
-                </motion.svg>{" "}
+                  ))}
+                </motion.svg>
               </motion.div>
             )}
 
-            {/* Phase 2: Number Revelation */}
             {phase >= 2 && (
               <motion.div className="absolute inset-0 flex items-center justify-center">
-                {" "}
                 <div className="relative">
-                  {" "}
                   <motion.div
                     className="absolute inset-0 -z-10"
                     initial={{ scale: 0, opacity: 0 }}
@@ -236,13 +215,13 @@ const AnniversaryLanding = ({
                       background:
                         "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
                       filter: "blur(100px)",
-                      width: "600px",
-                      height: "600px",
+                      width: "clamp(300px, 80vw, 600px)",
+                      height: "clamp(300px, 80vw, 600px)",
                       left: "50%",
                       top: "50%",
                       transform: "translate(-50%, -50%)",
                     }}
-                  />{" "}
+                  />
                   <motion.div
                     className="relative"
                     initial={{ scale: 0.8, opacity: 0, y: 0 }}
@@ -253,9 +232,7 @@ const AnniversaryLanding = ({
                     }}
                     transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    {" "}
                     <div style={{ perspective: "1000px" }}>
-                      {" "}
                       <motion.div
                         className="relative inline-block"
                         animate={{ rotateY: [0, 360] }}
@@ -268,23 +245,20 @@ const AnniversaryLanding = ({
                         }}
                         style={{ transformStyle: "preserve-3d" }}
                       >
-                        {" "}
                         <span
-                          className="block text-[20rem] leading-none font-thin text-transparent select-none"
+                          className="block text-[12rem] leading-none font-thin text-transparent select-none sm:text-[16rem] lg:text-[20rem]"
                           aria-hidden="true"
                         >
-                          {" "}
-                          40{" "}
-                        </span>{" "}
+                          40
+                        </span>
                         {[...Array(5)].map((_, i) => (
                           <motion.div
                             key={i}
                             className="absolute inset-0"
                             style={{ transform: `translateZ(${-30 * i}px)` }}
                           >
-                            {" "}
                             <span
-                              className="block text-[20rem] leading-none font-thin select-none"
+                              className="block text-[12rem] leading-none font-thin select-none sm:text-[16rem] lg:text-[20rem]"
                               style={{
                                 background: `linear-gradient(135deg, #ffffff ${100 - i * 15}%, #999999 100%)`,
                                 WebkitBackgroundClip: "text",
@@ -296,11 +270,10 @@ const AnniversaryLanding = ({
                                 filter: i > 0 ? "blur(1px)" : "none",
                               }}
                             >
-                              {" "}
-                              40{" "}
-                            </span>{" "}
+                              40
+                            </span>
                           </motion.div>
-                        ))}{" "}
+                        ))}
                         <motion.div
                           className="absolute inset-0"
                           style={{
@@ -308,20 +281,17 @@ const AnniversaryLanding = ({
                             opacity: 0.1,
                           }}
                         >
-                          {" "}
-                          <span className="block text-[20rem] leading-none font-thin text-white/20">
-                            {" "}
-                            40{" "}
-                          </span>{" "}
-                        </motion.div>{" "}
-                      </motion.div>{" "}
-                    </div>{" "}
-                  </motion.div>{" "}
-                </div>{" "}
+                          <span className="block text-[12rem] leading-none font-thin text-white/20 sm:text-[16rem] lg:text-[20rem]">
+                            40
+                          </span>
+                        </motion.div>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                </div>
               </motion.div>
             )}
 
-            {/* Phase 3: Text Revelation */}
             {phase >= 3 && (
               <motion.div
                 className="absolute inset-0"
@@ -329,25 +299,20 @@ const AnniversaryLanding = ({
                 animate={{ opacity: phase >= 4 ? 0 : 1 }}
                 transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
               >
-                {" "}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {" "}
+                <div className="absolute inset-0 flex items-center justify-center p-4">
                   <motion.div
                     className="relative text-center"
                     initial={{ y: 100 }}
                     animate={{ y: 0 }}
                     transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    {" "}
-                    <motion.div className="mb-8">
-                      {" "}
+                    <div className="mb-8">
                       <div className="overflow-hidden">
-                        {" "}
                         {["40", "ANS", "DU", "BON", "TEMPÉRAMENT"].map(
                           (word, wordIndex) => (
                             <motion.span
                               key={wordIndex}
-                              className="mx-2 inline-block"
+                              className="mx-1 inline-block sm:mx-2"
                               initial={{ y: "100%", opacity: 0 }}
                               animate={{ y: "0%", opacity: 1 }}
                               transition={{
@@ -356,11 +321,10 @@ const AnniversaryLanding = ({
                                 ease: [0.215, 0.61, 0.355, 1],
                               }}
                             >
-                              {" "}
                               {word.split("").map((letter, letterIndex) => (
                                 <motion.span
                                   key={letterIndex}
-                                  className="inline-block text-5xl font-thin tracking-wide md:text-7xl"
+                                  className="inline-block text-4xl font-thin tracking-wide sm:text-5xl md:text-7xl"
                                   style={{
                                     background:
                                       "linear-gradient(180deg, #ffffff 0%, #888888 100%)",
@@ -368,26 +332,24 @@ const AnniversaryLanding = ({
                                     WebkitTextFillColor: "transparent",
                                   }}
                                 >
-                                  {" "}
-                                  {letter}{" "}
+                                  {letter}
                                 </motion.span>
-                              ))}{" "}
+                              ))}
                             </motion.span>
                           ),
-                        )}{" "}
-                      </div>{" "}
-                    </motion.div>{" "}
+                        )}
+                      </div>
+                    </div>
                     <motion.p
-                      className="text-xl font-light text-white/60 md:text-2xl"
+                      className="text-lg font-light text-white/60 sm:text-xl md:text-2xl"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.0, duration: 0.8 }}
                     >
-                      {" "}
-                      Une célébration de la musique et de la passion{" "}
-                    </motion.p>{" "}
-                  </motion.div>{" "}
-                </div>{" "}
+                      Une célébration de la musique et de la passion
+                    </motion.p>
+                  </motion.div>
+                </div>
                 <motion.div
                   className="absolute inset-x-0 top-0 h-24"
                   initial={{ scaleY: 0 }}
@@ -398,7 +360,7 @@ const AnniversaryLanding = ({
                       "linear-gradient(180deg, #000000 0%, transparent 100%)",
                     transformOrigin: "top",
                   }}
-                />{" "}
+                />
                 <motion.div
                   className="absolute inset-x-0 bottom-0 h-24"
                   initial={{ scaleY: 0 }}
@@ -409,16 +371,13 @@ const AnniversaryLanding = ({
                       "linear-gradient(0deg, #000000 0%, transparent 100%)",
                     transformOrigin: "bottom",
                   }}
-                />{" "}
+                />
               </motion.div>
             )}
 
-            {/* Phase 4: Spiral Firework */}
             {phase >= 4 && (
               <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                {" "}
                 <div className="relative h-1 w-1">
-                  {" "}
                   {[...Array(numBatons)].map((_, i) => (
                     <motion.div
                       key={i}
@@ -428,7 +387,6 @@ const AnniversaryLanding = ({
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.1 }}
                     >
-                      {" "}
                       <motion.div
                         className="w-px origin-bottom bg-linear-to-t from-transparent via-white/80 to-transparent"
                         initial={{ height: 0, opacity: 1 }}
@@ -438,14 +396,13 @@ const AnniversaryLanding = ({
                           delay: i * 0.015,
                           ease: [0.22, 1, 0.36, 1],
                         }}
-                      />{" "}
+                      />
                     </motion.div>
-                  ))}{" "}
-                </div>{" "}
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Phase 5: Elegant outro */}
             {phase >= 5 && (
               <motion.div
                 className="absolute inset-0 bg-black"
@@ -466,9 +423,7 @@ const AnniversaryLanding = ({
           transition={{ duration: 1.5 }}
           className="relative min-h-screen overflow-hidden bg-slate-50 pt-20 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
         >
-          {/* --- Background Elements --- */}
           <div className="absolute inset-0 z-0">
-            {/* Parallax background orbs for subtle depth */}
             <motion.div
               style={{ y: y1, opacity: scrollOpacity }}
               className="bg-primary/10 absolute -top-40 -left-40 h-120 w-120 rounded-full blur-3xl md:h-160 md:w-160"
@@ -513,16 +468,13 @@ const AnniversaryLanding = ({
             </div>
           </div>
 
-          {/* Main content container with staggered animations */}
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="relative z-10 mx-auto max-w-7xl px-4 py-16 text-center md:py-24"
+            className="relative z-10 mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 md:py-24 lg:px-8"
           >
-            {/* 1. Hero Text Content */}
             <motion.div variants={fadeInUp}>
-              {/* The glass title card is perfect and remains unchanged */}
               <div className="relative mx-auto mb-8 inline-block">
                 <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-3xl bg-linear-to-br backdrop-blur-lg dark:from-slate-800 dark:to-slate-900" />
                 <div
@@ -532,12 +484,11 @@ const AnniversaryLanding = ({
                       "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
                   }}
                 />
-                <h1 className="text-title text-primary px-12 py-8 font-thin tracking-tight dark:text-white">
+                <h1 className="text-primary px-8 py-6 text-6xl font-thin tracking-tight sm:px-12 sm:py-8 sm:text-7xl lg:text-8xl dark:text-white">
                   {hero.hero_number} ANS
                 </h1>
               </div>
 
-              {/* REFINED: Subtitle now uses a lighter font weight for a more elegant feel */}
               <p className="mx-auto mt-6 max-w-3xl text-xl font-light text-slate-500 md:text-2xl dark:text-slate-400">
                 {hero.hero_subtitle}
               </p>
@@ -548,7 +499,6 @@ const AnniversaryLanding = ({
               )}
             </motion.div>
 
-            {/* 2. REFINED Stats Grid for a "Thin" Design */}
             <motion.div
               variants={fadeInUp}
               className="mt-16 grid grid-cols-2 gap-4 text-left md:grid-cols-4 md:gap-8"
@@ -560,10 +510,8 @@ const AnniversaryLanding = ({
                     key={stat.id}
                     whileHover={{ y: -5 }}
                     transition={{ duration: 0.2 }}
-                    // REFINED: Removed heavy shadows, using a very thin border and subtle hover effect
-                    className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-5 backdrop-blur-md transition-all duration-300 hover:border-slate-300/80 dark:border-slate-800/50 dark:bg-slate-900/30 dark:hover:border-slate-700/80"
+                    className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md transition-all duration-300 hover:border-slate-300/80 sm:p-5 dark:border-slate-800/50 dark:bg-slate-900/30 dark:hover:border-slate-700/80"
                   >
-                    {/* Subtle inner glow on hover for a premium feel */}
                     <div
                       className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                       style={{
@@ -572,12 +520,10 @@ const AnniversaryLanding = ({
                       }}
                     />
                     <div className="flex items-center gap-4">
-                      {/* REFINED: Softer, borderless icon background */}
-                      <div className="bg-primary/5 text-primary dark:bg-primary/10 rounded-lg p-3">
+                      <div className="bg-primary/5 text-primary dark:bg-primary/10 shrink-0 rounded-lg p-3">
                         <IconComponent className="text-xl" />
                       </div>
                       <div>
-                        {/* REFINED: Kept number bold for emphasis, but softened other text */}
                         <p className="text-2xl font-semibold text-slate-800 dark:text-white">
                           {stat.number}
                         </p>
@@ -591,7 +537,6 @@ const AnniversaryLanding = ({
               })}
             </motion.div>
 
-            {/* 3. REFINED Call to Action Button */}
             <motion.div variants={fadeInUp} className="mt-16">
               <motion.button
                 variants={{
@@ -601,13 +546,12 @@ const AnniversaryLanding = ({
                 initial="initial"
                 whileHover="hover"
                 transition={{ duration: 0.3 }}
-                className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8! py-3 font-medium transition-colors duration-300"
+                className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
                 onClick={() => {
                   document
                     .getElementById(hero.cta_target_section)
                     ?.scrollIntoView({ behavior: "smooth" });
                 }}
-                style={{ paddingInline: "40px" }}
               >
                 <motion.div
                   className="bg-primary absolute inset-0 -z-10"
