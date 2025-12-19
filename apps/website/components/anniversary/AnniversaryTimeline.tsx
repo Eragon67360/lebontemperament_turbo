@@ -47,21 +47,21 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
     <section
       id="timeline"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
+      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
     >
       <motion.div
         style={{ y }}
         className="bg-primary/5 absolute top-1/4 left-0 h-125 w-125 rounded-full blur-[100px]"
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="mb-16 text-center"
+          className="mb-12 text-center md:mb-16"
         >
-          <h2 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
             Notre Parcours : 40 Ans
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
@@ -70,45 +70,46 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
         </motion.div>
 
         <div className="relative">
-          <div className="absolute top-0 left-4 h-full w-0.5 bg-slate-200 md:left-1/2 md:-translate-x-1/2 dark:bg-slate-800">
+          <div className="absolute top-0 left-4 h-full w-0.5 -translate-x-1/2 bg-slate-200 md:left-1/2 dark:bg-slate-800">
             <motion.div
               style={{ height: lineHeight }}
               className="bg-primary w-full"
             />
           </div>
 
-          <div className="mx-4 space-y-12">
+          <div className="space-y-12">
             {events.map((event, index) => {
               const isEven = index % 2 === 0;
               const IconComponent = iconMap[event.icon_name] || FaMusic;
 
               return (
-                <div
-                  key={event.id}
-                  className={`flex items-start ${isEven ? "mr-4 md:flex-row" : "ml-4 md:flex-row-reverse"}`}
-                >
+                <div key={event.id} className="relative">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.5 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true, amount: 0.5 }}
                     transition={{ duration: 0.5 }}
-                    className="border-primary relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-slate-50 md:h-12 md:w-12 dark:bg-slate-900"
+                    className="border-primary absolute top-0 left-4 z-10 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border bg-slate-50 md:left-1/2 md:h-12 md:w-12 dark:bg-slate-900"
                   >
                     <IconComponent className="text-md text-primary md:text-xl" />
                   </motion.div>
 
                   <motion.div
-                    initial={{ opacity: 0, x: isEven ? -20 : 20 }}
+                    initial={{ opacity: 0, x: isEven ? 20 : -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, amount: 0.5 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
-                    className={`w-full px-6 md:w-1/2 ${isEven ? "md:pr-12" : "md:pl-12"}`}
+                    className={`w-full pl-10 md:w-1/2 md:pl-0 ${
+                      isEven
+                        ? "md:ml-auto md:pl-14"
+                        : "md:mr-auto md:pr-14 md:text-right"
+                    }`}
                   >
-                    <div className="rounded-xl border border-slate-200/80 bg-white/30 p-6 backdrop-blur-md dark:border-slate-200/20 dark:bg-slate-900/30">
+                    <div className="rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md sm:p-6 md:text-left dark:border-slate-200/20 dark:bg-slate-900/30">
                       <p className="text-primary mb-2 text-sm font-semibold">
                         {event.year}
                       </p>
-                      <h3 className="mb-3 text-xl font-medium text-slate-900 dark:text-white">
+                      <h3 className="mb-3 text-lg font-medium text-slate-900 sm:text-xl dark:text-white">
                         {event.title}
                       </h3>
                       <p className="text-sm leading-relaxed font-light text-slate-500 dark:text-slate-400">

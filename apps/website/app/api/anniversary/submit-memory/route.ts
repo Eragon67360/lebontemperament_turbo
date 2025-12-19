@@ -212,7 +212,55 @@ const adminNotificationEmailTemplate = (
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, message, year } = body;
+    const { name, email, message, year, captchaValue } = body;
+
+    if (!captchaValue) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Veuillez vérifier que vous n'êtes pas un robot",
+        },
+        { status: 400 },
+      );
+    }
+
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error("RECAPTCHA_SECRET_KEY not found in environment variables");
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Configuration du serveur incomplète",
+        },
+        { status: 500 },
+      );
+    }
+
+    // Verify reCAPTCHA with Google
+    const recaptchaResponse = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaValue}`,
+      {
+        method: "POST",
+      },
+    );
+
+    const recaptchaResult = await recaptchaResponse.json();
+
+    if (!recaptchaResult.success) {
+      console.error(
+        "reCAPTCHA verification failed:",
+        recaptchaResult["error-codes"],
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Échec de la vérification reCAPTCHA",
+          errorCodes: recaptchaResult["error-codes"],
+        },
+        { status: 400 },
+      );
+    }
 
     // Validate required fields (email is mandatory)
     if (!name || !email || !message) {
