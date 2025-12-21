@@ -118,6 +118,20 @@ export interface AnniversaryMemory {
   updated_at: string;
 }
 
+export interface AnniversaryArchive {
+  id: string;
+  title: string;
+  description: string;
+  year: number;
+  type: ArchiveType;
+  theme: string;
+  file_url: string;
+  file_size: string;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ============================================================================
 // DTO Types (Data Transfer Objects)
 // ============================================================================
@@ -232,6 +246,21 @@ export interface UpdateMemoryDTO {
   is_featured?: boolean;
 }
 
+export interface CreateArchiveDTO {
+  title: string;
+  description: string;
+  year: number;
+  type: ArchiveType;
+  theme: string;
+  file_url: string;
+  file_size: string;
+  is_visible?: boolean;
+}
+
+export interface UpdateArchiveDTO extends Partial<CreateArchiveDTO> {
+  id: string;
+}
+
 // ============================================================================
 // Utility Types
 // ============================================================================
@@ -281,3 +310,27 @@ export const PHOTO_CATEGORIES = [
 ] as const;
 
 export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number];
+
+// Archive type options
+export const ARCHIVE_TYPES = [
+  "assemblée-générale",
+  "rapport-annuel",
+  "rapport-financier",
+  "gazette",
+  "programme",
+  "document-historique",
+] as const;
+
+export type ArchiveType = (typeof ARCHIVE_TYPES)[number];
+
+// Archive theme options (common themes)
+export const ARCHIVE_THEMES = [
+  "Gouvernance",
+  "Bilan",
+  "Finances",
+  "Communication",
+  "Concerts",
+  "Histoire",
+] as const;
+
+export type ArchiveTheme = (typeof ARCHIVE_THEMES)[number];

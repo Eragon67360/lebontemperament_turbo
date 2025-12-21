@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     // Determine resource type if not provided
     let type: "image" | "video" | "raw" | "auto" = "auto";
     if (resourceType) {
-      if (resourceType === "audio") {
-        type = "raw"; // Audio files are uploaded as 'raw' in Cloudinary
+      if (resourceType === "audio" || resourceType === "raw") {
+        type = "raw"; // Audio files and PDFs are uploaded as 'raw' in Cloudinary
       } else if (resourceType === "image" || resourceType === "video") {
         type = resourceType;
       }
