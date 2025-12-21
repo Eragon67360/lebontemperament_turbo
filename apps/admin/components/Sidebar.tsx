@@ -21,6 +21,7 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import {
   AlertCircle,
+  Archive,
   BarChart3,
   Bug,
   Building2,
@@ -120,7 +121,7 @@ export default function Sidebar({
           visible: true,
           badge:
             unreadMessagesCount > 0 ? (
-              <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-semibold text-white">
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-semibold text-white">
                 {unreadMessagesCount}
               </span>
             ) : null,
@@ -208,6 +209,11 @@ export default function Sidebar({
           href: "/dashboard/admin/anniversary/photos",
           label: "Collection Photos",
           icon: <ImageIcon className="h-4 w-4" />,
+        },
+        {
+          href: "/dashboard/admin/anniversary/archives",
+          label: "Archives Publiques",
+          icon: <Archive className="h-4 w-4" />,
         },
         {
           href: "/dashboard/admin/anniversary/form",
