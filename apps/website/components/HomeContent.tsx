@@ -779,7 +779,7 @@ const HomeContent = () => {
                     l&apos;accompagnement et la mise en réseau des acteurs.
                   </p>
                   <p>
-                    Le Bon Tempérament a l&apos;honneur d&apos;être mis à
+                    Le Bon Tempérament a la joie d&apos;être mis à
                     l&apos;honneur dans le{" "}
                     <strong>Calendrier Musical 2025 de Cadence</strong>, en
                     étant l&apos;ensemble amateur du jour pour le{" "}
