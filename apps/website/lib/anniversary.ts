@@ -1,4 +1,4 @@
-import type { AnniversaryPageData } from "@/types/anniversary";
+import type { AnniversaryPageData, Archive } from "@/types/anniversary";
 import { createClient } from "@/utils/supabase/server";
 
 /**
@@ -130,5 +130,45 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
   } catch (error) {
     console.error("Error fetching anniversary data:", error);
     return null;
+  }
+}
+
+/**
+ * Fetches all visible archives from the database
+ * Used by Server Components with Next.js caching
+ */
+export async function getArchives(): Promise<Archive[]> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("anniversary_archives")
+      .select("*")
+      .eq("is_visible", true)
+      .order("year", { ascending: false })
+      .order("created_at", { ascending: false });
+    console.log("data", data);
+
+    if (error) {
+      console.error("Error fetching archives:", error);
+      return [];
+    }
+
+    // Map database fields to Archive type
+    return (
+      data?.map((archive) => ({
+        id: archive.id,
+        title: archive.title,
+        description: archive.description,
+        year: archive.year,
+        type: archive.type as Archive["type"],
+        theme: archive.theme,
+        file_url: archive.file_url,
+        file_size: archive.file_size,
+      })) || []
+    );
+  } catch (error) {
+    console.error("Error fetching archives:", error);
+    return [];
   }
 }

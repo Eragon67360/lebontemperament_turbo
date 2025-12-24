@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 interface UploadOptions {
   file: File;
   folder?: string;
-  resourceType?: "image" | "video" | "audio";
+  resourceType?: "image" | "video" | "audio" | "raw";
 }
 
 // Upload file to Cloudinary

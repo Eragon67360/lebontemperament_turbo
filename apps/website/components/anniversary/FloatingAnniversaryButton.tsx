@@ -101,7 +101,7 @@ const FloatingAnniversaryButton = () => {
   // Hide button on anniversary page or membres pages
   const shouldShow =
     (isAnniversaryEnabled || isAdmin) &&
-    pathname !== "/40-ans" &&
+    !pathname.startsWith("/40-ans") &&
     !pathname.startsWith("/membres");
 
   if (!shouldShow) {

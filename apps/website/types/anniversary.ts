@@ -90,6 +90,25 @@ export interface Memory {
   created_at: string;
 }
 
+export type ArchiveType =
+  | "assemblée-générale"
+  | "rapport-annuel"
+  | "rapport-financier"
+  | "gazette"
+  | "programme"
+  | "document-historique";
+
+export interface Archive {
+  id: string;
+  title: string;
+  description: string;
+  year: number;
+  type: ArchiveType;
+  theme: string;
+  file_url: string;
+  file_size: string;
+}
+
 // Combined response types for API
 export interface AnniversaryPageData {
   hero: AnniversaryHero;

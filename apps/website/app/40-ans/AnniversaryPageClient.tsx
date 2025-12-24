@@ -3,6 +3,7 @@
 import AnniversaryLanding from "@/components/anniversary/AnniversaryLanding";
 import AnniversaryNavigation from "@/components/anniversary/AnniversaryNavigation";
 import AnniversaryTimeline from "@/components/anniversary/AnniversaryTimeline";
+import ArchivesSection from "@/components/anniversary/ArchivesSection";
 import AudioMemories from "@/components/anniversary/AudioMemories";
 import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
@@ -353,6 +354,7 @@ export default function AnniversaryPageClient({
       <VideoGallery videos={data.videos} />
       <AudioMemories audioMemories={data.audioMemories} />
       <PhotoCollection photos={data.photos} />
+      <ArchivesSection />
       <MemorySharing
         config={data.formConfig}
         featuredMemories={data.featuredMemories}

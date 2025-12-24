@@ -17,9 +17,16 @@ import ProjectViewer from "@/components/ProjectViewer";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
-import { Button } from "@heroui/react";
+import {
+  Button,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@heroui/react";
 import Link from "next/link";
-import { IoIosArrowRoundForward } from "react-icons/io";
+import { IoIosArrowRoundForward, IoIosInformationCircle } from "react-icons/io";
 import Footer from "./Footer";
 
 const HomeContent = () => {
@@ -28,6 +35,15 @@ const HomeContent = () => {
   const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
     typeof window !== "undefined" ? Math.max(window.innerHeight, 200) : 600,
   );
+  const [showCalendarButton, setShowCalendarButton] = useState<boolean>(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
+
+  // Check if we should show the calendar button (before January 15, 2026)
+  useEffect(() => {
+    const expirationDate = new Date("2026-01-15");
+    const now = new Date();
+    setShowCalendarButton(now < expirationDate);
+  }, []);
 
   // Refs for each section
   const projectsRef = useRef(null);
@@ -127,6 +143,45 @@ const HomeContent = () => {
                   Nous contacter
                 </Button>
               </div>
+
+              {/* Calendar CTA - Temporary until January 15, 2026 */}
+              {showCalendarButton && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                  className="mt-6 flex w-fit items-center gap-2"
+                >
+                  <Button
+                    as="a"
+                    href="https://view.genially.com/6915ed221c1347062848697b/presentation-calendrier-musical-2025-cadence"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="lg"
+                    radius="sm"
+                    variant="bordered"
+                    className="border-white/50 text-white hover:bg-white/10"
+                    aria-label="Découvrir le calendrier musical 2025"
+                  >
+                    🎄 Calendrier musical 2025
+                    <IoIosArrowRoundForward
+                      className="-mr-1 ml-2 h-3 w-3 lg:h-5 lg:w-5"
+                      aria-hidden="true"
+                    />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    variant="light"
+                    className="text-white/80 hover:bg-white/10 hover:text-white"
+                    aria-label="En savoir plus sur le calendrier musical"
+                    onPress={() => setIsInfoModalOpen(true)}
+                  >
+                    <IoIosInformationCircle className="h-5 w-5 lg:h-6 lg:w-6" />
+                  </Button>
+                </motion.div>
+              )}
 
               {/* Anniversary CTA */}
               {(isAnniversaryEnabled || isAdmin) && (
@@ -687,6 +742,82 @@ const HomeContent = () => {
           <Footer />
         </div>
       </div>
+
+      {/* Calendar Info Modal */}
+      <Modal
+        isOpen={isInfoModalOpen}
+        onOpenChange={setIsInfoModalOpen}
+        size="lg"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <h2 className="text-2xl font-bold">
+                  🎄 Calendrier Musical 2025
+                </h2>
+                <p className="text-default-500 text-sm font-normal">
+                  Une reconnaissance pour Le Bon Tempérament
+                </p>
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-4 text-sm leading-relaxed">
+                  <p>
+                    <strong>Cadence</strong> est un{" "}
+                    <a
+                      href="https://cadence-musique.fr/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary font-medium hover:underline"
+                    >
+                      pôle musical régional
+                    </a>{" "}
+                    qui œuvre pour le développement et la structuration des
+                    pratiques musicales en amateur par le soutien et
+                    l&apos;initiative de projets, la formation,
+                    l&apos;accompagnement et la mise en réseau des acteurs.
+                  </p>
+                  <p>
+                    Le Bon Tempérament a l&apos;honneur d&apos;être mis à
+                    l&apos;honneur dans le{" "}
+                    <strong>Calendrier Musical 2025 de Cadence</strong>, en
+                    étant l&apos;ensemble amateur du jour pour le{" "}
+                    <strong>24 décembre</strong>.
+                  </p>
+                  <p className="text-primary font-medium">
+                    Cette reconnaissance couronne en beauté notre saison
+                    2024/2025 et témoigne de la qualité et de l&apos;engagement
+                    de notre ensemble vocal et instrumental.
+                  </p>
+                  <p className="text-default-500 text-xs italic">
+                    Cadence est soutenu par la Direction régionale des affaires
+                    culturelles du Grand Est, la Région Grand Est et la
+                    Collectivité européenne d&apos;Alsace.
+                  </p>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose} aria-label="Fermer">
+                  Fermer
+                </Button>
+                <Button
+                  as="a"
+                  href="https://view.genially.com/6915ed221c1347062848697b/presentation-calendrier-musical-2025-cadence"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  color="primary"
+                  onPress={onClose}
+                  aria-label="Ouvrir le calendrier musical"
+                >
+                  Ouvrir le calendrier
+                  <IoIosArrowRoundForward className="ml-2" />
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 };
