@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "6.8.0",
+  "version": "6.9.0",
   "type": "module",
   "private": true,
   "scripts": {
@@ -31,8 +31,8 @@
     "cloudinary": "^2.8.0",
     "dotenv": "^16.5.0",
     "gapi-client": "^0.0.3",
-    "googleapis": "^148.0.0",
-    "googleapis-common": "^7.2.0",
+    "googleapis": "^169.0.0",
+    "googleapis-common": "^8.0.1",
     "gsap": "^3.13.0",
     "micro": "^10.0.1",
     "micro-cors": "^0.1.1",
