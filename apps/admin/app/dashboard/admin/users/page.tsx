@@ -297,7 +297,7 @@ export default function UsersPage() {
       title="Gestion des utilisateurs"
       description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
       headerAction={
-        <div className="flex flex-shrink-0 gap-2">
+        <div className="flex shrink-0 gap-2">
           {/* Sync Button */}
           <Button
             variant="outline"
