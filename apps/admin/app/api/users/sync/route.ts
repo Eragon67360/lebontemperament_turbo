@@ -36,6 +36,24 @@ interface SyncResult {
     invite_status: string;
   }>;
   matched: number;
+  duplicates: Array<{
+    email: string;
+    entries: Array<{
+      name: string;
+      email: string;
+      address: string;
+      homePhone: string;
+      mobilePhone: string;
+      voice: string;
+    }>;
+  }>;
+  withoutEmail: Array<{
+    name: string;
+    address: string;
+    homePhone: string;
+    mobilePhone: string;
+    voice: string;
+  }>;
 }
 
 export async function GET() {
@@ -63,12 +81,9 @@ export async function GET() {
       );
     }
 
-    // Normalize Excel data
-    const excelMembers = result.data
-      .filter(
-        (member) =>
-          member["NOM Prénom"]?.trim() && member["Adresse mail"]?.trim(),
-      )
+    // Normalize Excel data - separate members with and without emails
+    const allExcelMembers = result.data
+      .filter((member) => member["NOM Prénom"]?.trim())
       .map((member) => ({
         name: member["NOM Prénom"]?.trim() || "",
         email: member["Adresse mail"]?.trim().toLowerCase() || "",
@@ -76,8 +91,21 @@ export async function GET() {
         homePhone: member.Domicile?.trim() || "",
         mobilePhone: member.Portable?.trim() || "",
         voice: member.Voix?.trim() || "",
-      }))
-      .filter((member) => member.email);
+      }));
+
+    // Members with email (for existing logic)
+    const excelMembers = allExcelMembers.filter((member) => member.email);
+
+    // Members without email
+    const withoutEmail = allExcelMembers
+      .filter((member) => !member.email)
+      .map((member) => ({
+        name: member.name,
+        address: member.address,
+        homePhone: member.homePhone,
+        mobilePhone: member.mobilePhone,
+        voice: member.voice,
+      }));
 
     // Fetch all database users
     const { data: profiles, error: profilesError } = await supabaseAdmin
@@ -163,6 +191,23 @@ export async function GET() {
       ),
     ).length;
 
+    // Find duplicate emails in Excel
+    const emailMap = new Map<string, typeof excelMembers>();
+    excelMembers.forEach((member) => {
+      const email = member.email.toLowerCase();
+      if (!emailMap.has(email)) {
+        emailMap.set(email, []);
+      }
+      emailMap.get(email)!.push(member);
+    });
+
+    const duplicates = Array.from(emailMap.entries())
+      .filter(([_, entries]) => entries.length > 1)
+      .map(([email, entries]) => ({
+        email,
+        entries,
+      }));
+
     const syncResult: SyncResult = {
       missingInDatabase,
       missingInExcel: missingInExcel.map((p) => ({
@@ -172,6 +217,8 @@ export async function GET() {
         invite_status: p.invite_status,
       })),
       matched,
+      duplicates,
+      withoutEmail,
     };
 
     return NextResponse.json(syncResult);

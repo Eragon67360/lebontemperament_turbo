@@ -47,6 +47,24 @@ interface SyncData {
     invite_status: string;
   }>;
   matched: number;
+  duplicates: Array<{
+    email: string;
+    entries: Array<{
+      name: string;
+      email: string;
+      address: string;
+      homePhone: string;
+      mobilePhone: string;
+      voice: string;
+    }>;
+  }>;
+  withoutEmail: Array<{
+    name: string;
+    address: string;
+    homePhone: string;
+    mobilePhone: string;
+    voice: string;
+  }>;
 }
 
 export function SyncUsersDialog({
@@ -208,13 +226,15 @@ export function SyncUsersDialog({
     if (typedSyncData.missingInDatabase.length > 0) return "invite";
     if (pendingUsersNotInExcel.length > 0 || acceptedUsersNotInExcel.length > 0)
       return "delete";
+    if ((typedSyncData.duplicates?.length ?? 0) > 0) return "duplicates";
+    if ((typedSyncData.withoutEmail?.length ?? 0) > 0) return "no-email";
     return "sync";
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-7xl flex-col sm:w-full">
-        <DialogHeader className="flex-shrink-0 pb-2 sm:pb-4">
+      <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-[95vw] flex-col sm:w-full sm:max-w-[95vw] lg:max-w-[90vw] xl:max-w-[85vw] 2xl:max-w-[80vw]">
+        <DialogHeader className="shrink-0 pb-2 sm:pb-4">
           <DialogTitle className="text-sm sm:text-lg">
             Synchronisation avec la liste Excel
           </DialogTitle>
@@ -236,10 +256,10 @@ export function SyncUsersDialog({
               onValueChange={setActiveTab}
               className="flex min-h-0 flex-1 flex-col"
             >
-              <TabsList className="flex w-full flex-wrap gap-1 sm:grid sm:grid-cols-3">
+              <TabsList className="flex min-h-fit w-full flex-1 grow flex-wrap gap-1 sm:grid sm:grid-cols-5">
                 <TabsTrigger
                   value="invite"
-                  className="relative min-w-0 flex-1 text-xs sm:flex-none sm:text-sm"
+                  className="relative !min-w-20 flex-1 shrink-0 text-xs sm:flex-none sm:text-sm"
                 >
                   <span className="truncate">Inviter</span>
                   {typedSyncData.missingInDatabase.length > 0 && (
@@ -250,7 +270,7 @@ export function SyncUsersDialog({
                 </TabsTrigger>
                 <TabsTrigger
                   value="delete"
-                  className="relative min-w-0 flex-1 text-xs sm:flex-none sm:text-sm"
+                  className="relative !min-w-20 flex-1 text-xs sm:flex-none sm:text-sm"
                 >
                   <span className="truncate">Supprimer</span>
                   {pendingUsersNotInExcel.length +
@@ -264,9 +284,31 @@ export function SyncUsersDialog({
                 </TabsTrigger>
                 <TabsTrigger
                   value="sync"
-                  className="relative min-w-0 flex-1 text-xs sm:flex-none sm:text-sm"
+                  className="relative !min-w-20 flex-1 text-xs sm:flex-none sm:text-sm"
                 >
                   <span className="truncate">Synchroniser</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="duplicates"
+                  className="relative !min-w-20 flex-1 text-xs sm:flex-none sm:text-sm"
+                >
+                  <span className="truncate">Doublons</span>
+                  {(typedSyncData.duplicates?.length ?? 0) > 0 && (
+                    <span className="ml-1.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-yellow-500 text-xs font-medium text-white sm:ml-2">
+                      {typedSyncData.duplicates?.length ?? 0}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="no-email"
+                  className="relative !min-w-20 flex-1 text-xs sm:flex-none sm:text-sm"
+                >
+                  <span className="truncate">Sans email</span>
+                  {(typedSyncData.withoutEmail?.length ?? 0) > 0 && (
+                    <span className="ml-1.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-500 text-xs font-medium text-white sm:ml-2">
+                      {typedSyncData.withoutEmail?.length ?? 0}
+                    </span>
+                  )}
                 </TabsTrigger>
               </TabsList>
 
@@ -316,7 +358,7 @@ export function SyncUsersDialog({
                       </Button>
                     </div>
 
-                    <ScrollArea className="max-h-[400px] min-h-[120px] flex-1 overflow-y-auto rounded-lg border border-gray-200 sm:max-h-[500px] sm:min-h-[200px]">
+                    <ScrollArea className="max-h-100 min-h-30 flex-1 overflow-y-auto rounded-lg border border-gray-200 sm:max-h-125 sm:min-h-50">
                       <div className="space-y-0.5 p-1 sm:space-y-1 sm:p-2">
                         {typedSyncData.missingInDatabase.map(
                           (
@@ -432,7 +474,7 @@ export function SyncUsersDialog({
                           </Button>
                         </div>
 
-                        <ScrollArea className="max-h-[300px] min-h-[100px] flex-1 overflow-y-auto rounded-lg border border-red-200 sm:max-h-[400px] sm:min-h-[150px]">
+                        <ScrollArea className="max-h-75 min-h-25 flex-1 overflow-y-auto rounded-lg border border-red-200 sm:max-h-100 sm:min-h-37.5">
                           <div className="space-y-0.5 p-1 sm:space-y-1 sm:p-2">
                             {pendingUsersNotInExcel.map(
                               (user: {
@@ -546,7 +588,7 @@ export function SyncUsersDialog({
                           </Button>
                         </div>
 
-                        <ScrollArea className="max-h-[300px] min-h-[100px] flex-1 overflow-y-auto rounded-lg border border-orange-200 sm:max-h-[400px] sm:min-h-[150px]">
+                        <ScrollArea className="max-h-75 min-h-25 flex-1 overflow-y-auto rounded-lg border border-orange-200 sm:max-h-100 sm:min-h-37.5">
                           <div className="space-y-0.5 p-1 sm:space-y-1 sm:p-2">
                             {acceptedUsersNotInExcel.map(
                               (user: {
@@ -692,6 +734,190 @@ export function SyncUsersDialog({
                   </Button>
                 </div>
               </TabsContent>
+
+              {/* Tab 4: Duplicate Emails */}
+              <TabsContent
+                value="duplicates"
+                className="flex min-h-0 flex-1 flex-col space-y-2 overflow-hidden sm:space-y-4"
+              >
+                {(typedSyncData.duplicates?.length ?? 0) > 0 ? (
+                  <>
+                    <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-2 sm:p-4">
+                      <div className="flex items-center gap-1.5 sm:gap-3 md:items-start">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-yellow-600 sm:h-5 sm:w-5" />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xs font-semibold text-yellow-900 sm:text-sm">
+                            Emails en double dans Excel
+                          </h3>
+                          <p className="mt-0.5 hidden text-xs text-yellow-700 sm:mt-1 sm:block">
+                            {typedSyncData.duplicates?.length ?? 0} email(s)
+                            apparaît(ssent) plusieurs fois dans la liste Excel.
+                            Chaque occurrence est affichée ci-dessous.
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-yellow-700 sm:hidden">
+                            {typedSyncData.duplicates?.length ?? 0} email(s) en
+                            double
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <ScrollArea className="max-h-100 min-h-30 flex-1 overflow-y-auto rounded-lg border border-gray-200 sm:max-h-125 sm:min-h-50">
+                      <div className="space-y-4 p-2 sm:p-4">
+                        {(typedSyncData.duplicates ?? []).map(
+                          (duplicate, index) => (
+                            <div
+                              key={index}
+                              className="rounded-lg border border-yellow-200 bg-yellow-50/50 p-3 sm:p-4"
+                            >
+                              <div className="mb-2 text-xs font-semibold text-yellow-900 sm:text-sm">
+                                {duplicate.email} ({duplicate.entries.length}{" "}
+                                occurrence
+                                {duplicate.entries.length > 1 ? "s" : ""})
+                              </div>
+                              <div className="space-y-2">
+                                {duplicate.entries.map((entry, entryIndex) => (
+                                  <div
+                                    key={entryIndex}
+                                    className="rounded-md border border-yellow-100 bg-white p-2 sm:p-3"
+                                  >
+                                    <div className="text-xs font-medium text-gray-900 sm:text-sm">
+                                      {entry.name}
+                                    </div>
+                                    <div className="mt-1 space-y-0.5 text-[10px] text-gray-600 sm:text-xs">
+                                      {entry.address && (
+                                        <div>Adresse: {entry.address}</div>
+                                      )}
+                                      {entry.homePhone && (
+                                        <div>Domicile: {entry.homePhone}</div>
+                                      )}
+                                      {entry.mobilePhone && (
+                                        <div>Portable: {entry.mobilePhone}</div>
+                                      )}
+                                      {entry.voice && (
+                                        <div>Voix: {entry.voice}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <CheckCircle2 className="h-12 w-12 text-green-500" />
+                    <p className="mt-4 text-sm font-medium text-gray-900">
+                      Aucun email en double
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Tous les emails de la liste Excel sont uniques.
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Tab 5: Users Without Email */}
+              <TabsContent
+                value="no-email"
+                className="flex min-h-0 flex-1 flex-col space-y-2 overflow-hidden sm:space-y-4"
+              >
+                {(typedSyncData.withoutEmail?.length ?? 0) > 0 ? (
+                  <>
+                    <div className="rounded-lg border border-purple-200 bg-purple-50 p-2 sm:p-4">
+                      <div className="flex items-center gap-1.5 sm:gap-3 md:items-start">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-purple-600 sm:h-5 sm:w-5" />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xs font-semibold text-purple-900 sm:text-sm">
+                            Membres sans adresse email
+                          </h3>
+                          <p className="mt-0.5 hidden text-xs text-purple-700 sm:mt-1 sm:block">
+                            {typedSyncData.withoutEmail?.length ?? 0} membre(s)
+                            présent(s) dans Excel sans adresse email. Contactez
+                            ces membres pour obtenir leur adresse email.
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-purple-700 sm:hidden">
+                            {typedSyncData.withoutEmail?.length ?? 0} membre(s)
+                            sans email
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <ScrollArea className="max-h-100 min-h-30 flex-1 overflow-y-auto rounded-lg border border-gray-200 sm:max-h-125 sm:min-h-50">
+                      <div className="space-y-0.5 p-1 sm:space-y-1 sm:p-2">
+                        {(typedSyncData.withoutEmail ?? []).map(
+                          (member, index) => (
+                            <div
+                              key={index}
+                              className="rounded-md border border-purple-100 bg-white p-2 transition-colors sm:p-3"
+                            >
+                              <div className="text-xs font-medium text-gray-900 sm:text-sm">
+                                {member.name}
+                              </div>
+                              <div className="mt-1 space-y-0.5 text-[10px] text-gray-600 sm:text-xs">
+                                {member.address && (
+                                  <div className="flex items-start gap-1.5 sm:gap-2">
+                                    <span className="font-medium text-gray-500 sm:min-w-[70px]">
+                                      Adresse:
+                                    </span>
+                                    <span className="flex-1 break-words">
+                                      {member.address}
+                                    </span>
+                                  </div>
+                                )}
+                                {member.homePhone && (
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <span className="font-medium text-gray-500 sm:min-w-[70px]">
+                                      Domicile:
+                                    </span>
+                                    <span className="flex-1 break-words">
+                                      {member.homePhone}
+                                    </span>
+                                  </div>
+                                )}
+                                {member.mobilePhone && (
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <span className="font-medium text-gray-500 sm:min-w-[70px]">
+                                      Portable:
+                                    </span>
+                                    <span className="flex-1 break-words">
+                                      {member.mobilePhone}
+                                    </span>
+                                  </div>
+                                )}
+                                {member.voice && (
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <span className="font-medium text-gray-500 sm:min-w-[70px]">
+                                      Voix:
+                                    </span>
+                                    <span className="flex-1 break-words">
+                                      {member.voice}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <CheckCircle2 className="h-12 w-12 text-green-500" />
+                    <p className="mt-4 text-sm font-medium text-gray-900">
+                      Aucun membre sans email
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Tous les membres de la liste Excel ont une adresse email.
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
           ) : (
             <div className="py-12 text-center text-red-500">
@@ -700,7 +926,7 @@ export function SyncUsersDialog({
           )}
         </div>
 
-        <DialogFooter className="flex-shrink-0 flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-end">
+        <DialogFooter className="shrink-0 flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
