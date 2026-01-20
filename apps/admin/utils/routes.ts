@@ -10,6 +10,9 @@ const RouteNames = {
       BUG_REPORTS: "/dashboard/admin/bug-reports",
       USERS: "/dashboard/admin/users",
     },
+    DRIVER: {
+      TRACKING: "/dashboard/driver/tracking",
+    },
     MEMBERS: {
       EVENEMENTS: "/dashboard/members/evenements",
       TRAVAIL: (programId: string, groupSlug: string) =>

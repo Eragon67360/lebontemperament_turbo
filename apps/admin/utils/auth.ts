@@ -36,3 +36,28 @@ export async function isAdmin(supabase: SupabaseClient) {
 
   return profile?.role === "admin" || profile?.role === "superadmin";
 }
+
+export async function checkDriverAuthorization() {
+  const supabase = await createClient();
+
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) {
+    return { error: "Non authentifié", status: 401 };
+  }
+
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .single();
+
+  if (!userProfile || userProfile.role !== "superadmin") {
+    return {
+      authorized: false,
+      error: "Non autorisé - Rôle superadmin requis",
+      status: 403,
+    };
+  }
+
+  return { authorized: true, user: data.user };
+}
