@@ -61,7 +61,7 @@ export function UserCard({
 }: UserCardProps) {
   return (
     <Card className="transition-all">
-      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="border-destructive flex flex-col gap-4 border p-2 sm:flex-row sm:items-center sm:justify-between md:p-4">
         {/* User Info Section */}
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -126,7 +126,7 @@ export function UserCard({
                 onRoleChange(user.id, value)
               }
             >
-              <SelectTrigger className="h-8 w-[110px] border-gray-200 bg-white text-xs">
+              <SelectTrigger className="h-8 w-27.5 border-gray-200 bg-white text-xs">
                 <SelectValue>{getRoleLabel(user.role)}</SelectValue>
               </SelectTrigger>
               <SelectContent>

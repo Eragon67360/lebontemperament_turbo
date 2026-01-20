@@ -293,7 +293,7 @@ export default function UsersPage() {
     <PageShell
       fullHeight
       theme="admin"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="border-destructive lg:px-8m overflow-x-hidden border px-4 py-8 sm:px-6"
       title="Gestion des utilisateurs"
       description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
       headerAction={
@@ -350,7 +350,7 @@ export default function UsersPage() {
         sortConfig={sortConfig}
         setSortConfig={setSortConfig}
       />
-      <ScrollArea className="pr-4">
+      <ScrollArea className="flex w-full grow flex-col overflow-x-hidden border border-blue-500 pr-0">
         {isLoading ? (
           <UserLoadingState />
         ) : error ? (
@@ -361,7 +361,7 @@ export default function UsersPage() {
         ) : users.length === 0 ? (
           <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
         ) : (
-          <div className="space-y-2 px-1 md:space-y-4">
+          <div className="flex w-full flex-col space-y-2 overflow-x-hidden md:space-y-4">
             {sortedUsers.map((user) => (
               <UserCard
                 key={user.id}
