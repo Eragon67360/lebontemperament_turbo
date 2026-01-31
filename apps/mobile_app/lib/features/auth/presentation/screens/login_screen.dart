@@ -1,16 +1,105 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/auth_provider.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
+class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
+      body: Stack(
+        children: [
+          // Main content with form
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: const [
+                    // --- 1. Header ---
+                    FadeInUp(delay: 100, child: _LoginHeader()),
+                    SizedBox(height: 48),
+
+                    // --- 2. Login Form ---
+                    FadeInUp(delay: 200, child: _LoginForm()),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // --- 3. Loading Overlay ---
+          if (isLoading)
+            Container(
+              color: theme.colorScheme.surface.withOpacity(0.5),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+// MARK: - UI Components
+
+class _LoginHeader extends StatelessWidget {
+  const _LoginHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: theme.colorScheme.primary,
+          ),
+          child: Icon(Icons.music_note_rounded,
+              size: 40, color: theme.colorScheme.onPrimary),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Bienvenue',
+          style: GoogleFonts.poppins(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Connectez-vous pour continuer',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginForm extends ConsumerStatefulWidget {
+  const _LoginForm();
+
+  @override
+  ConsumerState<_LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends ConsumerState<_LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -23,166 +112,177 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+
   Future<void> _handleLogin() async {
+    // Hide keyboard
+    FocusScope.of(context).unfocus();
+
     if (!_formKey.currentState!.validate()) return;
 
     try {
       await ref
           .read(authControllerProvider.notifier)
           .signIn(_emailController.text.trim(), _passwordController.text);
+      // Navigation is handled by the auth state listener in the router
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur de connexion: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        _showErrorSnackBar(
+            'Erreur de connexion: Email ou mot de passe incorrect.');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Add some top padding for smaller screens
-                const SizedBox(height: 40),
+    // Custom InputDecoration for our text fields
+    final customInputDecoration = InputDecoration(
+      filled: true,
+      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+      ),
+      prefixIconColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.focused)
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant),
+    );
 
-                // Header
-                Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        Icons.music_note,
-                        size: 40,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Connexion',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Connectez-vous à votre compte',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 48),
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // --- Email Field ---
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            decoration: customInputDecoration.copyWith(
+              labelText: 'Email',
+              prefixIcon: const Icon(Icons.email_outlined),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty)
+                return 'Veuillez entrer votre email';
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value))
+                return 'Veuillez entrer un email valide';
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
 
-                // Email Field
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre email';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
-                      return 'Veuillez entrer un email valide';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+          // --- Password Field ---
+          TextFormField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _handleLogin(),
+            decoration: customInputDecoration.copyWith(
+              labelText: 'Mot de passe',
+              prefixIcon: const Icon(Icons.lock_outlined),
+              suffixIcon: IconButton(
+                icon: Icon(_obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty)
+                return 'Veuillez entrer votre mot de passe';
+              if (value.length < 6)
+                return 'Le mot de passe doit contenir au moins 6 caractères';
+              return null;
+            },
+          ),
+          const SizedBox(height: 8),
 
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Mot de passe',
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre mot de passe';
-                    }
-                    if (value.length < 6) {
-                      return 'Le mot de passe doit contenir au moins 6 caractères';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Login Button
-                ElevatedButton(
-                  onPressed: isLoading ? null : _handleLogin,
-                  child: isLoading
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
-                        )
-                      : const Text('Se connecter'),
-                ),
-                const SizedBox(height: 16),
-
-                // Forgot Password
-                TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to forgot password screen
-                  },
-                  child: const Text('Mot de passe oublié ?'),
-                ),
-
-                // Add some bottom padding for smaller screens
-                const SizedBox(height: 40),
-              ],
+          // --- Forgot Password ---
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {/* TODO: Navigate to forgot password screen */},
+              child: const Text('Mot de passe oublié ?'),
             ),
           ),
-        ),
+          const SizedBox(height: 24),
+
+          // --- Login Button ---
+          FilledButton(
+            onPressed: isLoading ? null : _handleLogin,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: GoogleFonts.poppins(
+                  fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            child: const Text('Se connecter'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// MARK: - Animation Widget
+class FadeInUp extends StatefulWidget {
+  final Widget child;
+  final int delay;
+  const FadeInUp({super.key, required this.child, this.delay = 0});
+  @override
+  State<FadeInUp> createState() => _FadeInUpState();
+}
+
+class _FadeInUpState extends State<FadeInUp>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+  late Animation<double> _translateY;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+    _opacity = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _translateY = Tween<double>(begin: 30.0, end: 0.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    Future.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => Opacity(
+        opacity: _opacity.value,
+        child: Transform.translate(
+            offset: Offset(0, _translateY.value), child: widget.child),
       ),
     );
   }

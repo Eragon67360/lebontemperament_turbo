@@ -172,7 +172,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     _backupTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
       try {
         final pos = await Geolocator.getCurrentPosition(
-          locationSettings: locationSettings,
+          desiredAccuracy: LocationAccuracy.high,
         );
         onPosition(pos);
       } catch (_) {}

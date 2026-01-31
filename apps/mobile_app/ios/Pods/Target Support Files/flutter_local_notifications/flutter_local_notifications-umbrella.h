@@ -11,8 +11,8 @@
 #endif
 
 #import "ActionEventSink.h"
+#import "Converters.h"
 #import "FlutterEngineManager.h"
-#import "FlutterLocalNotificationsConverters.h"
 #import "FlutterLocalNotificationsPlugin.h"
 
 FOUNDATION_EXPORT double flutter_local_notificationsVersionNumber;
