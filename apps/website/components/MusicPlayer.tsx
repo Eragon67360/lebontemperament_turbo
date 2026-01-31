@@ -1,8 +1,7 @@
-import React from "react";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
 
-const MusicPlayer = ({ src }: { src: any }) => {
+const MusicPlayer = ({ src }: { src: string }) => {
   const cleanDisplayName = (fileName: string) => {
     const cleanedName = fileName
       .replace("/music/BT - Album/", "")

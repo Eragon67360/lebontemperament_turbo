@@ -79,16 +79,16 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
 
   const Controls = () => (
     <div
-      className={`flex ${isPortrait ? "flex-row justify-center gap-4 mt-4" : "flex-col gap-4"}`}
+      className={`flex ${isPortrait ? "mt-4 flex-row justify-center gap-4" : "flex-col gap-4"}`}
     >
       <button
         onClick={() => paginate(-1)}
         disabled={page === 0}
-        className="cursor-pointer group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 md:h-12 md:w-12"
       >
-        <BiUpArrow className="w-5 h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-gray-900 transition-colors" />
+        <BiUpArrow className="h-5 w-5 text-gray-700 transition-colors group-hover:text-gray-900 md:h-6 md:w-6" />
         {page > 0 && (
-          <div className="absolute hidden md:block left-full ml-3 px-2 py-1 bg-black/75 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <div className="absolute left-full ml-3 hidden rounded-md bg-black/75 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
             Vidéo précédente
           </div>
         )}
@@ -100,22 +100,22 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
 
       <button
         onClick={() => paginate(1)}
-        className="cursor-pointer group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#1a878d] to-[#126266] shadow-lg hover:shadow-xl transition-all duration-300"
+        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#1a878d] to-[#126266] shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
       >
-        <BiDownArrow className="w-5 h-5 md:w-6 md:h-6 text-white" />
-        <div className="absolute hidden md:block left-full ml-3 px-2 py-1 bg-black/75 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+        <BiDownArrow className="h-5 w-5 text-white md:h-6 md:w-6" />
+        <div className="absolute left-full ml-3 hidden rounded-md bg-black/75 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
           {page === videos.length - 1 ? "Terminer" : "Vidéo suivante"}
         </div>
       </button>
 
       <button
         onClick={toggleMute}
-        className="cursor-pointer group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg hover:shadow-xl transition-all duration-300"
+        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
       >
         {isMuted ? (
-          <HiVolumeOff className="w-5 h-5 md:w-6 md:h-6 text-gray-700" />
+          <HiVolumeOff className="h-5 w-5 text-gray-700 md:h-6 md:w-6" />
         ) : (
-          <HiVolumeUp className="w-5 h-5 md:w-6 md:h-6 text-gray-700" />
+          <HiVolumeUp className="h-5 w-5 text-gray-700 md:h-6 md:w-6" />
         )}
       </button>
     </div>
@@ -124,7 +124,7 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
     <div
       className={`flex ${isPortrait ? "flex-col" : "flex-row items-center"} gap-4`}
     >
-      <div className="relative w-full max-w-[90vw] md:max-w-[320px] aspect-[9/16] overflow-hidden">
+      <div className="relative aspect-[9/16] w-full max-w-[90vw] overflow-hidden md:max-w-[320px]">
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={page}
@@ -148,14 +148,14 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
                 paginate(-1);
               }
             }}
-            className="absolute w-full h-full"
+            className="absolute h-full w-full"
           >
             <video
               ref={(el) => {
                 if (el) videoRefs.current[page] = el;
               }}
               src={videos[page]?.url}
-              className="w-full h-full object-cover rounded-xl md:rounded-2xl shadow-lg"
+              className="h-full w-full rounded-xl object-cover shadow-lg md:rounded-2xl"
               autoPlay
               loop
               playsInline
@@ -163,7 +163,7 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
             />
 
             {videos[page]?.caption && (
-              <div className="absolute bottom-4 left-4 right-4 text-white text-center bg-black/40 backdrop-blur-sm p-2 md:p-3 rounded-lg md:rounded-xl text-sm md:text-base">
+              <div className="absolute right-4 bottom-4 left-4 rounded-lg bg-black/40 p-2 text-center text-sm text-white backdrop-blur-sm md:rounded-xl md:p-3 md:text-base">
                 {videos[page].caption}
               </div>
             )}

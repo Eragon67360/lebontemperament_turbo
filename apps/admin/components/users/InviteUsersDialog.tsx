@@ -10,9 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InvitationProgress } from "@/types/user";
-import { Check, Plus, RefreshCw, Send, X, Upload } from "lucide-react";
+import { Check, Plus, RefreshCw, Send, Upload, X } from "lucide-react";
 import Papa from "papaparse";
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Progress } from "../ui/progress";
@@ -35,6 +35,10 @@ interface InviteUserDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  initialInvitations?: Array<{
+    email: string;
+    displayName: string;
+  }>;
 }
 interface InvitationResult {
   success: boolean;
@@ -52,6 +56,7 @@ export function InviteUserDialog({
   isOpen,
   onOpenChange,
   onSuccess,
+  initialInvitations,
 }: InviteUserDialogProps) {
   const [invitations, setInvitations] = useState<InvitationEntry[]>([
     { email: "", displayName: "", role: "user", status: "pending" },
@@ -70,6 +75,26 @@ export function InviteUserDialog({
     setIsProcessing(false);
     setProgress({ current: 0, total: 0, percentage: 0 });
   };
+
+  // Load initial invitations when dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialInvitations && initialInvitations.length > 0) {
+        setInvitations(
+          initialInvitations.map((inv) => ({
+            email: inv.email,
+            displayName: inv.displayName,
+            role: "user" as const,
+            status: "pending" as const,
+          })),
+        );
+      } else {
+        // Reset to empty if no initial data
+        resetState();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialInvitations]);
 
   const addInvitationField = () => {
     setInvitations([
@@ -375,7 +400,7 @@ export function InviteUserDialog({
         onOpenChange(open);
       }}
     >
-      <DialogContent className="max-w-xs sm:max-w-[800px] rounded-md">
+      <DialogContent className="max-w-[95vw] rounded-md sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>Inviter des Utilisateurs</DialogTitle>
           <DialogDescription>
@@ -383,71 +408,134 @@ export function InviteUserDialog({
             invitations seront envoyées par lots.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-end mb-4">
+        <div className="mb-4 flex justify-end">
           <div className="relative">
             <input
               type="file"
               accept=".csv"
               onChange={handleCSVImport}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
-            <Button variant="outline">
-              <Upload className="mr-2 h-4 w-4" />
-              Importer CSV
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+              <Upload className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Importer CSV</span>
+              <span className="sm:hidden">CSV</span>
             </Button>
           </div>
         </div>
-        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 py-2 pl-2">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="max-h-[400px] space-y-3 overflow-y-auto py-2 pr-2 pl-1 sm:pr-4 sm:pl-2">
+          <div className="hidden grid-cols-2 gap-4 sm:grid">
             <Label>Nom complet</Label>
             <Label>Email</Label>
           </div>
           {invitations.map((invitation, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <div className="flex-grow grid grid-cols-2 gap-4">
-                <div>
-                  <Input
-                    id={`displayName-${index}`}
-                    placeholder="Jean Dupont"
-                    value={invitation.displayName}
-                    onChange={(e) =>
-                      updateInvitation(index, "displayName", e.target.value)
-                    }
-                    disabled={invitation.status === "sent"}
-                    className={
-                      invitation.status === "error"
-                        ? "border-destructive focus-visible:ring-destructive"
-                        : ""
-                    }
-                  />
+            <div
+              key={index}
+              className="flex items-start gap-2 rounded-lg border border-gray-100 p-3 sm:items-center sm:border-0 sm:p-0"
+            >
+              <div className="flex-grow space-y-2 sm:space-y-0">
+                {/* Mobile: Stacked layout */}
+                <div className="flex flex-col gap-2 sm:hidden">
+                  <div>
+                    <Label
+                      htmlFor={`displayName-${index}`}
+                      className="text-xs text-gray-600"
+                    >
+                      Nom complet
+                    </Label>
+                    <Input
+                      id={`displayName-${index}`}
+                      placeholder="Jean Dupont"
+                      value={invitation.displayName}
+                      onChange={(e) =>
+                        updateInvitation(index, "displayName", e.target.value)
+                      }
+                      disabled={invitation.status === "sent"}
+                      className={
+                        invitation.status === "error"
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor={`email-${index}`}
+                      className="text-xs text-gray-600"
+                    >
+                      Email
+                    </Label>
+                    <Input
+                      id={`email-${index}`}
+                      placeholder="exemple@domaine.com"
+                      value={invitation.email}
+                      onChange={(e) =>
+                        updateInvitation(index, "email", e.target.value)
+                      }
+                      disabled={invitation.status === "sent"}
+                      className={
+                        invitation.status === "error"
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
+                      }
+                    />
+                    {invitation.status === "error" &&
+                      invitation.errorMessage && (
+                        <p className="text-destructive mt-1 text-xs">
+                          {invitation.errorMessage}
+                        </p>
+                      )}
+                  </div>
                 </div>
-                <div>
-                  <Input
-                    id={`email-${index}`}
-                    placeholder="exemple@domaine.com"
-                    value={invitation.email}
-                    onChange={(e) =>
-                      updateInvitation(index, "email", e.target.value)
-                    }
-                    disabled={invitation.status === "sent"}
-                    className={
-                      invitation.status === "error"
-                        ? "border-destructive focus-visible:ring-destructive"
-                        : ""
-                    }
-                  />
-                  {invitation.status === "error" && invitation.errorMessage && (
-                    <p className="text-xs text-destructive mt-1">
-                      {invitation.errorMessage}
-                    </p>
-                  )}
+
+                {/* Desktop: Grid layout */}
+                <div className="hidden grid-cols-2 gap-4 sm:grid">
+                  <div>
+                    <Input
+                      id={`displayName-${index}`}
+                      placeholder="Jean Dupont"
+                      value={invitation.displayName}
+                      onChange={(e) =>
+                        updateInvitation(index, "displayName", e.target.value)
+                      }
+                      disabled={invitation.status === "sent"}
+                      className={
+                        invitation.status === "error"
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      id={`email-${index}`}
+                      placeholder="exemple@domaine.com"
+                      value={invitation.email}
+                      onChange={(e) =>
+                        updateInvitation(index, "email", e.target.value)
+                      }
+                      disabled={invitation.status === "sent"}
+                      className={
+                        invitation.status === "error"
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
+                      }
+                    />
+                    {invitation.status === "error" &&
+                      invitation.errorMessage && (
+                        <p className="text-destructive mt-1 text-xs">
+                          {invitation.errorMessage}
+                        </p>
+                      )}
+                  </div>
                 </div>
               </div>
-              <div className="w-[50px] flex items-center justify-center">
+              <div className="flex w-[36px] flex-shrink-0 items-center justify-center sm:w-[50px]">
                 {invitation.status === "pending" && (
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => removeInvitationField(index)}
                   >
                     <X className="h-4 w-4" />
@@ -463,6 +551,7 @@ export function InviteUserDialog({
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => resendInvitation(index)}
                   >
                     <RefreshCw className="h-4 w-4 text-red-500" />
@@ -473,24 +562,29 @@ export function InviteUserDialog({
           ))}
         </div>
 
-        <div className="flex justify-between items-center">
-          <Button variant="outline" onClick={addInvitationField}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addInvitationField}
+            className="w-full sm:w-auto"
+          >
             <Plus className="mr-2 h-4 w-4" /> Ajouter un email
           </Button>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-center text-xs sm:text-sm">
             {invitations.length} personne{invitations.length > 1 ? "s" : ""}
           </p>
         </div>
         {isProcessing && (
           <div className="space-y-2">
             <Progress value={progress.percentage} />
-            <p className="text-sm text-center text-muted-foreground">
+            <p className="text-muted-foreground text-center text-sm">
               Traitement en cours : {progress.current} sur {progress.total} (
               {progress.percentage}%)
             </p>
           </div>
         )}
-        <DialogFooter className="gap-2">
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button
             variant="outline"
             onClick={() => {
@@ -498,19 +592,22 @@ export function InviteUserDialog({
               onOpenChange(false);
             }}
             disabled={isProcessing && !allSent}
+            className="w-full sm:w-auto"
           >
             Annuler
           </Button>
           <Button
             onClick={sendInvitations}
             disabled={!isInvitationReady || isProcessing}
+            className="w-full sm:w-auto"
           >
             {isProcessing ? (
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Send className="mr-2 h-4 w-4" />
             )}
-            Envoyer les invitations
+            <span className="hidden sm:inline">Envoyer les invitations</span>
+            <span className="sm:hidden">Envoyer</span>
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,3 +1,4 @@
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   Card,
   CardDescription,
@@ -9,14 +10,16 @@ import Link from "next/link";
 
 export default function TravailPage() {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">Espace de Travail</h1>
-
+    <PageShell
+      theme="members"
+      title="Espace de Travail"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+    >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Link href="">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="cursor-pointer transition-shadow hover:shadow-lg">
             <CardHeader>
-              <Users className="w-8 h-8 mb-2 text-primary" />
+              <Users className="text-primary mb-2 h-8 w-8" />
               <CardTitle>Adultes</CardTitle>
               <CardDescription>
                 Partitions, exercices et ressources pédagogiques adaptés aux
@@ -27,9 +30,9 @@ export default function TravailPage() {
         </Link>
 
         <Link href="/dashboard/travail/jeunes">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="cursor-pointer transition-shadow hover:shadow-lg">
             <CardHeader>
-              <UserRound className="w-8 h-8 mb-2 text-primary" />
+              <UserRound className="text-primary mb-2 h-8 w-8" />
               <CardTitle>Jeunes</CardTitle>
               <CardDescription>
                 Matériel d&apos;étude et programme de formation pour les
@@ -40,9 +43,9 @@ export default function TravailPage() {
         </Link>
 
         <Link href="/dashboard/travail/enfants">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="cursor-pointer transition-shadow hover:shadow-lg">
             <CardHeader>
-              <Baby className="w-8 h-8 mb-2 text-primary" />
+              <Baby className="text-primary mb-2 h-8 w-8" />
               <CardTitle>Enfants</CardTitle>
               <CardDescription>
                 Activités ludiques, exercices simples et supports pédagogiques
@@ -53,9 +56,9 @@ export default function TravailPage() {
         </Link>
 
         <Link href="/dashboard/travail/orchestre">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="cursor-pointer transition-shadow hover:shadow-lg">
             <CardHeader>
-              <Music className="w-8 h-8 mb-2 text-primary" />
+              <Music className="text-primary mb-2 h-8 w-8" />
               <CardTitle>Orchestre</CardTitle>
               <CardDescription>
                 Partitions d&apos;orchestre, planning des répétitions et
@@ -65,6 +68,6 @@ export default function TravailPage() {
           </Card>
         </Link>
       </div>
-    </div>
+    </PageShell>
   );
 }

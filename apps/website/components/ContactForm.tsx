@@ -1,11 +1,35 @@
 "use client";
 import { ContactFormProps } from "@/types/contactFormData";
-import { Input, Spinner, Textarea, addToast } from "@heroui/react";
+import { Button, Input, Spinner, Textarea, addToast } from "@heroui/react";
 import { CldImage } from "next-cloudinary";
-import React, { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { IoIosArrowRoundForward } from "react-icons/io";
 
 const ContactForm = () => {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Track mounted state for theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Global reCAPTCHA error handler
+  useEffect(() => {
+    const handleRecaptchaError = (event: any) => {
+      console.error("Global reCAPTCHA error:", event);
+    };
+
+    // Listen for reCAPTCHA errors
+    window.addEventListener("recaptcha-error", handleRecaptchaError);
+
+    return () => {
+      window.removeEventListener("recaptcha-error", handleRecaptchaError);
+    };
+  }, []);
+
   const [formData, setFormData] = useState<ContactFormProps>({
     lastName: "",
     firstName: "",
@@ -16,21 +40,120 @@ const ContactForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
+  const [errors, setErrors] = useState<Partial<ContactFormProps>>({});
+  const [honeypot, setHoneypot] = useState<string>("");
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null); // State for CAPTCHA value
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+  useEffect(() => {
+    if (!siteKey) {
+      console.warn(
+        "reCAPTCHA site key missing. Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and rebuild to enable CAPTCHA.",
+      );
+    }
+  }, [siteKey]);
 
   // Validate email format
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  // Validate form fields
+  const validateField = useCallback(
+    (name: keyof ContactFormProps, value: string) => {
+      switch (name) {
+        case "email":
+          if (!value) return "L'adresse email est requise";
+          if (!isValidEmail(value))
+            return "Veuillez entrer une adresse email valide";
+          return "";
+        case "message":
+          if (!value) return "Le message est requis";
+          if (value.length < 10)
+            return "Le message doit contenir au moins 10 caractères";
+          return "";
+        case "firstName":
+          if (value && value.length < 2)
+            return "Le prénom doit contenir au moins 2 caractères";
+          return "";
+        case "lastName":
+          if (value && value.length < 2)
+            return "Le nom doit contenir au moins 2 caractères";
+          return "";
+        default:
+          return "";
+      }
+    },
+    [],
+  );
+
   // Check form validity
   useEffect(() => {
-    setIsButtonDisabled(
-      !formData.email || !formData.message || !isValidEmail(formData.email),
-    );
-  }, [formData]);
+    const emailError = validateField("email", formData.email);
+    const messageError = validateField("message", formData.message);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    setIsButtonDisabled(
+      !formData.email ||
+        !formData.message ||
+        Boolean(emailError) ||
+        Boolean(messageError) ||
+        !captchaValue, // Disable button if CAPTCHA is not verified
+    );
+  }, [formData, validateField, captchaValue]);
+
+  const handleFieldChange = (name: keyof ContactFormProps, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleFieldBlur = (name: keyof ContactFormProps, value: string) => {
+    const error = validateField(name, value);
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (honeypot) {
+      addToast({
+        title: "Erreur",
+        description: "Soumission invalide.",
+        color: "danger",
+      });
+      return;
+    }
+
+    if (!captchaValue) {
+      addToast({
+        title: "Erreur",
+        description: "Veuillez vérifier que vous n'êtes pas un robot.",
+        color: "danger",
+      });
+      return;
+    }
+
+    const newErrors: Partial<ContactFormProps> = {};
+    Object.keys(formData).forEach((key) => {
+      const fieldName = key as keyof ContactFormProps;
+      const value = formData[fieldName];
+      if (value !== undefined && typeof value === "string") {
+        const error = validateField(fieldName, value);
+        if (error) {
+          newErrors[fieldName] = error;
+        }
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -39,7 +162,7 @@ const ContactForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, captchaValue }), // Send CAPTCHA value to the server
       });
 
       if (!response.ok) {
@@ -54,6 +177,9 @@ const ContactForm = () => {
         subject: "",
         message: "",
       });
+      setErrors({});
+      setCaptchaValue(null); // Reset CAPTCHA value
+      recaptchaRef.current?.reset(); // Reset reCAPTCHA widget
       addToast({
         title: "Succès",
         description: "Votre demande a bien été envoyée",
@@ -61,6 +187,9 @@ const ContactForm = () => {
       });
     } catch (err) {
       console.error(err);
+      // Reset reCAPTCHA on error
+      setCaptchaValue(null);
+      recaptchaRef.current?.reset();
       addToast({
         title: "Erreur",
         description: "Votre demande n'a pas pu être envoyée",
@@ -69,69 +198,76 @@ const ContactForm = () => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="mt-[120px] px-8 lg:px-24" id="contact">
-      <h2 className="text-primary/50 font-light text-title leading-none">
+    <section
+      className="bg-background mx-auto w-full max-w-[1440px] px-8 py-16 lg:px-24"
+      id="contact"
+      aria-labelledby="contact-title"
+    >
+      <h2
+        id="contact-title"
+        className="text-primary/50 dark:text-primary text-title leading-none font-light"
+      >
         Nous contacter
       </h2>
-      <div className="mt-[30px] flex gap-[30px] justify-between">
+      <div className="mt-12 flex justify-between gap-12">
         <div className="w-full lg:w-1/2">
           <form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-6"
             onSubmit={handleSubmit}
             noValidate
+            aria-label="Formulaire de contact"
           >
-            <Input
-              type="text"
-              label="Nom de famille"
-              name="lastName"
-              value={formData.lastName}
-              variant="flat"
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, lastName: value }))
-              }
-            />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <Input
+                type="text"
+                label="Nom de famille"
+                name="lastName"
+                value={formData.lastName}
+                variant="bordered"
+                radius="sm"
+                isInvalid={!!errors.lastName}
+                errorMessage={errors.lastName}
+                onValueChange={(value) => handleFieldChange("lastName", value)}
+                onBlur={() => handleFieldBlur("lastName", formData.lastName)}
+                aria-describedby={
+                  errors.lastName ? "lastName-error" : undefined
+                }
+              />
 
-            <Input
-              type="text"
-              label="Prénom"
-              name="firstName"
-              value={formData.firstName}
-              variant="flat"
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, firstName: value }))
-              }
-            />
+              <Input
+                type="text"
+                label="Prénom"
+                name="firstName"
+                value={formData.firstName}
+                variant="bordered"
+                radius="sm"
+                isInvalid={!!errors.firstName}
+                errorMessage={errors.firstName}
+                onValueChange={(value) => handleFieldChange("firstName", value)}
+                onBlur={() => handleFieldBlur("firstName", formData.firstName)}
+                aria-describedby={
+                  errors.firstName ? "firstName-error" : undefined
+                }
+              />
+            </div>
 
             <Input
               type="email"
               label="Email"
               name="email"
               value={formData.email}
-              variant="flat"
+              variant="bordered"
+              radius="sm"
               isRequired
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, email: value }))
-              }
-              errorMessage={
-                formData.email && !isValidEmail(formData.email)
-                  ? "Veuillez entrer une adresse email valide"
-                  : null
-              }
+              isInvalid={!!errors.email}
+              errorMessage={errors.email}
+              onValueChange={(value) => handleFieldChange("email", value)}
+              onBlur={() => handleFieldBlur("email", formData.email)}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              aria-required="true"
             />
 
             <Input
@@ -139,58 +275,109 @@ const ContactForm = () => {
               label="Sujet"
               name="subject"
               value={formData.subject}
-              variant="flat"
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3]",
-                inputWrapper: "rounded-none",
-              }}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, subject: value }))
-              }
+              variant="bordered"
+              radius="sm"
+              onValueChange={(value) => handleFieldChange("subject", value)}
             />
 
             <Textarea
-              type="textarea"
               label="Message"
               name="message"
               value={formData.message}
-              variant="flat"
+              variant="bordered"
+              radius="sm"
               isRequired
-              classNames={{
-                input: "rounded-none bg-[#F3F3F3] min-h-[200px]",
-                inputWrapper: "rounded-none",
-              }}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, message: value }))
-              }
+              isInvalid={!!errors.message}
+              errorMessage={errors.message}
+              minRows={6}
+              onValueChange={(value) => handleFieldChange("message", value)}
+              onBlur={() => handleFieldBlur("message", formData.message)}
+              aria-describedby={errors.message ? "message-error" : undefined}
+              aria-required="true"
             />
 
-            <div className="flex justify-start mt-6 gap-4">
-              <button
+            <Input
+              type="text"
+              name="honeypot"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              className="hidden"
+            />
+
+            {siteKey && mounted ? (
+              <ReCAPTCHA
+                sitekey={siteKey}
+                ref={recaptchaRef}
+                onChange={(value) => {
+                  console.log(
+                    "reCAPTCHA onChange triggered with value:",
+                    value,
+                  );
+                  setCaptchaValue(value);
+                }}
+                onExpired={() => {
+                  console.log("reCAPTCHA expired");
+                  setCaptchaValue(null);
+                }}
+                theme={resolvedTheme === "dark" ? "dark" : "light"}
+                size="normal"
+                type="image"
+              />
+            ) : siteKey ? (
+              <div className="bg-default-100 h-[78px] w-[304px] animate-pulse rounded" />
+            ) : (
+              <div className="text-danger text-sm">
+                reCAPTCHA non configuré — le formulaire est protégé côté
+                serveur. Veuillez contacter l&apos;administrateur.
+              </div>
+            )}
+
+            <div className="flex items-center gap-4">
+              <Button
                 type="submit"
+                color="primary"
+                radius="sm"
                 disabled={isButtonDisabled || loading}
-                className="justify-end px-[20px] py-[18px] bg-[#333] text-white border-[#333] border  hover:bg-white hover:text-[#333] transition-all flex items-center space-x-[18px]"
+                aria-describedby={isButtonDisabled ? "submit-help" : undefined}
+                className="flex items-center gap-2"
               >
-                <span className="uppercase text-[12px] tracking-[2.4px]">
-                  {loading ? "Envoi en cours..." : "Envoyer un mail"}
-                </span>
-                {!loading && <IoIosArrowRoundForward className="scale-110" />}
-              </button>
-              {loading && <Spinner color="primary" />}
+                {loading ? (
+                  <>
+                    <Spinner size="sm" color="current" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs tracking-[2.4px] uppercase">
+                      Envoyer un mail
+                    </span>
+                    <IoIosArrowRoundForward className="scale-110" />
+                  </>
+                )}
+              </Button>
             </div>
+
+            {isButtonDisabled && (
+              <p id="submit-help" className="text-default-600 text-sm">
+                Veuillez remplir tous les champs obligatoires (email et message)
+                et compléter la vérification reCAPTCHA pour pouvoir envoyer le
+                formulaire.
+              </p>
+            )}
           </form>
         </div>
 
-        <div className="w-1/2 hidden lg:flex justify-end">
+        <div className="hidden w-1/2 shrink-0 justify-end lg:flex">
           <CldImage
             src={"Site/logo"}
-            alt="image contact"
-            width={600}
-            height={600}
+            alt="Logo Le Bon Tempérament - Contact"
+            className="h-auto w-full shrink-0 object-contain"
+            width={632}
+            height={624}
           />
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

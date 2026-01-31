@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { Button } from "@/components/ui/button";
 import RouteNames from "@/utils/routes";
+import { createClient } from "@/utils/supabase/client";
+import { AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function UnauthorizedPage() {
   const router = useRouter();
@@ -28,8 +28,8 @@ export default function UnauthorizedPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md space-y-8">
         <Alert variant="destructive" className="border-red-500">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle className="text-xl font-bold">
@@ -41,7 +41,7 @@ export default function UnauthorizedPage() {
           </AlertDescription>
         </Alert>
 
-        <div className="text-center space-y-6">
+        <div className="space-y-6 text-center">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">
               Erreur 403
@@ -76,7 +76,7 @@ export default function UnauthorizedPage() {
             Pour toute assistance, contactez le support technique :{" "}
             <a
               href="mailto:thomas-moser@orangefr"
-              className="font-medium text-primary hover:text-primary/80"
+              className="text-primary hover:text-primary/80 font-medium"
             >
               thomas-moser@orange
             </a>

@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -19,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Analytics />
-      <body className={inter.className}>
+      <body className={cn(inter.className, "overflow-y-hidden")}>
         <Toaster position="top-right" richColors />
         <Providers>{children}</Providers>
       </body>

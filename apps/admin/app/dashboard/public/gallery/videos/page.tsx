@@ -1,7 +1,7 @@
 // app/dashboard/public/videos/page.tsx
 "use client";
 
-import { DashboardPageHeader } from "@/components/DashboardPageHeader";
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -141,20 +141,20 @@ export default function VideosPage() {
     }, []);
 
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="space-y-4 text-center">
-          <Music2 className="h-12 w-12 text-primary/50 animate-pulse mx-auto" />
-          <p className="text-sm text-muted-foreground">{message}</p>
+          <Music2 className="text-primary/50 mx-auto h-12 w-12 animate-pulse" />
+          <p className="text-muted-foreground text-sm">{message}</p>
         </div>
       </div>
     );
   };
   const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-      <div className="text-center space-y-4">
-        <Music2 className="h-16 w-16 text-primary/30 mx-auto" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
+      <div className="space-y-4 text-center">
+        <Music2 className="text-primary/30 mx-auto h-16 w-16" />
         <h2 className="text-xl font-medium">Aucune vidéo</h2>
-        <p className="text-sm text-muted-foreground max-w-sm">
+        <p className="text-muted-foreground max-w-sm text-sm">
           Commencez par ajouter votre première vidéo pour créer votre collection
         </p>
       </div>
@@ -164,7 +164,7 @@ export default function VideosPage() {
   const AddVideoButton = () => (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="rounded-full px-6">
+        <Button variant="outline" className="px-6">
           <Plus className="mr-2 h-4 w-4" />
           Ajouter une vidéo
         </Button>
@@ -184,17 +184,17 @@ export default function VideosPage() {
     const videoId = extractYouTubeId(video.youtube_url);
 
     return (
-      <div className="bg-white dark:bg-black rounded-2xl overflow-hidden shadow-sm border border-border/50">
+      <div className="border-border/50 overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-black">
         <div className="aspect-video">
           <YoutubeIframe key={videoId} videoId={videoId} />
         </div>
-        <div className="p-6 space-y-4">
+        <div className="space-y-4 p-6">
           <div className="space-y-2">
-            <h3 className="text-lg font-medium leading-none">{video.title}</h3>
-            <p className="text-sm text-muted-foreground">{video.composer}</p>
+            <h3 className="text-lg leading-none font-medium">{video.title}</h3>
+            <p className="text-muted-foreground text-sm">{video.composer}</p>
           </div>
 
-          <div className="space-y-1 text-sm text-muted-foreground">
+          <div className="text-muted-foreground space-y-1 text-sm">
             <p>
               {format(new Date(video.performance_date), "dd MMMM yyyy", {
                 locale: fr,
@@ -221,7 +221,7 @@ export default function VideosPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-full text-destructive"
+              className="text-destructive rounded-full"
               onClick={() => {
                 setVideoToDelete(video.id);
                 setDeleteDialogOpen(true);
@@ -236,16 +236,13 @@ export default function VideosPage() {
   };
 
   return (
-    <div className="container px-4 sm:px-6 lg:px-8 py-8">
-      <header className="flex items-center justify-between">
-        <DashboardPageHeader
-          title="Vidéos"
-          description="Ajoutez ici les vidéos depuis YouTube que vous souhaitez voir apparaître sur le site."
-        />
-
-        <AddVideoButton />
-      </header>
-
+    <PageShell
+      theme="public"
+      title="Vidéos"
+      description="Ajoutez ici les vidéos depuis YouTube que vous souhaitez voir apparaître sur le site."
+      headerAction={<AddVideoButton />}
+      className="px-4 py-8 sm:px-6 lg:px-8"
+    >
       {loading ? (
         <LoadingState />
       ) : videos.length === 0 ? (
@@ -271,7 +268,7 @@ export default function VideosPage() {
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 text-white"
             >
               Supprimer
             </AlertDialogAction>
@@ -290,6 +287,6 @@ export default function VideosPage() {
           <VideoForm onSubmit={handleEdit} initialData={editingVideo} />
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }

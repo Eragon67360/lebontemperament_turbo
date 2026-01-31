@@ -1,6 +1,6 @@
 // app/dashboard/travail/[programId]/[groupSlug]/page.tsx
-import { createClient } from "@/utils/supabase/server";
 import { FileExplorer } from "@/components/FileExplorer";
+import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 
 interface WorkPageProps {
@@ -34,7 +34,7 @@ export default async function WorkPage({
 
   return (
     <div className="container mx-auto">
-      <h1 className="text-2xl font-bold mb-8">
+      <h1 className="mb-8 text-2xl font-bold">
         {program.name} - {group.name}
       </h1>
       <FileExplorer programId={program.id} groupId={group.id} />

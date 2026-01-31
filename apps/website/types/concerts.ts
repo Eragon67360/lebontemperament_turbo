@@ -12,6 +12,8 @@ export interface Concert {
   name?: string | null;
   created_by: string;
   affiche: string | null;
+  tour_id?: string | null;
+  related_link?: string | null;
 }
 
 export interface CreateConcertDTO {
@@ -26,4 +28,18 @@ export interface CreateConcertDTO {
 
 export interface UpdateConcertDTO extends Partial<CreateConcertDTO> {
   id: string;
+}
+
+export interface Tour {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  description: string | null;
+  context: Context;
+  start_date: string | null;
+  end_date: string | null;
+  tour_poster: string | null;
+  is_active: boolean;
+  created_by: string;
 }

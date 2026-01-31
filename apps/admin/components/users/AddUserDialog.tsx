@@ -1,9 +1,13 @@
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,10 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserIcon, ShieldCheck, Loader2, Plus } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Loader2, Plus, ShieldCheck, UserIcon } from "lucide-react";
 // components/users/AddUserDialog.tsx
 interface AddUserDialogProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export function AddUserDialog({
             <div className="space-y-2">
               <Label htmlFor="display_name">
                 Nom d&apos;affichage
-                <span className="text-xs text-muted-foreground ml-2">
+                <span className="text-muted-foreground ml-2 text-xs">
                   (Optionnel)
                 </span>
               </Label>

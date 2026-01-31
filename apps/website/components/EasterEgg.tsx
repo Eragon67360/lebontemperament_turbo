@@ -9,7 +9,7 @@ const emulateTaps = () => {
   if (process.env.NODE_ENV === "development") {
     let tapCount = 0;
     const interval = setInterval(() => {
-      if (tapCount < 4) {
+      if (tapCount < 6) {
         window.dispatchEvent(new Event("touchstart"));
         tapCount++;
       } else {
@@ -34,6 +34,7 @@ const DevTapButton = () => {
         color: "white",
         borderRadius: "5px",
         zIndex: 9999,
+        display: "none",
       }}
     >
       Emulate Quad Tap
@@ -87,7 +88,7 @@ const CodeInput = ({
 
   return (
     <motion.div
-      className="flex flex-wrap gap-2 justify-center"
+      className="flex flex-wrap justify-center gap-2"
       animate={
         isError
           ? {
@@ -108,12 +109,11 @@ const CodeInput = ({
             value={code[index]}
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
-            className={`w-8 h-8 md:w-10 md:h-10 text-center border-2 rounded focus:outline-none uppercase transition-colors duration-200
-                ${
-                  isError
-                    ? "border-red-500 focus:border-red-600"
-                    : "border-gray-300 focus:border-primary"
-                }`}
+            className={`h-8 w-8 rounded border-2 text-center uppercase transition-colors duration-200 focus:outline-none md:h-10 md:w-10 ${
+              isError
+                ? "border-red-500 focus:border-red-600"
+                : "focus:border-primary border-gray-300"
+            }`}
           />
         ))}
     </motion.div>
@@ -129,8 +129,6 @@ export const EasterEgg = () => {
   const correctCode = "PICONPASTIS";
 
   const handleEasterEgg = () => {
-    console.log("COMPLETE");
-
     setIsOpen(true);
     setShowInitialMessage(true);
     setIsError(false);
@@ -205,25 +203,16 @@ export const EasterEgg = () => {
         className="mx-0"
       >
         <ModalContent
-          className={`
-            w-full max-w-[95vw] md:max-w-3xl
-            fixed transform -translate-x-1/2
-            ${
-              isMobile()
-                ? "top-4 left-1/2"
-                : "top-1/2 left-1/2 -translate-y-1/2"
-            }
-            md:rounded-lg
-            bg-white
-            shadow-xl
-          `}
+          className={`fixed w-full max-w-[95vw] -translate-x-1/2 transform md:max-w-3xl ${
+            isMobile() ? "top-4 left-1/2" : "top-1/2 left-1/2 -translate-y-1/2"
+          } bg-white shadow-xl md:rounded-lg`}
           style={{
             maxHeight: isMobile() ? "calc(100vh - 2rem)" : "80vh",
             overflowY: "auto",
           }}
         >
           <ModalBody className="py-4 md:py-8">
-            <div className="flex flex-col items-center justify-center min-h-[200px] px-2 md:px-4">
+            <div className="flex min-h-[200px] flex-col items-center justify-center px-2 md:px-4">
               <AnimatePresence mode="wait">
                 {showInitialMessage && (
                   <motion.div
@@ -231,7 +220,7 @@ export const EasterEgg = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-xl md:text-3xl font-bold text-center bg-gradient-to-r from-[#1a878d] to-blue-600 text-transparent bg-clip-text"
+                    className="bg-gradient-to-r from-[#1a878d] to-blue-600 bg-clip-text text-center text-xl font-bold text-transparent md:text-3xl"
                   >
                     Le BT est-il une secte ?
                   </motion.div>
@@ -242,9 +231,9 @@ export const EasterEgg = () => {
                     key="code"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex flex-col items-center gap-4 md:gap-6 w-full"
+                    className="flex w-full flex-col items-center gap-4 md:gap-6"
                   >
-                    <div className="text-lg md:text-xl font-bold text-center">
+                    <div className="text-center text-lg font-bold md:text-xl">
                       Trouve le code pour avoir la réponse
                     </div>
                     <CodeInput
@@ -256,7 +245,7 @@ export const EasterEgg = () => {
                       <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-red-500 mt-2 text-sm md:text-base"
+                        className="mt-2 text-sm text-red-500 md:text-base"
                       >
                         Code incorrect, essayez encore !
                       </motion.p>

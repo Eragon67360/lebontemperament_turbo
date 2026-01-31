@@ -49,9 +49,9 @@ const PasswordModal: FC<PasswordModalProps> = ({
                     onClick={toggleVisibility}
                   >
                     {isVisible ? (
-                      <FaEyeSlash className="text-2xl text-default-400 pointer-events-none" />
+                      <FaEyeSlash className="text-default-400 pointer-events-none text-2xl" />
                     ) : (
-                      <FaEye className="text-2xl text-default-400 pointer-events-none" />
+                      <FaEye className="text-default-400 pointer-events-none text-2xl" />
                     )}
                   </button>
                 }

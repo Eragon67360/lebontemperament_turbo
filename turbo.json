@@ -11,10 +11,6 @@
     "build": {
       "env": [
         "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
-        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-        "CLERK_SECRET_KEY",
-        "NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL",
-        "NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL",
         "DISABLE_SIGN_UP",
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
@@ -42,17 +38,32 @@
         "CLOUDINARY_API_SECRET",
         "NEXT_PUBLIC_ADMIN_PASSWORD",
         "ANALYZE",
-        "NEXT_PUBLIC_SITE_URL"
+        "NEXT_PUBLIC_SITE_URL",
+        "RECAPTCHA_SECRET_KEY",
+        "GOOGLE_APPS_SCRIPT_URL",
+        "ADMIN_EMAIL"
       ],
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": [
+        "^check-types"
+      ]
     },
     "dev": {
       "cache": false,

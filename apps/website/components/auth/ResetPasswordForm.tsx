@@ -52,8 +52,10 @@ export default function ResetPasswordForm() {
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold">Mission accomplie ! ✨</h1>
-          <p className="text-balance text-sm text-muted-foreground">
+          <h1 className="text-foreground text-2xl font-bold">
+            Mission accomplie ! ✨
+          </h1>
+          <p className="text-default-500 text-sm text-balance">
             File vite checker ta boîte mail, un message t&apos;attend pour
             récupérer ton accès !
           </p>
@@ -71,8 +73,10 @@ export default function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Oups, petit trou de mémoire ?</h1>
-        <p className="text-balance text-sm text-muted-foreground">
+        <h1 className="text-foreground text-2xl font-bold">
+          Oups, petit trou de mémoire ?
+        </h1>
+        <p className="text-foreground/50 text-sm text-balance">
           Pas de panique ! Donne-nous ton email et on t&apos;aide à retrouver
           tes accès 🔑
         </p>

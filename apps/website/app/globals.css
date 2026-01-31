@@ -1,243 +1,351 @@
+/* ==========================================================================
+   1. IMPORTS & CONFIGURATION
+   ========================================================================== */
+
+/* Import Tailwind's base, components, and utilities */
 @import "tailwindcss";
+
+/* Optional: Import any third-party CSS libraries */
 @import "tw-animate-css";
+
+/* Configuration for HeroUI theme plugin */
 @plugin '../hero.ts';
 @source '../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:is(.dark *));
 
-@layer base {
-  * {
-    @apply border-border dark:border-neutral-700 focus-visible:ring-primary outline-primary;
-  }
-  body {
-    @apply scroll-smooth;
-  }
-  html {
-    @apply scroll-smooth;
-  }
-}
-
+/* ==========================================================================
+   2. THEME VARIABLES (@theme)
+   ========================================================================== */
 @theme {
   --color-primary: oklch(0.57 0.0911 200.74);
   --color-border: oklch(0.922 0 0);
-  --heroui-focus: var(--color-primary)
-    /* :root {
-    --radius: 0.625rem;
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
-    --color-background: oklch(1 0 0);
-    --color-foreground: oklch(0.16 0 0);
-    --color-card: oklch(1 0 0);
-    --color-card-foreground: oklch(0.145 0 0);
-    --color-popover: oklch(1 0 0);
-    --color-popover-foreground: oklch(0.145 0 0);
-    --color-primary: oklch(0.57 0.0911 200.74);
-    --color-primary-foreground: oklch(0.985 0 0);
-    --color-secondary: oklch(0.97 0 0);
-    --color-secondary-foreground: oklch(0.205 0 0);
-    --color-muted: oklch(0.97 0 0);
-    --color-muted-foreground: oklch(0.556 0 0);
-    --color-accent: oklch(0.97 0 0);
-    --color-accent-foreground: oklch(0.205 0 0);
-    --color-destructive: oklch(0.577 0.245 27.325);
-    --color-border: oklch(0.922 0 0);
-    --color-input: oklch(0.922 0 0);
-    --color-ring: oklch(0.708 0 0);
-    --color-chart-1: oklch(0.646 0.222 41.116);
-    --color-chart-2: oklch(0.6 0.118 184.704);
-    --color-chart-3: oklch(0.398 0.07 227.392);
-    --color-chart-4: oklch(0.828 0.189 84.429);
-    --color-chart-5: oklch(0.769 0.188 70.08);
-    --color-sidebar: oklch(0.985 0 0);
-    --color-sidebar-foreground: oklch(0.145 0 0);
-    --color-sidebar-primary: oklch(0.205 0 0);
-    --color-sidebar-primary-foreground: oklch(0.985 0 0);
-    --color-sidebar-accent: oklch(0.97 0 0);
-    --color-sidebar-accent-foreground: oklch(0.205 0 0);
-    --color-sidebar-border: oklch(0.922 0 0);
-    --color-sidebar-ring: oklch(0.708 0 0);
+  --heroui-focus: var(--color-primary);
+  --heroui-background: 255 255 255;
+  --heroui-foreground: 37 37 37;
+  --heroui-content1: 255 255 255;
+  --heroui-content2: 245 245 245;
+  --heroui-content3: 232 232 232;
+  --heroui-content4: 212 212 212;
+}
+
+/* ==========================================================================
+   3. BASE LAYER STYLES (@layer base)
+   ========================================================================== */
+@layer base {
+  /* Apply a consistent focus ring and border color to all elements */
+  * {
+    @apply border-border focus-visible:ring-primary outline-primary;
   }
 
-  :root[data-theme="dark"] {
-    --radius: 0.625rem;
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
-    --color-background: oklch(0.16 0 0);
-    --color-foreground: oklch(0.95 0 0);
-    --color-card: oklch(0.2 0 0);
-    --color-card-foreground: oklch(0.95 0 0);
-    --color-popover: oklch(0.2 0 0);
-    --color-popover-foreground: oklch(0.95 0 0);
-    --color-primary: oklch(0.57 0.0911 200.74);
-    --color-primary-foreground: oklch(0.16 0 0);
-    --color-secondary: oklch(0.25 0 0);
-    --color-secondary-foreground: oklch(0.95 0 0);
-    --color-muted: oklch(0.25 0 0);
-    --color-muted-foreground: oklch(0.7 0 0);
-    --color-accent: oklch(0.25 0 0);
-    --color-accent-foreground: oklch(0.95 0 0);
-    --color-destructive: oklch(0.577 0.245 27.325);
-    --color-border: oklch(0.3 0 0);
-    --color-input: oklch(0.3 0 0);
-    --color-ring: oklch(0.4 0 0);
-    --color-chart-1: oklch(0.646 0.222 41.116);
-    --color-chart-2: oklch(0.6 0.118 184.704);
-    --color-chart-3: oklch(0.398 0.07 227.392);
-    --color-chart-4: oklch(0.828 0.189 84.429);
-    --color-chart-5: oklch(0.769 0.188 70.08);
-    --color-sidebar: oklch(0.18 0 0);
-    --color-sidebar-foreground: oklch(0.95 0 0);
-    --color-sidebar-primary: oklch(0.95 0 0);
-    --color-sidebar-primary-foreground: oklch(0.18 0 0);
-    --color-sidebar-accent: oklch(0.25 0 0);
-    --color-sidebar-accent-foreground: oklch(0.95 0 0);
-    --color-sidebar-border: oklch(0.3 0 0);
-    --color-sidebar-ring: oklch(0.4 0 0);
-  } */;
-}
-
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.text-title {
-  @apply text-[clamp(24px,4.44vw,64px)];
-}
-
-.gallery img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-.crossed {
-  background: linear-gradient(
-    to top left,
-    rgba(189, 189, 189, 0) 0%,
-    rgba(189, 189, 189, 0) calc(50% - 0.8px),
-    rgba(189, 189, 189, 1) 50%,
-    rgba(189, 189, 189, 0) calc(50% + 0.8px),
-    rgba(189, 189, 189, 0) 100%
-  );
-}
-
-.audio-player .rhap_container,
-.audio-player .rhap_main-controls,
-.audio-player .rhap_progress-container,
-.audio-player .rhap_time,
-.audio-player .rhap_volume-controls {
-  background-color: transparent !important;
-  color: white !important;
-}
-
-.audio-player .rhap_button {
-  color: white !important;
-}
-
-.audio-player .rhap_volume-indicator,
-.audio-player .rhap_progress-indicator,
-.audio-player .rhap_progress-filled {
-  background: white !important;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+  /* Set smooth scrolling behavior for the whole document */
+  html,
+  body {
+    @apply scroll-smooth;
   }
-  to {
-    opacity: 1;
+
+  /* Improved default focus-visible styles for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Make links smoother */
+  a {
+    transition: color 0.2s ease-in-out;
+  }
+
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  /* Make form elements transition smoothly */
+  input,
+  textarea,
+  select {
+    transition:
+      border-color 0.2s ease-in-out,
+      box-shadow 0.2s ease-in-out;
+  }
+
+  /* Set cursor for buttons */
+  button {
+    @apply cursor-pointer;
+  }
+
+  /* Reduced motion accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* High contrast accessibility */
+  @media (prefers-contrast: high) {
+    :root {
+      --color-primary: #000000;
+      --color-border: #000000;
+    }
+  }
+
+  /* --- Custom Scrollbar Styling --- */
+  /* For Webkit browsers (Chrome, Safari) */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--heroui-primary) / 0.5);
+    border-radius: 6px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--heroui-primary) / 0.7);
+  }
+
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--heroui-primary) / 0.5) transparent;
   }
 }
 
-@keyframes fadeOut {
-  from {
-    opacity: 1;
+/* ==========================================================================
+   4. COMPONENT LAYER (@layer components)
+   ========================================================================== */
+@layer components {
+  /* Reusable component classes */
+  .text-title {
+    font-size: clamp(24px, 4.44vw, 64px);
   }
-  to {
-    opacity: 0;
+
+  .h-125 {
+    height: 31.25rem;
+  }
+  .w-125 {
+    width: 31.25rem;
+  }
+  .h-75 {
+    height: 18.75rem;
+  }
+  .w-75 {
+    width: 18.75rem;
+  }
+  h-112\.5 {
+    height: 28.125rem;
+  }
+  .w-112\.5 {
+    width: 28.125rem;
+  }
+
+  .size-125 {
+    @apply h-125 w-125;
+  }
+  .size-75 {
+    @apply h-75 w-75;
+  }
+  .size-112\.5 {
+    @apply h-112.5 w-112.5;
+  }
+
+  .fill-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .gallery img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  /* --- Accessibility Components --- */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* --- Audio Player Custom Styles --- */
+  /* .audio-player .rhap_container,
+  .audio-player .rhap_main-controls,
+  .audio-player .rhap_progress-container,
+  .audio-player .rhap_time,
+  .audio-player .rhap_volume-controls,
+  .custom-audio-player.rhap_container {
+    background-color: transparent !important;
+    color: white !important;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .audio-player .rhap_button,
+  .custom-audio-player .rhap_button-clear {
+    color: white !important;
+  }
+
+  .audio-player .rhap_volume-indicator,
+  .audio-player .rhap_progress-indicator,
+  .audio-player .rhap_progress-filled,
+  .custom-audio-player .rhap_progress-filled {
+    background: white !important;
+  } */
+
+  /* In globals.css, inside @layer components */
+
+  /* ==========================================================================
+   Custom Audio Player Styles ("thin" variant)
+   ========================================================================== */
+  .audio-player-thin .rhap_container {
+    @apply bg-transparent p-0 shadow-none;
+  }
+
+  /* --- Main Controls (Play/Pause) --- */
+  .audio-player-thin .rhap_button-clear {
+    @apply hover:text-primary dark:hover:text-primary text-slate-500 transition-colors duration-200 dark:text-slate-400;
+  }
+
+  /* --- Progress Bar --- */
+  .audio-player-thin .rhap_progress-container {
+    @apply mx-4;
+  }
+  .audio-player-thin .rhap_progress-bar {
+    @apply h-1 bg-slate-200 dark:bg-slate-700;
+  }
+  .audio-player-thin .rhap_progress-filled {
+    @apply bg-primary;
+  }
+  .audio-player-thin .rhap_progress-indicator {
+    @apply bg-primary h-3 w-3 shadow-none;
+  }
+
+  /* --- Time Stamps --- */
+  .audio-player-thin .rhap_time {
+    @apply text-xs font-light text-slate-400 dark:text-slate-500;
+  }
+
+  /* --- Volume Controls --- */
+  .audio-player-thin .rhap_volume-controls {
+    @apply justify-start;
+  }
+  .audio-player-thin .rhap_volume-bar {
+    @apply h-1 bg-slate-200 dark:bg-slate-700;
+  }
+  .audio-player-thin .rhap_volume-indicator {
+    @apply bg-primary h-3 w-3 border-0 shadow-none;
   }
 }
 
-.fade-in {
-  animation: fadeIn 1s ease-in;
-}
-
-.fade-out {
-  animation: fadeOut 1s ease-out;
-}
-
-.fill-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: left top;
-}
-
-.custom-audio-player.rhap_container {
-  background-color: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-
-.custom-audio-player .rhap_progress-section {
-  margin-bottom: 8px;
-}
-
-.custom-audio-player .rhap_progress-bar {
-  height: 4px;
-}
-
-.custom-audio-player .rhap_progress-indicator {
-  width: 12px;
-  height: 12px;
-  margin-left: -6px;
-  top: -4px;
-}
-
-.custom-audio-player .rhap_controls-section {
-  margin-top: 0;
-}
-
-.custom-audio-player .rhap_time {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
-}
-
-.custom-audio-player .rhap_button-clear {
-  color: white;
-}
-
-.custom-audio-player .rhap_progress-filled {
-  background-color: white;
-}
-
-.custom-audio-player .rhap_progress-bar-show-download {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.custom-audio-player .rhap_volume-controls {
-  margin-left: 12px;
-}
-
-/* Add this to your CSS */
-@media (max-width: 768px) {
-  .modal-open {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+/* ==========================================================================
+   5. UTILITIES LAYER (@layer utilities)
+   ========================================================================== */
+@layer utilities {
+  .text-7xl {
+    font-size: var(--font-size-7xl);
+    line-height: var(--line-height-none);
   }
-}
+  .text-8xl {
+    font-size: var(--font-size-8xl);
+    line-height: var(--line-height-none);
+  }
+  .text-9xl {
+    font-size: var(--font-size-9xl);
+    line-height: var(--line-height-none);
+  }
+  /* Hide scrollbar while maintaining scroll functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 
-/* Optional: Add smooth behavior for virtual keyboard */
-@media (max-width: 768px) {
-  .modal-content {
-    transition: transform 0.3s ease-out;
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* --- Humanizing Textures & Effects (from your original file) --- */
+  .texture-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(
+        circle at 20% 50%,
+        rgba(255, 255, 255, 0.03) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 80%,
+        rgba(0, 0, 0, 0.02) 0%,
+        transparent 50%
+      );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .grain-texture::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
+  }
+
+  .hand-drawn {
+    border: 2px solid;
+    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  }
+
+  .gradient-organic {
+    background: linear-gradient(135deg, var(--tw-gradient-stops));
+    background-size: 120% 120%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 }

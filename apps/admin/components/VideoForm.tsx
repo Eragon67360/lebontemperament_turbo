@@ -19,13 +19,13 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Video, VideoFormData } from "@/types/video";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Video, VideoFormData } from "@/types/video";
 
 const formSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
@@ -154,7 +154,7 @@ export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-50" align="start">
+                <PopoverContent className="z-50 w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={field.value}

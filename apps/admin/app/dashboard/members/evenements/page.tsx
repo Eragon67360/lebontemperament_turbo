@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardPageHeader } from "@/components/DashboardPageHeader";
 import { EventForm } from "@/components/EventForm";
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,12 +22,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Event } from "@/types/events";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import {
+  useCreateEvent,
+  useDeleteEvent,
+  useEvents,
+  useUpdateEvent,
+} from "@/hooks/useEvents";
 
 const loadingMessages = [
   "Préparation des événements... 📅",
@@ -38,9 +46,17 @@ const loadingMessages = [
 ];
 
 export default function Evenements() {
-  const [events, setEvents] = useState<Event[]>([]);
+  // Queries
+  const { data: events = [], isLoading: loadingEvents } = useEvents();
+
+  // Mutations
+  const createEvent = useCreateEvent();
+  const updateEvent = useUpdateEvent();
+  const deleteEvent = useDeleteEvent();
+
+  const loading = loadingEvents;
+
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState<string | undefined>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
@@ -57,24 +73,6 @@ export default function Evenements() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch("/api/events");
-      const data = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error(error);
-
-      toast.error("Erreur lors du chargement des événements");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
   const handleDeleteClick = (id: string) => {
     setEventToDelete(id);
     setDeleteDialogOpen(true);
@@ -86,7 +84,6 @@ export default function Evenements() {
     dateTo: Date | null | undefined,
   ) => {
     e.preventDefault();
-    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const eventData = {
@@ -97,30 +94,20 @@ export default function Evenements() {
       location: formData.get("location") as string,
       responsible_name: formData.get("responsible_name") as string,
       responsible_email: (formData.get("responsible_email") as string) || null,
-      event_type: formData.get("event_type") as string,
+      event_type: formData.get("event_type") as Event["event_type"],
       description: (formData.get("description") as string) || null,
       link: (formData.get("link") as string) || null,
       is_public: formData.get("is_public") === "on",
     };
 
     try {
-      const response = await fetch("/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok)
-        throw new Error("Erreur lors de l'ajout de l'événement");
+      await createEvent.mutateAsync(eventData);
 
       toast.success("Événement ajouté avec succès");
       setOpen(false);
-      fetchEvents();
     } catch (error) {
       toast.error("Erreur lors de l'ajout de l'événement");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -130,7 +117,6 @@ export default function Evenements() {
     dateTo: Date | null | undefined,
   ) => {
     e.preventDefault();
-    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const eventData = {
@@ -142,30 +128,21 @@ export default function Evenements() {
       location: formData.get("location") as string,
       responsible_name: formData.get("responsible_name") as string,
       responsible_email: (formData.get("responsible_email") as string) || null,
-      event_type: formData.get("event_type") as string,
+      event_type: formData.get("event_type") as Event["event_type"],
       description: (formData.get("description") as string) || null,
       link: (formData.get("link") as string) || null,
       is_public: formData.get("is_public") === "on",
     };
 
     try {
-      const response = await fetch("/api/events", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la modification");
+      await updateEvent.mutateAsync(eventData);
 
       toast.success("Événement modifié avec succès");
       setEditDialogOpen(false);
       setEditingEvent(null);
-      fetchEvents();
     } catch (error) {
       toast.error("Erreur lors de la modification");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -173,16 +150,9 @@ export default function Evenements() {
     if (!eventToDelete) return;
 
     try {
-      const response = await fetch("/api/events", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: eventToDelete }),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
+      await deleteEvent.mutateAsync(eventToDelete);
 
       toast.success("Événement supprimé avec succès");
-      fetchEvents();
     } catch (error) {
       toast.error("Erreur lors de la suppression");
       console.error(error);
@@ -194,30 +164,30 @@ export default function Evenements() {
 
   // Loading State Component
   const LoadingState = () => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
-      <div className="p-4 bg-primary/10 rounded-full animate-pulse">
-        <Calendar className="h-12 w-12 text-primary" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-8">
+      <div className="bg-primary/10 animate-pulse rounded-full p-4">
+        <Calendar className="text-primary h-12 w-12" />
       </div>
-      <p className="text-sm text-muted-foreground animate-pulse">
+      <p className="text-muted-foreground animate-pulse text-sm">
         {loadingMessage || loadingMessages[0]}
       </p>
     </div>
   );
 
   const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-      <div className="text-center space-y-4">
-        <div className="p-4 bg-primary/5 rounded-full inline-block">
-          <Calendar className="h-16 w-16 text-primary/30" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
+      <div className="space-y-4 text-center">
+        <div className="bg-primary/5 inline-block rounded-full p-4">
+          <Calendar className="text-primary/30 h-16 w-16" />
         </div>
         <h2 className="text-xl font-medium">Aucun événement</h2>
-        <p className="text-sm text-muted-foreground max-w-sm">
+        <p className="text-muted-foreground max-w-sm text-sm">
           Aucun événement n&apos;est prévu pour le moment.
         </p>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="rounded-full px-6">
+          <Button variant="outline" className="px-6">
             <Plus className="mr-2 h-4 w-4" />
             Ajouter un événement
           </Button>
@@ -240,17 +210,16 @@ export default function Evenements() {
   };
 
   return (
-    <div className="container px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
-        <div className="space-y-1.5">
-          <DashboardPageHeader
-            title="Gestion des événements"
-            description="Gérez vos événements et leur programmation."
-          />
-        </div>
+    <PageShell
+      fullHeight
+      theme="members"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Gestion des événements"
+      description="Gérez vos événements et leur programmation."
+      headerAction={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="rounded-full px-6">
+            <Button className="px-6">
               <Plus className="mr-2 h-4 w-4" />
               Ajouter un événement
             </Button>
@@ -266,94 +235,96 @@ export default function Evenements() {
             </DialogHeader>
             <EventForm
               onSubmit={handleCreate}
-              loading={loading}
+              loading={createEvent.isPending}
               initialData={null}
               submitLabel="Ajouter l'événement"
             />
           </DialogContent>
         </Dialog>
-      </div>
+      }
+    >
+      <ScrollArea className="pr-2">
+        {loading ? (
+          <LoadingState />
+        ) : events.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="space-y-4">
+            {events.map((event) => (
+              <Card
+                key={event.id}
+                className="overflow-hidden rounded-2xl border-0 bg-white/50 shadow-lg backdrop-blur-xl transition-all duration-200 hover:shadow-xl dark:bg-black/50"
+              >
+                <div className="p-6">
+                  <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-semibold">{event.title}</h3>
+                        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {formatEventDate(event)} à{" "}
+                            {event.time.slice(0, 5).replace(":", "h")}
+                          </span>
+                        </div>
+                      </div>
 
-      {loading ? (
-        <LoadingState />
-      ) : events.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="space-y-4">
-          {events.map((event) => (
-            <Card
-              key={event.id}
-              className="backdrop-blur-xl bg-white/50 dark:bg-black/50 border-0 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-200"
-            >
-              <div className="p-6">
-                <div className="flex flex-col sm:flex-row justify-between gap-4">
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold">{event.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          {formatEventDate(event)} à{" "}
-                          {event.time.slice(0, 5).replace(":", "h")}
-                        </span>
+                      <div className="space-y-2">
+                        <p className="font-medium">{event.location}</p>
+                        <p className="text-muted-foreground text-sm">
+                          Responsable : {event.responsible_name}
+                          {event.responsible_email && (
+                            <span className="text-primary/70">
+                              {` (${event.responsible_email})`}
+                            </span>
+                          )}
+                        </p>
+                        {event.description && (
+                          <p className="text-muted-foreground text-sm">
+                            {event.description}
+                          </p>
+                        )}
+                        {event.link && (
+                          <a
+                            href={event.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
+                          >
+                            Voir plus
+                          </a>
+                        )}
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <p className="font-medium">{event.location}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Responsable : {event.responsible_name}
-                        {event.responsible_email && (
-                          <span className="text-primary/70">
-                            {` (${event.responsible_email})`}
-                          </span>
-                        )}
-                      </p>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {event.description}
-                        </p>
-                      )}
-                      {event.link && (
-                        <a
-                          href={event.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-                        >
-                          Voir plus
-                        </a>
-                      )}
+                    <div className="flex gap-2 sm:flex-col">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingEvent(event);
+                          setEditDialogOpen(true);
+                        }}
+                        className="hover:bg-primary/10 rounded-full"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(event.id)}
+                        className="hover:bg-destructive/10 text-destructive rounded-full"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex gap-2 sm:flex-col">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setEditingEvent(event);
-                        setEditDialogOpen(true);
-                      }}
-                      className="rounded-full hover:bg-primary/10"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(event.id)}
-                      className="rounded-full hover:bg-destructive/10 text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -368,7 +339,7 @@ export default function Evenements() {
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 text-white"
             >
               Supprimer
             </AlertDialogAction>
@@ -386,12 +357,12 @@ export default function Evenements() {
           </DialogHeader>
           <EventForm
             onSubmit={handleEdit}
-            loading={loading}
+            loading={updateEvent.isPending}
             initialData={editingEvent}
             submitLabel="Modifier l'événement"
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }

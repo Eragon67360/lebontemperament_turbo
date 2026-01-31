@@ -1,17 +1,16 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Users, Briefcase, Calendar, LucideIcon } from "lucide-react";
+import { PageShell } from "@/components/layouts/PageShell";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Briefcase, Calendar, LucideIcon, Users } from "lucide-react";
 import Link from "next/link";
 // app/dashboard/members/page.tsx
 export default function MembersDashboardPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Espace Membres</h2>
-        <p className="text-muted-foreground">
-          Gérez l&apos;espace réservé aux membres.
-        </p>
-      </div>
-
+    <PageShell
+      theme="members"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Espace Membres"
+      description="Gérez l'espace réservé aux membres."
+    >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <DashboardCard
           title="Gestion Membres"
@@ -36,7 +35,7 @@ export default function MembersDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard title="Membres actifs" value="42" icon={Users} />
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -61,7 +60,7 @@ const DashboardCard = ({
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </CardContent>
       </Card>
     </Link>
@@ -81,7 +80,7 @@ const StatsCard = ({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className="text-muted-foreground h-4 w-4" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>

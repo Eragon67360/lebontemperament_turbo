@@ -70,7 +70,7 @@ export function EventForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label>Date de début</Label>
           <Popover modal>
@@ -156,7 +156,7 @@ export function EventForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="responsible_name">Responsable</Label>
           <Input
@@ -221,12 +221,12 @@ export function EventForm({
           />
           <Label
             htmlFor="is_public"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Événement public
           </Label>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Si coché, l&apos;événement sera visible sur le site public. Sinon, il
           ne sera visible que pour les membres.
         </p>

@@ -15,7 +15,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
 
-    let query = supabaseAdmin.from("profiles").select("*");
+    let query = supabaseAdmin
+      .from("profiles")
+      .select(
+        "id, email, display_name, role, created_at, address, home_phone, mobile_phone, profile_picture_url",
+      );
 
     if (search) {
       query = query.or(
@@ -86,9 +90,14 @@ export async function GET(request: Request) {
         }
       }
 
+      // Get avatar: prioritize profile_picture_url over Google avatar
+      const googleAvatar = authUser?.user_metadata?.avatar_url;
+      const avatar = profile.profile_picture_url || googleAvatar || undefined;
+
       return {
         ...profile,
         invite_status,
+        avatar,
       };
     });
 

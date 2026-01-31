@@ -1,12 +1,7 @@
 // pages/users/index.tsx
 "use client";
 
-import { AddUserDialog } from "@/components/users/AddUserDialog";
-import { UserCard } from "@/components/users/UserCard";
-import { UserEmptyState } from "@/components/users/UserEmptyState";
-import { UserHeader } from "@/components/users/UserHeader";
-import { UserLoadingState } from "@/components/users/UserLoadingState";
-import { UserSearch } from "@/components/users/UserSearch";
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,134 +12,110 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createClient } from "@/utils/supabase/client";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
-import { SortConfig, User } from "@/types/user";
 import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
+import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
+import { SyncUsersDialog } from "@/components/users/SyncUsersDialog";
+import { UserCard } from "@/components/users/UserCard";
+import { UserEmptyState } from "@/components/users/UserEmptyState";
+import { UserHeader } from "@/components/users/UserHeader";
+import { UserLoadingState } from "@/components/users/UserLoadingState";
+import { UserSearch } from "@/components/users/UserSearch";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import {
+  useCreateUser,
+  useDeleteUser,
+  useSyncUsers,
+  useUpdateUserDisplayName,
+  useUpdateUserRole,
+  useUsers,
+} from "@/hooks/useUsers";
+import { SortConfig, User } from "@/types/user";
+import { createClient } from "@/utils/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { Plus, RefreshCw, UserPlus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export default function UsersPage() {
-  // State declarations
-  const [users, setUsers] = useState<User[]>([]);
-  const [sortedUsers, setSortedUsers] = useState<User[]>([]);
+  const queryClient = useQueryClient();
+  const supabase = createClient();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  // UI State
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isSyncOpen, setIsSyncOpen] = useState(false);
+  const [pendingInvitations, setPendingInvitations] = useState<
+    Array<{ email: string; displayName: string }>
+  >([]);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"user" | "admin">("user");
   const [editingUser, setEditingUser] = useState<{
     id: string;
     display_name: string;
   } | null>(null);
-  const [newUserDisplayName, setNewUserDisplayName] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [profilePictureUser, setProfilePictureUser] = useState<User | null>(
+    null,
+  );
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    sortBy: "created_at", // Default sort field
-    sortOrder: "desc", // Default sort direction
+    sortBy: "created_at",
+    sortOrder: "desc",
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const inviteCounts = users.reduce(
-    (acc, user) => {
-      if (user.invite_status === "en attente") {
-        acc.pending++;
-      } else if (user.invite_status === "approuvé") {
-        acc.approved++;
-      }
-      return acc;
-    },
-    { pending: 0, approved: 0 },
-  );
-  const supabase = createClient();
 
-  const sortUsers = useCallback(
-    (usersToSort: User[]) => {
-      return [...usersToSort].sort((a, b) => {
-        switch (sortConfig.sortBy) {
-          case "invite_status":
-            if (sortConfig.sortOrder === "asc") {
-              return a.invite_status.localeCompare(b.invite_status);
-            }
-            return b.invite_status.localeCompare(a.invite_status);
+  // Form state for adding users
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserRole, setNewUserRole] = useState<"user" | "admin">("user");
+  const [newUserDisplayName, setNewUserDisplayName] = useState("");
 
-          case "email":
-            return sortConfig.sortOrder === "asc"
-              ? a.email.localeCompare(b.email)
-              : b.email.localeCompare(a.email);
+  // Debounced search term for queries
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-          case "display_name": {
-            const displayNameA = a.display_name || "";
-            const displayNameB = b.display_name || "";
-            return sortConfig.sortOrder === "asc"
-              ? displayNameA.localeCompare(displayNameB)
-              : displayNameB.localeCompare(displayNameA);
-          }
-
-          case "created_at": {
-            const dateA = new Date(a.created_at).getTime();
-            const dateB = new Date(b.created_at).getTime();
-            return sortConfig.sortOrder === "asc"
-              ? dateA - dateB
-              : dateB - dateA;
-          }
-
-          default:
-            return 0;
-        }
-      });
-    },
-    [sortConfig],
-  );
   useEffect(() => {
-    setSortedUsers(sortUsers(users));
-  }, [users, sortConfig, sortUsers]);
-
-  const getCurrentUser = useCallback(async () => {
-    const { data } = await supabase.auth.getUser();
-    setCurrentUser(data?.user?.id || null);
-  }, [supabase]);
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const queryParams = new URLSearchParams(
-        searchTerm ? { search: searchTerm } : {},
-      );
-
-      const response = await fetch(`/api/users?${queryParams}`);
-      if (!response.ok) throw new Error("Failed to fetch users");
-
-      const data = await response.json();
-      setUsers(data);
-    } catch (error) {
-      toast.error("Erreur", {
-        description: "Impossible de charger les utilisateurs.",
-      });
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        await Promise.all([fetchUsers(), getCurrentUser()]);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
+  // Fetch data using hooks
+  const {
+    data: users = [],
+    isLoading,
+    error,
+  } = useUsers({
+    search: debouncedSearch,
+  });
+  const { data: currentUserData } = useCurrentUser();
+  const currentUser = currentUserData?.id || null;
+  const { data: syncData } = useSyncUsers();
+
+  // Mark users that are missing in Excel
+  const usersWithSyncStatus = useMemo(() => {
+    if (!syncData) return users;
+    const typedSyncData = syncData as {
+      missingInExcel: Array<{ id: string }>;
     };
+    return users.map((user) => ({
+      ...user,
+      isMissingInExcel: typedSyncData.missingInExcel.some(
+        (m) => m.id === user.id,
+      ),
+    }));
+  }, [users, syncData]);
 
-    fetchData();
+  // Mutations
+  const createUser = useCreateUser();
+  const deleteUser = useDeleteUser();
+  const updateRole = useUpdateUserRole();
+  const updateDisplayName = useUpdateUserDisplayName();
 
+  // Real-time subscription for live updates
+  useEffect(() => {
     const subscription = supabase
       .channel("profiles-changes")
       .on(
@@ -155,7 +126,8 @@ export default function UsersPage() {
           table: "profiles",
         },
         () => {
-          fetchData();
+          // Invalidate queries to trigger refetch
+          queryClient.invalidateQueries({ queryKey: ["users"] });
         },
       )
       .subscribe();
@@ -163,35 +135,67 @@ export default function UsersPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchUsers, getCurrentUser, supabase]);
+  }, [supabase, queryClient]);
 
-  // Search debounce effect
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchUsers();
-    }, 300);
+  // Sorted users - computed from query data
+  const sortedUsers = useMemo(() => {
+    return [...usersWithSyncStatus].sort((a, b) => {
+      switch (sortConfig.sortBy) {
+        case "invite_status":
+          if (sortConfig.sortOrder === "asc") {
+            return a.invite_status.localeCompare(b.invite_status);
+          }
+          return b.invite_status.localeCompare(a.invite_status);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, fetchUsers]);
+        case "email":
+          return sortConfig.sortOrder === "asc"
+            ? a.email.localeCompare(b.email)
+            : b.email.localeCompare(a.email);
+
+        case "display_name": {
+          const displayNameA = a.display_name || "";
+          const displayNameB = b.display_name || "";
+          return sortConfig.sortOrder === "asc"
+            ? displayNameA.localeCompare(displayNameB)
+            : displayNameB.localeCompare(displayNameA);
+        }
+
+        case "created_at": {
+          const dateA = new Date(a.created_at).getTime();
+          const dateB = new Date(b.created_at).getTime();
+          return sortConfig.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+        }
+
+        default:
+          return 0;
+      }
+    });
+  }, [usersWithSyncStatus, sortConfig]);
+
+  // Invite counts - computed from query data
+  const inviteCounts = useMemo(() => {
+    return users.reduce(
+      (acc, user) => {
+        if (user.invite_status === "en attente") {
+          acc.pending++;
+        } else if (user.invite_status === "approuvé") {
+          acc.approved++;
+        }
+        return acc;
+      },
+      { pending: 0, approved: 0 },
+    );
+  }, [users]);
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsProcessing(true);
     try {
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: newUserEmail,
-          password: newUserPassword,
-          role: newUserRole,
-          display_name: newUserDisplayName || newUserEmail.split("@")[0],
-        }),
+      await createUser.mutateAsync({
+        email: newUserEmail,
+        password: newUserPassword,
+        role: newUserRole,
+        display_name: newUserDisplayName || newUserEmail.split("@")[0] || "",
       });
-
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Une erreur est survenue");
 
       toast.success("Succès", {
         description: "L'utilisateur a été créé avec succès",
@@ -203,15 +207,11 @@ export default function UsersPage() {
       setNewUserPassword("");
       setNewUserRole("user");
       setNewUserDisplayName("");
-
-      await fetchUsers();
     } catch (error) {
       toast.error("Erreur", {
         description:
           error instanceof Error ? error.message : "Une erreur est survenue",
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -224,20 +224,11 @@ export default function UsersPage() {
     }
 
     try {
-      const response = await fetch(`/api/users?id=${user.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Une erreur est survenue");
-      }
+      await deleteUser.mutateAsync(user.id);
 
       toast.success("Succès", {
         description: "L'utilisateur a été supprimé avec succès.",
       });
-
-      await fetchUsers();
     } catch (error) {
       toast.error("Erreur", {
         description:
@@ -262,22 +253,11 @@ export default function UsersPage() {
         return;
       }
 
-      const response = await fetch("/api/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, role: newRole }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Une erreur est survenue");
-      }
+      await updateRole.mutateAsync({ userId, role: newRole });
 
       toast.success("Succès", {
         description: "Le rôle a été mis à jour avec succès.",
       });
-
-      await fetchUsers();
     } catch (error) {
       toast.error("Erreur", {
         description:
@@ -291,23 +271,16 @@ export default function UsersPage() {
     newDisplayName: string,
   ) => {
     try {
-      const response = await fetch("/api/users/display-name", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, display_name: newDisplayName }),
+      await updateDisplayName.mutateAsync({
+        userId,
+        display_name: newDisplayName,
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Une erreur est survenue");
-      }
 
       toast.success("Succès", {
         description: "Nom d'affichage mis à jour avec succès.",
       });
 
       setEditingUser(null);
-      await fetchUsers();
     } catch (error) {
       toast.error("Erreur", {
         description:
@@ -317,12 +290,56 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="container px-4 sm:px-6 lg:px-8 py-8">
+    <PageShell
+      fullHeight
+      theme="admin"
+      className="border-destructive lg:px-8m overflow-x-hidden border px-4 py-8 sm:px-6"
+      title="Gestion des utilisateurs"
+      description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
+      headerAction={
+        <div className="flex shrink-0 gap-2">
+          {/* Sync Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-3"
+            onClick={() => setIsSyncOpen(true)}
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span className="hidden md:inline">Synchroniser</span>
+            {syncData &&
+              (syncData.missingInDatabase.length > 0 ||
+                syncData.missingInExcel.length > 0) && (
+                <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs font-medium text-white">
+                  {syncData.missingInDatabase.length +
+                    syncData.missingInExcel.length}
+                </span>
+              )}
+          </Button>
+
+          {/* Invite Users Button */}
+          <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 px-3">
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden md:inline">Inviter</span>
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+
+          {/* Add User Button */}
+          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="h-9 px-3">
+                <Plus className="h-4 w-4" />
+                <span className="hidden md:inline">Nouvel utilisateur</span>
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+        </div>
+      }
+    >
       <UserHeader
-        isAddUserOpen={isAddUserOpen}
-        setIsAddUserOpen={setIsAddUserOpen}
-        isInviteOpen={isInviteOpen}
-        setIsInviteOpen={setIsInviteOpen}
         pendingInvites={inviteCounts.pending}
         approvedInvites={inviteCounts.approved}
       />
@@ -333,35 +350,38 @@ export default function UsersPage() {
         sortConfig={sortConfig}
         setSortConfig={setSortConfig}
       />
-
-      {isLoading ? (
-        <UserLoadingState />
-      ) : error ? (
-        <div className="text-center text-red-500 py-8">
-          <p>{error}</p>
-        </div>
-      ) : users.length === 0 ? (
-        <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
-      ) : (
-        <div className="space-y-4">
-          {sortedUsers.map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              currentUser={currentUser}
-              onEdit={setEditingUser}
-              onDelete={setUserToDelete}
-              onRoleChange={handleRoleChange}
-            />
-          ))}
-        </div>
-      )}
+      <ScrollArea className="flex w-full grow flex-col overflow-x-hidden border border-blue-500 pr-0">
+        {isLoading ? (
+          <UserLoadingState />
+        ) : error ? (
+          <div className="py-8 text-center text-red-500">
+            <p>Erreur lors du chargement des utilisateurs</p>
+            <p className="mt-2 text-sm text-gray-500">{error.message}</p>
+          </div>
+        ) : users.length === 0 ? (
+          <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
+        ) : (
+          <div className="flex w-full flex-col space-y-2 overflow-x-hidden md:space-y-4">
+            {sortedUsers.map((user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                currentUser={currentUser}
+                onEdit={setEditingUser}
+                onDelete={setUserToDelete}
+                onRoleChange={handleRoleChange}
+                onProfilePicture={setProfilePictureUser}
+              />
+            ))}
+          </div>
+        )}
+      </ScrollArea>
 
       <AddUserDialog
         isOpen={isAddUserOpen}
         onOpenChange={setIsAddUserOpen}
         onSubmit={handleAddUser}
-        isProcessing={isProcessing}
+        isProcessing={createUser.isPending}
         newUserEmail={newUserEmail}
         setNewUserEmail={setNewUserEmail}
         newUserPassword={newUserPassword}
@@ -371,15 +391,49 @@ export default function UsersPage() {
         newUserDisplayName={newUserDisplayName}
         setNewUserDisplayName={setNewUserDisplayName}
       />
+      <SyncUsersDialog
+        isOpen={isSyncOpen}
+        onOpenChange={setIsSyncOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          queryClient.invalidateQueries({ queryKey: ["users-sync"] });
+        }}
+        onPrepareInvitations={(invitations) => {
+          setPendingInvitations(invitations);
+          setIsSyncOpen(false);
+          setIsInviteOpen(true);
+        }}
+      />
       <InviteUserDialog
         isOpen={isInviteOpen}
-        onOpenChange={setIsInviteOpen}
-        onSuccess={fetchUsers}
+        onOpenChange={(open) => {
+          setIsInviteOpen(open);
+          if (!open) {
+            // Clear pending invitations when dialog closes
+            setPendingInvitations([]);
+          }
+        }}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          setPendingInvitations([]);
+        }}
+        initialInvitations={pendingInvitations}
       />
       <EditUserDialog
         editingUser={editingUser}
         onClose={() => setEditingUser(null)}
         onSubmit={handleUpdateDisplayName}
+      />
+      <ProfilePictureDialog
+        userId={profilePictureUser?.id || ""}
+        currentAvatar={profilePictureUser?.avatar}
+        displayName={profilePictureUser?.display_name || ""}
+        email={profilePictureUser?.email || ""}
+        isOpen={!!profilePictureUser}
+        onOpenChange={(open) => !open && setProfilePictureUser(null)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        }}
       />
       <AlertDialog
         open={!!userToDelete}
@@ -397,13 +451,13 @@ export default function UsersPage() {
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => userToDelete && handleDeleteUser(userToDelete)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 text-white"
             >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageShell>
   );
 }

@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/membres/*",
         "/api/*",
+        "/download",
         "/copie-de-contact",
         "/copie-de-nous-decouvrir",
         "/videos",
@@ -28,6 +29,10 @@ export default function robots(): MetadataRoute.Robots {
         "/copie-de-nous-decouvrir?lightbox=dataItem-ji4s7kkd7",
         "/copie-de-nous-decouvrir?lightbox=dataItem-ji4s7kkg7",
         "/copie-de-nous-decouvrir?*",
+        "/&",
+        "/auth",
+        "pub-concerts",
+        "_next/*",
       ],
     },
     sitemap: `${WEBSITE_URL}/sitemap.xml`,

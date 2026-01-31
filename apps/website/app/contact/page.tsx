@@ -1,14 +1,13 @@
-import React from "react";
 import Map from "@/components/Maps";
-import { Metadata } from "next";
 import Subscribe from "@/components/newsletter/Subscribe";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Contact - Le Bon Tempérament | Saverne",
   description:
-    "Rejoignez l'équipe de Le Bon Tempérament pour toute question, demande de renseignements ou proposition de collaboration. Faites le premier pas vers une belle aventure musicale ensemble.",
+    "Contactez Le Bon Tempérament à Saverne. Email, téléphone et adresse pour rejoindre l'ensemble, réserver des places ou obtenir des informations sur nos concerts.",
   keywords:
-    "Contact Le Bon Tempérament, email Le Bon Tempérament, téléphone Le Bon Tempérament, adresse Le Bon Tempérament, formulaire de contact musique",
+    "contact Le Bon Tempérament Saverne, adresse ensemble vocal Alsace, email chœur musique classique, téléphone Le Bon Tempérament",
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -30,38 +29,63 @@ export const metadata: Metadata = {
 
 const Contact = () => {
   return (
-    <div className="container mx-auto w-full flex flex-col h-screen">
-      <div className="flex flex-col lg:flex-row justify-between">
-        <div className="py-16">
-          <h1 className="text-title text-primary/50 font-light leading-none">
+    <div className="container mx-auto flex min-h-screen w-full flex-col pb-8">
+      <div className="flex flex-col justify-between lg:flex-row">
+        <div className="px-8 py-4 md:py-8 lg:py-16">
+          <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
             Contact
           </h1>
-          <h2 className="text-title text-[#333] font-bold leading-none">
+          <h2 className="text-title text-foreground leading-none font-bold">
             Informations
           </h2>
-          <hr className="mt-8" />
-          <h3 className="font-bold mt-8">Où nous trouver</h3>
-          <p>
+          <hr className="border-divider mt-8" />
+          <h3 className="text-foreground mt-8 font-bold">Où nous trouver</h3>
+          <p className="text-foreground">
             3 Rue Clemenceau,
             <br />
             67700 SAVERNE, France
           </p>
-          <h3 className="font-bold mt-2">Email</h3>
-          <a href="mailto:lebontemperament@gmail.com">
+          <h3 className="text-foreground mt-2 font-bold">Email</h3>
+          <a
+            href="mailto:lebontemperament@gmail.com"
+            className="text-foreground hover:text-primary"
+          >
             lebontemperament@gmail.com
           </a>
-          <h3 className="font-bold mt-2">Téléphone</h3>
-          <a href="tel:+33952395789">(+33) 09 52 39 57 89</a>
+          <h3 className="text-foreground mt-2 font-bold">Téléphone</h3>
+          <a
+            href="tel:+33952395789"
+            className="text-foreground hover:text-primary"
+          >
+            (+33) 09 52 39 57 89
+          </a>
+          <h3 className="text-foreground mt-8 font-bold">
+            Questions fréquentes
+          </h3>
+          <p className="text-foreground mb-2">
+            Vous avez des questions? Consultez notre{" "}
+            <a href="/faq" className="text-primary font-medium hover:underline">
+              page de questions fréquentes
+            </a>
+            . Vous souhaitez nous rejoindre? Découvrez notre{" "}
+            <a
+              href="/rejoindre"
+              className="text-primary font-medium hover:underline"
+            >
+              page dédiée
+            </a>
+            .
+          </p>
         </div>
 
-        <div className="hidden lg:flex flex-wrap ml-[178px] w-1/2">
+        <div className="ml-[178px] hidden w-1/2 flex-wrap lg:flex">
           <Map />
         </div>
       </div>
 
-      <div className="my-20 shadow-lg rounded-lg bg-[#F2F2F2] flex flex-col p-8 w-full lg:w-1/2">
+      <div className="bg-default-50 my-20 flex w-full flex-col rounded-lg p-8 shadow-lg lg:w-1/2">
         <div className="flex gap-8 py-4 lg:py-12">
-          <div className="w-1/2 scale-125 items-center justify-center hidden lg:flex">
+          <div className="hidden w-1/2 scale-125 items-center justify-center lg:flex">
             <svg
               width="191"
               height="142"
@@ -234,22 +258,55 @@ const Contact = () => {
             </svg>
           </div>
 
-          <div className="w-full lg:w-1/2 flex flex-col">
-            <div className="font-extrabold uppercase text-[18px]">
+          <div className="flex w-full flex-col lg:w-1/2">
+            <div className="text-foreground text-[18px] font-extrabold uppercase">
               Recevez notre
             </div>
-            <div className="font-extrabold uppercase text-[32px] bg-gradient-to-r from-primary to-[#00F1AE] inline-block text-transparent bg-clip-text">
+            <div className="from-primary inline-block bg-gradient-to-r to-[#00F1AE] bg-clip-text text-[32px] font-extrabold text-transparent uppercase">
               Newsletter
             </div>
-            <div className="mt-8">
+            <div className="text-foreground mt-8">
               Les dernières nouvelles du Bon Tempérament dans votre boite
               mail.{" "}
             </div>
-            <div className="font-extrabold text-lg">Abonnez-vous !</div>
+            <div className="text-foreground text-lg font-extrabold">
+              Abonnez-vous !
+            </div>
           </div>
         </div>
         <Subscribe />
       </div>
+      {/* LocalBusiness Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#localbusiness`,
+            name: "Le Bon Tempérament",
+            image:
+              "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+            url: process.env.NEXT_PUBLIC_BASE_URL,
+            telephone: "+33-09-52-39-57-89",
+            email: "lebontemperament@gmail.com",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "3 Rue Clemenceau",
+              addressLocality: "Saverne",
+              addressRegion: "Alsace",
+              postalCode: "67700",
+              addressCountry: "FR",
+            },
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: "48.7417",
+              longitude: "7.3622",
+            },
+            priceRange: "€€",
+          }),
+        }}
+      />
     </div>
   );
 };

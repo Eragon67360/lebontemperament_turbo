@@ -1,17 +1,17 @@
 // app/dashboard/public/page.tsx
+import { PageShell } from "@/components/layouts/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Home, Image, LucideIcon, Phone } from "lucide-react";
 import Link from "next/link";
+
 export default function PublicDashboardPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Site Public</h2>
-        <p className="text-muted-foreground">
-          Gérez le contenu public de votre site web.
-        </p>
-      </div>
-
+    <PageShell
+      theme="public"
+      className="px-4 py-8 sm:px-6 lg:px-8"
+      title="Espace Public"
+      description="Gérez le contenu public de votre site web."
+    >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Quick access cards */}
         <DashboardCard
@@ -39,7 +39,7 @@ export default function PublicDashboardPage() {
           href="/dashboard/public/gallery"
         />
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -64,7 +64,7 @@ const DashboardCard = ({
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </CardContent>
       </Card>
     </Link>

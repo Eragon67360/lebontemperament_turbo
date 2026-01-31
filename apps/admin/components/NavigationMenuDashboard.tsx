@@ -225,23 +225,23 @@ export function NavigationMenuDashboard() {
         className={cn(
           "transition-all duration-300",
           isNavOpen
-            ? "fixed inset-0 bg-black/70 z-40"
-            : "bg-transparent pointer-events-none",
+            ? "fixed inset-0 z-40 bg-black/70"
+            : "pointer-events-none bg-transparent",
         )}
         onClick={() => setIsNavOpen(false)}
       />
 
-      <div className="sticky top-0 lg:top-4 z-50 bg-white lg:bg-transparent border-b lg:border-none pb-2 lg:pb-0 px-4">
+      <div className="sticky top-0 z-50 border-b bg-white px-4 pb-2 lg:top-4 lg:border-none lg:bg-transparent lg:pb-0">
         <div
           className={cn(
-            "flex items-center justify-between p-0 lg:p-2 mx-auto mt-2 lg:mt-0 rounded-full border border-transparent lg:border-border bg-white/95 container",
+            "lg:border-border container mx-auto mt-2 flex items-center justify-between rounded-full border border-transparent bg-white/95 p-0 lg:mt-0 lg:p-2",
             isNavOpen && "bg-background",
           )}
         >
           <div className="flex items-center gap-4">
             <Link
               href={RouteNames.DASHBOARD.ROOT}
-              className="hover:opacity-80 transition-all duration-300 hidden lg:block"
+              className="hidden transition-all duration-300 hover:opacity-80 lg:block"
             >
               <Image
                 src="/picto.svg"
@@ -267,7 +267,7 @@ export function NavigationMenuDashboard() {
                   <div className="mt-4 h-full overflow-y-auto">
                     {navItems.map((section) => (
                       <div key={section.title} className="mb-4">
-                        <h3 className="text-lg font-semibold mb-2">
+                        <h3 className="mb-2 text-lg font-semibold">
                           {section.title}
                         </h3>
                         <div className="space-y-2">
@@ -275,12 +275,12 @@ export function NavigationMenuDashboard() {
                             <Link
                               key={item.title}
                               href={item.url}
-                              className="block py-2 px-3 hover:bg-accent rounded"
+                              className="hover:bg-accent block rounded px-3 py-2"
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               <div className="font-medium">{item.title}</div>
                               {item.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-1">
+                                <p className="text-muted-foreground line-clamp-1 text-sm">
                                   {item.description}
                                 </p>
                               )}
@@ -320,17 +320,17 @@ export function NavigationMenuDashboard() {
                               <Link
                                 href={item.url}
                                 className={cn(
-                                  "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none",
-                                  "transition-colors hover:bg-accent hover:text-accent-foreground",
-                                  "flex justify-between items-center group",
+                                  "block space-y-1 rounded-md p-3 leading-none no-underline outline-none select-none",
+                                  "hover:bg-accent hover:text-accent-foreground transition-colors",
+                                  "group flex items-center justify-between",
                                 )}
                               >
                                 <div>
-                                  <div className="text-sm font-medium leading-none">
+                                  <div className="text-sm leading-none font-medium">
                                     {item.title}
                                   </div>
                                   {item.description && (
-                                    <p className="text-sm leading-snug text-muted-foreground mt-1">
+                                    <p className="text-muted-foreground mt-1 text-sm leading-snug">
                                       {item.description}
                                     </p>
                                   )}
@@ -338,7 +338,7 @@ export function NavigationMenuDashboard() {
                                 {item.items && (
                                   <ChevronRight
                                     className={cn(
-                                      "h-4 w-4 text-muted-foreground",
+                                      "text-muted-foreground h-4 w-4",
                                       "transition-all duration-300 ease-in-out",
                                       "group-hover:translate-x-1 group-hover:opacity-100",
                                       item.items ? "opacity-50" : "opacity-0",
@@ -351,10 +351,10 @@ export function NavigationMenuDashboard() {
                               <HoverCardContent
                                 side="right"
                                 align="start"
-                                className="w-[300px] p-4 ml-4 shadow-xl"
+                                className="ml-4 w-[300px] p-4 shadow-xl"
                               >
                                 <div>
-                                  <h4 className="text-sm font-semibold mb-3">
+                                  <h4 className="mb-3 text-sm font-semibold">
                                     {item.title}
                                   </h4>
                                   <div className="space-y-2">
@@ -362,13 +362,13 @@ export function NavigationMenuDashboard() {
                                       <Link
                                         key={subItem.title}
                                         href={subItem.url}
-                                        className="block p-2 rounded hover:bg-accent"
+                                        className="hover:bg-accent block rounded p-2"
                                       >
                                         <div className="text-sm font-medium">
                                           {subItem.title}
                                         </div>
                                         {subItem.description && (
-                                          <p className="text-xs text-muted-foreground">
+                                          <p className="text-muted-foreground text-xs">
                                             {subItem.description}
                                           </p>
                                         )}
@@ -388,7 +388,7 @@ export function NavigationMenuDashboard() {
             </NavigationMenu>
           </div>
           <div className="flex items-center gap-2 lg:gap-4">
-            <div className="hidden lg:flex items-center space-x-2">
+            <div className="hidden items-center space-x-2 lg:flex">
               <NotificationsPopover />
               <BugReportStatus />
               <BugReportDialog />
@@ -415,7 +415,7 @@ export function NavigationMenuDashboard() {
                       <span className="font-medium">
                         {user.email?.split("@")[0]}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         {user.email}
                       </span>
                     </div>

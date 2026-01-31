@@ -1,11 +1,11 @@
 // app/dashboard/travail/[programId]/page.tsx
-import { createClient } from "@/utils/supabase/server";
 import {
   Card,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
+import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 // import * as Icons from "lucide-react"
 
@@ -38,8 +38,8 @@ export default async function WorkProgramPage({
   }
 
   return (
-    <div className="container mx-auto ">
-      <h1 className="text-2xl font-bold mb-8">{program.name}</h1>
+    <div className="container mx-auto">
+      <h1 className="mb-8 text-2xl font-bold">{program.name}</h1>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {groups.map((group) => {
@@ -50,7 +50,7 @@ export default async function WorkProgramPage({
               key={group.id}
               href={`/dashboard/travail/${programId}/${group.slug}`}
             >
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <Card className="cursor-pointer transition-shadow hover:shadow-lg">
                 <CardHeader>
                   {/* <IconComponent className="w-8 h-8 mb-2 text-primary" /> */}
                   <CardTitle>{group.name}</CardTitle>

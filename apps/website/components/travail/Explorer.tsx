@@ -1,9 +1,10 @@
 "use client";
+import { DriveFile } from "@/utils/types";
+import { Button } from "@heroui/react";
 import { FC, useEffect, useState } from "react";
 import { FaFile, FaFolder, FaMusic, FaRegFilePdf } from "react-icons/fa";
 import { IoArrowBack } from "react-icons/io5";
 import { SiMusescore } from "react-icons/si";
-import { DriveFile } from "@/utils/types";
 import { toast } from "sonner";
 
 interface ExplorerProps {
@@ -62,38 +63,17 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
     }
   };
 
-  const handleFileClick = (file: DriveFile) => {
-    const baseFileUrl = `https://drive.google.com/uc?id=${file.id}`;
-    const audioUrl = `https://drive.google.com/file/d/${file.id}/preview`;
-    const downloadUrl = `${baseFileUrl}&export=download`;
-
-    if (file.mimeType === "application/pdf") {
-      window.open(baseFileUrl, "_blank");
-    } else if (file.mimeType.startsWith("audio/")) {
-      const audioPlayerUrl = `/membres/travail/audioplayer?fileUrl=${encodeURIComponent(
-        audioUrl,
-      )}&fileName=${file.name}`;
-      window.open(audioPlayerUrl, "_blank");
-    } else {
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   const renderFileIcon = (mimeType: string) => {
     switch (mimeType) {
       case "application/pdf":
-        return <FaRegFilePdf className="text-red-500" />;
+        return <FaRegFilePdf className="text-red-500 dark:text-red-400" />;
       case "audio/mpeg":
-        return <FaMusic className="text-blue-500" />;
+      case "audio/wav":
+        return <FaMusic className="text-blue-500 dark:text-blue-400" />;
       case "application/x-musescore":
-        return <SiMusescore className="text-purple-500" />;
+        return <SiMusescore className="text-purple-500 dark:text-purple-400" />;
       default:
-        return <FaFile className="text-gray-500" />;
+        return <FaFile className="text-default-500" />;
     }
   };
 
@@ -103,71 +83,90 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       {folderStack.length > 1 && (
         <button
           onClick={handleBackClick}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          className="text-default-600 hover:text-foreground flex items-center gap-2 px-3 py-2 text-sm transition-colors"
         >
-          <IoArrowBack className="w-4 h-4" />
+          <IoArrowBack className="h-4 w-4" />
           <span>Retour</span>
         </button>
       )}
 
       {/* Folders Section */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-500">Dossiers</h3>
+        <h3 className="text-default-500 text-sm font-medium">Dossiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-lg" />
+              <div key={i} className="bg-default-100 h-12 rounded-lg" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => handleFolderClick(folder.id!)}
-                className="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors text-left w-full"
-              >
-                <FaFolder className="w-5 h-5 text-blue-400" />
-                <span className="text-sm font-medium text-gray-900 truncate">
-                  {folder.name}
-                </span>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {folders
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((folder) => (
+                <button
+                  key={folder.id}
+                  onClick={() => handleFolderClick(folder.id!)}
+                  className="bg-content2 hover:bg-content3 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+                >
+                  <FaFolder className="h-5 w-5 text-blue-400 dark:text-blue-300" />
+                  <span className="text-foreground truncate text-sm font-medium">
+                    {folder.name}
+                  </span>
+                </button>
+              ))}
           </div>
         )}
       </div>
 
       {/* Files Section */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-500">Fichiers</h3>
+        <h3 className="text-default-500 text-sm font-medium">Fichiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-lg" />
+              <div key={i} className="bg-default-100 h-12 rounded-lg" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {individualFiles.map((file) => (
-              <button
-                key={file.id}
-                onClick={() => handleFileClick(file)}
-                className="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors text-left w-full group"
-              >
-                <div className="w-5 h-5">{renderFileIcon(file.mimeType)}</div>
-                <span className="text-sm font-medium text-gray-900 truncate flex-1">
-                  {file.name}
-                </span>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {individualFiles
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((file) => (
+                <div
+                  key={file.id}
+                  className="group bg-content2 hover:bg-content3 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+                >
+                  <div className="h-5 w-5">{renderFileIcon(file.mimeType)}</div>
+                  <span className="text-foreground flex-1 truncate text-sm font-medium">
+                    {file.name}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onPress={() => {
+                      const downloadUrl = `https://drive.google.com/uc?id=${file.id}&export=download`;
+                      const link = document.createElement("a");
+                      link.href = downloadUrl;
+                      link.download = file.name;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    Télécharger
+                  </Button>
+                </div>
+              ))}
           </div>
         )}
       </div>
 
       {/* Empty States */}
       {!loading && folders.length === 0 && individualFiles.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-sm text-gray-500">Ce dossier est vide</p>
+        <div className="py-12 text-center">
+          <p className="text-default-500 text-sm">Ce dossier est vide</p>
         </div>
       )}
     </div>

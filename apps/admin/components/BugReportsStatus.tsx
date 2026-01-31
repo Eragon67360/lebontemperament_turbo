@@ -2,12 +2,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { Bug } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import RouteNames from "@/utils/routes";
 
 export function BugReportStatus() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -67,7 +67,7 @@ export function BugReportStatus() {
       className="hidden xl:block"
     >
       <Button variant="ghost" className="inset-0 w-full justify-start">
-        <Bug className="h-4 w-4 mr-2" />
+        <Bug className="mr-2 h-4 w-4" />
         <span>Bug Reports</span>
         {unreadCount > 0 && (
           <Badge variant="destructive" className="animate-pulse">

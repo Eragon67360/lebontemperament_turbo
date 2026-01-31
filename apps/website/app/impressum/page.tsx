@@ -32,58 +32,62 @@ export default function Impressum() {
       <Head>
         <title>Impressum - Le Bon Temperament</title>
       </Head>
-      <main className="max-w-4xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold mb-12 text-primary/90">Impressum</h1>
+      <main className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <h1 className="text-primary/90 mb-12 text-4xl font-bold">Impressum</h1>
 
         <div className="space-y-8">
-          <section className="border-b border-gray-200 pb-8">
-            <h2 className="text-2xl font-semibold mb-6 text-primary/80">
+          <section className="border-divider border-b pb-8">
+            <h2 className="text-primary/80 mb-6 text-2xl font-semibold">
               Informations légales
             </h2>
             <div className="space-y-4">
               <div>
-                <span className="text-gray-600 font-medium">
+                <span className="text-default-600 font-medium">
                   Propriétaire du site :
                 </span>
-                <span className="ml-2 text-gray-800">Le Bon Tempérament</span>
+                <span className="text-foreground ml-2">Le Bon Tempérament</span>
               </div>
               <div>
-                <span className="text-gray-600 font-medium">Adresse :</span>
-                <span className="ml-2 text-gray-800">
+                <span className="text-default-600 font-medium">Adresse :</span>
+                <span className="text-foreground ml-2">
                   3 Rue Clemenceau, 67700 SAVERNE, France
                 </span>
               </div>
               <div>
-                <span className="text-gray-600 font-medium">Téléphone :</span>
-                <span className="ml-2 text-gray-800">(+33) 09 52 39 57 89</span>
+                <span className="text-default-600 font-medium">
+                  Téléphone :
+                </span>
+                <span className="text-foreground ml-2">
+                  (+33) 09 52 39 57 89
+                </span>
               </div>
               <div>
-                <span className="text-gray-600 font-medium">Email :</span>
-                <span className="ml-2 text-gray-800">
+                <span className="text-default-600 font-medium">Email :</span>
+                <span className="text-foreground ml-2">
                   lebontemperament@gmail.com
                 </span>
               </div>
               <div>
-                <span className="text-gray-600 font-medium">
+                <span className="text-default-600 font-medium">
                   Numéro de SIREN :
                 </span>
-                <span className="ml-2 text-gray-800">49966465400013</span>
+                <span className="text-foreground ml-2">49966465400013</span>
               </div>
             </div>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-6 text-primary/80">
+            <h2 className="text-primary/80 mb-6 text-2xl font-semibold">
               Responsable de la publication
             </h2>
             <div className="space-y-4">
               <div>
-                <span className="text-gray-600 font-medium">Nom :</span>
-                <span className="ml-2 text-gray-800">Sophie Bellard</span>
+                <span className="text-default-600 font-medium">Nom :</span>
+                <span className="text-foreground ml-2">Sophie Bellard</span>
               </div>
               <div>
-                <span className="text-gray-600 font-medium">Contact :</span>
-                <span className="ml-2 text-gray-800">
+                <span className="text-default-600 font-medium">Contact :</span>
+                <span className="text-foreground ml-2">
                   lebontemperament@gmail.com
                 </span>
               </div>

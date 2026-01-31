@@ -11,11 +11,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-export function MobileSidebar({ className }: { className?: string }) {
+export function MobileSidebar({
+  className,
+  setMessagesDialogOpen,
+  setBugReportDialogOpen,
+}: {
+  className?: string;
+  setMessagesDialogOpen?: (open: boolean) => void;
+  setBugReportDialogOpen?: (open: boolean) => void;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -23,21 +31,28 @@ export function MobileSidebar({ className }: { className?: string }) {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className={cn("md:hidden fixed top-4 left-4 z-40", className)}
+          className={cn("fixed top-2 left-2 z-40 md:hidden", className)}
+          size="icon"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Ouvrir le menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 w-72">
+      <SheetContent side="left" className="w-72 border-r border-gray-200 p-0">
         <SheetHeader>
           <VisuallyHidden>
-            <SheetTitle>Nav Content</SheetTitle>
-            <SheetDescription className="flex items-center flex-col justify-between h-[300px]">
-              {/* Descrciption Logic */}
+            <SheetTitle>Menu de navigation</SheetTitle>
+            <SheetDescription>
+              Navigation principale de l'application
             </SheetDescription>
           </VisuallyHidden>
         </SheetHeader>
-        <Sidebar mobile onNavigate={() => setOpen(false)} />
+        <Sidebar
+          mobile
+          onNavigate={() => setOpen(false)}
+          setMessagesDialogOpen={setMessagesDialogOpen}
+          setBugReportDialogOpen={setBugReportDialogOpen}
+        />
       </SheetContent>
     </Sheet>
   );

@@ -1,6 +1,6 @@
 // components/SuccessMessage.tsx
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { VideoCarousel, type Video } from "./VideoCarousel";
 
 interface SuccessMessageProps {
@@ -46,17 +46,17 @@ export const SuccessMessage = ({ onClose }: SuccessMessageProps) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="text-center px-4 md:px-8 max-w-2xl mx-auto"
+          className="mx-auto max-w-2xl px-4 text-center md:px-8"
           onAnimationComplete={() => setTimeout(() => setStage("videos"), 2000)}
         >
           <motion.div
-            className="relative inline-block mb-8"
+            className="relative mb-8 inline-block"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", damping: 12 }}
           >
-            <span className="absolute inset-0 animate-ping bg-gradient-to-r from-[#1a878d] to-purple-600 rounded-full opacity-20"></span>
-            <h2 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-[#1a878d] to-purple-600 text-transparent bg-clip-text p-2">
+            <span className="absolute inset-0 animate-ping rounded-full bg-gradient-to-r from-[#1a878d] to-purple-600 opacity-20"></span>
+            <h2 className="bg-gradient-to-r from-[#1a878d] to-purple-600 bg-clip-text p-2 text-2xl font-bold text-transparent md:text-4xl">
               🎉 Félicitations, initié(e) ! 🎉
             </h2>
           </motion.div>
@@ -65,7 +65,7 @@ export const SuccessMessage = ({ onClose }: SuccessMessageProps) => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-lg md:text-2xl font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 text-transparent bg-clip-text leading-relaxed"
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-lg leading-relaxed font-semibold text-transparent md:text-2xl"
           >
             Préparez-vous à découvrir la vérité sur le BT...
           </motion.p>
@@ -73,7 +73,7 @@ export const SuccessMessage = ({ onClose }: SuccessMessageProps) => {
       )}
 
       {stage === "videos" && (
-        <div className="w-full max-w-4xl mx-auto px-2 md:px-4">
+        <div className="mx-auto w-full max-w-4xl px-2 md:px-4">
           <VideoCarousel videos={videos} onComplete={handleVideoComplete} />
         </div>
       )}
@@ -82,13 +82,13 @@ export const SuccessMessage = ({ onClose }: SuccessMessageProps) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-8 px-4 md:px-8 max-w-2xl mx-auto"
+          className="mx-auto max-w-2xl space-y-8 px-4 text-center md:px-8"
         >
           <motion.h3
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="text-xl md:text-2xl font-bold bg-gradient-to-r from-red-500 to-purple-600 text-transparent bg-clip-text leading-relaxed"
+            className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-xl leading-relaxed font-bold text-transparent md:text-2xl"
           >
             Conclusion : le BT est effectivement une secte. Merci d&apos;avoir
             regardé
@@ -98,17 +98,17 @@ export const SuccessMessage = ({ onClose }: SuccessMessageProps) => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col md:flex-row gap-4 justify-center items-center"
+            className="flex flex-col items-center justify-center gap-4 md:flex-row"
           >
             <button
               onClick={onClose}
-              className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm md:text-base font-medium"
+              className="w-full transform rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-6 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:from-red-600 hover:to-red-700 hover:shadow-xl md:w-auto md:text-base"
             >
               Sortez-moi de là 😱
             </button>
             <button
               onClick={handleRewatch}
-              className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm md:text-base font-medium"
+              className="w-full transform rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl md:w-auto md:text-base"
             >
               Re-visionner 🔄
             </button>

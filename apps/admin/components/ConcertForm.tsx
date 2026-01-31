@@ -1,4 +1,5 @@
 // components/ConcertForm.tsx
+import { FileUpload } from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -16,13 +17,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { FileUpload } from "@/components/FileUpload";
 import { cn } from "@/lib/utils";
 import { Concert } from "@/types/concerts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface ConcertFormProps {
   onSubmit: (
@@ -76,7 +76,7 @@ export function ConcertForm({
           defaultValue={initialData?.place || ""}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label>Date</Label>
           <Popover modal>
@@ -151,6 +151,16 @@ export function ConcertForm({
           onFileClear={() => setSelectedFile(null)}
           value={selectedFile}
           currentImageUrl={initialData?.affiche || null}
+          mode="image"
+        />
+      </div>
+      <div>
+        <Label htmlFor="related_link">Lien connexe (optionnel)</Label>
+        <Input
+          id="related_link"
+          name="related_link"
+          type="text"
+          defaultValue={initialData?.related_link || ""}
         />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>

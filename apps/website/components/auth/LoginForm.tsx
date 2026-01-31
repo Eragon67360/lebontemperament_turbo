@@ -5,7 +5,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { ERROR_MESSAGES } from "@/consts/errorMessages";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Input, addToast } from "@heroui/react";
+import { Button, Checkbox, Input, addToast } from "@heroui/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -29,6 +29,7 @@ export default function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [stayOnPublic, setStayOnPublic] = useState(false);
 
   useEffect(() => {
     const hashParams = window.location.hash;
@@ -129,7 +130,7 @@ export default function LoginForm() {
             color: "success",
           });
 
-          router.push(RouteNames.MEMBRES.ROOT);
+          router.push(stayOnPublic ? RouteNames.ROOT : RouteNames.MEMBRES.ROOT);
         }
       } catch (error) {
         console.error("Login error:", error);
@@ -144,7 +145,7 @@ export default function LoginForm() {
 
   return (
     <div className="w-full px-2">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6 mt-2">
+      <form onSubmit={handleSubmit} className="mt-2 flex flex-col gap-6">
         <div className="grid gap-6">
           <div className="grid gap-4">
             <div className="grid gap-2">
@@ -167,7 +168,7 @@ export default function LoginForm() {
                 <div></div>
                 <Link
                   href={RouteNames.AUTH.RESET_PASSWORD}
-                  className="text-xs text-primary hover:underline"
+                  className="text-primary text-xs hover:underline"
                   tabIndex={isPending ? -1 : 0}
                 >
                   Mot de passe oublié?
@@ -186,6 +187,17 @@ export default function LoginForm() {
                 disabled={isPending}
               />
             </div>
+
+            <Checkbox
+              isSelected={stayOnPublic}
+              onValueChange={setStayOnPublic}
+              size="sm"
+              isDisabled={isPending}
+            >
+              <span className="text-sm">
+                Se connecter mais rester sur la partie publique
+              </span>
+            </Checkbox>
 
             <Button
               variant="solid"
@@ -210,7 +222,7 @@ export default function LoginForm() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-background text-muted-foreground px-2">
                 Ou continuer avec
               </span>
             </div>

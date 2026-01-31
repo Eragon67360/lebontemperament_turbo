@@ -37,43 +37,43 @@ const CDsViewer = () => {
         <div className="flex gap-4">
           <Card className="w-[200px] space-y-5 p-4" radius="lg">
             <Skeleton className="rounded-lg">
-              <div className="h-24 rounded-lg bg-default-300"></div>
+              <div className="bg-default-300 h-24 rounded-lg"></div>
             </Skeleton>
             <div className="space-y-3">
               <Skeleton className="w-3/5 rounded-lg">
-                <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
+                <div className="bg-default-200 h-3 w-3/5 rounded-lg"></div>
               </Skeleton>
               <Skeleton className="w-4/5 rounded-lg">
-                <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
+                <div className="bg-default-200 h-3 w-4/5 rounded-lg"></div>
               </Skeleton>
               <Skeleton className="w-2/5 rounded-lg">
-                <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
+                <div className="bg-default-300 h-3 w-2/5 rounded-lg"></div>
               </Skeleton>
             </div>
           </Card>
           <Card className="w-[200px] space-y-5 p-4" radius="lg">
             <Skeleton className="rounded-lg">
-              <div className="h-24 rounded-lg bg-default-300"></div>
+              <div className="bg-default-300 h-24 rounded-lg"></div>
             </Skeleton>
             <div className="space-y-3">
               <Skeleton className="w-3/5 rounded-lg">
-                <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
+                <div className="bg-default-200 h-3 w-3/5 rounded-lg"></div>
               </Skeleton>
               <Skeleton className="w-4/5 rounded-lg">
-                <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
+                <div className="bg-default-200 h-3 w-4/5 rounded-lg"></div>
               </Skeleton>
               <Skeleton className="w-2/5 rounded-lg">
-                <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
+                <div className="bg-default-300 h-3 w-2/5 rounded-lg"></div>
               </Skeleton>
             </div>
           </Card>
         </div>
       ) : (
-        <div className="gap-2 flex flex-col md:flex-row items-center ">
+        <div className="flex flex-col items-center gap-2 md:flex-row">
           {products.map((item, index) => (
             <Card
               shadow="sm"
-              className="w-fit hover:opacity-90 hover:scale-105 transition-all duration-200"
+              className="w-fit transition-all duration-200 hover:scale-105 hover:opacity-90"
               key={index}
               isPressable
               onPress={() =>
@@ -87,7 +87,7 @@ const CDsViewer = () => {
                   height={270}
                   width={270}
                   alt={item.name}
-                  className="w-full object-contain h-full"
+                  className="h-full w-full object-contain"
                   src={item.image}
                 />
               </CardBody>

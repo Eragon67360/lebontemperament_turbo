@@ -1,8 +1,9 @@
 "use client";
+
+import { Button } from "@heroui/react";
 import React from "react";
 import { toast } from "sonner";
 
-// Define the props type for the component
 interface ButtonWithToastProps {
   message: string;
   description: string;
@@ -20,12 +21,14 @@ const ButtonWithToast: React.FC<ButtonWithToastProps> = ({
   };
 
   return (
-    <button
+    <Button
       onClick={handleClick}
-      className="w-2/5 lg:w-1/5 rounded-r-lg bg-gradient-to-r from-primary to-[#00F1AE] text-white font-bold text-xs md:text-sm lg:text-base"
+      color="primary"
+      radius="sm"
+      className="w-2/5 text-xs font-bold md:text-sm lg:w-1/5 lg:text-base"
     >
       S&apos;abonner
-    </button>
+    </Button>
   );
 };
 

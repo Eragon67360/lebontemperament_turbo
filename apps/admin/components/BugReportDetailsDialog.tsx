@@ -15,23 +15,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/utils/supabase/client";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { useBugMessages, useCreateBugMessage } from "@/hooks/useBugMessages";
+import { useState } from "react";
+import { toast } from "sonner";
 
-type BugMessage = {
-  id: string;
-  bug_report_id: string;
-  sender_id: string;
-  message: string;
-  created_at: string;
-  sender: {
-    email: string;
-    display_name: string | null;
-  };
-};
+// Export BugMessage type for reuse
+export type { BugMessage } from "@/types/bugMessages";
 
 interface BugReportDetailsProps {
   report: {
@@ -42,6 +33,7 @@ interface BugReportDetailsProps {
     created_at: string;
     profiles: {
       email: string;
+      display_name: string | null;
     };
   };
 }
@@ -60,44 +52,14 @@ const getStatusColor = (status: string) => {
 };
 
 export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
-  const [messages, setMessages] = useState<BugMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [open, setOpen] = useState(false);
-  const supabase = createClient();
 
-  const fetchMessages = useCallback(async () => {
-    const { data } = await supabase
-      .from("bug_messages")
-      .select(
-        `
-                *,
-                profiles:sender_id(email)
-            `,
-      )
-      .eq("bug_report_id", report.id)
-      .order("created_at", { ascending: true });
-
-    if (data) {
-      setMessages(data);
-    }
-  }, [report.id, supabase]);
-
-  useEffect(() => {
-    fetchMessages();
-
-    const subscription = supabase
-      .channel("bug_messages_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bug_messages" },
-        fetchMessages,
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [fetchMessages, report.id, supabase]);
+  // Use TanStack Query hooks for data fetching and mutations
+  const { data: messages = [], isLoading } = useBugMessages({
+    bug_report_id: report.id,
+  });
+  const createMessageMutation = useCreateBugMessage();
 
   const sendMessage = async () => {
     if (!newMessage.trim()) {
@@ -106,17 +68,13 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
     }
 
     try {
-      const { error } = await supabase.from("bug_messages").insert({
+      await createMessageMutation.mutateAsync({
         bug_report_id: report.id,
         message: newMessage.trim(),
-        sender_id: (await supabase.auth.getUser()).data.user?.id,
       });
-
-      if (error) throw error;
 
       toast.success("Message envoyé avec succès");
       setNewMessage("");
-      setOpen(false);
     } catch (error) {
       toast.error("Erreur lors de l'envoi du message");
       console.error(error);
@@ -129,7 +87,7 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Bug Report Details</DialogTitle>
+          <DialogTitle>Détails du rapport</DialogTitle>
         </DialogHeader>
         <Card>
           <CardHeader>
@@ -137,7 +95,8 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
               <div>
                 <CardTitle className="text-xl">{report.title}</CardTitle>
                 <CardDescription>
-                  Reported by {report.profiles.email} on{" "}
+                  Signalé par{" "}
+                  {report.profiles.display_name || report.profiles.email} le{" "}
                   {new Date(report.created_at).toLocaleDateString("fr-FR", {
                     year: "numeric",
                     month: "long",
@@ -148,17 +107,21 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
                 </CardDescription>
               </div>
               <Badge className={`${getStatusColor(report.status)} capitalize`}>
-                {report.status.replace("_", " ")}
+                {report.status === "pending"
+                  ? "En attente"
+                  : report.status === "in_progress"
+                    ? "En cours"
+                    : "Résolu"}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="mt-2">
-              <h4 className="text-sm font-medium text-gray-500 mb-2">
+              <h4 className="mb-2 text-sm font-medium text-gray-500">
                 Description
               </h4>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="whitespace-pre-wrap text-sm text-gray-700">
+              <div className="rounded-lg bg-gray-50 p-4">
+                <p className="text-sm whitespace-pre-wrap text-gray-700">
                   {report.description}
                 </p>
               </div>
@@ -166,19 +129,31 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
           </CardContent>
         </Card>
         <div className="mt-6">
-          <h4 className="text-sm font-medium mb-2">Messages</h4>
-          <ScrollArea className="space-y-2 max-h-[200px] overflow-y-auto">
-            {messages.map((message) => (
-              <div key={message.id} className="bg-gray-50 p-3 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium"></span>
-                  <span className="text-xs text-gray-400">
-                    {new Date(message.created_at).toLocaleString()}
-                  </span>
-                </div>
-                <p className="text-sm mt-1">{message.message}</p>
+          <h4 className="mb-2 text-sm font-medium">Messages</h4>
+          <ScrollArea className="max-h-[200px] space-y-2 overflow-y-auto">
+            {isLoading ? (
+              <div className="text-center text-sm text-gray-500">
+                Chargement des messages...
               </div>
-            ))}
+            ) : messages.length === 0 ? (
+              <div className="text-center text-sm text-gray-500">
+                Aucun message pour le moment
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div key={message.id} className="rounded-lg bg-gray-50 p-3">
+                  <div className="flex items-start justify-between">
+                    <span className="text-sm font-medium">
+                      {message.sender.display_name || message.sender.email}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(message.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm">{message.message}</p>
+                </div>
+              ))
+            )}
           </ScrollArea>
 
           <div className="mt-4">
@@ -187,8 +162,16 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Écrivez votre message..."
               className="mb-2"
+              disabled={createMessageMutation.isPending}
             />
-            <Button onClick={sendMessage}>Envoyer le message</Button>
+            <Button
+              onClick={sendMessage}
+              disabled={createMessageMutation.isPending}
+            >
+              {createMessageMutation.isPending
+                ? "Envoi en cours..."
+                : "Envoyer le message"}
+            </Button>
           </div>
         </div>
       </DialogContent>

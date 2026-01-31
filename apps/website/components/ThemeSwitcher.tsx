@@ -1,63 +1,166 @@
 "use client";
 
+import { Button } from "@heroui/react";
 import { useTheme } from "next-themes";
-import {
-  Button,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@heroui/react";
-import { FiSun, FiMoon } from "react-icons/fi";
-import { BiDesktop } from "react-icons/bi";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { FiMonitor, FiMoon, FiSun } from "react-icons/fi";
 
-export const ThemeSwitcher = () => {
-  const { theme, setTheme } = useTheme();
+/**
+ * ThemeSwitcher Component
+ * Implementation according to HeroUI documentation
+ * Reference: https://www.heroui.com/docs/customization/dark-mode
+ *
+ * Features:
+ * - Three theme options: light, dark, system
+ * - Visual indication of current selection
+ * - Smooth transitions
+ * - Accessible keyboard navigation
+ * - Prevents hydration mismatch
+ */
+export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
   const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  // Prevent hydration mismatch - only render after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-0.5 rounded-md bg-transparent p-0.5">
+        {/* Skeleton placeholder */}
+        <div className="bg-default-100 h-7 w-7 animate-pulse rounded-sm" />
+        <div className="bg-default-100 h-7 w-7 animate-pulse rounded-sm" />
+        <div className="bg-default-100 h-7 w-7 animate-pulse rounded-sm" />
+      </div>
+    );
+  }
+
+  // Dynamic classes based on isLight prop
+  const buttonBaseClasses = isLight
+    ? "min-w-7 h-7 w-7 p-0 data-[hover=true]:bg-white/20"
+    : "min-w-7 h-7 w-7 p-0 data-[hover=true]:bg-default-100";
+
+  const iconClasses = isLight ? "text-white" : "";
+
+  return (
+    <div className="flex items-center gap-0.5 rounded-md bg-transparent p-0.5">
+      {/* Light Theme Button */}
+      <Button
+        isIconOnly
+        size="sm"
+        variant={theme === "light" ? "flat" : "light"}
+        color={theme === "light" ? "primary" : "default"}
+        className={buttonBaseClasses}
+        onPress={() => setTheme("light")}
+        aria-label="Passer au thème clair"
+        aria-pressed={theme === "light"}
+        title="Thème clair"
+      >
+        <FiSun className={`h-3.5 w-3.5 ${iconClasses}`} />
+      </Button>
+
+      {/* Dark Theme Button */}
+      <Button
+        isIconOnly
+        size="sm"
+        variant={theme === "dark" ? "flat" : "light"}
+        color={theme === "dark" ? "primary" : "default"}
+        className={buttonBaseClasses}
+        onPress={() => setTheme("dark")}
+        aria-label="Passer au thème sombre"
+        aria-pressed={theme === "dark"}
+        title="Thème sombre"
+      >
+        <FiMoon className={`h-3.5 w-3.5 ${iconClasses}`} />
+      </Button>
+
+      {/* System Theme Button */}
+      <Button
+        isIconOnly
+        size="sm"
+        variant={theme === "system" ? "flat" : "light"}
+        color={theme === "system" ? "primary" : "default"}
+        className={buttonBaseClasses}
+        onPress={() => setTheme("system")}
+        aria-label="Utiliser le thème du système"
+        aria-pressed={theme === "system"}
+        title="Thème système"
+      >
+        <FiMonitor className={`h-3.5 w-3.5 ${iconClasses}`} />
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * ThemeSwitcherCompact Component
+ * Minimal version with single button cycle for space-constrained areas
+ */
+export function ThemeSwitcherCompact() {
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme, systemTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-  if (!mounted) return null;
+
+  if (!mounted) {
+    return (
+      <Button
+        isIconOnly
+        variant="light"
+        className="h-9 w-9"
+        aria-label="Changer de thème"
+      >
+        <div className="bg-default-200 h-5 w-5 animate-pulse rounded-full" />
+      </Button>
+    );
+  }
+
+  // Cycle through themes: light → dark → system
+  const cycleTheme = () => {
+    if (theme === "light") {
+      setTheme("dark");
+    } else if (theme === "dark") {
+      setTheme("system");
+    } else {
+      setTheme("light");
+    }
+  };
+
+  // Get the appropriate icon for current theme
+  const getIcon = () => {
+    if (theme === "system") {
+      return <FiMonitor className="h-5 w-5" />;
+    }
+    // For system theme, show icon based on actual system preference
+    const activeTheme = theme === "system" ? systemTheme : theme;
+    return activeTheme === "dark" ? (
+      <FiMoon className="h-5 w-5" />
+    ) : (
+      <FiSun className="h-5 w-5" />
+    );
+  };
+
+  const getLabel = () => {
+    if (theme === "system") {
+      return `Thème système (${systemTheme === "dark" ? "sombre" : "clair"})`;
+    }
+    return theme === "dark" ? "Thème sombre" : "Thème clair";
+  };
+
   return (
-    <Dropdown>
-      <DropdownTrigger>
-        <Button
-          variant="ghost"
-          className="w-9 h-9 p-0 pointer-events-none opacity-0"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? (
-            <FiMoon className="h-5 w-5" />
-          ) : (
-            <FiSun className="h-5 w-5" />
-          )}
-        </Button>
-      </DropdownTrigger>
-      <DropdownMenu aria-label="Theme selection">
-        <DropdownItem
-          key="light"
-          startContent={<FiSun className="h-4 w-4" />}
-          onPress={() => setTheme("light")}
-        >
-          Clair
-        </DropdownItem>
-        <DropdownItem
-          key="dark"
-          startContent={<FiMoon className="h-4 w-4" />}
-          onPress={() => setTheme("dark")}
-        >
-          Sombre
-        </DropdownItem>
-        <DropdownItem
-          key="system"
-          startContent={<BiDesktop className="h-4 w-4" />}
-          onPress={() => setTheme("system")}
-        >
-          Système
-        </DropdownItem>
-      </DropdownMenu>
-    </Dropdown>
+    <Button
+      isIconOnly
+      variant="light"
+      className="h-9 w-9 transition-transform hover:scale-110"
+      onPress={cycleTheme}
+      aria-label={`Changer de thème. Actuellement: ${getLabel()}`}
+      title={getLabel()}
+    >
+      {getIcon()}
+    </Button>
   );
-};
+}

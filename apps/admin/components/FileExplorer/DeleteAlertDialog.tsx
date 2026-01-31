@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Folder, FileRecord } from "@/types/files";
+import { FileRecord, Folder } from "@/types/files";
 
 interface DeleteAlertDialogProps {
   open: boolean;
@@ -43,7 +43,7 @@ export function DeleteAlertDialog({
                 Cette action supprimera définitivement le dossier &quot;
                 {item.name}&quot; et tout son contenu.
                 <br />
-                <span className="font-medium text-destructive">
+                <span className="text-destructive font-medium">
                   Cette action est irréversible.
                 </span>
               </>
@@ -52,7 +52,7 @@ export function DeleteAlertDialog({
                 Cette action supprimera définitivement le fichier &quot;
                 {item.name}&quot;.
                 <br />
-                <span className="font-medium text-destructive">
+                <span className="text-destructive font-medium">
                   Cette action est irréversible.
                 </span>
               </>
@@ -66,7 +66,7 @@ export function DeleteAlertDialog({
               e.preventDefault();
               onConfirm();
             }}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90 text-white"
           >
             Supprimer
           </AlertDialogAction>

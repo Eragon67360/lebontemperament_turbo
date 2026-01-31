@@ -3,7 +3,15 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  IoCalendarOutline,
+  IoCloudDownloadOutline,
+  IoDocumentTextOutline,
+  IoMusicalNotesOutline,
+  IoPeopleOutline,
+  IoTicketOutline,
+} from "react-icons/io5";
 
 export const MembresLandingPage = () => {
   type GridItem = {
@@ -11,6 +19,7 @@ export const MembresLandingPage = () => {
     description: string;
     href: string;
     target?: "_blank" | "_self";
+    icon: React.ElementType;
   };
   const [user, setUser] = useState<User | null>(null);
   const supabase = createClient();
@@ -27,7 +36,7 @@ export const MembresLandingPage = () => {
   const getFirstName = (fullName: string) => {
     if (!fullName) return "";
 
-    const matches = fullName.match(/^([A-Za-z]+(?:-[A-Za-z]+)*)/);
+    const matches = fullName.match(/^([\p{L}]+(?:-[\p{L}]+)*)/u);
 
     if (matches) {
       return matches[0];
@@ -41,34 +50,54 @@ export const MembresLandingPage = () => {
     user?.user_metadata.display_name || user?.user_metadata.name;
   const firstName = getFirstName(displayName);
 
-  const gridItems: GridItem[] = [
-    {
-      title: "Répétitions",
-      description:
-        "Voir les prochaines répétitions ainsi que le calendrier complet",
-      href: "/membres/calendrier",
-      target: "_self",
-    },
-    {
-      title: "Travail",
-      description:
-        "Accéder aux partitions et autres éléments utiles pour travailler",
-      href: "/membres/travail",
-      target: "_self",
-    },
-    {
-      title: "Concerts et évènements",
-      description: "Consulter les prochains concerts et évènements à venir",
-      href: "/membres/concerts",
-      target: "_self",
-    },
-    {
-      title: "Accès direct au Drive",
-      description: "Ouvrir le Google Drive du Bon Tempérament",
-      href: "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU",
-      target: "_blank",
-    },
-  ];
+  const gridItems: GridItem[] = useMemo(
+    () => [
+      {
+        title: "Partitions",
+        description: "Accéder aux partitions et autres documents de travail",
+        href: "/membres/travail",
+        target: "_self" as const,
+        icon: IoMusicalNotesOutline,
+      },
+      {
+        title: "Calendrier",
+        description:
+          "Consulter les prochaines répétitions et le calendrier complet",
+        href: "/membres/calendrier",
+        target: "_self" as const,
+        icon: IoCalendarOutline,
+      },
+      {
+        title: "Concerts",
+        description: "Voir les prochains concerts et évènements à venir",
+        href: "/membres/concerts",
+        target: "_self" as const,
+        icon: IoTicketOutline,
+      },
+      {
+        title: "Membres",
+        description: "Consulter la liste des membres du Bon Tempérament",
+        href: "/membres/membres",
+        target: "_self" as const,
+        icon: IoPeopleOutline,
+      },
+      {
+        title: "Administration",
+        description: "Archives, règlement intérieur, gazettes et logiciels",
+        href: "/membres/administration",
+        target: "_self" as const,
+        icon: IoDocumentTextOutline,
+      },
+      {
+        title: "Accès direct au Drive",
+        description: "Ouvrir le Google Drive du Bon Tempérament",
+        href: "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU",
+        target: "_blank" as const,
+        icon: IoCloudDownloadOutline,
+      },
+    ],
+    [],
+  );
 
   const itemVariants = {
     hidden: {
@@ -93,17 +122,16 @@ export const MembresLandingPage = () => {
     active: {
       scale: 1.0,
     },
-  };
+  } as const;
 
   return (
-    <div className="container mx-auto w-full flex flex-col justify-center items-center h-full relative">
-      <div className="w-full flex flex-col items-center overflow-hidden">
-        {" "}
+    <div className="relative container mx-auto flex w-full flex-col items-center py-8 md:py-12 lg:py-16">
+      <div className="flex w-full flex-col items-center">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="text-2xl md:text-3xl lg:text-5xl xl:text-7xl transition-[font-size] duration-400 text-center hyphens-auto font-extrabold bg-gradient-to-r from-primary via-foreground/50 to-purple-500 inline-block text-transparent bg-clip-text"
+          className="from-primary via-foreground/50 inline-block bg-gradient-to-r to-purple-500 bg-clip-text text-center text-2xl font-extrabold hyphens-auto text-transparent transition-[font-size] duration-400 md:text-3xl lg:text-5xl xl:text-7xl"
         >
           Bienvenue, <br />
           <motion.span
@@ -118,7 +146,7 @@ export const MembresLandingPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="text-sm md:text-base hyphens-auto text-foreground/50 mt-4 max-w-xl text-center"
+          className="text-foreground/50 mt-4 max-w-xl text-center text-sm hyphens-auto md:text-base"
         >
           Ici, tu peux retrouver tout ce qui est relatif à la vie du{" "}
           <b>Bon Tempérament</b>.<br /> Tu trouveras ci-dessous les liens les
@@ -128,47 +156,69 @@ export const MembresLandingPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 2 }}
-          className="container mx-auto mt-6 md:mt-10 lg:mt-16 w-full"
+          className="container mx-auto mt-6 w-full md:mt-10 lg:mt-16"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-4 w-full max-w-3xl mx-auto">
-            {gridItems.map((item, index) => (
-              <Link href={item.href} key={index} target={item.target}>
-                <motion.div
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  whileHover="hover"
-                  whileTap="active"
-                  className="group relative overflow-hidden rounded-xl h-full"
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+            {gridItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  href={item.href}
+                  key={item.href}
+                  target={item.target}
+                  rel={
+                    item.target === "_blank" ? "noopener noreferrer" : undefined
+                  }
+                  aria-label={item.description}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
-                  <div className="relative z-10 px-3 py-2 md:px-4 md:py-5 lg:px-6 lg:py-8 bg-foreground/5 backdrop-blur-md group-hover:bg-background/10 transition-all h-full">
-                    <motion.p
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: 0.3 + 0.2 * index,
-                      }}
-                      className="font-bold text-primary text-sm md:text-base"
-                    >
-                      {item.title}
-                    </motion.p>
-                    <motion.p
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: 0.4 + 0.2 * index,
-                      }}
-                      className="text-foreground/50 text-xs md:text-sm"
-                    >
-                      {item.description}
-                    </motion.p>
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
+                  <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    whileHover="hover"
+                    whileTap="active"
+                    className="group relative h-full overflow-hidden rounded-xl"
+                  >
+                    <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/90 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"></div>
+                    <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 flex h-full flex-col gap-2 px-4 py-4 backdrop-blur-sm transition-all md:px-5 md:py-6">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 0.2 + 0.1 * index,
+                        }}
+                        className="bg-primary/10 text-primary w-fit rounded-lg p-2 transition-transform group-hover:scale-110"
+                      >
+                        <Icon className="h-6 w-6" />
+                      </motion.div>
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 0.3 + 0.1 * index,
+                        }}
+                        className="text-primary text-sm font-bold md:text-base"
+                      >
+                        {item.title}
+                      </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 0.4 + 0.1 * index,
+                        }}
+                        className="text-foreground/50 text-xs md:text-sm"
+                      >
+                        {item.description}
+                      </motion.p>
+                    </div>
+                  </motion.div>
+                </Link>
+              );
+            })}
           </div>
         </motion.div>
       </div>

@@ -12,12 +12,23 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertCircle } from "lucide-react";
-import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { useState } from "react";
 
-export function BugReportDialog() {
-  const [open, setOpen] = useState(false);
+interface BugReportDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
+}
+
+export function BugReportDialog({
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  trigger,
+}: BugReportDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,12 +62,7 @@ export function BugReportDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start">
-          <AlertCircle className="mr-2 h-4 w-4" />
-          Signaler un problème
-        </Button>
-      </DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>

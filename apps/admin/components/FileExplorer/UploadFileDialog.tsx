@@ -53,7 +53,7 @@ export function UploadFileDialog({
           <DialogTitle>Téléverser un fichier</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6">
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6">
             <input
               type="file"
               ref={fileInputRef}
@@ -69,7 +69,7 @@ export function UploadFileDialog({
               Sélectionner un fichier
             </Button>
             {selectedFile && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {selectedFile.name}
               </p>
             )}
