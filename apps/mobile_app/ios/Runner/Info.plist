@@ -47,6 +47,8 @@
 	<true/>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>Cette application utilise les notifications pour vous informer des nouveaux événements et rappels de répétitions.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Votre position est partagée en temps réel avec les clients lors du suivi de livraison.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

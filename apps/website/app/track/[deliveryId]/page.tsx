@@ -1,46 +1,17 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { AlertCircle, MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
-// Dynamically import Leaflet to avoid SSR issues
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
+// Load map only on client (Leaflet uses window)
+const TrackMapClient = dynamic(
+  () => import("./TrackMapClient").then((mod) => mod.TrackMapClient),
   { ssr: false },
 );
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false },
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false },
-);
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
-  ssr: false,
-});
-
-// Import Leaflet CSS
-import "leaflet/dist/leaflet.css";
-
-// Fix for default marker icons in Next.js
-import L from "leaflet";
-import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
-
-// Set default icon for Leaflet markers (fixes issue with Next.js)
-if (typeof window !== "undefined") {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconUrl: icon.src,
-    iconRetinaUrl: iconRetina.src,
-    shadowUrl: iconShadow.src,
-  });
-}
 
 interface Delivery {
   id: string;
@@ -53,7 +24,7 @@ interface Delivery {
   updated_at: string;
 }
 
-export default function DeliveryTrackingPage() {
+function DeliveryTrackingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const deliveryId = params.deliveryId as string;
@@ -62,8 +33,8 @@ export default function DeliveryTrackingPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
-  const supabase = createClient();
-  const channelRef = useRef<any>(null);
+  const supabase = useMemo(() => createClient(), []);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Validate token and load delivery
   useEffect(() => {
@@ -142,7 +113,9 @@ export default function DeliveryTrackingPage() {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [delivery, supabase]);
+    // Only re-subscribe when delivery id changes, not on every position update
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- delivery?.id is intentional
+  }, [delivery?.id, supabase]);
 
   if (isLoading) {
     return (
@@ -171,6 +144,35 @@ export default function DeliveryTrackingPage() {
 
   if (!delivery) {
     return null;
+  }
+
+  // Tracking stopped: show only a grandiose white card, no map or position
+  if (!delivery.is_tracking_active) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-gray-100 to-gray-200 px-4 py-12">
+        <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl">
+          <div className="px-10 py-14 text-center sm:px-14 sm:py-16">
+            <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-gray-100">
+              <MapPin className="h-12 w-12 text-gray-400" strokeWidth={1.5} />
+            </div>
+            <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase">
+              Suivi de livraison
+            </p>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Suivi en direct indisponible
+            </h1>
+            <p className="mx-auto mt-6 max-w-sm text-base leading-relaxed text-gray-500">
+              Le conducteur a arrêté le partage de sa position. Vous serez
+              informé dès que le suivi en temps réel sera de nouveau actif.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600">
+              <span className="h-2 w-2 rounded-full bg-gray-400" />
+              Suivi arrêté
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const hasPosition = delivery.latitude !== null && delivery.longitude !== null;
@@ -208,38 +210,20 @@ export default function DeliveryTrackingPage() {
         </div>
       </div>
 
-      {/* Map */}
-      <div className="relative flex-1">
-        {mapReady && typeof window !== "undefined" && (
-          <MapContainer
+      {/* Map: explicit height so Leaflet can compute layout */}
+      <div
+        className="relative flex-1"
+        style={{ minHeight: 400, height: "50vh" }}
+      >
+        {mapReady && (
+          <TrackMapClient
             center={center}
-            zoom={hasPosition ? 15 : 10}
-            style={{ height: "100%", width: "100%" }}
-            scrollWheelZoom={true}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {hasPosition && (
-              <Marker position={[delivery.latitude!, delivery.longitude!]}>
-                <Popup>
-                  <div className="text-center">
-                    <MapPin className="mx-auto h-5 w-5 text-blue-500" />
-                    <p className="mt-1 text-sm font-medium">
-                      Position actuelle
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(delivery.updated_at).toLocaleString("fr-FR")}
-                    </p>
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-          </MapContainer>
+            delivery={delivery}
+            hasPosition={hasPosition}
+          />
         )}
 
-        {/* No position overlay */}
+        {/* No position overlay (tracking active but no position yet) */}
         {!hasPosition && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80">
             <div className="rounded-lg border bg-white p-6 text-center shadow-lg">
@@ -248,8 +232,8 @@ export default function DeliveryTrackingPage() {
                 Position non disponible
               </p>
               <p className="mt-2 text-sm text-gray-500">
-                Le conducteur n'a pas encore activé le suivi ou la position n'a
-                pas encore été enregistrée.
+                Le conducteur n&apos;a pas encore activé le suivi ou la position
+                n&apos;a pas encore été enregistrée.
               </p>
             </div>
           </div>
@@ -277,5 +261,24 @@ export default function DeliveryTrackingPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function TrackPageLoadingFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
+        <p className="text-gray-600">Chargement du suivi...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function DeliveryTrackingPage() {
+  return (
+    <Suspense fallback={<TrackPageLoadingFallback />}>
+      <DeliveryTrackingContent />
+    </Suspense>
   );
 }

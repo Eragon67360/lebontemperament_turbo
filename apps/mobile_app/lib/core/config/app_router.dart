@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/data/services/auth_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
+import '../../features/driver_tracking/presentation/screens/driver_tracking_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/notifications/presentation/screens/permission_request_screen.dart';
@@ -28,6 +29,7 @@ class AppRouter {
   static const String signup = '/signup';
   static const String main = '/main';
   static const String eventDetail = '/events/:id';
+  static const String driverTracking = '/driver-tracking';
 
   static GoRouter createRouter() {
     return GoRouter(
@@ -106,6 +108,14 @@ class AppRouter {
               builder: (context, ref, _) => EventDetailScreen(eventId: eventId),
             );
           },
+        ),
+
+        // Driver tracking (superadmin only; screen shows "Non autorisé" if not)
+        GoRoute(
+          path: driverTracking,
+          name: 'driverTracking',
+          builder: (context, state) =>
+              Consumer(builder: (context, ref, _) => const DriverTrackingScreen()),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
 import '../../../notifications/presentation/screens/notification_test_screen.dart';
 import 'about_screen.dart';
@@ -14,6 +15,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final isSuperadminAsync = ref.watch(isSuperadminProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -226,6 +228,39 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
+
+            // Driver tracking (superadmin only)
+            if (isSuperadminAsync.valueOrNull == true) ...[
+              Card(
+                child: ListTile(
+                  leading: Icon(
+                    Icons.local_shipping,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(
+                    'Suivi livraison',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Partager votre position en temps réel avec les clients',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 16,
+                  ),
+                  onTap: () {
+                    context.push('/driver-tracking');
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
 
             // About section
             Card(
