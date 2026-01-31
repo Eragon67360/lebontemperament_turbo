@@ -88,7 +88,7 @@ function DeliveryTrackingContent() {
 
   // Subscribe to realtime updates
   useEffect(() => {
-    if (!delivery) return;
+    if (!delivery || !token) return;
 
     // Subscribe to changes for this specific delivery
     channelRef.current = supabase
@@ -103,6 +103,14 @@ function DeliveryTrackingContent() {
         },
         (payload) => {
           const updatedDelivery = payload.new as Delivery;
+          // If driver reset the token, this link is no longer valid
+          if (updatedDelivery.public_token !== token) {
+            setError(
+              "Veuillez demander au conducteur de vous envoyer un lien valide.",
+            );
+            setDelivery(null);
+            return;
+          }
           setDelivery(updatedDelivery);
         },
       )
@@ -113,9 +121,9 @@ function DeliveryTrackingContent() {
         supabase.removeChannel(channelRef.current);
       }
     };
-    // Only re-subscribe when delivery id changes, not on every position update
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- delivery?.id is intentional
-  }, [delivery?.id, supabase]);
+    // Re-subscribe only when delivery id or token changes, not on every position update
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- delivery?.id and token are intentional
+  }, [delivery?.id, token, supabase]);
 
   if (isLoading) {
     return (
