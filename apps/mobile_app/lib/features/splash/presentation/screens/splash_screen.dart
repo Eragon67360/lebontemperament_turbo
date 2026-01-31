@@ -88,10 +88,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         color: Theme.of(context).colorScheme.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.music_note,
                         size: 60,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -117,7 +117,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     const SizedBox(height: 48),
 
                     // Loading indicator
-                    const CircularProgressIndicator(),
+                    CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ],
                 ),
               ),

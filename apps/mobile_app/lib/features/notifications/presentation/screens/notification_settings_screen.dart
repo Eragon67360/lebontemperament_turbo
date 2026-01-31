@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/notification_settings.dart';
 import '../../../../data/providers/realtime_notifications_provider.dart';
-import '../../../../data/services/notification_service.dart';
 import '../providers/notification_settings_provider.dart';
 
 class NotificationSettingsScreen extends ConsumerWidget {
@@ -308,47 +307,6 @@ class NotificationSettingsScreen extends ConsumerWidget {
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Test notification button
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            final notificationService = NotificationService();
-                            await notificationService.showTestNotification();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                    'Notification de test envoyée !',
-                                  ),
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Erreur: $e'),
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.error,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        icon: const Icon(Icons.notifications_active, size: 16),
-                        label: const Text('Tester les notifications'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
                     ),
                   ],
                 ),

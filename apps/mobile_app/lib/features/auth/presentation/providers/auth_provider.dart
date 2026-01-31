@@ -21,6 +21,29 @@ final currentUserProvider = Provider<User?>((ref) {
   );
 });
 
+/// Profile from database (profiles table). Fetched when user is logged in.
+final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return null;
+  final authService = ref.watch(authServiceProvider);
+  return authService.getUserProfile();
+});
+
+/// Display name: profile.display_name first, then auth userMetadata, then fallback.
+final displayNameProvider = Provider<String>((ref) {
+  final user = ref.watch(currentUserProvider);
+  final profileAsync = ref.watch(userProfileProvider);
+  final fromProfile = profileAsync.valueOrNull?['display_name']?.toString();
+  if (fromProfile != null && fromProfile.trim().isNotEmpty) {
+    return fromProfile.trim();
+  }
+  final fromAuth = user?.userMetadata?['display_name']?.toString();
+  if (fromAuth != null && fromAuth.trim().isNotEmpty) {
+    return fromAuth.trim();
+  }
+  return 'Utilisateur';
+});
+
 final isAuthenticatedProvider = Provider<bool>((ref) {
   final user = ref.watch(currentUserProvider);
   return user != null;

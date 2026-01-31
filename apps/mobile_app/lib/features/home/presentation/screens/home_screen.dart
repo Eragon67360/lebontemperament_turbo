@@ -11,7 +11,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
+    final displayName = ref.watch(displayNameProvider);
     final navigationNotifier = ref.read(mainNavigationProvider.notifier);
 
     return Scaffold(
@@ -46,17 +46,17 @@ class HomeScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Bienvenue',
+                      'Bienvenue, $displayName',
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      user?.userMetadata?['display_name'] ?? 'Utilisateur',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      'Voici un aperçu de votre activité',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),

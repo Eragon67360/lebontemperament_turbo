@@ -83,18 +83,30 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         child: IndexedStack(index: currentIndex, children: screens),
       ),
       bottomNavigationBar: SafeArea(
-        top: false, // Don't add top safe area for bottom navigation
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: currentIndex,
-          onTap: (index) {
-            navigationNotifier.setTab(index);
-          },
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          elevation: 8,
-          items: bottomNavItems,
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            currentIndex: currentIndex,
+            onTap: (index) {
+              navigationNotifier.setTab(index);
+            },
+            selectedItemColor: Theme.of(context).colorScheme.primary,
+            unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            items: bottomNavItems,
+          ),
         ),
       ),
     );

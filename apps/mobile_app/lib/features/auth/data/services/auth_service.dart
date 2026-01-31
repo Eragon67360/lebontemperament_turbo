@@ -1,5 +1,8 @@
+import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
+
+final _authLogger = Logger();
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -35,6 +38,15 @@ class AuthService {
         throw Exception('Connexion échouée');
       }
 
+      // Log backend (Supabase Auth) response for debugging display name
+      final u = response.user!;
+      _authLogger.i(
+        'AuthService signIn response from backend: id=${u.id}, email=${u.email}, '
+        'userMetadata=${u.userMetadata}, '
+        'display_name=${u.userMetadata?['display_name']}, '
+        'full_name=${u.userMetadata?['full_name']}',
+      );
+
       return response;
     } catch (e) {
       throw Exception('Erreur de connexion: ${e.toString()}');
@@ -50,7 +62,7 @@ class AuthService {
     }
   }
 
-  // Get user profile
+  // Get user profile (database profiles table)
   Future<Map<String, dynamic>?> getUserProfile() async {
     if (currentUser == null) return null;
 
@@ -61,9 +73,12 @@ class AuthService {
           .eq('id', currentUser!.id)
           .single();
 
+      _authLogger.i(
+        'AuthService getUserProfile response from database: $response',
+      );
       return response;
     } catch (e) {
-      // Profile might not exist yet, return null
+      _authLogger.w('AuthService getUserProfile failed (profile may not exist): $e');
       return null;
     }
   }

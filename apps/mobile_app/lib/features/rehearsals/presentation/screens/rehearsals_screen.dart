@@ -98,77 +98,117 @@ class RehearsalsScreen extends ConsumerWidget {
           Expanded(
             child: rehearsalsAsync.when(
               data: (rehearsals) {
+                Future<void> onRefresh() async {
+                  ref.invalidate(realtimeRehearsalsProvider);
+                  ref.invalidate(refreshTriggerProvider);
+                }
+
                 if (filteredRehearsals.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  return RefreshIndicator(
+                    onRefresh: onRefresh,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
                       children: [
-                        Icon(
-                          selectedFilter != null
-                              ? Icons.filter_list_off
-                              : Icons.repeat_one,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          selectedFilter != null
-                              ? 'Aucune répétition trouvée'
-                              : 'Aucune répétition',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          selectedFilter != null
-                              ? 'Aucune répétition ne correspond au filtre sélectionné'
-                              : 'Aucune répétition n\'est prévue pour le moment',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                          textAlign: TextAlign.center,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.4,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  selectedFilter != null
+                                      ? Icons.filter_list_off
+                                      : Icons.repeat,
+                                  size: 64,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  selectedFilter != null
+                                      ? 'Aucune répétition trouvée'
+                                      : 'Aucune répétition à venir',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(
+                                        color: Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  selectedFilter != null
+                                      ? 'Aucune répétition ne correspond au filtre sélectionné'
+                                      : 'Les prochaines répétitions apparaîtront ici',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredRehearsals.length,
-                  itemBuilder: (context, index) {
-                    final rehearsal = filteredRehearsals[index];
-                    return _buildRehearsalCard(context, rehearsal);
-                  },
+                return RefreshIndicator(
+                  onRefresh: onRefresh,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredRehearsals.length,
+                    itemBuilder: (context, index) {
+                      final rehearsal = filteredRehearsals[index];
+                      return _buildRehearsalCard(context, rehearsal);
+                    },
+                  ),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              loading: () => Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              error: (error, stack) => RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(realtimeRehearsalsProvider);
+                  ref.invalidate(refreshTriggerProvider);
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
                   children: [
-                    Icon(
-                      Icons.error,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Erreur lors du chargement',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Veuillez réessayer',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Erreur lors du chargement',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tirez pour réessayer',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

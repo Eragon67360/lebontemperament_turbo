@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/date_utils.dart' as app_date_utils;
 import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/data_providers.dart';
 
@@ -26,10 +27,17 @@ final filteredRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
 
   return rehearsalsAsync.when(
     data: (rehearsals) {
+      final upcoming = rehearsals.where((r) {
+        return app_date_utils.isRehearsalUpcoming(
+          date: r.date,
+          startTime: r.startTime,
+          endTime: r.endTime,
+        );
+      }).toList();
       if (selectedFilter == null) {
-        return rehearsals;
+        return upcoming;
       }
-      return rehearsals
+      return upcoming
           .where((rehearsal) => rehearsal.groupType == selectedFilter)
           .toList();
     },
