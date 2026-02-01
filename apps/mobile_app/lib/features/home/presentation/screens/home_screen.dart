@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart'; // Add `google_fonts` to your pubspec.yaml
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
@@ -15,7 +16,6 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -240,52 +240,81 @@ class _NavigationCard extends StatelessWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
+class _InfoCard extends ConsumerWidget {
   const _InfoCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final navigationNotifier = ref.read(mainNavigationProvider.notifier);
+
     return FadeInUp(
       delay: 400,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.info_outline,
-              color: theme.colorScheme.onSecondaryContainer,
-              size: 24,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          navigationNotifier.setTab(4);
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(0.15),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'À propos',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                  Text(
-                    'Le Bon Tempérament - Les infos de votre asso',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSecondaryContainer.withOpacity(
-                        0.8,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                color: theme.colorScheme.onSecondaryContainer,
+                size: 24,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Le Bon Tempérament',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: theme.colorScheme.onSecondaryContainer,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Ensemble vocal et instrumental à Saverne depuis 1987. '
+                      'Chœurs adultes, jeunes et enfants · Orchestre depuis 2023.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: theme.colorScheme.onSecondaryContainer
+                            .withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Voir plus dans Profil → À propos',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: theme.colorScheme.onSecondaryContainer.withOpacity(0.6),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -295,57 +324,123 @@ class _InfoCard extends StatelessWidget {
 class _BetaNoticeCard extends StatelessWidget {
   const _BetaNoticeCard();
 
+  Future<void> _launchEmail(BuildContext context) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: kSupportEmail,
+      query: Uri(queryParameters: {
+        'subject': 'Retour version bêta - Le Bon Tempérament',
+      }).query,
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible d\'ouvrir l\'application email.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _launchWhatsApp(BuildContext context) async {
+    final uri = Uri.parse(
+      'https://wa.me/${kSupportWhatsAppPhone}',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible d\'ouvrir WhatsApp.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final betaBgColor = isDark
-        ? Colors.yellow.shade900.withOpacity(0.3)
-        : Colors.yellow.shade100;
-    final betaTextColor =
-        isDark ? Colors.yellow.shade200 : Colors.yellow.shade900;
 
     return FadeInUp(
       delay: 500,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: betaBgColor,
+          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.primary.withOpacity(0.25),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.bug_report_outlined, color: betaTextColor, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Application en version bêta',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    color: betaTextColor,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.science_outlined,
+                        size: 16,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Bêta',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
-              'Cette application est en cours de développement. Merci de signaler tout bug ou suggestion pour nous aider à l\'améliorer.',
-              textAlign: TextAlign.center,
+              'Application en version bêta',
               style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: betaTextColor.withOpacity(0.8),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 6),
+            Text(
+              'Cette application est en cours de développement. '
+              'Merci de signaler tout bug ou suggestion pour nous aider à l\'améliorer.',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                height: 1.4,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(
                   child: _ContactButton(
                     icon: Icons.email_outlined,
                     label: 'Email',
-                    onTap: () => _launchEmail(),
+                    onTap: () => _launchEmail(context),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -353,7 +448,7 @@ class _BetaNoticeCard extends StatelessWidget {
                   child: _ContactButton(
                     icon: Icons.message_outlined,
                     label: 'WhatsApp',
-                    onTap: () => _launchWhatsApp(),
+                    onTap: () => _launchWhatsApp(context),
                   ),
                 ),
               ],
@@ -362,13 +457,6 @@ class _BetaNoticeCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _launchEmail() async {
-    // ... same as your original implementation
-  }
-  Future<void> _launchWhatsApp() async {
-    // ... same as your original implementation
   }
 }
 
@@ -385,25 +473,22 @@ class _ContactButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final buttonColor = isDark
-        ? Colors.yellow.shade800.withOpacity(0.5)
-        : Colors.yellow.shade200;
-    final buttonTextColor =
-        isDark ? Colors.yellow.shade200 : Colors.yellow.shade900;
-
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 16),
+    return FilledButton.tonalIcon(
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      icon: Icon(icon, size: 18),
       label: Text(label),
-      style: ElevatedButton.styleFrom(
-        foregroundColor: buttonTextColor,
-        backgroundColor: buttonColor,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        textStyle: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

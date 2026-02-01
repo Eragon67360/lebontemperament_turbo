@@ -29,7 +29,7 @@
 -keep class * implements androidx.sqlite.db.SupportSQLiteDatabase { *; }
 
 # Keep all model classes
--keep class com.example.mobile_app.** { *; }
+-keep class com.lebontemperament.app.** { *; }
 -keep class **.models.** { *; }
 -keep class **.data.models.** { *; }
 

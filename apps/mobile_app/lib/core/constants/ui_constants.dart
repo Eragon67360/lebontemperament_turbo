@@ -16,3 +16,12 @@ const double kExtraScrollPadding = 20.0;
 // to ensure its content is not hidden by the floating navigation bar.
 const double kFloatingNavBarBottomPadding =
     kNavBarHeight + kNavBarBottomMargin + kExtraScrollPadding; // Result: 110.0
+
+// --- External URLs and contact (replace with real values) ---
+const String kPrivacyPolicyUrl =
+    'https://www.lebontemperament.com/politique-de-confidentialite';
+
+const String kSupportEmail = 'contactlebontemperament@gmail.com';
+
+/// WhatsApp number with country code, no + or spaces (e.g. 33123456789).
+const String kSupportWhatsAppPhone = '33647849308';

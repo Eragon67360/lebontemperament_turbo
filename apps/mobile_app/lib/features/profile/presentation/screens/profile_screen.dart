@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
-import 'package:mobile_app/data/models/rehearsal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -13,43 +11,35 @@ import '../../../notifications/presentation/screens/notification_settings_screen
 import 'about_screen.dart';
 import 'theme_settings_screen.dart';
 
-// --- NEW PROVIDER ---
-// This provider will store the user's primary group preference.
-// In a real app, this would be saved to SharedPreferences or a database.
-final userGroupPreferenceProvider = StateProvider<GroupType?>((ref) => null);
-
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
-
-  // --- NEW METHOD ---
-  // Shows a modal for the user to select their primary group.
-  void _showGroupSelectionModal(BuildContext context, WidgetRef ref) {
-    final currentGroup = ref.read(userGroupPreferenceProvider);
-
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => _GroupSelectionModal(
-        currentGroup: currentGroup,
-        onSelect: (group) {
-          ref.read(userGroupPreferenceProvider.notifier).state = group;
-          Navigator.of(ctx).pop();
-        },
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isSuperadminAsync = ref.watch(isSuperadminProvider);
-    final preferredGroup = ref.watch(userGroupPreferenceProvider);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: CustomScrollView(
         slivers: [
           // --- Dynamic Profile Header ---
-          _ProfileAppBar(onLogout: () async {/* ... same as before ... */}),
+          _ProfileAppBar(
+            onLogout: () async {
+              try {
+                await ref.read(authControllerProvider.notifier).signOut();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Erreur lors de la déconnexion: ${e.toString()}'),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
 
           // --- Content Sections ---
           SliverToBoxAdapter(
@@ -60,31 +50,12 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   const SizedBox(height: 20),
 
-                  // --- 1. NEW "Preferences" Section ---
+                  // --- 1. Général ---
                   const FadeInUp(
-                      delay: 100, child: _SectionTitle(title: 'Préférences')),
+                      delay: 100, child: _SectionTitle(title: 'Général')),
                   const SizedBox(height: 12),
                   FadeInUp(
-                    delay: 200,
-                    child: _SettingsGroup(
-                      children: [
-                        _SettingsTile(
-                          icon: Icons.group_outlined,
-                          title: 'Mon Groupe Principal',
-                          subtitle: preferredGroup?.toString() ?? 'Non défini',
-                          onTap: () => _showGroupSelectionModal(context, ref),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // --- 2. Settings Sections ---
-                  const SizedBox(height: 32),
-                  const FadeInUp(
-                      delay: 300, child: _SectionTitle(title: 'Général')),
-                  const SizedBox(height: 12),
-                  FadeInUp(
-                    delay: 400,
+                    delay: 150,
                     child: _SettingsGroup(
                       children: [
                         _SettingsTile(
@@ -104,10 +75,10 @@ class ProfileScreen extends ConsumerWidget {
 
                   const SizedBox(height: 32),
                   const FadeInUp(
-                      delay: 500, child: _SectionTitle(title: 'Application')),
+                      delay: 200, child: _SectionTitle(title: 'Application')),
                   const SizedBox(height: 12),
                   FadeInUp(
-                    delay: 600,
+                    delay: 300,
                     child: _SettingsGroup(
                       children: [
                         _SettingsTile(
@@ -116,8 +87,7 @@ class ProfileScreen extends ConsumerWidget {
                           subtitle: 'Apparence de l\'application',
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  const ThemeSettingsScreen(),
+                              builder: (_) => const ThemeSettingsScreen(),
                             ),
                           ),
                         ),
@@ -138,13 +108,13 @@ class ProfileScreen extends ConsumerWidget {
                   // --- 3. Superadmin Section (Conditional) ---
                   if (isSuperadminAsync.valueOrNull == true) ...[/* ... */],
 
-                  // --- 4. NEW "Support" Section ---
+                  // --- 3. Support ---
                   const SizedBox(height: 32),
                   const FadeInUp(
-                      delay: 700, child: _SectionTitle(title: 'Support')),
+                      delay: 400, child: _SectionTitle(title: 'Support')),
                   const SizedBox(height: 12),
                   FadeInUp(
-                    delay: 800,
+                    delay: 500,
                     child: _SettingsGroup(
                       children: [
                         _SettingsTile(
@@ -153,7 +123,8 @@ class ProfileScreen extends ConsumerWidget {
                           subtitle: 'Contacter le support',
                           onTap: () async {
                             final Uri emailUri = Uri(
-                                scheme: 'mailto', path: 'support@example.com');
+                                scheme: 'mailto',
+                                path: 'contactlebontemperament@gmail.com');
                             if (await canLaunchUrl(emailUri)) {
                               await launchUrl(emailUri);
                             }
@@ -163,22 +134,32 @@ class ProfileScreen extends ConsumerWidget {
                           icon: Icons.shield_outlined,
                           title: 'Politique de confidentialité',
                           subtitle: 'Consulter nos engagements',
-                          onTap: () {
-                            /* TODO: Navigate to privacy policy URL */
+                          onTap: () async {
+                            final uri = Uri.parse(kPrivacyPolicyUrl);
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri,
+                                  mode: LaunchMode.externalApplication);
+                            } else if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('Impossible d\'ouvrir la page.')),
+                              );
+                            }
                           },
                         ),
                       ],
                     ),
                   ),
 
-                  // --- 5. Danger Zone Section ---
+                  // --- 4. Danger Zone ---
                   const SizedBox(height: 32),
                   const FadeInUp(
-                      delay: 900,
+                      delay: 600,
                       child: _SectionTitle(title: 'Zone de Danger')),
                   const SizedBox(height: 12),
                   FadeInUp(
-                    delay: 1000,
+                    delay: 700,
                     child: _SettingsGroup(
                       children: [
                         _SettingsTile(
@@ -187,15 +168,13 @@ class ProfileScreen extends ConsumerWidget {
                           subtitle: 'Action irréversible',
                           iconColor: Colors.red,
                           titleColor: Colors.red,
-                          onTap: () {
-                            /* TODO: Show delete account confirmation */
-                          },
+                          onTap: () => _showDeleteAccountConfirmation(context),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: kFloatingNavBarBottomPadding),
+                  const SizedBox(height: kFloatingNavBarBottomPadding + 60),
                 ],
               ),
             ),
@@ -206,64 +185,47 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-// MARK: - UI Components
+const String _kSupportEmail = 'contactlebontemperament@gmail.com';
 
-// --- All widgets from the previous version remain here ---
-// (_ProfileAppBar, _ProfileHeader, _SectionTitle, _SettingsGroup, _SettingsTile, FadeInUp)
-
-// --- NEW WIDGET: Group Selection Modal ---
-class _GroupSelectionModal extends StatelessWidget {
-  final GroupType? currentGroup;
-  final ValueChanged<GroupType?> onSelect;
-
-  const _GroupSelectionModal({this.currentGroup, required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // Add "None" option to the list of groups
-    final allOptions = [null, ...GroupType.values];
-
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Sélectionner votre groupe',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Using a flexible ListView to handle many options
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              children: allOptions.map((group) {
-                final title = group?.toString() ?? 'Aucun';
-                return RadioListTile<GroupType?>(
-                  title: Text(title, style: GoogleFonts.poppins()),
-                  value: group,
-                  groupValue: currentGroup,
-                  onChanged: (value) => onSelect(value),
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: theme.colorScheme.primary,
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
+Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
+  final contactSupport = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Supprimer le compte'),
+      content: const Text(
+        'Pour supprimer définitivement votre compte, contactez-nous par email. '
+        'Cette action est irréversible.',
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Contacter le support'),
+        ),
+      ],
+    ),
+  );
+  if (contactSupport == true && context.mounted) {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: _kSupportEmail,
+      query:
+          _encodeQueryParameters(subject: 'Demande de suppression de compte'),
     );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 }
 
-// --- All existing widgets from your file are below ---
+String? _encodeQueryParameters({required String subject}) {
+  return Uri(queryParameters: {'subject': subject}).query;
+}
+
+// MARK: - UI Components
 
 class _ProfileAppBar extends ConsumerWidget {
   final VoidCallback onLogout;

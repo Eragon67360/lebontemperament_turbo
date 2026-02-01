@@ -48,10 +48,12 @@ class AboutScreen extends ConsumerWidget {
                   delay: 100,
                   child: _AboutHeader(packageInfo: packageInfo),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
+                const FadeInUp(delay: 150, child: _AssociationSection()),
+                const SizedBox(height: 28),
                 FadeInUp(
                   delay: 200,
-                  child: _InfoCard(packageInfo: packageInfo),
+                  child: _AppInfoCard(packageInfo: packageInfo),
                 ),
                 const SizedBox(height: 32),
                 const FadeInUp(delay: 300, child: _Footer()),
@@ -116,12 +118,21 @@ class _AboutHeader extends StatelessWidget {
             color: theme.colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
+        Text(
+          'Ensemble vocal et instrumental à Saverne depuis 1987',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
         Text(
           'Version ${packageInfo.version} (build ${packageInfo.buildNumber})',
           style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 14,
+            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
           ),
         ),
       ],
@@ -129,43 +140,139 @@ class _AboutHeader extends StatelessWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  final PackageInfo packageInfo;
-  const _InfoCard({required this.packageInfo});
+class _AssociationSection extends StatelessWidget {
+  const _AssociationSection();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
-        ),
-        child: Column(
-          children: [
-            _InfoTile(
-              icon: Icons.business_outlined,
-              label: 'Propriétaire',
-              value: 'Le Bon Tempérament',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Notre association',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.primary,
             ),
-            const Divider(height: 1, indent: 16, endIndent: 16),
-            _InfoTile(
-              icon: Icons.person_outline_rounded,
-              label: 'Développeur',
-              value: 'Thomas Moser',
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outline.withOpacity(0.2),
+              ),
             ),
-            const Divider(height: 1, indent: 16, endIndent: 16),
-            _InfoTile(
-              icon: Icons.shield_outlined,
-              label: 'Package',
-              value: packageInfo.packageName,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'L\'association Le Bon Tempérament est un ensemble vocal et '
+                  'instrumental dirigé par Simone Duclos depuis sa création en '
+                  '1987. Basé à Saverne, en Alsace, notre ensemble se distingue '
+                  'par le mélange des générations, la diversité des parcours des '
+                  'chanteurs et des instrumentistes, et l\'esprit de convivialité '
+                  'qui l\'anime.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Nous partageons la passion pour la musique classique, '
+                  'l\'opéra baroque et les œuvres chorales. Notre répertoire '
+                  'couvre une large période, de la Renaissance à nos jours, '
+                  'avec des œuvres sacrées et profanes ainsi que des pièces '
+                  'populaires et folkloriques.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'L\'association accorde une place toute particulière aux '
+                  'familles : chœurs d\'adultes, de jeunes et d\'enfants. '
+                  'Depuis 2023, un orchestre symphonique dirigé par Charlotte '
+                  'Lienhard se produit seul ou avec la chorale lors des concerts '
+                  'de l\'année.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppInfoCard extends StatelessWidget {
+  final PackageInfo packageInfo;
+  const _AppInfoCard({required this.packageInfo});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cette application',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outline.withOpacity(0.2),
+              ),
+            ),
+            child: Column(
+              children: [
+                _InfoTile(
+                  icon: Icons.business_outlined,
+                  label: 'Propriétaire',
+                  value: 'Le Bon Tempérament',
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                _InfoTile(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Développeur',
+                  value: 'Thomas Moser',
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                _InfoTile(
+                  icon: Icons.shield_outlined,
+                  label: 'Package',
+                  value: packageInfo.packageName,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
