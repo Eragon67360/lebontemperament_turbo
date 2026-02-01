@@ -200,9 +200,10 @@ function TrackByTokenContent() {
   }
 
   const hasPosition = delivery.latitude !== null && delivery.longitude !== null;
+  // MapLibre/GeoJSON expect [longitude, latitude]
   const center: [number, number] = hasPosition
-    ? [delivery.latitude!, delivery.longitude!]
-    : [48.7426, 7.3622];
+    ? [delivery.longitude!, delivery.latitude!]
+    : [7.3622, 48.7426]; // Alsace, France [lng, lat]
 
   if (viewMode === "recipient" && recipient) {
     const isDelivered = !!recipient.delivered_at;

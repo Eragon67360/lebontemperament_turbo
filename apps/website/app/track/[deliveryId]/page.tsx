@@ -146,9 +146,14 @@ function DeliveryTrackingContent() {
   }
 
   const hasPosition = delivery.latitude !== null && delivery.longitude !== null;
+  // MapLibre/GeoJSON expect [longitude, latitude]
   const center: [number, number] = hasPosition
-    ? [delivery.latitude!, delivery.longitude!]
-    : [48.7426, 7.3622];
+    ? [delivery.longitude!, delivery.latitude!]
+    : [7.3622, 48.7426]; // Alsace, France [lng, lat]
+  console.log("[TrackMap] center", {
+    longitude: center[0],
+    latitude: center[1],
+  });
 
   return (
     <div className="relative z-0 h-full min-h-dvh w-full bg-gray-200 dark:bg-gray-800">

@@ -97,7 +97,7 @@ export const DeveloperFootprint = () => {
             <ModalContent className="border-primary/20 border-2 p-0">
               {() => (
                 <motion.div
-                  className="flex h-[500px] flex-col"
+                  className="flex h-125 flex-col"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
@@ -132,7 +132,7 @@ export const DeveloperFootprint = () => {
                             >
                               🐈
                             </motion.div>
-                            <h2 className="from-primary mt-4 bg-gradient-to-r to-blue-500 bg-clip-text text-2xl font-bold text-transparent">
+                            <h2 className="from-primary mt-4 bg-linear-to-r to-blue-500 bg-clip-text text-2xl font-bold text-transparent">
                               You found the secret!
                             </h2>
                             <p className="text-foreground/70 mt-2">
