@@ -1,6 +1,11 @@
 # Android APK build and GitHub Release (turborepo: mobile app lives in apps/mobile_app)
 # - Push to dev / development / release/*: bump build number, build APK, create draft release
 # - Push to main: bump app version (patch) + build number, build APK, create full release
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL, SUPABASE_ANON_KEY
+#   SITE_URL_DEV (e.g. https://dev.lebontemperament.com) — used for dev/development/release/*
+#   SITE_URL_PROD (e.g. https://www.lebontemperament.com) — used for main
 
 name: Android Build and Release
 
@@ -52,6 +57,19 @@ jobs:
           git add apps/mobile_app/pubspec.yaml
           git diff --staged --quiet || git commit -m "chore(mobile): bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
           git push || true
+
+      - name: Provide .env for build
+        working-directory: apps/mobile_app
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SITE_URL: ${{ secrets.SITE_URL_DEV }}
+        run: |
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          echo "" >> .env
+          echo "# Public website URL (for driver tracking share link)" >> .env
+          echo "SITE_URL=$SITE_URL" >> .env
 
       - name: Install dependencies
         working-directory: apps/mobile_app
@@ -109,6 +127,19 @@ jobs:
           git add apps/mobile_app/pubspec.yaml
           git diff --staged --quiet || git commit -m "chore(mobile): release ${{ steps.bump.outputs.version_name }} [skip ci]"
           git push || true
+
+      - name: Provide .env for build
+        working-directory: apps/mobile_app
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SITE_URL: ${{ secrets.SITE_URL_PROD }}
+        run: |
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          echo "" >> .env
+          echo "# Public website URL (for driver tracking share link)" >> .env
+          echo "SITE_URL=$SITE_URL" >> .env
 
       - name: Install dependencies
         working-directory: apps/mobile_app
