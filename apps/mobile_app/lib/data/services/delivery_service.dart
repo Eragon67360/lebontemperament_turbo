@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/delivery.dart';
+import '../models/delivery_recipient.dart';
 import '../../core/config/supabase_config.dart';
 import '../../features/auth/data/services/auth_service.dart';
 
@@ -126,6 +127,147 @@ class DeliveryService {
       return Delivery.fromJson(response);
     } catch (e) {
       _logger.e('DeliveryService: resetToken failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Updates scheduled delivery time.
+  Future<Delivery?> updateScheduledAt(String deliveryId, DateTime? scheduledAt) async {
+    try {
+      final response = await _client
+          .from('deliveries')
+          .update({
+            'scheduled_at': scheduledAt?.toIso8601String(),
+          })
+          .eq('id', deliveryId)
+          .select()
+          .single();
+      _logger.i('DeliveryService: updateScheduledAt $deliveryId');
+      return Delivery.fromJson(response);
+    } catch (e) {
+      _logger.e('DeliveryService: updateScheduledAt failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Sets delay flag and optional delay minutes.
+  Future<Delivery?> setDelay(
+    String deliveryId, {
+    required bool isDelayed,
+    int? delayMinutes,
+  }) async {
+    try {
+      final response = await _client
+          .from('deliveries')
+          .update({
+            'is_delayed': isDelayed,
+            'delay_minutes': delayMinutes,
+          })
+          .eq('id', deliveryId)
+          .select()
+          .single();
+      _logger.i('DeliveryService: setDelay $deliveryId');
+      return Delivery.fromJson(response);
+    } catch (e) {
+      _logger.e('DeliveryService: setDelay failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Sets or clears problem message (e.g. "Bouchons", "Accident").
+  Future<Delivery?> setProblemMessage(String deliveryId, String? message) async {
+    try {
+      final response = await _client
+          .from('deliveries')
+          .update({'problem_message': message})
+          .eq('id', deliveryId)
+          .select()
+          .single();
+      _logger.i('DeliveryService: setProblemMessage $deliveryId');
+      return Delivery.fromJson(response);
+    } catch (e) {
+      _logger.e('DeliveryService: setProblemMessage failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Fetches recipients for a delivery, ordered by sort_order then scheduled_at.
+  Future<List<DeliveryRecipient>> getRecipients(String deliveryId) async {
+    try {
+      final response = await _client
+          .from('delivery_recipients')
+          .select()
+          .eq('delivery_id', deliveryId)
+          .order('sort_order')
+          .order('scheduled_at');
+      final list = response as List<dynamic>? ?? [];
+      return list.map((e) => DeliveryRecipient.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      _logger.e('DeliveryService: getRecipients failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Adds a recipient.
+  Future<DeliveryRecipient> addRecipient(
+    String deliveryId, {
+    required String label,
+    required DateTime scheduledAt,
+    int sortOrder = 0,
+  }) async {
+    try {
+      final response = await _client
+          .from('delivery_recipients')
+          .insert({
+            'delivery_id': deliveryId,
+            'label': label,
+            'scheduled_at': scheduledAt.toIso8601String(),
+            'sort_order': sortOrder,
+          })
+          .select()
+          .single();
+      _logger.i('DeliveryService: addRecipient $deliveryId');
+      return DeliveryRecipient.fromJson(response);
+    } catch (e) {
+      _logger.e('DeliveryService: addRecipient failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Updates a recipient.
+  Future<DeliveryRecipient> updateRecipient(
+    String recipientId, {
+    String? label,
+    DateTime? scheduledAt,
+    int? sortOrder,
+  }) async {
+    try {
+      final Map<String, dynamic> updates = {};
+      if (label != null) updates['label'] = label;
+      if (scheduledAt != null) updates['scheduled_at'] = scheduledAt.toIso8601String();
+      if (sortOrder != null) updates['sort_order'] = sortOrder;
+      if (updates.isEmpty) throw ArgumentError('At least one field must be updated');
+      final response = await _client
+          .from('delivery_recipients')
+          .update(updates)
+          .eq('id', recipientId)
+          .select()
+          .single();
+      _logger.i('DeliveryService: updateRecipient $recipientId');
+      return DeliveryRecipient.fromJson(response);
+    } catch (e) {
+      _logger.e('DeliveryService: updateRecipient failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Deletes a recipient.
+  Future<void> deleteRecipient(String recipientId) async {
+    try {
+      await _client.from('delivery_recipients').delete().eq('id', recipientId);
+      _logger.i('DeliveryService: deleteRecipient $recipientId');
+    } catch (e) {
+      _logger.e('DeliveryService: deleteRecipient failed', error: e);
       rethrow;
     }
   }

@@ -3,7 +3,7 @@
 import L from "leaflet";
 import { MapPin } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
@@ -52,6 +52,27 @@ function MapSizeFix() {
   return null;
 }
 
+/** Syncs map view to center/zoom when they change (e.g. realtime position updates). MapContainer only uses center as initial value. */
+function MapCenterSync({
+  center,
+  zoom,
+}: {
+  center: [number, number];
+  zoom: number;
+}) {
+  const map = useMap();
+  const isFirst = useRef(true);
+  const [lat, lng] = center;
+  useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false;
+      return;
+    }
+    map.flyTo(center, zoom, { duration: 0.5 });
+  }, [map, center, lat, lng, zoom]);
+  return null;
+}
+
 export function TrackMapClient({
   center,
   delivery,
@@ -63,7 +84,10 @@ export function TrackMapClient({
   const attribution = isDark ? CARTODB_ATTRIBUTION : OSM_ATTRIBUTION;
 
   return (
-    <div className="h-full min-h-[400px] w-full" style={{ minHeight: 400 }}>
+    <div
+      className="relative isolate -z-40 h-full min-h-[400px] w-full"
+      style={{ minHeight: 400 }}
+    >
       <MapContainer
         center={center}
         zoom={hasPosition ? 15 : 10}
@@ -71,6 +95,7 @@ export function TrackMapClient({
         scrollWheelZoom={true}
       >
         <MapSizeFix />
+        <MapCenterSync center={center} zoom={hasPosition ? 15 : 10} />
         <TileLayer attribution={attribution} url={tileUrl} />
         {hasPosition &&
           delivery.latitude != null &&

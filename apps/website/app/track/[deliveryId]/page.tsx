@@ -1,18 +1,14 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import type { RealtimeChannel } from "@supabase/supabase-js";
-import { AlertCircle, MapPin } from "lucide-react";
+import clsx from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, AlertTriangle, ShipWheel, Users } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
-// Load map only on client (Leaflet uses window)
-const TrackMapClient = dynamic(
-  () => import("./TrackMapClient").then((mod) => mod.TrackMapClient),
-  { ssr: false },
-);
-
+// --- Data Interfaces ---
 interface Delivery {
   id: string;
   driver_id: string;
@@ -22,131 +18,334 @@ interface Delivery {
   is_tracking_active: boolean;
   expires_at: string;
   updated_at: string;
+  scheduled_at: string | null;
+  is_delayed: boolean;
+  delay_minutes: number | null;
+  problem_message: string | null;
 }
 
+interface DeliveryRecipient {
+  id: string;
+  delivery_id: string;
+  label: string;
+  scheduled_at: string;
+  sort_order: number;
+}
+
+// --- Dynamic Map Import & Helpers ---
+const TrackMapClient = dynamic(
+  () => import("./TrackMapClient").then((mod) => mod.TrackMapClient),
+  { ssr: false },
+);
+
+function calculateETA(
+  iso: string | null,
+  delayMinutes: number | null,
+): Date | null {
+  if (!iso) return null;
+  const scheduledDate = new Date(iso);
+  if (delayMinutes && delayMinutes > 0) {
+    scheduledDate.setMinutes(scheduledDate.getMinutes() + delayMinutes);
+  }
+  return scheduledDate;
+}
+
+function formatTime(date: Date | null): string {
+  if (!date) return "--:--";
+  return date.toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// --- Sub-Components ---
+function StatusPanel({ delivery }: { delivery: Delivery }) {
+  const eta = calculateETA(delivery.scheduled_at, delivery.delay_minutes);
+  const isProblem = !!delivery.problem_message;
+  const isDelayed = delivery.is_delayed;
+
+  return (
+    <motion.div
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 100, damping: 20 }}
+      className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            Arrivée estimée
+          </p>
+          <p className="text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
+            {formatTime(eta)}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+          <span className="text-gray-700 dark:text-gray-300">En direct</span>
+        </div>
+      </div>
+      <AnimatePresence>
+        {(isDelayed || isProblem) && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: "auto", opacity: 1, marginTop: "16px" }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            className="overflow-hidden"
+          >
+            <div
+              className={clsx(
+                "flex items-start gap-3 rounded-lg p-3 text-sm",
+                isProblem
+                  ? "border border-red-200 bg-red-50 text-red-800 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300"
+                  : "border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300",
+              )}
+            >
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                {isProblem ? (
+                  <>
+                    <span className="font-bold">Problème:</span>{" "}
+                    {delivery.problem_message}
+                  </>
+                ) : (
+                  <>
+                    <span className="font-bold">En retard</span>
+                    {delivery.delay_minutes != null &&
+                      delivery.delay_minutes > 0 && (
+                        <span> (~{delivery.delay_minutes} min)</span>
+                      )}
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function RecipientsPanel({ recipients }: { recipients: DeliveryRecipient[] }) {
+  if (recipients.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
+      className="z-10 mx-auto flex max-h-[40vh] w-full max-w-lg flex-col rounded-2xl border border-white/20 bg-white/70 shadow-xl backdrop-blur-lg dark:border-gray-500/20 dark:bg-gray-900/70"
+    >
+      <div className="shrink-0 border-b border-black/5 p-4 sm:p-6 dark:border-white/5">
+        <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-gray-200">
+          <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <span>Ordre de livraison</span>
+        </h3>
+      </div>
+      <ul className="space-y-3 overflow-y-auto p-4 sm:p-6">
+        {recipients.map((r, index) => (
+          <li key={r.id} className="flex items-center gap-4">
+            <div className="flex flex-col items-center self-stretch">
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-gray-600 dark:bg-gray-600 dark:text-gray-300">
+                {index + 1}
+              </div>
+              <div
+                className={clsx("w-px grow bg-gray-300 dark:bg-gray-600", {
+                  hidden: index === recipients.length - 1,
+                })}
+              />
+            </div>
+            <div className="py-1 text-sm">
+              <span className="font-medium text-gray-800 dark:text-gray-300">
+                {r.label}
+              </span>
+              <span className="text-gray-500 dark:text-gray-400">
+                {" "}
+                – {formatTime(new Date(r.scheduled_at))}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </motion.div>
+  );
+}
+
+function StoppedOverlay({ delivery }: { delivery: Delivery }) {
+  return (
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 150, damping: 20 }}
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-8 text-center shadow-2xl dark:bg-gray-900"
+      >
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+          <ShipWheel
+            className="h-8 w-8 text-gray-400 dark:text-gray-500"
+            strokeWidth={1.5}
+          />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+          Suivi en direct interrompu
+        </h1>
+        <p className="mt-4 text-base text-gray-500 dark:text-gray-400">
+          Le conducteur a mis le suivi en pause. Il sera réactivé prochainement.
+        </p>
+      </motion.div>
+    </div>
+  );
+}
+
+// --- Main Content Component ---
 function DeliveryTrackingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const deliveryId = params.deliveryId as string;
   const token = searchParams.get("token");
+
   const [delivery, setDelivery] = useState<Delivery | null>(null);
+  const [recipients, setRecipients] = useState<DeliveryRecipient[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [mapReady, setMapReady] = useState(false);
+
   const supabase = useMemo(() => createClient(), []);
-  const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Validate token and load delivery
+  const loadRecipients = useCallback(async () => {
+    const { data } = await supabase
+      .from("delivery_recipients")
+      .select("*")
+      .eq("delivery_id", deliveryId)
+      .order("sort_order")
+      .order("scheduled_at");
+    if (data) {
+      setRecipients(data);
+    }
+  }, [supabase, deliveryId]);
+
   useEffect(() => {
-    async function loadDelivery() {
-      if (!token) {
-        setError("Token manquant dans l'URL.");
+    async function loadInitialData() {
+      setIsLoading(true);
+      if (!token || !deliveryId) {
+        setError("URL invalide ou informations manquantes.");
         setIsLoading(false);
         return;
       }
-
-      if (!deliveryId) {
-        setError("ID de livraison manquant dans l'URL.");
-        setIsLoading(false);
-        return;
-      }
-
       try {
-        // First, validate the token by fetching the delivery
-        const { data, error: fetchError } = await supabase
+        const { data: deliveryData, error: deliveryError } = await supabase
           .from("deliveries")
           .select("*")
           .eq("id", deliveryId)
           .eq("public_token", token)
           .single();
 
-        if (fetchError || !data) {
-          setError("Livraison introuvable ou token invalide.");
+        if (deliveryError || !deliveryData) {
+          setError("Livraison introuvable, expirée ou lien invalide.");
           setIsLoading(false);
           return;
         }
 
-        // Check if expired
-        if (new Date(data.expires_at) < new Date()) {
-          setError("Cette livraison a expiré.");
-          setIsLoading(false);
-          return;
-        }
+        const { data: recipientsData } = await supabase
+          .from("delivery_recipients")
+          .select("*")
+          .eq("delivery_id", deliveryId)
+          .order("sort_order")
+          .order("scheduled_at");
 
-        setDelivery(data);
-        setIsLoading(false);
-        setMapReady(true);
+        setDelivery(deliveryData);
+        if (recipientsData) {
+          setRecipients(recipientsData);
+        }
       } catch (err) {
-        console.error("Error loading delivery:", err);
-        setError("Une erreur est survenue lors du chargement.");
+        console.error("Error loading initial data:", err);
+        setError("Une erreur est survenue lors du chargement des données.");
+      } finally {
         setIsLoading(false);
       }
     }
-
-    loadDelivery();
+    loadInitialData();
   }, [token, deliveryId, supabase]);
 
-  // Subscribe to realtime updates
   useEffect(() => {
-    if (!delivery || !token) return;
+    if (!deliveryId || !token) return;
 
-    // Subscribe to changes for this specific delivery
-    channelRef.current = supabase
-      .channel(`delivery:${delivery.id}`)
-      .on(
+    const channelName = `delivery-tracking:${deliveryId}`;
+    const channel = supabase.channel(channelName);
+    console.log("[Track Realtime] Channel created", {
+      channelName,
+      deliveryId,
+    });
+
+    channel
+      .on<Delivery>(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "deliveries",
-          filter: `id=eq.${delivery.id}`,
+          filter: `id=eq.${deliveryId}`,
         },
         (payload) => {
-          const updatedDelivery = payload.new as Delivery;
-          // If driver reset the token, this link is no longer valid
-          if (updatedDelivery.public_token !== token) {
-            setError(
-              "Veuillez demander au conducteur de vous envoyer un lien valide.",
-            );
-            setDelivery(null);
-            return;
-          }
-          setDelivery(updatedDelivery);
+          console.log(
+            "[Track Realtime] Delivery UPDATE received:",
+            payload.new,
+          );
+          setDelivery(payload.new);
         },
       )
-      .subscribe();
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "delivery_recipients",
+          filter: `delivery_id=eq.${deliveryId}`,
+        },
+        (payload) => {
+          console.log("[Track Realtime] Recipients change received:", payload);
+          void loadRecipients();
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "SUBSCRIBED") {
+          console.log("[Track Realtime] SUBSCRIBED – connection OK");
+        }
+        if (status === "CLOSED") {
+          console.log("[Track Realtime] CLOSED – channel closed");
+        }
+        if (status === "TIMED_OUT") {
+          console.warn(
+            "[Track Realtime] TIMED_OUT – subscription did not complete in time",
+            err,
+          );
+        }
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Track Realtime] CHANNEL_ERROR", err);
+          setError(
+            "La connexion au suivi en direct a été perdue. Réactualisez la page.",
+          );
+        }
+      }, 30_000);
 
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
+      console.log("[Track Realtime] Channel removed (cleanup)");
+      supabase.removeChannel(channel);
     };
-    // Re-subscribe only when delivery id or token changes, not on every position update
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- delivery?.id and token are intentional
-  }, [delivery?.id, token, supabase]);
+  }, [deliveryId, token, supabase, loadRecipients]);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
-        <div className="text-center">
-          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-          <p className="text-gray-600 dark:text-gray-400">
-            Chargement du suivi...
-          </p>
-        </div>
-      </div>
-    );
+    return <TrackPageLoadingFallback />;
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
-        <div className="mx-auto max-w-md rounded-xl border border-red-200 bg-white p-4 shadow-sm transition-colors duration-200 sm:p-6 dark:border-red-900/50 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
+      <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-950">
+        <div className="max-w-md rounded-xl border border-red-200 bg-white p-6 shadow-lg dark:border-red-900/50 dark:bg-gray-900">
           <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-            <AlertCircle className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Erreur</h2>
+            <AlertCircle className="h-6 w-6" />
+            <h2 className="text-xl font-semibold">Erreur de suivi</h2>
           </div>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">{error}</p>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">{error}</p>
         </div>
       </div>
     );
@@ -156,131 +355,45 @@ function DeliveryTrackingContent() {
     return null;
   }
 
-  // Tracking stopped: show only a grandiose white card, no map or position
-  if (!delivery.is_tracking_active) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 px-4 py-12 transition-colors duration-200 dark:from-gray-900 dark:to-gray-950">
-        <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
-          <div className="px-6 py-14 text-center sm:px-10 sm:py-16">
-            <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <MapPin
-                className="h-12 w-12 text-gray-400 dark:text-gray-500"
-                strokeWidth={1.5}
-              />
-            </div>
-            <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase dark:text-gray-500">
-              Suivi de livraison
-            </p>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
-              Suivi en direct indisponible
-            </h1>
-            <p className="mx-auto mt-6 max-w-sm text-base leading-relaxed text-gray-500 dark:text-gray-400">
-              Le conducteur a arrêté le partage de sa position. Vous serez
-              informé dès que le suivi en temps réel sera de nouveau actif.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-              <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500" />
-              Suivi arrêté
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const hasPosition = delivery.latitude !== null && delivery.longitude !== null;
   const center: [number, number] = hasPosition
     ? [delivery.latitude!, delivery.longitude!]
-    : [48.7426, 7.3622]; // Default to Saverne, France
+    : [48.7426, 7.3622];
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
-      {/* Header */}
-      <div className="border-b bg-white shadow-sm transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-gray-100">
-                Suivi de livraison
-              </h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Position mise à jour en temps réel
-              </p>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg border bg-gray-50 px-3 py-2 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
-              <div
-                className={`h-2 w-2 rounded-full ${
-                  delivery.is_tracking_active
-                    ? "animate-pulse bg-green-500 dark:bg-green-400"
-                    : "bg-gray-400 dark:bg-gray-500"
-                }`}
-              />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {delivery.is_tracking_active ? "En cours" : "Arrêté"}
-              </span>
+    <div className="relative z-0 h-full min-h-dvh w-full bg-gray-200 dark:bg-gray-800">
+      <TrackMapClient
+        center={center}
+        delivery={delivery}
+        hasPosition={hasPosition}
+      />
+      <AnimatePresence>
+        {!delivery.is_tracking_active && <StoppedOverlay delivery={delivery} />}
+      </AnimatePresence>
+      {delivery.is_tracking_active && (
+        <>
+          <div className="absolute top-0 right-0 left-0 z-10 p-3 sm:p-4">
+            <div className="mx-auto max-w-lg">
+              <StatusPanel delivery={delivery} />
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Map: explicit height so Leaflet can compute layout */}
-      <div className="relative h-[50vh] min-h-[300px] flex-1 sm:min-h-[400px]">
-        {mapReady && (
-          <TrackMapClient
-            center={center}
-            delivery={delivery}
-            hasPosition={hasPosition}
-          />
-        )}
-
-        {/* No position overlay (tracking active but no position yet) */}
-        {!hasPosition && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 dark:bg-gray-900/90">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-lg transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
-              <MapPin className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-              <p className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Position non disponible
-              </p>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Le conducteur n&apos;a pas encore activé le suivi ou la position
-                n&apos;a pas encore été enregistrée.
-              </p>
-            </div>
+          <div className="absolute right-0 bottom-0 left-0 z-10 p-3 sm:p-4">
+            <RecipientsPanel recipients={recipients} />
           </div>
-        )}
-      </div>
-
-      {/* Info footer */}
-      {hasPosition && (
-        <div className="border-t bg-white px-4 py-3 transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <MapPin className="h-4 w-4 dark:text-gray-500" />
-                <span>
-                  Dernière mise à jour:{" "}
-                  {new Date(delivery.updated_at).toLocaleString("fr-FR")}
-                </span>
-              </div>
-              <div className="break-all text-gray-500 dark:text-gray-500">
-                Coordonnées: {delivery.latitude?.toFixed(6)},{" "}
-                {delivery.longitude?.toFixed(6)}
-              </div>
-            </div>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
 }
 
+// --- Loading Fallback and Page Export ---
 function TrackPageLoadingFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
-      <div className="text-center">
-        <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-        <p className="text-gray-600 dark:text-gray-400">
-          Chargement du suivi...
+    <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="flex flex-col items-center gap-4">
+        <ShipWheel className="h-10 w-10 animate-spin text-gray-400 dark:text-gray-500" />
+        <p className="font-medium text-gray-600 dark:text-gray-400">
+          Chargement du suivi en direct...
         </p>
       </div>
     </div>

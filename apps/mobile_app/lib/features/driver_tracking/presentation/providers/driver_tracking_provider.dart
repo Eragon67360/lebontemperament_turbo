@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:logger/logger.dart';
 
 import '../../../../data/models/delivery.dart';
+import '../../../../data/models/delivery_recipient.dart';
 import '../../../../data/services/delivery_service.dart';
 
 /// Current position (lat, lng) for display.
@@ -23,6 +24,7 @@ class TrackingPosition {
 /// State for the driver tracking screen.
 class DriverTrackingState {
   final Delivery? delivery;
+  final List<DeliveryRecipient> recipients;
   final bool isTracking;
   final TrackingPosition? position;
   final String? error;
@@ -30,6 +32,7 @@ class DriverTrackingState {
 
   const DriverTrackingState({
     this.delivery,
+    this.recipients = const [],
     this.isTracking = false,
     this.position,
     this.error,
@@ -38,6 +41,7 @@ class DriverTrackingState {
 
   DriverTrackingState copyWith({
     Delivery? delivery,
+    List<DeliveryRecipient>? recipients,
     bool? isTracking,
     TrackingPosition? position,
     String? error,
@@ -45,6 +49,7 @@ class DriverTrackingState {
   }) {
     return DriverTrackingState(
       delivery: delivery ?? this.delivery,
+      recipients: recipients ?? this.recipients,
       isTracking: isTracking ?? this.isTracking,
       position: position ?? this.position,
       error: error,
@@ -77,8 +82,15 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final delivery = await _service.getOrCreateDelivery();
+      List<DeliveryRecipient> recipients = const [];
+      if (delivery != null) {
+        try {
+          recipients = await _service.getRecipients(delivery.id);
+        } catch (_) {}
+      }
       state = state.copyWith(
         delivery: delivery,
+        recipients: recipients,
         isLoading: false,
         error: null,
         isTracking: delivery?.isTrackingActive ?? false,
@@ -97,6 +109,112 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         isLoading: false,
         error: 'Erreur lors du chargement de la livraison.',
       );
+    }
+  }
+
+  /// Refresh recipients list for current delivery.
+  Future<void> loadRecipients() async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      final recipients = await _service.getRecipients(delivery.id);
+      state = state.copyWith(recipients: recipients);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier loadRecipients', error: e);
+    }
+  }
+
+  /// Update scheduled delivery time.
+  Future<void> updateScheduledAt(DateTime? scheduledAt) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      final updated = await _service.updateScheduledAt(delivery.id, scheduledAt);
+      if (updated != null) state = state.copyWith(delivery: updated, error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier updateScheduledAt', error: e);
+      state = state.copyWith(error: 'Erreur lors de la mise à jour de l\'heure.');
+    }
+  }
+
+  /// Set delay flag and optional minutes.
+  Future<void> setDelay({required bool isDelayed, int? delayMinutes}) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      final updated = await _service.setDelay(
+        delivery.id,
+        isDelayed: isDelayed,
+        delayMinutes: delayMinutes,
+      );
+      if (updated != null) state = state.copyWith(delivery: updated, error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier setDelay', error: e);
+      state = state.copyWith(error: 'Erreur lors de la mise à jour du retard.');
+    }
+  }
+
+  /// Set or clear problem message.
+  Future<void> setProblemMessage(String? message) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      final updated = await _service.setProblemMessage(delivery.id, message);
+      if (updated != null) state = state.copyWith(delivery: updated, error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier setProblemMessage', error: e);
+      state = state.copyWith(error: 'Erreur lors de la mise à jour du message.');
+    }
+  }
+
+  /// Add a recipient.
+  Future<void> addRecipient({required String label, required DateTime scheduledAt}) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      final list = state.recipients;
+      final sortOrder = list.isEmpty ? 0 : (list.map((r) => r.sortOrder).reduce((a, b) => a > b ? a : b) + 1);
+      final added = await _service.addRecipient(
+        delivery.id,
+        label: label,
+        scheduledAt: scheduledAt,
+        sortOrder: sortOrder,
+      );
+      state = state.copyWith(recipients: [...list, added], error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier addRecipient', error: e);
+      state = state.copyWith(error: 'Erreur lors de l\'ajout de la personne.');
+    }
+  }
+
+  /// Update a recipient.
+  Future<void> updateRecipient(
+    String recipientId, {
+    String? label,
+    DateTime? scheduledAt,
+    int? sortOrder,
+  }) async {
+    try {
+      await _service.updateRecipient(recipientId, label: label, scheduledAt: scheduledAt, sortOrder: sortOrder);
+      await loadRecipients();
+      state = state.copyWith(error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier updateRecipient', error: e);
+      state = state.copyWith(error: 'Erreur lors de la modification.');
+    }
+  }
+
+  /// Delete a recipient.
+  Future<void> deleteRecipient(String recipientId) async {
+    try {
+      await _service.deleteRecipient(recipientId);
+      state = state.copyWith(
+        recipients: state.recipients.where((r) => r.id != recipientId).toList(),
+        error: null,
+      );
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier deleteRecipient', error: e);
+      state = state.copyWith(error: 'Erreur lors de la suppression.');
     }
   }
 
@@ -140,12 +258,9 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
 
     state = state.copyWith(isTracking: true);
 
-    void onPosition(Position position) {
-      _service.updatePosition(
-        delivery.id,
-        position.latitude,
-        position.longitude,
-      );
+    final deliveryId = delivery.id;
+
+    Future<void> onPosition(Position position) async {
       state = state.copyWith(
         position: TrackingPosition(
           lat: position.latitude,
@@ -153,6 +268,15 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
           accuracyMeters: position.accuracy,
         ),
       );
+      try {
+        await _service.updatePosition(
+          deliveryId,
+          position.latitude,
+          position.longitude,
+        );
+      } catch (e) {
+        _logger.e('DriverTrackingNotifier updatePosition failed', error: e);
+      }
     }
 
     const locationSettings = LocationSettings(
@@ -169,16 +293,23 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       },
     );
 
-    _backupTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+    // Fire one position update immediately, then every 10 seconds (stream may not emit if device hasn't moved 10m)
+    void sendBackupPosition() async {
       try {
         final pos = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 15),
         );
-        onPosition(pos);
-      } catch (_) {}
-    });
+        await onPosition(pos);
+      } catch (e) {
+        _logger.w('DriverTrackingNotifier backup getCurrentPosition failed', error: e);
+      }
+    }
 
-    _logger.i('DriverTrackingNotifier: tracking started for ${delivery.id}');
+    sendBackupPosition();
+    _backupTimer = Timer.periodic(const Duration(seconds: 10), (_) => sendBackupPosition());
+
+    _logger.i('DriverTrackingNotifier: tracking started for $deliveryId');
   }
 
   /// Stop tracking: cancel stream and timer, update DB.
