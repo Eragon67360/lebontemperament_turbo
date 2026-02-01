@@ -93,7 +93,7 @@ BEGIN
             VALUE "FileDescription", "mobile_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "mobile_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 Le Bon Tempérament. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Le Bon Tempérament. All rights reserved." "\0"
             VALUE "OriginalFilename", "mobile_app.exe" "\0"
             VALUE "ProductName", "mobile_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
