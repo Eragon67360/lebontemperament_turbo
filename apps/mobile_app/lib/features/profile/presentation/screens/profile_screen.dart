@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
-import '../../../notifications/presentation/screens/notification_test_screen.dart';
 import 'about_screen.dart';
 import 'theme_settings_screen.dart';
 
@@ -14,322 +15,413 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
+    final theme = Theme.of(context);
     final isSuperadminAsync = ref.watch(isSuperadminProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Profil',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.logout,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            onPressed: () async {
+      backgroundColor: theme.colorScheme.surface,
+      body: CustomScrollView(
+        slivers: [
+          // --- 1. Dynamic Profile Header ---
+          _ProfileAppBar(
+            onLogout: () async {
               try {
                 await ref.read(authControllerProvider.notifier).signOut();
-                if (context.mounted) {
-                  context.go('/login');
-                }
+                if (context.mounted) context.go('/login');
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Erreur lors de la déconnexion: $e'),
-                      backgroundColor: Theme.of(context).colorScheme.error,
+                      backgroundColor: theme.colorScheme.error,
                     ),
                   );
                 }
               }
             },
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // User info section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+
+          // --- 2. Settings Sections ---
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  const FadeInUp(
+                    delay: 100,
+                    child: _SectionTitle(title: 'Général'),
+                  ),
+                  const SizedBox(height: 12),
+                  FadeInUp(
+                    delay: 200,
+                    child: _SettingsGroup(
                       children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          child: Icon(
-                            Icons.person,
-                            size: 30,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user?.userMetadata?['display_name'] ??
-                                    'Utilisateur',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                user?.email ?? 'email@example.com',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                              ),
-                            ],
+                        _SettingsTile(
+                          icon: Icons.notifications_outlined,
+                          title: 'Notifications',
+                          subtitle: 'Gérer les rappels d\'événements',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const NotificationSettingsScreen(),
+                            ),
                           ),
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 32),
+                  const FadeInUp(
+                    delay: 300,
+                    child: _SectionTitle(title: 'Application'),
+                  ),
+                  const SizedBox(height: 12),
+                  FadeInUp(
+                    delay: 400,
+                    child: _SettingsGroup(
+                      children: [
+                        _SettingsTile(
+                          icon: Icons.palette_outlined,
+                          title: 'Thème',
+                          subtitle: 'Changer l\'apparence',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ThemeSettingsScreen(),
+                            ),
+                          ),
+                        ),
+                        _SettingsTile(
+                          icon: Icons.info_outline_rounded,
+                          title: 'À propos',
+                          subtitle: 'Informations sur l\'application',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const AboutScreen(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // --- 3. Superadmin Section (Conditional) ---
+                  if (isSuperadminAsync.valueOrNull == true) ...[
+                    const SizedBox(height: 32),
+                    const FadeInUp(
+                      delay: 500,
+                      child: _SectionTitle(title: 'Administration'),
+                    ),
+                    const SizedBox(height: 12),
+                    FadeInUp(
+                      delay: 600,
+                      child: _SettingsGroup(
+                        children: [
+                          _SettingsTile(
+                            icon: Icons.local_shipping_outlined,
+                            title: 'Suivi livraison',
+                            subtitle: 'Partager votre position en temps réel',
+                            onTap: () => context.push('/driver-tracking'),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
-                ),
+                  const SizedBox(height: 80),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            // Settings section
-            Text(
-              'Paramètres',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
+// MARK: - UI Components
+
+class _ProfileAppBar extends ConsumerWidget {
+  final VoidCallback onLogout;
+  const _ProfileAppBar({required this.onLogout});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final displayName = ref.watch(displayNameProvider);
+    final theme = Theme.of(context);
+
+    return SliverAppBar(
+      backgroundColor: theme.colorScheme.surface,
+      surfaceTintColor: theme.colorScheme.surface,
+      pinned: true,
+      expandedHeight: 220.0, // Reduced height as the title is removed
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout_outlined),
+          color: theme.colorScheme.onSurfaceVariant,
+          tooltip: 'Déconnexion',
+          onPressed: onLogout,
+        ),
+        const SizedBox(width: 8),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: false,
+        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        title: Text(
+          displayName,
+          style: GoogleFonts.poppins(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        background: const _ProfileHeader(),
+      ),
+    );
+  }
+}
+
+class _ProfileHeader extends ConsumerWidget {
+  const _ProfileHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    final displayName = ref.watch(displayNameProvider);
+    final theme = Theme.of(context);
+    final initials = displayName.isNotEmpty
+        ? displayName
+              .trim()
+              .split(' ')
+              .map((l) => l[0])
+              .take(2)
+              .join()
+              .toUpperCase()
+        : '?';
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.surface,
+            theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 50), // Adjusted padding
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: theme.colorScheme.primary,
+              child: Text(
+                initials,
+                style: GoogleFonts.poppins(
+                  color: theme.colorScheme.onPrimary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-
-            // Theme switcher
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.palette,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                title: Text(
-                  'Thème',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                subtitle: Text(
-                  'Changer l\'apparence de l\'application',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  size: 16,
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const ThemeSettingsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Notification settings
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.notifications,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                title: Text(
-                  'Notifications',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                subtitle: Text(
-                  'Gérer les rappels d\'événements',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  size: 16,
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationSettingsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Notification test (debug)
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.bug_report,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                title: Text(
-                  'Test des Notifications',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                subtitle: Text(
-                  'Tester les notifications programmées',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  size: 16,
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationTestScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Driver tracking (superadmin only)
-            if (isSuperadminAsync.valueOrNull == true) ...[
-              Card(
-                child: ListTile(
-                  leading: Icon(
-                    Icons.local_shipping,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  title: Text(
-                    'Suivi livraison',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Partager votre position en temps réel avec les clients',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.arrow_forward_ios,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 16,
-                  ),
-                  onTap: () {
-                    context.push('/driver-tracking');
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-
-            // About section
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.info,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                title: Text(
-                  'À propos',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                subtitle: Text(
-                  'Informations sur l\'application',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  size: 16,
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AboutScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Logout button
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.logout,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                title: Text(
-                  'Se déconnecter',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                onTap: () async {
-                  try {
-                    await ref.read(authControllerProvider.notifier).signOut();
-                    if (context.mounted) {
-                      context.go('/login');
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Erreur lors de la déconnexion: $e'),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      );
-                    }
-                  }
-                },
+            // THIS IS THE LINE I REMOVED
+            // Text(
+            //   displayName,
+            //   style: GoogleFonts.poppins(
+            //     fontSize: 28,
+            //     fontWeight: FontWeight.bold,
+            //     color: theme.colorScheme.onSurface,
+            //   ),
+            // ),
+            Text(
+              user?.email ?? '',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: GoogleFonts.poppins(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+}
+
+class _SettingsGroup extends StatelessWidget {
+  final List<Widget> children;
+  const _SettingsGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+      ),
+      child: Column(
+        children: List.generate(children.length * 2 - 1, (index) {
+          if (index.isEven) {
+            return children[index ~/ 2];
+          }
+          return Divider(
+            height: 1,
+            thickness: 1,
+            indent: 60,
+            color: theme.colorScheme.outline.withOpacity(0.2),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(16), // Match parent for ripple effect
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// MARK: - Animation Widget
+class FadeInUp extends StatefulWidget {
+  final Widget child;
+  final int delay;
+  const FadeInUp({super.key, required this.child, this.delay = 0});
+  @override
+  State<FadeInUp> createState() => _FadeInUpState();
+}
+
+class _FadeInUpState extends State<FadeInUp>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+  late Animation<double> _translateY;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _translateY = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    Future.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _opacity.value,
+          child: Transform.translate(
+            offset: Offset(0, _translateY.value),
+            child: widget.child,
+          ),
+        );
+      },
     );
   }
 }

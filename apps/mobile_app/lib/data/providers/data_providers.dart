@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import '../../core/utils/date_utils.dart' as app_date_utils;
 import '../models/event.dart';
 import '../models/concert.dart';
 import '../models/rehearsal.dart';
@@ -154,4 +155,23 @@ final realtimeRehearsalsProvider = FutureProvider<List<Rehearsal>>((ref) async {
 
   final rehearsalsService = ref.watch(rehearsalsServiceProvider);
   return await rehearsalsService.getRehearsals();
+});
+
+// Upcoming-only list providers (no past events/concerts/rehearsals)
+final upcomingEventsProvider = FutureProvider<List<Event>>((ref) async {
+  final events = await ref.watch(realtimeEventsProvider.future);
+  return events.where((e) {
+    return app_date_utils.isEventUpcoming(
+      dateFrom: e.dateFrom,
+      dateTo: e.dateTo,
+      time: e.time,
+    );
+  }).toList();
+});
+
+final upcomingConcertsProvider = FutureProvider<List<Concert>>((ref) async {
+  final concerts = await ref.watch(realtimeConcertsProvider.future);
+  return concerts.where((c) {
+    return app_date_utils.isConcertUpcoming(date: c.date, time: c.time);
+  }).toList();
 });

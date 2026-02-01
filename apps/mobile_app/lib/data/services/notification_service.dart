@@ -435,9 +435,10 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        // Use inexact scheduling which is more reliable on Android
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: payload,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.wallClockTime,
       );
 
       _logger.i(
@@ -1118,6 +1119,8 @@ class NotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: 'test_scheduled_$testNotificationId',
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.wallClockTime,
       );
 
       _logger.i(

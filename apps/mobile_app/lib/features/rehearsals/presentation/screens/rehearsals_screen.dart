@@ -1,430 +1,667 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/rehearsal_filter_provider.dart';
 
-class RehearsalsScreen extends ConsumerWidget {
+class RehearsalsScreen extends ConsumerStatefulWidget {
   const RehearsalsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RehearsalsScreen> createState() => _RehearsalsScreenState();
+}
+
+class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('fr_FR');
+  }
+
+  Future<void> _onRefresh() async {
+    ref.invalidate(realtimeRehearsalsProvider);
+    ref.invalidate(refreshTriggerProvider);
+  }
+
+  void _showFilterModal(BuildContext context, GroupType? currentFilter) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _FilterModal(
+        currentFilter: currentFilter,
+        onFilterSelected: (groupType) {
+          ref.read(rehearsalFilterProvider.notifier).setFilter(groupType);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
     final selectedFilter = ref.watch(rehearsalFilterProvider);
     final filteredRehearsals = ref.watch(filteredRehearsalsProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Répétitions',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.filter_list,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            onPressed: () => _showFilterDialog(context, ref, selectedFilter),
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.logout,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            onPressed: () async {
-              try {
-                await ref.read(authServiceProvider).signOut();
-                if (context.mounted) {
-                  context.go('/login');
+      backgroundColor: theme.colorScheme.surface,
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        color: theme.colorScheme.primary,
+        backgroundColor: theme.colorScheme.surfaceVariant,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            // --- 1. Dynamic App Bar ---
+            _RehearsalsAppBar(
+              onFilter: () => _showFilterModal(context, selectedFilter),
+              onLogout: () async {
+                try {
+                  await ref.read(authServiceProvider).signOut();
+                  if (mounted) context.go('/login');
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erreur lors de la déconnexion: $e'),
+                        backgroundColor: theme.colorScheme.error,
+                      ),
+                    );
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Erreur lors de la déconnexion: $e'),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    ),
+              },
+            ),
+
+            // --- 2. Active Filter Chip ---
+            if (selectedFilter != null)
+              SliverToBoxAdapter(
+                child: FadeInUp(
+                  delay: 50,
+                  child: _FilterChip(
+                    label: _getGroupTypeText(selectedFilter),
+                    onClear: () => ref
+                        .read(rehearsalFilterProvider.notifier)
+                        .clearFilter(),
+                  ),
+                ),
+              ),
+
+            // --- 3. Main Content based on State ---
+            rehearsalsAsync.when(
+              data: (rehearsals) {
+                if (filteredRehearsals.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _EmptyState(isFilterActive: selectedFilter != null),
                   );
                 }
-              }
-            },
+                return SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 80),
+                  sliver: SliverList.builder(
+                    itemCount: filteredRehearsals.length,
+                    itemBuilder: (context, index) {
+                      final rehearsal = filteredRehearsals[index];
+                      return FadeInUp(
+                        delay: 100 + (index * 50),
+                        child: _RehearsalCard(
+                          rehearsal: rehearsal,
+                          isLast: index == filteredRehearsals.length - 1,
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+              loading: () => const SliverFillRemaining(child: _LoadingState()),
+              error: (error, stack) => SliverFillRemaining(
+                hasScrollBody: false,
+                child: _ErrorState(onRetry: _onRefresh),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// MARK: - UI Components
+
+class _RehearsalsAppBar extends StatelessWidget {
+  final VoidCallback onFilter;
+  final VoidCallback onLogout;
+
+  const _RehearsalsAppBar({required this.onFilter, required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SliverAppBar(
+      backgroundColor: theme.colorScheme.surface,
+      surfaceTintColor: theme.colorScheme.surface,
+      pinned: true,
+      floating: true,
+      expandedHeight: 120.0,
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        centerTitle: false,
+        title: Text(
+          'Répétitions',
+          style: GoogleFonts.poppins(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
           ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.filter_list_rounded),
+          color: theme.colorScheme.onSurfaceVariant,
+          tooltip: 'Filtrer',
+          onPressed: onFilter,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: IconButton(
+            icon: const Icon(Icons.logout_outlined),
+            color: theme.colorScheme.onSurfaceVariant,
+            tooltip: 'Déconnexion',
+            onPressed: onLogout,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onClear;
+
+  const _FilterChip({required this.label, required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: Container(
+        padding: const EdgeInsets.only(left: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Filtre:',
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.primary,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              color: theme.colorScheme.primary,
+              onPressed: onClear,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterModal extends StatelessWidget {
+  final GroupType? currentFilter;
+  final Function(GroupType?) onFilterSelected;
+
+  const _FilterModal({this.currentFilter, required this.onFilterSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Filtrer par groupe',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFilterOption(context, 'Tous les groupes', null),
+          ...GroupType.values.map(
+            (group) =>
+                _buildFilterOption(context, _getGroupTypeText(group), group),
+          ),
+          const SizedBox(height: 10),
         ],
       ),
-      body: Column(
-        children: [
-          // Filter chips
-          if (selectedFilter != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+    );
+  }
+
+  Widget _buildFilterOption(
+    BuildContext context,
+    String title,
+    GroupType? value,
+  ) {
+    return RadioListTile<GroupType?>(
+      title: Text(title, style: GoogleFonts.poppins()),
+      value: value,
+      groupValue: currentFilter,
+      onChanged: (newValue) => onFilterSelected(newValue),
+      contentPadding: EdgeInsets.zero,
+      activeColor: Theme.of(context).colorScheme.primary,
+    );
+  }
+}
+
+class _RehearsalCard extends StatelessWidget {
+  final Rehearsal rehearsal;
+  final bool isLast;
+
+  const _RehearsalCard({required this.rehearsal, this.isLast = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Date parsing logic
+    String day = '-';
+    String month = '-';
+    if (rehearsal.date != null) {
+      try {
+        final dateTime = DateTime.parse(rehearsal.date!);
+        day = DateFormat('d', 'fr_FR').format(dateTime);
+        month = DateFormat('MMM', 'fr_FR').format(dateTime).toUpperCase();
+      } catch (e) {
+        // Handle potential parsing error if date format is unexpected
+      }
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            // --- Date Section ---
+            SizedBox(
+              width: 55,
+              child: Column(
                 children: [
-                  Expanded(
-                    child: Chip(
-                      label: Text(
-                        'Filtré par: ${_getGroupTypeText(selectedFilter)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      backgroundColor: AppTheme.getSubtleBackgroundColor(
-                        context,
-                      ),
-                      deleteIcon: Icon(
-                        Icons.close,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      onDeleted: () => ref
-                          .read(rehearsalFilterProvider.notifier)
-                          .clearFilter(),
+                  Text(
+                    month,
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    day,
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      height: 1.1,
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-
-          // Rehearsals list
-          Expanded(
-            child: rehearsalsAsync.when(
-              data: (rehearsals) {
-                if (filteredRehearsals.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          selectedFilter != null
-                              ? Icons.filter_list_off
-                              : Icons.repeat_one,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          selectedFilter != null
-                              ? 'Aucune répétition trouvée'
-                              : 'Aucune répétition',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          selectedFilter != null
-                              ? 'Aucune répétition ne correspond au filtre sélectionné'
-                              : 'Aucune répétition n\'est prévue pour le moment',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredRehearsals.length,
-                  itemBuilder: (context, index) {
-                    final rehearsal = filteredRehearsals[index];
-                    return _buildRehearsalCard(context, rehearsal);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Erreur lors du chargement',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Veuillez réessayer',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            const SizedBox(width: 16),
+            Container(
+              width: 1,
+              height: 60,
+              color: theme.colorScheme.outline.withOpacity(0.3),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            const SizedBox(width: 16),
 
-  void _showFilterDialog(
-    BuildContext context,
-    WidgetRef ref,
-    GroupType? selectedFilter,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Filtrer par groupe',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // All option
-            ListTile(
-              leading: Radio<GroupType?>(
-                value: null,
-                groupValue: selectedFilter,
-                onChanged: (value) {
-                  ref.read(rehearsalFilterProvider.notifier).setFilter(value);
-                  Navigator.of(context).pop();
-                },
-              ),
-              title: Text(
-                'Tous les groupes',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              onTap: () {
-                ref.read(rehearsalFilterProvider.notifier).setFilter(null);
-                Navigator.of(context).pop();
-              },
-            ),
-            // Individual group options
-            ...GroupType.values.map(
-              (groupType) => ListTile(
-                leading: Radio<GroupType?>(
-                  value: groupType,
-                  groupValue: selectedFilter,
-                  onChanged: (value) {
-                    ref.read(rehearsalFilterProvider.notifier).setFilter(value);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                title: Text(
-                  _getGroupTypeText(groupType),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                onTap: () {
-                  ref
-                      .read(rehearsalFilterProvider.notifier)
-                      .setFilter(groupType);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Annuler',
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRehearsalCard(BuildContext context, Rehearsal rehearsal) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with icon and title
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.getSubtleBackgroundColor(context),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.repeat,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        rehearsal.name ?? 'Répétition sans titre',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _getGroupTypeText(rehearsal.groupType),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Date and time
-            if (rehearsal.date != null || rehearsal.startTime != null) ...[
-              Row(
+            // --- Details Section ---
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.calendar_today,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
+                  _GroupTypeTag(groupType: rehearsal.groupType),
+                  const SizedBox(height: 8),
                   Text(
-                    _formatRehearsalDateTime(
-                      rehearsal.date,
+                    rehearsal.name ?? 'Répétition sans titre',
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 17,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  _InfoRow(
+                    icon: Icons.access_time_outlined,
+                    text: _formatTimeRange(
                       rehearsal.startTime,
                       rehearsal.endTime,
                     ),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
                   ),
+                  if (rehearsal.place != null &&
+                      rehearsal.place!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    _InfoRow(
+                      icon: Icons.location_on_outlined,
+                      text: rehearsal.place!,
+                    ),
+                  ],
                 ],
               ),
-              const SizedBox(height: 12),
-            ],
-
-            // Location
-            if (rehearsal.place != null && rehearsal.place!.isNotEmpty) ...[
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      rehearsal.place!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  String _formatRehearsalDateTime(
-    String? date,
-    String? startTime,
-    String? endTime,
-  ) {
-    if (date == null && startTime == null && endTime == null) {
-      return 'Date et heure non renseignées';
-    }
+class _GroupTypeTag extends StatelessWidget {
+  final GroupType groupType;
+  const _GroupTypeTag({required this.groupType});
 
-    String dateStr = 'Date non renseignée';
-    String timeStr = 'Heure non renseignée';
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        _getGroupTypeText(groupType),
+        style: GoogleFonts.poppins(
+          color: theme.colorScheme.onSecondaryContainer,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
 
-    if (date != null) {
-      try {
-        final dateTime = DateTime.parse(date);
-        dateStr = DateFormat('d MMMM yyyy', 'fr_FR').format(dateTime);
-      } catch (e) {
-        dateStr = date;
-      }
-    }
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
 
-    if (startTime != null && endTime != null) {
-      try {
-        final startParts = startTime.split(':');
-        final endParts = endTime.split(':');
-        if (startParts.length >= 2 && endParts.length >= 2) {
-          timeStr =
-              '${startParts[0]}h${startParts[1]} à ${endParts[0]}h${endParts[1]}';
-        } else {
-          timeStr = '$startTime à $endTime';
-        }
-      } catch (e) {
-        timeStr = '$startTime à $endTime';
-      }
-    } else if (startTime != null) {
-      try {
-        final timeParts = startTime.split(':');
-        if (timeParts.length >= 2) {
-          timeStr = '${timeParts[0]}h${timeParts[1]}';
-        } else {
-          timeStr = startTime;
-        }
-      } catch (e) {
-        timeStr = startTime;
-      }
-    }
+  const _InfoRow({required this.icon, required this.text});
 
-    return '$dateStr - $timeStr';
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 14),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// MARK: - State Handling Widgets
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: CircularProgressIndicator(
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final bool isFilterActive;
+  const _EmptyState({this.isFilterActive = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FadeInUp(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isFilterActive
+                    ? Icons.filter_list_off_outlined
+                    : Icons.music_off_outlined,
+                size: 72,
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                isFilterActive ? 'Aucun résultat' : 'Aucune répétition',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isFilterActive
+                    ? 'Aucune répétition ne correspond à votre filtre. Essayez une autre sélection.'
+                    : 'Les prochaines répétitions apparaîtront ici dès qu\'elles seront planifiées.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _ErrorState({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FadeInUp(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.cloud_off_outlined,
+                size: 72,
+                color: theme.colorScheme.error.withOpacity(0.7),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Oups, une erreur est survenue',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Nous n\'avons pas pu charger les répétitions. Vérifiez votre connexion et réessayez.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Réessayer'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// MARK: - Animation Widget
+class FadeInUp extends StatefulWidget {
+  final Widget child;
+  final int delay;
+  const FadeInUp({super.key, required this.child, this.delay = 0});
+  @override
+  State<FadeInUp> createState() => _FadeInUpState();
+}
+
+class _FadeInUpState extends State<FadeInUp>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+  late Animation<double> _translateY;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _translateY = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    Future.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) _controller.forward();
+    });
   }
 
-  String _getGroupTypeText(GroupType groupType) {
-    switch (groupType) {
-      case GroupType.orchestre:
-        return 'Orchestre';
-      case GroupType.hommes:
-        return 'Hommes';
-      case GroupType.femmes:
-        return 'Femmes';
-      case GroupType.jeunesEnfants:
-        return 'Jeunes/Enfants';
-      case GroupType.choeurComplet:
-        return 'Chœur complet';
-      case GroupType.tous:
-        return 'Tous';
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _opacity.value,
+          child: Transform.translate(
+            offset: Offset(0, _translateY.value),
+            child: widget.child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+// MARK: - Helpers
+
+String _getGroupTypeText(GroupType groupType) {
+  switch (groupType) {
+    case GroupType.orchestre:
+      return 'Orchestre';
+    case GroupType.hommes:
+      return 'Hommes';
+    case GroupType.femmes:
+      return 'Femmes';
+    case GroupType.jeunesEnfants:
+      return 'Jeunes/Enfants';
+    case GroupType.choeurComplet:
+      return 'Chœur complet';
+    case GroupType.tous:
+      return 'Tous';
+  }
+}
+
+String _formatTimeRange(String? startTime, String? endTime) {
+  if (startTime == null) return 'Heure non spécifiée';
+
+  String format(String time) {
+    try {
+      final parts = time.split(':');
+      if (parts.length >= 2) return '${parts[0]}h${parts[1]}';
+    } catch (e) {
+      // Return original time if format is unexpected
+    }
+    return time;
+  }
+
+  final formattedStart = format(startTime);
+  if (endTime == null || endTime.isEmpty) return formattedStart;
+
+  final formattedEnd = format(endTime);
+  return '$formattedStart - $formattedEnd';
 }
