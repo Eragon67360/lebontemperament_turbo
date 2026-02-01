@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_app/core/constants/ui_constants.dart';
 
 import '../../../../data/models/event.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -72,7 +73,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   );
                 }
                 return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 80),
+                  padding: const EdgeInsets.fromLTRB(
+                      20, 10, 20, kFloatingNavBarBottomPadding),
                   sliver: SliverList.builder(
                     itemCount: events.length,
                     itemBuilder: (context, index) {
