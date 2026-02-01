@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Clock, // <-- Import the Clock icon
   ShipWheel,
@@ -139,7 +140,41 @@ export function StatusPanel({
         </div>
       </div>
       <AnimatePresence>
-        {/* ... (delay/problem section remains the same) ... */}
+        {(isDelayed || isProblem) && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: "auto", opacity: 1, marginTop: "16px" }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            className="overflow-hidden"
+          >
+            <div
+              className={clsx(
+                "flex items-start gap-3 rounded-lg p-3 text-sm",
+                isProblem
+                  ? "border border-red-200 bg-red-50 text-red-800 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300"
+                  : "border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300",
+              )}
+            >
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                {isProblem ? (
+                  <>
+                    <span className="font-bold">Problème:</span>{" "}
+                    {delivery.problem_message}
+                  </>
+                ) : (
+                  <>
+                    <span className="font-bold">En retard</span>
+                    {delivery.delay_minutes != null &&
+                      delivery.delay_minutes > 0 && (
+                        <span> (~{delivery.delay_minutes} min)</span>
+                      )}
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </motion.div>
   );
@@ -164,6 +199,36 @@ export function RecipientSinglePanel({
       ? calculateETA(recipient.scheduled_at, delivery.delay_minutes)
       : null;
 
+  // --- NEW: Smart ETA Label Generation ---
+  const getSmartEtaLabel = (): string => {
+    // If no live ETA is available, fallback to the scheduled time.
+    if (!etaForCurrentRecipient) {
+      return `prévue à ${formatTime(scheduledTime)}`;
+    }
+
+    const remainingSeconds =
+      (etaForCurrentRecipient.getTime() - Date.now()) / 1000;
+
+    // If the ETA is slightly in the past (due to network lag), show imminent.
+    if (remainingSeconds < 0) {
+      return "Arrivée imminente";
+    }
+
+    const remainingMinutes = Math.round(remainingSeconds / 60);
+
+    if (remainingMinutes <= 1) {
+      return "Dans moins d'une minute";
+    }
+    // Threshold for showing relative time vs absolute time.
+    if (remainingMinutes <= 15) {
+      // Correctly pluralize "minute(s)"
+      const plural = remainingMinutes > 1 ? "s" : "";
+      return `Dans environ ${remainingMinutes} minute${plural}`;
+    }
+    // For longer ETAs, show the absolute time which is less mental math for the user.
+    return `vers ${formatTime(etaForCurrentRecipient)}`;
+  };
+
   return (
     <motion.div
       initial={{ y: -100, opacity: 0 }}
@@ -178,18 +243,14 @@ export function RecipientSinglePanel({
         {recipient.label}
       </p>
 
-      {/* -- RENDER PATH 1: Delivery is IN PROGRESS -- */}
+      {/* RENDER PATH 1: Delivery is IN PROGRESS (Live) */}
       {isInProgress ? (
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          Arrivée estimée (ETA) :{" "}
-          <span className="font-semibold">
-            {etaForCurrentRecipient
-              ? `~ ${formatTime(etaForCurrentRecipient)}`
-              : formatTime(scheduledTime)}
-          </span>
+          Arrivée estimée :{" "}
+          <span className="font-semibold">{getSmartEtaLabel()}</span>
         </p>
       ) : (
-        /* -- RENDER PATH 2: Delivery is PENDING -- */
+        /* RENDER PATH 2: Delivery is PENDING */
         <>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Passage prévu :{" "}
@@ -198,7 +259,8 @@ export function RecipientSinglePanel({
           <div className="mt-4 flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
             <Clock className="mt-0.5 h-4 w-4 shrink-0" />
             <p className="text-sm">
-              Le suivi en direct s'activera lorsque le conducteur sera en route.
+              Le suivi en direct s&apos;activera lorsque le conducteur sera en
+              route.
             </p>
           </div>
         </>
