@@ -75,7 +75,8 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
     final state = ref.read(driverTrackingProvider);
     final now = DateTime.now();
     final initialStart = state.delivery?.scheduledAt ?? now;
-    final initialEnd = state.delivery?.scheduledEndAt ?? initialStart.add(const Duration(hours: 1));
+    final initialEnd = state.delivery?.scheduledEndAt ??
+        initialStart.add(const Duration(hours: 1));
 
     // Start date + time
     final startDate = await showDatePicker(
@@ -109,7 +110,9 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
     final endTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(
-        initialEnd.isBefore(scheduledAt) ? scheduledAt.add(const Duration(hours: 1)) : initialEnd,
+        initialEnd.isBefore(scheduledAt)
+            ? scheduledAt.add(const Duration(hours: 1))
+            : initialEnd,
       ),
     );
     if (endTime == null || !context.mounted) return;
@@ -123,7 +126,9 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
     if (scheduledEndAt.isBefore(scheduledAt)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('L\'heure de fin doit être après l\'heure de début')),
+          const SnackBar(
+              content:
+                  Text('L\'heure de fin doit être après l\'heure de début')),
         );
       }
       return;
@@ -239,8 +244,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                           Clipboard.setData(ClipboardData(text: url));
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Lien copié')));
+                                const SnackBar(content: Text('Lien copié')));
                           }
                         },
                         onMarkDelivered: (r) => ref
@@ -429,11 +433,14 @@ class _RecipientsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Container(
+      // The outer decoration remains the same
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
+      // We clip the content to ensure the rounded corners apply to the list items
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           if (recipients.isEmpty)
@@ -450,6 +457,9 @@ class _RecipientsCard extends ConsumerWidget {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+              // --- THIS IS THE FIX ---
+              // Explicitly remove all internal padding from the ListView.
+              padding: EdgeInsets.zero,
               itemCount: recipients.length,
               itemBuilder: (_, index) => _RecipientTile(
                 recipient: recipients[index],
@@ -466,8 +476,7 @@ class _RecipientsCard extends ConsumerWidget {
           Divider(height: 1, color: theme.colorScheme.outline.withOpacity(0.2)),
           InkWell(
             onTap: onAdd,
-            borderRadius:
-                const BorderRadius.vertical(bottom: Radius.circular(15)),
+            // The borderRadius for the InkWell is no longer needed because the parent clips.
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -507,8 +516,7 @@ class _RecipientTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDelivered = recipient.deliveredAt != null;
     final canShare = recipient.publicToken != null && onShare != null;
-    final canMarkDelivered =
-        !isDelivered && onMarkDelivered != null;
+    final canMarkDelivered = !isDelivered && onMarkDelivered != null;
 
     return ListTile(
       title: Row(
@@ -610,7 +618,8 @@ class _LiveUpdatesCard extends ConsumerWidget {
           '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledAt!)} – '
           '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledEndAt!)}';
     } else {
-      scheduledStr = DateFormat('dd/MM à HH:mm', 'fr_FR').format(delivery.scheduledAt!);
+      scheduledStr =
+          DateFormat('dd/MM à HH:mm', 'fr_FR').format(delivery.scheduledAt!);
     }
 
     return Container(
