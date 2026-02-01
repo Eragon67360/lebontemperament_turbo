@@ -62,6 +62,21 @@ class DeliveryService {
     }
   }
 
+  /// Fetches a delivery by id (e.g. after updating current_recipient_id).
+  Future<Delivery?> getDelivery(String deliveryId) async {
+    try {
+      final response = await _client
+          .from('deliveries')
+          .select()
+          .eq('id', deliveryId)
+          .maybeSingle();
+      return response != null ? Delivery.fromJson(response) : null;
+    } catch (e) {
+      _logger.e('DeliveryService: getDelivery failed', error: e);
+      rethrow;
+    }
+  }
+
   /// Sets is_tracking_active = true for the given delivery.
   Future<void> startTracking(String deliveryId) async {
     try {
@@ -214,24 +229,44 @@ class DeliveryService {
     }
   }
 
+  /// Sets the recipient the driver is currently driving to. Pass null to revert to pending.
+  Future<void> setCurrentRecipient(String deliveryId, {String? recipientId}) async {
+    try {
+      await _client.from('deliveries').update({
+        'current_recipient_id': recipientId,
+      }).eq('id', deliveryId);
+      _logger.i('DeliveryService: setCurrentRecipient $deliveryId -> $recipientId');
+    } catch (e) {
+      _logger.e('DeliveryService: setCurrentRecipient failed', error: e);
+      rethrow;
+    }
+  }
+
   /// Adds a recipient with a unique public_token for per-recipient share links.
   Future<DeliveryRecipient> addRecipient(
     String deliveryId, {
     required String label,
-    required DateTime scheduledAt,
+    DateTime? scheduledAt,
     int sortOrder = 0,
+    String? address,
+    double? latitude,
+    double? longitude,
   }) async {
     try {
       final publicToken = const Uuid().v4();
+      final Map<String, dynamic> insertData = {
+        'delivery_id': deliveryId,
+        'label': label,
+        'sort_order': sortOrder,
+        'public_token': publicToken,
+      };
+      if (scheduledAt != null) insertData['scheduled_at'] = scheduledAt.toIso8601String();
+      if (address != null) insertData['address'] = address;
+      if (latitude != null) insertData['latitude'] = latitude;
+      if (longitude != null) insertData['longitude'] = longitude;
       final response = await _client
           .from('delivery_recipients')
-          .insert({
-            'delivery_id': deliveryId,
-            'label': label,
-            'scheduled_at': scheduledAt.toIso8601String(),
-            'sort_order': sortOrder,
-            'public_token': publicToken,
-          })
+          .insert(insertData)
           .select()
           .single();
       _logger.i('DeliveryService: addRecipient $deliveryId');
@@ -242,9 +277,15 @@ class DeliveryService {
     }
   }
 
-  /// Marks a recipient as delivered (sets delivered_at to now).
+  /// Marks a recipient as delivered (sets delivered_at to now) and clears delivery.current_recipient_id.
   Future<DeliveryRecipient?> markRecipientDelivered(String recipientId) async {
     try {
+      final existing = await _client
+          .from('delivery_recipients')
+          .select('delivery_id')
+          .eq('id', recipientId)
+          .maybeSingle();
+      final deliveryId = existing?['delivery_id'] as String?;
       final now = DateTime.now().toUtc().toIso8601String();
       final response = await _client
           .from('delivery_recipients')
@@ -252,11 +293,12 @@ class DeliveryService {
           .eq('id', recipientId)
           .select()
           .maybeSingle();
-      if (response != null) {
+      if (response != null && deliveryId != null) {
+        await _client.from('deliveries').update({'current_recipient_id': null}).eq('id', deliveryId);
         _logger.i('DeliveryService: markRecipientDelivered $recipientId');
         return DeliveryRecipient.fromJson(response);
       }
-      return null;
+      return response != null ? DeliveryRecipient.fromJson(response) : null;
     } catch (e) {
       _logger.e('DeliveryService: markRecipientDelivered failed', error: e);
       rethrow;
@@ -269,12 +311,18 @@ class DeliveryService {
     String? label,
     DateTime? scheduledAt,
     int? sortOrder,
+    String? address,
+    double? latitude,
+    double? longitude,
   }) async {
     try {
       final Map<String, dynamic> updates = {};
       if (label != null) updates['label'] = label;
       if (scheduledAt != null) updates['scheduled_at'] = scheduledAt.toIso8601String();
       if (sortOrder != null) updates['sort_order'] = sortOrder;
+      if (address != null) updates['address'] = address;
+      if (latitude != null) updates['latitude'] = latitude;
+      if (longitude != null) updates['longitude'] = longitude;
       if (updates.isEmpty) throw ArgumentError('At least one field must be updated');
       final response = await _client
           .from('delivery_recipients')
@@ -297,6 +345,23 @@ class DeliveryService {
       _logger.i('DeliveryService: deleteRecipient $recipientId');
     } catch (e) {
       _logger.e('DeliveryService: deleteRecipient failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Reorders recipients by updating sort_order for each id in the given order (index = sort_order).
+  Future<void> reorderRecipients(String deliveryId, List<String> recipientIdsInOrder) async {
+    try {
+      for (var i = 0; i < recipientIdsInOrder.length; i++) {
+        await _client
+            .from('delivery_recipients')
+            .update({'sort_order': i})
+            .eq('id', recipientIdsInOrder[i])
+            .eq('delivery_id', deliveryId);
+      }
+      _logger.i('DeliveryService: reorderRecipients $deliveryId');
+    } catch (e) {
+      _logger.e('DeliveryService: reorderRecipients failed', error: e);
       rethrow;
     }
   }

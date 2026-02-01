@@ -9,119 +9,105 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import type { Delivery, DeliveryRecipient } from "./shared";
 import {
   DeliveredPanel,
+  PendingPanel,
   RecipientSinglePanel,
-  RecipientsPanel,
   StatusPanel,
   StoppedOverlay,
   TrackPageError,
   TrackPageLoadingFallback,
 } from "./shared";
 
+// Dynamically import the map component to prevent SSR and reduce initial bundle size
 const TrackMapClient = dynamic(
-  () =>
-    import("./[deliveryId]/TrackMapClient").then((mod) => mod.TrackMapClient),
+  () => import("./TrackMapClient").then((mod) => mod.TrackMapClient),
   { ssr: false },
 );
 
-type ViewMode = "recipient" | "full";
-
+/**
+ * Checks if a delivery's tracking link has expired.
+ * @param expiresAt ISO string of the expiration date.
+ * @returns True if the link has expired.
+ */
 function isExpired(expiresAt: string): boolean {
   return new Date(expiresAt) < new Date();
 }
 
+/**
+ * Core component for handling the tracking logic based on a URL token.
+ */
 function TrackByTokenContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const [viewMode, setViewMode] = useState<ViewMode | null>(null);
+  // State management
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [recipient, setRecipient] = useState<DeliveryRecipient | null>(null);
-  const [recipients, setRecipients] = useState<DeliveryRecipient[]>([]);
+  const [etaForCurrentRecipient, setEtaForCurrentRecipient] =
+    useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Memoize Supabase client to prevent re-creation on re-renders
   const supabase = useMemo(() => createClient(), []);
 
-  const loadRecipients = useCallback(
-    async (deliveryId: string) => {
-      const { data } = await supabase
-        .from("delivery_recipients")
-        .select("*")
-        .eq("delivery_id", deliveryId)
-        .order("sort_order")
-        .order("scheduled_at");
-      if (data) {
-        setRecipients(data);
-      }
-    },
-    [supabase],
-  );
+  // Callback for when the map component calculates a new route ETA
+  const handleRouteFetched = useCallback((durationSeconds: number | null) => {
+    if (durationSeconds === null) {
+      setEtaForCurrentRecipient(null);
+      return;
+    }
+    setEtaForCurrentRecipient(new Date(Date.now() + durationSeconds * 1000));
+  }, []);
 
+  // Effect to fetch initial data based on the token from the URL
   useEffect(() => {
     async function resolveToken() {
       setIsLoading(true);
       setError(null);
+
       if (!token) {
         setError("URL invalide ou informations manquantes.");
         setIsLoading(false);
         return;
       }
+
       try {
-        // 1) Try recipient by public_token
+        // 1. Find the recipient by their unique public token
         const { data: recipientData, error: recipientError } = await supabase
           .from("delivery_recipients")
           .select("*")
           .eq("public_token", token)
-          .maybeSingle();
+          .single();
 
-        if (!recipientError && recipientData) {
-          const deliveryId = recipientData.delivery_id as string;
-          const { data: deliveryData, error: deliveryError } = await supabase
-            .from("deliveries")
-            .select("*")
-            .eq("id", deliveryId)
-            .single();
-
-          if (deliveryError || !deliveryData) {
-            setError("Livraison introuvable ou expirée.");
-            setIsLoading(false);
-            return;
-          }
-          if (isExpired(deliveryData.expires_at)) {
-            setError("Ce lien a expiré.");
-            setIsLoading(false);
-            return;
-          }
-          setViewMode("recipient");
-          setRecipient(recipientData as DeliveryRecipient);
-          setDelivery(deliveryData as Delivery);
-          setRecipients([recipientData as DeliveryRecipient]);
+        if (recipientError || !recipientData) {
+          setError("Livraison introuvable, expirée ou lien invalide.");
           setIsLoading(false);
           return;
         }
 
-        // 2) Try delivery by public_token
+        // 2. Fetch the associated delivery
         const { data: deliveryData, error: deliveryError } = await supabase
           .from("deliveries")
           .select("*")
-          .eq("public_token", token)
-          .maybeSingle();
+          .eq("id", recipientData.delivery_id)
+          .single();
 
-        if (!deliveryError && deliveryData) {
-          if (isExpired(deliveryData.expires_at)) {
-            setError("Ce lien a expiré.");
-            setIsLoading(false);
-            return;
-          }
-          setViewMode("full");
-          setDelivery(deliveryData as Delivery);
-          setRecipient(null);
-          await loadRecipients(deliveryData.id);
+        if (deliveryError || !deliveryData) {
+          setError("Livraison introuvable ou expirée.");
           setIsLoading(false);
           return;
         }
 
-        setError("Livraison introuvable, expirée ou lien invalide.");
+        // 3. Check if the tracking link has expired
+        if (isExpired(deliveryData.expires_at)) {
+          setError("Ce lien de suivi a expiré.");
+          setIsLoading(false);
+          return;
+        }
+
+        // 4. Set state with the fetched data
+        setRecipient(recipientData as DeliveryRecipient);
+        setDelivery(deliveryData as Delivery);
       } catch (err) {
         console.error("Error resolving token:", err);
         setError("Une erreur est survenue lors du chargement des données.");
@@ -129,15 +115,17 @@ function TrackByTokenContent() {
         setIsLoading(false);
       }
     }
+
     resolveToken();
-  }, [token, supabase, loadRecipients]);
+  }, [token, supabase]);
 
+  // Effect to subscribe to real-time updates from Supabase
   useEffect(() => {
-    if (!delivery || viewMode === null) return;
+    if (!delivery || !recipient) return;
 
-    const channelName = `delivery-tracking:${delivery.id}`;
-    const channel = supabase.channel(channelName);
+    const channel = supabase.channel(`delivery-tracking:${delivery.id}`);
 
+    // Listen for updates to the main delivery record
     channel
       .on<Delivery>(
         "postgres_changes",
@@ -147,45 +135,34 @@ function TrackByTokenContent() {
           table: "deliveries",
           filter: `id=eq.${delivery.id}`,
         },
-        (payload) => {
-          setDelivery(payload.new);
-        },
+        (payload) => setDelivery(payload.new),
       )
-      .on(
+      // Listen for updates to this specific recipient
+      .on<DeliveryRecipient>(
         "postgres_changes",
         {
-          event: "*",
+          event: "UPDATE",
           schema: "public",
           table: "delivery_recipients",
-          filter: `delivery_id=eq.${delivery.id}`,
+          filter: `id=eq.${recipient.id}`,
         },
-        () => {
-          if (viewMode === "full") {
-            void loadRecipients(delivery.id);
-          } else if (recipient) {
-            supabase
-              .from("delivery_recipients")
-              .select("*")
-              .eq("id", recipient.id)
-              .single()
-              .then(({ data }) => {
-                if (data) setRecipient(data as DeliveryRecipient);
-              });
-          }
-        },
+        (payload) => setRecipient(payload.new),
       )
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR") {
           setError(
-            "La connexion au suivi en direct a été perdue. Réactualisez la page.",
+            "La connexion au suivi en direct a été perdue. Veuillez réactualiser la page.",
           );
         }
-      }, 30_000);
+      });
 
+    // Cleanup subscription on component unmount
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [delivery?.id, viewMode, recipient?.id, supabase, loadRecipients]);
+  }, [delivery, recipient, supabase]);
+
+  // --- Render Logic ---
 
   if (isLoading) {
     return <TrackPageLoadingFallback />;
@@ -195,24 +172,48 @@ function TrackByTokenContent() {
     return <TrackPageError message={error} />;
   }
 
-  if (!delivery || viewMode === null) {
-    return null;
+  if (!delivery || !recipient) {
+    return null; // Should not happen if not loading and no error
   }
 
+  // --- Derived State for Rendering ---
+  const isDelivered = !!recipient.delivered_at;
+  const isInProgress = delivery.current_recipient_id === recipient.id;
   const hasPosition = delivery.latitude !== null && delivery.longitude !== null;
-  // MapLibre/GeoJSON expect [longitude, latitude]
-  const center: [number, number] = hasPosition
-    ? [delivery.longitude!, delivery.latitude!]
-    : [7.3622, 48.7426]; // Alsace, France [lng, lat]
 
-  if (viewMode === "recipient" && recipient) {
-    const isDelivered = !!recipient.delivered_at;
+  // MapLibre/GeoJSON expect [longitude, latitude]
+  const driverPosition: [number, number] = hasPosition
+    ? [delivery.longitude!, delivery.latitude!]
+    : [2.3522, 48.8566]; // Default to Paris if no position
+
+  const destination: [number, number] | undefined =
+    recipient.latitude != null && recipient.longitude != null
+      ? [recipient.longitude, recipient.latitude]
+      : undefined;
+
+  // --- Render Views ---
+
+  if (isDelivered) {
+    return (
+      <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-950">
+        <DeliveredPanel
+          deliveredAt={recipient.delivered_at!}
+          label={recipient.label}
+        />
+      </div>
+    );
+  }
+
+  // View for "En route" status
+  if (isInProgress) {
     return (
       <div className="relative z-0 h-full min-h-dvh w-full bg-gray-200 dark:bg-gray-800">
         <TrackMapClient
-          center={center}
+          center={driverPosition}
           delivery={delivery}
           hasPosition={hasPosition}
+          destination={destination}
+          onRouteFetched={handleRouteFetched}
         />
         <AnimatePresence>
           {!delivery.is_tracking_active && (
@@ -220,58 +221,37 @@ function TrackByTokenContent() {
           )}
         </AnimatePresence>
         {delivery.is_tracking_active && (
-          <>
-            <div className="absolute top-0 right-0 left-0 z-10 p-3 sm:p-4">
-              <div className="mx-auto flex max-w-lg flex-col gap-3">
-                {isDelivered ? (
-                  <DeliveredPanel
-                    deliveredAt={recipient.delivered_at!}
-                    label={recipient.label}
-                  />
-                ) : (
-                  <>
-                    <StatusPanel delivery={delivery} />
-                    <RecipientSinglePanel
-                      recipient={recipient}
-                      delivery={delivery}
-                    />
-                  </>
-                )}
-              </div>
+          <div className="absolute top-0 right-0 left-0 z-10 p-3 sm:p-4">
+            <div className="mx-auto flex max-w-lg flex-col gap-3">
+              <StatusPanel delivery={delivery} status="live" />
+              <RecipientSinglePanel
+                recipient={recipient}
+                delivery={delivery}
+                etaForCurrentRecipient={etaForCurrentRecipient}
+              />
             </div>
-          </>
+          </div>
         )}
       </div>
     );
   }
 
-  // Full view (delivery token)
+  // Default view for "Pending" status (not yet en route)
   return (
-    <div className="relative z-0 h-full min-h-dvh w-full bg-gray-200 dark:bg-gray-800">
-      <TrackMapClient
-        center={center}
+    <PendingPanel>
+      <StatusPanel delivery={delivery} status="pending" />
+      <RecipientSinglePanel
+        recipient={recipient}
         delivery={delivery}
-        hasPosition={hasPosition}
+        etaForCurrentRecipient={null} // No real-time ETA when pending
       />
-      <AnimatePresence>
-        {!delivery.is_tracking_active && <StoppedOverlay delivery={delivery} />}
-      </AnimatePresence>
-      {delivery.is_tracking_active && (
-        <>
-          <div className="absolute top-0 right-0 left-0 z-10 p-3 sm:p-4">
-            <div className="mx-auto max-w-lg">
-              <StatusPanel delivery={delivery} />
-            </div>
-          </div>
-          <div className="absolute right-0 bottom-0 left-0 z-10 p-3 sm:p-4">
-            <RecipientsPanel recipients={recipients} />
-          </div>
-        </>
-      )}
-    </div>
+    </PendingPanel>
   );
 }
 
+/**
+ * Page wrapper component that provides a Suspense boundary.
+ */
 export default function TrackByTokenPage() {
   return (
     <Suspense fallback={<TrackPageLoadingFallback />}>

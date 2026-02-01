@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geocoding/geocoding.dart' show locationFromAddress;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
@@ -141,8 +142,14 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
 
   Future<void> _showAddOrEditRecipientDialog(
       {DeliveryRecipient? recipient}) async {
-    final newRecipient =
-        await showDialog<({String label, DateTime scheduledAt})?>(
+    final newRecipient = await showDialog<
+        ({
+          String label,
+          DateTime? scheduledAt,
+          String? address,
+          double? latitude,
+          double? longitude
+        })?>(
       context: context,
       builder: (_) => _AddOrEditRecipientDialog(recipient: recipient),
     );
@@ -151,12 +158,18 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
         await ref.read(driverTrackingProvider.notifier).addRecipient(
               label: newRecipient.label,
               scheduledAt: newRecipient.scheduledAt,
+              address: newRecipient.address,
+              latitude: newRecipient.latitude,
+              longitude: newRecipient.longitude,
             );
       } else {
         await ref.read(driverTrackingProvider.notifier).updateRecipient(
               recipient.id,
               label: newRecipient.label,
               scheduledAt: newRecipient.scheduledAt,
+              address: newRecipient.address,
+              latitude: newRecipient.latitude,
+              longitude: newRecipient.longitude,
             );
       }
     }
@@ -232,6 +245,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                   FadeInUp(
                       delay: 500,
                       child: _RecipientsCard(
+                        delivery: state.delivery!,
                         recipients: state.recipients,
                         onAdd: () => _showAddOrEditRecipientDialog(),
                         onEdit: (r) =>
@@ -247,9 +261,18 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                                 const SnackBar(content: Text('Lien copié')));
                           }
                         },
+                        onStartDriving: (r) => ref
+                            .read(driverTrackingProvider.notifier)
+                            .startDrivingToRecipient(r.id),
+                        onRevertToPending: () => ref
+                            .read(driverTrackingProvider.notifier)
+                            .revertToPending(),
                         onMarkDelivered: (r) => ref
                             .read(driverTrackingProvider.notifier)
                             .markRecipientDelivered(r.id),
+                        onReorder: (newOrder) => ref
+                            .read(driverTrackingProvider.notifier)
+                            .reorderRecipients(newOrder),
                       )),
                   const SizedBox(height: 32),
                   const FadeInUp(
@@ -415,31 +438,37 @@ class _ActionButtons extends ConsumerWidget {
 }
 
 class _RecipientsCard extends ConsumerWidget {
+  final Delivery delivery;
   final List<DeliveryRecipient> recipients;
   final Future<void> Function() onAdd;
   final Future<void> Function(DeliveryRecipient) onEdit;
   final void Function(DeliveryRecipient) onShareRecipient;
+  final void Function(DeliveryRecipient) onStartDriving;
+  final VoidCallback onRevertToPending;
   final void Function(DeliveryRecipient) onMarkDelivered;
+  final void Function(List<String> newOrderIds) onReorder;
 
   const _RecipientsCard({
+    required this.delivery,
     required this.recipients,
     required this.onAdd,
     required this.onEdit,
     required this.onShareRecipient,
+    required this.onStartDriving,
+    required this.onRevertToPending,
     required this.onMarkDelivered,
+    required this.onReorder,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Container(
-      // The outer decoration remains the same
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
-      // We clip the content to ensure the rounded corners apply to the list items
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -454,29 +483,33 @@ class _RecipientsCard extends ConsumerWidget {
               ),
             )
           else
-            ListView.separated(
+            ReorderableListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              // --- THIS IS THE FIX ---
-              // Explicitly remove all internal padding from the ListView.
               padding: EdgeInsets.zero,
               itemCount: recipients.length,
+              onReorder: (oldIndex, newIndex) {
+                if (oldIndex < newIndex) newIndex--;
+                final newOrder = List<DeliveryRecipient>.from(recipients);
+                final item = newOrder.removeAt(oldIndex);
+                newOrder.insert(newIndex, item);
+                onReorder(newOrder.map((r) => r.id).toList());
+              },
               itemBuilder: (_, index) => _RecipientTile(
+                key: ValueKey(recipients[index].id),
+                reorderIndex: index,
+                delivery: delivery,
                 recipient: recipients[index],
                 onEdit: onEdit,
                 onShare: onShareRecipient,
+                onStartDriving: onStartDriving,
+                onRevertToPending: onRevertToPending,
                 onMarkDelivered: onMarkDelivered,
               ),
-              separatorBuilder: (_, __) => Divider(
-                  height: 1,
-                  indent: 20,
-                  endIndent: 20,
-                  color: theme.colorScheme.outline.withOpacity(0.2)),
             ),
           Divider(height: 1, color: theme.colorScheme.outline.withOpacity(0.2)),
           InkWell(
             onTap: onAdd,
-            // The borderRadius for the InkWell is no longer needed because the parent clips.
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -499,15 +532,24 @@ class _RecipientsCard extends ConsumerWidget {
 }
 
 class _RecipientTile extends ConsumerWidget {
+  final int reorderIndex;
+  final Delivery delivery;
   final DeliveryRecipient recipient;
   final Future<void> Function(DeliveryRecipient) onEdit;
   final void Function(DeliveryRecipient)? onShare;
+  final void Function(DeliveryRecipient)? onStartDriving;
+  final VoidCallback? onRevertToPending;
   final void Function(DeliveryRecipient)? onMarkDelivered;
 
   const _RecipientTile({
+    super.key,
+    required this.reorderIndex,
+    required this.delivery,
     required this.recipient,
     required this.onEdit,
     this.onShare,
+    this.onStartDriving,
+    this.onRevertToPending,
     this.onMarkDelivered,
   });
 
@@ -515,31 +557,57 @@ class _RecipientTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDelivered = recipient.deliveredAt != null;
+    final isInProgress = delivery.currentRecipientId == recipient.id;
     final canShare = recipient.publicToken != null && onShare != null;
-    final canMarkDelivered = !isDelivered && onMarkDelivered != null;
+    final canMarkDelivered =
+        !isDelivered && onMarkDelivered != null && isInProgress;
+    final canStartDriving = !isDelivered && onStartDriving != null;
+    final canRevertToPending = isInProgress && onRevertToPending != null;
+
+    String statusLabel;
+    if (isDelivered) {
+      statusLabel = 'Livré';
+    } else if (isInProgress) {
+      statusLabel = 'En route';
+    } else {
+      statusLabel = 'En attente';
+    }
+
+    final subtitle = recipient.scheduledAt != null
+        ? 'Prévu à ${DateFormat('HH:mm', 'fr_FR').format(recipient.scheduledAt!)}'
+        : 'Pas d\'heure prévue';
 
     return ListTile(
+      key: key,
+      leading: ReorderableDragStartListener(
+        index: reorderIndex,
+        child:
+            Icon(Icons.drag_handle, color: theme.colorScheme.onSurfaceVariant),
+      ),
       title: Row(
         children: [
           Expanded(
             child: Text(recipient.label,
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
           ),
-          if (isDelivered)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text('Livré',
-                  style: GoogleFonts.poppins(
-                      fontSize: 12, fontWeight: FontWeight.w600)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDelivered
+                  ? theme.colorScheme.primaryContainer
+                  : isInProgress
+                      ? theme.colorScheme.tertiaryContainer
+                      : theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Text(statusLabel,
+                style: GoogleFonts.poppins(
+                    fontSize: 12, fontWeight: FontWeight.w600)),
+          ),
         ],
       ),
       subtitle: Text(
-        'Prévu à ${DateFormat('HH:mm', 'fr_FR').format(recipient.scheduledAt)}',
+        subtitle,
         style: GoogleFonts.poppins(
             color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
       ),
@@ -574,6 +642,10 @@ class _RecipientTile extends ConsumerWidget {
             }
           } else if (value == 'share' && canShare) {
             onShare!(recipient);
+          } else if (value == 'start_driving' && canStartDriving) {
+            onStartDriving!(recipient);
+          } else if (value == 'revert_pending' && canRevertToPending) {
+            onRevertToPending!();
           } else if (value == 'mark_delivered' && canMarkDelivered) {
             onMarkDelivered!(recipient);
           }
@@ -583,6 +655,12 @@ class _RecipientTile extends ConsumerWidget {
           if (canShare)
             const PopupMenuItem(
                 value: 'share', child: Text('Copier lien de suivi')),
+          if (canStartDriving)
+            const PopupMenuItem(
+                value: 'start_driving', child: Text('En route')),
+          if (canRevertToPending)
+            const PopupMenuItem(
+                value: 'revert_pending', child: Text('Reporter en attente')),
           if (canMarkDelivered)
             const PopupMenuItem(
                 value: 'mark_delivered', child: Text('Marquer comme livré')),
@@ -800,33 +878,38 @@ class _AddOrEditRecipientDialog extends StatefulWidget {
 
 class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   late final TextEditingController _labelController;
-  late DateTime _scheduledAt;
+  late final TextEditingController _addressController;
+  DateTime? _scheduledAt;
+  bool _isGeocoding = false;
 
   @override
   void initState() {
     super.initState();
     _labelController = TextEditingController(text: widget.recipient?.label);
-    _scheduledAt = widget.recipient?.scheduledAt ??
-        DateTime.now().add(const Duration(hours: 1));
+    _addressController = TextEditingController(text: widget.recipient?.address);
+    _scheduledAt = widget.recipient?.scheduledAt;
   }
 
   @override
   void dispose() {
     _labelController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
   Future<void> _pickDateTime() async {
+    final initial =
+        _scheduledAt ?? DateTime.now().add(const Duration(hours: 1));
     final date = await showDatePicker(
       context: context,
-      initialDate: _scheduledAt,
+      initialDate: initial,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (date == null || !mounted) return;
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_scheduledAt),
+      initialTime: TimeOfDay.fromDateTime(initial),
     );
     if (time != null) {
       setState(() {
@@ -834,6 +917,58 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
             DateTime(date.year, date.month, date.day, time.hour, time.minute);
       });
     }
+  }
+
+  Future<void> _save() async {
+    final label = _labelController.text.trim();
+    if (label.isEmpty) return;
+    final addressStr = _addressController.text.trim();
+
+    String? savedAddress;
+    double? savedLatitude;
+    double? savedLongitude;
+
+    if (addressStr.isNotEmpty) {
+      setState(() => _isGeocoding = true);
+      try {
+        final locations = await locationFromAddress(addressStr);
+        if (locations.isNotEmpty && mounted) {
+          savedAddress = addressStr;
+          savedLatitude = locations.first.latitude;
+          savedLongitude = locations.first.longitude;
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Adresse introuvable. Enregistrement sans position.',
+              ),
+            ),
+          );
+          savedAddress = addressStr;
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Adresse introuvable. Enregistrement sans position.',
+              ),
+            ),
+          );
+          savedAddress = addressStr;
+        }
+      }
+      if (mounted) setState(() => _isGeocoding = false);
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pop((
+      label: label,
+      scheduledAt: _scheduledAt,
+      address: savedAddress?.isEmpty == true ? null : savedAddress,
+      latitude: savedLatitude,
+      longitude: savedLongitude,
+    ));
   }
 
   @override
@@ -853,13 +988,35 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
               autofocus: true,
             ),
             const SizedBox(height: 16),
+            TextField(
+              controller: _addressController,
+              decoration: const InputDecoration(
+                labelText: 'Adresse (optionnel)',
+                hintText: 'Ex: 10 Rue de la Paix, 67000 Strasbourg',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
             ListTile(
-              title: Text('Heure prévue:',
+              title: Text('Heure prévue (optionnel):',
                   style: GoogleFonts.poppins(fontSize: 14)),
               subtitle: Text(
-                  DateFormat('dd/MM HH:mm', 'fr_FR').format(_scheduledAt),
+                  _scheduledAt != null
+                      ? DateFormat('dd/MM HH:mm', 'fr_FR').format(_scheduledAt!)
+                      : 'Non définie',
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              trailing: const Icon(Icons.edit_calendar),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_scheduledAt != null)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => setState(() => _scheduledAt = null),
+                      tooltip: 'Effacer',
+                    ),
+                  const Icon(Icons.edit_calendar),
+                ],
+              ),
               onTap: _pickDateTime,
               contentPadding: EdgeInsets.zero,
             ),
@@ -868,17 +1025,17 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _isGeocoding ? null : () => Navigator.of(context).pop(),
             child: const Text('Annuler')),
         FilledButton(
-          onPressed: () {
-            if (_labelController.text.trim().isEmpty) return;
-            Navigator.of(context).pop((
-              label: _labelController.text.trim(),
-              scheduledAt: _scheduledAt
-            ));
-          },
-          child: const Text('Enregistrer'),
+          onPressed: _isGeocoding ? null : _save,
+          child: _isGeocoding
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Enregistrer'),
         ),
       ],
     );

@@ -175,7 +175,13 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   }
 
   /// Add a recipient.
-  Future<void> addRecipient({required String label, required DateTime scheduledAt}) async {
+  Future<void> addRecipient({
+    required String label,
+    DateTime? scheduledAt,
+    String? address,
+    double? latitude,
+    double? longitude,
+  }) async {
     final delivery = state.delivery;
     if (delivery == null) return;
     try {
@@ -186,11 +192,60 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         label: label,
         scheduledAt: scheduledAt,
         sortOrder: sortOrder,
+        address: address,
+        latitude: latitude,
+        longitude: longitude,
       );
       state = state.copyWith(recipients: [...list, added], error: null);
     } catch (e) {
       _logger.e('DriverTrackingNotifier addRecipient', error: e);
       state = state.copyWith(error: 'Erreur lors de l\'ajout de la personne.');
+    }
+  }
+
+  /// Start driving to a recipient (sets current_recipient_id).
+  Future<void> startDrivingToRecipient(String recipientId) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      await _service.setCurrentRecipient(delivery.id, recipientId: recipientId);
+      final updated = await _service.getDelivery(delivery.id);
+      if (updated != null) {
+        state = state.copyWith(delivery: updated, error: null);
+      }
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier startDrivingToRecipient', error: e);
+      state = state.copyWith(error: 'Erreur lors du démarrage de la livraison.');
+    }
+  }
+
+  /// Revert current recipient to pending (clears current_recipient_id).
+  Future<void> revertToPending() async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      await _service.setCurrentRecipient(delivery.id, recipientId: null);
+      final updated = await _service.getDelivery(delivery.id);
+      if (updated != null) {
+        state = state.copyWith(delivery: updated, error: null);
+      }
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier revertToPending', error: e);
+      state = state.copyWith(error: 'Erreur lors du report en attente.');
+    }
+  }
+
+  /// Reorder recipients (updates sort_order for each).
+  Future<void> reorderRecipients(List<String> recipientIdsInOrder) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      await _service.reorderRecipients(delivery.id, recipientIdsInOrder);
+      await loadRecipients();
+      state = state.copyWith(error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier reorderRecipients', error: e);
+      state = state.copyWith(error: 'Erreur lors du réordonnancement.');
     }
   }
 
@@ -200,9 +255,20 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     String? label,
     DateTime? scheduledAt,
     int? sortOrder,
+    String? address,
+    double? latitude,
+    double? longitude,
   }) async {
     try {
-      await _service.updateRecipient(recipientId, label: label, scheduledAt: scheduledAt, sortOrder: sortOrder);
+      await _service.updateRecipient(
+        recipientId,
+        label: label,
+        scheduledAt: scheduledAt,
+        sortOrder: sortOrder,
+        address: address,
+        latitude: latitude,
+        longitude: longitude,
+      );
       await loadRecipients();
       state = state.copyWith(error: null);
     } catch (e) {
@@ -225,13 +291,19 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     }
   }
 
-  /// Mark a recipient as delivered.
+  /// Mark a recipient as delivered (also clears current_recipient_id on delivery).
   Future<void> markRecipientDelivered(String recipientId) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
     try {
       final updated = await _service.markRecipientDelivered(recipientId);
       if (updated != null) {
         await loadRecipients();
-        state = state.copyWith(error: null);
+        final refreshedDelivery = await _service.getDelivery(delivery.id);
+        state = state.copyWith(
+          delivery: refreshedDelivery ?? delivery,
+          error: null,
+        );
       }
     } catch (e) {
       _logger.e('DriverTrackingNotifier markRecipientDelivered', error: e);

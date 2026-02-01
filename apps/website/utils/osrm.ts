@@ -6,13 +6,15 @@ const OSRM_BASE = "https://router.project-osrm.org/route/v1/driving";
 
 export interface OSRMRouteResult {
   coordinates: [number, number][];
+  /** Route duration in seconds (for ETA: now + durationSeconds). */
+  durationSeconds: number | null;
 }
 
 /**
  * Fetches a driving route between two points from OSRM.
  * @param from [lng, lat] or [lat, lng] - OSRM uses lng,lat
  * @param to [lng, lat] or [lat, lng]
- * @returns Route geometry as array of [lng, lat] for MapLibre/GeoJSON, or null on error
+ * @returns Route geometry and duration in seconds, or null on error
  */
 export async function fetchOSRMRoute(
   from: [number, number],
@@ -28,12 +30,21 @@ export async function fetchOSRMRoute(
     if (!res.ok) return null;
     const data = (await res.json()) as {
       code?: string;
-      routes?: Array<{ geometry?: { coordinates?: [number, number][] } }>;
+      routes?: Array<{
+        duration?: number;
+        geometry?: { coordinates?: [number, number][] };
+      }>;
     };
-    if (data.code !== "Ok" || !data.routes?.[0]?.geometry?.coordinates) {
+    const route = data.routes?.[0];
+    if (data.code !== "Ok" || !route?.geometry?.coordinates) {
       return null;
     }
-    return { coordinates: data.routes[0].geometry.coordinates };
+    const durationSeconds =
+      typeof route.duration === "number" ? route.duration : null;
+    return {
+      coordinates: route.geometry.coordinates,
+      durationSeconds,
+    };
   } catch {
     return null;
   }

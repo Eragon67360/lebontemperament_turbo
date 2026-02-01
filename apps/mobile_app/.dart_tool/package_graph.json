@@ -17,6 +17,7 @@
         "flutter_localizations",
         "flutter_riverpod",
         "freezed_annotation",
+        "geocoding",
         "geolocator",
         "get_it",
         "go_router",
@@ -217,6 +218,16 @@
         "url_launcher_windows",
         "web",
         "win32"
+      ]
+    },
+    {
+      "name": "geocoding",
+      "version": "3.0.0",
+      "dependencies": [
+        "flutter",
+        "geocoding_android",
+        "geocoding_ios",
+        "geocoding_platform_interface"
       ]
     },
     {
@@ -1096,6 +1107,31 @@
       "dependencies": [
         "meta",
         "web"
+      ]
+    },
+    {
+      "name": "geocoding_ios",
+      "version": "3.1.0",
+      "dependencies": [
+        "flutter",
+        "geocoding_platform_interface"
+      ]
+    },
+    {
+      "name": "geocoding_android",
+      "version": "3.3.1",
+      "dependencies": [
+        "flutter",
+        "geocoding_platform_interface"
+      ]
+    },
+    {
+      "name": "geocoding_platform_interface",
+      "version": "3.2.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
       ]
     },
     {
