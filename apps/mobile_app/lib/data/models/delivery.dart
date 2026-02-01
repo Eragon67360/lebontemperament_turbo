@@ -11,6 +11,7 @@ class Delivery {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? scheduledAt;
+  final DateTime? scheduledEndAt;
   final bool isDelayed;
   final int? delayMinutes;
   final String? problemMessage;
@@ -26,6 +27,7 @@ class Delivery {
     this.createdAt,
     this.updatedAt,
     this.scheduledAt,
+    this.scheduledEndAt,
     this.isDelayed = false,
     this.delayMinutes,
     this.problemMessage,
@@ -57,6 +59,9 @@ class Delivery {
       scheduledAt: json['scheduled_at'] != null
           ? DateTime.parse(json['scheduled_at'] as String)
           : null,
+      scheduledEndAt: json['scheduled_end_at'] != null
+          ? DateTime.parse(json['scheduled_end_at'] as String)
+          : null,
       isDelayed: json['is_delayed'] as bool? ?? false,
       delayMinutes: json['delay_minutes'] as int?,
       problemMessage: json['problem_message'] as String?,
@@ -74,6 +79,7 @@ class Delivery {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? scheduledAt,
+    DateTime? scheduledEndAt,
     bool? isDelayed,
     int? delayMinutes,
     String? problemMessage,
@@ -89,6 +95,7 @@ class Delivery {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       scheduledAt: scheduledAt ?? this.scheduledAt,
+      scheduledEndAt: scheduledEndAt ?? this.scheduledEndAt,
       isDelayed: isDelayed ?? this.isDelayed,
       delayMinutes: delayMinutes ?? this.delayMinutes,
       problemMessage: problemMessage ?? this.problemMessage,

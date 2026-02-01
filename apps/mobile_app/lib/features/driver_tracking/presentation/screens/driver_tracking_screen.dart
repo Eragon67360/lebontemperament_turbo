@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../data/models/delivery.dart';
@@ -72,26 +71,67 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
 
   // --- Dialog & Picker Logic ---
 
-  Future<void> _pickScheduledTime(BuildContext context) async {
+  Future<void> _pickScheduledTimeRange(BuildContext context) async {
     final state = ref.read(driverTrackingProvider);
     final now = DateTime.now();
-    final date = await showDatePicker(
+    final initialStart = state.delivery?.scheduledAt ?? now;
+    final initialEnd = state.delivery?.scheduledEndAt ?? initialStart.add(const Duration(hours: 1));
+
+    // Start date + time
+    final startDate = await showDatePicker(
       context: context,
-      initialDate: state.delivery?.scheduledAt ?? now,
+      initialDate: initialStart,
       firstDate: now.subtract(const Duration(days: 1)),
       lastDate: now.add(const Duration(days: 365)),
     );
-    if (date == null || !context.mounted) return;
-    final time = await showTimePicker(
+    if (startDate == null || !context.mounted) return;
+    final startTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(state.delivery?.scheduledAt ?? now),
+      initialTime: TimeOfDay.fromDateTime(initialStart),
     );
-    if (time == null || !context.mounted) return;
-    final scheduledAt =
-        DateTime(date.year, date.month, date.day, time.hour, time.minute);
-    await ref
-        .read(driverTrackingProvider.notifier)
-        .updateScheduledAt(scheduledAt);
+    if (startTime == null || !context.mounted) return;
+    final scheduledAt = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+      startTime.hour,
+      startTime.minute,
+    );
+
+    // End date + time (must be >= start)
+    final endDate = await showDatePicker(
+      context: context,
+      initialDate: initialEnd.isBefore(scheduledAt) ? scheduledAt : initialEnd,
+      firstDate: scheduledAt,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (endDate == null || !context.mounted) return;
+    final endTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(
+        initialEnd.isBefore(scheduledAt) ? scheduledAt.add(const Duration(hours: 1)) : initialEnd,
+      ),
+    );
+    if (endTime == null || !context.mounted) return;
+    final scheduledEndAt = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+      endTime.hour,
+      endTime.minute,
+    );
+    if (scheduledEndAt.isBefore(scheduledAt)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('L\'heure de fin doit être après l\'heure de début')),
+        );
+      }
+      return;
+    }
+    await ref.read(driverTrackingProvider.notifier).updateScheduledRange(
+          scheduledAt: scheduledAt,
+          scheduledEndAt: scheduledEndAt,
+        );
   }
 
   Future<void> _showAddOrEditRecipientDialog(
@@ -191,6 +231,21 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                         onAdd: () => _showAddOrEditRecipientDialog(),
                         onEdit: (r) =>
                             _showAddOrEditRecipientDialog(recipient: r),
+                        onShareRecipient: (r) {
+                          if (r.publicToken == null) return;
+                          final base =
+                              AppConfig.siteUrl.replaceAll(RegExp(r'/$'), '');
+                          final url = '$base/track?token=${r.publicToken}';
+                          Clipboard.setData(ClipboardData(text: url));
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Lien copié')));
+                          }
+                        },
+                        onMarkDelivered: (r) => ref
+                            .read(driverTrackingProvider.notifier)
+                            .markRecipientDelivered(r.id),
                       )),
                   const SizedBox(height: 32),
                   const FadeInUp(
@@ -203,7 +258,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                         delivery: state.delivery!,
                         problemController: _problemController,
                         delayController: _delayController,
-                        onPickTime: () => _pickScheduledTime(context),
+                        onPickTime: () => _pickScheduledTimeRange(context),
                       )),
                   const SizedBox(height: 32),
                   const FadeInUp(
@@ -359,11 +414,15 @@ class _RecipientsCard extends ConsumerWidget {
   final List<DeliveryRecipient> recipients;
   final Future<void> Function() onAdd;
   final Future<void> Function(DeliveryRecipient) onEdit;
+  final void Function(DeliveryRecipient) onShareRecipient;
+  final void Function(DeliveryRecipient) onMarkDelivered;
 
   const _RecipientsCard({
     required this.recipients,
     required this.onAdd,
     required this.onEdit,
+    required this.onShareRecipient,
+    required this.onMarkDelivered,
   });
 
   @override
@@ -395,6 +454,8 @@ class _RecipientsCard extends ConsumerWidget {
               itemBuilder: (_, index) => _RecipientTile(
                 recipient: recipients[index],
                 onEdit: onEdit,
+                onShare: onShareRecipient,
+                onMarkDelivered: onMarkDelivered,
               ),
               separatorBuilder: (_, __) => Divider(
                   height: 1,
@@ -431,15 +492,44 @@ class _RecipientsCard extends ConsumerWidget {
 class _RecipientTile extends ConsumerWidget {
   final DeliveryRecipient recipient;
   final Future<void> Function(DeliveryRecipient) onEdit;
+  final void Function(DeliveryRecipient)? onShare;
+  final void Function(DeliveryRecipient)? onMarkDelivered;
 
-  const _RecipientTile({required this.recipient, required this.onEdit});
+  const _RecipientTile({
+    required this.recipient,
+    required this.onEdit,
+    this.onShare,
+    this.onMarkDelivered,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isDelivered = recipient.deliveredAt != null;
+    final canShare = recipient.publicToken != null && onShare != null;
+    final canMarkDelivered =
+        !isDelivered && onMarkDelivered != null;
+
     return ListTile(
-      title: Text(recipient.label,
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(recipient.label,
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          ),
+          if (isDelivered)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('Livré',
+                  style: GoogleFonts.poppins(
+                      fontSize: 12, fontWeight: FontWeight.w600)),
+            ),
+        ],
+      ),
       subtitle: Text(
         'Prévu à ${DateFormat('HH:mm', 'fr_FR').format(recipient.scheduledAt)}',
         style: GoogleFonts.poppins(
@@ -474,10 +564,20 @@ class _RecipientTile extends ConsumerWidget {
                   .read(driverTrackingProvider.notifier)
                   .deleteRecipient(recipient.id);
             }
+          } else if (value == 'share' && canShare) {
+            onShare!(recipient);
+          } else if (value == 'mark_delivered' && canMarkDelivered) {
+            onMarkDelivered!(recipient);
           }
         },
         itemBuilder: (context) => [
           const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+          if (canShare)
+            const PopupMenuItem(
+                value: 'share', child: Text('Copier lien de suivi')),
+          if (canMarkDelivered)
+            const PopupMenuItem(
+                value: 'mark_delivered', child: Text('Marquer comme livré')),
           const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
         ],
       ),
@@ -501,9 +601,17 @@ class _LiveUpdatesCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final scheduledStr = delivery.scheduledAt != null
-        ? DateFormat('dd/MM à HH:mm', 'fr_FR').format(delivery.scheduledAt!)
-        : 'Non définie';
+    String scheduledStr;
+    if (delivery.scheduledAt == null) {
+      scheduledStr = 'Non définie';
+    } else if (delivery.scheduledEndAt != null) {
+      scheduledStr =
+          '${DateFormat('dd/MM', 'fr_FR').format(delivery.scheduledAt!)} '
+          '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledAt!)} – '
+          '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledEndAt!)}';
+    } else {
+      scheduledStr = DateFormat('dd/MM à HH:mm', 'fr_FR').format(delivery.scheduledAt!);
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -515,7 +623,7 @@ class _LiveUpdatesCard extends ConsumerWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.schedule_outlined),
-            title: Text('Heure de livraison prévue',
+            title: Text('Créneau de livraison prévu',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
             subtitle: Text(scheduledStr,
                 style: GoogleFonts.poppins(
@@ -614,9 +722,10 @@ class _SessionDetailsCard extends StatelessWidget {
   const _SessionDetailsCard(
       {required this.delivery, required this.onResetToken});
 
+  /// Full-view link (all recipients). Per-recipient links use /track?token=recipient.publicToken.
   String _trackingUrl(Delivery delivery) {
     final base = AppConfig.siteUrl.replaceAll(RegExp(r'/$'), '');
-    return '$base/track/${delivery.id}?token=${delivery.publicToken}';
+    return '$base/track?token=${delivery.publicToken}';
   }
 
   @override
