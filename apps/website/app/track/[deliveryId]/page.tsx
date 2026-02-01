@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, AlertTriangle, ShipWheel, Users } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 // --- Data Interfaces ---
 interface Delivery {
@@ -32,13 +32,12 @@ interface DeliveryRecipient {
   sort_order: number;
 }
 
-// --- Dynamic Map Import (no changes) ---
+// --- Dynamic Map Import & Helpers ---
 const TrackMapClient = dynamic(
   () => import("./TrackMapClient").then((mod) => mod.TrackMapClient),
   { ssr: false },
 );
 
-// --- Helper Functions ---
 function calculateETA(
   iso: string | null,
   delayMinutes: number | null,
@@ -60,7 +59,6 @@ function formatTime(date: Date | null): string {
 }
 
 // --- Sub-Components ---
-
 function StatusPanel({ delivery }: { delivery: Delivery }) {
   const eta = calculateETA(delivery.scheduled_at, delivery.delay_minutes);
   const isProblem = !!delivery.problem_message;
@@ -71,7 +69,7 @@ function StatusPanel({ delivery }: { delivery: Delivery }) {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
-      className="z-999 rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
+      className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
     >
       <div className="flex items-start justify-between">
         <div>
@@ -87,7 +85,6 @@ function StatusPanel({ delivery }: { delivery: Delivery }) {
           <span className="text-gray-700 dark:text-gray-300">En direct</span>
         </div>
       </div>
-
       <AnimatePresence>
         {(isDelayed || isProblem) && (
           <motion.div
@@ -145,7 +142,6 @@ function RecipientsPanel({ recipients }: { recipients: DeliveryRecipient[] }) {
           <span>Ordre de livraison</span>
         </h3>
       </div>
-
       <ul className="space-y-3 overflow-y-auto p-4 sm:p-6">
         {recipients.map((r, index) => (
           <li key={r.id} className="flex items-center gap-4">
@@ -175,12 +171,9 @@ function RecipientsPanel({ recipients }: { recipients: DeliveryRecipient[] }) {
   );
 }
 
-function StoppedOverlay(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- prop kept for API
-  { delivery }: { delivery: Delivery },
-) {
+function StoppedOverlay({ delivery }: { delivery: Delivery }) {
   return (
-    <div className="absolute inset-0 z-999 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -204,6 +197,7 @@ function StoppedOverlay(
   );
 }
 
+// --- Main Content Component ---
 function DeliveryTrackingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -217,49 +211,54 @@ function DeliveryTrackingContent() {
 
   const supabase = useMemo(() => createClient(), []);
 
-  // Initial Data Loading
+  const loadRecipients = useCallback(async () => {
+    const { data } = await supabase
+      .from("delivery_recipients")
+      .select("*")
+      .eq("delivery_id", deliveryId)
+      .order("sort_order")
+      .order("scheduled_at");
+    if (data) {
+      setRecipients(data);
+    }
+  }, [supabase, deliveryId]);
+
   useEffect(() => {
     async function loadInitialData() {
-      // ... same logic as before ...
+      setIsLoading(true);
       if (!token || !deliveryId) {
-        setError("URL invalide.");
+        setError("URL invalide ou informations manquantes.");
         setIsLoading(false);
         return;
       }
       try {
-        const { data, error: fetchError } = await supabase
+        const { data: deliveryData, error: deliveryError } = await supabase
           .from("deliveries")
           .select("*")
           .eq("id", deliveryId)
           .eq("public_token", token)
-          .maybeSingle();
-        console.log("data", data);
-        console.log("fetchError", fetchError);
-        if (fetchError) {
-          setError("Une erreur est survenue.");
-          setIsLoading(false);
-          return;
-        }
-        if (!data) {
+          .single();
+
+        if (deliveryError || !deliveryData) {
           setError("Livraison introuvable, expirée ou lien invalide.");
           setIsLoading(false);
           return;
         }
-        if (new Date(data.expires_at) < new Date()) {
-          setError("Cette livraison a expiré.");
-          setIsLoading(false);
-          return;
-        }
-        setDelivery(data);
+
         const { data: recipientsData } = await supabase
           .from("delivery_recipients")
           .select("*")
           .eq("delivery_id", deliveryId)
           .order("sort_order")
           .order("scheduled_at");
-        if (recipientsData) setRecipients(recipientsData);
-      } catch {
-        setError("Une erreur est survenue.");
+
+        setDelivery(deliveryData);
+        if (recipientsData) {
+          setRecipients(recipientsData);
+        }
+      } catch (err) {
+        console.error("Error loading initial data:", err);
+        setError("Une erreur est survenue lors du chargement des données.");
       } finally {
         setIsLoading(false);
       }
@@ -267,26 +266,13 @@ function DeliveryTrackingContent() {
     loadInitialData();
   }, [token, deliveryId, supabase]);
 
-  // Realtime subscription: only after we have a validated delivery (so token + row exist).
-  // Ensure Database > Replication has "deliveries" and "delivery_recipients" in supabase_realtime.
   useEffect(() => {
-    if (!delivery?.id || !token) return;
-
-    const loadRecipients = async () => {
-      const { data } = await supabase
-        .from("delivery_recipients")
-        .select("*")
-        .eq("delivery_id", deliveryId)
-        .order("sort_order")
-        .order("scheduled_at");
-      if (data) setRecipients(data);
-    };
+    if (!deliveryId || !token) return;
 
     const channel = supabase.channel(`delivery-tracking:${deliveryId}`, {
-      config: {
-        broadcast: { self: true },
-      },
+      config: { broadcast: { self: true } },
     });
+
     channel
       .on<Delivery>(
         "postgres_changes",
@@ -297,8 +283,8 @@ function DeliveryTrackingContent() {
           filter: `id=eq.${deliveryId}`,
         },
         (payload) => {
-          const updatedDelivery = payload.new;
-          setDelivery(updatedDelivery);
+          console.log("Realtime delivery UPDATE received:", payload.new);
+          setDelivery(payload.new);
         },
       )
       .on(
@@ -309,24 +295,27 @@ function DeliveryTrackingContent() {
           table: "delivery_recipients",
           filter: `delivery_id=eq.${deliveryId}`,
         },
-        () => void loadRecipients(),
+        (payload) => {
+          console.log("Realtime recipients change received:", payload);
+          void loadRecipients();
+        },
       )
       .subscribe((status, err) => {
         if (status === "SUBSCRIBED") {
-          console.log(
-            "Successfully subscribed to realtime channel with token!",
-          );
+          console.log("Successfully subscribed to realtime channel!");
         }
         if (status === "CHANNEL_ERROR") {
           console.error("Realtime channel error:", err);
-          setError("La connexion au suivi en direct a été perdue.");
+          setError(
+            "La connexion au suivi en direct a été perdue. Réactualisez la page.",
+          );
         }
       });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [delivery?.id, token, supabase, deliveryId]);
+  }, [deliveryId, token, supabase, loadRecipients]);
 
   if (isLoading) {
     return <TrackPageLoadingFallback />;
@@ -347,7 +336,7 @@ function DeliveryTrackingContent() {
   }
 
   if (!delivery) {
-    return null; // Should be handled by error state
+    return null;
   }
 
   const hasPosition = delivery.latitude !== null && delivery.longitude !== null;
@@ -362,19 +351,17 @@ function DeliveryTrackingContent() {
         delivery={delivery}
         hasPosition={hasPosition}
       />
-
       <AnimatePresence>
         {!delivery.is_tracking_active && <StoppedOverlay delivery={delivery} />}
       </AnimatePresence>
-
       {delivery.is_tracking_active && (
         <>
-          <div className="absolute top-0 right-0 left-0 z-999 p-3 sm:p-4">
+          <div className="absolute top-0 right-0 left-0 z-10 p-3 sm:p-4">
             <div className="mx-auto max-w-lg">
               <StatusPanel delivery={delivery} />
             </div>
           </div>
-          <div className="absolute right-0 bottom-0 left-0 z-999 p-3 sm:p-4">
+          <div className="absolute right-0 bottom-0 left-0 z-10 p-3 sm:p-4">
             <RecipientsPanel recipients={recipients} />
           </div>
         </>
@@ -383,6 +370,7 @@ function DeliveryTrackingContent() {
   );
 }
 
+// --- Loading Fallback and Page Export ---
 function TrackPageLoadingFallback() {
   return (
     <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 dark:bg-gray-950">
