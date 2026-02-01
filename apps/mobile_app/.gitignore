@@ -44,5 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Windows and Linux (only building for iOS and Android)
+/windows/
+/linux/
+
 # Environment variables
 .env

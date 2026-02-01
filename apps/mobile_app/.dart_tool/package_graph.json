@@ -264,11 +264,12 @@
     },
     {
       "name": "uuid",
-      "version": "4.5.2",
+      "version": "4.5.1",
       "dependencies": [
         "crypto",
         "fixnum",
-        "meta"
+        "meta",
+        "sprintf"
       ]
     },
     {
@@ -305,7 +306,7 @@
     },
     {
       "name": "package_info_plus",
-      "version": "8.3.1",
+      "version": "8.3.0",
       "dependencies": [
         "clock",
         "ffi",
@@ -321,7 +322,7 @@
     },
     {
       "name": "connectivity_plus",
-      "version": "6.1.5",
+      "version": "6.1.4",
       "dependencies": [
         "collection",
         "connectivity_plus_platform_interface",
@@ -334,10 +335,8 @@
     },
     {
       "name": "logger",
-      "version": "2.6.2",
-      "dependencies": [
-        "meta"
-      ]
+      "version": "2.5.0",
+      "dependencies": []
     },
     {
       "name": "shared_preferences",
@@ -372,20 +371,19 @@
     },
     {
       "name": "dio",
-      "version": "5.9.1",
+      "version": "5.8.0+1",
       "dependencies": [
         "async",
         "collection",
         "dio_web_adapter",
         "http_parser",
         "meta",
-        "mime",
         "path"
       ]
     },
     {
       "name": "supabase_flutter",
-      "version": "2.12.0",
+      "version": "2.9.1",
       "dependencies": [
         "app_links",
         "async",
@@ -451,7 +449,7 @@
     },
     {
       "name": "url_launcher",
-      "version": "6.3.2",
+      "version": "6.3.1",
       "dependencies": [
         "flutter",
         "url_launcher_android",
@@ -584,7 +582,7 @@
     },
     {
       "name": "code_builder",
-      "version": "4.11.1",
+      "version": "4.10.1",
       "dependencies": [
         "built_collection",
         "built_value",
@@ -689,7 +687,7 @@
     },
     {
       "name": "crypto",
-      "version": "3.0.7",
+      "version": "3.0.6",
       "dependencies": [
         "typed_data"
       ]
@@ -716,7 +714,7 @@
     },
     {
       "name": "watcher",
-      "version": "1.2.1",
+      "version": "1.1.1",
       "dependencies": [
         "async",
         "path"
@@ -764,7 +762,7 @@
     },
     {
       "name": "pool",
-      "version": "1.5.2",
+      "version": "1.5.1",
       "dependencies": [
         "async",
         "stack_trace"
@@ -880,7 +878,7 @@
     },
     {
       "name": "build_daemon",
-      "version": "4.1.1",
+      "version": "4.0.4",
       "dependencies": [
         "built_collection",
         "built_value",
@@ -1010,7 +1008,7 @@
     },
     {
       "name": "win32",
-      "version": "5.15.0",
+      "version": "5.13.0",
       "dependencies": [
         "ffi"
       ]
@@ -1022,7 +1020,7 @@
     },
     {
       "name": "ffi",
-      "version": "2.1.5",
+      "version": "2.1.4",
       "dependencies": []
     },
     {
@@ -1035,7 +1033,7 @@
     },
     {
       "name": "url_launcher_linux",
-      "version": "3.2.2",
+      "version": "3.2.1",
       "dependencies": [
         "flutter",
         "url_launcher_platform_interface"
@@ -1043,7 +1041,7 @@
     },
     {
       "name": "url_launcher_windows",
-      "version": "3.1.5",
+      "version": "3.1.4",
       "dependencies": [
         "flutter",
         "url_launcher_platform_interface"
@@ -1215,8 +1213,13 @@
       "dependencies": []
     },
     {
+      "name": "sprintf",
+      "version": "7.0.0",
+      "dependencies": []
+    },
+    {
       "name": "package_info_plus_platform_interface",
-      "version": "3.2.1",
+      "version": "3.2.0",
       "dependencies": [
         "flutter",
         "meta",
@@ -1225,7 +1228,7 @@
     },
     {
       "name": "http",
-      "version": "1.6.0",
+      "version": "1.4.0",
       "dependencies": [
         "async",
         "http_parser",
@@ -1301,7 +1304,7 @@
     },
     {
       "name": "shared_preferences_android",
-      "version": "2.4.13",
+      "version": "2.4.10",
       "dependencies": [
         "flutter",
         "shared_preferences_platform_interface"
@@ -1341,7 +1344,7 @@
     },
     {
       "name": "supabase",
-      "version": "2.10.2",
+      "version": "2.8.0",
       "dependencies": [
         "functions_client",
         "gotrue",
@@ -1356,7 +1359,7 @@
     },
     {
       "name": "app_links",
-      "version": "6.4.1",
+      "version": "6.4.0",
       "dependencies": [
         "app_links_linux",
         "app_links_platform_interface",
@@ -1423,7 +1426,7 @@
     },
     {
       "name": "url_launcher_macos",
-      "version": "3.2.3",
+      "version": "3.2.2",
       "dependencies": [
         "flutter",
         "url_launcher_platform_interface"
@@ -1431,7 +1434,7 @@
     },
     {
       "name": "url_launcher_ios",
-      "version": "6.3.4",
+      "version": "6.3.3",
       "dependencies": [
         "flutter",
         "url_launcher_platform_interface"
@@ -1439,7 +1442,7 @@
     },
     {
       "name": "url_launcher_android",
-      "version": "6.3.20",
+      "version": "6.3.16",
       "dependencies": [
         "flutter",
         "url_launcher_platform_interface"
@@ -1452,7 +1455,7 @@
     },
     {
       "name": "built_value",
-      "version": "8.12.3",
+      "version": "8.10.1",
       "dependencies": [
         "built_collection",
         "collection",
@@ -1585,7 +1588,7 @@
     },
     {
       "name": "path_provider_foundation",
-      "version": "2.4.2",
+      "version": "2.4.1",
       "dependencies": [
         "flutter",
         "path_provider_platform_interface"
@@ -1593,7 +1596,7 @@
     },
     {
       "name": "path_provider_android",
-      "version": "2.2.19",
+      "version": "2.2.17",
       "dependencies": [
         "flutter",
         "path_provider_platform_interface"
@@ -1613,7 +1616,7 @@
     },
     {
       "name": "storage_client",
-      "version": "2.4.1",
+      "version": "2.4.0",
       "dependencies": [
         "http",
         "http_parser",
@@ -1625,7 +1628,7 @@
     },
     {
       "name": "realtime_client",
-      "version": "2.7.0",
+      "version": "2.5.1",
       "dependencies": [
         "collection",
         "http",
@@ -1636,7 +1639,7 @@
     },
     {
       "name": "postgrest",
-      "version": "2.6.0",
+      "version": "2.4.2",
       "dependencies": [
         "http",
         "logging",
@@ -1646,11 +1649,10 @@
     },
     {
       "name": "gotrue",
-      "version": "2.18.0",
+      "version": "2.13.0",
       "dependencies": [
         "collection",
         "crypto",
-        "dart_jsonwebtoken",
         "http",
         "jwt_decode",
         "logging",
@@ -1662,7 +1664,7 @@
     },
     {
       "name": "functions_client",
-      "version": "2.5.0",
+      "version": "2.4.3",
       "dependencies": [
         "http",
         "logging",
@@ -1733,7 +1735,7 @@
     },
     {
       "name": "xml",
-      "version": "6.6.1",
+      "version": "6.5.0",
       "dependencies": [
         "collection",
         "meta",
@@ -1751,16 +1753,6 @@
       "dependencies": []
     },
     {
-      "name": "dart_jsonwebtoken",
-      "version": "3.3.1",
-      "dependencies": [
-        "clock",
-        "convert",
-        "ed25519_edwards",
-        "pointycastle"
-      ]
-    },
-    {
       "name": "jwt_decode",
       "version": "0.3.1",
       "dependencies": []
@@ -1776,7 +1768,7 @@
     },
     {
       "name": "sqflite_common",
-      "version": "2.5.6",
+      "version": "2.5.5",
       "dependencies": [
         "meta",
         "path",
@@ -1817,41 +1809,16 @@
     },
     {
       "name": "petitparser",
-      "version": "7.0.1",
+      "version": "6.1.0",
       "dependencies": [
         "collection",
         "meta"
       ]
     },
     {
-      "name": "ed25519_edwards",
-      "version": "0.3.1",
-      "dependencies": [
-        "adaptive_number",
-        "collection",
-        "convert",
-        "crypto"
-      ]
-    },
-    {
-      "name": "pointycastle",
-      "version": "4.0.0",
-      "dependencies": [
-        "collection",
-        "convert"
-      ]
-    },
-    {
       "name": "synchronized",
-      "version": "3.4.0",
+      "version": "3.3.1",
       "dependencies": []
-    },
-    {
-      "name": "adaptive_number",
-      "version": "1.0.0",
-      "dependencies": [
-        "fixnum"
-      ]
     }
   ],
   "configVersion": 1
