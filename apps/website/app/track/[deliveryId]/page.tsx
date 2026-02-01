@@ -127,10 +127,12 @@ function DeliveryTrackingContent() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
         <div className="text-center">
           <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-          <p className="text-gray-600">Chargement du suivi...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Chargement du suivi...
+          </p>
         </div>
       </div>
     );
@@ -138,13 +140,13 @@ function DeliveryTrackingContent() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="mx-auto max-w-md rounded-lg border border-red-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-3 text-red-600">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
+        <div className="mx-auto max-w-md rounded-xl border border-red-200 bg-white p-4 shadow-sm transition-colors duration-200 sm:p-6 dark:border-red-900/50 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
+          <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
             <AlertCircle className="h-5 w-5" />
             <h2 className="text-lg font-semibold">Erreur</h2>
           </div>
-          <p className="mt-2 text-gray-600">{error}</p>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">{error}</p>
         </div>
       </div>
     );
@@ -157,24 +159,27 @@ function DeliveryTrackingContent() {
   // Tracking stopped: show only a grandiose white card, no map or position
   if (!delivery.is_tracking_active) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-gray-100 to-gray-200 px-4 py-12">
-        <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl">
-          <div className="px-10 py-14 text-center sm:px-14 sm:py-16">
-            <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-gray-100">
-              <MapPin className="h-12 w-12 text-gray-400" strokeWidth={1.5} />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 px-4 py-12 transition-colors duration-200 dark:from-gray-900 dark:to-gray-950">
+        <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
+          <div className="px-6 py-14 text-center sm:px-10 sm:py-16">
+            <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+              <MapPin
+                className="h-12 w-12 text-gray-400 dark:text-gray-500"
+                strokeWidth={1.5}
+              />
             </div>
-            <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase">
+            <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase dark:text-gray-500">
               Suivi de livraison
             </p>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
               Suivi en direct indisponible
             </h1>
-            <p className="mx-auto mt-6 max-w-sm text-base leading-relaxed text-gray-500">
+            <p className="mx-auto mt-6 max-w-sm text-base leading-relaxed text-gray-500 dark:text-gray-400">
               Le conducteur a arrêté le partage de sa position. Vous serez
               informé dès que le suivi en temps réel sera de nouveau actif.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600">
-              <span className="h-2 w-2 rounded-full bg-gray-400" />
+            <div className="mt-10 flex items-center justify-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+              <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500" />
               Suivi arrêté
             </div>
           </div>
@@ -189,28 +194,28 @@ function DeliveryTrackingContent() {
     : [48.7426, 7.3622]; // Default to Saverne, France
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
       {/* Header */}
-      <div className="border-b bg-white shadow-sm">
+      <div className="border-b bg-white shadow-sm transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-gray-100">
                 Suivi de livraison
               </h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Position mise à jour en temps réel
               </p>
             </div>
-            <div className="flex items-center gap-2 rounded-lg border bg-gray-50 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-lg border bg-gray-50 px-3 py-2 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
               <div
                 className={`h-2 w-2 rounded-full ${
                   delivery.is_tracking_active
-                    ? "animate-pulse bg-green-500"
-                    : "bg-gray-400"
+                    ? "animate-pulse bg-green-500 dark:bg-green-400"
+                    : "bg-gray-400 dark:bg-gray-500"
                 }`}
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {delivery.is_tracking_active ? "En cours" : "Arrêté"}
               </span>
             </div>
@@ -219,10 +224,7 @@ function DeliveryTrackingContent() {
       </div>
 
       {/* Map: explicit height so Leaflet can compute layout */}
-      <div
-        className="relative flex-1"
-        style={{ minHeight: 400, height: "50vh" }}
-      >
+      <div className="relative h-[50vh] min-h-[300px] flex-1 sm:min-h-[400px]">
         {mapReady && (
           <TrackMapClient
             center={center}
@@ -233,13 +235,13 @@ function DeliveryTrackingContent() {
 
         {/* No position overlay (tracking active but no position yet) */}
         {!hasPosition && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80">
-            <div className="rounded-lg border bg-white p-6 text-center shadow-lg">
-              <MapPin className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-4 text-lg font-semibold text-gray-900">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 dark:bg-gray-900/90">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-lg transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900 dark:shadow-none dark:ring-1 dark:ring-gray-800">
+              <MapPin className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+              <p className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Position non disponible
               </p>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 Le conducteur n&apos;a pas encore activé le suivi ou la position
                 n&apos;a pas encore été enregistrée.
               </p>
@@ -250,17 +252,17 @@ function DeliveryTrackingContent() {
 
       {/* Info footer */}
       {hasPosition && (
-        <div className="border-t bg-white px-4 py-3">
+        <div className="border-t bg-white px-4 py-3 transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900">
           <div className="mx-auto max-w-7xl">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-gray-600">
-                <MapPin className="h-4 w-4" />
+            <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                <MapPin className="h-4 w-4 dark:text-gray-500" />
                 <span>
                   Dernière mise à jour:{" "}
                   {new Date(delivery.updated_at).toLocaleString("fr-FR")}
                 </span>
               </div>
-              <div className="text-gray-500">
+              <div className="break-all text-gray-500 dark:text-gray-500">
                 Coordonnées: {delivery.latitude?.toFixed(6)},{" "}
                 {delivery.longitude?.toFixed(6)}
               </div>
@@ -274,10 +276,12 @@ function DeliveryTrackingContent() {
 
 function TrackPageLoadingFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
       <div className="text-center">
         <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-        <p className="text-gray-600">Chargement du suivi...</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          Chargement du suivi...
+        </p>
       </div>
     </div>
   );

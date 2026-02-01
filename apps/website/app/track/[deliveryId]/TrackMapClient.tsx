@@ -2,6 +2,7 @@
 
 import L from "leaflet";
 import { MapPin } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 
@@ -9,6 +10,14 @@ import "leaflet/dist/leaflet.css";
 
 // Use CDN URLs so the marker icon works regardless of Next.js asset resolution
 const LEAFLET_CDN = "https://unpkg.com/leaflet@1.9.4/dist/images";
+const OSM_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const CARTODB_DARK_TILES =
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
+const CARTODB_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
 const defaultMarkerIcon = L.icon({
   iconUrl: `${LEAFLET_CDN}/marker-icon.png`,
   iconRetinaUrl: `${LEAFLET_CDN}/marker-icon-2x.png`,
@@ -48,6 +57,11 @@ export function TrackMapClient({
   delivery,
   hasPosition,
 }: TrackMapClientProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const tileUrl = isDark ? CARTODB_DARK_TILES : OSM_TILES;
+  const attribution = isDark ? CARTODB_ATTRIBUTION : OSM_ATTRIBUTION;
+
   return (
     <div className="h-full min-h-[400px] w-full" style={{ minHeight: 400 }}>
       <MapContainer
@@ -57,10 +71,7 @@ export function TrackMapClient({
         scrollWheelZoom={true}
       >
         <MapSizeFix />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayer attribution={attribution} url={tileUrl} />
         {hasPosition &&
           delivery.latitude != null &&
           delivery.longitude != null && (
@@ -69,10 +80,10 @@ export function TrackMapClient({
               position={[delivery.latitude, delivery.longitude]}
             >
               <Popup>
-                <div className="text-center">
-                  <MapPin className="mx-auto h-5 w-5 text-blue-500" />
+                <div className="text-center text-gray-900 dark:text-gray-100">
+                  <MapPin className="mx-auto h-5 w-5 text-blue-500 dark:text-blue-400" />
                   <p className="mt-1 text-sm font-medium">Position actuelle</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(delivery.updated_at).toLocaleString("fr-FR")}
                   </p>
                 </div>

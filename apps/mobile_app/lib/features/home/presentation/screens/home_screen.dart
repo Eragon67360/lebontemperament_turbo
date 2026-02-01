@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -21,32 +23,27 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: theme.colorScheme.surface,
       body: CustomScrollView(
         slivers: [
-          // We use Slivers for a more dynamic and flexible layout than a simple Column.
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
-              20.0, // Left padding
-              60.0, // Top padding
-              20.0, // Right padding
+              20.0,
+              60.0,
+              20.0,
               kFloatingNavBarBottomPadding,
             ),
             sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // --- 1. Welcome Header ---
-                const _WelcomeHeader(),
-                const SizedBox(height: 40),
-
-                // --- 2. Quick Actions ---
-                const _SectionTitle(title: 'Actions rapides'),
-                const SizedBox(height: 16),
-                const _QuickActions(),
-                const SizedBox(height: 40),
-
-                // --- 3. App Info & Beta Notice ---
-                const _InfoCard(),
-                const SizedBox(height: 24),
-                const _BetaNoticeCard(),
-                const SizedBox(height: 80), // Extra bottom padding for nav bar
-              ]),
+              delegate: SliverChildListDelegate(
+                [
+                  const _WelcomeHeader(),
+                  const SizedBox(height: 40),
+                  const _SectionTitle(title: 'Actions rapides'),
+                  const SizedBox(height: 16),
+                  const _QuickActions(),
+                  const SizedBox(height: 40),
+                  const _InfoCard(),
+                  const SizedBox(height: 24),
+                  const _BetaNoticeCard(),
+                ],
+              ),
             ),
           ),
         ],
@@ -147,27 +144,44 @@ class _QuickActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationNotifier = ref.read(mainNavigationProvider.notifier);
+    final isSuperadmin = ref.watch(isSuperadminProvider).valueOrNull ?? false;
+
     return FadeInUp(
       delay: 300,
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: _NavigationCard(
-              icon: Icons.music_note_outlined,
-              title: 'Répétitions',
-              subtitle: 'Voir les répétitions',
-              onTap: () => navigationNotifier.setTab(3),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: _NavigationCard(
+                  icon: Icons.repeat_rounded,
+                  title: 'Répétitions',
+                  subtitle: 'Voir les répétitions',
+                  onTap: () => navigationNotifier.setTab(3),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _NavigationCard(
+                  icon: Icons.person_outline,
+                  title: 'Profil',
+                  subtitle: 'Gérer votre profil',
+                  onTap: () => navigationNotifier.setTab(4),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _NavigationCard(
-              icon: Icons.person_outline,
-              title: 'Profil',
-              subtitle: 'Gérer votre profil',
-              onTap: () => navigationNotifier.setTab(4),
+          // --- NEW: Conditional Admin Card ---
+          if (isSuperadmin) ...[
+            const SizedBox(height: 16),
+            _NavigationCard(
+              icon: Icons.local_shipping_outlined,
+              title: 'Suivi Livraison',
+              subtitle: 'Partager votre position en temps réel',
+              onTap: () => context.push('/driver-tracking'),
+              isHighlighted: true, // Make it stand out
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -179,17 +193,26 @@ class _NavigationCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool isHighlighted;
 
   const _NavigationCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.isHighlighted = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bgColor = isHighlighted
+        ? theme.colorScheme.primaryContainer
+        : theme.colorScheme.surfaceVariant.withOpacity(0.5);
+    final iconColor = isHighlighted
+        ? theme.colorScheme.onPrimaryContainer
+        : theme.colorScheme.primary;
+
     return InkWell(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -199,39 +222,45 @@ class _NavigationCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          color: bgColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: iconColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: theme.colorScheme.primary, size: 24),
+              child: Icon(icon, color: iconColor, size: 24),
             ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 12,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -253,7 +282,13 @@ class _InfoCard extends ConsumerWidget {
       child: InkWell(
         onTap: () {
           HapticFeedback.lightImpact();
+          // Navigate to Profile -> About
           navigationNotifier.setTab(4);
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+            // Placeholder, assuming you have an AboutScreen
+            // you might need to import it.
+            return const Scaffold(body: Center(child: Text("About Screen")));
+          }));
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
@@ -327,7 +362,8 @@ class _BetaNoticeCard extends StatelessWidget {
   Future<void> _launchEmail(BuildContext context) async {
     final uri = Uri(
       scheme: 'mailto',
-      path: kSupportEmail,
+      path:
+          'contactlebontemperament@gmail.com', // Replace with your support email
       query: Uri(queryParameters: {
         'subject': 'Retour version bêta - Le Bon Tempérament',
       }).query,
@@ -337,23 +373,20 @@ class _BetaNoticeCard extends StatelessWidget {
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Impossible d\'ouvrir l\'application email.'),
-        ),
+            content: Text('Impossible d\'ouvrir l\'application email.')),
       );
     }
   }
 
   Future<void> _launchWhatsApp(BuildContext context) async {
     final uri = Uri.parse(
-      'https://wa.me/${kSupportWhatsAppPhone}',
+      'https://wa.me/YOUR_PHONE_NUMBER', // Replace with your support WhatsApp number
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible d\'ouvrir WhatsApp.'),
-        ),
+        const SnackBar(content: Text('Impossible d\'ouvrir WhatsApp.')),
       );
     }
   }
@@ -387,7 +420,8 @@ class _BetaNoticeCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(20),
@@ -519,14 +553,10 @@ class _FadeInUpState extends State<FadeInUp>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _opacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _opacity = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _translateY = Tween<double>(begin: 30.0, end: 0.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) {
