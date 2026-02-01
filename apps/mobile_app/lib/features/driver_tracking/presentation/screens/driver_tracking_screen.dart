@@ -251,11 +251,17 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                             recipients: state.recipients,
                             onAdd: () => _showAddOrEditRecipientDialog(),
                             onTapRecipient: (recipient) {
-                              context
-                                  .push('/driver-tracking/recipient', extra: {
-                                'delivery': state.delivery!,
-                                'recipient': recipient,
-                              });
+                              // THIS IS THE PART TO CHANGE
+                              context.push(
+                                '/driver-tracking/recipient',
+                                extra: {
+                                  'delivery': state.delivery!,
+                                  'recipient': recipient,
+                                  // Add the callback here
+                                  'onEdit': () => _showAddOrEditRecipientDialog(
+                                      recipient: recipient),
+                                },
+                              );
                             },
                             onReorder: (newOrder) => ref
                                 .read(driverTrackingProvider.notifier)

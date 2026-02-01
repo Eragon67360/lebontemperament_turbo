@@ -128,19 +128,22 @@ class AppRouter {
                   'recipient', // This creates the full path: /driver-tracking/recipient
               name: driverTrackingRecipient,
               builder: (context, state) {
-                // Safely extract the delivery and recipient objects from 'extra'
                 final extra = state.extra as Map<String, dynamic>?;
                 if (extra != null &&
                     extra.containsKey('delivery') &&
-                    extra.containsKey('recipient')) {
+                    extra.containsKey('recipient') &&
+                    extra.containsKey('onEdit')) {
+                  // <-- Add check for onEdit
                   final delivery = extra['delivery'] as Delivery;
                   final recipient = extra['recipient'] as DeliveryRecipient;
+                  final onEdit = extra['onEdit'] as Future<void>
+                      Function(); // <-- Extract onEdit
                   return RecipientDetailsScreen(
                     delivery: delivery,
                     recipient: recipient,
+                    onEdit: onEdit, // <-- Pass it to the screen
                   );
                 }
-                // Fallback widget if the required data is missing
                 return Scaffold(
                   appBar: AppBar(),
                   body: const Center(

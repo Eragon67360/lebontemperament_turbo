@@ -1,11 +1,14 @@
-import 'dart:io' show Platform; // Import Platform to check OS
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Required for Clipboard
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart'; // Required for pop
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/config/app_config.dart'; // Required for site URL
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../providers/driver_tracking_provider.dart';
@@ -13,15 +16,17 @@ import '../providers/driver_tracking_provider.dart';
 class RecipientDetailsScreen extends ConsumerWidget {
   final Delivery delivery;
   final DeliveryRecipient recipient;
+  // This callback allows us to trigger the dialog from the parent screen
+  final Future<void> Function() onEdit;
 
   const RecipientDetailsScreen({
     super.key,
     required this.delivery,
     required this.recipient,
+    required this.onEdit,
   });
 
-  /// Launches the most appropriate map application with the recipient's coordinates.
-  /// Falls back to the address string if coordinates are not available.
+  /// Launches the most appropriate map application.
   Future<void> _launchMaps(
     BuildContext context, {
     double? lat,
@@ -29,21 +34,13 @@ class RecipientDetailsScreen extends ConsumerWidget {
     String? address,
   }) async {
     Uri? uri;
-
-    // --- NEW LOGIC ---
-    // Prioritize precise coordinates
     if (lat != null && lng != null) {
       if (Platform.isIOS) {
-        // Use Apple Maps URL scheme for iOS for the best experience
         uri = Uri.parse('https://maps.apple.com/?q=$lat,$lng');
       } else {
-        // Use the universal 'geo' scheme for Android. This will open a chooser
-        // dialog if multiple map apps (Google Maps, Waze, etc.) are installed.
         uri = Uri.parse('geo:$lat,$lng');
       }
-    }
-    // Fallback to address string if no coordinates are present
-    else if (address != null && address.isNotEmpty) {
+    } else if (address != null && address.isNotEmpty) {
       if (Platform.isIOS) {
         uri = Uri.parse(
             'https://maps.apple.com/?q=${Uri.encodeComponent(address)}');
@@ -62,6 +59,44 @@ class RecipientDetailsScreen extends ConsumerWidget {
     }
   }
 
+  /// Constructs the unique tracking URL for this recipient.
+  String _getRecipientUrl(DeliveryRecipient recipient) {
+    if (recipient.publicToken == null) return '';
+    final base = AppConfig.siteUrl.replaceAll(RegExp(r'/$'), '');
+    return '$base/track?token=${recipient.publicToken}';
+  }
+
+  /// Shows a confirmation dialog before deleting the recipient.
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, String recipientId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer le destinataire ?'),
+        content: const Text('Cette action est irréversible.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Annuler')),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      await ref
+          .read(driverTrackingProvider.notifier)
+          .deleteRecipient(recipientId);
+      // Go back to the previous screen since this one no longer represents a valid item.
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(driverTrackingProvider);
@@ -75,12 +110,11 @@ class RecipientDetailsScreen extends ConsumerWidget {
     final isDelivered = currentRecipient.deliveredAt != null;
     final isInProgress =
         currentDelivery.currentRecipientId == currentRecipient.id;
-
-    // Determine if we have enough info to launch maps
     final canLaunchMaps = (currentRecipient.latitude != null &&
             currentRecipient.longitude != null) ||
         (currentRecipient.address != null &&
             currentRecipient.address!.isNotEmpty);
+    final canShare = currentRecipient.publicToken != null;
 
     String statusLabel;
     Color statusColor;
@@ -123,13 +157,10 @@ class RecipientDetailsScreen extends ConsumerWidget {
                           color: statusColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
-                          statusLabel,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            color: statusColor,
-                          ),
-                        ),
+                        child: Text(statusLabel,
+                            style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                color: statusColor)),
                       ),
                     ],
                   ),
@@ -191,7 +222,7 @@ class RecipientDetailsScreen extends ConsumerWidget {
                 ref
                     .read(driverTrackingProvider.notifier)
                     .markRecipientDelivered(currentRecipient.id);
-                Navigator.of(context).pop();
+                context.pop();
               },
             ),
             const SizedBox(height: 12),
@@ -207,21 +238,27 @@ class RecipientDetailsScreen extends ConsumerWidget {
           const Divider(),
           const SizedBox(height: 24),
 
-          // --- NOTE: These buttons need the dialogs from the main screen ---
-          // This example shows them disabled, but you would pass the functions
-          // from the main screen to enable them if you choose to.
+          // --- Management Buttons ---
           _ActionButton(
             label: 'Modifier les informations',
             icon: Icons.edit_outlined,
             isSecondary: true,
-            onPressed: null, // To be implemented via main screen
+            onPressed: onEdit, // <-- Use the callback passed from the parent
           ),
           const SizedBox(height: 12),
           _ActionButton(
             label: 'Copier le lien de suivi',
             icon: Icons.copy_all_outlined,
             isSecondary: true,
-            onPressed: null, // To be implemented via main screen
+            onPressed: canShare
+                ? () {
+                    // <-- Implement directly here
+                    final url = _getRecipientUrl(currentRecipient);
+                    Clipboard.setData(ClipboardData(text: url));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Lien copié dans le presse-papiers')));
+                  }
+                : null, // <-- Disable if no token
           ),
           const SizedBox(height: 12),
           _ActionButton(
@@ -229,7 +266,8 @@ class RecipientDetailsScreen extends ConsumerWidget {
             icon: Icons.delete_outline_rounded,
             color: theme.colorScheme.error,
             isSecondary: true,
-            onPressed: null, // To be implemented via main screen
+            onPressed: () => _confirmDelete(context, ref,
+                currentRecipient.id), // <-- Implement directly here
           ),
         ],
       ),
@@ -262,8 +300,10 @@ class _ActionButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: color,
           side: BorderSide(
-              color: color ??
-                  Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+              color: onPressed == null
+                  ? Colors.grey.withOpacity(0.4)
+                  : color ??
+                      Theme.of(context).colorScheme.outline.withOpacity(0.5)),
           padding: const EdgeInsets.symmetric(vertical: 14),
           textStyle:
               GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
