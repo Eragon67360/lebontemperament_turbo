@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart'; // Add `google_fonts` to your pubspec.yaml
-import 'package:url_launcher/url_launcher.dart';
+import 'package:mobile_app/core/constants/ui_constants.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
 
@@ -24,10 +23,11 @@ class HomeScreen extends ConsumerWidget {
         slivers: [
           // We use Slivers for a more dynamic and flexible layout than a simple Column.
           SliverPadding(
-            padding: const EdgeInsets.only(
-              top: 60.0, // More space from the top status bar
-              left: 20.0,
-              right: 20.0,
+            padding: const EdgeInsets.fromLTRB(
+              20.0, // Left padding
+              60.0, // Top padding
+              20.0, // Right padding
+              kFloatingNavBarBottomPadding,
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
@@ -302,9 +302,8 @@ class _BetaNoticeCard extends StatelessWidget {
     final betaBgColor = isDark
         ? Colors.yellow.shade900.withOpacity(0.3)
         : Colors.yellow.shade100;
-    final betaTextColor = isDark
-        ? Colors.yellow.shade200
-        : Colors.yellow.shade900;
+    final betaTextColor =
+        isDark ? Colors.yellow.shade200 : Colors.yellow.shade900;
 
     return FadeInUp(
       delay: 500,
@@ -391,9 +390,8 @@ class _ContactButton extends StatelessWidget {
     final buttonColor = isDark
         ? Colors.yellow.shade800.withOpacity(0.5)
         : Colors.yellow.shade200;
-    final buttonTextColor = isDark
-        ? Colors.yellow.shade200
-        : Colors.yellow.shade900;
+    final buttonTextColor =
+        isDark ? Colors.yellow.shade200 : Colors.yellow.shade900;
 
     return ElevatedButton.icon(
       onPressed: onTap,

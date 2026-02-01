@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart'; // Add google_fonts to pubspec.yaml
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart'; // For french date formatting
+import 'package:mobile_app/core/constants/ui_constants.dart';
 
 import '../../../../data/models/concert.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -75,7 +76,8 @@ class _ConcertsScreenState extends ConsumerState<ConcertsScreen> {
                 }
                 // Using SliverList for performance with a builder
                 return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 80),
+                  padding: const EdgeInsets.fromLTRB(
+                      20, 10, 20, kFloatingNavBarBottomPadding),
                   sliver: SliverList.builder(
                     itemCount: concerts.length,
                     itemBuilder: (context, index) {
