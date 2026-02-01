@@ -131,21 +131,27 @@ class DeliveryService {
     }
   }
 
-  /// Updates scheduled delivery time.
-  Future<Delivery?> updateScheduledAt(String deliveryId, DateTime? scheduledAt) async {
+  /// Updates scheduled delivery time (start and optional end for time range).
+  Future<Delivery?> updateScheduledRange(
+    String deliveryId, {
+    required DateTime? scheduledAt,
+    DateTime? scheduledEndAt,
+  }) async {
     try {
+      final updates = <String, dynamic>{
+        'scheduled_at': scheduledAt?.toIso8601String(),
+        'scheduled_end_at': scheduledEndAt?.toIso8601String(),
+      };
       final response = await _client
           .from('deliveries')
-          .update({
-            'scheduled_at': scheduledAt?.toIso8601String(),
-          })
+          .update(updates)
           .eq('id', deliveryId)
           .select()
           .single();
-      _logger.i('DeliveryService: updateScheduledAt $deliveryId');
+      _logger.i('DeliveryService: updateScheduledRange $deliveryId');
       return Delivery.fromJson(response);
     } catch (e) {
-      _logger.e('DeliveryService: updateScheduledAt failed', error: e);
+      _logger.e('DeliveryService: updateScheduledRange failed', error: e);
       rethrow;
     }
   }
@@ -208,7 +214,7 @@ class DeliveryService {
     }
   }
 
-  /// Adds a recipient.
+  /// Adds a recipient with a unique public_token for per-recipient share links.
   Future<DeliveryRecipient> addRecipient(
     String deliveryId, {
     required String label,
@@ -216,6 +222,7 @@ class DeliveryService {
     int sortOrder = 0,
   }) async {
     try {
+      final publicToken = const Uuid().v4();
       final response = await _client
           .from('delivery_recipients')
           .insert({
@@ -223,6 +230,7 @@ class DeliveryService {
             'label': label,
             'scheduled_at': scheduledAt.toIso8601String(),
             'sort_order': sortOrder,
+            'public_token': publicToken,
           })
           .select()
           .single();
@@ -230,6 +238,27 @@ class DeliveryService {
       return DeliveryRecipient.fromJson(response);
     } catch (e) {
       _logger.e('DeliveryService: addRecipient failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Marks a recipient as delivered (sets delivered_at to now).
+  Future<DeliveryRecipient?> markRecipientDelivered(String recipientId) async {
+    try {
+      final now = DateTime.now().toUtc().toIso8601String();
+      final response = await _client
+          .from('delivery_recipients')
+          .update({'delivered_at': now})
+          .eq('id', recipientId)
+          .select()
+          .maybeSingle();
+      if (response != null) {
+        _logger.i('DeliveryService: markRecipientDelivered $recipientId');
+        return DeliveryRecipient.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      _logger.e('DeliveryService: markRecipientDelivered failed', error: e);
       rethrow;
     }
   }

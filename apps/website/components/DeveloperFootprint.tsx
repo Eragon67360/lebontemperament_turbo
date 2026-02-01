@@ -1,10 +1,11 @@
 "use client";
 
-import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/react";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { Modal, ModalContent } from "@heroui/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Code, Github, Heart, PawPrint, User } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-// Hook to detect "CATS" typed sequence
+// --- HOOK (No changes) ---
 const useCatsEasterEgg = (callback: () => void) => {
   useEffect(() => {
     let typedSequence = "";
@@ -12,31 +13,18 @@ const useCatsEasterEgg = (callback: () => void) => {
     let timeoutId: NodeJS.Timeout;
 
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Clear timeout on new keypress
       clearTimeout(timeoutId);
-
-      // Add key to sequence
-      typedSequence += e.key.toLowerCase();
-
-      // Keep only last 4 characters
-      if (typedSequence.length > 4) {
-        typedSequence = typedSequence.slice(-4);
-      }
-
-      // Check if sequence matches
+      typedSequence = (typedSequence + e.key.toLowerCase()).slice(-4);
       if (typedSequence === targetSequence) {
         callback();
-        typedSequence = ""; // Reset
+        typedSequence = "";
       }
-
-      // Reset sequence after 2 seconds of inactivity
       timeoutId = setTimeout(() => {
         typedSequence = "";
       }, 2000);
     };
 
     window.addEventListener("keypress", handleKeyPress);
-
     return () => {
       window.removeEventListener("keypress", handleKeyPress);
       clearTimeout(timeoutId);
@@ -44,48 +32,26 @@ const useCatsEasterEgg = (callback: () => void) => {
   }, [callback]);
 };
 
-// Cat animation component
-const FloatingCat = ({ delay = 0 }: { delay?: number }) => (
-  <motion.div
-    initial={{ y: -20, opacity: 0 }}
-    animate={{
-      y: [0, -10, 0],
-      opacity: 1,
-    }}
-    transition={{
-      y: {
-        repeat: Infinity,
-        duration: 2,
-        ease: "easeInOut",
-        delay,
-      },
-      opacity: {
-        duration: 0.5,
-      },
-    }}
-    className="text-4xl"
-  >
-    🐱
-  </motion.div>
+// --- TechIcon Component (No changes) ---
+const TechIcon = ({ icon, name }: { icon: React.ReactNode; name: string }) => (
+  <div className="flex flex-col items-center gap-2 text-center">
+    <div className="bg-primary/10 text-primary group-hover:bg-primary/20 flex h-12 w-12 items-center justify-center rounded-lg transition-colors">
+      {icon}
+    </div>
+    <p className="text-foreground/70 text-xs">{name}</p>
+  </div>
 );
 
+// --- THE MAIN COMPONENT ---
 export const DeveloperFootprint = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [hasSeenBefore, setHasSeenBefore] = useState(false);
+  const [activeTab, setActiveTab] = useState("meow");
+  const meowAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Console messages on component mount
   useEffect(() => {
-    // ASCII art cat
-    const catArt = `
- |\_/|    
- (. .)
-  =w= (\  
- / ^ \//  
-(|| ||)
-,""_""_ .`;
-
+    const catArt = `\n |\\_/|    \n (. .) \n  =w= (\\ \n / ^ \\// \n(|| ||) \n, ""_""_ .\n`;
     console.log(
-      "%c" + catArt,
+      `%c${catArt}`,
       "font-size: 16px; color: #ff6b6b; font-family: monospace; line-height: 1.2;",
     );
     console.log(
@@ -94,186 +60,209 @@ export const DeveloperFootprint = () => {
     );
   }, []);
 
-  // Handle CATS Easter egg
-  useCatsEasterEgg(() => {
+  const openModal = useCallback(() => {
     setIsOpen(true);
-    if (!hasSeenBefore) {
-      setHasSeenBefore(true);
-      console.log(
-        "%c🎉 You found the secret! MEOW! 🐱",
-        "font-size: 20px; color: #ff6b6b; font-weight: bold;",
-      );
-    }
-  });
+    setActiveTab("meow");
+  }, []);
+
+  useCatsEasterEgg(openModal);
+
+  const handlePlayMeow = () => {
+    meowAudioRef.current
+      ?.play()
+      .catch((e) => console.error("Error playing audio:", e));
+  };
+
+  const tabs = [
+    { id: "meow", icon: <PawPrint size={20} />, label: "Meow" },
+    { id: "dev", icon: <Code size={20} />, label: "Dev" },
+    { id: "project", icon: <Heart size={20} />, label: "Project" },
+  ];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
-      size="2xl"
-      backdrop="blur"
-      classNames={{
-        backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10",
-      }}
-    >
-      <ModalContent className="border-primary/20 border-2">
-        {() => (
-          <>
-            <ModalHeader className="border-primary/10 flex flex-col gap-1 border-b">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="flex items-center gap-2"
-              >
-                <span className="text-2xl">👨‍💻</span>
-                <h2 className="bg-gradient-to-r from-[#1a878d] to-blue-600 bg-clip-text text-2xl font-bold text-transparent">
-                  You found the secret!
-                </h2>
-              </motion.div>
-            </ModalHeader>
-            <ModalBody className="py-6">
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="space-y-6"
-              >
-                {/* Floating cats */}
-                <div className="flex justify-center gap-8">
-                  <FloatingCat delay={0} />
-                  <FloatingCat delay={0.3} />
-                  <FloatingCat delay={0.6} />
-                </div>
+    <>
+      <audio ref={meowAudioRef} src="/meow.mp3" preload="auto" />
 
-                {/* Developer info */}
-                <div className="from-primary/5 rounded-lg bg-gradient-to-br to-blue-500/5 p-6">
-                  <h3 className="text-foreground mb-3 text-xl font-bold">
-                    About the Developer
-                  </h3>
-                  <div className="text-foreground/80 space-y-2">
-                    <p>
-                      <span className="text-primary font-semibold">Name:</span>{" "}
-                      Thomas Moser
-                    </p>
-                    <p>
-                      <span className="text-primary font-semibold">
-                        GitHub:
-                      </span>{" "}
-                      <a
-                        href="https://github.com/Eragon67360"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary-600 underline transition-colors"
-                      >
-                        @Eragon67360
-                      </a>
-                    </p>
-                    <p>
-                      <span className="text-primary font-semibold">
-                        Status:
-                      </span>{" "}
-                      Cat Enthusiast 🐱 & Code Wizard ✨
-                    </p>
-                  </div>
-                </div>
-
-                {/* Love message */}
+      <AnimatePresence>
+        {isOpen && (
+          <Modal
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            size="md"
+            backdrop="blur"
+            classNames={{
+              backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10",
+            }}
+          >
+            <ModalContent className="border-primary/20 border-2 p-0">
+              {() => (
                 <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
+                  className="flex h-[500px] flex-col"
+                  initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="rounded-lg border-2 border-red-500/20 bg-gradient-to-r from-red-500/5 to-pink-500/5 p-6 text-center"
+                  exit={{ scale: 0.8, opacity: 0 }}
                 >
-                  <p className="mb-3 text-3xl">❤️</p>
-                  <p className="text-foreground text-lg font-medium">
-                    This website was crafted with{" "}
-                    <span className="font-bold text-red-500">much love</span>,
-                    especially for this beautiful music project.
-                  </p>
-                  <p className="text-foreground/60 mt-2 text-sm">
-                    Every line of code, every pixel, every interaction was
-                    carefully designed.
-                  </p>
-                </motion.div>
-
-                {/* Tech stack */}
-                <div>
-                  <h4 className="text-foreground mb-2 font-semibold">
-                    Built with:
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "Next.js 16",
-                      "React",
-                      "TypeScript",
-                      "Supabase",
-                      "TailwindCSS",
-                      "Framer Motion",
-                      "❤️",
-                      "🐱",
-                    ].map((tech) => (
-                      <span
-                        key={tech}
-                        className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium"
+                  <div className="grow p-6">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex h-full flex-col" // Ensure div takes full height
                       >
-                        {tech}
-                      </span>
+                        {activeTab === "meow" && (
+                          <div className="flex flex-1 flex-col items-center justify-center text-center">
+                            {/* --- MODIFIED: Interactive Cat --- */}
+                            <motion.div
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9, rotate: 15 }}
+                              onClick={handlePlayMeow}
+                              // --- NEW: Breathing animation ---
+                              animate={{ scale: [1, 1.05, 1] }}
+                              transition={{
+                                scale: {
+                                  duration: 3,
+                                  repeat: Infinity,
+                                  ease: "easeInOut",
+                                },
+                              }}
+                              className="cursor-pointer text-9xl" // --- MODIFIED: Size increased ---
+                            >
+                              🐈
+                            </motion.div>
+                            <h2 className="from-primary mt-4 bg-gradient-to-r to-blue-500 bg-clip-text text-2xl font-bold text-transparent">
+                              You found the secret!
+                            </h2>
+                            <p className="text-foreground/70 mt-2">
+                              The cat distribution system has chosen you.
+                            </p>
+                            {/* --- NEW: Added a clear hint --- */}
+                            <p className="text-foreground/60 mt-6 text-sm italic">
+                              (psst... try clicking the cat)
+                            </p>
+                          </div>
+                        )}
+
+                        {activeTab === "dev" && (
+                          <div className="space-y-4">
+                            <h3 className="text-foreground text-xl font-bold">
+                              About the Developer
+                            </h3>
+                            <div className="space-y-3 text-sm">
+                              <div className="flex items-center gap-3">
+                                <User className="text-primary h-5 w-5" />
+                                <div>
+                                  <p className="text-foreground font-semibold">
+                                    Thomas Moser
+                                  </p>
+                                  <p className="text-foreground/60">
+                                    Full-Stack Developer
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Github className="text-primary h-5 w-5" />
+                                <a
+                                  href="https://github.com/Eragon67360"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-foreground/80 hover:text-primary transition-colors"
+                                >
+                                  @Eragon67360
+                                </a>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <PawPrint className="text-primary h-5 w-5" />
+                                <p className="text-foreground/80">
+                                  Powered by Coffee & Cats
+                                </p>
+                              </div>
+                            </div>
+                            <p className="font-signature text-foreground/60 border-foreground/10 border-t pt-4 italic">
+                              Made with passion
+                            </p>
+                          </div>
+                        )}
+
+                        {activeTab === "project" && (
+                          <div className="space-y-6">
+                            <h3 className="text-foreground text-xl font-bold">
+                              About This Project
+                            </h3>
+                            <p className="text-foreground/80 text-sm">
+                              This app was crafted with{" "}
+                              <span className="font-bold text-red-500">
+                                much love
+                              </span>{" "}
+                              for this beautiful music project. Every line of
+                              code, every pixel, every interaction was carefully
+                              designed.
+                            </p>
+                            <div>
+                              <h4 className="text-foreground/90 mb-3 font-semibold">
+                                Built With
+                              </h4>
+                              <div className="grid grid-cols-4 gap-4">
+                                <TechIcon
+                                  icon={<p className="text-xl font-bold">N</p>}
+                                  name="Next.js"
+                                />
+                                <TechIcon
+                                  icon={<p className="text-xl font-bold">R</p>}
+                                  name="React"
+                                />
+                                <TechIcon
+                                  icon={<p className="text-xl font-bold">S</p>}
+                                  name="Supabase"
+                                />
+                                <TechIcon
+                                  icon={<p className="text-xl font-bold">T</p>}
+                                  name="Tailwind"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Tab Navigation */}
+                  <div className="border-primary/10 bg-primary/5 mt-auto flex border-t p-2">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`${activeTab === tab.id ? "" : "hover:bg-primary/5"} text-primary relative flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors`}
+                        style={{ WebkitTapHighlightColor: "transparent" }}
+                      >
+                        {activeTab === tab.id && (
+                          <motion.span
+                            layoutId="bubble"
+                            className="bg-primary/10 absolute inset-0 z-10"
+                            style={{ borderRadius: 6 }}
+                            transition={{
+                              type: "spring",
+                              bounce: 0.2,
+                              duration: 0.6,
+                            }}
+                          />
+                        )}
+                        <span className="relative z-20 flex items-center justify-center gap-2">
+                          {tab.icon}
+                          {tab.label}
+                        </span>
+                      </button>
                     ))}
                   </div>
-                </div>
-
-                {/* Cat fact */}
-                <motion.div
-                  initial={{ rotate: -2 }}
-                  animate={{ rotate: 2 }}
-                  transition={{
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                    duration: 1,
-                  }}
-                  className="mt-4 rounded-lg bg-orange-500/10 p-4 text-center"
-                >
-                  <p className="text-2xl font-bold text-orange-600">
-                    🐈 I LOVE CATS!!! 🐈
-                  </p>
-                  <p className="text-foreground/70 mt-2 text-sm">
-                    (Yes, it needed to be said again)
-                  </p>
                 </motion.div>
-
-                {/* Fun stats */}
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="from-primary/5 to-primary/10 rounded-lg bg-gradient-to-br p-3">
-                    <p className="text-primary text-2xl font-bold">∞</p>
-                    <p className="text-foreground/60 text-xs">Lines of Code</p>
-                  </div>
-                  <div className="rounded-lg bg-gradient-to-br from-red-500/5 to-red-500/10 p-3">
-                    <p className="text-2xl font-bold text-red-500">❤️</p>
-                    <p className="text-foreground/60 text-xs">
-                      Love & Dedication
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-gradient-to-br from-orange-500/5 to-orange-500/10 p-3">
-                    <p className="text-2xl font-bold text-orange-600">🐱</p>
-                    <p className="text-foreground/60 text-xs">Cat Thoughts</p>
-                  </div>
-                </div>
-
-                {/* Signature */}
-                <div className="border-foreground/10 text-foreground/60 border-t pt-4 text-center text-sm">
-                  <p className="font-signature italic">
-                    Made with passion by Thomas
-                  </p>
-                  <p className="mt-1 text-xs">
-                    💻 Happy coding! 🐱 Pet a cat today!
-                  </p>
-                </div>
-              </motion.div>
-            </ModalBody>
-          </>
+              )}
+            </ModalContent>
+          </Modal>
         )}
-      </ModalContent>
-    </Modal>
+      </AnimatePresence>
+    </>
   );
 };

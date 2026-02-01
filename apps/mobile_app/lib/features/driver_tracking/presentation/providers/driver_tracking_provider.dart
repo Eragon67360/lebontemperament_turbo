@@ -124,15 +124,22 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     }
   }
 
-  /// Update scheduled delivery time.
-  Future<void> updateScheduledAt(DateTime? scheduledAt) async {
+  /// Update scheduled delivery time (start and optional end for time range).
+  Future<void> updateScheduledRange({
+    required DateTime? scheduledAt,
+    DateTime? scheduledEndAt,
+  }) async {
     final delivery = state.delivery;
     if (delivery == null) return;
     try {
-      final updated = await _service.updateScheduledAt(delivery.id, scheduledAt);
+      final updated = await _service.updateScheduledRange(
+        delivery.id,
+        scheduledAt: scheduledAt,
+        scheduledEndAt: scheduledEndAt,
+      );
       if (updated != null) state = state.copyWith(delivery: updated, error: null);
     } catch (e) {
-      _logger.e('DriverTrackingNotifier updateScheduledAt', error: e);
+      _logger.e('DriverTrackingNotifier updateScheduledRange', error: e);
       state = state.copyWith(error: 'Erreur lors de la mise à jour de l\'heure.');
     }
   }
@@ -215,6 +222,21 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     } catch (e) {
       _logger.e('DriverTrackingNotifier deleteRecipient', error: e);
       state = state.copyWith(error: 'Erreur lors de la suppression.');
+    }
+  }
+
+  /// Mark a recipient as delivered.
+  Future<void> markRecipientDelivered(String recipientId) async {
+    try {
+      final updated = await _service.markRecipientDelivered(recipientId);
+      if (updated != null) {
+        await loadRecipients();
+        state = state.copyWith(error: null);
+      }
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier markRecipientDelivered', error: e);
+      state = state.copyWith(
+          error: 'Erreur lors du marquage comme livré.');
     }
   }
 
