@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/models/delivery.dart'; // Add this import
+import '../../data/models/delivery_recipient.dart'; // Add this import
 import '../../features/auth/data/services/auth_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/driver_tracking/presentation/screens/driver_tracking_screen.dart';
+import '../../features/driver_tracking/presentation/screens/recipient_details_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/notifications/presentation/screens/permission_request_screen.dart';
@@ -30,6 +33,8 @@ class AppRouter {
   static const String main = '/main';
   static const String eventDetail = '/events/:id';
   static const String driverTracking = '/driver-tracking';
+  // The name for the new sub-route
+  static const String driverTrackingRecipient = 'driverTrackingRecipient';
 
   static GoRouter createRouter() {
     return GoRouter(
@@ -114,8 +119,37 @@ class AppRouter {
         GoRoute(
           path: driverTracking,
           name: 'driverTracking',
-          builder: (context, state) =>
-              Consumer(builder: (context, ref, _) => const DriverTrackingScreen()),
+          builder: (context, state) => Consumer(
+              builder: (context, ref, _) => const DriverTrackingScreen()),
+          // --- NESTED ROUTE FOR RECIPIENT DETAILS ---
+          routes: [
+            GoRoute(
+              path:
+                  'recipient', // This creates the full path: /driver-tracking/recipient
+              name: driverTrackingRecipient,
+              builder: (context, state) {
+                // Safely extract the delivery and recipient objects from 'extra'
+                final extra = state.extra as Map<String, dynamic>?;
+                if (extra != null &&
+                    extra.containsKey('delivery') &&
+                    extra.containsKey('recipient')) {
+                  final delivery = extra['delivery'] as Delivery;
+                  final recipient = extra['recipient'] as DeliveryRecipient;
+                  return RecipientDetailsScreen(
+                    delivery: delivery,
+                    recipient: recipient,
+                  );
+                }
+                // Fallback widget if the required data is missing
+                return Scaffold(
+                  appBar: AppBar(),
+                  body: const Center(
+                    child: Text('Erreur: Données du destinataire manquantes.'),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

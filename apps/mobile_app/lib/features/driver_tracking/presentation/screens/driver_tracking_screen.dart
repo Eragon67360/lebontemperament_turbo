@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart' show locationFromAddress;
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:geocoding/geocoding.dart' show locationFromAddress;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
@@ -145,7 +146,6 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
     final newRecipient = await showDialog<
         ({
           String label,
-          DateTime? scheduledAt,
           String? address,
           double? latitude,
           double? longitude
@@ -157,7 +157,6 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
       if (recipient == null) {
         await ref.read(driverTrackingProvider.notifier).addRecipient(
               label: newRecipient.label,
-              scheduledAt: newRecipient.scheduledAt,
               address: newRecipient.address,
               latitude: newRecipient.latitude,
               longitude: newRecipient.longitude,
@@ -166,7 +165,6 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
         await ref.read(driverTrackingProvider.notifier).updateRecipient(
               recipient.id,
               label: newRecipient.label,
-              scheduledAt: newRecipient.scheduledAt,
               address: newRecipient.address,
               latitude: newRecipient.latitude,
               longitude: newRecipient.longitude,
@@ -237,66 +235,57 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                     child: _SectionTitle(title: 'Panneau de Contrôle')),
                 const SizedBox(height: 12),
                 FadeInUp(delay: 300, child: _ActionButtons(state: state)),
-                if (state.delivery != null) ...[
-                  const SizedBox(height: 32),
-                  const FadeInUp(
-                      delay: 400, child: _SectionTitle(title: 'Destinataires')),
-                  const SizedBox(height: 12),
-                  FadeInUp(
-                      delay: 500,
-                      child: _RecipientsCard(
-                        delivery: state.delivery!,
-                        recipients: state.recipients,
-                        onAdd: () => _showAddOrEditRecipientDialog(),
-                        onEdit: (r) =>
-                            _showAddOrEditRecipientDialog(recipient: r),
-                        onShareRecipient: (r) {
-                          if (r.publicToken == null) return;
-                          final base =
-                              AppConfig.siteUrl.replaceAll(RegExp(r'/$'), '');
-                          final url = '$base/track?token=${r.publicToken}';
-                          Clipboard.setData(ClipboardData(text: url));
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Lien copié')));
-                          }
-                        },
-                        onStartDriving: (r) => ref
-                            .read(driverTrackingProvider.notifier)
-                            .startDrivingToRecipient(r.id),
-                        onRevertToPending: () => ref
-                            .read(driverTrackingProvider.notifier)
-                            .revertToPending(),
-                        onMarkDelivered: (r) => ref
-                            .read(driverTrackingProvider.notifier)
-                            .markRecipientDelivered(r.id),
-                        onReorder: (newOrder) => ref
-                            .read(driverTrackingProvider.notifier)
-                            .reorderRecipients(newOrder),
-                      )),
-                  const SizedBox(height: 32),
-                  const FadeInUp(
-                      delay: 600,
-                      child: _SectionTitle(title: 'Mises à Jour en Direct')),
-                  const SizedBox(height: 12),
-                  FadeInUp(
-                      delay: 700,
-                      child: _LiveUpdatesCard(
-                        delivery: state.delivery!,
-                        problemController: _problemController,
-                        delayController: _delayController,
-                        onPickTime: () => _pickScheduledTimeRange(context),
-                      )),
-                  const SizedBox(height: 32),
-                  const FadeInUp(
-                      delay: 800, child: _SectionTitle(title: 'Partage')),
-                  const SizedBox(height: 12),
-                  FadeInUp(
-                      delay: 900,
-                      child: _SessionDetailsCard(
-                          delivery: state.delivery!,
-                          onResetToken: _confirmResetToken)),
-                ]
+                if (state.delivery != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 32),
+                      const FadeInUp(
+                          delay: 400,
+                          child: _SectionTitle(title: 'Destinataires')),
+                      const SizedBox(height: 12),
+                      FadeInUp(
+                          delay: 500,
+                          child: _RecipientsCard(
+                            delivery: state.delivery!,
+                            recipients: state.recipients,
+                            onAdd: () => _showAddOrEditRecipientDialog(),
+                            onTapRecipient: (recipient) {
+                              context
+                                  .push('/driver-tracking/recipient', extra: {
+                                'delivery': state.delivery!,
+                                'recipient': recipient,
+                              });
+                            },
+                            onReorder: (newOrder) => ref
+                                .read(driverTrackingProvider.notifier)
+                                .reorderRecipients(newOrder),
+                          )),
+                      const SizedBox(height: 32),
+                      const FadeInUp(
+                          delay: 600,
+                          child:
+                              _SectionTitle(title: 'Mises à Jour en Direct')),
+                      const SizedBox(height: 12),
+                      FadeInUp(
+                          delay: 700,
+                          child: _LiveUpdatesCard(
+                            delivery: state.delivery!,
+                            problemController: _problemController,
+                            delayController: _delayController,
+                            onPickTime: () => _pickScheduledTimeRange(context),
+                          )),
+                      const SizedBox(height: 32),
+                      const FadeInUp(
+                          delay: 800, child: _SectionTitle(title: 'Partage')),
+                      const SizedBox(height: 12),
+                      FadeInUp(
+                          delay: 900,
+                          child: _SessionDetailsCard(
+                              delivery: state.delivery!,
+                              onResetToken: _confirmResetToken)),
+                    ],
+                  )
               ]),
             ),
           )
@@ -358,10 +347,13 @@ class _TrackingStatusHero extends StatelessWidget {
       ),
       child: Column(
         children: [
-          if (state.error != null) ...[
-            _ErrorBanner(error: state.error!),
-            const SizedBox(height: 16),
-          ],
+          if (state.error != null)
+            Column(
+              children: [
+                _ErrorBanner(error: state.error!),
+                const SizedBox(height: 16),
+              ],
+            ),
           _StatusIndicator(isActive: state.isTracking),
           const SizedBox(height: 12),
           Text(
@@ -441,22 +433,14 @@ class _RecipientsCard extends ConsumerWidget {
   final Delivery delivery;
   final List<DeliveryRecipient> recipients;
   final Future<void> Function() onAdd;
-  final Future<void> Function(DeliveryRecipient) onEdit;
-  final void Function(DeliveryRecipient) onShareRecipient;
-  final void Function(DeliveryRecipient) onStartDriving;
-  final VoidCallback onRevertToPending;
-  final void Function(DeliveryRecipient) onMarkDelivered;
+  final void Function(DeliveryRecipient) onTapRecipient;
   final void Function(List<String> newOrderIds) onReorder;
 
   const _RecipientsCard({
     required this.delivery,
     required this.recipients,
     required this.onAdd,
-    required this.onEdit,
-    required this.onShareRecipient,
-    required this.onStartDriving,
-    required this.onRevertToPending,
-    required this.onMarkDelivered,
+    required this.onTapRecipient,
     required this.onReorder,
   });
 
@@ -500,11 +484,7 @@ class _RecipientsCard extends ConsumerWidget {
                 reorderIndex: index,
                 delivery: delivery,
                 recipient: recipients[index],
-                onEdit: onEdit,
-                onShare: onShareRecipient,
-                onStartDriving: onStartDriving,
-                onRevertToPending: onRevertToPending,
-                onMarkDelivered: onMarkDelivered,
+                onTap: () => onTapRecipient(recipients[index]),
               ),
             ),
           Divider(height: 1, color: theme.colorScheme.outline.withOpacity(0.2)),
@@ -535,22 +515,14 @@ class _RecipientTile extends ConsumerWidget {
   final int reorderIndex;
   final Delivery delivery;
   final DeliveryRecipient recipient;
-  final Future<void> Function(DeliveryRecipient) onEdit;
-  final void Function(DeliveryRecipient)? onShare;
-  final void Function(DeliveryRecipient)? onStartDriving;
-  final VoidCallback? onRevertToPending;
-  final void Function(DeliveryRecipient)? onMarkDelivered;
+  final VoidCallback onTap;
 
   const _RecipientTile({
     super.key,
     required this.reorderIndex,
     required this.delivery,
     required this.recipient,
-    required this.onEdit,
-    this.onShare,
-    this.onStartDriving,
-    this.onRevertToPending,
-    this.onMarkDelivered,
+    required this.onTap,
   });
 
   @override
@@ -558,11 +530,6 @@ class _RecipientTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDelivered = recipient.deliveredAt != null;
     final isInProgress = delivery.currentRecipientId == recipient.id;
-    final canShare = recipient.publicToken != null && onShare != null;
-    final canMarkDelivered =
-        !isDelivered && onMarkDelivered != null && isInProgress;
-    final canStartDriving = !isDelivered && onStartDriving != null;
-    final canRevertToPending = isInProgress && onRevertToPending != null;
 
     String statusLabel;
     if (isDelivered) {
@@ -573,12 +540,11 @@ class _RecipientTile extends ConsumerWidget {
       statusLabel = 'En attente';
     }
 
-    final subtitle = recipient.scheduledAt != null
-        ? 'Prévu à ${DateFormat('HH:mm', 'fr_FR').format(recipient.scheduledAt!)}'
-        : 'Pas d\'heure prévue';
+    final subtitle = recipient.address ?? 'Aucune adresse';
 
     return ListTile(
       key: key,
+      onTap: onTap,
       leading: ReorderableDragStartListener(
         index: reorderIndex,
         child:
@@ -611,62 +577,7 @@ class _RecipientTile extends ConsumerWidget {
         style: GoogleFonts.poppins(
             color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
       ),
-      trailing: PopupMenuButton<String>(
-        icon: const Icon(Icons.more_vert),
-        onSelected: (value) async {
-          if (value == 'edit') {
-            onEdit(recipient);
-          } else if (value == 'delete') {
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Supprimer'),
-                content: Text('Supprimer "${recipient.label}" de la liste ?'),
-                actions: [
-                  TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      child: const Text('Annuler')),
-                  FilledButton(
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    style: FilledButton.styleFrom(
-                        backgroundColor: theme.colorScheme.error),
-                    child: const Text('Supprimer'),
-                  ),
-                ],
-              ),
-            );
-            if (confirm == true && context.mounted) {
-              await ref
-                  .read(driverTrackingProvider.notifier)
-                  .deleteRecipient(recipient.id);
-            }
-          } else if (value == 'share' && canShare) {
-            onShare!(recipient);
-          } else if (value == 'start_driving' && canStartDriving) {
-            onStartDriving!(recipient);
-          } else if (value == 'revert_pending' && canRevertToPending) {
-            onRevertToPending!();
-          } else if (value == 'mark_delivered' && canMarkDelivered) {
-            onMarkDelivered!(recipient);
-          }
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(value: 'edit', child: Text('Modifier')),
-          if (canShare)
-            const PopupMenuItem(
-                value: 'share', child: Text('Copier lien de suivi')),
-          if (canStartDriving)
-            const PopupMenuItem(
-                value: 'start_driving', child: Text('En route')),
-          if (canRevertToPending)
-            const PopupMenuItem(
-                value: 'revert_pending', child: Text('Reporter en attente')),
-          if (canMarkDelivered)
-            const PopupMenuItem(
-                value: 'mark_delivered', child: Text('Marquer comme livré')),
-          const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
-        ],
-      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
     );
   }
 }
@@ -809,7 +720,6 @@ class _SessionDetailsCard extends StatelessWidget {
   const _SessionDetailsCard(
       {required this.delivery, required this.onResetToken});
 
-  /// Full-view link (all recipients). Per-recipient links use /track?token=recipient.publicToken.
   String _trackingUrl(Delivery delivery) {
     final base = AppConfig.siteUrl.replaceAll(RegExp(r'/$'), '');
     return '$base/track?token=${delivery.publicToken}';
@@ -879,7 +789,6 @@ class _AddOrEditRecipientDialog extends StatefulWidget {
 class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   late final TextEditingController _labelController;
   late final TextEditingController _addressController;
-  DateTime? _scheduledAt;
   bool _isGeocoding = false;
 
   @override
@@ -887,7 +796,6 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     super.initState();
     _labelController = TextEditingController(text: widget.recipient?.label);
     _addressController = TextEditingController(text: widget.recipient?.address);
-    _scheduledAt = widget.recipient?.scheduledAt;
   }
 
   @override
@@ -895,28 +803,6 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     _labelController.dispose();
     _addressController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDateTime() async {
-    final initial =
-        _scheduledAt ?? DateTime.now().add(const Duration(hours: 1));
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (date == null || !mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (time != null) {
-      setState(() {
-        _scheduledAt =
-            DateTime(date.year, date.month, date.day, time.hour, time.minute);
-      });
-    }
   }
 
   Future<void> _save() async {
@@ -964,7 +850,6 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     if (!mounted) return;
     Navigator.of(context).pop((
       label: label,
-      scheduledAt: _scheduledAt,
       address: savedAddress?.isEmpty == true ? null : savedAddress,
       latitude: savedLatitude,
       longitude: savedLongitude,
@@ -995,30 +880,6 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
                 hintText: 'Ex: 10 Rue de la Paix, 67000 Strasbourg',
                 border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              title: Text('Heure prévue (optionnel):',
-                  style: GoogleFonts.poppins(fontSize: 14)),
-              subtitle: Text(
-                  _scheduledAt != null
-                      ? DateFormat('dd/MM HH:mm', 'fr_FR').format(_scheduledAt!)
-                      : 'Non définie',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_scheduledAt != null)
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => setState(() => _scheduledAt = null),
-                      tooltip: 'Effacer',
-                    ),
-                  const Icon(Icons.edit_calendar),
-                ],
-              ),
-              onTap: _pickDateTime,
-              contentPadding: EdgeInsets.zero,
             ),
           ],
         ),
@@ -1114,22 +975,25 @@ class _ErrorBanner extends StatelessWidget {
                     style: GoogleFonts.poppins(color: Colors.white))),
           ],
         ),
-        if (error.toLowerCase().contains('permission')) ...[
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => openAppSettings(),
-              icon: const Icon(Icons.settings, size: 16),
-              label: const Text('Ouvrir les paramètres'),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.green.shade800,
-                visualDensity: VisualDensity.compact,
+        if (error.toLowerCase().contains('permission'))
+          Column(
+            children: [
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => openAppSettings(),
+                  icon: const Icon(Icons.settings, size: 16),
+                  label: const Text('Ouvrir les paramètres'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.green.shade800,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
       ],
     );
   }
