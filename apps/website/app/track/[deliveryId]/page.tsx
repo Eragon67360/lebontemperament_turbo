@@ -271,10 +271,6 @@ function DeliveryTrackingContent() {
 
     const channelName = `delivery-tracking:${deliveryId}`;
     const channel = supabase.channel(channelName);
-    console.log("[Track Realtime] Channel created", {
-      channelName,
-      deliveryId,
-    });
 
     channel
       .on<Delivery>(
@@ -286,10 +282,6 @@ function DeliveryTrackingContent() {
           filter: `id=eq.${deliveryId}`,
         },
         (payload) => {
-          console.log(
-            "[Track Realtime] Delivery UPDATE received:",
-            payload.new,
-          );
           setDelivery(payload.new);
         },
       )
@@ -301,26 +293,12 @@ function DeliveryTrackingContent() {
           table: "delivery_recipients",
           filter: `delivery_id=eq.${deliveryId}`,
         },
-        (payload) => {
-          console.log("[Track Realtime] Recipients change received:", payload);
+        () => {
           void loadRecipients();
         },
       )
       .subscribe((status, err) => {
-        if (status === "SUBSCRIBED") {
-          console.log("[Track Realtime] SUBSCRIBED – connection OK");
-        }
-        if (status === "CLOSED") {
-          console.log("[Track Realtime] CLOSED – channel closed");
-        }
-        if (status === "TIMED_OUT") {
-          console.warn(
-            "[Track Realtime] TIMED_OUT – subscription did not complete in time",
-            err,
-          );
-        }
         if (status === "CHANNEL_ERROR") {
-          console.error("[Track Realtime] CHANNEL_ERROR", err);
           setError(
             "La connexion au suivi en direct a été perdue. Réactualisez la page.",
           );
@@ -328,7 +306,6 @@ function DeliveryTrackingContent() {
       }, 30_000);
 
     return () => {
-      console.log("[Track Realtime] Channel removed (cleanup)");
       supabase.removeChannel(channel);
     };
   }, [deliveryId, token, supabase, loadRecipients]);
