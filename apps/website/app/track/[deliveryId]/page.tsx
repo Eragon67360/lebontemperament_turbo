@@ -269,8 +269,11 @@ function DeliveryTrackingContent() {
   useEffect(() => {
     if (!deliveryId || !token) return;
 
-    const channel = supabase.channel(`delivery-tracking:${deliveryId}`, {
-      config: { broadcast: { self: true } },
+    const channelName = `delivery-tracking:${deliveryId}`;
+    const channel = supabase.channel(channelName);
+    console.log("[Track Realtime] Channel created", {
+      channelName,
+      deliveryId,
     });
 
     channel
@@ -283,7 +286,10 @@ function DeliveryTrackingContent() {
           filter: `id=eq.${deliveryId}`,
         },
         (payload) => {
-          console.log("Realtime delivery UPDATE received:", payload.new);
+          console.log(
+            "[Track Realtime] Delivery UPDATE received:",
+            payload.new,
+          );
           setDelivery(payload.new);
         },
       )
@@ -296,23 +302,33 @@ function DeliveryTrackingContent() {
           filter: `delivery_id=eq.${deliveryId}`,
         },
         (payload) => {
-          console.log("Realtime recipients change received:", payload);
+          console.log("[Track Realtime] Recipients change received:", payload);
           void loadRecipients();
         },
       )
       .subscribe((status, err) => {
         if (status === "SUBSCRIBED") {
-          console.log("Successfully subscribed to realtime channel!");
+          console.log("[Track Realtime] SUBSCRIBED – connection OK");
+        }
+        if (status === "CLOSED") {
+          console.log("[Track Realtime] CLOSED – channel closed");
+        }
+        if (status === "TIMED_OUT") {
+          console.warn(
+            "[Track Realtime] TIMED_OUT – subscription did not complete in time",
+            err,
+          );
         }
         if (status === "CHANNEL_ERROR") {
-          console.error("Realtime channel error:", err);
+          console.error("[Track Realtime] CHANNEL_ERROR", err);
           setError(
             "La connexion au suivi en direct a été perdue. Réactualisez la page.",
           );
         }
-      });
+      }, 30_000);
 
     return () => {
+      console.log("[Track Realtime] Channel removed (cleanup)");
       supabase.removeChannel(channel);
     };
   }, [deliveryId, token, supabase, loadRecipients]);
