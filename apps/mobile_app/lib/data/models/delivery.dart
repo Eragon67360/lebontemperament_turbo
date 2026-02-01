@@ -15,6 +15,8 @@ class Delivery {
   final bool isDelayed;
   final int? delayMinutes;
   final String? problemMessage;
+  /// Recipient the driver is currently driving to (one at a time).
+  final String? currentRecipientId;
 
   const Delivery({
     required this.id,
@@ -31,6 +33,7 @@ class Delivery {
     this.isDelayed = false,
     this.delayMinutes,
     this.problemMessage,
+    this.currentRecipientId,
   });
 
   factory Delivery.fromJson(Map<String, dynamic> json) {
@@ -65,6 +68,7 @@ class Delivery {
       isDelayed: json['is_delayed'] as bool? ?? false,
       delayMinutes: json['delay_minutes'] as int?,
       problemMessage: json['problem_message'] as String?,
+      currentRecipientId: json['current_recipient_id'] as String?,
     );
   }
 
@@ -83,6 +87,7 @@ class Delivery {
     bool? isDelayed,
     int? delayMinutes,
     String? problemMessage,
+    String? currentRecipientId,
   }) {
     return Delivery(
       id: id ?? this.id,
@@ -99,6 +104,7 @@ class Delivery {
       isDelayed: isDelayed ?? this.isDelayed,
       delayMinutes: delayMinutes ?? this.delayMinutes,
       problemMessage: problemMessage ?? this.problemMessage,
+      currentRecipientId: currentRecipientId ?? this.currentRecipientId,
     );
   }
 }

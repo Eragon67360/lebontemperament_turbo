@@ -137,10 +137,12 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         scheduledAt: scheduledAt,
         scheduledEndAt: scheduledEndAt,
       );
-      if (updated != null) state = state.copyWith(delivery: updated, error: null);
+      if (updated != null)
+        state = state.copyWith(delivery: updated, error: null);
     } catch (e) {
       _logger.e('DriverTrackingNotifier updateScheduledRange', error: e);
-      state = state.copyWith(error: 'Erreur lors de la mise à jour de l\'heure.');
+      state =
+          state.copyWith(error: 'Erreur lors de la mise à jour de l\'heure.');
     }
   }
 
@@ -154,7 +156,8 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         isDelayed: isDelayed,
         delayMinutes: delayMinutes,
       );
-      if (updated != null) state = state.copyWith(delivery: updated, error: null);
+      if (updated != null)
+        state = state.copyWith(delivery: updated, error: null);
     } catch (e) {
       _logger.e('DriverTrackingNotifier setDelay', error: e);
       state = state.copyWith(error: 'Erreur lors de la mise à jour du retard.');
@@ -167,25 +170,36 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     if (delivery == null) return;
     try {
       final updated = await _service.setProblemMessage(delivery.id, message);
-      if (updated != null) state = state.copyWith(delivery: updated, error: null);
+      if (updated != null)
+        state = state.copyWith(delivery: updated, error: null);
     } catch (e) {
       _logger.e('DriverTrackingNotifier setProblemMessage', error: e);
-      state = state.copyWith(error: 'Erreur lors de la mise à jour du message.');
+      state =
+          state.copyWith(error: 'Erreur lors de la mise à jour du message.');
     }
   }
 
   /// Add a recipient.
-  Future<void> addRecipient({required String label, required DateTime scheduledAt}) async {
+  Future<void> addRecipient({
+    required String label,
+    String? address,
+    double? latitude,
+    double? longitude,
+  }) async {
     final delivery = state.delivery;
     if (delivery == null) return;
     try {
       final list = state.recipients;
-      final sortOrder = list.isEmpty ? 0 : (list.map((r) => r.sortOrder).reduce((a, b) => a > b ? a : b) + 1);
+      final sortOrder = list.isEmpty
+          ? 0
+          : (list.map((r) => r.sortOrder).reduce((a, b) => a > b ? a : b) + 1);
       final added = await _service.addRecipient(
         delivery.id,
         label: label,
-        scheduledAt: scheduledAt,
         sortOrder: sortOrder,
+        address: address,
+        latitude: latitude,
+        longitude: longitude,
       );
       state = state.copyWith(recipients: [...list, added], error: null);
     } catch (e) {
@@ -194,15 +208,71 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     }
   }
 
+  /// Start driving to a recipient (sets current_recipient_id).
+  Future<void> startDrivingToRecipient(String recipientId) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      await _service.setCurrentRecipient(delivery.id, recipientId: recipientId);
+      final updated = await _service.getDelivery(delivery.id);
+      if (updated != null) {
+        state = state.copyWith(delivery: updated, error: null);
+      }
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier startDrivingToRecipient', error: e);
+      state =
+          state.copyWith(error: 'Erreur lors du démarrage de la livraison.');
+    }
+  }
+
+  /// Revert current recipient to pending (clears current_recipient_id).
+  Future<void> revertToPending() async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      await _service.setCurrentRecipient(delivery.id, recipientId: null);
+      final updated = await _service.getDelivery(delivery.id);
+      if (updated != null) {
+        state = state.copyWith(delivery: updated, error: null);
+      }
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier revertToPending', error: e);
+      state = state.copyWith(error: 'Erreur lors du report en attente.');
+    }
+  }
+
+  /// Reorder recipients (updates sort_order for each).
+  Future<void> reorderRecipients(List<String> recipientIdsInOrder) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    try {
+      await _service.reorderRecipients(delivery.id, recipientIdsInOrder);
+      await loadRecipients();
+      state = state.copyWith(error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier reorderRecipients', error: e);
+      state = state.copyWith(error: 'Erreur lors du réordonnancement.');
+    }
+  }
+
   /// Update a recipient.
   Future<void> updateRecipient(
     String recipientId, {
     String? label,
-    DateTime? scheduledAt,
     int? sortOrder,
+    String? address,
+    double? latitude,
+    double? longitude,
   }) async {
     try {
-      await _service.updateRecipient(recipientId, label: label, scheduledAt: scheduledAt, sortOrder: sortOrder);
+      await _service.updateRecipient(
+        recipientId,
+        label: label,
+        sortOrder: sortOrder,
+        address: address,
+        latitude: latitude,
+        longitude: longitude,
+      );
       await loadRecipients();
       state = state.copyWith(error: null);
     } catch (e) {
@@ -225,18 +295,23 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     }
   }
 
-  /// Mark a recipient as delivered.
+  /// Mark a recipient as delivered (also clears current_recipient_id on delivery).
   Future<void> markRecipientDelivered(String recipientId) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
     try {
       final updated = await _service.markRecipientDelivered(recipientId);
       if (updated != null) {
         await loadRecipients();
-        state = state.copyWith(error: null);
+        final refreshedDelivery = await _service.getDelivery(delivery.id);
+        state = state.copyWith(
+          delivery: refreshedDelivery ?? delivery,
+          error: null,
+        );
       }
     } catch (e) {
       _logger.e('DriverTrackingNotifier markRecipientDelivered', error: e);
-      state = state.copyWith(
-          error: 'Erreur lors du marquage comme livré.');
+      state = state.copyWith(error: 'Erreur lors du marquage comme livré.');
     }
   }
 
@@ -248,8 +323,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   Future<void> startTracking() async {
     final delivery = state.delivery;
     if (delivery == null) {
-      state = state.copyWith(
-          error: 'Aucune livraison. Rechargez la page.');
+      state = state.copyWith(error: 'Aucune livraison. Rechargez la page.');
       return;
     }
 
@@ -273,8 +347,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       await _service.startTracking(delivery.id);
     } catch (e) {
       _logger.e('DriverTrackingNotifier startTracking DB', error: e);
-      state = state.copyWith(
-          error: 'Erreur lors du démarrage du suivi.');
+      state = state.copyWith(error: 'Erreur lors du démarrage du suivi.');
       return;
     }
 
@@ -324,12 +397,14 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         );
         await onPosition(pos);
       } catch (e) {
-        _logger.w('DriverTrackingNotifier backup getCurrentPosition failed', error: e);
+        _logger.w('DriverTrackingNotifier backup getCurrentPosition failed',
+            error: e);
       }
     }
 
     sendBackupPosition();
-    _backupTimer = Timer.periodic(const Duration(seconds: 10), (_) => sendBackupPosition());
+    _backupTimer = Timer.periodic(
+        const Duration(seconds: 10), (_) => sendBackupPosition());
 
     _logger.i('DriverTrackingNotifier: tracking started for $deliveryId');
   }
@@ -366,8 +441,8 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       return updated;
     } catch (e) {
       _logger.e('DriverTrackingNotifier resetToken', error: e);
-      state = state.copyWith(
-          error: 'Erreur lors de la réinitialisation du token.');
+      state =
+          state.copyWith(error: 'Erreur lors de la réinitialisation du token.');
       return null;
     }
   }

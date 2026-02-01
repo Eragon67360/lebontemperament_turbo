@@ -6,14 +6,14 @@ import {
   AlertCircle,
   AlertTriangle,
   CheckCircle2,
+  Clock, // <-- Import the Clock icon
   ShipWheel,
-  Users,
 } from "lucide-react";
+import type { ReactNode } from "react";
 
-// --- Data Interfaces (shared by token-only and [deliveryId] pages) ---
+// --- Data Interfaces (No changes here) ---
 export interface Delivery {
   id: string;
-  driver_id: string;
   public_token: string;
   latitude: number | null;
   longitude: number | null;
@@ -25,19 +25,21 @@ export interface Delivery {
   is_delayed: boolean;
   delay_minutes: number | null;
   problem_message: string | null;
+  current_recipient_id?: string | null;
 }
 
 export interface DeliveryRecipient {
   id: string;
   delivery_id: string;
   label: string;
-  scheduled_at: string;
-  sort_order: number;
+  scheduled_at?: string | null;
   public_token?: string;
   delivered_at?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
-// --- Helpers ---
+// --- Helper Functions (No changes here) ---
 export function calculateETA(
   iso: string | null,
   delayMinutes: number | null,
@@ -68,7 +70,6 @@ export function formatDateTime(date: Date | null): string {
   });
 }
 
-// --- Sub-Components ---
 function formatTimeRangeLabel(
   start: string | null,
   end: string | null,
@@ -81,7 +82,19 @@ function formatTimeRangeLabel(
   return `${formatTime(startDate)} – ${formatTime(endDate)}`;
 }
 
-export function StatusPanel({ delivery }: { delivery: Delivery }) {
+// --- UI Components (REFACTORED) ---
+
+/**
+ * A panel that shows the estimated time window and delivery status.
+ * Now context-aware with a `status` prop.
+ */
+export function StatusPanel({
+  delivery,
+  status,
+}: {
+  delivery: Delivery;
+  status: "live" | "pending";
+}) {
   const hasRange = delivery.scheduled_at && delivery.scheduled_end_at;
   const label = hasRange ? "Créneau estimé" : "Arrivée estimée";
   const timeLabel = formatTimeRangeLabel(
@@ -108,9 +121,22 @@ export function StatusPanel({ delivery }: { delivery: Delivery }) {
             {timeLabel}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-          <span className="text-gray-700 dark:text-gray-300">En direct</span>
+        {/* -- Conditionally rendered status badge -- */}
+        <div
+          className={clsx(
+            "flex items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5",
+            status === "live"
+              ? "text-gray-700 dark:text-gray-300"
+              : "text-gray-600 dark:text-gray-400",
+          )}
+        >
+          <div
+            className={clsx("h-2 w-2 rounded-full", {
+              "animate-pulse bg-green-500": status === "live",
+              "bg-gray-400 dark:bg-gray-500": status === "pending",
+            })}
+          />
+          <span>{status === "live" ? "En direct" : "Prévu"}</span>
         </div>
       </div>
       <AnimatePresence>
@@ -154,73 +180,55 @@ export function StatusPanel({ delivery }: { delivery: Delivery }) {
   );
 }
 
-export function RecipientsPanel({
-  recipients,
-}: {
-  recipients: DeliveryRecipient[];
-}) {
-  if (recipients.length === 0) return null;
-
-  return (
-    <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
-      className="z-10 mx-auto flex max-h-[40vh] w-full max-w-lg flex-col rounded-2xl border border-white/20 bg-white/70 shadow-xl backdrop-blur-lg dark:border-gray-500/20 dark:bg-gray-900/70"
-    >
-      <div className="shrink-0 border-b border-black/5 p-4 sm:p-6 dark:border-white/5">
-        <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-gray-200">
-          <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-          <span>Ordre de livraison</span>
-        </h3>
-      </div>
-      <ul className="space-y-3 overflow-y-auto p-4 sm:p-6">
-        {recipients.map((r, index) => (
-          <li key={r.id} className="flex items-center gap-4">
-            <div className="flex flex-col items-center self-stretch">
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-gray-600 dark:bg-gray-600 dark:text-gray-300">
-                {index + 1}
-              </div>
-              <div
-                className={clsx("w-px grow bg-gray-300 dark:bg-gray-600", {
-                  hidden: index === recipients.length - 1,
-                })}
-              />
-            </div>
-            <div className="py-1 text-sm">
-              <span className="font-medium text-gray-800 dark:text-gray-300">
-                {r.label}
-              </span>
-              <span className="text-gray-500 dark:text-gray-400">
-                {" "}
-                – {formatTime(new Date(r.scheduled_at))}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </motion.div>
-  );
-}
-
-/** Single-recipient panel for token-only recipient view: "Votre livraison : [label], vers [time]" */
+/**
+ * A panel showing the specific recipient's information.
+ * HEAVILY REFACTORED for better UX in the pending state.
+ */
 export function RecipientSinglePanel({
   recipient,
   delivery,
+  etaForCurrentRecipient = null,
 }: {
   recipient: DeliveryRecipient;
   delivery: Delivery;
+  etaForCurrentRecipient?: Date | null;
 }) {
-  const hasRange = delivery.scheduled_at && delivery.scheduled_end_at;
-  const eta = calculateETA(recipient.scheduled_at, delivery.delay_minutes);
-  const globalLabel = hasRange ? "Créneau global" : "Prévision";
-  const globalTime = hasRange
-    ? formatTimeRangeLabel(
-        delivery.scheduled_at,
-        delivery.scheduled_end_at ?? null,
-        delivery.delay_minutes,
-      )
-    : formatTime(eta);
+  const isInProgress = delivery.current_recipient_id === recipient.id;
+  const scheduledTime =
+    recipient.scheduled_at != null
+      ? calculateETA(recipient.scheduled_at, delivery.delay_minutes)
+      : null;
+
+  // --- NEW: Smart ETA Label Generation ---
+  const getSmartEtaLabel = (): string => {
+    // If no live ETA is available, fallback to the scheduled time.
+    if (!etaForCurrentRecipient) {
+      return `prévue à ${formatTime(scheduledTime)}`;
+    }
+
+    const remainingSeconds =
+      (etaForCurrentRecipient.getTime() - Date.now()) / 1000;
+
+    // If the ETA is slightly in the past (due to network lag), show imminent.
+    if (remainingSeconds < 0) {
+      return "Arrivée imminente";
+    }
+
+    const remainingMinutes = Math.round(remainingSeconds / 60);
+
+    if (remainingMinutes <= 1) {
+      return "Dans moins d'une minute";
+    }
+    // Threshold for showing relative time vs absolute time.
+    if (remainingMinutes <= 15) {
+      // Correctly pluralize "minute(s)"
+      const plural = remainingMinutes > 1 ? "s" : "";
+      return `Dans environ ${remainingMinutes} minute${plural}`;
+    }
+    // For longer ETAs, show the absolute time which is less mental math for the user.
+    return `vers ${formatTime(etaForCurrentRecipient)}`;
+  };
+
   return (
     <motion.div
       initial={{ y: -100, opacity: 0 }}
@@ -234,19 +242,36 @@ export function RecipientSinglePanel({
       <p className="mt-1 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl dark:text-gray-100">
         {recipient.label}
       </p>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-        {globalLabel} : {globalTime}
-      </p>
-      {hasRange && (
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Votre passage prévu : {formatTime(eta)}
+
+      {/* RENDER PATH 1: Delivery is IN PROGRESS (Live) */}
+      {isInProgress ? (
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          Arrivée estimée :{" "}
+          <span className="font-semibold">{getSmartEtaLabel()}</span>
         </p>
+      ) : (
+        /* RENDER PATH 2: Delivery is PENDING */
+        <>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            Passage prévu :{" "}
+            <span className="font-semibold">{formatTime(scheduledTime)}</span>
+          </p>
+          <div className="mt-4 flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+            <p className="text-sm">
+              Le suivi en direct s&apos;activera lorsque le conducteur sera en
+              route.
+            </p>
+          </div>
+        </>
       )}
     </motion.div>
   );
 }
 
-/** Delivered state panel for recipient view when delivered_at is set */
+/**
+ * A confirmation panel shown when the item is delivered.
+ */
 export function DeliveredPanel({
   deliveredAt,
   label,
@@ -260,7 +285,7 @@ export function DeliveredPanel({
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 150, damping: 20 }}
-      className="rounded-2xl border border-green-200 bg-green-50 p-6 shadow-xl dark:border-green-800/50 dark:bg-green-950/40"
+      className="w-full max-w-lg rounded-2xl border border-green-200 bg-green-50 p-6 shadow-xl dark:border-green-800/50 dark:bg-green-950/40"
     >
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
@@ -279,10 +304,13 @@ export function DeliveredPanel({
   );
 }
 
+/**
+ * An overlay shown when the driver has paused tracking.
+ */
 export function StoppedOverlay({ delivery }: { delivery: Delivery }) {
-  void delivery; // kept for API; overlay content is static
+  void delivery; // Prop kept for API consistency
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
+    <div className="absolute inset-0 z-20 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -306,6 +334,20 @@ export function StoppedOverlay({ delivery }: { delivery: Delivery }) {
   );
 }
 
+/**
+ * A layout for the "Pending" state, showing info panels without a map.
+ */
+export function PendingPanel({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-dvh w-full items-start justify-center bg-gray-100 p-3 pt-12 sm:p-4 sm:pt-16 dark:bg-gray-900">
+      <div className="flex w-full max-w-lg flex-col gap-3">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * A fallback component to show while the page is loading.
+ */
 export function TrackPageLoadingFallback() {
   return (
     <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 dark:bg-gray-950">
@@ -319,10 +361,13 @@ export function TrackPageLoadingFallback() {
   );
 }
 
+/**
+ * A component to display an error message.
+ */
 export function TrackPageError({ message }: { message: string }) {
   return (
     <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-950">
-      <div className="max-w-md rounded-xl border border-red-200 bg-white p-6 shadow-lg dark:border-red-900/50 dark:bg-gray-900">
+      <div className="w-full max-w-md rounded-xl border border-red-200 bg-white p-6 shadow-lg dark:border-red-900/50 dark:bg-gray-900">
         <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
           <AlertCircle className="h-6 w-6" />
           <h2 className="text-xl font-semibold">Erreur de suivi</h2>
