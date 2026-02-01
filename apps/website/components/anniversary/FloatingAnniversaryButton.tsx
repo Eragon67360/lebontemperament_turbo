@@ -98,11 +98,12 @@ const FloatingAnniversaryButton = () => {
   };
 
   // Show button if feature is enabled OR user is admin
-  // Hide button on anniversary page or membres pages
+  // Hide button on anniversary, membres, or track pages
   const shouldShow =
     (isAnniversaryEnabled || isAdmin) &&
     !pathname.startsWith("/40-ans") &&
-    !pathname.startsWith("/membres");
+    !pathname.startsWith("/membres") &&
+    !pathname.startsWith("/track");
 
   if (!shouldShow) {
     return null;

@@ -63,7 +63,10 @@ export function TrackMapClient({
   const attribution = isDark ? CARTODB_ATTRIBUTION : OSM_ATTRIBUTION;
 
   return (
-    <div className="h-full min-h-[400px] w-full" style={{ minHeight: 400 }}>
+    <div
+      className="-z-40 h-full min-h-[400px] w-full"
+      style={{ minHeight: 400 }}
+    >
       <MapContainer
         center={center}
         zoom={hasPosition ? 15 : 10}
