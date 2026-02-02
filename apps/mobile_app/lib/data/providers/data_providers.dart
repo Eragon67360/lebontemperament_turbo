@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import '../../core/utils/date_utils.dart' as app_date_utils;
 import '../models/event.dart';
@@ -110,12 +112,12 @@ final rehearsalProvider = FutureProvider.family<Rehearsal?, String>((
 
 final rehearsalsByGroupProvider =
     FutureProvider.family<List<Rehearsal>, GroupType>((ref, groupType) async {
-      // Ensure storage is initialized
-      await ref.watch(storageInitializationProvider.future);
+  // Ensure storage is initialized
+  await ref.watch(storageInitializationProvider.future);
 
-      final rehearsalsService = ref.watch(rehearsalsServiceProvider);
-      return await rehearsalsService.getRehearsalsByGroupType(groupType);
-    });
+  final rehearsalsService = ref.watch(rehearsalsServiceProvider);
+  return await rehearsalsService.getRehearsalsByGroupType(groupType);
+});
 
 // Real-time providers that automatically refresh when changes are detected
 final realtimeEventsProvider = FutureProvider<List<Event>>((ref) async {
@@ -175,3 +177,76 @@ final upcomingConcertsProvider = FutureProvider<List<Concert>>((ref) async {
     return app_date_utils.isConcertUpcoming(date: c.date, time: c.time);
   }).toList();
 });
+
+final upcomingRehearsalsProvider = FutureProvider<List<Rehearsal>>((ref) async {
+  final rehearsals = await ref.watch(realtimeRehearsalsProvider.future);
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+
+  final upcoming = rehearsals.where((r) {
+    if (r.date == null) return false;
+    final rehearsalDate = DateTime.tryParse(r.date!);
+    return rehearsalDate != null && !rehearsalDate.isBefore(today);
+  }).toList();
+
+  // Sort by date, then by start time to ensure correct order
+  upcoming.sort((a, b) {
+    final dateA = DateTime.parse(a.date!);
+    final dateB = DateTime.parse(b.date!);
+    final dateComparison = dateA.compareTo(dateB);
+    if (dateComparison != 0) return dateComparison;
+
+    // If dates are the same, sort by start time
+    final timeA = a.startTime ?? '00:00';
+    final timeB = b.startTime ?? '00:00';
+    return timeA.compareTo(timeB);
+  });
+
+  return upcoming;
+});
+
+// --- NEW: Providers specifically for the Home Screen ---
+
+/// Provides the next 2 upcoming rehearsals for the home screen UI.
+/// Handles loading/error states gracefully by returning an empty list.
+final homeUpcomingRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
+  final asyncRehearsals = ref.watch(upcomingRehearsalsProvider);
+  return asyncRehearsals.when(
+    data: (rehearsals) => rehearsals.take(2).toList(),
+    loading: () => [],
+    error: (_, __) => [],
+  );
+});
+
+/// Provides the next 2 upcoming concerts for the home screen UI.
+/// Handles loading/error states gracefully by returning an empty list.
+final homeUpcomingConcertsProvider = Provider<List<Concert>>((ref) {
+  final asyncConcerts = ref.watch(upcomingConcertsProvider);
+  // We need to sort the concerts here since your original provider doesn't.
+  return asyncConcerts.when(
+    data: (concerts) {
+      // Create a mutable copy to sort
+      final sortedConcerts = List<Concert>.from(concerts);
+      sortedConcerts.sort((a, b) {
+        final dateA = DateTime.parse(a.date);
+        final dateB = DateTime.parse(b.date);
+        final dateComparison = dateA.compareTo(dateB);
+        if (dateComparison != 0) return dateComparison;
+        return a.time.compareTo(b.time);
+      });
+      return sortedConcerts.take(2).toList();
+    },
+    loading: () => [],
+    error: (_, __) => [],
+  );
+});
+
+// --- NEW: Helper function for formatting dates ---
+String formatDate(String dateString) {
+  // Initialize locale data for French if not already done
+  initializeDateFormatting('fr_FR', null);
+  final date = DateTime.tryParse(dateString);
+  if (date == null) return 'Date invalide';
+  // Format: "Mar. 25 juin"
+  return DateFormat('EEE d MMM', 'fr_FR').format(date);
+}

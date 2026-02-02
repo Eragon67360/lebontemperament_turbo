@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:mobile_app/data/models/concert.dart';
+import 'package:mobile_app/data/models/rehearsal.dart';
+import 'package:mobile_app/data/providers/data_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -35,9 +38,9 @@ class HomeScreen extends ConsumerWidget {
                 [
                   const _WelcomeHeader(),
                   const SizedBox(height: 40),
-                  const _SectionTitle(title: 'Actions rapides'),
+                  const _SectionTitle(title: 'Prochains événements'),
                   const SizedBox(height: 16),
-                  const _QuickActions(),
+                  const _UpcomingEvents(), // Renamed for clarity
                   const SizedBox(height: 40),
                   const _InfoCard(),
                   const SizedBox(height: 24),
@@ -53,7 +56,6 @@ class HomeScreen extends ConsumerWidget {
 }
 
 // MARK: - UI Components
-
 class _WelcomeHeader extends ConsumerWidget {
   const _WelcomeHeader();
 
@@ -138,40 +140,77 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _QuickActions extends ConsumerWidget {
-  const _QuickActions();
+// --- THE NEW DYNAMIC WIDGET ---
+class _UpcomingEvents extends ConsumerWidget {
+  const _UpcomingEvents();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationNotifier = ref.read(mainNavigationProvider.notifier);
     final isSuperadmin = ref.watch(isSuperadminProvider).valueOrNull ?? false;
 
+    // Watch our new providers from data_providers.dart
+    final nextRehearsals = ref.watch(homeUpcomingRehearsalsProvider);
+    final nextConcerts = ref.watch(homeUpcomingConcertsProvider);
+
     return FadeInUp(
       delay: 300,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // --- Upcoming Rehearsals Section ---
           Row(
             children: [
-              Expanded(
-                child: _NavigationCard(
-                  icon: Icons.repeat_rounded,
-                  title: 'Répétitions',
-                  subtitle: 'Voir les répétitions',
-                  onTap: () => navigationNotifier.setTab(3),
-                ),
-              ),
+              if (nextRehearsals.isNotEmpty)
+                Expanded(
+                  // Rehearsals are on tab index 3.
+                  child: _buildRehearsalCard(context, nextRehearsals[0],
+                      () => navigationNotifier.setTab(3)),
+                )
+              else
+                Expanded(
+                    child: _buildPlaceholderCard(
+                        context, 'Aucune répétition à venir')),
               const SizedBox(width: 16),
-              Expanded(
-                child: _NavigationCard(
-                  icon: Icons.person_outline,
-                  title: 'Profil',
-                  subtitle: 'Gérer votre profil',
-                  onTap: () => navigationNotifier.setTab(4),
-                ),
-              ),
+              if (nextRehearsals.length > 1)
+                Expanded(
+                  child: _buildRehearsalCard(context, nextRehearsals[1],
+                      () => navigationNotifier.setTab(3)),
+                )
+              else
+                Expanded(
+                    child: _buildPlaceholderCard(
+                        context, 'Pas d\'autre répétition')),
             ],
           ),
-          // --- NEW: Conditional Admin Card ---
+          const SizedBox(height: 16),
+          // --- Upcoming Concerts Section ---
+          Row(
+            children: [
+              if (nextConcerts.isNotEmpty)
+                Expanded(
+                  // Concerts are on tab index 2. Adjust if needed.
+                  child: _buildConcertCard(context, nextConcerts[0],
+                      () => navigationNotifier.setTab(2)),
+                )
+              else
+                Expanded(
+                    child: _buildPlaceholderCard(
+                        context, 'Aucun concert à venir')),
+              const SizedBox(width: 16),
+              if (nextConcerts.length > 1)
+                Expanded(
+                  child: _buildConcertCard(context, nextConcerts[1],
+                      () => navigationNotifier.setTab(2)),
+                )
+              else
+                Expanded(
+                    child:
+                        _buildPlaceholderCard(context, 'Pas d\'autre concert')),
+            ],
+          ),
+
+          // --- Existing Conditional Admin Card ---
           if (isSuperadmin) ...[
             const SizedBox(height: 16),
             _NavigationCard(
@@ -179,10 +218,126 @@ class _QuickActions extends ConsumerWidget {
               title: 'Suivi Livraison',
               subtitle: 'Partager votre position en temps réel',
               onTap: () => context.push('/driver-tracking'),
-              isHighlighted: true, // Make it stand out
+              isHighlighted: true,
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildRehearsalCard(
+      BuildContext context, Rehearsal rehearsal, VoidCallback onTap) {
+    return _EventNavigationCard(
+      icon: Icons.repeat_rounded,
+      title: formatDate(rehearsal.date!),
+      subtitle:
+          '${rehearsal.startTime ?? ""} · ${rehearsal.place ?? "Lieu non défini"}',
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildConcertCard(
+      BuildContext context, Concert concert, VoidCallback onTap) {
+    return _EventNavigationCard(
+      icon: Icons.celebration_outlined,
+      title: formatDate(concert.date),
+      subtitle: '${concert.time} · ${concert.place}',
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildPlaceholderCard(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    return Container(
+      height: 112, // Match the height of a regular card
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EventNavigationCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _EventNavigationCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 112, // Fixed height for layout consistency
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 22),
+            ),
+            const Spacer(),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -269,6 +424,8 @@ class _NavigationCard extends StatelessWidget {
   }
 }
 
+// ... (The rest of your file: _InfoCard, _BetaNoticeCard, etc., can remain exactly the same)
+// ... (omitting for brevity, just copy them from your original file)
 class _InfoCard extends ConsumerWidget {
   const _InfoCard();
 
