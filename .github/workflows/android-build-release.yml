@@ -23,19 +23,23 @@ jobs:
     name: Android (${{ matrix.name }})
     runs-on: ubuntu-latest
 
-    # This matrix defines the different configurations for each branch
+    # Set job-level environment variables. This is where we can safely access secrets.
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      # Conditionally set SITE_URL based on the branch from the matrix
+      SITE_URL: ${{ github.ref_name == 'dev' && secrets.SITE_URL_DEV || secrets.SITE_URL_PROD }}
+
     strategy:
       matrix:
         include:
           - name: "Dev"
             branch: "dev"
             bump_type: "build"
-            site_url: ${{ secrets.SITE_URL_DEV }}
             draft_release: true
           - name: "Main"
             branch: "main"
             bump_type: "patch"
-            site_url: ${{ secrets.SITE_URL_PROD }}
             draft_release: false
 
     # Run this job only if the push is to a branch defined in the matrix
@@ -45,7 +49,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Use a token to allow the action to push the version bump commit
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Java
@@ -65,24 +68,20 @@ jobs:
         run: |
           NEW_VERSION=$(node scripts/bump-mobile-version.js ${{ matrix.bump_type }} | tail -1)
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped version to $NEW_VERSION"
+          echo "Calculated version: $NEW_VERSION"
 
       - name: Commit version bump
+        if: matrix.branch == 'main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add apps/mobile_app/pubspec.yaml
-          # Use --quiet to avoid errors if there are no changes to commit
           git diff --staged --quiet || git commit -m "chore(mobile): bump version to ${{ steps.bump.outputs.version }} [skip ci]"
-          # Use "|| true" to prevent the workflow from failing if the push is rejected (e.g., due to branch protection rules)
           git push || true
 
       - name: Provide .env for build
         working-directory: apps/mobile_app
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SITE_URL: ${{ matrix.site_url }}
+        # This step now inherits all the necessary env vars from the job level
         run: |
           echo "SUPABASE_URL=$SUPABASE_URL" > .env
           echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
