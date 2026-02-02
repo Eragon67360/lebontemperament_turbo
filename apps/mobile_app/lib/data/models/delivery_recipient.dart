@@ -12,6 +12,7 @@ class DeliveryRecipient {
   final String? address;
   final double? latitude;
   final double? longitude;
+  final String? phoneNumber;
 
   const DeliveryRecipient({
     required this.id,
@@ -24,6 +25,7 @@ class DeliveryRecipient {
     this.address,
     this.latitude,
     this.longitude,
+    this.phoneNumber,
   });
 
   factory DeliveryRecipient.fromJson(Map<String, dynamic> json) {
@@ -42,6 +44,7 @@ class DeliveryRecipient {
       address: json['address'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      phoneNumber: json['phone_number'] as String?,
     );
   }
 
@@ -57,6 +60,7 @@ class DeliveryRecipient {
       if (address != null) 'address': address,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
+      if (phoneNumber != null) 'phone_number': phoneNumber,
     };
   }
 
@@ -71,6 +75,7 @@ class DeliveryRecipient {
     String? address,
     double? latitude,
     double? longitude,
+    String? phoneNumber,
   }) {
     return DeliveryRecipient(
       id: id ?? this.id,
@@ -83,6 +88,7 @@ class DeliveryRecipient {
       address: address ?? this.address,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 }

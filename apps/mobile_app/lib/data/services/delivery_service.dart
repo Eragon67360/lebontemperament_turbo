@@ -82,8 +82,7 @@ class DeliveryService {
     try {
       await _client
           .from('deliveries')
-          .update({'is_tracking_active': true})
-          .eq('id', deliveryId);
+          .update({'is_tracking_active': true}).eq('id', deliveryId);
       _logger.i('DeliveryService: startTracking $deliveryId');
     } catch (e) {
       _logger.e('DeliveryService: startTracking failed', error: e);
@@ -96,8 +95,7 @@ class DeliveryService {
     try {
       await _client
           .from('deliveries')
-          .update({'is_tracking_active': false})
-          .eq('id', deliveryId);
+          .update({'is_tracking_active': false}).eq('id', deliveryId);
       _logger.i('DeliveryService: stopTracking $deliveryId');
     } catch (e) {
       _logger.e('DeliveryService: stopTracking failed', error: e);
@@ -196,7 +194,8 @@ class DeliveryService {
   }
 
   /// Sets or clears problem message (e.g. "Bouchons", "Accident").
-  Future<Delivery?> setProblemMessage(String deliveryId, String? message) async {
+  Future<Delivery?> setProblemMessage(
+      String deliveryId, String? message) async {
     try {
       final response = await _client
           .from('deliveries')
@@ -222,7 +221,9 @@ class DeliveryService {
           .order('sort_order')
           .order('scheduled_at');
       final list = response as List<dynamic>? ?? [];
-      return list.map((e) => DeliveryRecipient.fromJson(e as Map<String, dynamic>)).toList();
+      return list
+          .map((e) => DeliveryRecipient.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       _logger.e('DeliveryService: getRecipients failed', error: e);
       rethrow;
@@ -230,12 +231,14 @@ class DeliveryService {
   }
 
   /// Sets the recipient the driver is currently driving to. Pass null to revert to pending.
-  Future<void> setCurrentRecipient(String deliveryId, {String? recipientId}) async {
+  Future<void> setCurrentRecipient(String deliveryId,
+      {String? recipientId}) async {
     try {
       await _client.from('deliveries').update({
         'current_recipient_id': recipientId,
       }).eq('id', deliveryId);
-      _logger.i('DeliveryService: setCurrentRecipient $deliveryId -> $recipientId');
+      _logger.i(
+          'DeliveryService: setCurrentRecipient $deliveryId -> $recipientId');
     } catch (e) {
       _logger.e('DeliveryService: setCurrentRecipient failed', error: e);
       rethrow;
@@ -251,6 +254,7 @@ class DeliveryService {
     String? address,
     double? latitude,
     double? longitude,
+    String? phoneNumber,
   }) async {
     try {
       final publicToken = const Uuid().v4();
@@ -260,10 +264,12 @@ class DeliveryService {
         'sort_order': sortOrder,
         'public_token': publicToken,
       };
-      if (scheduledAt != null) insertData['scheduled_at'] = scheduledAt.toIso8601String();
+      if (scheduledAt != null)
+        insertData['scheduled_at'] = scheduledAt.toIso8601String();
       if (address != null) insertData['address'] = address;
       if (latitude != null) insertData['latitude'] = latitude;
       if (longitude != null) insertData['longitude'] = longitude;
+      if (phoneNumber != null) insertData['phone_number'] = phoneNumber;
       final response = await _client
           .from('delivery_recipients')
           .insert(insertData)
@@ -294,7 +300,9 @@ class DeliveryService {
           .select()
           .maybeSingle();
       if (response != null && deliveryId != null) {
-        await _client.from('deliveries').update({'current_recipient_id': null}).eq('id', deliveryId);
+        await _client
+            .from('deliveries')
+            .update({'current_recipient_id': null}).eq('id', deliveryId);
         _logger.i('DeliveryService: markRecipientDelivered $recipientId');
         return DeliveryRecipient.fromJson(response);
       }
@@ -314,16 +322,22 @@ class DeliveryService {
     String? address,
     double? latitude,
     double? longitude,
+    String? phoneNumber,
   }) async {
     try {
       final Map<String, dynamic> updates = {};
       if (label != null) updates['label'] = label;
-      if (scheduledAt != null) updates['scheduled_at'] = scheduledAt.toIso8601String();
+      if (scheduledAt != null) {
+        updates['scheduled_at'] = scheduledAt.toIso8601String();
+      }
       if (sortOrder != null) updates['sort_order'] = sortOrder;
       if (address != null) updates['address'] = address;
       if (latitude != null) updates['latitude'] = latitude;
       if (longitude != null) updates['longitude'] = longitude;
-      if (updates.isEmpty) throw ArgumentError('At least one field must be updated');
+      if (phoneNumber != null) updates['phone_number'] = phoneNumber;
+      if (updates.isEmpty) {
+        throw ArgumentError('At least one field must be updated');
+      }
       final response = await _client
           .from('delivery_recipients')
           .update(updates)
@@ -350,7 +364,8 @@ class DeliveryService {
   }
 
   /// Reorders recipients by updating sort_order for each id in the given order (index = sort_order).
-  Future<void> reorderRecipients(String deliveryId, List<String> recipientIdsInOrder) async {
+  Future<void> reorderRecipients(
+      String deliveryId, List<String> recipientIdsInOrder) async {
     try {
       for (var i = 0; i < recipientIdsInOrder.length; i++) {
         await _client

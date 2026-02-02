@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
@@ -180,12 +181,12 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   }
 
   /// Add a recipient.
-  Future<void> addRecipient({
-    required String label,
-    String? address,
-    double? latitude,
-    double? longitude,
-  }) async {
+  Future<void> addRecipient(
+      {required String label,
+      String? address,
+      double? latitude,
+      double? longitude,
+      String? phoneNumber}) async {
     final delivery = state.delivery;
     if (delivery == null) return;
     try {
@@ -200,6 +201,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         address: address,
         latitude: latitude,
         longitude: longitude,
+        phoneNumber: phoneNumber,
       );
       state = state.copyWith(recipients: [...list, added], error: null);
     } catch (e) {
@@ -213,11 +215,30 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     final delivery = state.delivery;
     if (delivery == null) return;
     try {
+      // First, update the database and local state so the UI is fast.
       await _service.setCurrentRecipient(delivery.id, recipientId: recipientId);
       final updated = await _service.getDelivery(delivery.id);
       if (updated != null) {
         state = state.copyWith(delivery: updated, error: null);
       }
+
+      // --- Trigger the Edge Function to send the SMS ---
+      _logger.i('Attempting to trigger SMS for recipient $recipientId');
+      Supabase.instance.client.functions.invoke(
+        'send-delivery-sms',
+        body: {'recipientId': recipientId},
+      ).then((response) {
+        if (response.status != 200) {
+          _logger.w(
+              'SMS function invocation failed with status: ${response.status}',
+              error: response.data);
+        } else {
+          _logger.i(
+              'SMS function invoked successfully for recipient $recipientId');
+        }
+      }).catchError((error) {
+        _logger.e('Failed to invoke SMS function', error: error);
+      });
     } catch (e) {
       _logger.e('DriverTrackingNotifier startDrivingToRecipient', error: e);
       state =
@@ -263,6 +284,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     String? address,
     double? latitude,
     double? longitude,
+    String? phoneNumber,
   }) async {
     try {
       await _service.updateRecipient(
@@ -272,6 +294,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         address: address,
         latitude: latitude,
         longitude: longitude,
+        phoneNumber: phoneNumber,
       );
       await loadRecipients();
       state = state.copyWith(error: null);

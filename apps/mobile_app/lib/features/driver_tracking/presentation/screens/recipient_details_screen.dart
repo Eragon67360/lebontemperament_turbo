@@ -174,6 +174,17 @@ class RecipientDetailsScreen extends ConsumerWidget {
                         fontSize: 14,
                         color: theme.colorScheme.onSurfaceVariant),
                   ),
+                  const Divider(height: 32), // <-- ADDED a divider
+                  Text('Téléphone', // <-- ADDED new section title
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(
+                    // <-- ADDED new text field for phone
+                    currentRecipient.phoneNumber ?? 'Aucun numéro renseigné',
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurfaceVariant),
+                  ),
                   if (isDelivered) ...[
                     const Divider(height: 32),
                     Text('Heure de livraison',
@@ -243,7 +254,7 @@ class RecipientDetailsScreen extends ConsumerWidget {
             label: 'Modifier les informations',
             icon: Icons.edit_outlined,
             isSecondary: true,
-            onPressed: onEdit, // <-- Use the callback passed from the parent
+            onPressed: onEdit,
           ),
           const SizedBox(height: 12),
           _ActionButton(
@@ -252,13 +263,12 @@ class RecipientDetailsScreen extends ConsumerWidget {
             isSecondary: true,
             onPressed: canShare
                 ? () {
-                    // <-- Implement directly here
                     final url = _getRecipientUrl(currentRecipient);
                     Clipboard.setData(ClipboardData(text: url));
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Lien copié dans le presse-papiers')));
                   }
-                : null, // <-- Disable if no token
+                : null,
           ),
           const SizedBox(height: 12),
           _ActionButton(
@@ -266,8 +276,7 @@ class RecipientDetailsScreen extends ConsumerWidget {
             icon: Icons.delete_outline_rounded,
             color: theme.colorScheme.error,
             isSecondary: true,
-            onPressed: () => _confirmDelete(context, ref,
-                currentRecipient.id), // <-- Implement directly here
+            onPressed: () => _confirmDelete(context, ref, currentRecipient.id),
           ),
         ],
       ),
