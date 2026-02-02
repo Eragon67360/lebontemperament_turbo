@@ -49,8 +49,8 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
 
 final notificationSchedulerProvider =
     StateNotifierProvider<NotificationSchedulerNotifier, void>(
-      (ref) => NotificationSchedulerNotifier(ref),
-    );
+  (ref) => NotificationSchedulerNotifier(ref),
+);
 
 // Provider that automatically schedules notifications when data changes
 final autoScheduleNotificationsProvider = Provider<void>((ref) {
