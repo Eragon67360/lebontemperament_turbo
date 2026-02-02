@@ -20,30 +20,16 @@ permissions:
 
 jobs:
   build_and_release:
-    name: Android (${{ matrix.name }})
+    # Set the job name dynamically based on the branch
+    name: Android (${{ github.ref_name == 'main' && 'Main' || 'Dev' }})
     runs-on: ubuntu-latest
 
-    # Set job-level environment variables. This is where we can safely access secrets.
+    # Set all branch-specific parameters here using conditional expressions.
+    # This is evaluated after the trigger but before the steps run, so contexts are available.
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      # Conditionally set SITE_URL based on the branch from the matrix
-      SITE_URL: ${{ github.ref_name == 'dev' && secrets.SITE_URL_DEV || secrets.SITE_URL_PROD }}
-
-    strategy:
-      matrix:
-        include:
-          - name: "Dev"
-            branch: "dev"
-            bump_type: "build"
-            draft_release: true
-          - name: "Main"
-            branch: "main"
-            bump_type: "patch"
-            draft_release: false
-
-    # Run this job only if the push is to a branch defined in the matrix
-    if: github.ref == format('refs/heads/{0}', matrix.branch)
+      BUMP_TYPE: ${{ github.ref_name == 'main' && 'patch' || 'build' }}
+      DRAFT_RELEASE: ${{ github.ref_name == 'main' && 'false' || 'true' }}
+      SITE_URL: ${{ github.ref_name == 'main' && secrets.SITE_URL_PROD || secrets.SITE_URL_DEV }}
 
     steps:
       - name: Checkout
@@ -66,12 +52,14 @@ jobs:
       - name: Bump version
         id: bump
         run: |
-          NEW_VERSION=$(node scripts/bump-mobile-version.js ${{ matrix.bump_type }} | tail -1)
+          # Use the BUMP_TYPE environment variable defined at the job level
+          NEW_VERSION=$(node scripts/bump-mobile-version.js ${{ env.BUMP_TYPE }} | tail -1)
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Calculated version: $NEW_VERSION"
 
       - name: Commit version bump
-        if: matrix.branch == 'main'
+        # The condition now uses the reliable github.ref_name context
+        if: github.ref_name == 'main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -81,12 +69,17 @@ jobs:
 
       - name: Provide .env for build
         working-directory: apps/mobile_app
-        # This step now inherits all the necessary env vars from the job level
+        # Secrets are passed in via env vars at the job level now for simplicity
+        env:
+          # These secrets are constant for both branches
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           echo "SUPABASE_URL=$SUPABASE_URL" > .env
           echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
           echo "" >> .env
           echo "# Public website URL (for driver tracking share link)" >> .env
+          # The SITE_URL is inherited from the job-level env
           echo "SITE_URL=$SITE_URL" >> .env
 
       - name: Install dependencies
@@ -112,7 +105,8 @@ jobs:
         with:
           tag_name: "android/v${{ steps.bump.outputs.version }}"
           name: "Android v${{ steps.bump.outputs.version }}"
-          draft: ${{ matrix.draft_release }}
+          # Use the DRAFT_RELEASE environment variable
+          draft: ${{ env.DRAFT_RELEASE }}
           prerelease: false
           files: ${{ steps.rename.outputs.apk_path }}
           generate_release_notes: true
