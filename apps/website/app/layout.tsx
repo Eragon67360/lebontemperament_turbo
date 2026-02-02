@@ -1,13 +1,8 @@
-import FloatingAnniversaryButton from "@/components/anniversary/FloatingAnniversaryButton";
-import { BubbleContainer } from "@/components/BubbleContainer";
 import ConditionalGoogleAnalytics from "@/components/cookies/ConditionalGoogleAnalytics";
-import ConditionalVercelAnalytics from "@/components/cookies/ConditionalVercelAnalytics";
 import CookieConsentComponent from "@/components/cookies/CookieConsent";
 import { DeveloperFootprint } from "@/components/DeveloperFootprint";
 import { EasterEgg } from "@/components/EasterEgg";
-import { FooterClientWrapper } from "@/components/FooterClientWrapper";
-import Header from "@/components/Header";
-import Navigation from "@/components/Navigation";
+import { LayoutShell } from "@/components/LayoutShell";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
@@ -168,30 +163,10 @@ export default function RootLayout({
       </head>
       <body className="bg-background text-foreground z-10 transition-colors duration-200">
         <CookieConsentComponent />
-        <Header />
         <Providers>
           <DeveloperFootprint />
           <EasterEgg />
-
-          {/* Skip to main content link for accessibility */}
-          <a
-            href="#main-content"
-            className="focus:bg-primary focus:ring-primary sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-offset-2 focus:outline-none"
-          >
-            Aller au contenu principal
-          </a>
-
-          <main
-            id="main-content"
-            className="flex min-h-dvh flex-col justify-center"
-          >
-            <Navigation />
-            {children}
-            <BubbleContainer />
-            <FloatingAnniversaryButton />
-            <ConditionalVercelAnalytics />
-            <FooterClientWrapper />
-          </main>
+          <LayoutShell>{children}</LayoutShell>
         </Providers>
         <Toaster position="top-right" richColors />
         <ConditionalGoogleAnalytics />

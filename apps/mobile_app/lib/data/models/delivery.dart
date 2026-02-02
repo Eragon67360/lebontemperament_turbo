@@ -10,6 +10,13 @@ class Delivery {
   final DateTime expiresAt;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? scheduledAt;
+  final DateTime? scheduledEndAt;
+  final bool isDelayed;
+  final int? delayMinutes;
+  final String? problemMessage;
+  /// Recipient the driver is currently driving to (one at a time).
+  final String? currentRecipientId;
 
   const Delivery({
     required this.id,
@@ -21,6 +28,12 @@ class Delivery {
     required this.expiresAt,
     this.createdAt,
     this.updatedAt,
+    this.scheduledAt,
+    this.scheduledEndAt,
+    this.isDelayed = false,
+    this.delayMinutes,
+    this.problemMessage,
+    this.currentRecipientId,
   });
 
   factory Delivery.fromJson(Map<String, dynamic> json) {
@@ -46,6 +59,16 @@ class Delivery {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
+      scheduledAt: json['scheduled_at'] != null
+          ? DateTime.parse(json['scheduled_at'] as String)
+          : null,
+      scheduledEndAt: json['scheduled_end_at'] != null
+          ? DateTime.parse(json['scheduled_end_at'] as String)
+          : null,
+      isDelayed: json['is_delayed'] as bool? ?? false,
+      delayMinutes: json['delay_minutes'] as int?,
+      problemMessage: json['problem_message'] as String?,
+      currentRecipientId: json['current_recipient_id'] as String?,
     );
   }
 
@@ -59,6 +82,12 @@ class Delivery {
     DateTime? expiresAt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? scheduledAt,
+    DateTime? scheduledEndAt,
+    bool? isDelayed,
+    int? delayMinutes,
+    String? problemMessage,
+    String? currentRecipientId,
   }) {
     return Delivery(
       id: id ?? this.id,
@@ -70,6 +99,12 @@ class Delivery {
       expiresAt: expiresAt ?? this.expiresAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
+      scheduledEndAt: scheduledEndAt ?? this.scheduledEndAt,
+      isDelayed: isDelayed ?? this.isDelayed,
+      delayMinutes: delayMinutes ?? this.delayMinutes,
+      problemMessage: problemMessage ?? this.problemMessage,
+      currentRecipientId: currentRecipientId ?? this.currentRecipientId,
     );
   }
 }
