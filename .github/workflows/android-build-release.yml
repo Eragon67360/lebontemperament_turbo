@@ -1,12 +1,3 @@
-# Android APK build and GitHub Release
-# - Push to dev: bump build number, build APK, create draft release
-# - Push to main: bump app version (patch) + build number, build APK, create full release
-#
-# Required repo secrets (Settings → Secrets and variables → Actions):
-#   SUPABASE_URL, SUPABASE_ANON_KEY
-#   SITE_URL_DEV (e.g. https://dev.lebontemperament.com) — used for dev
-#   SITE_URL_PROD (e.g. https://www.lebontemperament.com) — used for main
-
 name: Android Build and Release
 
 on:
@@ -14,19 +5,23 @@ on:
     branches:
       - dev
       - main
+    # BEST PRACTICE: Only run when mobile app code is changed
+    paths:
+      - "apps/mobile_app/**"
+      - ".github/workflows/android-build-release.yml"
+      - "scripts/bump-mobile-version.js"
 
 permissions:
   contents: write
 
 jobs:
   build_and_release:
+    # THE FIX: Prevent workflow recursion from the version bump commit
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    # Set the job name dynamically based on the branch
+
     name: Android (${{ github.ref_name == 'main' && 'Main' || 'Dev' }})
     runs-on: ubuntu-latest
 
-    # Set all branch-specific parameters here using conditional expressions.
-    # This is evaluated after the trigger but before the steps run, so contexts are available.
     env:
       BUMP_TYPE: ${{ github.ref_name == 'main' && 'patch' || 'build' }}
       DRAFT_RELEASE: ${{ github.ref_name == 'main' && 'false' || 'true' }}
@@ -35,8 +30,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        # You need to fetch the full history for the bump script to work correctly
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -53,26 +49,22 @@ jobs:
       - name: Bump version
         id: bump
         run: |
-          # Use the BUMP_TYPE environment variable defined at the job level
           NEW_VERSION=$(node scripts/bump-mobile-version.js ${{ env.BUMP_TYPE }} | tail -1)
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Calculated version: $NEW_VERSION"
 
       - name: Commit version bump
-        # The condition now uses the reliable github.ref_name context
         if: github.ref_name == 'main'
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add apps/mobile_app/pubspec.yaml
           git diff --staged --quiet || git commit -m "chore(mobile): bump version to ${{ steps.bump.outputs.version }} [skip ci]"
-          git push || true
+          git push
 
       - name: Provide .env for build
         working-directory: apps/mobile_app
-        # Secrets are passed in via env vars at the job level now for simplicity
         env:
-          # These secrets are constant for both branches
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
@@ -80,7 +72,6 @@ jobs:
           echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
           echo "" >> .env
           echo "# Public website URL (for driver tracking share link)" >> .env
-          # The SITE_URL is inherited from the job-level env
           echo "SITE_URL=$SITE_URL" >> .env
 
       - name: Install dependencies
@@ -106,7 +97,6 @@ jobs:
         with:
           tag_name: "android/v${{ steps.bump.outputs.version }}"
           name: "Android v${{ steps.bump.outputs.version }}"
-          # Use the DRAFT_RELEASE environment variable
           draft: ${{ env.DRAFT_RELEASE }}
           prerelease: false
           files: ${{ steps.rename.outputs.apk_path }}
