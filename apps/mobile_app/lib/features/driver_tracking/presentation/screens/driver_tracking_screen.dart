@@ -148,7 +148,8 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
           String label,
           String? address,
           double? latitude,
-          double? longitude
+          double? longitude,
+          String? phoneNumber
         })?>(
       context: context,
       builder: (_) => _AddOrEditRecipientDialog(recipient: recipient),
@@ -160,6 +161,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
               address: newRecipient.address,
               latitude: newRecipient.latitude,
               longitude: newRecipient.longitude,
+              phoneNumber: newRecipient.phoneNumber,
             );
       } else {
         await ref.read(driverTrackingProvider.notifier).updateRecipient(
@@ -168,6 +170,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
               address: newRecipient.address,
               latitude: newRecipient.latitude,
               longitude: newRecipient.longitude,
+              phoneNumber: newRecipient.phoneNumber,
             );
       }
     }
@@ -784,6 +787,8 @@ class _SessionDetailsCard extends StatelessWidget {
   }
 }
 
+// This replaces the existing _AddOrEditRecipientDialog in driver_tracking_screen.dart
+
 class _AddOrEditRecipientDialog extends StatefulWidget {
   final DeliveryRecipient? recipient;
   const _AddOrEditRecipientDialog({this.recipient});
@@ -795,6 +800,7 @@ class _AddOrEditRecipientDialog extends StatefulWidget {
 class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   late final TextEditingController _labelController;
   late final TextEditingController _addressController;
+  late final TextEditingController _phoneController;
   bool _isGeocoding = false;
 
   @override
@@ -802,12 +808,15 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     super.initState();
     _labelController = TextEditingController(text: widget.recipient?.label);
     _addressController = TextEditingController(text: widget.recipient?.address);
+    _phoneController =
+        TextEditingController(text: widget.recipient?.phoneNumber);
   }
 
   @override
   void dispose() {
     _labelController.dispose();
     _addressController.dispose();
+    _phoneController.dispose(); // <-- ADDED disposal
     super.dispose();
   }
 
@@ -815,6 +824,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     final label = _labelController.text.trim();
     if (label.isEmpty) return;
     final addressStr = _addressController.text.trim();
+    final phoneStr = _phoneController.text.trim(); // <-- ADDED get phone value
 
     String? savedAddress;
     double? savedLatitude;
@@ -854,11 +864,14 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     }
 
     if (!mounted) return;
+
+    // <-- MODIFIED the returned object to include the phone number
     Navigator.of(context).pop((
       label: label,
       address: savedAddress?.isEmpty == true ? null : savedAddress,
       latitude: savedLatitude,
       longitude: savedLongitude,
+      phoneNumber: phoneStr.isEmpty ? null : phoneStr, // <-- ADDED phone number
     ));
   }
 
@@ -877,6 +890,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
               decoration: const InputDecoration(
                   labelText: 'Nom ou libellé', border: OutlineInputBorder()),
               autofocus: true,
+              textCapitalization: TextCapitalization.words,
             ),
             const SizedBox(height: 16),
             TextField(
@@ -884,6 +898,16 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
               decoration: const InputDecoration(
                 labelText: 'Adresse (optionnel)',
                 hintText: 'Ex: 10 Rue de la Paix, 67000 Strasbourg',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Téléphone (pour SMS)',
+                hintText: 'Format international (ex: +336...))',
                 border: OutlineInputBorder(),
               ),
             ),
