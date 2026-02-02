@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "mobile_app",
-      "version": "1.0.1+9",
+      "version": "1.0.2+10",
       "dependencies": [
         "cached_network_image",
         "connectivity_plus",
