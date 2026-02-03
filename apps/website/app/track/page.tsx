@@ -162,6 +162,14 @@ function TrackByTokenContent() {
     };
   }, [delivery, recipient, supabase]);
 
+  // Auto-refresh when connection is restored (e.g. after CHANNEL_ERROR)
+  useEffect(() => {
+    if (!error) return;
+    const handleOnline = () => window.location.reload();
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [error]);
+
   // --- Render Logic ---
 
   if (isLoading) {
@@ -169,7 +177,12 @@ function TrackByTokenContent() {
   }
 
   if (error) {
-    return <TrackPageError message={error} />;
+    return (
+      <TrackPageError
+        message={error}
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   if (!delivery || !recipient) {
