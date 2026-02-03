@@ -199,7 +199,7 @@ export function RecipientSinglePanel({
       ? calculateETA(recipient.scheduled_at, delivery.delay_minutes)
       : null;
 
-  // --- NEW: Smart ETA Label Generation ---
+  // --- Smart ETA Label Generation ---
   const getSmartEtaLabel = (): string => {
     // If no live ETA is available, fallback to the scheduled time.
     if (!etaForCurrentRecipient) {
@@ -208,25 +208,24 @@ export function RecipientSinglePanel({
 
     const remainingSeconds =
       (etaForCurrentRecipient.getTime() - Date.now()) / 1000;
+    const remainingMinutes = Math.round(remainingSeconds / 60);
+    const absoluteTime = formatTime(etaForCurrentRecipient);
 
     // If the ETA is slightly in the past (due to network lag), show imminent.
     if (remainingSeconds < 0) {
-      return "Arrivée imminente";
+      return `${absoluteTime} (arrivée imminente)`;
     }
-
-    const remainingMinutes = Math.round(remainingSeconds / 60);
 
     if (remainingMinutes <= 1) {
-      return "Dans moins d'une minute";
+      return `${absoluteTime} (dans moins d'une minute)`;
     }
-    // Threshold for showing relative time vs absolute time.
+    // When remaining <= 15 min: show absolute time + remaining time next to it.
     if (remainingMinutes <= 15) {
-      // Correctly pluralize "minute(s)"
       const plural = remainingMinutes > 1 ? "s" : "";
-      return `Dans environ ${remainingMinutes} minute${plural}`;
+      return `${absoluteTime} (dans environ ${remainingMinutes} minute${plural})`;
     }
-    // For longer ETAs, show the absolute time which is less mental math for the user.
-    return `vers ${formatTime(etaForCurrentRecipient)}`;
+    // For longer ETAs, show only the absolute time.
+    return `vers ${absoluteTime}`;
   };
 
   return (
@@ -362,9 +361,17 @@ export function TrackPageLoadingFallback() {
 }
 
 /**
- * A component to display an error message.
+ * A component to display an error message with an optional refresh button.
  */
-export function TrackPageError({ message }: { message: string }) {
+export function TrackPageError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) {
+  const handleRetry = onRetry ?? (() => window.location.reload());
+
   return (
     <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-950">
       <div className="w-full max-w-md rounded-xl border border-red-200 bg-white p-6 shadow-lg dark:border-red-900/50 dark:bg-gray-900">
@@ -373,6 +380,13 @@ export function TrackPageError({ message }: { message: string }) {
           <h2 className="text-xl font-semibold">Erreur de suivi</h2>
         </div>
         <p className="mt-3 text-gray-600 dark:text-gray-400">{message}</p>
+        <button
+          type="button"
+          onClick={handleRetry}
+          className="mt-4 w-full rounded-lg bg-gray-900 px-4 py-2.5 font-medium text-white transition hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+        >
+          Réactualiser la page
+        </button>
       </div>
     </div>
   );
