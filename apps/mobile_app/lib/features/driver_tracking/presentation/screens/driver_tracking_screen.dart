@@ -65,9 +65,6 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
   void dispose() {
     _problemController.dispose();
     _delayController.dispose();
-    if (mounted && ref.read(driverTrackingProvider).isTracking) {
-      ref.read(driverTrackingProvider.notifier).stopTracking();
-    }
     super.dispose();
   }
 

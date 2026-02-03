@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -397,10 +398,22 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       }
     }
 
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
-    );
+    final locationSettings = Platform.isAndroid
+        ? AndroidSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+            foregroundNotificationConfig: ForegroundNotificationConfig(
+              notificationTitle: 'Suivi de livraison',
+              notificationText: 'Votre position est partagée en temps réel.',
+              notificationChannelName: 'Suivi de livraison',
+              setOngoing: true,
+              enableWakeLock: true,
+            ),
+          )
+        : const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          );
 
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: locationSettings,
