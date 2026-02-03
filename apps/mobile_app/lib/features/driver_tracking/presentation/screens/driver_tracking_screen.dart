@@ -311,6 +311,16 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                           child: _SessionDetailsCard(
                               delivery: state.delivery!,
                               onResetToken: _confirmResetToken)),
+                      const SizedBox(height: 24),
+                      FadeInUp(
+                        delay: 950,
+                        child: TextButton.icon(
+                          onPressed: () =>
+                              context.push('/driver-tracking/history'),
+                          icon: const Icon(Icons.history_rounded, size: 20),
+                          label: const Text('Historique des tournées'),
+                        ),
+                      ),
                     ],
                   )
               ]),

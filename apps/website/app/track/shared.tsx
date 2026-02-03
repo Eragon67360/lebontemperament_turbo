@@ -85,23 +85,10 @@ function formatTimeRangeLabel(
 // --- UI Components (REFACTORED) ---
 
 /**
- * A panel that shows the estimated time window and delivery status.
- * Now context-aware with a `status` prop.
+ * A panel that shows delivery alerts (delay, problem).
+ * Only rendered when there are alerts. Status badge is in RecipientSinglePanel.
  */
-export function StatusPanel({
-  delivery,
-  status,
-}: {
-  delivery: Delivery;
-  status: "live" | "pending";
-}) {
-  const hasRange = delivery.scheduled_at && delivery.scheduled_end_at;
-  const label = hasRange ? "Créneau estimé" : "Arrivée estimée";
-  const timeLabel = formatTimeRangeLabel(
-    delivery.scheduled_at,
-    delivery.scheduled_end_at ?? null,
-    delivery.delay_minutes,
-  );
+export function StatusPanel({ delivery }: { delivery: Delivery }) {
   const isProblem = !!delivery.problem_message;
   const isDelayed = delivery.is_delayed;
 
@@ -112,39 +99,12 @@ export function StatusPanel({
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
       className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {label}
-          </p>
-          <p className="text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
-            {timeLabel}
-          </p>
-        </div>
-        {/* -- Conditionally rendered status badge -- */}
-        <div
-          className={clsx(
-            "flex items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5",
-            status === "live"
-              ? "text-gray-700 dark:text-gray-300"
-              : "text-gray-600 dark:text-gray-400",
-          )}
-        >
-          <div
-            className={clsx("h-2 w-2 rounded-full", {
-              "animate-pulse bg-green-500": status === "live",
-              "bg-gray-400 dark:bg-gray-500": status === "pending",
-            })}
-          />
-          <span>{status === "live" ? "En direct" : "Prévu"}</span>
-        </div>
-      </div>
       <AnimatePresence>
         {(isDelayed || isProblem) && (
           <motion.div
-            initial={{ height: 0, opacity: 0, marginTop: 0 }}
-            animate={{ height: "auto", opacity: 1, marginTop: "16px" }}
-            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
             <div
@@ -182,16 +142,18 @@ export function StatusPanel({
 
 /**
  * A panel showing the specific recipient's information.
- * HEAVILY REFACTORED for better UX in the pending state.
+ * ETA is the hero; overall delivery window is secondary contextual info.
  */
 export function RecipientSinglePanel({
   recipient,
   delivery,
   etaForCurrentRecipient = null,
+  status,
 }: {
   recipient: DeliveryRecipient;
   delivery: Delivery;
   etaForCurrentRecipient?: Date | null;
+  status: "live" | "pending";
 }) {
   const isInProgress = delivery.current_recipient_id === recipient.id;
   const scheduledTime =
@@ -199,11 +161,18 @@ export function RecipientSinglePanel({
       ? calculateETA(recipient.scheduled_at, delivery.delay_minutes)
       : null;
 
+  const rangeLabel = formatTimeRangeLabel(
+    delivery.scheduled_at,
+    delivery.scheduled_end_at ?? null,
+    delivery.delay_minutes,
+  );
+  const hasRange = delivery.scheduled_at && delivery.scheduled_end_at;
+
   // --- Smart ETA Label Generation ---
   const getSmartEtaLabel = (): string => {
     // If no live ETA is available, fallback to the scheduled time.
     if (!etaForCurrentRecipient) {
-      return `prévue à ${formatTime(scheduledTime)}`;
+      return formatTime(scheduledTime);
     }
 
     const remainingSeconds =
@@ -235,35 +204,72 @@ export function RecipientSinglePanel({
       transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
       className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
     >
-      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-        Votre livraison
-      </p>
-      <p className="mt-1 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl dark:text-gray-100">
-        {recipient.label}
-      </p>
-
-      {/* RENDER PATH 1: Delivery is IN PROGRESS (Live) */}
-      {isInProgress ? (
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          Arrivée estimée :{" "}
-          <span className="font-semibold">{getSmartEtaLabel()}</span>
-        </p>
-      ) : (
-        /* RENDER PATH 2: Delivery is PENDING */
-        <>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Passage prévu :{" "}
-            <span className="font-semibold">{formatTime(scheduledTime)}</span>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            Votre livraison
           </p>
-          <div className="mt-4 flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
-            <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-            <p className="text-sm">
-              Le suivi en direct s&apos;activera lorsque le conducteur sera en
-              route.
-            </p>
-          </div>
-        </>
-      )}
+          <p className="mt-1 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl dark:text-gray-100">
+            {recipient.label}
+          </p>
+
+          {/* RENDER PATH 1: Delivery is IN PROGRESS (Live) - ETA as hero */}
+          {isInProgress ? (
+            <>
+              <p className="mt-3 text-xs font-medium text-gray-500 dark:text-gray-400">
+                Arrivée prévue
+              </p>
+              <p className="mt-1 text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
+                {getSmartEtaLabel()}
+              </p>
+              {hasRange && (
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Créneau prévu : {rangeLabel}
+                </p>
+              )}
+            </>
+          ) : (
+            /* RENDER PATH 2: Delivery is PENDING */
+            <>
+              <p className="mt-3 text-xs font-medium text-gray-500 dark:text-gray-400">
+                Passage prévu
+              </p>
+              <p className="mt-1 text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
+                {formatTime(scheduledTime)}
+              </p>
+              {hasRange && (
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Créneau prévu : {rangeLabel}
+                </p>
+              )}
+              <div className="mt-4 flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                <p className="text-sm">
+                  Le suivi en direct s&apos;activera lorsque le conducteur sera
+                  en route.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+        {/* Status badge */}
+        <div
+          className={clsx(
+            "flex shrink-0 items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5",
+            status === "live"
+              ? "text-gray-700 dark:text-gray-300"
+              : "text-gray-600 dark:text-gray-400",
+          )}
+        >
+          <div
+            className={clsx("h-2 w-2 rounded-full", {
+              "animate-pulse bg-green-500": status === "live",
+              "bg-gray-400 dark:bg-gray-500": status === "pending",
+            })}
+          />
+          <span>{status === "live" ? "En direct" : "Prévu"}</span>
+        </div>
+      </div>
     </motion.div>
   );
 }

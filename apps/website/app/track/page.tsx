@@ -236,12 +236,15 @@ function TrackByTokenContent() {
         {delivery.is_tracking_active && (
           <div className="absolute top-0 right-0 left-0 z-10 p-3 sm:p-4">
             <div className="mx-auto flex max-w-lg flex-col gap-3">
-              <StatusPanel delivery={delivery} status="live" />
               <RecipientSinglePanel
                 recipient={recipient}
                 delivery={delivery}
                 etaForCurrentRecipient={etaForCurrentRecipient}
+                status="live"
               />
+              {(delivery.is_delayed || delivery.problem_message) && (
+                <StatusPanel delivery={delivery} />
+              )}
             </div>
           </div>
         )}
@@ -252,12 +255,15 @@ function TrackByTokenContent() {
   // Default view for "Pending" status (not yet en route)
   return (
     <PendingPanel>
-      <StatusPanel delivery={delivery} status="pending" />
       <RecipientSinglePanel
         recipient={recipient}
         delivery={delivery}
         etaForCurrentRecipient={null} // No real-time ETA when pending
+        status="pending"
       />
+      {(delivery.is_delayed || delivery.problem_message) && (
+        <StatusPanel delivery={delivery} />
+      )}
     </PendingPanel>
   );
 }

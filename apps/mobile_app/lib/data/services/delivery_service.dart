@@ -7,6 +7,17 @@ import '../models/delivery_recipient.dart';
 import '../../core/config/supabase_config.dart';
 import '../../features/auth/data/services/auth_service.dart';
 
+/// A delivery with its recipients, used for the history screen.
+class DeliveryWithRecipients {
+  final Delivery delivery;
+  final List<DeliveryRecipient> recipients;
+
+  const DeliveryWithRecipients({
+    required this.delivery,
+    required this.recipients,
+  });
+}
+
 class DeliveryService {
   final SupabaseClient _client = SupabaseConfig.client;
   final AuthService _auth = AuthService();
@@ -14,7 +25,9 @@ class DeliveryService {
 
   String? get _userId => _auth.currentUser?.id;
 
-  /// Fetches the latest delivery for the current user, or creates one if none or expired.
+  /// Fetches the latest delivery for the current user, or creates one if none.
+  /// Reuses the latest delivery when it has pending (undelivered) recipients.
+  /// Creates new only when: no delivery exists, all recipients delivered, or no recipients.
   /// RLS: only superadmins can insert/update. Call only when authenticated.
   Future<Delivery?> getOrCreateDelivery() async {
     final userId = _userId;
@@ -31,8 +44,21 @@ class DeliveryService {
 
       if (response != null) {
         final delivery = Delivery.fromJson(response);
-        final isExpired = delivery.expiresAt.isBefore(DateTime.now());
-        if (!isExpired) {
+        final recipients = await getRecipients(delivery.id);
+        final hasPending = recipients.any((r) => r.deliveredAt == null);
+
+        if (hasPending) {
+          final isExpired = delivery.expiresAt.isBefore(DateTime.now());
+          if (isExpired) {
+            final expiresAt = DateTime.now().add(const Duration(hours: 24));
+            await _client.from('deliveries').update({
+              'expires_at': expiresAt.toIso8601String(),
+            }).eq('id', delivery.id);
+            final refreshed = await getDelivery(delivery.id);
+            _logger.i(
+                'DeliveryService: reused expired delivery ${delivery.id}, extended expiry');
+            return refreshed;
+          }
           _logger.i('DeliveryService: using existing delivery ${delivery.id}');
           return delivery;
         }
@@ -207,6 +233,49 @@ class DeliveryService {
       return Delivery.fromJson(response);
     } catch (e) {
       _logger.e('DeliveryService: setProblemMessage failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// Fetches past deliveries for the current driver with their recipients.
+  /// Ordered by created_at DESC. Used for the delivery history screen.
+  Future<List<DeliveryWithRecipients>> getPastDeliveries(
+      {int limit = 50}) async {
+    final userId = _userId;
+    if (userId == null) return [];
+
+    try {
+      final response = await _client
+          .from('deliveries')
+          .select(
+              '*, delivery_recipients!delivery_recipients_delivery_id_fkey(*)')
+          .eq('driver_id', userId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      final list = response as List<dynamic>? ?? [];
+      return list.map((row) {
+        final map = Map<String, dynamic>.from(row as Map<String, dynamic>);
+        final recipientsData = map.remove('delivery_recipients');
+        final delivery = Delivery.fromJson(map);
+        final recipients = (recipientsData as List<dynamic>?)
+                ?.map((r) =>
+                    DeliveryRecipient.fromJson(r as Map<String, dynamic>))
+                .toList() ??
+            [];
+        recipients.sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          if (a.scheduledAt == null && b.scheduledAt == null) return 0;
+          if (a.scheduledAt == null) return 1;
+          if (b.scheduledAt == null) return -1;
+          return a.scheduledAt!.compareTo(b.scheduledAt!);
+        });
+        return DeliveryWithRecipients(
+            delivery: delivery, recipients: recipients);
+      }).toList();
+    } catch (e) {
+      _logger.e('DeliveryService: getPastDeliveries failed', error: e);
       rethrow;
     }
   }
