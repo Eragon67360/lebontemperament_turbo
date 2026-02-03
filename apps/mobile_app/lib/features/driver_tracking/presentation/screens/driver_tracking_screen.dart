@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../../../../core/config/app_config.dart';
 import '../../../../data/models/delivery.dart';
@@ -132,9 +133,29 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
       }
       return;
     }
+
+    // Treat picked times as Europe/Paris wall-clock to fix timezone sync with website
+    final paris = tz.getLocation('Europe/Paris');
+    final scheduledAtUtc = tz.TZDateTime(
+      paris,
+      scheduledAt.year,
+      scheduledAt.month,
+      scheduledAt.day,
+      scheduledAt.hour,
+      scheduledAt.minute,
+    ).toUtc();
+    final scheduledEndAtUtc = tz.TZDateTime(
+      paris,
+      scheduledEndAt.year,
+      scheduledEndAt.month,
+      scheduledEndAt.day,
+      scheduledEndAt.hour,
+      scheduledEndAt.minute,
+    ).toUtc();
+
     await ref.read(driverTrackingProvider.notifier).updateScheduledRange(
-          scheduledAt: scheduledAt,
-          scheduledEndAt: scheduledEndAt,
+          scheduledAt: scheduledAtUtc,
+          scheduledEndAt: scheduledEndAtUtc,
         );
   }
 

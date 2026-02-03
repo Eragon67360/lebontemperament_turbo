@@ -320,6 +320,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   }
 
   /// Mark a recipient as delivered (also clears current_recipient_id on delivery).
+  /// Triggers the send-delivery-complete-sms edge function to notify the recipient.
   Future<void> markRecipientDelivered(String recipientId) async {
     final delivery = state.delivery;
     if (delivery == null) return;
@@ -332,6 +333,26 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
           delivery: refreshedDelivery ?? delivery,
           error: null,
         );
+
+        // Trigger SMS to thank the recipient and include Felix's contact
+        Supabase.instance.client.functions.invoke(
+          'send-delivery-complete-sms',
+          body: {'recipientId': recipientId},
+        ).then((response) {
+          if (response.status != 200) {
+            _logger.w(
+              'Delivery complete SMS function failed with status: ${response.status}',
+              error: response.data,
+            );
+          } else {
+            _logger.i(
+              'Delivery complete SMS sent successfully for recipient $recipientId',
+            );
+          }
+        }).catchError((error) {
+          _logger.e('Failed to invoke delivery complete SMS function',
+              error: error);
+        });
       }
     } catch (e) {
       _logger.e('DriverTrackingNotifier markRecipientDelivered', error: e);

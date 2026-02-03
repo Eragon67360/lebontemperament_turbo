@@ -1,7 +1,7 @@
 "use client";
 
 import { fetchOSRMRoute } from "@/utils/osrm";
-import { MapPin } from "lucide-react";
+import { Crosshair, MapPin } from "lucide-react";
 import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "next-themes";
@@ -29,6 +29,8 @@ const DRIVER_SOURCE_ID = "driver-position";
 const DRIVER_LAYER_ID = "driver-marker";
 const ROUTE_SOURCE_ID = "route";
 const ROUTE_LAYER_ID = "route-line";
+const DESTINATION_SOURCE_ID = "destination-marker";
+const DESTINATION_LAYER_ID = "destination-flag";
 
 // --- MapLibre Style Generator ---
 function getMapStyle(isDark: boolean) {
@@ -103,6 +105,10 @@ export function TrackMapClient({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const isInitialLoad = useRef(true); // Used to differentiate initial jump from subsequent flights.
+  const isProgrammaticMove = useRef(false); // True when we trigger flyTo/jumpTo, so we don't mark as user interaction.
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
+  const setUserHasInteractedRef = useRef(setUserHasInteracted);
+  setUserHasInteractedRef.current = setUserHasInteracted;
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // --- Effect 1: Map Instance Management ---
@@ -121,12 +127,23 @@ export function TrackMapClient({
         style: getMapStyle(isDark),
         center: center, // Use the initial center prop.
         zoom: hasPosition ? 15 : 10,
+        minZoom: 0,
         interactive: true,
+        touchZoomRotate: true,
       });
 
-      map.addControl(new maplibregl.NavigationControl(), "top-right");
+      map.addControl(new maplibregl.NavigationControl(), "bottom-right");
       mapRef.current = map;
       map.on("load", () => setIsMapLoaded(true));
+
+      // Track user pan/zoom so we don't auto-recenter when they've manually moved the map.
+      map.on("moveend", () => {
+        if (isProgrammaticMove.current) {
+          isProgrammaticMove.current = false;
+          return;
+        }
+        setUserHasInteractedRef.current(true);
+      });
     });
 
     // Cleanup function: ensures the map is properly removed when the component unmounts.
@@ -148,19 +165,28 @@ export function TrackMapClient({
 
   // --- Effect 3: Map View Management ---
   // Moves the map's camera to center on the driver's position.
+  // Only auto-recenter if the user hasn't manually panned/zoomed (Waze-like behavior).
   useEffect(() => {
     if (!isMapLoaded || !mapRef.current) return;
     const zoom = hasPosition ? 15 : 10;
 
-    // Use jumpTo on the very first load for an instant view,
-    // then flyTo for smooth animations on subsequent updates.
     if (isInitialLoad.current) {
+      isProgrammaticMove.current = true;
       mapRef.current.jumpTo({ center, zoom });
       isInitialLoad.current = false;
-    } else {
+    } else if (!userHasInteracted) {
+      isProgrammaticMove.current = true;
       mapRef.current.flyTo({ center, zoom, duration: 2000, essential: true });
     }
-  }, [center, hasPosition, isMapLoaded]);
+  }, [center, hasPosition, isMapLoaded, userHasInteracted]);
+
+  const handleRecenter = () => {
+    if (!mapRef.current) return;
+    const zoom = hasPosition ? 15 : 10;
+    setUserHasInteracted(false); // Resume auto-follow after recenter.
+    isProgrammaticMove.current = true;
+    mapRef.current.flyTo({ center, zoom, duration: 800 });
+  };
 
   // --- Effect 4: Driver Marker Data Layer ---
   // Updates the GeoJSON source for the driver's marker.
@@ -263,8 +289,55 @@ export function TrackMapClient({
     onRouteFetched,
   ]);
 
+  // --- Effect 6: Destination Flag Marker ---
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!isMapLoaded || !map) return;
+
+    if (destination) {
+      addOrUpdateSource(map, DESTINATION_SOURCE_ID, {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: destination },
+      });
+      if (!map.getLayer(DESTINATION_LAYER_ID)) {
+        map.addLayer({
+          id: DESTINATION_LAYER_ID,
+          type: "circle",
+          source: DESTINATION_SOURCE_ID,
+          paint: {
+            "circle-radius": 10,
+            "circle-color": "#22c55e",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff",
+          },
+        });
+      }
+    } else if (map.getSource(DESTINATION_SOURCE_ID)) {
+      addOrUpdateSource(map, DESTINATION_SOURCE_ID, {
+        type: "FeatureCollection",
+        features: [],
+      });
+    }
+  }, [destination, isMapLoaded]);
+
   return (
-    <div ref={containerRef} className="absolute inset-0 -z-10 h-full w-full">
+    <div
+      ref={containerRef}
+      className="absolute inset-0 -z-10 h-full w-full"
+      style={{ touchAction: "manipulation" }}
+    >
+      {hasPosition && userHasInteracted && (
+        <button
+          type="button"
+          onClick={handleRecenter}
+          className="absolute bottom-24 left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-lg transition hover:bg-white dark:border-gray-700 dark:bg-gray-900/95 dark:hover:bg-gray-800"
+          aria-label="Recentrer sur ma position"
+          title="Recentrer sur ma position"
+        >
+          <Crosshair className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+        </button>
+      )}
       {hasPosition && (
         <div
           className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-lg border border-gray-200 bg-white/95 px-3 py-2 shadow dark:border-gray-700 dark:bg-gray-900/95"
