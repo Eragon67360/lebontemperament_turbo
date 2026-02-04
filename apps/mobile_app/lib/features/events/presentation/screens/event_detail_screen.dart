@@ -339,6 +339,12 @@ _EventTypeTheme _getEventTypeTheme(EventType eventType, ThemeData theme) {
         backgroundColor: Colors.orange.shade100,
         iconColor: Colors.orange.shade800,
       );
+    case EventType.sejour:
+      return _EventTypeTheme(
+        icon: Icons.terrain_outlined,
+        backgroundColor: Colors.amber.shade100,
+        iconColor: Colors.amber.shade800,
+      );
     case EventType.autre:
       return _EventTypeTheme(
         icon: Icons.event_outlined,
@@ -356,6 +362,8 @@ String _getEventTypeText(EventType eventType) {
       return 'Vente';
     case EventType.repetition:
       return 'Répétition';
+    case EventType.sejour:
+      return 'Séjour';
     case EventType.autre:
       return 'Autre';
   }

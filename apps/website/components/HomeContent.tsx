@@ -297,7 +297,7 @@ const HomeContent = () => {
             >
               <Button
                 as={Link}
-                href="/concerts#projects-section"
+                href="/concerts#projets"
                 color="primary"
                 radius="sm"
                 aria-label="Voir tous nos projets"

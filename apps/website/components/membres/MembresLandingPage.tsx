@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  IoCalendarClear,
   IoCalendarOutline,
   IoCloudDownloadOutline,
   IoDocumentTextOutline,
@@ -69,10 +70,18 @@ export const MembresLandingPage = () => {
       },
       {
         title: "Concerts",
-        description: "Voir les prochains concerts et évènements à venir",
-        href: "/membres/concerts",
+        description: "Voir les prochains concerts à venir",
+        href: "/membres/concerts#concerts",
         target: "_self" as const,
         icon: IoTicketOutline,
+      },
+      {
+        title: "Évènements",
+        description:
+          "Répétitions, ventes et autres événements du Bon Tempérament",
+        href: "/membres/concerts#evenements",
+        target: "_self" as const,
+        icon: IoCalendarClear,
       },
       {
         title: "Membres",
