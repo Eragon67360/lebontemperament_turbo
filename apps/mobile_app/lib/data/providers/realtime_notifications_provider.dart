@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import '../services/realtime_service.dart';
@@ -84,34 +85,9 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
       await _notificationService.initialize();
       _logger.i('Notification service initialized');
 
-      // Check and request permissions
-      final hasPermissions = await _notificationService.hasPermissions();
-      _logger.i('Initial permission check result: $hasPermissions');
-
-      if (!hasPermissions) {
-        _logger.i('Requesting notification permissions...');
-        final granted = await _notificationService.requestPermissions();
-        _logger.i('Permission request result: $granted');
-
-        if (!granted) {
-          _logger.w('Notification permissions not granted by user');
-          return false;
-        }
-
-        // Check permissions again after request
-        final finalPermissionCheck =
-            await _notificationService.hasPermissions();
-        _logger.i(
-          'Final permission check after request: $finalPermissionCheck',
-        );
-
-        if (!finalPermissionCheck) {
-          _logger.w('Permissions still not available after request');
-          return false;
-        }
-      }
-
-      _logger.i('Permissions confirmed, subscribing to all channels...');
+      // Subscribe regardless of permissions - list updates work without them.
+      // Push notifications are gated in callbacks by realtimeEnabled + hasPermissions.
+      _logger.i('Subscribing to all channels...');
 
       // Subscribe to rehearsals changes
       _realtimeService.subscribeToRehearsals(
@@ -165,6 +141,13 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('Triggered refresh of real-time providers');
   }
 
+  /// Whether to show push notifications (realtimeEnabled + has permissions)
+  Future<bool> _shouldShowNotification() async {
+    final settings = _ref.read(notificationSettingsProvider);
+    if (!settings.realtimeEnabled) return false;
+    return await _notificationService.hasPermissions();
+  }
+
   static bool _rehearsalTimeOrPlaceChanged(Rehearsal old, Rehearsal updated) {
     return old.place != updated.place ||
         old.date != updated.date ||
@@ -193,9 +176,23 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     );
 
     try {
-      await _notificationService.showRehearsalAddedNotification(rehearsal);
-      _logger.i(
-          '[Realtime] Rehearsal added: notification sent for ${rehearsal.name}');
+      final shouldShow = await _shouldShowNotification();
+      _logger.i('[Realtime] _shouldShowNotification=$shouldShow');
+      if (!shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showRehearsalAddedNotification(rehearsal).then(
+                (_) => _logger.i(
+                    '[Realtime] Rehearsal added: notification sent for ${rehearsal.name}'),
+              );
+        });
+      }
 
       await _storageService.saveRehearsal(rehearsal);
       _logger.i(
@@ -223,10 +220,23 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     }
 
     try {
-      if (timeOrPlaceChanged) {
-        await _notificationService.showRehearsalUpdatedNotification(updated);
-        _logger.i(
-            '[Realtime] Rehearsal updated: notification sent for ${updated.name}');
+      final shouldShow = timeOrPlaceChanged && await _shouldShowNotification();
+      _logger.i(
+          '[Realtime] _shouldShowNotification=$shouldShow (timeOrPlaceChanged=$timeOrPlaceChanged)');
+      if (timeOrPlaceChanged && !shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showRehearsalUpdatedNotification(updated).then(
+                (_) => _logger.i(
+                    '[Realtime] Rehearsal updated: notification sent for ${updated.name}'),
+              );
+        });
       }
 
       _storageService.saveRehearsal(updated);
@@ -247,9 +257,23 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     );
 
     try {
-      await _notificationService.showRehearsalDeletedNotification(rehearsal);
-      _logger.i(
-          '[Realtime] Rehearsal deleted: notification sent for ${rehearsal.name}');
+      final shouldShow = await _shouldShowNotification();
+      _logger.i('[Realtime] _shouldShowNotification=$shouldShow');
+      if (!shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showRehearsalDeletedNotification(rehearsal).then(
+                (_) => _logger.i(
+                    '[Realtime] Rehearsal deleted: notification sent for ${rehearsal.name}'),
+              );
+        });
+      }
 
       _storageService.deleteRehearsal(rehearsal.id);
       _logger.i(
@@ -266,10 +290,21 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('New event detected: ${event.title}');
 
     try {
-      // Show immediate notification
-      await _notificationService.showEventAddedNotification(event);
+      final shouldShow = await _shouldShowNotification();
+      _logger.i('[Realtime] _shouldShowNotification=$shouldShow');
+      if (!shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showEventAddedNotification(event);
+        });
+      }
 
-      // Save to local storage
       await _storageService.saveEvent(event);
       _logger.i('Saved new event to local storage: ${event.title}');
 
@@ -289,8 +324,21 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('Event updated: ${updated.title}');
 
     try {
-      if (_eventTimeOrPlaceChanged(old, updated)) {
-        await _notificationService.showEventUpdatedNotification(updated);
+      final timeOrPlaceChanged = _eventTimeOrPlaceChanged(old, updated);
+      final shouldShow = timeOrPlaceChanged && await _shouldShowNotification();
+      _logger.i(
+          '[Realtime] _shouldShowNotification=$shouldShow (timeOrPlaceChanged=$timeOrPlaceChanged)');
+      if (timeOrPlaceChanged && !shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showEventUpdatedNotification(updated);
+        });
       }
 
       _storageService.saveEvent(updated);
@@ -306,7 +354,20 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('Event deleted: ${event.title}');
 
     try {
-      await _notificationService.showEventDeletedNotification(event);
+      final shouldShow = await _shouldShowNotification();
+      _logger.i('[Realtime] _shouldShowNotification=$shouldShow');
+      if (!shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showEventDeletedNotification(event);
+        });
+      }
       _storageService.deleteEvent(event.id);
       _logger.i('Deleted event from local storage: ${event.id}');
       _triggerRefresh();
@@ -320,10 +381,21 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('New concert detected: ${concert.name}');
 
     try {
-      // Show immediate notification
-      await _notificationService.showConcertAddedNotification(concert);
+      final shouldShow = await _shouldShowNotification();
+      _logger.i('[Realtime] _shouldShowNotification=$shouldShow');
+      if (!shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showConcertAddedNotification(concert);
+        });
+      }
 
-      // Save to local storage
       await _storageService.saveConcert(concert);
       _logger.i('Saved new concert to local storage: ${concert.name}');
 
@@ -343,8 +415,21 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('Concert updated: ${updated.name}');
 
     try {
-      if (_concertTimeOrPlaceChanged(old, updated)) {
-        await _notificationService.showConcertUpdatedNotification(updated);
+      final timeOrPlaceChanged = _concertTimeOrPlaceChanged(old, updated);
+      final shouldShow = timeOrPlaceChanged && await _shouldShowNotification();
+      _logger.i(
+          '[Realtime] _shouldShowNotification=$shouldShow (timeOrPlaceChanged=$timeOrPlaceChanged)');
+      if (timeOrPlaceChanged && !shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showConcertUpdatedNotification(updated);
+        });
       }
 
       _storageService.saveConcert(updated);
@@ -360,7 +445,20 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('Concert deleted: ${concert.name}');
 
     try {
-      await _notificationService.showConcertDeletedNotification(concert);
+      final shouldShow = await _shouldShowNotification();
+      _logger.i('[Realtime] _shouldShowNotification=$shouldShow');
+      if (!shouldShow) {
+        final settings = _ref.read(notificationSettingsProvider);
+        final perms = await _notificationService.hasPermissions();
+        _logger.w(
+          '[Realtime] Skipping notification: realtimeEnabled=${settings.realtimeEnabled}, hasPermissions=$perms',
+        );
+      }
+      if (shouldShow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationService.showConcertDeletedNotification(concert);
+        });
+      }
       _storageService.deleteConcert(concert.id);
       _logger.i('Deleted concert from local storage: ${concert.id}');
       _triggerRefresh();

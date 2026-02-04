@@ -6,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:logger/logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'dart:io';
 
 import '../models/notification_settings.dart';
@@ -24,6 +25,15 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+
+  /// Current app lifecycle state (updated from main.dart). Used for diagnostic logging.
+  static AppLifecycleState? currentLifecycleState;
+
+  /// Update the current app lifecycle state. Call from WidgetsBindingObserver.didChangeAppLifecycleState.
+  static void updateLifecycleState(AppLifecycleState state) {
+    currentLifecycleState = state;
+  }
+
   bool _isScheduling =
       false; // Add flag to prevent multiple simultaneous scheduling
 
@@ -78,12 +88,66 @@ class NotificationService {
       if (initialized == true) {
         _logger.i('Notification service initialized successfully');
         _isInitialized = true;
+
+        // Create realtime notification channels explicitly (Android 8+)
+        // Ensures proper importance/visibility from first use
+        if (Platform.isAndroid) {
+          await _createRealtimeNotificationChannels();
+        }
       } else {
         _logger.e('Failed to initialize notification service');
       }
     } catch (e) {
       _logger.e('Error initializing notification service: $e');
       rethrow;
+    }
+  }
+
+  /// Create notification channels for realtime notifications (Android 8+).
+  /// Ensures channels have Importance.max from the start for visibility.
+  Future<void> _createRealtimeNotificationChannels() async {
+    try {
+      final androidPlugin =
+          _notifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin == null) return;
+
+      const channels = [
+        AndroidNotificationChannel(
+          'new_rehearsals',
+          'Nouvelles répétitions',
+          description: 'Notifications pour les nouvelles répétitions',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+        AndroidNotificationChannel(
+          'new_events',
+          'Nouveaux événements',
+          description: 'Notifications pour les nouveaux événements',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+        AndroidNotificationChannel(
+          'new_concerts',
+          'Nouveaux concerts',
+          description: 'Notifications pour les nouveaux concerts',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+      ];
+
+      for (final channel in channels) {
+        await androidPlugin.createNotificationChannel(channel);
+      }
+      _logger.i('Created ${channels.length} realtime notification channels');
+    } catch (e) {
+      _logger.w('Could not create notification channels: $e');
     }
   }
 
@@ -668,18 +732,26 @@ class NotificationService {
       final notificationBody = _buildRehearsalNotificationBody(rehearsal);
       _logger.i('Notification body: $notificationBody');
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Nouvelle répétition ajoutée',
         notificationBody,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_rehearsals',
             'Nouvelles répétitions',
             channelDescription: 'Notifications pour les nouvelles répétitions',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Nouvelle répétition ajoutée',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -732,18 +804,26 @@ class NotificationService {
       final notificationBody = _buildEventNotificationBody(event);
       _logger.i('Notification body: $notificationBody');
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Nouvel événement ajouté',
         notificationBody,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_events',
             'Nouveaux événements',
             channelDescription: 'Notifications pour les nouveaux événements',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Nouvel événement ajouté',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -796,18 +876,26 @@ class NotificationService {
       final notificationBody = _buildConcertNotificationBody(concert);
       _logger.i('Notification body: $notificationBody');
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Nouveau concert ajouté',
         notificationBody,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_concerts',
             'Nouveaux concerts',
             channelDescription: 'Notifications pour les nouveaux concerts',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Nouveau concert ajouté',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -841,18 +929,26 @@ class NotificationService {
           _generateRealtimeNotificationId('rehearsal_updated_${rehearsal.id}');
       final body = _buildRehearsalNotificationBody(rehearsal);
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Répétition modifiée',
         body,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_rehearsals',
             'Nouvelles répétitions',
             channelDescription: 'Notifications pour les nouvelles répétitions',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Répétition modifiée',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -881,18 +977,26 @@ class NotificationService {
           _generateRealtimeNotificationId('rehearsal_deleted_${rehearsal.id}');
       final body = _buildRehearsalNotificationBody(rehearsal);
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Répétition supprimée',
         body,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_rehearsals',
             'Nouvelles répétitions',
             channelDescription: 'Notifications pour les nouvelles répétitions',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Répétition supprimée',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -921,18 +1025,26 @@ class NotificationService {
           _generateRealtimeNotificationId('event_updated_${event.id}');
       final body = _buildEventNotificationBody(event);
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Événement modifié',
         body,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_events',
             'Nouveaux événements',
             channelDescription: 'Notifications pour les nouveaux événements',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Événement modifié',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -961,18 +1073,26 @@ class NotificationService {
           _generateRealtimeNotificationId('event_deleted_${event.id}');
       final body = _buildEventNotificationBody(event);
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Événement supprimé',
         body,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_events',
             'Nouveaux événements',
             channelDescription: 'Notifications pour les nouveaux événements',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Événement supprimé',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -1001,18 +1121,26 @@ class NotificationService {
           _generateRealtimeNotificationId('concert_updated_${concert.id}');
       final body = _buildConcertNotificationBody(concert);
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Concert modifié',
         body,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_concerts',
             'Nouveaux concerts',
             channelDescription: 'Notifications pour les nouveaux concerts',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Concert modifié',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -1041,18 +1169,26 @@ class NotificationService {
           _generateRealtimeNotificationId('concert_deleted_${concert.id}');
       final body = _buildConcertNotificationBody(concert);
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Concert supprimé',
         body,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_concerts',
             'Nouveaux concerts',
             channelDescription: 'Notifications pour les nouveaux concerts',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Concert supprimé',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,

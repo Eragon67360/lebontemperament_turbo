@@ -7,6 +7,7 @@ import 'package:mobile_app/core/constants/ui_constants.dart';
 import 'package:mobile_app/core/widgets/custom_toast.dart';
 import 'package:mobile_app/data/models/concert.dart';
 import 'package:mobile_app/data/models/rehearsal.dart';
+import 'package:mobile_app/data/services/notification_service.dart';
 import 'package:mobile_app/features/notifications/presentation/providers/notification_settings_provider.dart';
 
 class DeveloperModeScreen extends ConsumerWidget {
@@ -44,6 +45,29 @@ class DeveloperModeScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         CustomToast.showError(context, errorMessage);
+      }
+    }
+  }
+
+  /// Simulates a Realtime event: waits 2 seconds then shows notification.
+  /// Tests whether the issue is timing/isolate vs Realtime-specific.
+  Future<void> _runSimulateRealtimeTest(
+    BuildContext context,
+    NotificationService notificationService,
+  ) async {
+    if (context.mounted) {
+      CustomToast.showSuccess(context, 'Simulation dans 2 secondes...');
+    }
+    await Future.delayed(const Duration(seconds: 2));
+    if (!context.mounted) return;
+    try {
+      await notificationService.showRehearsalAddedNotification(_fakeRehearsal);
+      if (context.mounted) {
+        CustomToast.showSuccess(context, 'Notification envoyée (après délai)');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        CustomToast.showError(context, 'Erreur: $e');
       }
     }
   }
@@ -115,6 +139,16 @@ class DeveloperModeScreen extends ConsumerWidget {
                         ),
                         'Notification envoyée',
                         'Erreur lors de l\'envoi',
+                      ),
+                    ),
+                    _DevActionTile(
+                      icon: Icons.schedule_send_outlined,
+                      title: 'Simuler Realtime (2 sec)',
+                      subtitle:
+                          'Délai 2s puis notification - teste timing/isolate',
+                      onTap: (context) => _runSimulateRealtimeTest(
+                        context,
+                        notificationService,
                       ),
                     ),
                     _DevActionTile(
