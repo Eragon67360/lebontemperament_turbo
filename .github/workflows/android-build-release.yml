@@ -58,14 +58,25 @@ jobs:
           echo "# Public website URL (for driver tracking share link)" >> .env
           echo "SITE_URL=$SITE_URL" >> .env
 
-      # - name: Setup release signing
-      #   if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
-      #   run: |
-      #     echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > apps/mobile_app/android/key.properties
-      #     echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> apps/mobile_app/android/key.properties
-      #     echo "keyAlias=upload" >> apps/mobile_app/android/key.properties
-      #     echo "storeFile=upload-keystore.jks" >> apps/mobile_app/android/key.properties
-      #     echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > apps/mobile_app/android/upload-keystore.jks
+      # --- NEW STEP: Generate a temp key so the APK is signed and installable ---
+      - name: Generate temporary signing key
+        working-directory: apps/mobile_app/android
+        run: |
+          # Generate the keystore file
+          keytool -genkey -v -keystore upload-keystore.jks \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -alias upload \
+            -dname "CN=Temp, OU=Temp, O=Temp, L=Temp, S=Temp, C=US" \
+            -storepass password \
+            -keypass password
+
+          # Create key.properties to tell Gradle about it
+          echo "storePassword=password" > key.properties
+          echo "keyPassword=password" >> key.properties
+          echo "keyAlias=upload" >> key.properties
+          echo "storeFile=upload-keystore.jks" >> key.properties
 
       - name: Install dependencies
         working-directory: apps/mobile_app
