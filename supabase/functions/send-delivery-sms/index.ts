@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const FELIX_PHONE = "+33677565184";
-
 serve(async (req) => {
   try {
     if (req.method !== "POST") {
@@ -24,7 +22,7 @@ serve(async (req) => {
 
     const { data: recipient, error } = await supabaseAdmin
       .from("delivery_recipients")
-      .select("phone_number, label")
+      .select("phone_number, label, public_token")
       .eq("id", recipientId)
       .single();
 
@@ -48,10 +46,12 @@ serve(async (req) => {
     const twilioApiUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
     const basicAuth = "Basic " + btoa(`${accountSid}:${authToken}`);
 
+    const trackingUrl = `${siteUrl}/track?token=${recipient.public_token}`;
     const messageBody =
-      `Bonjour ${recipient.label}, votre commande a bien été livrée ! Merci pour votre confiance.\n\n` +
-      `Si la commande devait être incomplète, nous en sommes désolés. N'hésitez pas à écrire à Félix au numéro suivant : ${FELIX_PHONE}.\n\n` +
-      `Si vous voulez en savoir plus sur nous, n'hésitez pas à visiter notre site à cette adresse : ${siteUrl}.\n\n` +
+      `Bonjour ${recipient.label},\n\n` +
+      `Nous avons commencé notre tournée de livraison (fromages et saucissons). Vous êtes le prochain sur notre liste.\n\n` +
+      `Suivez en direct : ${trackingUrl}\n\n` +
+      `Merci pour votre commande ! Si vous voulez en savoir plus sur nous, n'hésitez pas à visiter notre site : ${siteUrl}.\n\n` +
       `- Félix & Thomas`;
 
     const requestBody = new URLSearchParams({
@@ -79,8 +79,8 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Error in send-delivery-complete-sms function:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error("Error in send-delivery-sms function:", err);
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
