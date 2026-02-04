@@ -287,8 +287,8 @@ class DeliveryService {
           .from('delivery_recipients')
           .select()
           .eq('delivery_id', deliveryId)
-          .order('sort_order')
-          .order('scheduled_at');
+          .order('sort_order', ascending: true)
+          .order('scheduled_at', ascending: true);
       final list = response as List<dynamic>? ?? [];
       return list
           .map((e) => DeliveryRecipient.fromJson(e as Map<String, dynamic>))

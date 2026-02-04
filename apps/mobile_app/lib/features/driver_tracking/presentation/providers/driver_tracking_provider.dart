@@ -31,6 +31,7 @@ class DriverTrackingState {
   final TrackingPosition? position;
   final String? error;
   final bool isLoading;
+  final bool isActionLoading;
 
   const DriverTrackingState({
     this.delivery,
@@ -39,6 +40,7 @@ class DriverTrackingState {
     this.position,
     this.error,
     this.isLoading = false,
+    this.isActionLoading = false,
   });
 
   DriverTrackingState copyWith({
@@ -48,6 +50,7 @@ class DriverTrackingState {
     TrackingPosition? position,
     String? error,
     bool? isLoading,
+    bool? isActionLoading,
   }) {
     return DriverTrackingState(
       delivery: delivery ?? this.delivery,
@@ -56,6 +59,7 @@ class DriverTrackingState {
       position: position ?? this.position,
       error: error,
       isLoading: isLoading ?? this.isLoading,
+      isActionLoading: isActionLoading ?? this.isActionLoading,
     );
   }
 }
@@ -215,6 +219,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   Future<void> startDrivingToRecipient(String recipientId) async {
     final delivery = state.delivery;
     if (delivery == null) return;
+    state = state.copyWith(isActionLoading: true);
     try {
       // First, update the database and local state so the UI is fast.
       await _service.setCurrentRecipient(delivery.id, recipientId: recipientId);
@@ -223,27 +228,26 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         state = state.copyWith(delivery: updated, error: null);
       }
 
-      // --- Trigger the Edge Function to send the SMS ---
+      // --- Trigger the Edge Function to send the SMS (await to prevent double-tap) ---
       _logger.i('Attempting to trigger SMS for recipient $recipientId');
-      Supabase.instance.client.functions.invoke(
+      final response = await Supabase.instance.client.functions.invoke(
         'send-delivery-sms',
         body: {'recipientId': recipientId},
-      ).then((response) {
-        if (response.status != 200) {
-          _logger.w(
-              'SMS function invocation failed with status: ${response.status}',
-              error: response.data);
-        } else {
-          _logger.i(
-              'SMS function invoked successfully for recipient $recipientId');
-        }
-      }).catchError((error) {
-        _logger.e('Failed to invoke SMS function', error: error);
-      });
+      );
+      if (response.status != 200) {
+        _logger.w(
+            'SMS function invocation failed with status: ${response.status}',
+            error: response.data);
+      } else {
+        _logger.i(
+            'SMS function invoked successfully for recipient $recipientId');
+      }
     } catch (e) {
       _logger.e('DriverTrackingNotifier startDrivingToRecipient', error: e);
       state =
           state.copyWith(error: 'Erreur lors du démarrage de la livraison.');
+    } finally {
+      state = state.copyWith(isActionLoading: false);
     }
   }
 
@@ -274,6 +278,47 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     } catch (e) {
       _logger.e('DriverTrackingNotifier reorderRecipients', error: e);
       state = state.copyWith(error: 'Erreur lors du réordonnancement.');
+    }
+  }
+
+  /// Optimize recipients route using nearest-neighbor heuristic.
+  /// Optionally pass driver position (lat, lng) as start point.
+  Future<void> optimizeRecipientsRoute({
+    double? startLat,
+    double? startLng,
+  }) async {
+    final delivery = state.delivery;
+    if (delivery == null) return;
+    state = state.copyWith(isActionLoading: true, error: null);
+    try {
+      final body = <String, dynamic>{
+        'deliveryId': delivery.id,
+      };
+      if (startLat != null && startLng != null) {
+        body['startLat'] = startLat;
+        body['startLng'] = startLng;
+      }
+      final response = await Supabase.instance.client.functions.invoke(
+        'optimize-recipients-route',
+        body: body,
+      );
+      if (response.status != 200) {
+        final msg = response.data is Map && response.data['error'] != null
+            ? response.data['error'] as String
+            : 'Erreur lors de l\'optimisation.';
+        throw Exception(msg);
+      }
+      await loadRecipients();
+      state = state.copyWith(error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier optimizeRecipientsRoute', error: e);
+      state = state.copyWith(
+        error: e is Exception
+            ? e.toString().replaceFirst('Exception: ', '')
+            : 'Erreur lors de l\'optimisation de l\'itinéraire.',
+      );
+    } finally {
+      state = state.copyWith(isActionLoading: false);
     }
   }
 
@@ -324,6 +369,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   Future<void> markRecipientDelivered(String recipientId) async {
     final delivery = state.delivery;
     if (delivery == null) return;
+    state = state.copyWith(isActionLoading: true);
     try {
       final updated = await _service.markRecipientDelivered(recipientId);
       if (updated != null) {
@@ -334,29 +380,27 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
           error: null,
         );
 
-        // Trigger SMS to thank the recipient and include Felix's contact
-        Supabase.instance.client.functions.invoke(
+        // Trigger SMS to thank the recipient (await to prevent double-tap)
+        final response = await Supabase.instance.client.functions.invoke(
           'send-delivery-complete-sms',
           body: {'recipientId': recipientId},
-        ).then((response) {
-          if (response.status != 200) {
-            _logger.w(
-              'Delivery complete SMS function failed with status: ${response.status}',
-              error: response.data,
-            );
-          } else {
-            _logger.i(
-              'Delivery complete SMS sent successfully for recipient $recipientId',
-            );
-          }
-        }).catchError((error) {
-          _logger.e('Failed to invoke delivery complete SMS function',
-              error: error);
-        });
+        );
+        if (response.status != 200) {
+          _logger.w(
+            'Delivery complete SMS function failed with status: ${response.status}',
+            error: response.data,
+          );
+        } else {
+          _logger.i(
+            'Delivery complete SMS sent successfully for recipient $recipientId',
+          );
+        }
       }
     } catch (e) {
       _logger.e('DriverTrackingNotifier markRecipientDelivered', error: e);
       state = state.copyWith(error: 'Erreur lors du marquage comme livré.');
+    } finally {
+      state = state.copyWith(isActionLoading: false);
     }
   }
 

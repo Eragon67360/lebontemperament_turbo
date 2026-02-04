@@ -221,20 +221,26 @@ class RecipientDetailsScreen extends ConsumerWidget {
             _ActionButton(
               label: 'En route vers ce destinataire',
               icon: Icons.play_arrow_rounded,
-              onPressed: () => ref
-                  .read(driverTrackingProvider.notifier)
-                  .startDrivingToRecipient(currentRecipient.id),
+              isLoading: state.isActionLoading,
+              onPressed: state.isActionLoading
+                  ? null
+                  : () => ref
+                      .read(driverTrackingProvider.notifier)
+                      .startDrivingToRecipient(currentRecipient.id),
             ),
           if (isInProgress) ...[
             _ActionButton(
               label: 'Marquer comme livré',
               icon: Icons.check_circle_outline_rounded,
-              onPressed: () {
-                ref
-                    .read(driverTrackingProvider.notifier)
-                    .markRecipientDelivered(currentRecipient.id);
-                context.pop();
-              },
+              isLoading: state.isActionLoading,
+              onPressed: state.isActionLoading
+                  ? null
+                  : () async {
+                      await ref
+                          .read(driverTrackingProvider.notifier)
+                          .markRecipientDelivered(currentRecipient.id);
+                      if (context.mounted) context.pop();
+                    },
             ),
             const SizedBox(height: 12),
             _ActionButton(
@@ -290,6 +296,7 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Color? color;
   final bool isSecondary;
+  final bool isLoading;
 
   const _ActionButton({
     required this.label,
@@ -297,19 +304,29 @@ class _ActionButton extends StatelessWidget {
     this.onPressed,
     this.color,
     this.isSecondary = false,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveOnPressed = isLoading ? null : onPressed;
+    final leading = isLoading
+        ? const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Icon(icon, size: isSecondary ? null : 24);
+
     if (isSecondary) {
       return OutlinedButton.icon(
-        icon: Icon(icon),
+        icon: leading,
         label: Text(label),
-        onPressed: onPressed,
+        onPressed: effectiveOnPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: color,
           side: BorderSide(
-              color: onPressed == null
+              color: effectiveOnPressed == null
                   ? Colors.grey.withOpacity(0.4)
                   : color ??
                       Theme.of(context).colorScheme.outline.withOpacity(0.5)),
@@ -321,9 +338,9 @@ class _ActionButton extends StatelessWidget {
     }
 
     return FilledButton.icon(
-      icon: Icon(icon, size: 24),
+      icon: leading,
       label: Text(label),
-      onPressed: onPressed,
+      onPressed: effectiveOnPressed,
       style: FilledButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 16),

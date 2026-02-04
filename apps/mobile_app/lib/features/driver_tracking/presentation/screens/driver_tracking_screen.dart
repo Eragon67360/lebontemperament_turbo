@@ -275,9 +275,40 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 32),
-                      const FadeInUp(
+                      FadeInUp(
                           delay: 400,
-                          child: _SectionTitle(title: 'Destinataires')),
+                          child: Row(
+                            children: [
+                              const _SectionTitle(title: 'Destinataires'),
+                              const Spacer(),
+                              FilledButton.tonalIcon(
+                                onPressed: state.isActionLoading
+                                    ? null
+                                    : () => ref
+                                        .read(driverTrackingProvider.notifier)
+                                        .optimizeRecipientsRoute(
+                                          startLat: state.position?.lat,
+                                          startLng: state.position?.lng,
+                                        ),
+                                icon: state.isActionLoading
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.auto_awesome, size: 18),
+                                label: const Text('Optimiser l\'itinéraire'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  textStyle: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          )),
                       const SizedBox(height: 12),
                       FadeInUp(
                           delay: 500,
@@ -524,7 +555,6 @@ class _RecipientsCard extends ConsumerWidget {
               padding: EdgeInsets.zero,
               itemCount: recipients.length,
               onReorder: (oldIndex, newIndex) {
-                if (oldIndex < newIndex) newIndex--;
                 final newOrder = List<DeliveryRecipient>.from(recipients);
                 final item = newOrder.removeAt(oldIndex);
                 newOrder.insert(newIndex, item);
