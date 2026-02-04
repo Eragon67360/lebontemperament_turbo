@@ -1,28 +1,24 @@
 echo "🔍 Running pre-commit checks..."
 
-# Bump versions for changed apps
-echo "📦 Bumping versions for changed apps..."
-node scripts/bump-versions.js
-
-# Add version-bumped package.json and package-lock.json files to staging (only if they exist and were modified)
-if [ -f apps/website/package.json ] || [ -f apps/admin/package.json ]; then
-  git add apps/website/package.json apps/admin/package.json 2>/dev/null || true
-fi
-
-# Add package-lock.json if it was updated by npm install
-if [ -f package-lock.json ]; then
-  git add package-lock.json 2>/dev/null || true
-fi
-
 # Run format
 echo "📝 Formatting code..."
 npm run format
 
-# Add formatted files back to staging
+# Add formatted files to staging
 git add -A
 
-# Run build
+# Run build (must succeed before we bump versions)
 echo "🏗️  Building projects..."
-npm run build
+npm run build || exit 1
+
+# Build succeeded - bump versions for changed apps
+echo "📦 Bumping versions for changed apps..."
+node scripts/bump-version.js patch --if-changed
+
+# Add version-bumped files to staging
+git add version.json apps/website/package.json apps/admin/package.json apps/mobile_app/pubspec.yaml 2>/dev/null || true
+if [ -f package-lock.json ]; then
+  git add package-lock.json 2>/dev/null || true
+fi
 
 echo "✅ Pre-commit checks passed!"
