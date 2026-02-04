@@ -451,7 +451,7 @@ class _TrackingStatusHero extends StatelessWidget {
           Text(
             state.isTracking
                 ? 'Votre position est partagée en temps réel.'
-                : 'Démarrez le suivi pour partager votre position.',
+                : 'Démarrez la livraison pour partager votre position.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -471,17 +471,57 @@ class _ActionButtons extends ConsumerWidget {
   final DriverTrackingState state;
   const _ActionButtons({required this.state});
 
+  Future<void> _onStartDelivery(BuildContext context, WidgetRef ref) async {
+    // Request location permission BEFORE showing the SMS dialog, so the system
+    // permission prompt can appear (it won't show when a modal is already open).
+    final hasPermission = await ref
+        .read(driverTrackingProvider.notifier)
+        .ensureLocationPermission();
+    if (!hasPermission || !context.mounted) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Démarrer la livraison'),
+        content: const Text(
+          'Envoyer un SMS à tous les destinataires pour les prévenir du début de la tournée ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Non'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Oui'),
+          ),
+        ],
+      ),
+    );
+    if (ok != null && context.mounted) {
+      await ref.read(driverTrackingProvider.notifier).startDeliveryRound(
+            sendSms: ok,
+          );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FilledButton.icon(
-          onPressed: state.isTracking
+          onPressed: state.isTracking || state.isActionLoading
               ? null
-              : () => ref.read(driverTrackingProvider.notifier).startTracking(),
-          icon: const Icon(Icons.play_arrow_rounded, size: 28),
-          label: const Text('Démarrer le suivi'),
+              : () => _onStartDelivery(context, ref),
+          icon: state.isActionLoading
+              ? const SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.play_arrow_rounded, size: 28),
+          label: const Text('Démarrer la livraison'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
             textStyle:

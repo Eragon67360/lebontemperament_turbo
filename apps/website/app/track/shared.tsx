@@ -82,6 +82,25 @@ function formatTimeRangeLabel(
   return `${formatTime(startDate)} – ${formatTime(endDate)}`;
 }
 
+/**
+ * Format per-recipient range: 30-min window with 15-min rounding.
+ * e.g. scheduled 09:29 → "09:15 – 09:45"
+ * Returns "HH:MM – HH:MM" or "--:--" if no scheduled_at.
+ */
+export function formatRecipientRange(
+  scheduledAt: string | null,
+  delayMinutes: number | null,
+): string {
+  if (!scheduledAt) return "--:--";
+  const base = calculateETA(scheduledAt, delayMinutes);
+  if (!base) return "--:--";
+  const quarterMs = 15 * 60 * 1000;
+  const rounded = new Date(Math.round(base.getTime() / quarterMs) * quarterMs);
+  const start = new Date(rounded.getTime() - 15 * 60 * 1000);
+  const end = new Date(rounded.getTime() + 15 * 60 * 1000);
+  return `${formatTime(start)} – ${formatTime(end)}`;
+}
+
 // --- UI Components (REFACTORED) ---
 
 /**
@@ -161,12 +180,17 @@ export function RecipientSinglePanel({
       ? calculateETA(recipient.scheduled_at, delivery.delay_minutes)
       : null;
 
-  const rangeLabel = formatTimeRangeLabel(
-    delivery.scheduled_at,
-    delivery.scheduled_end_at ?? null,
-    delivery.delay_minutes,
-  );
-  const hasRange = delivery.scheduled_at && delivery.scheduled_end_at;
+  const rangeLabel =
+    recipient.scheduled_at != null
+      ? formatRecipientRange(recipient.scheduled_at, delivery.delay_minutes)
+      : formatTimeRangeLabel(
+          delivery.scheduled_at,
+          delivery.scheduled_end_at ?? null,
+          delivery.delay_minutes,
+        );
+  const hasRange =
+    recipient.scheduled_at != null ||
+    (delivery.scheduled_at != null && delivery.scheduled_end_at != null);
 
   // --- Smart ETA Label Generation ---
   const getSmartEtaLabel = (): string => {
@@ -205,13 +229,34 @@ export function RecipientSinglePanel({
       className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            Votre livraison
-          </p>
-          <p className="mt-1 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl dark:text-gray-100">
-            {recipient.label}
-          </p>
+        <div className="flex w-full min-w-0 flex-col">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Votre livraison
+              </p>
+              <p className="mt-1 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl dark:text-gray-100">
+                {recipient.label}
+              </p>
+            </div>
+            {/* Status badge */}
+            <div
+              className={clsx(
+                "flex shrink-0 items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5",
+                status === "live"
+                  ? "text-gray-700 dark:text-gray-300"
+                  : "text-gray-600 dark:text-gray-400",
+              )}
+            >
+              <div
+                className={clsx("h-2 w-2 rounded-full", {
+                  "animate-pulse bg-green-500": status === "live",
+                  "bg-gray-400 dark:bg-gray-500": status === "pending",
+                })}
+              />
+              <span>{status === "live" ? "En direct" : "Prévu"}</span>
+            </div>
+          </div>
 
           {/* RENDER PATH 1: Delivery is IN PROGRESS (Live) - ETA as hero */}
           {isInProgress ? (
@@ -229,45 +274,29 @@ export function RecipientSinglePanel({
               )}
             </>
           ) : (
-            /* RENDER PATH 2: Delivery is PENDING */
+            /* RENDER PATH 2: Delivery is PENDING - only show range, no exact time */
             <>
-              <p className="mt-3 text-xs font-medium text-gray-500 dark:text-gray-400">
-                Passage prévu
-              </p>
-              <p className="mt-1 text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
-                {formatTime(scheduledTime)}
-              </p>
               {hasRange && (
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  Créneau prévu : {rangeLabel}
-                </p>
+                <>
+                  <p className="mt-3 text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Créneau prévu
+                  </p>
+                  <p className="mt-1 text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
+                    {rangeLabel}
+                  </p>
+                </>
               )}
-              <div className="mt-4 flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
-                <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-                <p className="text-sm">
-                  Le suivi en direct s&apos;activera lorsque le conducteur sera
-                  en route.
-                </p>
+              <div className="w-full">
+                <div className="mt-4 flex w-full items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="text-sm">
+                    Le suivi en direct s&apos;activera lorsque le conducteur
+                    sera en route.
+                  </p>
+                </div>
               </div>
             </>
           )}
-        </div>
-        {/* Status badge */}
-        <div
-          className={clsx(
-            "flex shrink-0 items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5",
-            status === "live"
-              ? "text-gray-700 dark:text-gray-300"
-              : "text-gray-600 dark:text-gray-400",
-          )}
-        >
-          <div
-            className={clsx("h-2 w-2 rounded-full", {
-              "animate-pulse bg-green-500": status === "live",
-              "bg-gray-400 dark:bg-gray-500": status === "pending",
-            })}
-          />
-          <span>{status === "live" ? "En direct" : "Prévu"}</span>
         </div>
       </div>
     </motion.div>

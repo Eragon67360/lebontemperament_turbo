@@ -239,8 +239,8 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
             'SMS function invocation failed with status: ${response.status}',
             error: response.data);
       } else {
-        _logger.i(
-            'SMS function invoked successfully for recipient $recipientId');
+        _logger
+            .i('SMS function invoked successfully for recipient $recipientId');
       }
     } catch (e) {
       _logger.e('DriverTrackingNotifier startDrivingToRecipient', error: e);
@@ -406,6 +406,72 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
 
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  /// Check and request location permission. Returns true if granted, false otherwise.
+  /// Call this before showing any modal so the system permission dialog can appear.
+  Future<bool> ensureLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      state = state.copyWith(
+        error:
+            'Permission de géolocalisation refusée. Autorisez l\'accès dans les paramètres.',
+      );
+      return false;
+    }
+    return true;
+  }
+
+  /// Start the delivery round: get position, call start-delivery-round (scheduled_at + optional SMS), then start tracking.
+  Future<void> startDeliveryRound({required bool sendSms}) async {
+    final delivery = state.delivery;
+    if (delivery == null) {
+      state = state.copyWith(error: 'Aucune livraison. Rechargez la page.');
+      return;
+    }
+
+    state = state.copyWith(isActionLoading: true, error: null);
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+
+      final response = await Supabase.instance.client.functions.invoke(
+        'start-delivery-round',
+        body: {
+          'deliveryId': delivery.id,
+          'startLat': position.latitude,
+          'startLng': position.longitude,
+          'sendSms': sendSms,
+        },
+      );
+
+      if (response.status != 200) {
+        final msg = response.data is Map && response.data['error'] != null
+            ? response.data['error'] as String
+            : 'Erreur lors du démarrage de la livraison.';
+        throw Exception(msg);
+      }
+
+      await loadRecipients();
+      await startTracking();
+      state = state.copyWith(error: null);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier startDeliveryRound', error: e);
+      state = state.copyWith(
+        error: e is Exception
+            ? e.toString().replaceFirst('Exception: ', '')
+            : 'Erreur lors du démarrage de la livraison.',
+      );
+    } finally {
+      state = state.copyWith(isActionLoading: false);
+    }
   }
 
   /// Start tracking: request permission, start DB tracking, then position stream + backup timer.
