@@ -7,7 +7,7 @@ export type Event = {
   location: string;
   responsible_name: string;
   responsible_email?: string | null;
-  event_type: "concert" | "vente" | "repetition" | "autre";
+  event_type: "concert" | "vente" | "repetition" | "sejour" | "autre";
   description?: string | null;
   created_at: string;
   updated_at: string;

@@ -11,6 +11,8 @@ enum EventType {
   vente,
   @JsonValue('repetition')
   repetition,
+  @JsonValue('sejour')
+  sejour,
   @JsonValue('autre')
   autre,
 }

@@ -77,6 +77,17 @@ const EmptyState = ({
   </div>
 );
 
+const getEventTypeLabel = (type: string) => {
+  const labels: Record<string, string> = {
+    concert: "Concert",
+    repetition: "Répétition",
+    sejour: "Séjour",
+    vente: "Vente",
+    autre: "Autre",
+  };
+  return labels[type] || type;
+};
+
 const ConcertsClient = ({
   initialConcerts,
   initialEvents,
@@ -523,8 +534,8 @@ const ConcertsClient = ({
                       <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
                         {event.title}
                       </h4>
-                      <span className="bg-primary/10 text-primary shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize">
-                        {event.event_type}
+                      <span className="bg-primary/10 text-primary shrink-0 rounded-full px-3 py-1 text-xs font-medium">
+                        {getEventTypeLabel(event.event_type)}
                       </span>
                     </div>
                     <div className="mt-4 grow space-y-3">

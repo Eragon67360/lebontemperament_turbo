@@ -246,6 +246,7 @@ export default function DashboardPage() {
                           concert: "Concert",
                           vente: "Vente",
                           repetition: "Répétition",
+                          sejour: "Séjour",
                           autre: "Autre",
                         };
                         const eventTypeColors: Record<
@@ -255,6 +256,7 @@ export default function DashboardPage() {
                           concert: "bg-purple-100 text-purple-700",
                           vente: "bg-green-100 text-green-700",
                           repetition: "bg-blue-100 text-blue-700",
+                          sejour: "bg-amber-100 text-amber-700",
                           autre: "bg-gray-100 text-gray-700",
                         };
 
