@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
 
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
@@ -28,7 +30,17 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
   void initState() {
     super.initState();
     initializeDateFormatting('fr_FR');
+    if (!tz.timeZoneDatabase.isInitialized) {
+      tz_data.initializeTimeZones();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  static DateTime _utcToParis(DateTime utc) {
+    final paris = tz.getLocation('Europe/Paris');
+    final inParis = tz.TZDateTime.from(utc, paris);
+    return DateTime(
+        inParis.year, inParis.month, inParis.day, inParis.hour, inParis.minute);
   }
 
   Future<void> _load() async {
@@ -77,9 +89,9 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
 
   String _formatScheduledWindow(Delivery d) {
     if (d.scheduledAt == null) return '';
-    final start = _formatTime(d.scheduledAt);
+    final start = _formatTime(_utcToParis(d.scheduledAt!));
     if (d.scheduledEndAt == null) return start;
-    return '$start – ${_formatTime(d.scheduledEndAt)}';
+    return '$start – ${_formatTime(_utcToParis(d.scheduledEndAt!))}';
   }
 
   @override

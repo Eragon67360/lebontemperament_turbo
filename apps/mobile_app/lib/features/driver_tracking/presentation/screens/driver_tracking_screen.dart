@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../../core/config/app_config.dart';
@@ -18,6 +19,13 @@ import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../providers/driver_tracking_provider.dart';
+
+DateTime _utcToParis(DateTime utc) {
+  final paris = tz.getLocation('Europe/Paris');
+  final inParis = tz.TZDateTime.from(utc, paris);
+  return DateTime(
+      inParis.year, inParis.month, inParis.day, inParis.hour, inParis.minute);
+}
 
 class DriverTrackingScreen extends ConsumerWidget {
   const DriverTrackingScreen({super.key});
@@ -57,6 +65,9 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
   void initState() {
     super.initState();
     initializeDateFormatting('fr_FR');
+    if (!tz.timeZoneDatabase.isInitialized) {
+      tz_data.initializeTimeZones();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(driverTrackingProvider.notifier).loadDelivery();
     });
@@ -74,9 +85,12 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
   Future<void> _pickScheduledTimeRange(BuildContext context) async {
     final state = ref.read(driverTrackingProvider);
     final now = DateTime.now();
-    final initialStart = state.delivery?.scheduledAt ?? now;
-    final initialEnd = state.delivery?.scheduledEndAt ??
-        initialStart.add(const Duration(hours: 1));
+    final initialStart = state.delivery?.scheduledAt != null
+        ? _utcToParis(state.delivery!.scheduledAt!)
+        : now;
+    final initialEnd = state.delivery?.scheduledEndAt != null
+        ? _utcToParis(state.delivery!.scheduledEndAt!)
+        : initialStart.add(const Duration(hours: 1));
 
     // Start date + time
     final startDate = await showDatePicker(
@@ -638,14 +652,16 @@ class _LiveUpdatesCard extends ConsumerWidget {
     String scheduledStr;
     if (delivery.scheduledAt == null) {
       scheduledStr = 'Non définie';
-    } else if (delivery.scheduledEndAt != null) {
-      scheduledStr =
-          '${DateFormat('dd/MM', 'fr_FR').format(delivery.scheduledAt!)} '
-          '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledAt!)} – '
-          '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledEndAt!)}';
     } else {
-      scheduledStr =
-          DateFormat('dd/MM à HH:mm', 'fr_FR').format(delivery.scheduledAt!);
+      final startParis = _utcToParis(delivery.scheduledAt!);
+      if (delivery.scheduledEndAt != null) {
+        final endParis = _utcToParis(delivery.scheduledEndAt!);
+        scheduledStr = '${DateFormat('dd/MM', 'fr_FR').format(startParis)} '
+            '${DateFormat('HH:mm', 'fr_FR').format(startParis)} – '
+            '${DateFormat('HH:mm', 'fr_FR').format(endParis)}';
+      } else {
+        scheduledStr = DateFormat('dd/MM à HH:mm', 'fr_FR').format(startParis);
+      }
     }
 
     return Container(
