@@ -50,7 +50,7 @@ const InfoRow = ({
 }) => (
   <div className="flex items-center gap-3 text-sm">
     <Icon className="text-primary h-5 w-5 shrink-0" />
-    <span className="text-default-700 dark:text-default-200">{children}</span>
+    <span className="text-default-500 dark:text-default-400">{children}</span>
   </div>
 );
 
