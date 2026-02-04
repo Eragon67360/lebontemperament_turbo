@@ -89,7 +89,7 @@ export default function Evenements() {
     const eventData = {
       title: formData.get("title") as string,
       date_from: dateFrom ? format(dateFrom, "yyyy-MM-dd") : "",
-      date_to: dateTo ? format(dateTo, "yyyy-MM-dd") : "",
+      date_to: dateTo ? format(dateTo, "yyyy-MM-dd") : null,
       time: formData.get("time") as string,
       location: formData.get("location") as string,
       responsible_name: formData.get("responsible_name") as string,
@@ -123,7 +123,7 @@ export default function Evenements() {
       id: editingEvent!.id,
       title: formData.get("title") as string,
       date_from: dateFrom ? format(dateFrom, "yyyy-MM-dd") : "",
-      date_to: dateTo ? format(dateTo, "yyyy-MM-dd") : "",
+      date_to: dateTo ? format(dateTo, "yyyy-MM-dd") : null,
       time: formData.get("time") as string,
       location: formData.get("location") as string,
       responsible_name: formData.get("responsible_name") as string,
