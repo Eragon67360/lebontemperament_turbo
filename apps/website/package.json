@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "6.24.1",
+  "version": "2.0.1",
   "type": "module",
   "private": true,
   "scripts": {

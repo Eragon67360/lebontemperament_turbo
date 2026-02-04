@@ -5,34 +5,36 @@ on:
     branches:
       - dev
       - main
-    # BEST PRACTICE: Only run when mobile app code is changed
     paths:
       - "apps/mobile_app/**"
+      - "version.json"
       - ".github/workflows/android-build-release.yml"
-      - "scripts/bump-mobile-version.js"
+      - "scripts/bump-version.js"
 
 permissions:
   contents: write
 
 jobs:
   build_and_release:
-    # THE FIX: Prevent workflow recursion from the version bump commit
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
     name: Android (${{ github.ref_name == 'main' && 'Main' || 'Dev' }})
     runs-on: ubuntu-latest
 
     env:
-      BUMP_TYPE: ${{ github.ref_name == 'main' && 'patch' || 'build' }}
       DRAFT_RELEASE: ${{ github.ref_name == 'main' && 'false' || 'true' }}
       SITE_URL: ${{ github.ref_name == 'main' && secrets.SITE_URL_PROD || secrets.SITE_URL_DEV }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        # You need to fetch the full history for the bump script to work correctly
-        with:
-          fetch-depth: 0
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -e "const v=require('./version.json'); console.log(v.version+'+'+v.build)")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -45,22 +47,6 @@ jobs:
         with:
           channel: "stable"
           cache: true
-
-      - name: Bump version
-        id: bump
-        run: |
-          NEW_VERSION=$(node scripts/bump-mobile-version.js ${{ env.BUMP_TYPE }} | tail -1)
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Calculated version: $NEW_VERSION"
-
-      - name: Commit version bump
-        if: github.ref_name == 'main'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/mobile_app/pubspec.yaml
-          git diff --staged --quiet || git commit -m "chore(mobile): bump version to ${{ steps.bump.outputs.version }} [skip ci]"
-          git push
 
       - name: Provide .env for build
         working-directory: apps/mobile_app
@@ -85,7 +71,7 @@ jobs:
       - name: Rename APK for release
         id: rename
         run: |
-          VERSION="${{ steps.bump.outputs.version }}"
+          VERSION="${{ steps.version.outputs.version }}"
           OLD_PATH="apps/mobile_app/build/app/outputs/flutter-apk/app-release.apk"
           NEW_PATH="apps/mobile_app/build/app/outputs/flutter-apk/BT-App-v${VERSION}.apk"
           mv $OLD_PATH $NEW_PATH
@@ -95,8 +81,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "android/v${{ steps.bump.outputs.version }}"
-          name: "Android v${{ steps.bump.outputs.version }}"
+          tag_name: "android/v${{ steps.version.outputs.version }}"
+          name: "Android v${{ steps.version.outputs.version }}"
           draft: ${{ env.DRAFT_RELEASE }}
           prerelease: false
           files: ${{ steps.rename.outputs.apk_path }}

@@ -7,7 +7,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "bump-versions": "node scripts/bump-versions.js",
+    "bump-version": "node scripts/bump-version.js",
     "prepare": "husky"
   },
   "dependencies": {

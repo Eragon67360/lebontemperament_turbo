@@ -6,7 +6,7 @@ set -e
 # --- Configuration ---
 # Adjust these paths if your project structure is different
 MOBILE_APP_DIR="apps/mobile_app"
-BUMP_SCRIPT_PATH="scripts/bump-mobile-version.js"
+BUMP_SCRIPT_PATH="scripts/bump-version.js"
 ROOT_ENV_FILE=".env.local" # We'll read secrets from this file at the project root
 
 # --- Pretty Colors for Output ---
