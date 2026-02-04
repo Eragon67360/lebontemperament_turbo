@@ -81,61 +81,64 @@ class _AboutHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary.withOpacity(0.8),
-                theme.colorScheme.primary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.8),
+                  theme.colorScheme.primary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.music_note_rounded,
+              size: 50,
+              color: theme.colorScheme.onPrimary,
+            ),
           ),
-          child: Icon(
-            Icons.music_note_rounded,
-            size: 50,
-            color: theme.colorScheme.onPrimary,
+          const SizedBox(height: 24),
+          Text(
+            'Le Bon Tempérament',
+            style: GoogleFonts.poppins(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Le Bon Tempérament',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
+          const SizedBox(height: 6),
+          Text(
+            'Ensemble vocal et instrumental à Saverne depuis 1987',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Ensemble vocal et instrumental à Saverne depuis 1987',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            color: theme.colorScheme.onSurfaceVariant,
+          const SizedBox(height: 12),
+          Text(
+            'Version ${packageInfo.version} (build ${packageInfo.buildNumber})',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Version ${packageInfo.version} (build ${packageInfo.buildNumber})',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -289,33 +292,68 @@ class _InfoTile extends StatelessWidget {
     required this.value,
   });
 
+  void _showFullValue(BuildContext context) {
+    final theme = Theme.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(label),
+        content: SelectableText(
+          value,
+          style: GoogleFonts.poppins(
+            color: theme.colorScheme.onSurface,
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child:
+                Text('OK', style: TextStyle(color: theme.colorScheme.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-      child: Row(
-        children: [
-          Icon(icon, color: theme.colorScheme.primary, size: 22),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 14,
+      child: InkWell(
+        onTap: () => _showFullValue(context),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary, size: 22),
+              const SizedBox(width: 16),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: GoogleFonts.poppins(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
           ),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
