@@ -1,0 +1,6 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "turbo build --filter=website",
+  "outputDirectory": "apps/website/.next",
+  "installCommand": "npm ci"
+}
