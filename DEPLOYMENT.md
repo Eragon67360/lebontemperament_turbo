@@ -1,43 +1,35 @@
 # Vercel Deployment Guide (Turborepo)
 
-This monorepo uses **shared dependencies** at the root. To preserve that setup, use one of these approaches:
+Each app has its own `vercel.json` with the correct build filter. **You must set the Root Directory per project** so Vercel reads the right config.
 
-## Option A: Root Directory = empty (recommended)
-
-Use the **repository root** as Root Directory so Vercel has full access to the workspace and shared packages.
+## Configuration (required)
 
 ### Website project
 
-1. **Root Directory**: Leave empty (or set to `.`)
-2. **Build Command**: `turbo build --filter=website` (override in dashboard)
-3. **Output Directory**: `apps/website/.next` (override in dashboard)
-4. **Install Command**: `npm ci` (default, runs from repo root)
-
-The root [vercel.json](vercel.json) is pre-configured for the website project.
+| Setting              | Value                                                                           |
+| -------------------- | ------------------------------------------------------------------------------- |
+| **Root Directory**   | `apps/website`                                                                  |
+| **Build Command**    | _(from [apps/website/vercel.json](apps/website/vercel.json) – do not override)_ |
+| **Output Directory** | _(Next.js default)_                                                             |
 
 ### Admin project
 
-1. **Root Directory**: Leave empty (or set to `.`)
-2. **Build Command**: `turbo build --filter=admin` (override in dashboard)
-3. **Output Directory**: `apps/admin/.next` (override in dashboard)
-4. **Install Command**: `npm ci` (default)
+| Setting              | Value                                                                       |
+| -------------------- | --------------------------------------------------------------------------- |
+| **Root Directory**   | `apps/admin`                                                                |
+| **Build Command**    | _(from [apps/admin/vercel.json](apps/admin/vercel.json) – do not override)_ |
+| **Output Directory** | _(Next.js default)_                                                         |
 
----
+## Important: Include source files outside Root Directory
 
-## Option B: Root Directory = app folder
+Enable **"Include source files outside of the Root Directory in the Build Step"** for both projects:
 
-If you prefer Root Directory = `apps/website` or `apps/admin`:
+1. Project Settings → Build and Deployment
+2. Root Directory section
+3. Enable the toggle
 
-1. Enable **"Include source files outside of the Root Directory in the Build Step"** in Project Settings → Root Directory
-2. This allows the build to access root `node_modules` and shared packages
-3. Use the app-specific [apps/website/vercel.json](apps/website/vercel.json) or [apps/admin/vercel.json](apps/admin/vercel.json)
+This allows the build to access root `node_modules` and shared packages (`@tailwindcss/postcss`, `next`, etc.).
 
----
+## Do not use Root Directory = empty
 
-## Ignored Build Step (optional)
-
-For both projects, set **Ignored Build Step** to skip deployments when unchanged:
-
-```
-npx turbo-ignore --fallback=HEAD^1
-```
+If Root Directory is empty, both projects would read the same config and one would build the wrong app. Always use `apps/website` or `apps/admin`.
