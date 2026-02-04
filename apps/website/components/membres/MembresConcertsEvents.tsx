@@ -135,6 +135,7 @@ const MembresConcertsEvents = () => {
     <div className="container mx-auto flex w-full flex-col space-y-8 px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">
       {/* Concerts Section */}
       <motion.section
+        id="concerts"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -210,6 +211,7 @@ const MembresConcertsEvents = () => {
 
       {/* Events Section */}
       <motion.section
+        id="evenements"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}

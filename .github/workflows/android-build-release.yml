@@ -58,14 +58,14 @@ jobs:
           echo "# Public website URL (for driver tracking share link)" >> .env
           echo "SITE_URL=$SITE_URL" >> .env
 
-      - name: Setup release signing
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
-        run: |
-          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > apps/mobile_app/android/key.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> apps/mobile_app/android/key.properties
-          echo "keyAlias=upload" >> apps/mobile_app/android/key.properties
-          echo "storeFile=upload-keystore.jks" >> apps/mobile_app/android/key.properties
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > apps/mobile_app/android/upload-keystore.jks
+      # - name: Setup release signing
+      #   if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      #   run: |
+      #     echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > apps/mobile_app/android/key.properties
+      #     echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> apps/mobile_app/android/key.properties
+      #     echo "keyAlias=upload" >> apps/mobile_app/android/key.properties
+      #     echo "storeFile=upload-keystore.jks" >> apps/mobile_app/android/key.properties
+      #     echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > apps/mobile_app/android/upload-keystore.jks
 
       - name: Install dependencies
         working-directory: apps/mobile_app
