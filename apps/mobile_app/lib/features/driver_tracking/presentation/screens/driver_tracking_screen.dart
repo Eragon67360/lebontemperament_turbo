@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../../core/config/app_config.dart';
@@ -18,6 +19,13 @@ import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../providers/driver_tracking_provider.dart';
+
+DateTime _utcToParis(DateTime utc) {
+  final paris = tz.getLocation('Europe/Paris');
+  final inParis = tz.TZDateTime.from(utc, paris);
+  return DateTime(
+      inParis.year, inParis.month, inParis.day, inParis.hour, inParis.minute);
+}
 
 class DriverTrackingScreen extends ConsumerWidget {
   const DriverTrackingScreen({super.key});
@@ -57,6 +65,9 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
   void initState() {
     super.initState();
     initializeDateFormatting('fr_FR');
+    if (!tz.timeZoneDatabase.isInitialized) {
+      tz_data.initializeTimeZones();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(driverTrackingProvider.notifier).loadDelivery();
     });
@@ -74,9 +85,12 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
   Future<void> _pickScheduledTimeRange(BuildContext context) async {
     final state = ref.read(driverTrackingProvider);
     final now = DateTime.now();
-    final initialStart = state.delivery?.scheduledAt ?? now;
-    final initialEnd = state.delivery?.scheduledEndAt ??
-        initialStart.add(const Duration(hours: 1));
+    final initialStart = state.delivery?.scheduledAt != null
+        ? _utcToParis(state.delivery!.scheduledAt!)
+        : now;
+    final initialEnd = state.delivery?.scheduledEndAt != null
+        ? _utcToParis(state.delivery!.scheduledEndAt!)
+        : initialStart.add(const Duration(hours: 1));
 
     // Start date + time
     final startDate = await showDatePicker(
@@ -261,9 +275,40 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 32),
-                      const FadeInUp(
+                      FadeInUp(
                           delay: 400,
-                          child: _SectionTitle(title: 'Destinataires')),
+                          child: Row(
+                            children: [
+                              const _SectionTitle(title: 'Destinataires'),
+                              const Spacer(),
+                              FilledButton.tonalIcon(
+                                onPressed: state.isActionLoading
+                                    ? null
+                                    : () => ref
+                                        .read(driverTrackingProvider.notifier)
+                                        .optimizeRecipientsRoute(
+                                          startLat: state.position?.lat,
+                                          startLng: state.position?.lng,
+                                        ),
+                                icon: state.isActionLoading
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.auto_awesome, size: 18),
+                                label: const Text('Optimiser l\'itinéraire'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  textStyle: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          )),
                       const SizedBox(height: 12),
                       FadeInUp(
                           delay: 500,
@@ -311,6 +356,16 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                           child: _SessionDetailsCard(
                               delivery: state.delivery!,
                               onResetToken: _confirmResetToken)),
+                      const SizedBox(height: 24),
+                      FadeInUp(
+                        delay: 950,
+                        child: TextButton.icon(
+                          onPressed: () =>
+                              context.push('/driver-tracking/history'),
+                          icon: const Icon(Icons.history_rounded, size: 20),
+                          label: const Text('Historique des tournées'),
+                        ),
+                      ),
                     ],
                   )
               ]),
@@ -500,7 +555,6 @@ class _RecipientsCard extends ConsumerWidget {
               padding: EdgeInsets.zero,
               itemCount: recipients.length,
               onReorder: (oldIndex, newIndex) {
-                if (oldIndex < newIndex) newIndex--;
                 final newOrder = List<DeliveryRecipient>.from(recipients);
                 final item = newOrder.removeAt(oldIndex);
                 newOrder.insert(newIndex, item);
@@ -628,14 +682,16 @@ class _LiveUpdatesCard extends ConsumerWidget {
     String scheduledStr;
     if (delivery.scheduledAt == null) {
       scheduledStr = 'Non définie';
-    } else if (delivery.scheduledEndAt != null) {
-      scheduledStr =
-          '${DateFormat('dd/MM', 'fr_FR').format(delivery.scheduledAt!)} '
-          '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledAt!)} – '
-          '${DateFormat('HH:mm', 'fr_FR').format(delivery.scheduledEndAt!)}';
     } else {
-      scheduledStr =
-          DateFormat('dd/MM à HH:mm', 'fr_FR').format(delivery.scheduledAt!);
+      final startParis = _utcToParis(delivery.scheduledAt!);
+      if (delivery.scheduledEndAt != null) {
+        final endParis = _utcToParis(delivery.scheduledEndAt!);
+        scheduledStr = '${DateFormat('dd/MM', 'fr_FR').format(startParis)} '
+            '${DateFormat('HH:mm', 'fr_FR').format(startParis)} – '
+            '${DateFormat('HH:mm', 'fr_FR').format(endParis)}';
+      } else {
+        scheduledStr = DateFormat('dd/MM à HH:mm', 'fr_FR').format(startParis);
+      }
     }
 
     return Container(

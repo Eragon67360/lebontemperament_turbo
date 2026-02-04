@@ -7,6 +7,7 @@ import '../../data/models/delivery_recipient.dart'; // Add this import
 import '../../features/auth/data/services/auth_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
+import '../../features/driver_tracking/presentation/screens/delivery_history_screen.dart';
 import '../../features/driver_tracking/presentation/screens/driver_tracking_screen.dart';
 import '../../features/driver_tracking/presentation/screens/recipient_details_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
@@ -123,6 +124,13 @@ class AppRouter {
               builder: (context, ref, _) => const DriverTrackingScreen()),
           // --- NESTED ROUTE FOR RECIPIENT DETAILS ---
           routes: [
+            GoRoute(
+              path: 'history',
+              name: 'driverTrackingHistory',
+              builder: (context, state) => Consumer(
+                builder: (context, ref, _) => const DeliveryHistoryScreen(),
+              ),
+            ),
             GoRoute(
               path:
                   'recipient', // This creates the full path: /driver-tracking/recipient
