@@ -11,6 +11,7 @@ interface RecipientRow {
   phone_number: string | null;
   label: string;
   public_token: string;
+  delivered_at: string | null;
 }
 
 async function fetchOSRMLegDurations(
@@ -92,7 +93,7 @@ serve(async (req) => {
     const { data: recipients, error } = await supabaseAdmin
       .from("delivery_recipients")
       .select(
-        "id, latitude, longitude, sort_order, phone_number, label, public_token",
+        "id, latitude, longitude, sort_order, phone_number, label, public_token, delivered_at",
       )
       .eq("delivery_id", deliveryId)
       .order("sort_order");
@@ -166,6 +167,7 @@ serve(async (req) => {
       for (const { id, scheduledAt } of scheduledAts) {
         const recipient = withCoords.find((r) => r.id === id);
         if (!recipient?.phone_number?.trim()) continue;
+        if (recipient.delivered_at != null) continue; // Skip already delivered
 
         const scheduledDate = new Date(scheduledAt);
         const { start: startRange, end: endRange } =
@@ -174,7 +176,7 @@ serve(async (req) => {
         const endStr = formatTimeHHMMParis(endRange);
         const trackingUrl = `${baseUrl}/track?token=${recipient.public_token}`;
 
-        const messageBody = `Bonjour ${recipient.label}, notre tournée de livraison (fromages et saucissons) a commencé. Passage prévu entre ${startStr} et ${endStr}. Suivez en direct : ${trackingUrl}. - Félix & Thomas`;
+        const messageBody = `Bonjour ${recipient.label}, notre tournée de livraison (fromages et saucissons) a commencé.\n\n Passage prévu entre ${startStr} et ${endStr}. Suivez en direct : ${trackingUrl}.\n\n - Félix & Thomas`;
 
         const requestBody = new URLSearchParams({
           To: recipient.phone_number,
