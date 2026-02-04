@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../data/models/notification_settings.dart';
 import '../../../../data/providers/realtime_notifications_provider.dart';
@@ -21,50 +20,15 @@ class _NotificationSettingsScreenState
   // We move the complex async logic out of the build method for cleanliness.
   Future<void> _handleRealtimeToggle(bool enable) async {
     if (enable) {
-      // Show a loading indicator while we request permission.
-      showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => const Center(child: CircularProgressIndicator()));
-
+      // Ensure subscription is active (idempotent), then enable push notifications
       final notifier =
           ref.read(realtimeNotificationsControllerProvider.notifier);
-      final success = await notifier.startListening();
-
-      if (!mounted) return;
-      Navigator.of(context).pop(); // Hide loading indicator
-
-      if (success) {
-        await ref
-            .read(notificationSettingsProvider.notifier)
-            .setRealtimeEnabled(true);
-      } else {
-        // If permission was denied, show a helpful dialog.
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Permissions requises'),
-            content: const Text(
-                'Pour activer les notifications en temps réel, vous devez autoriser les notifications dans les paramètres de votre appareil.'),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Annuler')),
-              FilledButton(
-                  onPressed: () {
-                    openAppSettings();
-                    Navigator.of(ctx).pop();
-                  },
-                  child: const Text('Ouvrir les Paramètres')),
-            ],
-          ),
-        );
-      }
+      await notifier.startListening();
+      await ref
+          .read(notificationSettingsProvider.notifier)
+          .setRealtimeEnabled(true);
     } else {
-      // If disabling, just stop listening and update the state.
-      ref
-          .read(realtimeNotificationsControllerProvider.notifier)
-          .stopListening();
+      // Disable push notifications only - keep subscription for list updates
       await ref
           .read(notificationSettingsProvider.notifier)
           .setRealtimeEnabled(false);

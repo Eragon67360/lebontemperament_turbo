@@ -6,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:logger/logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'dart:io';
 
 import '../models/notification_settings.dart';
@@ -24,6 +25,15 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+
+  /// Current app lifecycle state (updated from main.dart). Used for diagnostic logging.
+  static AppLifecycleState? currentLifecycleState;
+
+  /// Update the current app lifecycle state. Call from WidgetsBindingObserver.didChangeAppLifecycleState.
+  static void updateLifecycleState(AppLifecycleState state) {
+    currentLifecycleState = state;
+  }
+
   bool _isScheduling =
       false; // Add flag to prevent multiple simultaneous scheduling
 
@@ -78,12 +88,66 @@ class NotificationService {
       if (initialized == true) {
         _logger.i('Notification service initialized successfully');
         _isInitialized = true;
+
+        // Create realtime notification channels explicitly (Android 8+)
+        // Ensures proper importance/visibility from first use
+        if (Platform.isAndroid) {
+          await _createRealtimeNotificationChannels();
+        }
       } else {
         _logger.e('Failed to initialize notification service');
       }
     } catch (e) {
       _logger.e('Error initializing notification service: $e');
       rethrow;
+    }
+  }
+
+  /// Create notification channels for realtime notifications (Android 8+).
+  /// Ensures channels have Importance.max from the start for visibility.
+  Future<void> _createRealtimeNotificationChannels() async {
+    try {
+      final androidPlugin =
+          _notifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin == null) return;
+
+      const channels = [
+        AndroidNotificationChannel(
+          'new_rehearsals',
+          'Nouvelles répétitions',
+          description: 'Notifications pour les nouvelles répétitions',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+        AndroidNotificationChannel(
+          'new_events',
+          'Nouveaux événements',
+          description: 'Notifications pour les nouveaux événements',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+        AndroidNotificationChannel(
+          'new_concerts',
+          'Nouveaux concerts',
+          description: 'Notifications pour les nouveaux concerts',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+      ];
+
+      for (final channel in channels) {
+        await androidPlugin.createNotificationChannel(channel);
+      }
+      _logger.i('Created ${channels.length} realtime notification channels');
+    } catch (e) {
+      _logger.w('Could not create notification channels: $e');
     }
   }
 
@@ -98,10 +162,8 @@ class NotificationService {
       // For iOS, use the flutter_local_notifications plugin directly
       // This is more reliable than using permission_handler on iOS
       try {
-        final iosPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin
-            >();
+        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
         if (iosPlugin != null) {
           _logger.i('Using iOS-specific permission request...');
           final iosSettings = await iosPlugin.requestPermissions(
@@ -132,8 +194,7 @@ class NotificationService {
           // This will open system settings for exact alarms on Android 12+
           await _notifications
               .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin
-              >()
+                  AndroidFlutterLocalNotificationsPlugin>()
               ?.requestExactAlarmsPermission();
         } catch (e) {
           _logger.w('Could not request exact alarm permission: $e');
@@ -151,10 +212,8 @@ class NotificationService {
     try {
       // For iOS, check using flutter_local_notifications first
       try {
-        final iosPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin
-            >();
+        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
         if (iosPlugin != null) {
           _logger.i(
             'Checking iOS permissions using flutter_local_notifications...',
@@ -408,7 +467,7 @@ class NotificationService {
     String? payload,
   }) async {
     try {
-      // Try inexact scheduling first (more reliable on Android)
+      // Use exact scheduling for reliability when app is killed (Doze mode)
       await _notifications.zonedSchedule(
         id,
         title,
@@ -435,7 +494,7 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: payload,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,
@@ -604,8 +663,8 @@ class NotificationService {
   /// Check pending notifications to verify scheduling
   Future<void> _checkPendingNotifications() async {
     try {
-      final pendingNotifications = await _notifications
-          .pendingNotificationRequests();
+      final pendingNotifications =
+          await _notifications.pendingNotificationRequests();
       _logger.i('Pending notifications count: ${pendingNotifications.length}');
 
       for (final notification in pendingNotifications) {
@@ -673,18 +732,26 @@ class NotificationService {
       final notificationBody = _buildRehearsalNotificationBody(rehearsal);
       _logger.i('Notification body: $notificationBody');
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Nouvelle répétition ajoutée',
         notificationBody,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_rehearsals',
             'Nouvelles répétitions',
             channelDescription: 'Notifications pour les nouvelles répétitions',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Nouvelle répétition ajoutée',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -737,18 +804,26 @@ class NotificationService {
       final notificationBody = _buildEventNotificationBody(event);
       _logger.i('Notification body: $notificationBody');
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Nouvel événement ajouté',
         notificationBody,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_events',
             'Nouveaux événements',
             channelDescription: 'Notifications pour les nouveaux événements',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Nouvel événement ajouté',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -801,18 +876,26 @@ class NotificationService {
       final notificationBody = _buildConcertNotificationBody(concert);
       _logger.i('Notification body: $notificationBody');
 
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
       await _notifications.show(
         notificationId,
         'Nouveau concert ajouté',
         notificationBody,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'new_concerts',
             'Nouveaux concerts',
             channelDescription: 'Notifications pour les nouveaux concerts',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: Importance.max,
+            priority: Priority.max,
             showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Nouveau concert ajouté',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -833,6 +916,294 @@ class NotificationService {
     } catch (e) {
       _logger.e('Error showing concert added notification: $e');
       _logger.e('Concert details: ${concert.toJson()}');
+    }
+  }
+
+  /// Show notification when rehearsal is updated (time or place changed)
+  Future<void> showRehearsalUpdatedNotification(Rehearsal rehearsal) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('rehearsal_updated_${rehearsal.id}');
+      final body = _buildRehearsalNotificationBody(rehearsal);
+
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
+      await _notifications.show(
+        notificationId,
+        'Répétition modifiée',
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_rehearsals',
+            'Nouvelles répétitions',
+            channelDescription: 'Notifications pour les nouvelles répétitions',
+            importance: Importance.max,
+            priority: Priority.max,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Répétition modifiée',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_rehearsal',
+          ),
+        ),
+        payload: 'rehearsal_${rehearsal.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing rehearsal updated notification: $e');
+    }
+  }
+
+  /// Show notification when rehearsal is deleted
+  Future<void> showRehearsalDeletedNotification(Rehearsal rehearsal) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('rehearsal_deleted_${rehearsal.id}');
+      final body = _buildRehearsalNotificationBody(rehearsal);
+
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
+      await _notifications.show(
+        notificationId,
+        'Répétition supprimée',
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_rehearsals',
+            'Nouvelles répétitions',
+            channelDescription: 'Notifications pour les nouvelles répétitions',
+            importance: Importance.max,
+            priority: Priority.max,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Répétition supprimée',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_rehearsal',
+          ),
+        ),
+        payload: 'rehearsal_${rehearsal.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing rehearsal deleted notification: $e');
+    }
+  }
+
+  /// Show notification when event is updated (time or place changed)
+  Future<void> showEventUpdatedNotification(Event event) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('event_updated_${event.id}');
+      final body = _buildEventNotificationBody(event);
+
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
+      await _notifications.show(
+        notificationId,
+        'Événement modifié',
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_events',
+            'Nouveaux événements',
+            channelDescription: 'Notifications pour les nouveaux événements',
+            importance: Importance.max,
+            priority: Priority.max,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Événement modifié',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_event',
+          ),
+        ),
+        payload: 'event_${event.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing event updated notification: $e');
+    }
+  }
+
+  /// Show notification when event is deleted
+  Future<void> showEventDeletedNotification(Event event) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('event_deleted_${event.id}');
+      final body = _buildEventNotificationBody(event);
+
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
+      await _notifications.show(
+        notificationId,
+        'Événement supprimé',
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_events',
+            'Nouveaux événements',
+            channelDescription: 'Notifications pour les nouveaux événements',
+            importance: Importance.max,
+            priority: Priority.max,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Événement supprimé',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_event',
+          ),
+        ),
+        payload: 'event_${event.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing event deleted notification: $e');
+    }
+  }
+
+  /// Show notification when concert is updated (time or place changed)
+  Future<void> showConcertUpdatedNotification(Concert concert) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('concert_updated_${concert.id}');
+      final body = _buildConcertNotificationBody(concert);
+
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
+      await _notifications.show(
+        notificationId,
+        'Concert modifié',
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_concerts',
+            'Nouveaux concerts',
+            channelDescription: 'Notifications pour les nouveaux concerts',
+            importance: Importance.max,
+            priority: Priority.max,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Concert modifié',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_concert',
+          ),
+        ),
+        payload: 'concert_${concert.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing concert updated notification: $e');
+    }
+  }
+
+  /// Show notification when concert is deleted
+  Future<void> showConcertDeletedNotification(Concert concert) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('concert_deleted_${concert.id}');
+      final body = _buildConcertNotificationBody(concert);
+
+      _logger.i(
+        'App lifecycle at show time: ${currentLifecycleState?.name ?? "unknown"}',
+      );
+
+      await _notifications.show(
+        notificationId,
+        'Concert supprimé',
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_concerts',
+            'Nouveaux concerts',
+            channelDescription: 'Notifications pour les nouveaux concerts',
+            importance: Importance.max,
+            priority: Priority.max,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: 'Concert supprimé',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_concert',
+          ),
+        ),
+        payload: 'concert_${concert.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing concert deleted notification: $e');
     }
   }
 
@@ -1067,6 +1438,96 @@ class NotificationService {
       _logger.i('Test notification shown successfully');
     } catch (e) {
       _logger.e('Error showing test notification: $e');
+    }
+  }
+
+  /// Test immediate rehearsal reminder notification (same format as scheduled)
+  Future<void> showTestRehearsalReminderNotification() async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) {
+        _logger.w(
+          'Cannot show test rehearsal reminder - permissions may not be granted',
+        );
+        return;
+      }
+
+      await _notifications.show(
+        888001,
+        'Répétition à venir',
+        'Répétition test dans 15 minutes',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'event_reminders',
+            'Rappels d\'événements',
+            channelDescription:
+                'Notifications pour les concerts et répétitions',
+            importance: Importance.high,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            showWhen: true,
+            autoCancel: true,
+            category: AndroidNotificationCategory.reminder,
+            visibility: NotificationVisibility.public,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'rehearsal_dev_test',
+      );
+
+      _logger.i('Test rehearsal reminder notification shown successfully');
+    } catch (e) {
+      _logger.e('Error showing test rehearsal reminder: $e');
+    }
+  }
+
+  /// Test immediate concert reminder notification (same format as scheduled)
+  Future<void> showTestConcertReminderNotification() async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) {
+        _logger.w(
+          'Cannot show test concert reminder - permissions may not be granted',
+        );
+        return;
+      }
+
+      await _notifications.show(
+        888002,
+        'Concert à venir',
+        'Concert test dans 1 heure',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'event_reminders',
+            'Rappels d\'événements',
+            channelDescription:
+                'Notifications pour les concerts et répétitions',
+            importance: Importance.high,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            showWhen: true,
+            autoCancel: true,
+            category: AndroidNotificationCategory.reminder,
+            visibility: NotificationVisibility.public,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'concert_dev_test',
+      );
+
+      _logger.i('Test concert reminder notification shown successfully');
+    } catch (e) {
+      _logger.e('Error showing test concert reminder: $e');
     }
   }
 
