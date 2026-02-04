@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const OSRM_BASE = "https://router.project-osrm.org";
+
 function haversineDistance(
   lat1: number,
   lon1: number,
@@ -18,6 +20,51 @@ function haversineDistance(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+type RecipientWithCoords = {
+  id: string;
+  latitude: number;
+  longitude: number;
+  sort_order: number;
+};
+
+function nearestNeighborOrder(
+  withCoords: RecipientWithCoords[],
+  start: { lat: number; lng: number },
+): RecipientWithCoords[] {
+  const ordered: RecipientWithCoords[] = [];
+  const remaining = [...withCoords];
+  let current = start;
+
+  while (remaining.length > 0) {
+    let nearestIdx = 0;
+    let nearestDist = haversineDistance(
+      current.lat,
+      current.lng,
+      remaining[0].latitude,
+      remaining[0].longitude,
+    );
+
+    for (let i = 1; i < remaining.length; i++) {
+      const d = haversineDistance(
+        current.lat,
+        current.lng,
+        remaining[i].latitude,
+        remaining[i].longitude,
+      );
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestIdx = i;
+      }
+    }
+
+    const next = remaining.splice(nearestIdx, 1)[0];
+    ordered.push(next);
+    current = { lat: next.latitude, lng: next.longitude };
+  }
+
+  return ordered;
 }
 
 serve(async (req) => {
@@ -64,7 +111,7 @@ serve(async (req) => {
         r.longitude != null &&
         typeof r.latitude === "number" &&
         typeof r.longitude === "number",
-    );
+    ) as RecipientWithCoords[];
 
     const withoutCoords = recipients.filter(
       (r) => r.latitude == null || r.longitude == null,
@@ -80,51 +127,78 @@ serve(async (req) => {
       );
     }
 
-    // Nearest-neighbor from start point (driver position or first recipient)
-    const start =
-      startLat != null && startLng != null
-        ? { lat: startLat, lng: startLng }
-        : {
-            lat: withCoords[0].latitude as number,
-            lng: withCoords[0].longitude as number,
-          };
+    const hasDriver = startLat != null && startLng != null;
 
-    const ordered: typeof withCoords = [];
-    const remaining = [...withCoords];
+    // Build coordinates: OSRM uses lng,lat
+    const coordsList: { lng: number; lat: number }[] = hasDriver
+      ? [
+          { lng: startLng!, lat: startLat! },
+          ...withCoords.map((r) => ({ lng: r.longitude, lat: r.latitude })),
+        ]
+      : withCoords.map((r) => ({ lng: r.longitude, lat: r.latitude }));
 
-    let current = start;
+    const coordsStr = coordsList.map((c) => `${c.lng},${c.lat}`).join(";");
+    const recipientStartIndex = hasDriver ? 1 : 0;
 
-    while (remaining.length > 0) {
-      let nearestIdx = 0;
-      let nearestDist = haversineDistance(
-        current.lat,
-        current.lng,
-        remaining[0].latitude as number,
-        remaining[0].longitude as number,
-      );
+    let ordered: RecipientWithCoords[];
+    let optimizationMethod: "osrm" | "nearest_neighbor" = "nearest_neighbor";
 
-      for (let i = 1; i < remaining.length; i++) {
-        const d = haversineDistance(
-          current.lat,
-          current.lng,
-          remaining[i].latitude as number,
-          remaining[i].longitude as number,
-        );
-        if (d < nearestDist) {
-          nearestDist = d;
-          nearestIdx = i;
-        }
+    try {
+      const params = new URLSearchParams({
+        roundtrip: "false",
+        source: hasDriver ? "first" : "any",
+        destination: hasDriver ? "last" : "any",
+      });
+      const osrmUrl = `${OSRM_BASE}/trip/v1/driving/${coordsStr}?${params}`;
+      const osrmRes = await fetch(osrmUrl);
+
+      if (!osrmRes.ok) {
+        throw new Error(`OSRM returned ${osrmRes.status}`);
       }
 
-      const next = remaining.splice(nearestIdx, 1)[0];
-      ordered.push(next);
-      current = {
-        lat: next.latitude as number,
-        lng: next.longitude as number,
-      };
+      const osrmJson = await osrmRes.json();
+      if (osrmJson.code !== "Ok") {
+        throw new Error(osrmJson.message || "OSRM request failed");
+      }
+
+      const waypoints = osrmJson.waypoints as Array<{
+        waypoint_index: number;
+        location: [number, number];
+      }>;
+
+      if (!waypoints || waypoints.length === 0) {
+        throw new Error("No waypoints in OSRM response");
+      }
+
+      // waypoints are in input order; waypoint_index = position in optimized trip
+      // Sort by waypoint_index to get visit order, then map to recipients
+      const sortedByTripOrder = [...waypoints].sort(
+        (a, b) => a.waypoint_index - b.waypoint_index,
+      );
+
+      // Map input indices to recipients (skip driver at index 0 when present)
+      ordered = sortedByTripOrder
+        .map((w) =>
+          waypoints.findIndex((wp) => wp.waypoint_index === w.waypoint_index),
+        )
+        .filter((idx) => idx >= recipientStartIndex)
+        .map((idx) => withCoords[idx - recipientStartIndex]);
+      optimizationMethod = "osrm";
+    } catch (osrmErr) {
+      console.warn(
+        "OSRM Trip failed, falling back to nearest-neighbor:",
+        osrmErr,
+      );
+      const start = hasDriver
+        ? { lat: startLat!, lng: startLng! }
+        : {
+            lat: withCoords[0].latitude,
+            lng: withCoords[0].longitude,
+          };
+      ordered = nearestNeighborOrder(withCoords, start);
     }
 
-    // Build final order: optimized first, then those without coords (keep their relative order)
+    // Build final order: optimized first, then those without coords
     const orderedIds = ordered.map((r) => r.id);
     const withoutCoordsIds = withoutCoords.map((r) => r.id);
     const finalOrder = [...orderedIds, ...withoutCoordsIds];
@@ -142,6 +216,7 @@ serve(async (req) => {
         success: true,
         optimizedCount: ordered.length,
         totalCount: finalOrder.length,
+        optimizationMethod,
       }),
       { headers: { "Content-Type": "application/json" } },
     );
