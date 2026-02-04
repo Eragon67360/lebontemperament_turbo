@@ -98,10 +98,8 @@ class NotificationService {
       // For iOS, use the flutter_local_notifications plugin directly
       // This is more reliable than using permission_handler on iOS
       try {
-        final iosPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin
-            >();
+        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
         if (iosPlugin != null) {
           _logger.i('Using iOS-specific permission request...');
           final iosSettings = await iosPlugin.requestPermissions(
@@ -132,8 +130,7 @@ class NotificationService {
           // This will open system settings for exact alarms on Android 12+
           await _notifications
               .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin
-              >()
+                  AndroidFlutterLocalNotificationsPlugin>()
               ?.requestExactAlarmsPermission();
         } catch (e) {
           _logger.w('Could not request exact alarm permission: $e');
@@ -151,10 +148,8 @@ class NotificationService {
     try {
       // For iOS, check using flutter_local_notifications first
       try {
-        final iosPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin
-            >();
+        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
         if (iosPlugin != null) {
           _logger.i(
             'Checking iOS permissions using flutter_local_notifications...',
@@ -408,7 +403,7 @@ class NotificationService {
     String? payload,
   }) async {
     try {
-      // Try inexact scheduling first (more reliable on Android)
+      // Use exact scheduling for reliability when app is killed (Doze mode)
       await _notifications.zonedSchedule(
         id,
         title,
@@ -435,7 +430,7 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: payload,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,
@@ -604,8 +599,8 @@ class NotificationService {
   /// Check pending notifications to verify scheduling
   Future<void> _checkPendingNotifications() async {
     try {
-      final pendingNotifications = await _notifications
-          .pendingNotificationRequests();
+      final pendingNotifications =
+          await _notifications.pendingNotificationRequests();
       _logger.i('Pending notifications count: ${pendingNotifications.length}');
 
       for (final notification in pendingNotifications) {
@@ -833,6 +828,246 @@ class NotificationService {
     } catch (e) {
       _logger.e('Error showing concert added notification: $e');
       _logger.e('Concert details: ${concert.toJson()}');
+    }
+  }
+
+  /// Show notification when rehearsal is updated (time or place changed)
+  Future<void> showRehearsalUpdatedNotification(Rehearsal rehearsal) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('rehearsal_updated_${rehearsal.id}');
+      final body = _buildRehearsalNotificationBody(rehearsal);
+
+      await _notifications.show(
+        notificationId,
+        'Répétition modifiée',
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_rehearsals',
+            'Nouvelles répétitions',
+            channelDescription: 'Notifications pour les nouvelles répétitions',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_rehearsal',
+          ),
+        ),
+        payload: 'rehearsal_${rehearsal.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing rehearsal updated notification: $e');
+    }
+  }
+
+  /// Show notification when rehearsal is deleted
+  Future<void> showRehearsalDeletedNotification(Rehearsal rehearsal) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('rehearsal_deleted_${rehearsal.id}');
+      final body = _buildRehearsalNotificationBody(rehearsal);
+
+      await _notifications.show(
+        notificationId,
+        'Répétition supprimée',
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_rehearsals',
+            'Nouvelles répétitions',
+            channelDescription: 'Notifications pour les nouvelles répétitions',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_rehearsal',
+          ),
+        ),
+        payload: 'rehearsal_${rehearsal.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing rehearsal deleted notification: $e');
+    }
+  }
+
+  /// Show notification when event is updated (time or place changed)
+  Future<void> showEventUpdatedNotification(Event event) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('event_updated_${event.id}');
+      final body = _buildEventNotificationBody(event);
+
+      await _notifications.show(
+        notificationId,
+        'Événement modifié',
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_events',
+            'Nouveaux événements',
+            channelDescription: 'Notifications pour les nouveaux événements',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_event',
+          ),
+        ),
+        payload: 'event_${event.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing event updated notification: $e');
+    }
+  }
+
+  /// Show notification when event is deleted
+  Future<void> showEventDeletedNotification(Event event) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('event_deleted_${event.id}');
+      final body = _buildEventNotificationBody(event);
+
+      await _notifications.show(
+        notificationId,
+        'Événement supprimé',
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_events',
+            'Nouveaux événements',
+            channelDescription: 'Notifications pour les nouveaux événements',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_event',
+          ),
+        ),
+        payload: 'event_${event.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing event deleted notification: $e');
+    }
+  }
+
+  /// Show notification when concert is updated (time or place changed)
+  Future<void> showConcertUpdatedNotification(Concert concert) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('concert_updated_${concert.id}');
+      final body = _buildConcertNotificationBody(concert);
+
+      await _notifications.show(
+        notificationId,
+        'Concert modifié',
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_concerts',
+            'Nouveaux concerts',
+            channelDescription: 'Notifications pour les nouveaux concerts',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_concert',
+          ),
+        ),
+        payload: 'concert_${concert.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing concert updated notification: $e');
+    }
+  }
+
+  /// Show notification when concert is deleted
+  Future<void> showConcertDeletedNotification(Concert concert) async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) return;
+
+      final notificationId =
+          _generateRealtimeNotificationId('concert_deleted_${concert.id}');
+      final body = _buildConcertNotificationBody(concert);
+
+      await _notifications.show(
+        notificationId,
+        'Concert supprimé',
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'new_concerts',
+            'Nouveaux concerts',
+            channelDescription: 'Notifications pour les nouveaux concerts',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'new_concert',
+          ),
+        ),
+        payload: 'concert_${concert.id}',
+      );
+    } catch (e) {
+      _logger.e('Error showing concert deleted notification: $e');
     }
   }
 
@@ -1067,6 +1302,96 @@ class NotificationService {
       _logger.i('Test notification shown successfully');
     } catch (e) {
       _logger.e('Error showing test notification: $e');
+    }
+  }
+
+  /// Test immediate rehearsal reminder notification (same format as scheduled)
+  Future<void> showTestRehearsalReminderNotification() async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) {
+        _logger.w(
+          'Cannot show test rehearsal reminder - permissions may not be granted',
+        );
+        return;
+      }
+
+      await _notifications.show(
+        888001,
+        'Répétition à venir',
+        'Répétition test dans 15 minutes',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'event_reminders',
+            'Rappels d\'événements',
+            channelDescription:
+                'Notifications pour les concerts et répétitions',
+            importance: Importance.high,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            showWhen: true,
+            autoCancel: true,
+            category: AndroidNotificationCategory.reminder,
+            visibility: NotificationVisibility.public,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'rehearsal_dev_test',
+      );
+
+      _logger.i('Test rehearsal reminder notification shown successfully');
+    } catch (e) {
+      _logger.e('Error showing test rehearsal reminder: $e');
+    }
+  }
+
+  /// Test immediate concert reminder notification (same format as scheduled)
+  Future<void> showTestConcertReminderNotification() async {
+    try {
+      final canShow = await canShowNotifications();
+      if (!canShow) {
+        _logger.w(
+          'Cannot show test concert reminder - permissions may not be granted',
+        );
+        return;
+      }
+
+      await _notifications.show(
+        888002,
+        'Concert à venir',
+        'Concert test dans 1 heure',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'event_reminders',
+            'Rappels d\'événements',
+            channelDescription:
+                'Notifications pour les concerts et répétitions',
+            importance: Importance.high,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            showWhen: true,
+            autoCancel: true,
+            category: AndroidNotificationCategory.reminder,
+            visibility: NotificationVisibility.public,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'concert_dev_test',
+      );
+
+      _logger.i('Test concert reminder notification shown successfully');
+    } catch (e) {
+      _logger.e('Error showing test concert reminder: $e');
     }
   }
 

@@ -10,6 +10,7 @@ import 'core/theme/theme_provider.dart';
 import 'data/services/notification_service.dart';
 import 'data/providers/realtime_notifications_provider.dart';
 import 'features/notifications/presentation/providers/notification_settings_provider.dart';
+import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,6 +75,10 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
               .read(realtimeNotificationsControllerProvider.notifier)
               .startListening();
         }
+        // Reschedule notifications to recover from OEM clearing alarms
+        ref
+            .read(notificationSchedulerProvider.notifier)
+            .scheduleNotifications();
         break;
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:

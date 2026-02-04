@@ -6,11 +6,11 @@ plugins {
 }
 
 // Load key.properties for release signing (optional - falls back to debug if missing)
-val keystorePropertiesFile = rootProject.file("key.properties")
-val keystoreProperties = java.util.Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(keystorePropertiesFile.inputStream())
-}
+// val keystorePropertiesFile = rootProject.file("key.properties")
+// val keystoreProperties = java.util.Properties()
+// if (keystorePropertiesFile.exists()) {
+//     keystoreProperties.load(keystorePropertiesFile.inputStream())
+// }
 
 android {
     namespace = "com.lebontemperament.app"
@@ -27,16 +27,16 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    signingConfigs {
-        create("release") {
-            if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-            }
-        }
-    }
+    // signingConfigs {
+    //     create("release") {
+    //         if (keystorePropertiesFile.exists()) {
+    //             keyAlias = keystoreProperties["keyAlias"] as String
+    //             keyPassword = keystoreProperties["keyPassword"] as String
+    //             storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+    //             storePassword = keystoreProperties["storePassword"] as String
+    //         }
+    //     }
+    // }
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
@@ -52,11 +52,11 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            // signingConfig = if (keystorePropertiesFile.exists()) {
+            //     signingConfigs.getByName("release")
+            // } else {
+            //     signingConfigs.getByName("debug")
+            // }
             
             // Disable aggressive optimizations that can break real-time connections
             isMinifyEnabled = false

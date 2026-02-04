@@ -46,6 +46,11 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
             
+        <!-- Receiver for scheduled notifications when alarm fires -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
+
         <!-- Boot receiver for scheduled notifications -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"

@@ -30,19 +30,19 @@ final realtimeNotificationsProvider = Provider<bool>((ref) {
 
 final realtimeNotificationsControllerProvider =
     StateNotifierProvider<RealtimeNotificationsNotifier, bool>((ref) {
-      final realtimeService = ref.watch(realtimeServiceProvider);
-      final notificationService = ref.watch(notificationServiceProvider);
-      final storageService = ref.watch(storageServiceProvider);
-      final logger = Logger();
+  final realtimeService = ref.watch(realtimeServiceProvider);
+  final notificationService = ref.watch(notificationServiceProvider);
+  final storageService = ref.watch(storageServiceProvider);
+  final logger = Logger();
 
-      return RealtimeNotificationsNotifier(
-        realtimeService: realtimeService,
-        notificationService: notificationService,
-        storageService: storageService,
-        logger: logger,
-        ref: ref,
-      );
-    });
+  return RealtimeNotificationsNotifier(
+    realtimeService: realtimeService,
+    notificationService: notificationService,
+    storageService: storageService,
+    logger: logger,
+    ref: ref,
+  );
+});
 
 class RealtimeNotificationsNotifier extends StateNotifier<bool> {
   final RealtimeService _realtimeService;
@@ -57,12 +57,12 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     required StorageService storageService,
     required Logger logger,
     required Ref ref,
-  }) : _realtimeService = realtimeService,
-       _notificationService = notificationService,
-       _storageService = storageService,
-       _logger = logger,
-       _ref = ref,
-       super(false);
+  })  : _realtimeService = realtimeService,
+        _notificationService = notificationService,
+        _storageService = storageService,
+        _logger = logger,
+        _ref = ref,
+        super(false);
 
   /// Start listening for real-time changes
   Future<bool> startListening() async {
@@ -99,8 +99,8 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
         }
 
         // Check permissions again after request
-        final finalPermissionCheck = await _notificationService
-            .hasPermissions();
+        final finalPermissionCheck =
+            await _notificationService.hasPermissions();
         _logger.i(
           'Final permission check after request: $finalPermissionCheck',
         );
@@ -165,62 +165,99 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
     _logger.i('Triggered refresh of real-time providers');
   }
 
+  static bool _rehearsalTimeOrPlaceChanged(Rehearsal old, Rehearsal updated) {
+    return old.place != updated.place ||
+        old.date != updated.date ||
+        old.startTime != updated.startTime ||
+        old.endTime != updated.endTime;
+  }
+
+  static bool _eventTimeOrPlaceChanged(Event old, Event updated) {
+    return old.location != updated.location ||
+        old.dateFrom != updated.dateFrom ||
+        old.dateTo != updated.dateTo ||
+        old.time != updated.time;
+  }
+
+  static bool _concertTimeOrPlaceChanged(Concert old, Concert updated) {
+    return old.place != updated.place ||
+        old.date != updated.date ||
+        old.time != updated.time;
+  }
+
   /// Handle new rehearsal added
   void _onRehearsalAdded(Rehearsal rehearsal) async {
-    _logger.i('New rehearsal detected: ${rehearsal.name}');
+    _logger.i(
+      '[Realtime] Rehearsal ADDED: id=${rehearsal.id}, name=${rehearsal.name}, '
+      'date=${rehearsal.date}, place=${rehearsal.place}, startTime=${rehearsal.startTime}',
+    );
 
     try {
-      // Show immediate notification
       await _notificationService.showRehearsalAddedNotification(rehearsal);
+      _logger.i(
+          '[Realtime] Rehearsal added: notification sent for ${rehearsal.name}');
 
-      // Save to local storage
       await _storageService.saveRehearsal(rehearsal);
-      _logger.i('Saved new rehearsal to local storage: ${rehearsal.name}');
+      _logger.i(
+          '[Realtime] Rehearsal added: saved to local storage (id=${rehearsal.id})');
 
-      // Trigger refresh of providers
       _triggerRefresh();
-
-      // You could also trigger other actions here, like:
-      // - Send analytics
-      // - etc.
     } catch (e) {
-      _logger.e('Error handling new rehearsal: $e');
+      _logger.e('[Realtime] Rehearsal added: error - $e');
     }
   }
 
   /// Handle rehearsal updated
-  void _onRehearsalUpdated(Rehearsal rehearsal) {
-    _logger.i('Rehearsal updated: ${rehearsal.name}');
+  void _onRehearsalUpdated(Rehearsal old, Rehearsal updated) async {
+    final timeOrPlaceChanged = _rehearsalTimeOrPlaceChanged(old, updated);
+    _logger.i(
+      '[Realtime] Rehearsal UPDATED: id=${updated.id}, name=${updated.name}, '
+      'timeOrPlaceChanged=$timeOrPlaceChanged',
+    );
+    if (timeOrPlaceChanged) {
+      _logger.i(
+        '[Realtime] Rehearsal updated: changes - place ${old.place}->${updated.place}, '
+        'date ${old.date}->${updated.date}, startTime ${old.startTime}->${updated.startTime}, '
+        'endTime ${old.endTime}->${updated.endTime}',
+      );
+    }
 
     try {
-      // Update in local storage
-      _storageService.saveRehearsal(rehearsal);
-      _logger.i('Updated rehearsal in local storage: ${rehearsal.name}');
+      if (timeOrPlaceChanged) {
+        await _notificationService.showRehearsalUpdatedNotification(updated);
+        _logger.i(
+            '[Realtime] Rehearsal updated: notification sent for ${updated.name}');
+      }
 
-      // Trigger refresh of providers
+      _storageService.saveRehearsal(updated);
+      _logger.i(
+          '[Realtime] Rehearsal updated: saved to local storage (id=${updated.id})');
+
       _triggerRefresh();
-
-      // You could implement update notifications here if needed
     } catch (e) {
-      _logger.e('Error handling rehearsal update: $e');
+      _logger.e('[Realtime] Rehearsal updated: error - $e');
     }
   }
 
   /// Handle rehearsal deleted
-  void _onRehearsalDeleted(String rehearsalId) {
-    _logger.i('Rehearsal deleted: $rehearsalId');
+  void _onRehearsalDeleted(Rehearsal rehearsal) async {
+    _logger.i(
+      '[Realtime] Rehearsal DELETED: id=${rehearsal.id}, name=${rehearsal.name}, '
+      'date=${rehearsal.date}, place=${rehearsal.place}',
+    );
 
     try {
-      // Delete from local storage
-      _storageService.deleteRehearsal(rehearsalId);
-      _logger.i('Deleted rehearsal from local storage: $rehearsalId');
+      await _notificationService.showRehearsalDeletedNotification(rehearsal);
+      _logger.i(
+          '[Realtime] Rehearsal deleted: notification sent for ${rehearsal.name}');
 
-      // Trigger refresh of providers
+      _storageService.deleteRehearsal(rehearsal.id);
+      _logger.i(
+          '[Realtime] Rehearsal deleted: removed from local storage (id=${rehearsal.id})');
+
       _triggerRefresh();
-
-      // You could implement deletion notifications here if needed
     } catch (e) {
-      _logger.e('Error handling rehearsal deletion: $e');
+      _logger.e('[Realtime] Rehearsal deleted: error - $e');
     }
   }
 
@@ -248,36 +285,31 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
   }
 
   /// Handle event updated
-  void _onEventUpdated(Event event) {
-    _logger.i('Event updated: ${event.title}');
+  void _onEventUpdated(Event old, Event updated) async {
+    _logger.i('Event updated: ${updated.title}');
 
     try {
-      // Update in local storage
-      _storageService.saveEvent(event);
-      _logger.i('Updated event in local storage: ${event.title}');
+      if (_eventTimeOrPlaceChanged(old, updated)) {
+        await _notificationService.showEventUpdatedNotification(updated);
+      }
 
-      // Trigger refresh of providers
+      _storageService.saveEvent(updated);
+      _logger.i('Updated event in local storage: ${updated.title}');
       _triggerRefresh();
-
-      // You could implement update notifications here if needed
     } catch (e) {
       _logger.e('Error handling event update: $e');
     }
   }
 
   /// Handle event deleted
-  void _onEventDeleted(String eventId) {
-    _logger.i('Event deleted: $eventId');
+  void _onEventDeleted(Event event) async {
+    _logger.i('Event deleted: ${event.title}');
 
     try {
-      // Delete from local storage
-      _storageService.deleteEvent(eventId);
-      _logger.i('Deleted event from local storage: $eventId');
-
-      // Trigger refresh of providers
+      await _notificationService.showEventDeletedNotification(event);
+      _storageService.deleteEvent(event.id);
+      _logger.i('Deleted event from local storage: ${event.id}');
       _triggerRefresh();
-
-      // You could implement deletion notifications here if needed
     } catch (e) {
       _logger.e('Error handling event deletion: $e');
     }
@@ -307,36 +339,31 @@ class RealtimeNotificationsNotifier extends StateNotifier<bool> {
   }
 
   /// Handle concert updated
-  void _onConcertUpdated(Concert concert) {
-    _logger.i('Concert updated: ${concert.name}');
+  void _onConcertUpdated(Concert old, Concert updated) async {
+    _logger.i('Concert updated: ${updated.name}');
 
     try {
-      // Update in local storage
-      _storageService.saveConcert(concert);
-      _logger.i('Updated concert in local storage: ${concert.name}');
+      if (_concertTimeOrPlaceChanged(old, updated)) {
+        await _notificationService.showConcertUpdatedNotification(updated);
+      }
 
-      // Trigger refresh of providers
+      _storageService.saveConcert(updated);
+      _logger.i('Updated concert in local storage: ${updated.name}');
       _triggerRefresh();
-
-      // You could implement update notifications here if needed
     } catch (e) {
       _logger.e('Error handling concert update: $e');
     }
   }
 
   /// Handle concert deleted
-  void _onConcertDeleted(String concertId) {
-    _logger.i('Concert deleted: $concertId');
+  void _onConcertDeleted(Concert concert) async {
+    _logger.i('Concert deleted: ${concert.name}');
 
     try {
-      // Delete from local storage
-      _storageService.deleteConcert(concertId);
-      _logger.i('Deleted concert from local storage: $concertId');
-
-      // Trigger refresh of providers
+      await _notificationService.showConcertDeletedNotification(concert);
+      _storageService.deleteConcert(concert.id);
+      _logger.i('Deleted concert from local storage: ${concert.id}');
       _triggerRefresh();
-
-      // You could implement deletion notifications here if needed
     } catch (e) {
       _logger.e('Error handling concert deletion: $e');
     }
