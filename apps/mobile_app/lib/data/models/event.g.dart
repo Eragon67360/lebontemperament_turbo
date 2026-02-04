@@ -122,5 +122,6 @@ const _$EventTypeEnumMap = {
   EventType.concert: 'concert',
   EventType.vente: 'vente',
   EventType.repetition: 'repetition',
+  EventType.sejour: 'sejour',
   EventType.autre: 'autre',
 };

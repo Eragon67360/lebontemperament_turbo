@@ -80,6 +80,7 @@ const MembresConcertsEvents = () => {
     const types = {
       concert: "Concert",
       repetition: "Répétition",
+      sejour: "Séjour",
       vente: "Vente",
       autre: "Autre",
     };
@@ -91,6 +92,8 @@ const MembresConcertsEvents = () => {
         "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
       repetition:
         "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+      sejour:
+        "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
       vente:
         "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
       autre: "bg-default-100 text-default-700",
@@ -135,6 +138,7 @@ const MembresConcertsEvents = () => {
     <div className="container mx-auto flex w-full flex-col space-y-8 px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">
       {/* Concerts Section */}
       <motion.section
+        id="concerts"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -210,6 +214,7 @@ const MembresConcertsEvents = () => {
 
       {/* Events Section */}
       <motion.section
+        id="evenements"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}

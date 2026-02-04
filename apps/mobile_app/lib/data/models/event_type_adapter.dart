@@ -16,6 +16,8 @@ class EventTypeAdapter extends TypeAdapter<EventType> {
         return EventType.repetition;
       case 3:
         return EventType.autre;
+      case 4:
+        return EventType.sejour;
       default:
         return EventType.autre;
     }
@@ -35,6 +37,9 @@ class EventTypeAdapter extends TypeAdapter<EventType> {
         break;
       case EventType.autre:
         writer.writeByte(3);
+        break;
+      case EventType.sejour:
+        writer.writeByte(4);
         break;
     }
   }

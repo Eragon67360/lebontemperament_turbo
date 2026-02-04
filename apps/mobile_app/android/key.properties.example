@@ -1,0 +1,12 @@
+# Copy this file to key.properties and fill in your values.
+# key.properties is gitignored - never commit it.
+#
+# Generate a keystore with:
+#   keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# For CI, store these as GitHub secrets (see RELEASE_SIGNING.md).
+
+storePassword=your-keystore-password
+keyPassword=your-key-password
+keyAlias=upload
+storeFile=upload-keystore.jks

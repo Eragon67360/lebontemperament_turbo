@@ -13,6 +13,7 @@ import '../../features/driver_tracking/presentation/screens/recipient_details_sc
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/notifications/presentation/screens/permission_request_screen.dart';
+import '../../features/profile/presentation/screens/developer_mode_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 
 // Global auth state listener
@@ -34,6 +35,7 @@ class AppRouter {
   static const String main = '/main';
   static const String eventDetail = '/events/:id';
   static const String driverTracking = '/driver-tracking';
+  static const String developer = '/developer';
   // The name for the new sub-route
   static const String driverTrackingRecipient = 'driverTrackingRecipient';
 
@@ -161,6 +163,13 @@ class AppRouter {
               },
             ),
           ],
+        ),
+
+        // Developer Mode (hidden - unlocked via 5 taps on version in About)
+        GoRoute(
+          path: developer,
+          name: 'developer',
+          builder: (context, state) => const DeveloperModeScreen(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

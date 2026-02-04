@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+import 'package:mobile_app/core/config/app_router.dart';
+import 'package:mobile_app/core/widgets/custom_toast.dart';
 
 // Provider to fetch package info asynchronously.
 // This is more idiomatic in a Riverpod app than using a StatefulWidget.
@@ -9,11 +14,32 @@ final packageInfoProvider = FutureProvider<PackageInfo>((ref) async {
   return await PackageInfo.fromPlatform();
 });
 
-class AboutScreen extends ConsumerWidget {
+class AboutScreen extends ConsumerStatefulWidget {
   const AboutScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends ConsumerState<AboutScreen> {
+  int _developerModeTapCount = 0;
+  bool _developerModeUnlocked = false;
+
+  void _onVersionTap() {
+    setState(() {
+      _developerModeTapCount++;
+      if (_developerModeTapCount >= 5) {
+        _developerModeUnlocked = true;
+        if (mounted) {
+          HapticFeedback.mediumImpact();
+          CustomToast.showInfo(context, 'Vous avez accès au mode développeur');
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final packageInfoAsync = ref.watch(packageInfoProvider);
 
@@ -46,7 +72,10 @@ class AboutScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 FadeInUp(
                   delay: 100,
-                  child: _AboutHeader(packageInfo: packageInfo),
+                  child: _AboutHeader(
+                    packageInfo: packageInfo,
+                    onVersionTap: _onVersionTap,
+                  ),
                 ),
                 const SizedBox(height: 28),
                 const FadeInUp(delay: 150, child: _AssociationSection()),
@@ -55,6 +84,15 @@ class AboutScreen extends ConsumerWidget {
                   delay: 200,
                   child: _AppInfoCard(packageInfo: packageInfo),
                 ),
+                if (_developerModeUnlocked) ...[
+                  const SizedBox(height: 12),
+                  FadeInUp(
+                    delay: 250,
+                    child: _DeveloperModeButton(
+                      onTap: () => context.push(AppRouter.developer),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 32),
                 const FadeInUp(delay: 300, child: _Footer()),
                 const SizedBox(height: 80),
@@ -76,66 +114,141 @@ class AboutScreen extends ConsumerWidget {
 
 class _AboutHeader extends StatelessWidget {
   final PackageInfo packageInfo;
-  const _AboutHeader({required this.packageInfo});
+  final VoidCallback? onVersionTap;
+
+  const _AboutHeader({
+    required this.packageInfo,
+    this.onVersionTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary.withOpacity(0.8),
-                theme.colorScheme.primary,
+    final versionText = Text(
+      'Version ${packageInfo.version} (build ${packageInfo.buildNumber})',
+      style: GoogleFonts.poppins(
+        fontSize: 14,
+        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.8),
+                  theme.colorScheme.primary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+            child: Icon(
+              Icons.music_note_rounded,
+              size: 50,
+              color: theme.colorScheme.onPrimary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Le Bon Tempérament',
+            style: GoogleFonts.poppins(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Ensemble vocal et instrumental à Saverne depuis 1987',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          onVersionTap != null
+              ? GestureDetector(
+                  onTap: onVersionTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: versionText,
+                  ),
+                )
+              : versionText,
+        ],
+      ),
+    );
+  }
+}
+
+class _DeveloperModeButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _DeveloperModeButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.developer_mode,
+                color: theme.colorScheme.primary,
+                size: 22,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Mode développeur',
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
               ),
             ],
           ),
-          child: Icon(
-            Icons.music_note_rounded,
-            size: 50,
-            color: theme.colorScheme.onPrimary,
-          ),
         ),
-        const SizedBox(height: 24),
-        Text(
-          'Le Bon Tempérament',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Ensemble vocal et instrumental à Saverne depuis 1987',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Version ${packageInfo.version} (build ${packageInfo.buildNumber})',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -289,33 +402,68 @@ class _InfoTile extends StatelessWidget {
     required this.value,
   });
 
+  void _showFullValue(BuildContext context) {
+    final theme = Theme.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(label),
+        content: SelectableText(
+          value,
+          style: GoogleFonts.poppins(
+            color: theme.colorScheme.onSurface,
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child:
+                Text('OK', style: TextStyle(color: theme.colorScheme.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-      child: Row(
-        children: [
-          Icon(icon, color: theme.colorScheme.primary, size: 22),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 14,
+      child: InkWell(
+        onTap: () => _showFullValue(context),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary, size: 22),
+              const SizedBox(width: 16),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: GoogleFonts.poppins(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
           ),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

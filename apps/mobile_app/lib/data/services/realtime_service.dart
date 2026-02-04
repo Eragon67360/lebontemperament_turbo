@@ -27,8 +27,8 @@ class RealtimeService {
   /// Subscribe to real-time changes on the rehearsals table
   void subscribeToRehearsals({
     required Function(Rehearsal) onRehearsalAdded,
-    required Function(Rehearsal) onRehearsalUpdated,
-    required Function(String) onRehearsalDeleted,
+    required Function(Rehearsal old, Rehearsal updated) onRehearsalUpdated,
+    required Function(Rehearsal) onRehearsalDeleted,
   }) {
     if (_isRehearsalsSubscribed) {
       _logger.w('Already subscribed to rehearsals channel');
@@ -45,12 +45,15 @@ class RealtimeService {
             schema: 'public',
             table: 'rehearsals',
             callback: (payload) {
-              _logger.i('New rehearsal added: ${payload.newRecord}');
+              _logger.i(
+                '[Realtime] Rehearsals INSERT received: id=${payload.newRecord['id']}, '
+                'name=${payload.newRecord['name']}',
+              );
               try {
                 final rehearsal = Rehearsal.fromJson(payload.newRecord);
                 onRehearsalAdded(rehearsal);
               } catch (e) {
-                _logger.e('Error parsing new rehearsal: $e');
+                _logger.e('[Realtime] Error parsing new rehearsal: $e');
               }
             },
           )
@@ -59,12 +62,16 @@ class RealtimeService {
             schema: 'public',
             table: 'rehearsals',
             callback: (payload) {
-              _logger.i('Rehearsal updated: ${payload.newRecord}');
+              _logger.i(
+                '[Realtime] Rehearsals UPDATE received: id=${payload.newRecord['id']}, '
+                'name=${payload.newRecord['name']}',
+              );
               try {
-                final rehearsal = Rehearsal.fromJson(payload.newRecord);
-                onRehearsalUpdated(rehearsal);
+                final oldRehearsal = Rehearsal.fromJson(payload.oldRecord);
+                final updatedRehearsal = Rehearsal.fromJson(payload.newRecord);
+                onRehearsalUpdated(oldRehearsal, updatedRehearsal);
               } catch (e) {
-                _logger.e('Error parsing updated rehearsal: $e');
+                _logger.e('[Realtime] Error parsing updated rehearsal: $e');
               }
             },
           )
@@ -73,12 +80,15 @@ class RealtimeService {
             schema: 'public',
             table: 'rehearsals',
             callback: (payload) {
-              _logger.i('Rehearsal deleted: ${payload.oldRecord}');
+              _logger.i(
+                '[Realtime] Rehearsals DELETE received: id=${payload.oldRecord['id']}, '
+                'name=${payload.oldRecord['name']}',
+              );
               try {
-                final rehearsalId = payload.oldRecord['id'] as String;
-                onRehearsalDeleted(rehearsalId);
+                final rehearsal = Rehearsal.fromJson(payload.oldRecord);
+                onRehearsalDeleted(rehearsal);
               } catch (e) {
-                _logger.e('Error parsing deleted rehearsal: $e');
+                _logger.e('[Realtime] Error parsing deleted rehearsal: $e');
               }
             },
           );
@@ -105,8 +115,8 @@ class RealtimeService {
   /// Subscribe to real-time changes on the events table
   void subscribeToEvents({
     required Function(Event) onEventAdded,
-    required Function(Event) onEventUpdated,
-    required Function(String) onEventDeleted,
+    required Function(Event old, Event updated) onEventUpdated,
+    required Function(Event) onEventDeleted,
   }) {
     if (_isEventsSubscribed) {
       _logger.w('Already subscribed to events channel');
@@ -139,8 +149,9 @@ class RealtimeService {
             callback: (payload) {
               _logger.i('Event updated: ${payload.newRecord}');
               try {
-                final event = Event.fromJson(payload.newRecord);
-                onEventUpdated(event);
+                final oldEvent = Event.fromJson(payload.oldRecord);
+                final updatedEvent = Event.fromJson(payload.newRecord);
+                onEventUpdated(oldEvent, updatedEvent);
               } catch (e) {
                 _logger.e('Error parsing updated event: $e');
               }
@@ -153,8 +164,8 @@ class RealtimeService {
             callback: (payload) {
               _logger.i('Event deleted: ${payload.oldRecord}');
               try {
-                final eventId = payload.oldRecord['id'] as String;
-                onEventDeleted(eventId);
+                final event = Event.fromJson(payload.oldRecord);
+                onEventDeleted(event);
               } catch (e) {
                 _logger.e('Error parsing deleted event: $e');
               }
@@ -183,8 +194,8 @@ class RealtimeService {
   /// Subscribe to real-time changes on the concerts table
   void subscribeToConcerts({
     required Function(Concert) onConcertAdded,
-    required Function(Concert) onConcertUpdated,
-    required Function(String) onConcertDeleted,
+    required Function(Concert old, Concert updated) onConcertUpdated,
+    required Function(Concert) onConcertDeleted,
   }) {
     if (_isConcertsSubscribed) {
       _logger.w('Already subscribed to concerts channel');
@@ -217,8 +228,9 @@ class RealtimeService {
             callback: (payload) {
               _logger.i('Concert updated: ${payload.newRecord}');
               try {
-                final concert = Concert.fromJson(payload.newRecord);
-                onConcertUpdated(concert);
+                final oldConcert = Concert.fromJson(payload.oldRecord);
+                final updatedConcert = Concert.fromJson(payload.newRecord);
+                onConcertUpdated(oldConcert, updatedConcert);
               } catch (e) {
                 _logger.e('Error parsing updated concert: $e');
               }
@@ -231,8 +243,8 @@ class RealtimeService {
             callback: (payload) {
               _logger.i('Concert deleted: ${payload.oldRecord}');
               try {
-                final concertId = payload.oldRecord['id'] as String;
-                onConcertDeleted(concertId);
+                final concert = Concert.fromJson(payload.oldRecord);
+                onConcertDeleted(concert);
               } catch (e) {
                 _logger.e('Error parsing deleted concert: $e');
               }

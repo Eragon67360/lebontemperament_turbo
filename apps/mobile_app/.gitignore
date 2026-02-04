@@ -50,3 +50,8 @@ app.*.map.json
 
 # Environment variables
 .env
+
+# Release signing (never commit)
+android/key.properties
+android/*.jks
+android/*.keystore

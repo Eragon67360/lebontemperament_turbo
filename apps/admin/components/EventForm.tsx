@@ -193,6 +193,7 @@ export function EventForm({
           <SelectContent>
             <SelectItem value="concert">Concert</SelectItem>
             <SelectItem value="repetition">Répétition</SelectItem>
+            <SelectItem value="sejour">Séjour</SelectItem>
             <SelectItem value="vente">Vente</SelectItem>
             <SelectItem value="autre">Autre</SelectItem>
           </SelectContent>
