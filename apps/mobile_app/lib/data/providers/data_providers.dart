@@ -5,8 +5,10 @@ import 'package:logger/logger.dart';
 import '../../core/utils/date_utils.dart' as app_date_utils;
 import '../models/event.dart';
 import '../models/concert.dart';
+import '../models/member.dart';
 import '../models/rehearsal.dart';
 import '../services/events_service.dart';
+import '../services/members_service.dart';
 import '../services/concerts_service.dart';
 import '../services/rehearsals_service.dart';
 import '../services/storage_service.dart';
@@ -37,6 +39,16 @@ final concertsServiceProvider = Provider<ConcertsService>((ref) {
 final rehearsalsServiceProvider = Provider<RehearsalsService>((ref) {
   final storageService = ref.watch(storageServiceProvider);
   return RehearsalsService(storageService: storageService);
+});
+
+final membersServiceProvider = Provider<MembersService>((ref) {
+  return MembersService(logger: Logger());
+});
+
+// Members providers
+final membersProvider = FutureProvider<List<Member>>((ref) async {
+  final membersService = ref.watch(membersServiceProvider);
+  return await membersService.getMembers();
 });
 
 // Refresh trigger provider for real-time updates

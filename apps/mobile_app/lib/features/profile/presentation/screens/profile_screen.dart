@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -267,27 +268,29 @@ class _ProfileAppBar extends ConsumerWidget {
 class _ProfileHeader extends ConsumerWidget {
   const _ProfileHeader();
 
+  String _getInitials(String displayName) {
+    if (displayName.trim().isEmpty) return '?';
+    final parts = displayName.trim().split(' ').where((p) => p.isNotEmpty);
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
+    return parts.first.substring(0, 2).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final displayName = ref.watch(displayNameProvider);
+    final photoUrl = ref.watch(profilePictureUrlProvider);
     final theme = Theme.of(context);
-    final initials = displayName.isNotEmpty
-        ? displayName
-            .trim()
-            .split(' ')
-            .map((l) => l[0])
-            .take(2)
-            .join()
-            .toUpperCase()
-        : '?';
+    final initials = _getInitials(displayName);
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.surface,
-            theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            theme.colorScheme.surfaceVariant.withValues(alpha: 0.5),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -299,17 +302,23 @@ class _ProfileHeader extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: theme.colorScheme.primary,
-              child: Text(
-                initials,
-                style: GoogleFonts.poppins(
-                  color: theme.colorScheme.onPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            ClipOval(
+              child: photoUrl != null && photoUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: photoUrl,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => _buildInitialsAvatar(
+                        theme,
+                        initials,
+                      ),
+                      errorWidget: (_, __, ___) => _buildInitialsAvatar(
+                        theme,
+                        initials,
+                      ),
+                    )
+                  : _buildInitialsAvatar(theme, initials),
             ),
             const SizedBox(height: 16),
             Text(
@@ -320,6 +329,26 @@ class _ProfileHeader extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitialsAvatar(ThemeData theme, String initials) {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: GoogleFonts.poppins(
+          color: theme.colorScheme.onPrimary,
+          fontSize: 28,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

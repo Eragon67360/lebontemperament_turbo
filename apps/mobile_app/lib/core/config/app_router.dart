@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/coming_soon_screen.dart';
+import '../../features/members/presentation/screens/members_screen.dart';
 import '../../data/models/delivery.dart'; // Add this import
 import '../../data/models/delivery_recipient.dart'; // Add this import
 import '../../features/auth/data/services/auth_service.dart';
@@ -200,9 +201,8 @@ class AppRouter {
         GoRoute(
           path: '/members',
           name: 'members',
-          builder: (context, state) => const ComingSoonScreen(
-            title: 'Membres',
-            description: 'L\'annuaire du Bon Tempérament.',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) => const MembersScreen(),
           ),
         ),
         GoRoute(

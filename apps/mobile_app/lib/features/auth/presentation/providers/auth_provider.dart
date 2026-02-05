@@ -44,6 +44,22 @@ final displayNameProvider = Provider<String>((ref) {
   return 'Utilisateur';
 });
 
+/// Profile picture URL: profile.profile_picture_url first, then auth avatar_url (Google).
+final profilePictureUrlProvider = Provider<String?>((ref) {
+  final profileAsync = ref.watch(userProfileProvider);
+  final fromProfile =
+      profileAsync.valueOrNull?['profile_picture_url']?.toString();
+  if (fromProfile != null && fromProfile.trim().isNotEmpty) {
+    return fromProfile.trim();
+  }
+  final user = ref.watch(currentUserProvider);
+  final fromAuth = user?.userMetadata?['avatar_url']?.toString();
+  if (fromAuth != null && fromAuth.trim().isNotEmpty) {
+    return fromAuth.trim();
+  }
+  return null;
+});
+
 final isAuthenticatedProvider = Provider<bool>((ref) {
   final user = ref.watch(currentUserProvider);
   return user != null;
@@ -51,16 +67,16 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AsyncValue<void>>((ref) {
-      final authService = ref.watch(authServiceProvider);
-      return AuthController(authService, ref);
-    });
+  final authService = ref.watch(authServiceProvider);
+  return AuthController(authService, ref);
+});
 
 class AuthController extends StateNotifier<AsyncValue<void>> {
   final AuthService _authService;
   final Ref _ref;
 
   AuthController(this._authService, this._ref)
-    : super(const AsyncValue.data(null));
+      : super(const AsyncValue.data(null));
 
   Future<void> signIn(String email, String password) async {
     try {
