@@ -9,6 +9,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
 import 'about_screen.dart';
+import 'support_contact_screen.dart';
 import 'theme_settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -121,14 +122,11 @@ class ProfileScreen extends ConsumerWidget {
                           icon: Icons.help_outline_rounded,
                           title: 'Aide & Contact',
                           subtitle: 'Contacter le support',
-                          onTap: () async {
-                            final Uri emailUri = Uri(
-                                scheme: 'mailto',
-                                path: 'contactlebontemperament@gmail.com');
-                            if (await canLaunchUrl(emailUri)) {
-                              await launchUrl(emailUri);
-                            }
-                          },
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SupportContactScreen(),
+                            ),
+                          ),
                         ),
                         _SettingsTile(
                           icon: Icons.shield_outlined,

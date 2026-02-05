@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
+import '../../../profile/presentation/screens/about_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -439,13 +440,12 @@ class _InfoCard extends ConsumerWidget {
       child: InkWell(
         onTap: () {
           HapticFeedback.lightImpact();
-          // Navigate to Profile -> About
           navigationNotifier.setTab(4);
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-            // Placeholder, assuming you have an AboutScreen
-            // you might need to import it.
-            return const Scaffold(body: Center(child: Text("About Screen")));
-          }));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const AboutScreen(),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
@@ -517,34 +517,33 @@ class _BetaNoticeCard extends StatelessWidget {
   const _BetaNoticeCard();
 
   Future<void> _launchEmail(BuildContext context) async {
-    final uri = Uri(
-      scheme: 'mailto',
-      path:
-          'contactlebontemperament@gmail.com', // Replace with your support email
-      query: Uri(queryParameters: {
-        'subject': 'Retour version bêta - Le Bon Tempérament',
-      }).query,
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Impossible d\'ouvrir l\'application email.')),
-      );
+    final subject =
+        Uri.encodeComponent('Retour version bêta - Le Bon Tempérament');
+    final uri = Uri.parse('mailto:$kSupportEmail?subject=$subject');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Impossible d\'ouvrir l\'application email.')),
+        );
+      }
     }
   }
 
   Future<void> _launchWhatsApp(BuildContext context) async {
-    final uri = Uri.parse(
-      'https://wa.me/YOUR_PHONE_NUMBER', // Replace with your support WhatsApp number
-    );
-    if (await canLaunchUrl(uri)) {
+    final text =
+        Uri.encodeComponent('Retour version bêta - Le Bon Tempérament');
+    final uri = Uri.parse('https://wa.me/$kSupportWhatsAppPhone?text=$text');
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible d\'ouvrir WhatsApp.')),
-      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible d\'ouvrir WhatsApp.')),
+        );
+      }
     }
   }
 
