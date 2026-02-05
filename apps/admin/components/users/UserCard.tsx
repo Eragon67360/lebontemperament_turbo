@@ -61,7 +61,7 @@ export function UserCard({
 }: UserCardProps) {
   return (
     <Card className="transition-all">
-      <div className="border-destructive flex flex-col gap-4 border p-2 sm:flex-row sm:items-center sm:justify-between md:p-4">
+      <div className="flex flex-col gap-4 p-2 sm:flex-row sm:items-center sm:justify-between md:p-4">
         {/* User Info Section */}
         <div className="flex items-center gap-4">
           <div className="relative">
