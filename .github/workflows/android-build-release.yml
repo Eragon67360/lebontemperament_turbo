@@ -25,14 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Reads version from version.json.
-      # CRITICAL: You must increment the 'build' number in version.json before every push!
       - name: Get version
         id: version
         run: |
           VERSION=$(node -e "const v=require('./version.json'); console.log(v.version+'+'+v.build)")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -44,31 +41,31 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-          cache: true
+          cache: true # Caches Flutter engine
 
-      - name: Create .env file
+      # --- OPTIMIZATION 1: CACHE GRADLE ---
+      - name: Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: false
+
+      - name: Create .env and Keystore
         working-directory: apps/mobile_app
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: |
-          echo "SUPABASE_URL=$SUPABASE_URL" > .env
-          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
-          echo "SITE_URL=$SITE_URL" >> .env
-
-      # --- KEYSTORE MANAGEMENT (SECURE) ---
-      - name: Decode Keystore and Create Properties
-        working-directory: apps/mobile_app/android
-        env:
+          SITE_URL: ${{ secrets.SITE_URL_PROD }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          # 1. Decode the Keystore file from the Secret
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > upload-keystore.jks
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          echo "SITE_URL=$SITE_URL" >> .env
 
-          # 2. Create key.properties referencing the decoded file
+          cd android
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > upload-keystore.jks
           echo "storePassword=$ANDROID_KEYSTORE_PASSWORD" > key.properties
           echo "keyPassword=$ANDROID_KEY_PASSWORD" >> key.properties
           echo "keyAlias=$ANDROID_KEY_ALIAS" >> key.properties
@@ -78,57 +75,65 @@ jobs:
         working-directory: apps/mobile_app
         run: flutter pub get
 
-      # 1. Build AAB for Play Store (Now generates mapping.txt because minification is ON)
+      # --- BUILD AAB ONLY (Heavy task runs once) ---
       - name: Build App Bundle
         working-directory: apps/mobile_app
         run: flutter build appbundle --release
 
-      # 2. Build APK for manual installation
-      - name: Build APK
+      # --- OPTIMIZATION 2: GENERATE APK FROM AAB (Fast) ---
+      - name: Generate APK from AAB
         working-directory: apps/mobile_app
-        run: flutter build apk --release
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          # 1. Download Bundletool
+          wget https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar -O bundletool.jar
 
-      # 3. Rename BOTH files for clarity
+          # 2. Convert AAB to APKS (Universal Mode)
+          java -jar bundletool.jar build-apks \
+            --bundle=build/app/outputs/bundle/release/app-release.aab \
+            --output=app.apks \
+            --mode=universal \
+            --ks=android/upload-keystore.jks \
+            --ks-pass=pass:"$ANDROID_KEYSTORE_PASSWORD" \
+            --ks-key-alias="$ANDROID_KEY_ALIAS" \
+            --key-pass=pass:"$ANDROID_KEY_PASSWORD"
+            
+          # 3. Extract the single APK
+          unzip -p app.apks universal.apk > build/app/outputs/flutter-apk/app-release.apk
+
       - name: Rename Artifacts
         id: rename
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-
-          # Paths
           AAB_OLD="apps/mobile_app/build/app/outputs/bundle/release/app-release.aab"
           AAB_NEW="apps/mobile_app/build/app/outputs/bundle/release/BT-App-v${VERSION}.aab"
-
           APK_OLD="apps/mobile_app/build/app/outputs/flutter-apk/app-release.apk"
           APK_NEW="apps/mobile_app/build/app/outputs/flutter-apk/BT-App-v${VERSION}.apk"
 
-          # Rename
           mv $AAB_OLD $AAB_NEW
           mv $APK_OLD $APK_NEW
 
-          # Output paths for next steps
           echo "aab_path=$AAB_NEW" >> $GITHUB_OUTPUT
           echo "apk_path=$APK_NEW" >> $GITHUB_OUTPUT
 
-      # 4. Create GitHub Release with BOTH files
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "android/v${{ steps.version.outputs.version }}"
-          name: "Android v${{ steps.version.outputs.version }}"
           files: |
             ${{ steps.rename.outputs.aab_path }}
             ${{ steps.rename.outputs.apk_path }}
           generate_release_notes: true
 
-      # 5. Upload AAB + Mapping File to Play Store
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}
           packageName: com.lebontemperament.app
           releaseFiles: ${{ steps.rename.outputs.aab_path }}
-          # --- ADD THIS LINE ---
           mappingFile: apps/mobile_app/build/app/outputs/mapping/release/mapping.txt
-          # ---------------------
           track: internal
           status: draft
