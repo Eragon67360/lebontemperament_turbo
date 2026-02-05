@@ -25,3 +25,7 @@ const String kSupportEmail = 'contactlebontemperament@gmail.com';
 
 /// WhatsApp number with country code, no + or spaces (e.g. 33123456789).
 const String kSupportWhatsAppPhone = '33647849308';
+
+/// Google Drive folder for Le Bon Tempérament documents (partitions, etc.).
+const String kDriveFolderUrl =
+    'https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU';

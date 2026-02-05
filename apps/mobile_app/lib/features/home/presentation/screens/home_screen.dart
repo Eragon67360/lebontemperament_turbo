@@ -41,7 +41,11 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 40),
                   const _SectionTitle(title: 'Prochains événements'),
                   const SizedBox(height: 16),
-                  const _UpcomingEvents(), // Renamed for clarity
+                  const _UpcomingEvents(),
+                  const SizedBox(height: 40),
+                  const _SectionTitle(title: 'Espace membres'),
+                  const SizedBox(height: 16),
+                  const _MembresGrid(),
                   const SizedBox(height: 40),
                   const _InfoCard(),
                   const SizedBox(height: 24),
@@ -425,8 +429,162 @@ class _NavigationCard extends StatelessWidget {
   }
 }
 
-// ... (The rest of your file: _InfoCard, _BetaNoticeCard, etc., can remain exactly the same)
-// ... (omitting for brevity, just copy them from your original file)
+// MARK: - Membres Grid (landing-style)
+class _MembresGrid extends ConsumerWidget {
+  const _MembresGrid();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navigationNotifier = ref.read(mainNavigationProvider.notifier);
+
+    return FadeInUp(
+      delay: 350,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = constraints.maxWidth > 400 ? 2 : 1;
+          // Single column needs more height for card content; 2-col uses compact ratio
+          final childAspectRatio = crossAxisCount == 1 ? 2.0 : 1.4;
+          return GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: crossAxisCount == 1 ? 8 : 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: childAspectRatio,
+            children: [
+              _MembresGridCard(
+                icon: Icons.music_note_outlined,
+                title: 'Partitions',
+                description: 'Partitions et documents',
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/partitions');
+                },
+              ),
+              _MembresGridCard(
+                icon: Icons.calendar_month_outlined,
+                title: 'Calendrier',
+                description: 'Répétitions à venir',
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  navigationNotifier.setTab(3);
+                },
+              ),
+              _MembresGridCard(
+                icon: Icons.people_outline,
+                title: 'Membres',
+                description: 'Annuaire',
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/members');
+                },
+              ),
+              _MembresGridCard(
+                icon: Icons.description_outlined,
+                title: 'Administration',
+                description: 'Archives, règlement',
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/administration');
+                },
+              ),
+              _MembresGridCard(
+                icon: Icons.folder_outlined,
+                title: 'Accès Drive',
+                description: 'Accès direct au Drive',
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  final uri = Uri.parse(kDriveFolderUrl);
+                  try {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Impossible d\'ouvrir le Drive.',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _MembresGridCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+
+  const _MembresGridCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.outline.withOpacity(0.15),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 22),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              description,
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _InfoCard extends ConsumerWidget {
   const _InfoCard();
 
