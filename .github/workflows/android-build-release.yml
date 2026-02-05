@@ -8,7 +8,6 @@ on:
       - "apps/mobile_app/**"
       - "version.json"
       - ".github/workflows/android-build-release.yml"
-      - "scripts/bump-version.js"
 
 permissions:
   contents: write
@@ -16,8 +15,7 @@ permissions:
 jobs:
   build_and_release:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
-
-    name: Android
+    name: Android Release
     runs-on: ubuntu-latest
 
     env:
@@ -27,6 +25,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Reads version from version.json.
+      # CRITICAL: You must increment the 'build' number in version.json before every push!
       - name: Get version
         id: version
         run: |
@@ -46,7 +46,7 @@ jobs:
           channel: "stable"
           cache: true
 
-      - name: Provide .env for build
+      - name: Create .env file
         working-directory: apps/mobile_app
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -54,54 +54,78 @@ jobs:
         run: |
           echo "SUPABASE_URL=$SUPABASE_URL" > .env
           echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
-          echo "" >> .env
-          echo "# Public website URL (for driver tracking share link)" >> .env
           echo "SITE_URL=$SITE_URL" >> .env
 
-      # --- NEW STEP: Generate a temp key so the APK is signed and installable ---
-      - name: Generate temporary signing key
+      # --- KEYSTORE MANAGEMENT (SECURE) ---
+      - name: Decode Keystore and Create Properties
         working-directory: apps/mobile_app/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          # Generate the keystore file
-          keytool -genkey -v -keystore upload-keystore.jks \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -alias upload \
-            -dname "CN=Temp, OU=Temp, O=Temp, L=Temp, S=Temp, C=US" \
-            -storepass password \
-            -keypass password
+          # 1. Decode the Keystore file from the Secret
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > upload-keystore.jks
 
-          # Create key.properties to tell Gradle about it
-          echo "storePassword=password" > key.properties
-          echo "keyPassword=password" >> key.properties
-          echo "keyAlias=upload" >> key.properties
+          # 2. Create key.properties referencing the decoded file
+          echo "storePassword=$ANDROID_KEYSTORE_PASSWORD" > key.properties
+          echo "keyPassword=$ANDROID_KEY_PASSWORD" >> key.properties
+          echo "keyAlias=$ANDROID_KEY_ALIAS" >> key.properties
           echo "storeFile=upload-keystore.jks" >> key.properties
 
       - name: Install dependencies
         working-directory: apps/mobile_app
         run: flutter pub get
 
+      # 1. Build AAB for Play Store
+      - name: Build App Bundle
+        working-directory: apps/mobile_app
+        run: flutter build appbundle --release
+
+      # 2. Build APK for manual installation (side-loading)
       - name: Build APK
         working-directory: apps/mobile_app
         run: flutter build apk --release
 
-      - name: Rename APK for release
+      # 3. Rename BOTH files for clarity
+      - name: Rename Artifacts
         id: rename
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          OLD_PATH="apps/mobile_app/build/app/outputs/flutter-apk/app-release.apk"
-          NEW_PATH="apps/mobile_app/build/app/outputs/flutter-apk/BT-App-v${VERSION}.apk"
-          mv $OLD_PATH $NEW_PATH
-          echo "apk_path=$NEW_PATH" >> $GITHUB_OUTPUT
-          echo "Renamed APK to $NEW_PATH"
 
+          # Paths
+          AAB_OLD="apps/mobile_app/build/app/outputs/bundle/release/app-release.aab"
+          AAB_NEW="apps/mobile_app/build/app/outputs/bundle/release/BT-App-v${VERSION}.aab"
+
+          APK_OLD="apps/mobile_app/build/app/outputs/flutter-apk/app-release.apk"
+          APK_NEW="apps/mobile_app/build/app/outputs/flutter-apk/BT-App-v${VERSION}.apk"
+
+          # Rename
+          mv $AAB_OLD $AAB_NEW
+          mv $APK_OLD $APK_NEW
+
+          # Output paths for next steps
+          echo "aab_path=$AAB_NEW" >> $GITHUB_OUTPUT
+          echo "apk_path=$APK_NEW" >> $GITHUB_OUTPUT
+
+      # 4. Create GitHub Release with BOTH files
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "android/v${{ steps.version.outputs.version }}"
           name: "Android v${{ steps.version.outputs.version }}"
-          draft: false
-          prerelease: false
-          files: ${{ steps.rename.outputs.apk_path }}
+          files: |
+            ${{ steps.rename.outputs.aab_path }}
+            ${{ steps.rename.outputs.apk_path }}
           generate_release_notes: true
+
+      # 5. Upload ONLY the AAB to Play Store
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}
+          packageName: com.lebontemperament.app
+          releaseFiles: ${{ steps.rename.outputs.aab_path }}
+          track: internal # Uploads to Internal Testing
+          status: draft # Uploads as Draft (Change to 'completed' to release immediately)
