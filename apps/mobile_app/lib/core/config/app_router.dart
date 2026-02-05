@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/coming_soon_screen.dart';
 import '../../data/models/delivery.dart'; // Add this import
 import '../../data/models/delivery_recipient.dart'; // Add this import
 import '../../features/auth/data/services/auth_service.dart';
@@ -185,6 +186,32 @@ class AppRouter {
           path: developer,
           name: 'developer',
           builder: (context, state) => const DeveloperModeScreen(),
+        ),
+
+        // Membres placeholder screens (Phase 1 - full implementation in later phases)
+        GoRoute(
+          path: '/partitions',
+          name: 'partitions',
+          builder: (context, state) => const ComingSoonScreen(
+            title: 'Partitions',
+            description: 'Accédez aux partitions et documents de travail.',
+          ),
+        ),
+        GoRoute(
+          path: '/members',
+          name: 'members',
+          builder: (context, state) => const ComingSoonScreen(
+            title: 'Membres',
+            description: 'L\'annuaire du Bon Tempérament.',
+          ),
+        ),
+        GoRoute(
+          path: '/administration',
+          name: 'administration',
+          builder: (context, state) => const ComingSoonScreen(
+            title: 'Administration',
+            description: 'Archives, règlement et gazettes.',
+          ),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
