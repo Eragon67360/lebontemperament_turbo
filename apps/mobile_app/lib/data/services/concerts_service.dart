@@ -9,7 +9,7 @@ class ConcertsService {
   final Logger _logger = Logger();
 
   ConcertsService({StorageService? storageService})
-    : _storageService = storageService ?? StorageService(logger: Logger());
+      : _storageService = storageService ?? StorageService(logger: Logger());
 
   Future<List<Concert>> getConcerts() async {
     try {
@@ -18,9 +18,8 @@ class ConcertsService {
           .select()
           .order('date', ascending: true);
 
-      final concerts = response
-          .map<Concert>((json) => Concert.fromJson(json))
-          .toList();
+      final concerts =
+          response.map<Concert>((json) => Concert.fromJson(json)).toList();
 
       // Save to local storage for caching
       await _storageService.saveConcerts(concerts);
@@ -41,11 +40,8 @@ class ConcertsService {
 
   Future<Concert?> getConcertById(String id) async {
     try {
-      final response = await _supabase
-          .from('concerts')
-          .select()
-          .eq('id', id)
-          .single();
+      final response =
+          await _supabase.from('concerts').select().eq('id', id).single();
 
       final concert = Concert.fromJson(response);
 

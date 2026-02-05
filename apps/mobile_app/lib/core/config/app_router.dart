@@ -7,6 +7,7 @@ import '../../data/models/delivery_recipient.dart'; // Add this import
 import '../../features/auth/data/services/auth_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
+import '../../features/concerts/presentation/screens/concert_detail_screen.dart';
 import '../../features/driver_tracking/presentation/screens/delivery_history_screen.dart';
 import '../../features/driver_tracking/presentation/screens/driver_tracking_screen.dart';
 import '../../features/driver_tracking/presentation/screens/recipient_details_screen.dart';
@@ -34,6 +35,7 @@ class AppRouter {
   static const String signup = '/signup';
   static const String main = '/main';
   static const String eventDetail = '/events/:id';
+  static const String concertDetail = '/concerts/:id';
   static const String driverTracking = '/driver-tracking';
   static const String developer = '/developer';
   // The name for the new sub-route
@@ -114,6 +116,19 @@ class AppRouter {
             final eventId = state.pathParameters['id']!;
             return Consumer(
               builder: (context, ref, _) => EventDetailScreen(eventId: eventId),
+            );
+          },
+        ),
+
+        // Concert Detail Route (protected)
+        GoRoute(
+          path: concertDetail,
+          name: 'concertDetail',
+          builder: (context, state) {
+            final concertId = state.pathParameters['id']!;
+            return Consumer(
+              builder: (context, ref, _) =>
+                  ConcertDetailScreen(concertId: concertId),
             );
           },
         ),
