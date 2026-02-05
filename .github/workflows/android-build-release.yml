@@ -78,12 +78,12 @@ jobs:
         working-directory: apps/mobile_app
         run: flutter pub get
 
-      # 1. Build AAB for Play Store
+      # 1. Build AAB for Play Store (Now generates mapping.txt because minification is ON)
       - name: Build App Bundle
         working-directory: apps/mobile_app
         run: flutter build appbundle --release
 
-      # 2. Build APK for manual installation (side-loading)
+      # 2. Build APK for manual installation
       - name: Build APK
         working-directory: apps/mobile_app
         run: flutter build apk --release
@@ -120,12 +120,15 @@ jobs:
             ${{ steps.rename.outputs.apk_path }}
           generate_release_notes: true
 
-      # 5. Upload ONLY the AAB to Play Store
+      # 5. Upload AAB + Mapping File to Play Store
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}
           packageName: com.lebontemperament.app
           releaseFiles: ${{ steps.rename.outputs.aab_path }}
-          track: internal # Uploads to Internal Testing
-          status: draft # Uploads as Draft (Change to 'completed' to release immediately)
+          # --- ADD THIS LINE ---
+          mappingFile: apps/mobile_app/build/app/outputs/mapping/release/mapping.txt
+          # ---------------------
+          track: internal
+          status: draft

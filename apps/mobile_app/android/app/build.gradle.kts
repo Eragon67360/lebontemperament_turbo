@@ -62,15 +62,17 @@ android {
                 signingConfigs.getByName("debug")
             }
 
-            // Disable aggressive optimizations that can break real-time connections
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // --- CHANGES START HERE ---
+            // We ENABLE minification to solve the Google Play warning
+            isMinifyEnabled = true
+            isShrinkResources = true
             
-            // Proguard rules to preserve real-time functionality
+            // This reads your proguard-rules.pro to prevent Supabase/Realtime breakage
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // --- CHANGES END HERE ---
         }
         
         debug {
@@ -89,8 +91,4 @@ flutter {
 dependencies {
     // For AGP 7.4+
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    // For AGP 7.3
-    // coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.3")
-    // For AGP 4.0 to 7.2
-    // coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.9")
 }

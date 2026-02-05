@@ -1,4 +1,7 @@
-# Flutter specific rules
+# ----------------------------------------------------------
+# FLUTTER & DART WRAPPERS
+# ----------------------------------------------------------
+# Keep Flutter engine interactions
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.**  { *; }
 -keep class io.flutter.util.**  { *; }
@@ -6,78 +9,62 @@
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
 
-# Supabase real-time rules
--keep class io.supabase.** { *; }
--keep class io.supabase.realtime.** { *; }
--keep class io.supabase.postgrest.** { *; }
--keep class io.supabase.gotrue.** { *; }
--keep class io.supabase.storage.** { *; }
-
-# WebSocket and real-time connection rules
--keep class org.java_websocket.** { *; }
--keep class com.squareup.okhttp.** { *; }
--keep class okhttp3.** { *; }
--keep class retrofit2.** { *; }
-
-# Notification service rules
--keep class com.dexterous.** { *; }
--keep class androidx.core.app.** { *; }
-
-# Hive database rules
--keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
--keep class * implements androidx.sqlite.db.SupportSQLiteOpenHelper { *; }
--keep class * implements androidx.sqlite.db.SupportSQLiteDatabase { *; }
-
-# Keep all model classes
--keep class com.lebontemperament.app.** { *; }
--keep class **.models.** { *; }
--keep class **.data.models.** { *; }
-
-# Keep all enum classes
--keep enum ** { *; }
-
-# Keep all service classes
--keep class **.services.** { *; }
-
-# Keep all provider classes
--keep class **.providers.** { *; }
-
-# Keep all generated classes
--keep class **.g.dart { *; }
--keep class **.freezed.dart { *; }
-
-# General rules for real-time functionality
--keepattributes *Annotation*
--keepattributes Signature
--keepattributes Exceptions
--keepattributes InnerClasses
-
-# Keep native methods
+# Keep methods that are called from Dart via JNI (Method Channels)
 -keepclasseswithmembernames class * {
     native <methods>;
 }
 
-# Keep serialization methods
--keepclassmembers class * {
-    @com.google.gson.annotations.SerializedName <fields>;
+# ----------------------------------------------------------
+# ANDROID & KOTLIN CORE
+# ----------------------------------------------------------
+# Prevent R8 from breaking Kotlin Coroutines (used by many plugins)
+-keep class kotlinx.coroutines.** { *; }
+-keepclassmembers class kotlinx.coroutines.** {
+    volatile <fields>;
 }
 
-# Keep JSON serialization
--keepclassmembers class * {
-    @com.google.gson.annotations.SerializedName <fields>;
-}
+# AndroidX and Support libraries
+-keep class androidx.core.app.** { *; }
+-keep class androidx.lifecycle.** { *; }
 
-# Keep all methods that might be called via reflection
--keepclassmembers class * {
-    @android.webkit.JavascriptInterface <methods>;
-}
+# ----------------------------------------------------------
+# NETWORKING (Supabase, HTTP, WebSockets)
+# ----------------------------------------------------------
+# Supabase and Flutter Http plugins rely heavily on OkHttp. 
+# If R8 strips these, real-time and auth will fail.
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-keep class retrofit2.** { *; }
+-keep class org.java_websocket.** { *; }
 
-# Keep all classes that might be used in notifications
--keep class * implements android.os.Parcelable {
-    public static final android.os.Parcelable$Creator *;
-}
+# Prevent 'missing class' warnings for OkHttp/Retrofit dependencies
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**
+-dontwarn javax.annotation.**
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
 
-# Keep all classes that might be used in real-time callbacks
+# ----------------------------------------------------------
+# SPECIFIC PLUGIN RULES
+# ----------------------------------------------------------
+# Flutter Local Notifications (com.dexterous)
+-keep class com.dexterous.** { *; }
+
+# Hive / SQLite (If used natively)
+-keep class * implements androidx.sqlite.db.SupportSQLiteOpenHelper { *; }
+-keep class * implements androidx.sqlite.db.SupportSQLiteDatabase { *; }
+
+# ----------------------------------------------------------
+# CUSTOM NATIVE LOGIC
+# ----------------------------------------------------------
+# If you have custom Java/Kotlin code in 'com.lebontemperament.app' that 
+# is called from Dart, keep it. Otherwise, let R8 shrink it.
+-keep class com.lebontemperament.app.MainActivity { *; }
+
+# You listed specific callback methods. If these exist in your JAVA/KOTLIN 
+# code (e.g. for a custom notification listener), we keep them. 
+# If these are Dart methods, this rule is ignored.
 -keepclassmembers class * {
     void onRehearsalAdded(...);
     void onRehearsalUpdated(...);
@@ -88,4 +75,12 @@
     void onConcertAdded(...);
     void onConcertUpdated(...);
     void onConcertDeleted(...);
-} 
+}
+
+# ----------------------------------------------------------
+# DEBUGGING SUPPORT
+# ----------------------------------------------------------
+# Keep line numbers and source file names so Crashlytics/Play Console 
+# can actually show you where the app crashed.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
