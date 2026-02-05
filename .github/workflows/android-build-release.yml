@@ -30,6 +30,7 @@ jobs:
         run: |
           VERSION=$(node -e "const v=require('./version.json'); console.log(v.version+'+'+v.build)")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -41,9 +42,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-          cache: true # Caches Flutter engine
+          cache: true # Optimization: Cache Flutter Engine
 
-      # --- OPTIMIZATION 1: CACHE GRADLE ---
+      # Optimization: Cache Gradle dependencies to speed up build
       - name: Gradle Cache
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -75,12 +76,26 @@ jobs:
         working-directory: apps/mobile_app
         run: flutter pub get
 
-      # --- BUILD AAB ONLY (Heavy task runs once) ---
+      # --- STEP 1: Build the AAB (The "Source of Truth") ---
       - name: Build App Bundle
         working-directory: apps/mobile_app
         run: flutter build appbundle --release
 
-      # --- OPTIMIZATION 2: GENERATE APK FROM AAB (Fast) ---
+      # --- STEP 2: Upload to Google Play IMMEDIATELY ---
+      # We do this BEFORE generating the APK. If this fails, the pipeline stops.
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}
+          packageName: com.lebontemperament.app
+          # Use the standard Flutter build path since we haven't renamed it yet
+          releaseFiles: apps/mobile_app/build/app/outputs/bundle/release/app-release.aab
+          mappingFile: apps/mobile_app/build/app/outputs/mapping/release/mapping.txt
+          track: internal
+          status: draft
+
+      # --- STEP 3: Generate APK from AAB (Optimization) ---
+      # We skip 'flutter build apk' to save time, and instead convert the AAB.
       - name: Generate APK from AAB
         working-directory: apps/mobile_app
         env:
@@ -91,7 +106,10 @@ jobs:
           # 1. Download Bundletool
           wget https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar -O bundletool.jar
 
-          # 2. Convert AAB to APKS (Universal Mode)
+          # 2. FIX: Create the output directory explicitly (Flutter doesn't create it for AAB builds)
+          mkdir -p build/app/outputs/flutter-apk
+
+          # 3. Convert AAB to APKS (Universal Mode)
           java -jar bundletool.jar build-apks \
             --bundle=build/app/outputs/bundle/release/app-release.aab \
             --output=app.apks \
@@ -101,21 +119,27 @@ jobs:
             --ks-key-alias="$ANDROID_KEY_ALIAS" \
             --key-pass=pass:"$ANDROID_KEY_PASSWORD"
             
-          # 3. Extract the single APK
+          # 4. Extract the single APK
           unzip -p app.apks universal.apk > build/app/outputs/flutter-apk/app-release.apk
 
+      # --- STEP 4: Rename and Release ---
       - name: Rename Artifacts
         id: rename
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+
+          # Define paths
           AAB_OLD="apps/mobile_app/build/app/outputs/bundle/release/app-release.aab"
           AAB_NEW="apps/mobile_app/build/app/outputs/bundle/release/BT-App-v${VERSION}.aab"
+
           APK_OLD="apps/mobile_app/build/app/outputs/flutter-apk/app-release.apk"
           APK_NEW="apps/mobile_app/build/app/outputs/flutter-apk/BT-App-v${VERSION}.apk"
 
+          # Rename files
           mv $AAB_OLD $AAB_NEW
           mv $APK_OLD $APK_NEW
 
+          # Output for GitHub Release
           echo "aab_path=$AAB_NEW" >> $GITHUB_OUTPUT
           echo "apk_path=$APK_NEW" >> $GITHUB_OUTPUT
 
@@ -123,17 +147,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "android/v${{ steps.version.outputs.version }}"
+          name: "Android v${{ steps.version.outputs.version }}"
           files: |
             ${{ steps.rename.outputs.aab_path }}
             ${{ steps.rename.outputs.apk_path }}
           generate_release_notes: true
-
-      - name: Upload to Google Play
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}
-          packageName: com.lebontemperament.app
-          releaseFiles: ${{ steps.rename.outputs.aab_path }}
-          mappingFile: apps/mobile_app/build/app/outputs/mapping/release/mapping.txt
-          track: internal
-          status: draft
