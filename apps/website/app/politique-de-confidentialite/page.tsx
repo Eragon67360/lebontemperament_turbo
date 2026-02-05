@@ -223,6 +223,113 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          <section
+            id="application-mobile"
+            className="border-divider border-b pb-8"
+          >
+            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+              Application mobile (Le Bon Tempérament)
+            </h2>
+            <p className="text-foreground mb-4">
+              Notre application mobile Le Bon Tempérament permet aux membres de
+              Le Bon Tempérament de consulter les concerts, répétitions et
+              annonces, de recevoir des rappels de notifications, et pour
+              certains administrateurs, d&apos;effectuer le suivi de livraison
+              en temps réel. Cette section décrit les données collectées et les
+              permissions utilisées par l&apos;application.
+            </p>
+
+            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+              Données collectées par l&apos;application
+            </h3>
+            <ul className="text-foreground mb-4 list-disc pl-5">
+              <li className="mb-2">
+                <strong>Données de compte</strong> : adresse email, nom, prénom,
+                photo de profil (avatar) — pour l&apos;authentification et le
+                profil utilisateur.
+              </li>
+              <li className="mb-2">
+                <strong>Données de localisation</strong> : coordonnées GPS
+                (latitude, longitude) — uniquement lorsque vous utilisez la
+                fonction de suivi de livraison ; votre position est partagée en
+                temps réel avec les destinataires via des liens de partage.
+              </li>
+              <li className="mb-2">
+                <strong>Données de livraison</strong> : adresses et numéros de
+                téléphone des destinataires — pour la gestion des tournées de
+                livraison (fonction réservée aux administrateurs).
+              </li>
+              <li className="mb-2">
+                <strong>Cache local</strong> : annonces, événements, concerts,
+                répétitions et profil utilisateur — pour l&apos;accès hors
+                ligne.
+              </li>
+              <li className="mb-2">
+                <strong>Préférences de notifications</strong> : préférences
+                d&apos;activation (concerts, répétitions, temps réel) et
+                horaires de rappel — stockées localement sur votre appareil.
+              </li>
+            </ul>
+
+            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+              Permissions de l&apos;application
+            </h3>
+            <ul className="text-foreground mb-4 list-disc pl-5">
+              <li className="mb-2">
+                <strong>Réseau</strong> : accès à Internet pour la
+                synchronisation des données.
+              </li>
+              <li className="mb-2">
+                <strong>Localisation</strong> : uniquement pour le suivi de
+                livraison en temps réel (position partagée avec les
+                destinataires).
+              </li>
+              <li className="mb-2">
+                <strong>Notifications</strong> : pour les rappels de répétitions
+                et d&apos;événements (concerts, annonces).
+              </li>
+            </ul>
+
+            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+              Services tiers
+            </h3>
+            <p className="text-foreground mb-4">
+              L&apos;application utilise les services suivants :
+            </p>
+            <ul className="text-foreground mb-4 list-disc pl-5">
+              <li className="mb-2">
+                <strong>Supabase</strong> : hébergement des données
+                (authentification, base de données, temps réel, fonctions).
+              </li>
+              <li className="mb-2">
+                <strong>Twilio</strong> : envoi de SMS pour les notifications de
+                livraison (via les fonctions Supabase).
+              </li>
+              <li className="mb-2">
+                <strong>Cloudinary</strong> : hébergement des images des
+                affiches de concerts.
+              </li>
+            </ul>
+
+            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+              Stockage local
+            </h3>
+            <p className="text-foreground mb-4">
+              Les données sont stockées localement sur votre appareil via Hive
+              (cache pour les annonces, événements, concerts, répétitions) et
+              SharedPreferences (préférences de notifications). Ces données
+              restent sur votre appareil et peuvent être supprimées en
+              désinstallant l&apos;application.
+            </p>
+
+            <p className="text-foreground">
+              Les droits RGPD décrits ci-dessous s&apos;appliquent également aux
+              données collectées par l&apos;application mobile. Vous pouvez
+              exercer ces droits en nous contactant à l&apos;adresse indiquée
+              dans la section « Vos droits RGPD ».
+            </p>
+          </section>
+
           <section>
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Vos droits RGPD
