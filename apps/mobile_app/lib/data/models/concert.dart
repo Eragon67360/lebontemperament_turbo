@@ -26,12 +26,24 @@ class Concert with _$Concert {
     @HiveField(4) required String date,
     @HiveField(5) required String time,
     @HiveField(6) required Context context,
-    @HiveField(7) String? additionalInformations,
+    @HiveField(7)
+    @JsonKey(name: 'additional_informations')
+    String? additionalInformations,
     @HiveField(8) String? name,
     @HiveField(9) String? createdBy,
     @HiveField(10) String? affiche,
   }) = _Concert;
 
   factory Concert.fromJson(Map<String, dynamic> json) =>
-      _$ConcertFromJson(json);
+      _$ConcertFromJson(_normalizeJson(json));
+
+  /// Ensures additional_informations is present (API/realtime may use snake_case or camelCase).
+  static Map<String, dynamic> _normalizeJson(Map<String, dynamic> json) {
+    final map = Map<String, dynamic>.from(json);
+    if (map['additional_informations'] == null &&
+        map['additionalInformations'] != null) {
+      map['additional_informations'] = map['additionalInformations'];
+    }
+    return map;
+  }
 }

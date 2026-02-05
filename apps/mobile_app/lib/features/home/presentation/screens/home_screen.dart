@@ -233,7 +233,7 @@ class _UpcomingEvents extends ConsumerWidget {
       icon: Icons.repeat_rounded,
       title: formatDate(rehearsal.date!),
       subtitle:
-          '${rehearsal.startTime ?? ""} · ${rehearsal.place ?? "Lieu non défini"}',
+          '${formatTime(rehearsal.startTime)} · ${rehearsal.place ?? "Lieu non défini"}',
       onTap: onTap,
     );
   }
@@ -243,7 +243,7 @@ class _UpcomingEvents extends ConsumerWidget {
     return _EventNavigationCard(
       icon: Icons.celebration_outlined,
       title: formatDate(concert.date),
-      subtitle: '${concert.time} · ${concert.place}',
+      subtitle: '${formatTime(concert.time)} · ${concert.place}',
       onTap: onTap,
     );
   }
