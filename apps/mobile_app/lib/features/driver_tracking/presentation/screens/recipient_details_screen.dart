@@ -26,7 +26,8 @@ class RecipientDetailsScreen extends ConsumerWidget {
     required this.onEdit,
   });
 
-  /// Launches the most appropriate map application.
+  /// Launches a map app. On Android uses geo: to show system app chooser
+  /// (Maps, Waze, etc.). On iOS uses Apple Maps with directions.
   Future<void> _launchMaps(
     BuildContext context, {
     double? lat,
@@ -36,21 +37,22 @@ class RecipientDetailsScreen extends ConsumerWidget {
     Uri? uri;
     if (lat != null && lng != null) {
       if (Platform.isIOS) {
-        uri = Uri.parse('https://maps.apple.com/?q=$lat,$lng');
+        uri = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng');
       } else {
-        uri = Uri.parse('geo:$lat,$lng');
+        // geo:0,0?q=lat,lng shows a pin at the destination (geo:lat,lng only centers)
+        uri = Uri.parse('geo:0,0?q=$lat,$lng');
       }
     } else if (address != null && address.isNotEmpty) {
+      final encoded = Uri.encodeComponent(address);
       if (Platform.isIOS) {
-        uri = Uri.parse(
-            'https://maps.apple.com/?q=${Uri.encodeComponent(address)}');
+        uri = Uri.parse('https://maps.apple.com/?daddr=$encoded');
       } else {
-        uri = Uri.parse('geo:0,0?q=${Uri.encodeComponent(address)}');
+        uri = Uri.parse('geo:0,0?q=$encoded');
       }
     }
 
     if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

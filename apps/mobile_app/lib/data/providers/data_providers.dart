@@ -250,3 +250,13 @@ String formatDate(String dateString) {
   // Format: "Mar. 25 juin"
   return DateFormat('EEE d MMM', 'fr_FR').format(date);
 }
+
+/// Converts "HH:MM:SS" or "HH:MM" to French format "HHhMM" (e.g. "20h30")
+String formatTime(String? time) {
+  if (time == null || time.isEmpty) return '';
+  try {
+    final parts = time.split(':');
+    if (parts.length >= 2) return '${parts[0]}h${parts[1]}';
+  } catch (_) {}
+  return time;
+}

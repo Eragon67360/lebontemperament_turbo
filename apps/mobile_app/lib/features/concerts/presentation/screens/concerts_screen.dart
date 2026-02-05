@@ -179,8 +179,7 @@ class _ConcertCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           HapticFeedback.lightImpact();
-          // TODO: Implement navigation to concert detail screen
-          // context.push('/concerts/${concert.id}');
+          context.push('/concerts/${concert.id}');
         },
         borderRadius: BorderRadius.circular(20),
         child: Container(
