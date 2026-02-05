@@ -6,8 +6,9 @@ on:
       - main
     paths:
       - "apps/mobile_app/**"
-      - "version.json"
       - ".github/workflows/android-build-release.yml"
+    paths-ignore:
+      - "apps/mobile_app/pubspec.yaml"
 
 permissions:
   contents: write
