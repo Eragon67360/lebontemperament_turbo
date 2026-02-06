@@ -56,6 +56,12 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SITE_URL: ${{ secrets.SITE_URL_PROD }}
+          DRIVE_FOLDER_ADULTES: ${{ secrets.DRIVE_FOLDER_ADULTES }}
+          DRIVE_FOLDER_JEUNES: ${{ secrets.DRIVE_FOLDER_JEUNES }}
+          DRIVE_FOLDER_ENFANTS: ${{ secrets.DRIVE_FOLDER_ENFANTS }}
+          DRIVE_FOLDER_ORCHESTRE: ${{ secrets.DRIVE_FOLDER_ORCHESTRE }}
+          DRIVE_FOLDER_CAHIER_30_ANS: ${{ secrets.DRIVE_FOLDER_CAHIER_30_ANS }}
+          DRIVE_FOLDER_MAIN: ${{ secrets.DRIVE_FOLDER_MAIN }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -64,6 +70,12 @@ jobs:
           echo "SUPABASE_URL=$SUPABASE_URL" > .env
           echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
           echo "SITE_URL=$SITE_URL" >> .env
+          [ -n "$DRIVE_FOLDER_ADULTES" ] && echo "DRIVE_FOLDER_ADULTES=$DRIVE_FOLDER_ADULTES" >> .env
+          [ -n "$DRIVE_FOLDER_JEUNES" ] && echo "DRIVE_FOLDER_JEUNES=$DRIVE_FOLDER_JEUNES" >> .env
+          [ -n "$DRIVE_FOLDER_ENFANTS" ] && echo "DRIVE_FOLDER_ENFANTS=$DRIVE_FOLDER_ENFANTS" >> .env
+          [ -n "$DRIVE_FOLDER_ORCHESTRE" ] && echo "DRIVE_FOLDER_ORCHESTRE=$DRIVE_FOLDER_ORCHESTRE" >> .env
+          [ -n "$DRIVE_FOLDER_CAHIER_30_ANS" ] && echo "DRIVE_FOLDER_CAHIER_30_ANS=$DRIVE_FOLDER_CAHIER_30_ANS" >> .env
+          [ -n "$DRIVE_FOLDER_MAIN" ] && echo "DRIVE_FOLDER_MAIN=$DRIVE_FOLDER_MAIN" >> .env
 
           cd android
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > upload-keystore.jks

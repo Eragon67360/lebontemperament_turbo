@@ -10,6 +10,7 @@ import 'package:mobile_app/core/constants/ui_constants.dart';
 import '../../../../data/models/concert.dart';
 import '../../../../data/providers/data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../widgets/concert_anniversaire_section.dart';
 
 class ConcertsScreen extends ConsumerStatefulWidget {
   const ConcertsScreen({super.key});
@@ -68,29 +69,38 @@ class _ConcertsScreenState extends ConsumerState<ConcertsScreen> {
             // --- 2. Main Content based on State ---
             concertsAsync.when(
               data: (concerts) {
-                if (concerts.isEmpty) {
-                  return const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _EmptyState(),
-                  );
-                }
-                // Using SliverList for performance with a builder
+                final itemCount =
+                    concerts.isEmpty ? 2 : concerts.length + 1;
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                       20, 10, 20, kFloatingNavBarBottomPadding),
-                  sliver: SliverList.builder(
-                    itemCount: concerts.length,
-                    itemBuilder: (context, index) {
-                      final concert = concerts[index];
-                      // Add animation to each card
-                      return FadeInUp(
-                        delay: 100 + (index * 50),
-                        child: _ConcertCard(
-                          concert: concert,
-                          isLast: index == concerts.length - 1,
-                        ),
-                      );
-                    },
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (concerts.isEmpty) {
+                          if (index == 0) return const _EmptyState();
+                          if (index == 1) {
+                            return const ConcertAnniversaireSection();
+                          }
+                        } else {
+                          if (index < concerts.length) {
+                            final concert = concerts[index];
+                            return FadeInUp(
+                              delay: 100 + (index * 50),
+                              child: _ConcertCard(
+                                concert: concert,
+                                isLast: false,
+                              ),
+                            );
+                          }
+                          if (index == concerts.length) {
+                            return const ConcertAnniversaireSection();
+                          }
+                        }
+                        return null;
+                      },
+                      childCount: itemCount,
+                    ),
                   ),
                 );
               },

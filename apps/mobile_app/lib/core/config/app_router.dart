@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/widgets/coming_soon_screen.dart';
+import '../../features/partitions/presentation/screens/partitions_screen.dart';
 import '../../features/administration/presentation/screens/administration_screen.dart';
 import '../../features/members/presentation/screens/members_screen.dart';
 import '../../data/models/delivery.dart'; // Add this import
@@ -194,9 +194,8 @@ class AppRouter {
         GoRoute(
           path: '/partitions',
           name: 'partitions',
-          builder: (context, state) => const ComingSoonScreen(
-            title: 'Partitions',
-            description: 'Accédez aux partitions et documents de travail.',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) => const PartitionsScreen(),
           ),
         ),
         GoRoute(

@@ -59,7 +59,18 @@ Create a `.env` file in the root directory:
 ```
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+SITE_URL=https://www.lebontemperament.com
+
+# Optional: Drive folder IDs for Partitions (fallback to defaults if omitted)
+DRIVE_FOLDER_MAIN=1oQGEse5USfg9KhM7dZv7_w6olmk_slaU
+DRIVE_FOLDER_ADULTES=19vwE3JOMqUGSHGKEQxKuttAhvD0gu3cd
+DRIVE_FOLDER_JEUNES=18ZukzBIhWotJ9UxpUTdodGBSY1wf0Q81
+DRIVE_FOLDER_ENFANTS=1Jcn6pSKBHpOvFXp5j0h6kKcwOBrAIkId
+DRIVE_FOLDER_ORCHESTRE=1t72TgfhowS2WqYDFYLkasqopdUI_FEem
+DRIVE_FOLDER_CAHIER_30_ANS=1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB
 ```
+
+For CI (GitHub Actions), add these as repository secrets to override defaults when folders change.
 
 ## Architecture
 
