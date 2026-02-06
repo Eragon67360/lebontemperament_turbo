@@ -32,21 +32,20 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
     ref.invalidate(refreshTriggerProvider);
   }
 
-  void _showFilterModal(BuildContext context, GroupType? currentFilter) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _FilterModal(
-        currentFilter: currentFilter,
-        onFilterSelected: (groupType) {
-          ref.read(rehearsalFilterProvider.notifier).setFilter(groupType);
-          Navigator.of(context).pop();
-        },
-      ),
-    );
+  Future<void> _openGoogleCalendar() async {
+    HapticFeedback.lightImpact();
+    final uri = Uri.parse(kGoogleCalendarUrl);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Impossible d\'ouvrir le calendrier.'),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -67,22 +66,7 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
           slivers: [
             // --- 1. Dynamic App Bar ---
             _RehearsalsAppBar(
-              onCalendar: () async {
-                HapticFeedback.lightImpact();
-                final uri = Uri.parse(kGoogleCalendarUrl);
-                try {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } catch (_) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Impossible d\'ouvrir le calendrier.'),
-                      ),
-                    );
-                  }
-                }
-              },
-              onFilter: () => _showFilterModal(context, selectedFilter),
+              onCalendar: _openGoogleCalendar,
               onLogout: () async {
                 try {
                   await ref.read(authServiceProvider).signOut();
@@ -100,21 +84,27 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
               },
             ),
 
-            // --- 2. Active Filter Chip ---
-            if (selectedFilter != null)
-              SliverToBoxAdapter(
-                child: FadeInUp(
-                  delay: 50,
-                  child: _FilterChip(
-                    label: _getGroupTypeText(selectedFilter),
-                    onClear: () => ref
-                        .read(rehearsalFilterProvider.notifier)
-                        .clearFilter(),
-                  ),
-                ),
+            // --- 2. Inline Filter Chips ---
+            SliverToBoxAdapter(
+              child: _InlineFilterChips(
+                selectedFilter: selectedFilter,
+                onFilterSelected: (groupType) => ref
+                    .read(rehearsalFilterProvider.notifier)
+                    .setFilter(groupType),
+                onClearFilter: () =>
+                    ref.read(rehearsalFilterProvider.notifier).clearFilter(),
               ),
+            ),
 
-            // --- 3. Main Content based on State ---
+            // --- 3. Calendrier complet Button ---
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: _CalendrierCompletButton(onTap: _openGoogleCalendar),
+              ),
+            ),
+
+            // --- 4. Main Content based on State ---
             rehearsalsAsync.when(
               data: (rehearsals) {
                 if (filteredRehearsals.isEmpty) {
@@ -158,12 +148,10 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
 
 class _RehearsalsAppBar extends StatelessWidget {
   final VoidCallback onCalendar;
-  final VoidCallback onFilter;
   final VoidCallback onLogout;
 
   const _RehearsalsAppBar({
     required this.onCalendar,
-    required this.onFilter,
     required this.onLogout,
   });
 
@@ -194,12 +182,6 @@ class _RehearsalsAppBar extends StatelessWidget {
           tooltip: 'Calendrier complet',
           onPressed: onCalendar,
         ),
-        IconButton(
-          icon: const Icon(Icons.filter_list_rounded),
-          color: theme.colorScheme.onSurfaceVariant,
-          tooltip: 'Filtrer',
-          onPressed: onFilter,
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
           child: IconButton(
@@ -214,105 +196,147 @@ class _RehearsalsAppBar extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onClear;
+class _InlineFilterChips extends StatelessWidget {
+  final GroupType? selectedFilter;
+  final void Function(GroupType?) onFilterSelected;
+  final VoidCallback onClearFilter;
 
-  const _FilterChip({required this.label, required this.onClear});
+  const _InlineFilterChips({
+    required this.selectedFilter,
+    required this.onFilterSelected,
+    required this.onClearFilter,
+  });
+
+  static const _chipOptions = [
+    (null, 'Tous'),
+    (GroupType.orchestre, 'Orchestre'),
+    (GroupType.hommes, 'Hommes'),
+    (GroupType.femmes, 'Femmes'),
+    (GroupType.jeunesEnfants, 'Jeunes/Enfants'),
+    (GroupType.choeurComplet, 'Chœur complet'),
+  ];
+
+  static Color _getGroupColor(GroupType? group) {
+    switch (group) {
+      case GroupType.orchestre:
+        return const Color(0xFF2196F3); // blue
+      case GroupType.hommes:
+        return const Color(0xFF4CAF50); // green
+      case GroupType.femmes:
+        return const Color(0xFF9C27B0); // purple
+      case GroupType.jeunesEnfants:
+        return const Color(0xFFFFC107); // amber
+      case GroupType.choeurComplet:
+        return const Color(0xFFE53935); // red
+      default:
+        return const Color(0xFF757575); // grey
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Container(
-        padding: const EdgeInsets.only(left: 12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(100),
-        ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Filtre:',
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.primary,
-                fontSize: 13,
+          children: _chipOptions.map((option) {
+            final (group, label) = option;
+            final isSelected = selectedFilter == group;
+            final chipColor = _getGroupColor(group);
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+                selected: isSelected,
+                onSelected: (_) {
+                  HapticFeedback.lightImpact();
+                  if (group == null) {
+                    onClearFilter();
+                  } else {
+                    onFilterSelected(group);
+                  }
+                },
+                selectedColor: chipColor.withOpacity(0.3),
+                checkmarkColor: chipColor,
+                side: BorderSide(
+                  color: isSelected
+                      ? chipColor
+                      : theme.colorScheme.outline.withOpacity(0.3),
+                  width: isSelected ? 2 : 1,
+                ),
+                showCheckmark: false,
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.close, size: 18),
-              color: theme.colorScheme.primary,
-              onPressed: onClear,
-              visualDensity: VisualDensity.compact,
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ),
     );
   }
 }
 
-class _FilterModal extends StatelessWidget {
-  final GroupType? currentFilter;
-  final Function(GroupType?) onFilterSelected;
+class _CalendrierCompletButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _FilterModal({this.currentFilter, required this.onFilterSelected});
+  const _CalendrierCompletButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Filtrer par groupe',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.primary.withOpacity(0.85),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildFilterOption(context, 'Tous les groupes', null),
-            ...GroupType.values.map(
-              (group) =>
-                  _buildFilterOption(context, _getGroupTypeText(group), group),
-            ),
-            const SizedBox(height: 10),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.calendar_month_rounded,
+                color: theme.colorScheme.onPrimary,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Voir le calendrier complet',
+                style: GoogleFonts.poppins(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFilterOption(
-    BuildContext context,
-    String title,
-    GroupType? value,
-  ) {
-    return RadioListTile<GroupType?>(
-      title: Text(title, style: GoogleFonts.poppins()),
-      value: value,
-      groupValue: currentFilter,
-      onChanged: (newValue) => onFilterSelected(newValue),
-      contentPadding: EdgeInsets.zero,
-      activeColor: Theme.of(context).colorScheme.primary,
     );
   }
 }

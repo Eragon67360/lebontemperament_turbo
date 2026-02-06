@@ -41,9 +41,9 @@ const List<_NavItemData> _navItems = [
       filledIcon: Icons.event,
       label: 'Concerts & Évènements'),
   _NavItemData(
-      outlinedIcon: Icons.repeat_rounded,
-      filledIcon: Icons.repeat_one_rounded,
-      label: 'Répétitions'),
+      outlinedIcon: Icons.calendar_month_outlined,
+      filledIcon: Icons.calendar_month,
+      label: 'Calendrier'),
   _NavItemData(
       outlinedIcon: Icons.person_outline,
       filledIcon: Icons.person,
