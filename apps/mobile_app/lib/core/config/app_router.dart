@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/coming_soon_screen.dart';
+import '../../features/administration/presentation/screens/administration_screen.dart';
 import '../../features/members/presentation/screens/members_screen.dart';
 import '../../data/models/delivery.dart'; // Add this import
 import '../../data/models/delivery_recipient.dart'; // Add this import
@@ -208,9 +209,8 @@ class AppRouter {
         GoRoute(
           path: '/administration',
           name: 'administration',
-          builder: (context, state) => const ComingSoonScreen(
-            title: 'Administration',
-            description: 'Archives, règlement et gazettes.',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) => const AdministrationScreen(),
           ),
         ),
       ],
