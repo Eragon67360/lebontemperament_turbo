@@ -143,7 +143,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
             RefreshIndicator(
               onRefresh: _onRefresh,
               color: theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surfaceVariant,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
               // We use Builder here to ensure the context passed to _buildScrollableContent
               // is a descendant of NestedScrollView
               child: Builder(
@@ -164,7 +164,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
             RefreshIndicator(
               onRefresh: _onRefresh,
               color: theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surfaceVariant,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
               child: Builder(
                 builder: (BuildContext context) {
                   return eventsAsync.when(
@@ -424,7 +424,8 @@ class _ConcertCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -531,7 +532,8 @@ class _EventCard extends StatelessWidget {
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: Container(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.5),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),

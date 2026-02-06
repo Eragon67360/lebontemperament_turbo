@@ -60,7 +60,7 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surfaceVariant,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -264,12 +264,12 @@ class _InlineFilterChips extends StatelessWidget {
                     onFilterSelected(group);
                   }
                 },
-                selectedColor: chipColor.withOpacity(0.3),
+                selectedColor: chipColor.withValues(alpha: 0.3),
                 checkmarkColor: chipColor,
                 side: BorderSide(
                   color: isSelected
                       ? chipColor
-                      : theme.colorScheme.outline.withOpacity(0.3),
+                      : theme.colorScheme.outline.withValues(alpha: 0.3),
                   width: isSelected ? 2 : 1,
                 ),
                 showCheckmark: false,
@@ -302,7 +302,7 @@ class _CalendrierCompletButton extends StatelessWidget {
             gradient: LinearGradient(
               colors: [
                 theme.colorScheme.primary,
-                theme.colorScheme.primary.withOpacity(0.85),
+                theme.colorScheme.primary.withValues(alpha: 0.85),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -310,7 +310,7 @@ class _CalendrierCompletButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.3),
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -369,9 +369,11 @@ class _RehearsalCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+          border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -405,7 +407,7 @@ class _RehearsalCard extends StatelessWidget {
             Container(
               width: 1,
               height: 60,
-              color: theme.colorScheme.outline.withOpacity(0.3),
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
             const SizedBox(width: 16),
 
@@ -462,7 +464,7 @@ class _GroupTypeTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withOpacity(0.6),
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -540,7 +542,8 @@ class _EmptyState extends StatelessWidget {
                     ? Icons.filter_list_off_outlined
                     : Icons.music_off_outlined,
                 size: 72,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 24),
               Text(
@@ -587,7 +590,7 @@ class _ErrorState extends StatelessWidget {
               Icon(
                 Icons.cloud_off_outlined,
                 size: 72,
-                color: theme.colorScheme.error.withOpacity(0.7),
+                color: theme.colorScheme.error.withValues(alpha: 0.7),
               ),
               const SizedBox(height: 24),
               Text(

@@ -410,8 +410,9 @@ class _TrackingStatusHero extends StatelessWidget {
           colors: state.isTracking
               ? [Colors.green.shade400, Colors.green.shade600]
               : [
-                  theme.colorScheme.surfaceVariant,
-                  theme.colorScheme.surfaceVariant.withOpacity(0.5)
+                  theme.colorScheme.surfaceContainerHighest,
+                  theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.5)
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -420,8 +421,8 @@ class _TrackingStatusHero extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: state.isTracking
-                ? Colors.green.withOpacity(0.3)
-                : Colors.black.withOpacity(0.1),
+                ? Colors.green.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -458,7 +459,7 @@ class _TrackingStatusHero extends StatelessWidget {
               color: (state.isTracking
                       ? Colors.white
                       : theme.colorScheme.onSurfaceVariant)
-                  .withOpacity(0.9),
+                  .withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -539,7 +540,7 @@ class _ActionButtons extends ConsumerWidget {
             foregroundColor: Theme.of(context).colorScheme.error,
             side: BorderSide(
                 color: !state.isTracking
-                    ? Colors.grey.withOpacity(0.4)
+                    ? Colors.grey.withValues(alpha: 0.4)
                     : Theme.of(context).colorScheme.error),
             padding: const EdgeInsets.symmetric(vertical: 16),
             textStyle:
@@ -571,9 +572,10 @@ class _RecipientsCard extends ConsumerWidget {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border:
+            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -608,7 +610,9 @@ class _RecipientsCard extends ConsumerWidget {
                 onTap: () => onTapRecipient(recipients[index]),
               ),
             ),
-          Divider(height: 1, color: theme.colorScheme.outline.withOpacity(0.2)),
+          Divider(
+              height: 1,
+              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
           InkWell(
             onTap: onAdd,
             child: Padding(
@@ -736,9 +740,10 @@ class _LiveUpdatesCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border:
+            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -856,9 +861,10 @@ class _SessionDetailsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border:
+            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1076,7 +1082,8 @@ class _StatusIndicatorState extends State<_StatusIndicator>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final inactiveColor = theme.colorScheme.onSurfaceVariant.withOpacity(0.5);
+    final inactiveColor =
+        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
     return SizedBox(
       width: 20,
       height: 20,
@@ -1089,7 +1096,7 @@ class _StatusIndicatorState extends State<_StatusIndicator>
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         blurRadius: 8,
                         spreadRadius: 4)
                   ],
@@ -1156,7 +1163,8 @@ class _UnauthorizedState extends StatelessWidget {
           children: [
             Icon(Icons.lock_outline_rounded,
                 size: 72,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
             const SizedBox(height: 24),
             Text('Accès non autorisé',
                 style: GoogleFonts.poppins(

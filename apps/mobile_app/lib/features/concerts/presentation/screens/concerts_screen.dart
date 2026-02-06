@@ -43,7 +43,7 @@ class _ConcertsScreenState extends ConsumerState<ConcertsScreen> {
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surfaceVariant,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -69,8 +69,7 @@ class _ConcertsScreenState extends ConsumerState<ConcertsScreen> {
             // --- 2. Main Content based on State ---
             concertsAsync.when(
               data: (concerts) {
-                final itemCount =
-                    concerts.isEmpty ? 2 : concerts.length + 1;
+                final itemCount = concerts.isEmpty ? 2 : concerts.length + 1;
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                       20, 10, 20, kFloatingNavBarBottomPadding),
@@ -195,10 +194,11 @@ class _ConcertCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.2),
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
           child: Row(
@@ -234,7 +234,7 @@ class _ConcertCard extends StatelessWidget {
               Container(
                 width: 1,
                 height: 60,
-                color: theme.colorScheme.outline.withOpacity(0.3),
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
               ),
               const SizedBox(width: 16),
 
@@ -350,7 +350,8 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 Icons.music_off_outlined,
                 size: 72,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 24),
               Text(
@@ -395,7 +396,7 @@ class _ErrorState extends StatelessWidget {
               Icon(
                 Icons.cloud_off_outlined,
                 size: 72,
-                color: theme.colorScheme.error.withOpacity(0.7),
+                color: theme.colorScheme.error.withValues(alpha: 0.7),
               ),
               const SizedBox(height: 24),
               Text(

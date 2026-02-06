@@ -34,7 +34,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           ref.invalidate(membersProvider);
         },
         color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surfaceVariant,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [

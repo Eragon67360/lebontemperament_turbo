@@ -40,7 +40,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surfaceVariant,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -162,9 +162,11 @@ class _EventCard extends StatelessWidget {
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: Container(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+          border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
         ),
         child: InkWell(
           onTap: () {
@@ -227,8 +229,8 @@ class _EventCard extends StatelessWidget {
                   child: Text(
                     event.description!,
                     style: GoogleFonts.poppins(
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                        0.8,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.8,
                       ),
                       fontSize: 13,
                       height: 1.5,
@@ -239,7 +241,7 @@ class _EventCard extends StatelessWidget {
                 ),
               Divider(
                 height: 1,
-                color: theme.colorScheme.outline.withOpacity(0.2),
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
               ),
               Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -368,7 +370,8 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 Icons.music_off_outlined,
                 size: 72,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 24),
               Text(
@@ -413,7 +416,7 @@ class _ErrorState extends StatelessWidget {
               Icon(
                 Icons.cloud_off_outlined,
                 size: 72,
-                color: theme.colorScheme.error.withOpacity(0.7),
+                color: theme.colorScheme.error.withValues(alpha: 0.7),
               ),
               const SizedBox(height: 24),
               Text(

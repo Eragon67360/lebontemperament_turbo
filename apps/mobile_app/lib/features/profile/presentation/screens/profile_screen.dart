@@ -290,7 +290,7 @@ class _ProfileHeader extends ConsumerWidget {
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.surface,
-            theme.colorScheme.surfaceVariant.withValues(alpha: 0.5),
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -381,9 +381,10 @@ class _SettingsGroup extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border:
+            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: List.generate(children.length * 2 - 1, (index) {
@@ -394,7 +395,7 @@ class _SettingsGroup extends StatelessWidget {
             height: 1,
             thickness: 1,
             indent: 60,
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           );
         }),
       ),
@@ -460,7 +461,8 @@ class _SettingsTile extends StatelessWidget {
             const SizedBox(width: 12),
             Icon(Icons.arrow_forward_ios_rounded,
                 size: 16,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
           ],
         ),
       ),

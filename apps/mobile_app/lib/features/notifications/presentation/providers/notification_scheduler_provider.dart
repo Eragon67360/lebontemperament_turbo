@@ -57,7 +57,7 @@ final autoScheduleNotificationsProvider = Provider<void>((ref) {
   // Watch for data changes to trigger scheduling
   final concertsAsync = ref.watch(realtimeConcertsProvider);
   final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
-  final settings = ref.watch(notificationSettingsProvider);
+  ref.watch(notificationSettingsProvider); // Rebuild when settings change
 
   // Schedule notifications when data is available and settings change
   if (concertsAsync.hasValue || rehearsalsAsync.hasValue) {

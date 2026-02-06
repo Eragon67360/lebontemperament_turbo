@@ -128,7 +128,7 @@ class _AboutHeader extends StatelessWidget {
       'Version ${packageInfo.version} (build ${packageInfo.buildNumber})',
       style: GoogleFonts.poppins(
         fontSize: 14,
-        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
       ),
     );
 
@@ -142,7 +142,7 @@ class _AboutHeader extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  theme.colorScheme.primary.withOpacity(0.8),
+                  theme.colorScheme.primary.withValues(alpha: 0.8),
                   theme.colorScheme.primary,
                 ],
                 begin: Alignment.topLeft,
@@ -150,7 +150,7 @@ class _AboutHeader extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -216,10 +216,11 @@ class _DeveloperModeButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.2),
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
           child: Row(
@@ -243,7 +244,8 @@ class _DeveloperModeButton extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ],
           ),
@@ -276,10 +278,11 @@ class _AssociationSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.2),
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -357,10 +360,11 @@ class _AppInfoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.2),
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -493,7 +497,7 @@ class _Footer extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],

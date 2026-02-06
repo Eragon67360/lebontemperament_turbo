@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -42,7 +41,7 @@ class LoginScreen extends ConsumerWidget {
           // --- 3. Loading Overlay ---
           if (isLoading)
             Container(
-              color: theme.colorScheme.surface.withOpacity(0.5),
+              color: theme.colorScheme.surface.withValues(alpha: 0.5),
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],
@@ -149,7 +148,8 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
     // Custom InputDecoration for our text fields
     final customInputDecoration = InputDecoration(
       filled: true,
-      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+      fillColor:
+          theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -158,8 +158,8 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
       ),
-      prefixIconColor: MaterialStateColor.resolveWith((states) =>
-          states.contains(MaterialState.focused)
+      prefixIconColor: WidgetStateColor.resolveWith((states) =>
+          states.contains(WidgetState.focused)
               ? theme.colorScheme.primary
               : theme.colorScheme.onSurfaceVariant),
     );

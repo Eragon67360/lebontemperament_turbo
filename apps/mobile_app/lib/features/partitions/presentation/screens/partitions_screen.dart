@@ -333,10 +333,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       width: 72,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border(
           right: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -357,7 +357,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               tooltip: tab.title,
               style: IconButton.styleFrom(
                 backgroundColor: isActive
-                    ? tab.iconColor.withOpacity(0.2)
+                    ? tab.iconColor.withValues(alpha: 0.2)
                     : Colors.transparent,
               ),
             ),
@@ -387,7 +387,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                     : theme.colorScheme.onSurfaceVariant,
               ),
               onSelected: (_) => _onTabSelected(tab),
-              selectedColor: tab.iconColor.withOpacity(0.2),
+              selectedColor: tab.iconColor.withValues(alpha: 0.2),
               checkmarkColor: tab.iconColor,
               showCheckmark: false,
             ),
@@ -408,7 +408,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _activeTab.iconColor.withOpacity(0.15),
+                  color: _activeTab.iconColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -591,7 +591,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
             gradient: LinearGradient(
               colors: [
                 theme.colorScheme.primary,
-                theme.colorScheme.primary.withOpacity(0.85),
+                theme.colorScheme.primary.withValues(alpha: 0.85),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -641,10 +641,11 @@ class _FolderTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.1),
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
             ),
           ),
           child: Row(
@@ -721,10 +722,11 @@ class _FileTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.1),
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -854,7 +856,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.2),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -869,7 +871,8 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

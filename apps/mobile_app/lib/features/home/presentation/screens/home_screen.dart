@@ -77,7 +77,7 @@ class _WelcomeHeader extends ConsumerWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              theme.colorScheme.primary.withOpacity(0.8),
+              theme.colorScheme.primary.withValues(alpha: 0.8),
               theme.colorScheme.primary,
             ],
             begin: Alignment.topLeft,
@@ -86,7 +86,7 @@ class _WelcomeHeader extends ConsumerWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.primary.withOpacity(0.3),
+              color: theme.colorScheme.primary.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -98,7 +98,7 @@ class _WelcomeHeader extends ConsumerWidget {
             Text(
               'Bienvenue,',
               style: GoogleFonts.poppins(
-                color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
                 fontSize: 20,
               ),
             ),
@@ -115,7 +115,7 @@ class _WelcomeHeader extends ConsumerWidget {
             Text(
               'Voici un aperçu de votre activité.',
               style: GoogleFonts.poppins(
-                color: theme.colorScheme.onPrimary.withOpacity(0.9),
+                color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                 fontSize: 14,
               ),
             ),
@@ -259,9 +259,10 @@ class _UpcomingEvents extends ConsumerWidget {
       height: 112, // Match the height of a regular card
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
+        border:
+            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: Center(
         child: Text(
@@ -305,9 +306,11 @@ class _EventNavigationCard extends StatelessWidget {
         height: 112, // Fixed height for layout consistency
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+          border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,7 +319,7 @@ class _EventNavigationCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: theme.colorScheme.primary, size: 22),
@@ -369,7 +372,7 @@ class _NavigationCard extends StatelessWidget {
     final theme = Theme.of(context);
     final bgColor = isHighlighted
         ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surfaceVariant.withOpacity(0.5);
+        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
     final iconColor = isHighlighted
         ? theme.colorScheme.onPrimaryContainer
         : theme.colorScheme.primary;
@@ -385,14 +388,15 @@ class _NavigationCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+          border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 24),
@@ -542,10 +546,11 @@ class _MembresGridCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.15),
+            color: theme.colorScheme.outline.withValues(alpha: 0.15),
           ),
         ),
         child: Column(
@@ -555,7 +560,7 @@ class _MembresGridCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: theme.colorScheme.primary, size: 20),
@@ -610,10 +615,10 @@ class _InfoCard extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
+            color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.15),
+              color: theme.colorScheme.outline.withValues(alpha: 0.15),
             ),
           ),
           child: Row(
@@ -644,7 +649,7 @@ class _InfoCard extends ConsumerWidget {
                         fontSize: 12,
                         height: 1.35,
                         color: theme.colorScheme.onSecondaryContainer
-                            .withOpacity(0.9),
+                            .withValues(alpha: 0.9),
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -662,7 +667,8 @@ class _InfoCard extends ConsumerWidget {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: theme.colorScheme.onSecondaryContainer.withOpacity(0.6),
+                color: theme.colorScheme.onSecondaryContainer
+                    .withValues(alpha: 0.6),
               ),
             ],
           ),
@@ -715,15 +721,16 @@ class _BetaNoticeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.25),
+            color: theme.colorScheme.primary.withValues(alpha: 0.25),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.06),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
