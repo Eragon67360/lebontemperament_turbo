@@ -144,7 +144,8 @@ class _ConcertDetailHeader extends StatelessWidget {
           imageUrl: concert.affiche!,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.5),
             child: Center(
               child: CircularProgressIndicator(
                 color: theme.colorScheme.primary,
@@ -162,7 +163,10 @@ class _ConcertDetailHeader extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.8)
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -178,7 +182,7 @@ class _ConcertDetailHeader extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -215,7 +219,7 @@ class _ConcertDetailHeader extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primaryContainer.withOpacity(0.5),
+            theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
             theme.colorScheme.primaryContainer,
           ],
           begin: Alignment.topCenter,
@@ -228,7 +232,8 @@ class _ConcertDetailHeader extends StatelessWidget {
             child: Icon(
               Icons.music_note_outlined,
               size: 200,
-              color: theme.colorScheme.onPrimaryContainer.withOpacity(0.1),
+              color:
+                  theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.1),
             ),
           ),
           Padding(
@@ -243,8 +248,8 @@ class _ConcertDetailHeader extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        theme.colorScheme.onPrimaryContainer.withOpacity(0.15),
+                    color: theme.colorScheme.onPrimaryContainer
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -287,9 +292,10 @@ class _ConcertInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border:
+            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -301,7 +307,7 @@ class _ConcertInfoCard extends StatelessWidget {
           Divider(
             height: 24,
             thickness: 0.5,
-            color: theme.colorScheme.outline.withOpacity(0.5),
+            color: theme.colorScheme.outline.withValues(alpha: 0.5),
           ),
           _InfoRow(
             icon: Icons.access_time_outlined,
@@ -311,7 +317,7 @@ class _ConcertInfoCard extends StatelessWidget {
           Divider(
             height: 24,
             thickness: 0.5,
-            color: theme.colorScheme.outline.withOpacity(0.5),
+            color: theme.colorScheme.outline.withValues(alpha: 0.5),
           ),
           _InfoRow(
             icon: Icons.location_on_outlined,
@@ -321,7 +327,7 @@ class _ConcertInfoCard extends StatelessWidget {
           Divider(
             height: 24,
             thickness: 0.5,
-            color: theme.colorScheme.outline.withOpacity(0.5),
+            color: theme.colorScheme.outline.withValues(alpha: 0.5),
           ),
           _InfoRow(
             icon: Icons.music_note_outlined,
@@ -412,10 +418,10 @@ class _AdditionalInformationsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Text(
@@ -423,7 +429,7 @@ class _AdditionalInformationsCard extends StatelessWidget {
         style: GoogleFonts.poppins(
           color: hasContent
               ? theme.colorScheme.onSurfaceVariant
-              : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
           fontSize: 15,
           height: 1.6,
           fontStyle: hasContent ? FontStyle.normal : FontStyle.italic,

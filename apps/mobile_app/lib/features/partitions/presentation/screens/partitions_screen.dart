@@ -4,12 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/core/config/app_config.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
-import 'package:mobile_app/core/widgets/pdf_viewer_sheet.dart';
-import 'package:mobile_app/data/models/drive_file.dart';
-import 'package:mobile_app/data/providers/data_providers.dart';
-import 'package:mobile_app/data/services/drive_service.dart';
+import 'package:lebontemperament/core/config/app_config.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
+import 'package:lebontemperament/data/models/drive_file.dart';
+import 'package:lebontemperament/data/providers/data_providers.dart';
+import 'package:lebontemperament/data/services/drive_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -232,7 +232,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Impossible de télécharger le fichier.')),
+            content: Text('Impossible de télécharger le fichier.'),
+          ),
         );
       }
     }
@@ -333,10 +334,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       width: 72,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border(
           right: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -357,7 +358,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               tooltip: tab.title,
               style: IconButton.styleFrom(
                 backgroundColor: isActive
-                    ? tab.iconColor.withOpacity(0.2)
+                    ? tab.iconColor.withValues(alpha: 0.2)
                     : Colors.transparent,
               ),
             ),
@@ -387,7 +388,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                     : theme.colorScheme.onSurfaceVariant,
               ),
               onSelected: (_) => _onTabSelected(tab),
-              selectedColor: tab.iconColor.withOpacity(0.2),
+              selectedColor: tab.iconColor.withValues(alpha: 0.2),
               checkmarkColor: tab.iconColor,
               showCheckmark: false,
             ),
@@ -408,7 +409,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _activeTab.iconColor.withOpacity(0.15),
+                  color: _activeTab.iconColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -436,8 +437,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               onTap: _onBack,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -465,8 +468,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
           child: _error != null
               ? _buildError(theme)
               : _loading
-                  ? _buildLoading(theme)
-                  : _buildFileList(theme),
+              ? _buildLoading(theme)
+              : _buildFileList(theme),
         ),
         _buildDriveLink(theme),
       ],
@@ -508,9 +511,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
 
   Widget _buildLoading(ThemeData theme) {
     return Center(
-      child: CircularProgressIndicator(
-        color: theme.colorScheme.primary,
-      ),
+      child: CircularProgressIndicator(color: theme.colorScheme.primary),
     );
   }
 
@@ -528,28 +529,34 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     }
 
     return ListView(
-      padding:
-          const EdgeInsets.fromLTRB(16, 0, 16, kFloatingNavBarBottomPadding),
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        kFloatingNavBarBottomPadding,
+      ),
       children: [
         if (_folders.isNotEmpty) ...[
           _sectionLabel(theme, 'Dossiers'),
           const SizedBox(height: 8),
-          ..._folders.map((f) => _FolderTile(
-                folder: f,
-                onTap: () => _onFolderTap(f),
-              )),
+          ..._folders.map(
+            (f) => _FolderTile(folder: f, onTap: () => _onFolderTap(f)),
+          ),
           const SizedBox(height: 20),
         ],
         if (_files.isNotEmpty) ...[
           _sectionLabel(theme, 'Fichiers'),
           const SizedBox(height: 8),
-          ..._files.map((f) => _FileTile(
-                file: f,
-                onDownload: () => _onFileDownload(f),
-                onPlay:
-                    _isAudioFile(f) ? () => _showAudioPlayer(context, f) : null,
-                onView: _isPdfFile(f) ? () => _showPdfViewer(context, f) : null,
-              )),
+          ..._files.map(
+            (f) => _FileTile(
+              file: f,
+              onDownload: () => _onFileDownload(f),
+              onPlay: _isAudioFile(f)
+                  ? () => _showAudioPlayer(context, f)
+                  : null,
+              onView: _isPdfFile(f) ? () => _showPdfViewer(context, f) : null,
+            ),
+          ),
         ],
       ],
     );
@@ -591,7 +598,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
             gradient: LinearGradient(
               colors: [
                 theme.colorScheme.primary,
-                theme.colorScheme.primary.withOpacity(0.85),
+                theme.colorScheme.primary.withValues(alpha: 0.85),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -641,10 +648,12 @@ class _FolderTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.1),
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
             ),
           ),
           child: Row(
@@ -721,19 +730,17 @@ class _FileTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.1),
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
           children: [
-            Icon(
-              _iconForMimeType(file.mimeType),
-              color: iconColor,
-              size: 26,
-            ),
+            Icon(_iconForMimeType(file.mimeType), color: iconColor, size: 26),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
@@ -761,10 +768,7 @@ class _FileTile extends StatelessWidget {
                 color: theme.colorScheme.primary,
                 tooltip: 'Ouvrir',
               ),
-            TextButton(
-              onPressed: onDownload,
-              child: const Text('Télécharger'),
-            ),
+            TextButton(onPressed: onDownload, child: const Text('Télécharger')),
           ],
         ),
       ),
@@ -854,7 +858,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.2),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -869,7 +873,9 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.4,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

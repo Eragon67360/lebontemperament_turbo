@@ -27,12 +27,8 @@ mixin _$NotificationSettings {
   bool get rehearsalsEnabled => throw _privateConstructorUsedError;
   bool get realtimeEnabled => throw _privateConstructorUsedError;
 
-  /// Serializes this NotificationSettings to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of NotificationSettings
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $NotificationSettingsCopyWith<NotificationSettings> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -62,8 +58,6 @@ class _$NotificationSettingsCopyWithImpl<$Res,
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of NotificationSettings
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -122,8 +116,6 @@ class __$$NotificationSettingsImplCopyWithImpl<$Res>
       $Res Function(_$NotificationSettingsImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of NotificationSettings
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -218,7 +210,7 @@ class _$NotificationSettingsImpl implements _NotificationSettings {
                 other.realtimeEnabled == realtimeEnabled));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -228,9 +220,7 @@ class _$NotificationSettingsImpl implements _NotificationSettings {
       rehearsalsEnabled,
       realtimeEnabled);
 
-  /// Create a copy of NotificationSettings
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$NotificationSettingsImplCopyWith<_$NotificationSettingsImpl>
@@ -267,11 +257,8 @@ abstract class _NotificationSettings implements NotificationSettings {
   bool get rehearsalsEnabled;
   @override
   bool get realtimeEnabled;
-
-  /// Create a copy of NotificationSettings
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$NotificationSettingsImplCopyWith<_$NotificationSettingsImpl>
       get copyWith => throw _privateConstructorUsedError;
 }

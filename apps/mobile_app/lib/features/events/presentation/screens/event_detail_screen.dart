@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -126,7 +125,7 @@ class _EventDetailHeader extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              eventTheme.backgroundColor.withOpacity(0.5),
+              eventTheme.backgroundColor.withValues(alpha: 0.5),
               eventTheme.backgroundColor,
             ],
             begin: Alignment.topCenter,
@@ -139,7 +138,7 @@ class _EventDetailHeader extends StatelessWidget {
               child: Icon(
                 eventTheme.icon,
                 size: 200,
-                color: eventTheme.iconColor.withOpacity(0.1),
+                color: eventTheme.iconColor.withValues(alpha: 0.1),
               ),
             ),
             Padding(
@@ -154,7 +153,7 @@ class _EventDetailHeader extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: eventTheme.iconColor.withOpacity(0.15),
+                      color: eventTheme.iconColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -198,9 +197,10 @@ class _EventInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border:
+            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -214,7 +214,7 @@ class _EventInfoCard extends StatelessWidget {
             Divider(
               height: 24,
               thickness: 0.5,
-              color: theme.colorScheme.outline.withOpacity(0.5),
+              color: theme.colorScheme.outline.withValues(alpha: 0.5),
             ),
           if (event.time != null) ...[
             _InfoRow(
@@ -226,7 +226,7 @@ class _EventInfoCard extends StatelessWidget {
               Divider(
                 height: 24,
                 thickness: 0.5,
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
           ],
           if (event.location != null && event.location!.isNotEmpty)

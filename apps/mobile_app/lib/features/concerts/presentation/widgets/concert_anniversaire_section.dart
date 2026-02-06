@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/data/constants/anniversary_tracks.dart';
+import 'package:lebontemperament/data/constants/anniversary_tracks.dart';
 
 /// Section displaying the Concert Anniversaire (20 ans du BT) album with audio player.
 class ConcertAnniversaireSection extends StatefulWidget {
@@ -14,7 +14,8 @@ class ConcertAnniversaireSection extends StatefulWidget {
       _ConcertAnniversaireSectionState();
 }
 
-class _ConcertAnniversaireSectionState extends State<ConcertAnniversaireSection> {
+class _ConcertAnniversaireSectionState
+    extends State<ConcertAnniversaireSection> {
   late final AudioPlayer _player;
   int? _playingIndex;
 
@@ -58,10 +59,10 @@ class _ConcertAnniversaireSectionState extends State<ConcertAnniversaireSection>
       margin: const EdgeInsets.only(top: 32),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.15),
+          color: theme.colorScheme.outline.withValues(alpha: 0.15),
         ),
       ),
       child: Column(
@@ -170,12 +171,16 @@ class _ConcertAnniversaireSectionState extends State<ConcertAnniversaireSection>
                           height: 36,
                           decoration: BoxDecoration(
                             color: isPlaying
-                                ? theme.colorScheme.primary.withOpacity(0.2)
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.2,
+                                  )
                                 : theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
-                            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            isPlaying
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
                             color: theme.colorScheme.primary,
                             size: 22,
                           ),

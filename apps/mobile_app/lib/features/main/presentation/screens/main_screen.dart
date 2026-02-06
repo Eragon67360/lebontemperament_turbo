@@ -152,9 +152,9 @@ class _FrostedGlassNavBar extends StatelessWidget {
             child: Container(
               height: 70, // Fixed height for the nav bar
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withOpacity(0.8),
+                color: theme.colorScheme.surface.withValues(alpha: 0.8),
                 border: Border.all(
-                    color: theme.colorScheme.outline.withOpacity(0.2)),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2)),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Row(

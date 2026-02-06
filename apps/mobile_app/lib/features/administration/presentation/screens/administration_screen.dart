@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
-import 'package:mobile_app/core/widgets/pdf_viewer_sheet.dart';
-import 'package:mobile_app/data/constants/pdf_archives.dart';
-import 'package:mobile_app/data/models/ca_minute.dart';
-import 'package:mobile_app/data/providers/data_providers.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
+import 'package:lebontemperament/data/constants/pdf_archives.dart';
+import 'package:lebontemperament/data/models/ca_minute.dart';
+import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -36,8 +36,9 @@ double _computeItemWidth(double maxWidth, List<String> labels) {
 
   if (labels.isEmpty) return halfWidth;
 
-  final maxLabelWidth =
-      labels.map(_measureLabelWidth).reduce((a, b) => a > b ? a : b);
+  final maxLabelWidth = labels
+      .map(_measureLabelWidth)
+      .reduce((a, b) => a > b ? a : b);
   final chipWidth = chipFixedWidth + maxLabelWidth;
 
   return chipWidth > halfWidth ? maxWidth : halfWidth;
@@ -154,8 +155,9 @@ class _TabBar extends StatelessWidget {
               child: Material(
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
+                    : theme.colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.5,
+                      ),
                 borderRadius: BorderRadius.circular(12),
                 child: InkWell(
                   onTap: () => onTap(i),
@@ -434,8 +436,9 @@ class _ExpandablePdfArchiveSectionState
   @override
   Widget build(BuildContext context) {
     final entries = widget.entries;
-    final displayCount =
-        _showAll ? entries.length : entries.length.clamp(0, _initialCount);
+    final displayCount = _showAll
+        ? entries.length
+        : entries.length.clamp(0, _initialCount);
     final displayed = entries.take(displayCount).toList();
     final remaining = entries.length - _initialCount;
 
@@ -536,8 +539,10 @@ class _ArchiveSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.folder_open_outlined,
-                  color: theme.colorScheme.primary),
+              Icon(
+                Icons.folder_open_outlined,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -571,8 +576,11 @@ class _ArchiveSection extends StatelessWidget {
               onTap: () => _launchUrl(driveLink!),
               child: Row(
                 children: [
-                  Icon(Icons.open_in_new,
-                      size: 16, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.open_in_new,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Voir toutes les archives',
@@ -624,8 +632,11 @@ class _PdfChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.max,
             children: [
-              Icon(Icons.picture_as_pdf,
-                  size: 18, color: theme.colorScheme.onPrimary),
+              Icon(
+                Icons.picture_as_pdf,
+                size: 18,
+                color: theme.colorScheme.onPrimary,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -682,7 +693,10 @@ class _ReglementTab extends StatelessWidget {
             title: 'Règlement intérieur',
             subtitle: 'Extrait du règlement intérieur',
             onTap: () => _showPdfSheet(
-                context, '/pdf/reglement.pdf', 'Règlement intérieur'),
+              context,
+              '/pdf/reglement.pdf',
+              'Règlement intérieur',
+            ),
             extras: [
               _ReglementExtract(
                 title: 'Répétitions',
@@ -701,16 +715,20 @@ class _ReglementTab extends StatelessWidget {
             title: 'Charte des séjours',
             subtitle: 'Consultez la charte complète sur les séjours BT',
             onTap: () => _showPdfSheet(
-                context, '/pdf/charte_BT.pdf', 'Charte des séjours'),
+              context,
+              '/pdf/charte_BT.pdf',
+              'Charte des séjours',
+            ),
           ),
           const SizedBox(height: 16),
           _ReglementCard(
             title: 'Statuts de l\'association',
             subtitle: 'Consultez les statuts complets du Bon Tempérament',
             onTap: () => _showPdfSheet(
-                context,
-                '/pdf/Statuts_Le_Bon_Tempérament.pdf',
-                'Statuts de l\'association'),
+              context,
+              '/pdf/Statuts_Le_Bon_Tempérament.pdf',
+              'Statuts de l\'association',
+            ),
           ),
           const SizedBox(height: kFloatingNavBarBottomPadding),
         ],
@@ -749,8 +767,10 @@ class _ReglementCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.description_outlined,
-                      color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.description_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -774,14 +794,14 @@ class _ReglementCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(Icons.open_in_new,
-                      size: 20, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.open_in_new,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
                 ],
               ),
-              if (extras != null) ...[
-                const SizedBox(height: 16),
-                ...extras!,
-              ],
+              if (extras != null) ...[const SizedBox(height: 16), ...extras!],
             ],
           ),
         ),
@@ -856,8 +876,10 @@ class _LogicielsTab extends StatelessWidget {
         items: [
           _SoftwareItem('VLC', 'https://www.videolan.org/vlc/'),
           _SoftwareItem('iTunes', 'https://www.apple.com/fr/itunes/'),
-          _SoftwareItem('Windows Media Player',
-              'https://support.microsoft.com/fr-fr/windows'),
+          _SoftwareItem(
+            'Windows Media Player',
+            'https://support.microsoft.com/fr-fr/windows',
+          ),
         ],
       ),
       _SoftwareCategory(
@@ -883,44 +905,49 @@ class _LogicielsTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...categories.map((cat) => Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(cat.icon, color: theme.colorScheme.primary),
-                        const SizedBox(width: 10),
-                        Text(
-                          cat.title,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
-                          ),
+          ...categories.map(
+            (cat) => Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(cat.icon, color: theme.colorScheme.primary),
+                      const SizedBox(width: 10),
+                      Text(
+                        cat.title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: cat.items
-                          .map((item) => _SoftwareChip(
-                                name: item.name,
-                                onTap: () => _launchUrl(item.url),
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-              )),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: cat.items
+                        .map(
+                          (item) => _SoftwareChip(
+                            name: item.name,
+                            onTap: () => _launchUrl(item.url),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: theme.colorScheme.outline.withValues(alpha: 0.15),
@@ -931,8 +958,10 @@ class _LogicielsTab extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.build_outlined,
-                        color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.build_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'Trucs et astuces',

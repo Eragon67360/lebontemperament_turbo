@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/services/auth_service.dart';
 import '../../../../core/config/app_router.dart';
@@ -33,7 +34,7 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 final displayNameProvider = Provider<String>((ref) {
   final user = ref.watch(currentUserProvider);
   final profileAsync = ref.watch(userProfileProvider);
-  final fromProfile = profileAsync.valueOrNull?['display_name']?.toString();
+  final fromProfile = profileAsync.value?['display_name']?.toString();
   if (fromProfile != null && fromProfile.trim().isNotEmpty) {
     return fromProfile.trim();
   }
@@ -48,7 +49,7 @@ final displayNameProvider = Provider<String>((ref) {
 final profilePictureUrlProvider = Provider<String?>((ref) {
   final profileAsync = ref.watch(userProfileProvider);
   final fromProfile =
-      profileAsync.valueOrNull?['profile_picture_url']?.toString();
+      profileAsync.value?['profile_picture_url']?.toString();
   if (fromProfile != null && fromProfile.trim().isNotEmpty) {
     return fromProfile.trim();
   }
