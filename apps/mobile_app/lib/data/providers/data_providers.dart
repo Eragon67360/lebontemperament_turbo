@@ -3,10 +3,12 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import '../../core/utils/date_utils.dart' as app_date_utils;
+import '../models/ca_minute.dart';
 import '../models/event.dart';
 import '../models/concert.dart';
 import '../models/member.dart';
 import '../models/rehearsal.dart';
+import '../services/ca_service.dart';
 import '../services/events_service.dart';
 import '../services/members_service.dart';
 import '../services/concerts_service.dart';
@@ -43,6 +45,16 @@ final rehearsalsServiceProvider = Provider<RehearsalsService>((ref) {
 
 final membersServiceProvider = Provider<MembersService>((ref) {
   return MembersService(logger: Logger());
+});
+
+final caServiceProvider = Provider<CaService>((ref) {
+  return CaService(logger: Logger());
+});
+
+// CA minutes provider
+final caMinutesProvider = FutureProvider<List<CaMinute>>((ref) async {
+  final caService = ref.watch(caServiceProvider);
+  return await caService.getCaMinutes();
 });
 
 // Members providers
