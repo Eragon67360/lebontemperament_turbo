@@ -534,14 +534,33 @@ class _MemberCard extends StatelessWidget {
           if (member.address != null && member.address!.isNotEmpty)
             _ContactRow(
               icon: Icons.home_outlined,
-              child: Text(
-                member.address!,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: theme.colorScheme.onSurfaceVariant,
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Clipboard.setData(ClipboardData(text: member.address!));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Adresse copiée',
+                        style: GoogleFonts.poppins(),
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: Text(
+                  member.address!,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: theme.colorScheme.primary,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ),
+          const SizedBox(height: 12),
+          _ContactActionRow(member: member),
         ],
       ),
     );
@@ -592,6 +611,108 @@ class _ContactRow extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(child: child),
         ],
+      ),
+    );
+  }
+}
+
+class _ContactActionRow extends StatelessWidget {
+  final Member member;
+
+  const _ContactActionRow({required this.member});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhone =
+        (member.mobilePhone != null && member.mobilePhone!.isNotEmpty) ||
+            (member.homePhone != null && member.homePhone!.isNotEmpty);
+    final hasEmail = member.email.isNotEmpty;
+    final hasAddress = member.address != null && member.address!.isNotEmpty;
+
+    if (!hasPhone && !hasEmail && !hasAddress) return const SizedBox.shrink();
+
+    return Row(
+      children: [
+        if (hasPhone)
+          _ActionChip(
+            icon: Icons.phone_outlined,
+            tooltip: 'Appeler',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              final tel = member.mobilePhone ?? member.homePhone ?? '';
+              launchUrl(
+                Uri.parse('tel:${tel.replaceAll(' ', '')}'),
+                mode: LaunchMode.externalApplication,
+              );
+            },
+          ),
+        if (hasPhone && (hasEmail || hasAddress)) const SizedBox(width: 8),
+        if (hasEmail)
+          _ActionChip(
+            icon: Icons.email_outlined,
+            tooltip: 'Envoyer un email',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              launchUrl(
+                Uri.parse('mailto:${member.email}'),
+                mode: LaunchMode.externalApplication,
+              );
+            },
+          ),
+        if (hasEmail && hasAddress) const SizedBox(width: 8),
+        if (hasAddress)
+          _ActionChip(
+            icon: Icons.copy_outlined,
+            tooltip: 'Copier l\'adresse',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Clipboard.setData(ClipboardData(text: member.address!));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Adresse copiée',
+                    style: GoogleFonts.poppins(),
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _ActionChip extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _ActionChip({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Icon(
+            icon,
+            size: 20,
+            color: theme.colorScheme.primary,
+          ),
+        ),
       ),
     );
   }

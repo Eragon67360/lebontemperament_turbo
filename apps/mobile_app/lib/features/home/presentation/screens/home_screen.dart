@@ -169,9 +169,9 @@ class _UpcomingEvents extends ConsumerWidget {
             children: [
               if (nextRehearsals.isNotEmpty)
                 Expanded(
-                  // Rehearsals are on tab index 3.
+                  // Rehearsals are on tab index 2.
                   child: _buildRehearsalCard(context, nextRehearsals[0],
-                      () => navigationNotifier.setTab(3)),
+                      () => navigationNotifier.setTab(2)),
                 )
               else
                 Expanded(
@@ -181,7 +181,7 @@ class _UpcomingEvents extends ConsumerWidget {
               if (nextRehearsals.length > 1)
                 Expanded(
                   child: _buildRehearsalCard(context, nextRehearsals[1],
-                      () => navigationNotifier.setTab(3)),
+                      () => navigationNotifier.setTab(2)),
                 )
               else
                 Expanded(
@@ -195,9 +195,9 @@ class _UpcomingEvents extends ConsumerWidget {
             children: [
               if (nextConcerts.isNotEmpty)
                 Expanded(
-                  // Concerts are on tab index 2. Adjust if needed.
+                  // Concerts & Évènements are on tab index 1.
                   child: _buildConcertCard(context, nextConcerts[0],
-                      () => navigationNotifier.setTab(2)),
+                      () => navigationNotifier.setTab(1)),
                 )
               else
                 Expanded(
@@ -207,7 +207,7 @@ class _UpcomingEvents extends ConsumerWidget {
               if (nextConcerts.length > 1)
                 Expanded(
                   child: _buildConcertCard(context, nextConcerts[1],
-                      () => navigationNotifier.setTab(2)),
+                      () => navigationNotifier.setTab(1)),
                 )
               else
                 Expanded(
@@ -468,7 +468,7 @@ class _MembresGrid extends ConsumerWidget {
                 description: 'Répétitions à venir',
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  navigationNotifier.setTab(3);
+                  navigationNotifier.setTab(2);
                 },
               ),
               _MembresGridCard(
@@ -599,7 +599,7 @@ class _InfoCard extends ConsumerWidget {
       child: InkWell(
         onTap: () {
           HapticFeedback.lightImpact();
-          navigationNotifier.setTab(4);
+          navigationNotifier.setTab(3);
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => const AboutScreen(),
