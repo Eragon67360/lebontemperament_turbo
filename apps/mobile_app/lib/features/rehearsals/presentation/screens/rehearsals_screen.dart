@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -66,6 +67,21 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
           slivers: [
             // --- 1. Dynamic App Bar ---
             _RehearsalsAppBar(
+              onCalendar: () async {
+                HapticFeedback.lightImpact();
+                final uri = Uri.parse(kGoogleCalendarUrl);
+                try {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (_) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Impossible d\'ouvrir le calendrier.'),
+                      ),
+                    );
+                  }
+                }
+              },
               onFilter: () => _showFilterModal(context, selectedFilter),
               onLogout: () async {
                 try {
@@ -141,10 +157,15 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
 // MARK: - UI Components
 
 class _RehearsalsAppBar extends StatelessWidget {
+  final VoidCallback onCalendar;
   final VoidCallback onFilter;
   final VoidCallback onLogout;
 
-  const _RehearsalsAppBar({required this.onFilter, required this.onLogout});
+  const _RehearsalsAppBar({
+    required this.onCalendar,
+    required this.onFilter,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +188,12 @@ class _RehearsalsAppBar extends StatelessWidget {
         ),
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.calendar_month_rounded),
+          color: theme.colorScheme.onSurfaceVariant,
+          tooltip: 'Calendrier complet',
+          onPressed: onCalendar,
+        ),
         IconButton(
           icon: const Icon(Icons.filter_list_rounded),
           color: theme.colorScheme.onSurfaceVariant,

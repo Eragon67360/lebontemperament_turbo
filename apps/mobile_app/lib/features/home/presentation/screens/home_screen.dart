@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_app/core/config/app_config.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
 import 'package:mobile_app/data/models/concert.dart';
 import 'package:mobile_app/data/models/rehearsal.dart';
@@ -494,7 +495,7 @@ class _MembresGrid extends ConsumerWidget {
                 description: 'Accès direct au Drive',
                 onTap: () async {
                   HapticFeedback.lightImpact();
-                  final uri = Uri.parse(kDriveFolderUrl);
+                  final uri = Uri.parse(AppConfig.driveFolderMain);
                   try {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   } catch (_) {

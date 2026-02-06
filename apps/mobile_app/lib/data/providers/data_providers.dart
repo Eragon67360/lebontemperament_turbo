@@ -12,6 +12,7 @@ import '../services/ca_service.dart';
 import '../services/events_service.dart';
 import '../services/members_service.dart';
 import '../services/concerts_service.dart';
+import '../services/drive_service.dart';
 import '../services/rehearsals_service.dart';
 import '../services/storage_service.dart';
 import 'realtime_notifications_provider.dart';
@@ -49,6 +50,10 @@ final membersServiceProvider = Provider<MembersService>((ref) {
 
 final caServiceProvider = Provider<CaService>((ref) {
   return CaService(logger: Logger());
+});
+
+final driveServiceProvider = Provider<DriveService>((ref) {
+  return DriveService(logger: Logger());
 });
 
 // CA minutes provider
