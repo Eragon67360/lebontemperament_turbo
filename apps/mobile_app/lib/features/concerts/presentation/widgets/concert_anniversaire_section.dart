@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/data/constants/anniversary_tracks.dart';
+import 'package:lebontemperament/data/constants/anniversary_tracks.dart';
 
 /// Section displaying the Concert Anniversaire (20 ans du BT) album with audio player.
 class ConcertAnniversaireSection extends StatefulWidget {
@@ -171,8 +171,9 @@ class _ConcertAnniversaireSectionState
                           height: 36,
                           decoration: BoxDecoration(
                             color: isPlaying
-                                ? theme.colorScheme.primary
-                                    .withValues(alpha: 0.2)
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.2,
+                                  )
                                 : theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(8),
                           ),

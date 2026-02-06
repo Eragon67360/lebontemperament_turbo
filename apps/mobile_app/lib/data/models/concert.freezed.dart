@@ -35,6 +35,7 @@ mixin _$Concert {
   @HiveField(6)
   Context get context => throw _privateConstructorUsedError;
   @HiveField(7)
+  @JsonKey(name: 'additional_informations')
   String? get additionalInformations => throw _privateConstructorUsedError;
   @HiveField(8)
   String? get name => throw _privateConstructorUsedError;
@@ -43,12 +44,8 @@ mixin _$Concert {
   @HiveField(10)
   String? get affiche => throw _privateConstructorUsedError;
 
-  /// Serializes this Concert to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Concert
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $ConcertCopyWith<Concert> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -65,7 +62,9 @@ abstract class $ConcertCopyWith<$Res> {
       @HiveField(4) String date,
       @HiveField(5) String time,
       @HiveField(6) Context context,
-      @HiveField(7) String? additionalInformations,
+      @HiveField(7)
+      @JsonKey(name: 'additional_informations')
+      String? additionalInformations,
       @HiveField(8) String? name,
       @HiveField(9) String? createdBy,
       @HiveField(10) String? affiche});
@@ -81,8 +80,6 @@ class _$ConcertCopyWithImpl<$Res, $Val extends Concert>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Concert
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -162,7 +159,9 @@ abstract class _$$ConcertImplCopyWith<$Res> implements $ConcertCopyWith<$Res> {
       @HiveField(4) String date,
       @HiveField(5) String time,
       @HiveField(6) Context context,
-      @HiveField(7) String? additionalInformations,
+      @HiveField(7)
+      @JsonKey(name: 'additional_informations')
+      String? additionalInformations,
       @HiveField(8) String? name,
       @HiveField(9) String? createdBy,
       @HiveField(10) String? affiche});
@@ -176,8 +175,6 @@ class __$$ConcertImplCopyWithImpl<$Res>
       _$ConcertImpl _value, $Res Function(_$ConcertImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Concert
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -253,7 +250,9 @@ class _$ConcertImpl implements _Concert {
       @HiveField(4) required this.date,
       @HiveField(5) required this.time,
       @HiveField(6) required this.context,
-      @HiveField(7) this.additionalInformations,
+      @HiveField(7)
+      @JsonKey(name: 'additional_informations')
+      this.additionalInformations,
       @HiveField(8) this.name,
       @HiveField(9) this.createdBy,
       @HiveField(10) this.affiche});
@@ -284,6 +283,7 @@ class _$ConcertImpl implements _Concert {
   final Context context;
   @override
   @HiveField(7)
+  @JsonKey(name: 'additional_informations')
   final String? additionalInformations;
   @override
   @HiveField(8)
@@ -322,14 +322,12 @@ class _$ConcertImpl implements _Concert {
             (identical(other.affiche, affiche) || other.affiche == affiche));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, id, createdAt, updatedAt, place,
       date, time, context, additionalInformations, name, createdBy, affiche);
 
-  /// Create a copy of Concert
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$ConcertImplCopyWith<_$ConcertImpl> get copyWith =>
@@ -352,7 +350,9 @@ abstract class _Concert implements Concert {
       @HiveField(4) required final String date,
       @HiveField(5) required final String time,
       @HiveField(6) required final Context context,
-      @HiveField(7) final String? additionalInformations,
+      @HiveField(7)
+      @JsonKey(name: 'additional_informations')
+      final String? additionalInformations,
       @HiveField(8) final String? name,
       @HiveField(9) final String? createdBy,
       @HiveField(10) final String? affiche}) = _$ConcertImpl;
@@ -382,6 +382,7 @@ abstract class _Concert implements Concert {
   Context get context;
   @override
   @HiveField(7)
+  @JsonKey(name: 'additional_informations')
   String? get additionalInformations;
   @override
   @HiveField(8)
@@ -392,11 +393,8 @@ abstract class _Concert implements Concert {
   @override
   @HiveField(10)
   String? get affiche;
-
-  /// Create a copy of Concert
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$ConcertImplCopyWith<_$ConcertImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

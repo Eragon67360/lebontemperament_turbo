@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
 
 import '../../../../data/models/event.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -74,7 +74,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                 }
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
-                      20, 10, 20, kFloatingNavBarBottomPadding),
+                    20,
+                    10,
+                    20,
+                    kFloatingNavBarBottomPadding,
+                  ),
                   sliver: SliverList.builder(
                     itemCount: events.length,
                     itemBuilder: (context, index) {
@@ -162,11 +166,13 @@ class _EventCard extends StatelessWidget {
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: Container(
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          ),
         ),
         child: InkWell(
           onTap: () {
@@ -370,8 +376,9 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 Icons.music_off_outlined,
                 size: 72,
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               const SizedBox(height: 24),
               Text(

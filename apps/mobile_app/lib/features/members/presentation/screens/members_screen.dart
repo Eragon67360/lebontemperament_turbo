@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
-import 'package:mobile_app/data/models/member.dart';
-import 'package:mobile_app/data/providers/data_providers.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/data/models/member.dart';
+import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -72,17 +72,19 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                       children: [
                         const SizedBox(height: 16),
                         _SearchBar(
-                          onChanged: (v) => ref
-                              .read(membersSearchProvider.notifier)
-                              .state = v,
+                          onChanged: (v) =>
+                              ref.read(membersSearchProvider.notifier).state =
+                                  v,
                         ),
                         const SizedBox(height: 12),
                         _VoiceFilterDropdown(
                           voiceWords: voiceWords,
                           selected: selectedVoice,
-                          onChanged: (v) => ref
-                              .read(membersVoiceFilterProvider.notifier)
-                              .state = v,
+                          onChanged: (v) =>
+                              ref
+                                      .read(membersVoiceFilterProvider.notifier)
+                                      .state =
+                                  v,
                         ),
                         const SizedBox(height: 16),
                         _MemberCountLabel(count: filtered.length),
@@ -173,9 +175,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               loading: () => const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, __) => const SliverFillRemaining(
-                child: SizedBox.shrink(),
-              ),
+              error: (_, __) =>
+                  const SliverFillRemaining(child: SizedBox.shrink()),
             ),
           ],
         ),
@@ -203,7 +204,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     String selectedVoice,
   ) {
     return members.where((m) {
-      final matchesSearch = searchTerm.isEmpty ||
+      final matchesSearch =
+          searchTerm.isEmpty ||
           m.displayName.toLowerCase().contains(searchTerm.toLowerCase()) ||
           m.email.toLowerCase().contains(searchTerm.toLowerCase()) ||
           (m.voice ?? '').toLowerCase().contains(searchTerm.toLowerCase()) ||
@@ -211,7 +213,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           (m.homePhone ?? '').contains(searchTerm) ||
           (m.address ?? '').toLowerCase().contains(searchTerm.toLowerCase());
 
-      final matchesVoice = selectedVoice.isEmpty ||
+      final matchesVoice =
+          selectedVoice.isEmpty ||
           (m.voice ?? '').toLowerCase().contains(selectedVoice.toLowerCase());
 
       return matchesSearch && matchesVoice;
@@ -302,8 +305,10 @@ class _SearchBarState extends State<_SearchBar> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       style: GoogleFonts.poppins(fontSize: 15),
     );
@@ -338,17 +343,17 @@ class _VoiceFilterDropdown extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       items: [
         const DropdownMenuItem(value: '', child: Text('Toutes les voix')),
         ...voiceWords.map(
           (v) => DropdownMenuItem(
             value: v,
-            child: Text(
-              v.isEmpty ? v : v[0].toUpperCase() + v.substring(1),
-            ),
+            child: Text(v.isEmpty ? v : v[0].toUpperCase() + v.substring(1)),
           ),
         ),
       ],
@@ -459,8 +464,9 @@ class _MemberCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.5,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -625,7 +631,7 @@ class _ContactActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasPhone =
         (member.mobilePhone != null && member.mobilePhone!.isNotEmpty) ||
-            (member.homePhone != null && member.homePhone!.isNotEmpty);
+        (member.homePhone != null && member.homePhone!.isNotEmpty);
     final hasEmail = member.email.isNotEmpty;
     final hasAddress = member.address != null && member.address!.isNotEmpty;
 
@@ -669,10 +675,7 @@ class _ContactActionRow extends StatelessWidget {
               Clipboard.setData(ClipboardData(text: member.address!));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'Adresse copiée',
-                    style: GoogleFonts.poppins(),
-                  ),
+                  content: Text('Adresse copiée', style: GoogleFonts.poppins()),
                   behavior: SnackBarBehavior.floating,
                   duration: const Duration(seconds: 2),
                 ),
@@ -707,11 +710,7 @@ class _ActionChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Icon(
-            icon,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
+          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
         ),
       ),
     );

@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:mobile_app/data/models/concert.dart';
-import 'package:mobile_app/data/models/event.dart';
-import 'package:mobile_app/data/providers/data_providers.dart';
+import 'package:lebontemperament/data/models/concert.dart';
+import 'package:lebontemperament/data/models/event.dart';
+import 'package:lebontemperament/data/providers/data_providers.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/concert_anniversaire_section.dart';
@@ -54,10 +54,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
         SliverOverlapInjector(
           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
         ),
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: child,
-        ),
+        SliverFillRemaining(hasScrollBody: false, child: child),
       ],
     );
   }
@@ -117,8 +114,9 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
                 unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                 indicatorColor: theme.colorScheme.primary,
                 indicatorSize: TabBarIndicatorSize.label,
-                dividerColor:
-                    theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+                dividerColor: theme.colorScheme.outlineVariant.withValues(
+                  alpha: 0.2,
+                ),
                 labelStyle: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -259,10 +257,7 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
-      color: backgroundColor,
-      child: tabBar,
-    );
+    return Container(color: backgroundColor, child: tabBar);
   }
 
   @override
@@ -307,7 +302,11 @@ class _ConcertsList extends StatelessWidget {
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
-              20, 16, 20, kFloatingNavBarBottomPadding),
+            20,
+            16,
+            20,
+            kFloatingNavBarBottomPadding,
+          ),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
@@ -372,7 +371,11 @@ class _EventsList extends StatelessWidget {
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
-              20, 16, 20, kFloatingNavBarBottomPadding),
+            20,
+            16,
+            20,
+            kFloatingNavBarBottomPadding,
+          ),
           sliver: SliverList.builder(
             itemCount: events.length,
             itemBuilder: (context, index) {
@@ -424,8 +427,9 @@ class _ConcertCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -532,8 +536,9 @@ class _EventCard extends StatelessWidget {
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: Container(
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -601,8 +606,9 @@ class _EventCard extends StatelessWidget {
                   child: Text(
                     event.description ?? '',
                     style: GoogleFonts.poppins(
-                      color: theme.colorScheme.onSurfaceVariant
-                          .withValues(alpha: 0.8),
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.8,
+                      ),
                       fontSize: 13,
                       height: 1.5,
                     ),
@@ -670,8 +676,9 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 icon,
                 size: 72,
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               const SizedBox(height: 24),
               Text(

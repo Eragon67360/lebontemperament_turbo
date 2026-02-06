@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -24,7 +24,12 @@ DateTime _utcToParis(DateTime utc) {
   final paris = tz.getLocation('Europe/Paris');
   final inParis = tz.TZDateTime.from(utc, paris);
   return DateTime(
-      inParis.year, inParis.month, inParis.day, inParis.hour, inParis.minute);
+    inParis.year,
+    inParis.month,
+    inParis.day,
+    inParis.hour,
+    inParis.minute,
+  );
 }
 
 class DriverTrackingScreen extends ConsumerWidget {
@@ -141,8 +146,8 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content:
-                  Text('L\'heure de fin doit être après l\'heure de début')),
+            content: Text('L\'heure de fin doit être après l\'heure de début'),
+          ),
         );
       }
       return;
@@ -167,28 +172,35 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
       scheduledEndAt.minute,
     ).toUtc();
 
-    await ref.read(driverTrackingProvider.notifier).updateScheduledRange(
+    await ref
+        .read(driverTrackingProvider.notifier)
+        .updateScheduledRange(
           scheduledAt: scheduledAtUtc,
           scheduledEndAt: scheduledEndAtUtc,
         );
   }
 
-  Future<void> _showAddOrEditRecipientDialog(
-      {DeliveryRecipient? recipient}) async {
-    final newRecipient = await showDialog<
-        ({
-          String label,
-          String? address,
-          double? latitude,
-          double? longitude,
-          String? phoneNumber
-        })?>(
-      context: context,
-      builder: (_) => _AddOrEditRecipientDialog(recipient: recipient),
-    );
+  Future<void> _showAddOrEditRecipientDialog({
+    DeliveryRecipient? recipient,
+  }) async {
+    final newRecipient =
+        await showDialog<
+          ({
+            String label,
+            String? address,
+            double? latitude,
+            double? longitude,
+            String? phoneNumber,
+          })?
+        >(
+          context: context,
+          builder: (_) => _AddOrEditRecipientDialog(recipient: recipient),
+        );
     if (newRecipient != null && mounted) {
       if (recipient == null) {
-        await ref.read(driverTrackingProvider.notifier).addRecipient(
+        await ref
+            .read(driverTrackingProvider.notifier)
+            .addRecipient(
               label: newRecipient.label,
               address: newRecipient.address,
               latitude: newRecipient.latitude,
@@ -196,7 +208,9 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
               phoneNumber: newRecipient.phoneNumber,
             );
       } else {
-        await ref.read(driverTrackingProvider.notifier).updateRecipient(
+        await ref
+            .read(driverTrackingProvider.notifier)
+            .updateRecipient(
               recipient.id,
               label: newRecipient.label,
               address: newRecipient.address,
@@ -214,14 +228,17 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
       builder: (ctx) => AlertDialog(
         title: const Text('Réinitialiser le token'),
         content: const Text(
-            'L\'ancien lien ne fonctionnera plus. Les clients devront utiliser la nouvelle URL. Continuer ?'),
+          'L\'ancien lien ne fonctionnera plus. Les clients devront utiliser la nouvelle URL. Continuer ?',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Annuler')),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Confirmer')),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Confirmer'),
+          ),
         ],
       ),
     );
@@ -237,8 +254,9 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
 
     if (state.isLoading && state.delivery == null) {
       return Scaffold(
-          appBar: AppBar(),
-          body: const Center(child: CircularProgressIndicator()));
+        appBar: AppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     return GestureDetector(
@@ -253,21 +271,29 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
               onPressed: () => context.pop(),
             ),
-            title: Text('Suivi livraison',
-                style: GoogleFonts.poppins(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w600)),
+            title: Text(
+              'Suivi livraison',
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
-                20, 20, 20, kFloatingNavBarBottomPadding),
+              20,
+              20,
+              20,
+              kFloatingNavBarBottomPadding,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 FadeInUp(delay: 100, child: _TrackingStatusHero(state: state)),
                 const SizedBox(height: 32),
                 const FadeInUp(
-                    delay: 200,
-                    child: _SectionTitle(title: 'Panneau de Contrôle')),
+                  delay: 200,
+                  child: _SectionTitle(title: 'Panneau de Contrôle'),
+                ),
                 const SizedBox(height: 12),
                 FadeInUp(delay: 300, child: _ActionButtons(state: state)),
                 if (state.delivery != null)
@@ -276,86 +302,98 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                     children: [
                       const SizedBox(height: 32),
                       FadeInUp(
-                          delay: 400,
-                          child: Row(
-                            children: [
-                              const _SectionTitle(title: 'Destinataires'),
-                              const Spacer(),
-                              FilledButton.tonalIcon(
-                                onPressed: state.isActionLoading
-                                    ? null
-                                    : () => ref
+                        delay: 400,
+                        child: Row(
+                          children: [
+                            const _SectionTitle(title: 'Destinataires'),
+                            const Spacer(),
+                            FilledButton.tonalIcon(
+                              onPressed: state.isActionLoading
+                                  ? null
+                                  : () => ref
                                         .read(driverTrackingProvider.notifier)
                                         .optimizeRecipientsRoute(
                                           startLat: state.position?.lat,
                                           startLng: state.position?.lng,
                                         ),
-                                icon: state.isActionLoading
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2),
-                                      )
-                                    : const Icon(Icons.auto_awesome, size: 18),
-                                label: const Text('Optimiser l\'itinéraire'),
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  textStyle: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600),
+                              icon: state.isActionLoading
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.auto_awesome, size: 18),
+                              label: const Text('Optimiser l\'itinéraire'),
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                textStyle: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                          )),
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       FadeInUp(
-                          delay: 500,
-                          child: _RecipientsCard(
-                            delivery: state.delivery!,
-                            recipients: state.recipients,
-                            onAdd: () => _showAddOrEditRecipientDialog(),
-                            onTapRecipient: (recipient) {
-                              // THIS IS THE PART TO CHANGE
-                              context.push(
-                                '/driver-tracking/recipient',
-                                extra: {
-                                  'delivery': state.delivery!,
-                                  'recipient': recipient,
-                                  // Add the callback here
-                                  'onEdit': () => _showAddOrEditRecipientDialog(
-                                      recipient: recipient),
-                                },
-                              );
-                            },
-                            onReorder: (newOrder) => ref
-                                .read(driverTrackingProvider.notifier)
-                                .reorderRecipients(newOrder),
-                          )),
+                        delay: 500,
+                        child: _RecipientsCard(
+                          delivery: state.delivery!,
+                          recipients: state.recipients,
+                          onAdd: () => _showAddOrEditRecipientDialog(),
+                          onTapRecipient: (recipient) {
+                            // THIS IS THE PART TO CHANGE
+                            context.push(
+                              '/driver-tracking/recipient',
+                              extra: {
+                                'delivery': state.delivery!,
+                                'recipient': recipient,
+                                // Add the callback here
+                                'onEdit': () => _showAddOrEditRecipientDialog(
+                                  recipient: recipient,
+                                ),
+                              },
+                            );
+                          },
+                          onReorder: (newOrder) => ref
+                              .read(driverTrackingProvider.notifier)
+                              .reorderRecipients(newOrder),
+                        ),
+                      ),
                       const SizedBox(height: 32),
                       const FadeInUp(
-                          delay: 600,
-                          child:
-                              _SectionTitle(title: 'Mises à Jour en Direct')),
+                        delay: 600,
+                        child: _SectionTitle(title: 'Mises à Jour en Direct'),
+                      ),
                       const SizedBox(height: 12),
                       FadeInUp(
-                          delay: 700,
-                          child: _LiveUpdatesCard(
-                            delivery: state.delivery!,
-                            problemController: _problemController,
-                            delayController: _delayController,
-                            onPickTime: () => _pickScheduledTimeRange(context),
-                          )),
+                        delay: 700,
+                        child: _LiveUpdatesCard(
+                          delivery: state.delivery!,
+                          problemController: _problemController,
+                          delayController: _delayController,
+                          onPickTime: () => _pickScheduledTimeRange(context),
+                        ),
+                      ),
                       const SizedBox(height: 32),
                       const FadeInUp(
-                          delay: 800, child: _SectionTitle(title: 'Partage')),
+                        delay: 800,
+                        child: _SectionTitle(title: 'Partage'),
+                      ),
                       const SizedBox(height: 12),
                       FadeInUp(
-                          delay: 900,
-                          child: _SessionDetailsCard(
-                              delivery: state.delivery!,
-                              onResetToken: _confirmResetToken)),
+                        delay: 900,
+                        child: _SessionDetailsCard(
+                          delivery: state.delivery!,
+                          onResetToken: _confirmResetToken,
+                        ),
+                      ),
                       const SizedBox(height: 24),
                       FadeInUp(
                         delay: 950,
@@ -367,10 +405,10 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                         ),
                       ),
                     ],
-                  )
+                  ),
               ]),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -411,8 +449,9 @@ class _TrackingStatusHero extends StatelessWidget {
               ? [Colors.green.shade400, Colors.green.shade600]
               : [
                   theme.colorScheme.surfaceContainerHighest,
-                  theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.5)
+                  theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -444,8 +483,9 @@ class _TrackingStatusHero extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color:
-                  state.isTracking ? Colors.white : theme.colorScheme.onSurface,
+              color: state.isTracking
+                  ? Colors.white
+                  : theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -456,10 +496,11 @@ class _TrackingStatusHero extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: (state.isTracking
-                      ? Colors.white
-                      : theme.colorScheme.onSurfaceVariant)
-                  .withValues(alpha: 0.9),
+              color:
+                  (state.isTracking
+                          ? Colors.white
+                          : theme.colorScheme.onSurfaceVariant)
+                      .withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -500,9 +541,9 @@ class _ActionButtons extends ConsumerWidget {
       ),
     );
     if (ok != null && context.mounted) {
-      await ref.read(driverTrackingProvider.notifier).startDeliveryRound(
-            sendSms: ok,
-          );
+      await ref
+          .read(driverTrackingProvider.notifier)
+          .startDeliveryRound(sendSms: ok);
     }
   }
 
@@ -525,8 +566,10 @@ class _ActionButtons extends ConsumerWidget {
           label: const Text('Démarrer la livraison'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle:
-                GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+            textStyle: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -539,14 +582,17 @@ class _ActionButtons extends ConsumerWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.error,
             side: BorderSide(
-                color: !state.isTracking
-                    ? Colors.grey.withValues(alpha: 0.4)
-                    : Theme.of(context).colorScheme.error),
+              color: !state.isTracking
+                  ? Colors.grey.withValues(alpha: 0.4)
+                  : Theme.of(context).colorScheme.error,
+            ),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle:
-                GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+            textStyle: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        )
+        ),
       ],
     );
   }
@@ -574,8 +620,9 @@ class _RecipientsCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -587,7 +634,9 @@ class _RecipientsCard extends ConsumerWidget {
                 'Ajoutez des destinataires pour afficher leurs horaires de livraison prévus.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                    color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
             )
           else
@@ -611,8 +660,9 @@ class _RecipientsCard extends ConsumerWidget {
               ),
             ),
           Divider(
-              height: 1,
-              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+            height: 1,
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          ),
           InkWell(
             onTap: onAdd,
             child: Padding(
@@ -622,14 +672,17 @@ class _RecipientsCard extends ConsumerWidget {
                 children: [
                   Icon(Icons.add, size: 20, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
-                  Text('Ajouter un destinataire',
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.primary)),
+                  Text(
+                    'Ajouter un destinataire',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -672,14 +725,18 @@ class _RecipientTile extends ConsumerWidget {
       onTap: onTap,
       leading: ReorderableDragStartListener(
         index: reorderIndex,
-        child:
-            Icon(Icons.drag_handle, color: theme.colorScheme.onSurfaceVariant),
+        child: Icon(
+          Icons.drag_handle,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
       title: Row(
         children: [
           Expanded(
-            child: Text(recipient.label,
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            child: Text(
+              recipient.label,
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -687,20 +744,26 @@ class _RecipientTile extends ConsumerWidget {
               color: isDelivered
                   ? theme.colorScheme.primaryContainer
                   : isInProgress
-                      ? theme.colorScheme.tertiaryContainer
-                      : theme.colorScheme.surfaceContainerHighest,
+                  ? theme.colorScheme.tertiaryContainer
+                  : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(statusLabel,
-                style: GoogleFonts.poppins(
-                    fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(
+              statusLabel,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
       subtitle: Text(
         subtitle,
         style: GoogleFonts.poppins(
-            color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+          color: theme.colorScheme.onSurfaceVariant,
+          fontSize: 13,
+        ),
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
     );
@@ -730,7 +793,8 @@ class _LiveUpdatesCard extends ConsumerWidget {
       final startParis = _utcToParis(delivery.scheduledAt!);
       if (delivery.scheduledEndAt != null) {
         final endParis = _utcToParis(delivery.scheduledEndAt!);
-        scheduledStr = '${DateFormat('dd/MM', 'fr_FR').format(startParis)} '
+        scheduledStr =
+            '${DateFormat('dd/MM', 'fr_FR').format(startParis)} '
             '${DateFormat('HH:mm', 'fr_FR').format(startParis)} – '
             '${DateFormat('HH:mm', 'fr_FR').format(endParis)}';
       } else {
@@ -742,30 +806,42 @@ class _LiveUpdatesCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         children: [
           ListTile(
             leading: const Icon(Icons.schedule_outlined),
-            title: Text('Créneau de livraison prévu',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-            subtitle: Text(scheduledStr,
-                style: GoogleFonts.poppins(
-                    color: theme.colorScheme.onSurfaceVariant)),
+            title: Text(
+              'Créneau de livraison prévu',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              scheduledStr,
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             trailing: TextButton(
-                onPressed: onPickTime, child: const Text('Modifier')),
+              onPressed: onPickTime,
+              child: const Text('Modifier'),
+            ),
           ),
           const Divider(height: 1, indent: 20, endIndent: 20),
           SwitchListTile(
-            title: Text('Signaler un retard',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            title: Text(
+              'Signaler un retard',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
             value: delivery.isDelayed,
             onChanged: (value) => ref
                 .read(driverTrackingProvider.notifier)
                 .setDelay(
-                    isDelayed: value, delayMinutes: delivery.delayMinutes),
+                  isDelayed: value,
+                  delayMinutes: delivery.delayMinutes,
+                ),
             secondary: const Icon(Icons.timer_off_outlined),
           ),
           if (delivery.isDelayed)
@@ -796,20 +872,24 @@ class _LiveUpdatesCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Signaler un problème',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                Text(
+                  'Signaler un problème',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: ['Bouchons', 'Accident', 'Autre']
-                      .map((label) => FilterChip(
-                            label: Text(label),
-                            selected: delivery.problemMessage == label,
-                            onSelected: (selected) => ref
-                                .read(driverTrackingProvider.notifier)
-                                .setProblemMessage(selected ? label : null),
-                          ))
+                      .map(
+                        (label) => FilterChip(
+                          label: Text(label),
+                          selected: delivery.problemMessage == label,
+                          onSelected: (selected) => ref
+                              .read(driverTrackingProvider.notifier)
+                              .setProblemMessage(selected ? label : null),
+                        ),
+                      )
                       .toList(),
                 ),
                 const SizedBox(height: 12),
@@ -834,7 +914,7 @@ class _LiveUpdatesCard extends ConsumerWidget {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -845,8 +925,10 @@ class _SessionDetailsCard extends StatelessWidget {
   final Delivery delivery;
   final VoidCallback onResetToken;
 
-  const _SessionDetailsCard(
-      {required this.delivery, required this.onResetToken});
+  const _SessionDetailsCard({
+    required this.delivery,
+    required this.onResetToken,
+  });
 
   String _trackingUrl(Delivery delivery) {
     final base = AppConfig.siteUrl.replaceAll(RegExp(r'/$'), '');
@@ -863,44 +945,63 @@ class _SessionDetailsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Lien de partage client',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          Text(
+            'Lien de partage client',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
-          SelectableText(url,
-              style: GoogleFonts.firaCode(
-                  fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+          SelectableText(
+            url,
+            style: GoogleFonts.firaCode(
+              fontSize: 12,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: 16),
-          Row(children: [
-            Expanded(
+          Row(
+            children: [
+              Expanded(
                 child: OutlinedButton(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: url));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Lien copié')));
-                    },
-                    child: const Text('Copier'))),
-            const SizedBox(width: 12),
-            Expanded(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: url));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(const SnackBar(content: Text('Lien copié')));
+                  },
+                  child: const Text('Copier'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: FilledButton(
-                    onPressed: () => Share.share(url),
-                    child: const Text('Partager'))),
-          ]),
+                  onPressed: () => Share.share(url),
+                  child: const Text('Partager'),
+                ),
+              ),
+            ],
+          ),
           const Divider(height: 32),
           Text(
-              'Expire le ${DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(delivery.expiresAt)}',
-              style: GoogleFonts.poppins(
-                  fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+            'Expire le ${DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(delivery.expiresAt)}',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: 8),
           Center(
-              child: TextButton(
-                  onPressed: onResetToken,
-                  child: const Text('Réinitialiser le token de partage'))),
+            child: TextButton(
+              onPressed: onResetToken,
+              child: const Text('Réinitialiser le token de partage'),
+            ),
+          ),
         ],
       ),
     );
@@ -928,8 +1029,9 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     super.initState();
     _labelController = TextEditingController(text: widget.recipient?.label);
     _addressController = TextEditingController(text: widget.recipient?.address);
-    _phoneController =
-        TextEditingController(text: widget.recipient?.phoneNumber);
+    _phoneController = TextEditingController(
+      text: widget.recipient?.phoneNumber,
+    );
   }
 
   @override
@@ -998,9 +1100,11 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.recipient == null
-          ? 'Ajouter un destinataire'
-          : 'Modifier le destinataire'),
+      title: Text(
+        widget.recipient == null
+            ? 'Ajouter un destinataire'
+            : 'Modifier le destinataire',
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1008,7 +1112,9 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
             TextField(
               controller: _labelController,
               decoration: const InputDecoration(
-                  labelText: 'Nom ou libellé', border: OutlineInputBorder()),
+                labelText: 'Nom ou libellé',
+                border: OutlineInputBorder(),
+              ),
               autofocus: true,
               textCapitalization: TextCapitalization.words,
             ),
@@ -1036,8 +1142,9 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
       ),
       actions: [
         TextButton(
-            onPressed: _isGeocoding ? null : () => Navigator.of(context).pop(),
-            child: const Text('Annuler')),
+          onPressed: _isGeocoding ? null : () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
         FilledButton(
           onPressed: _isGeocoding ? null : _save,
           child: _isGeocoding
@@ -1068,9 +1175,10 @@ class _StatusIndicatorState extends State<_StatusIndicator>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..repeat(reverse: true);
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -1082,8 +1190,9 @@ class _StatusIndicatorState extends State<_StatusIndicator>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final inactiveColor =
-        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
+    final inactiveColor = theme.colorScheme.onSurfaceVariant.withValues(
+      alpha: 0.5,
+    );
     return SizedBox(
       width: 20,
       height: 20,
@@ -1096,16 +1205,20 @@ class _StatusIndicatorState extends State<_StatusIndicator>
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        blurRadius: 8,
-                        spreadRadius: 4)
+                      color: Colors.white.withValues(alpha: 0.8),
+                      blurRadius: 8,
+                      spreadRadius: 4,
+                    ),
                   ],
                 ),
               ),
             )
           : Container(
-              decoration:
-                  BoxDecoration(shape: BoxShape.circle, color: inactiveColor)),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: inactiveColor,
+              ),
+            ),
     );
   }
 }
@@ -1122,8 +1235,11 @@ class _ErrorBanner extends StatelessWidget {
             const Icon(Icons.error_outline, color: Colors.white, size: 24),
             const SizedBox(width: 12),
             Expanded(
-                child: Text(error,
-                    style: GoogleFonts.poppins(color: Colors.white))),
+              child: Text(
+                error,
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+            ),
           ],
         ),
         if (error.toLowerCase().contains('permission'))
@@ -1161,27 +1277,35 @@ class _UnauthorizedState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock_outline_rounded,
-                size: 72,
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+            Icon(
+              Icons.lock_outline_rounded,
+              size: 72,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 24),
-            Text('Accès non autorisé',
-                style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface)),
+            Text(
+              'Accès non autorisé',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
-                'Cette fonctionnalité est réservée aux administrateurs de l\'application.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                    fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
+              'Cette fonctionnalité est réservée aux administrateurs de l\'application.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 24),
             FilledButton.icon(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Retour')),
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Retour'),
+            ),
           ],
         ),
       ),
@@ -1206,11 +1330,17 @@ class _FadeInUpState extends State<FadeInUp>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _opacity = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(begin: 30.0, end: 0.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _translateY = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _controller.forward();
     });
@@ -1229,7 +1359,9 @@ class _FadeInUpState extends State<FadeInUp>
       builder: (context, child) => Opacity(
         opacity: _opacity.value,
         child: Transform.translate(
-            offset: Offset(0, _translateY.value), child: widget.child),
+          offset: Offset(0, _translateY.value),
+          child: widget.child,
+        ),
       ),
     );
   }

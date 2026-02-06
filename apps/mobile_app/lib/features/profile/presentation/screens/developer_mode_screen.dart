@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
-import 'package:mobile_app/core/widgets/custom_toast.dart';
-import 'package:mobile_app/data/models/concert.dart';
-import 'package:mobile_app/data/models/rehearsal.dart';
-import 'package:mobile_app/data/services/notification_service.dart';
-import 'package:mobile_app/features/notifications/presentation/providers/notification_settings_provider.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/custom_toast.dart';
+import 'package:lebontemperament/data/models/concert.dart';
+import 'package:lebontemperament/data/models/rehearsal.dart';
+import 'package:lebontemperament/data/services/notification_service.dart';
+import 'package:lebontemperament/features/notifications/presentation/providers/notification_settings_provider.dart';
 
 class DeveloperModeScreen extends ConsumerWidget {
   const DeveloperModeScreen({super.key});
@@ -133,10 +133,8 @@ class DeveloperModeScreen extends ConsumerWidget {
                       subtitle: 'Notification temps réel',
                       onTap: (context) => _runTest(
                         context,
-                        () =>
-                            notificationService.showRehearsalAddedNotification(
-                          _fakeRehearsal,
-                        ),
+                        () => notificationService
+                            .showRehearsalAddedNotification(_fakeRehearsal),
                         'Notification envoyée',
                         'Erreur lors de l\'envoi',
                       ),
@@ -217,8 +215,9 @@ class _SettingsGroup extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         children: List.generate(children.length * 2 - 1, (index) {

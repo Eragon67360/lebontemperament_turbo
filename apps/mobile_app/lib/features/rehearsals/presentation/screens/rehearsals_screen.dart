@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../data/models/rehearsal.dart';
@@ -40,9 +40,7 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible d\'ouvrir le calendrier.'),
-          ),
+          const SnackBar(content: Text('Impossible d\'ouvrir le calendrier.')),
         );
       }
     }
@@ -115,7 +113,11 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
                 }
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
-                      20, 10, 20, kFloatingNavBarBottomPadding),
+                    20,
+                    10,
+                    20,
+                    kFloatingNavBarBottomPadding,
+                  ),
                   sliver: SliverList.builder(
                     itemCount: filteredRehearsals.length,
                     itemBuilder: (context, index) {
@@ -150,10 +152,7 @@ class _RehearsalsAppBar extends StatelessWidget {
   final VoidCallback onCalendar;
   final VoidCallback onLogout;
 
-  const _RehearsalsAppBar({
-    required this.onCalendar,
-    required this.onLogout,
-  });
+  const _RehearsalsAppBar({required this.onCalendar, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -369,11 +368,13 @@ class _RehearsalCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          ),
         ),
         child: Row(
           children: [
@@ -542,8 +543,9 @@ class _EmptyState extends StatelessWidget {
                     ? Icons.filter_list_off_outlined
                     : Icons.music_off_outlined,
                 size: 72,
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               const SizedBox(height: 24),
               Text(

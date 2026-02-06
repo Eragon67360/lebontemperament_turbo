@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart'; // Add google_fonts to pubspec.yaml
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart'; // For french date formatting
-import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
 
 import '../../../../data/models/concert.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -72,34 +72,35 @@ class _ConcertsScreenState extends ConsumerState<ConcertsScreen> {
                 final itemCount = concerts.isEmpty ? 2 : concerts.length + 1;
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
-                      20, 10, 20, kFloatingNavBarBottomPadding),
+                    20,
+                    10,
+                    20,
+                    kFloatingNavBarBottomPadding,
+                  ),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (concerts.isEmpty) {
-                          if (index == 0) return const _EmptyState();
-                          if (index == 1) {
-                            return const ConcertAnniversaireSection();
-                          }
-                        } else {
-                          if (index < concerts.length) {
-                            final concert = concerts[index];
-                            return FadeInUp(
-                              delay: 100 + (index * 50),
-                              child: _ConcertCard(
-                                concert: concert,
-                                isLast: false,
-                              ),
-                            );
-                          }
-                          if (index == concerts.length) {
-                            return const ConcertAnniversaireSection();
-                          }
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      if (concerts.isEmpty) {
+                        if (index == 0) return const _EmptyState();
+                        if (index == 1) {
+                          return const ConcertAnniversaireSection();
                         }
-                        return null;
-                      },
-                      childCount: itemCount,
-                    ),
+                      } else {
+                        if (index < concerts.length) {
+                          final concert = concerts[index];
+                          return FadeInUp(
+                            delay: 100 + (index * 50),
+                            child: _ConcertCard(
+                              concert: concert,
+                              isLast: false,
+                            ),
+                          );
+                        }
+                        if (index == concerts.length) {
+                          return const ConcertAnniversaireSection();
+                        }
+                      }
+                      return null;
+                    }, childCount: itemCount),
                   ),
                 );
               },
@@ -194,8 +195,9 @@ class _ConcertCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -350,8 +352,9 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 Icons.music_off_outlined,
                 size: 72,
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               const SizedBox(height: 24),
               Text(

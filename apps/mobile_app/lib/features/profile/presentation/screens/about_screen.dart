@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import 'package:mobile_app/core/config/app_router.dart';
-import 'package:mobile_app/core/widgets/custom_toast.dart';
+import 'package:lebontemperament/core/config/app_router.dart';
+import 'package:lebontemperament/core/widgets/custom_toast.dart';
 
 // Provider to fetch package info asynchronously.
 // This is more idiomatic in a Riverpod app than using a StatefulWidget.
@@ -116,10 +116,7 @@ class _AboutHeader extends StatelessWidget {
   final PackageInfo packageInfo;
   final VoidCallback? onVersionTap;
 
-  const _AboutHeader({
-    required this.packageInfo,
-    this.onVersionTap,
-  });
+  const _AboutHeader({required this.packageInfo, this.onVersionTap});
 
   @override
   Widget build(BuildContext context) {
@@ -216,8 +213,9 @@ class _DeveloperModeButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -244,8 +242,9 @@ class _DeveloperModeButton extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.7,
+                ),
               ),
             ],
           ),
@@ -278,8 +277,9 @@ class _AssociationSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -360,8 +360,9 @@ class _AppInfoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -422,8 +423,10 @@ class _InfoTile extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child:
-                Text('OK', style: TextStyle(color: theme.colorScheme.primary)),
+            child: Text(
+              'OK',
+              style: TextStyle(color: theme.colorScheme.primary),
+            ),
           ),
         ],
       ),

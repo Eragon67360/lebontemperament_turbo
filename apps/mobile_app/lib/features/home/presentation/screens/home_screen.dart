@@ -5,11 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/core/config/app_config.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
-import 'package:mobile_app/data/models/concert.dart';
-import 'package:mobile_app/data/models/rehearsal.dart';
-import 'package:mobile_app/data/providers/data_providers.dart';
+import 'package:lebontemperament/core/config/app_config.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/data/models/concert.dart';
+import 'package:lebontemperament/data/models/rehearsal.dart';
+import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -36,23 +36,21 @@ class HomeScreen extends ConsumerWidget {
               kFloatingNavBarBottomPadding,
             ),
             sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  const _WelcomeHeader(),
-                  const SizedBox(height: 40),
-                  const _SectionTitle(title: 'Prochains événements'),
-                  const SizedBox(height: 16),
-                  const _UpcomingEvents(),
-                  const SizedBox(height: 40),
-                  const _SectionTitle(title: 'Espace membres'),
-                  const SizedBox(height: 16),
-                  const _MembresGrid(),
-                  const SizedBox(height: 40),
-                  const _InfoCard(),
-                  const SizedBox(height: 24),
-                  const _BetaNoticeCard(),
-                ],
-              ),
+              delegate: SliverChildListDelegate([
+                const _WelcomeHeader(),
+                const SizedBox(height: 40),
+                const _SectionTitle(title: 'Prochains événements'),
+                const SizedBox(height: 16),
+                const _UpcomingEvents(),
+                const SizedBox(height: 40),
+                const _SectionTitle(title: 'Espace membres'),
+                const SizedBox(height: 16),
+                const _MembresGrid(),
+                const SizedBox(height: 40),
+                const _InfoCard(),
+                const SizedBox(height: 24),
+                const _BetaNoticeCard(),
+              ]),
             ),
           ),
         ],
@@ -153,7 +151,7 @@ class _UpcomingEvents extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationNotifier = ref.read(mainNavigationProvider.notifier);
-    final isSuperadmin = ref.watch(isSuperadminProvider).valueOrNull ?? false;
+    final isSuperadmin = ref.watch(isSuperadminProvider).value ?? false;
 
     // Watch our new providers from data_providers.dart
     final nextRehearsals = ref.watch(homeUpcomingRehearsalsProvider);
@@ -170,23 +168,35 @@ class _UpcomingEvents extends ConsumerWidget {
               if (nextRehearsals.isNotEmpty)
                 Expanded(
                   // Rehearsals are on tab index 2.
-                  child: _buildRehearsalCard(context, nextRehearsals[0],
-                      () => navigationNotifier.setTab(2)),
+                  child: _buildRehearsalCard(
+                    context,
+                    nextRehearsals[0],
+                    () => navigationNotifier.setTab(2),
+                  ),
                 )
               else
                 Expanded(
-                    child: _buildPlaceholderCard(
-                        context, 'Aucune répétition à venir')),
+                  child: _buildPlaceholderCard(
+                    context,
+                    'Aucune répétition à venir',
+                  ),
+                ),
               const SizedBox(width: 16),
               if (nextRehearsals.length > 1)
                 Expanded(
-                  child: _buildRehearsalCard(context, nextRehearsals[1],
-                      () => navigationNotifier.setTab(2)),
+                  child: _buildRehearsalCard(
+                    context,
+                    nextRehearsals[1],
+                    () => navigationNotifier.setTab(2),
+                  ),
                 )
               else
                 Expanded(
-                    child: _buildPlaceholderCard(
-                        context, 'Pas d\'autre répétition')),
+                  child: _buildPlaceholderCard(
+                    context,
+                    'Pas d\'autre répétition',
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -196,23 +206,32 @@ class _UpcomingEvents extends ConsumerWidget {
               if (nextConcerts.isNotEmpty)
                 Expanded(
                   // Concerts & Évènements are on tab index 1.
-                  child: _buildConcertCard(context, nextConcerts[0],
-                      () => navigationNotifier.setTab(1)),
+                  child: _buildConcertCard(
+                    context,
+                    nextConcerts[0],
+                    () => navigationNotifier.setTab(1),
+                  ),
                 )
               else
                 Expanded(
-                    child: _buildPlaceholderCard(
-                        context, 'Aucun concert à venir')),
+                  child: _buildPlaceholderCard(
+                    context,
+                    'Aucun concert à venir',
+                  ),
+                ),
               const SizedBox(width: 16),
               if (nextConcerts.length > 1)
                 Expanded(
-                  child: _buildConcertCard(context, nextConcerts[1],
-                      () => navigationNotifier.setTab(1)),
+                  child: _buildConcertCard(
+                    context,
+                    nextConcerts[1],
+                    () => navigationNotifier.setTab(1),
+                  ),
                 )
               else
                 Expanded(
-                    child:
-                        _buildPlaceholderCard(context, 'Pas d\'autre concert')),
+                  child: _buildPlaceholderCard(context, 'Pas d\'autre concert'),
+                ),
             ],
           ),
 
@@ -233,7 +252,10 @@ class _UpcomingEvents extends ConsumerWidget {
   }
 
   Widget _buildRehearsalCard(
-      BuildContext context, Rehearsal rehearsal, VoidCallback onTap) {
+    BuildContext context,
+    Rehearsal rehearsal,
+    VoidCallback onTap,
+  ) {
     return _EventNavigationCard(
       icon: Icons.repeat_rounded,
       title: formatDate(rehearsal.date!),
@@ -244,7 +266,10 @@ class _UpcomingEvents extends ConsumerWidget {
   }
 
   Widget _buildConcertCard(
-      BuildContext context, Concert concert, VoidCallback onTap) {
+    BuildContext context,
+    Concert concert,
+    VoidCallback onTap,
+  ) {
     return _EventNavigationCard(
       icon: Icons.celebration_outlined,
       title: formatDate(concert.date),
@@ -261,8 +286,9 @@ class _UpcomingEvents extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
       ),
       child: Center(
         child: Text(
@@ -306,11 +332,13 @@ class _EventNavigationCard extends StatelessWidget {
         height: 112, // Fixed height for layout consistency
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +417,8 @@ class _NavigationCard extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          ),
         ),
         child: Row(
           children: [
@@ -506,9 +535,7 @@ class _MembresGrid extends ConsumerWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(
-                            'Impossible d\'ouvrir le Drive.',
-                          ),
+                          content: Text('Impossible d\'ouvrir le Drive.'),
                         ),
                       );
                     }
@@ -546,8 +573,9 @@ class _MembresGridCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.15),
@@ -605,11 +633,9 @@ class _InfoCard extends ConsumerWidget {
         onTap: () {
           HapticFeedback.lightImpact();
           navigationNotifier.setTab(3);
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const AboutScreen(),
-            ),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const AboutScreen()));
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
@@ -667,8 +693,9 @@ class _InfoCard extends ConsumerWidget {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: theme.colorScheme.onSecondaryContainer
-                    .withValues(alpha: 0.6),
+                color: theme.colorScheme.onSecondaryContainer.withValues(
+                  alpha: 0.6,
+                ),
               ),
             ],
           ),
@@ -682,8 +709,9 @@ class _BetaNoticeCard extends StatelessWidget {
   const _BetaNoticeCard();
 
   Future<void> _launchEmail(BuildContext context) async {
-    final subject =
-        Uri.encodeComponent('Retour version bêta - Le Bon Tempérament');
+    final subject = Uri.encodeComponent(
+      'Retour version bêta - Le Bon Tempérament',
+    );
     final uri = Uri.parse('mailto:$kSupportEmail?subject=$subject');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -691,15 +719,17 @@ class _BetaNoticeCard extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Impossible d\'ouvrir l\'application email.')),
+            content: Text('Impossible d\'ouvrir l\'application email.'),
+          ),
         );
       }
     }
   }
 
   Future<void> _launchWhatsApp(BuildContext context) async {
-    final text =
-        Uri.encodeComponent('Retour version bêta - Le Bon Tempérament');
+    final text = Uri.encodeComponent(
+      'Retour version bêta - Le Bon Tempérament',
+    );
     final uri = Uri.parse('https://wa.me/$kSupportWhatsAppPhone?text=$text');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -721,8 +751,9 @@ class _BetaNoticeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.6,
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: theme.colorScheme.primary.withValues(alpha: 0.25),
@@ -742,8 +773,10 @@ class _BetaNoticeCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(20),
@@ -838,9 +871,7 @@ class _ContactButton extends StatelessWidget {
       label: Text(label),
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: GoogleFonts.poppins(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -875,10 +906,14 @@ class _FadeInUpState extends State<FadeInUp>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _opacity = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(begin: 30.0, end: 0.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _translateY = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) {

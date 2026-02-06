@@ -1,10 +1,10 @@
-name: mobile_app
-description: "A new Flutter project."
+name: lebontemperament
+description: "Application mobile du Bon Tempérament"
 publish_to: "none"
 
-version: 2.0.29+45
+version: 2.0.30+46
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=3.9.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -13,42 +13,42 @@ dependencies:
     sdk: flutter
 
   # UI & Core
-  google_fonts: ^6.2.1
+  google_fonts: ^8.0.1
   cupertino_icons: ^1.0.8
   intl: ^0.20.2
-  url_launcher: ^6.3.0
-  cached_network_image: ^3.3.1
+  url_launcher: ^6.3.2
+  cached_network_image: ^3.4.1
   shimmer: ^3.0.0
 
   # State Management (Aligned versions for compatibility)
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  flutter_riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
 
   # Navigation
-  go_router: ^13.2.4
+  go_router: ^17.1.0
 
   # Supabase & Networking
-  supabase_flutter: ^2.5.5
-  dio: ^5.4.3+1
+  supabase_flutter: ^2.12.0
+  dio: ^5.9.1
 
   # Local Storage (Aligned versions)
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  shared_preferences: ^2.2.3
+  shared_preferences: ^2.5.4
 
   # Utilities
-  logger: ^2.3.0
-  connectivity_plus: ^6.0.3
-  package_info_plus: ^8.0.0
-  flutter_dotenv: ^5.1.0
-  get_it: ^7.7.0
+  logger: ^2.6.2
+  connectivity_plus: ^7.0.0
+  package_info_plus: ^9.0.0
+  flutter_dotenv: ^6.0.0
+  get_it: ^9.2.0
   json_annotation: ^4.9.0
   freezed_annotation: ^2.4.1
-  uuid: ^4.4.0
+  uuid: ^4.5.2
 
   # Permissions & Notifications
-  permission_handler: ^11.3.1
-  flutter_local_notifications: ^17.1.2
+  permission_handler: ^12.0.1
+  flutter_local_notifications: ^17.2.4
   timezone: ^0.9.4
 
   # Feature Specific
@@ -61,13 +61,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
   # Code Generation (Aligned versions for compatibility)
   build_runner: ^2.4.10
-  # FIXED: Downgraded riverpod_generator to be compatible with hive_generator
-  riverpod_generator: ^2.4.0
-  hive_generator: ^2.0.1 # This can now coexist
+  hive_generator: ^2.0.1
   freezed: ^2.5.2
   json_serializable: ^6.8.0
 
