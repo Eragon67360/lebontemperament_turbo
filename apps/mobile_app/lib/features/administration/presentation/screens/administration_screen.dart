@@ -649,12 +649,26 @@ class _PdfChip extends StatelessWidget {
 class _ReglementTab extends StatelessWidget {
   const _ReglementTab();
 
-  Future<void> _launchPdf(String path) async {
-    final url = '$kWebsiteBaseUrl$path';
+  Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {}
+  }
+
+  void _showPdfSheet(BuildContext context, String path, String fileName) {
+    final url = '$kWebsiteBaseUrl$path';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => PdfViewerSheet(
+        url: url,
+        fileName: fileName,
+        onClose: () => Navigator.of(ctx).pop(),
+        onOpenInBrowser: (u) => _launchUrl(u),
+      ),
+    );
   }
 
   @override
@@ -667,7 +681,8 @@ class _ReglementTab extends StatelessWidget {
           _ReglementCard(
             title: 'Règlement intérieur',
             subtitle: 'Extrait du règlement intérieur',
-            onTap: () => _launchPdf('/pdf/reglement.pdf'),
+            onTap: () => _showPdfSheet(
+                context, '/pdf/reglement.pdf', 'Règlement intérieur'),
             extras: [
               _ReglementExtract(
                 title: 'Répétitions',
@@ -685,13 +700,17 @@ class _ReglementTab extends StatelessWidget {
           _ReglementCard(
             title: 'Charte des séjours',
             subtitle: 'Consultez la charte complète sur les séjours BT',
-            onTap: () => _launchPdf('/pdf/charte_BT.pdf'),
+            onTap: () => _showPdfSheet(
+                context, '/pdf/charte_BT.pdf', 'Charte des séjours'),
           ),
           const SizedBox(height: 16),
           _ReglementCard(
             title: 'Statuts de l\'association',
             subtitle: 'Consultez les statuts complets du Bon Tempérament',
-            onTap: () => _launchPdf('/pdf/Statuts_Le_Bon_Tempérament.pdf'),
+            onTap: () => _showPdfSheet(
+                context,
+                '/pdf/Statuts_Le_Bon_Tempérament.pdf',
+                'Statuts de l\'association'),
           ),
           const SizedBox(height: kFloatingNavBarBottomPadding),
         ],

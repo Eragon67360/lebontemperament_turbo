@@ -443,13 +443,13 @@ class _MembresGrid extends ConsumerWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final crossAxisCount = constraints.maxWidth > 400 ? 2 : 1;
-          // Single column needs more height for card content; 2-col uses compact ratio
-          final childAspectRatio = crossAxisCount == 1 ? 2.0 : 1.4;
+          // Compact aspect ratios to avoid excessive vertical space
+          final childAspectRatio = crossAxisCount == 1 ? 2.4 : 1.7;
           return GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: crossAxisCount,
-            mainAxisSpacing: crossAxisCount == 1 ? 8 : 12,
+            mainAxisSpacing: crossAxisCount == 1 ? 6 : 8,
             crossAxisSpacing: 12,
             childAspectRatio: childAspectRatio,
             children: [
@@ -540,7 +540,7 @@ class _MembresGridCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
           borderRadius: BorderRadius.circular(16),
@@ -553,14 +553,14 @@ class _MembresGridCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: theme.colorScheme.primary, size: 22),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 20),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               title,
               style: GoogleFonts.poppins(
