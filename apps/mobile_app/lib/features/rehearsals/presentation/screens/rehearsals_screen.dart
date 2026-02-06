@@ -275,26 +275,28 @@ class _FilterModal extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(20.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Filtrer par groupe',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Filtrer par groupe',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _buildFilterOption(context, 'Tous les groupes', null),
-          ...GroupType.values.map(
-            (group) =>
-                _buildFilterOption(context, _getGroupTypeText(group), group),
-          ),
-          const SizedBox(height: 10),
-        ],
+            const SizedBox(height: 16),
+            _buildFilterOption(context, 'Tous les groupes', null),
+            ...GroupType.values.map(
+              (group) =>
+                  _buildFilterOption(context, _getGroupTypeText(group), group),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }

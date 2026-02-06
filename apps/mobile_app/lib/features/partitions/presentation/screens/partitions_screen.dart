@@ -1,13 +1,12 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:pdfx/pdfx.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/core/config/app_config.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:mobile_app/core/widgets/pdf_viewer_sheet.dart';
 import 'package:mobile_app/data/models/drive_file.dart';
 import 'package:mobile_app/data/providers/data_providers.dart';
 import 'package:mobile_app/data/services/drive_service.dart';
@@ -208,10 +207,16 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _DrivePdfViewerSheet(
+      builder: (ctx) => PdfViewerSheet(
         url: url,
         fileName: file.name,
         onClose: () => Navigator.of(ctx).pop(),
+        onOpenInBrowser: (u) async {
+          final uri = Uri.parse(u);
+          try {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } catch (_) {}
+        },
       ),
     );
   }
@@ -931,178 +936,6 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DrivePdfViewerSheet extends StatefulWidget {
-  final String url;
-  final String fileName;
-  final VoidCallback onClose;
-
-  const _DrivePdfViewerSheet({
-    required this.url,
-    required this.fileName,
-    required this.onClose,
-  });
-
-  @override
-  State<_DrivePdfViewerSheet> createState() => _DrivePdfViewerSheetState();
-}
-
-class _DrivePdfViewerSheetState extends State<_DrivePdfViewerSheet> {
-  PdfControllerPinch? _controller;
-  String? _error;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPdf();
-  }
-
-  Future<void> _loadPdf() async {
-    try {
-      final response = await Dio().get(
-        widget.url,
-        options: Options(responseType: ResponseType.bytes),
-      );
-      final doc = await PdfDocument.openData(response.data);
-      if (!mounted) return;
-      setState(() {
-        _controller = PdfControllerPinch(
-          document: Future.value(doc),
-          initialPage: 1,
-        );
-        _loading = false;
-        _error = null;
-      });
-    } catch (e, st) {
-      debugPrint('PDF load error: $e\n$st');
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.fileName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    widget.onClose();
-                  },
-                  icon: const Icon(Icons.close_rounded),
-                  tooltip: 'Fermer',
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: _loading
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Chargement du PDF…',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : _error != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.error_outline_rounded,
-                                size: 48,
-                                color: theme.colorScheme.error,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Impossible de charger le PDF',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _error!,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: theme.colorScheme.error,
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : PdfViewPinch(
-                        controller: _controller!,
-                        scrollDirection: Axis.vertical,
-                      ),
           ),
         ],
       ),

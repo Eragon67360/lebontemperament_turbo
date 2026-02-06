@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:mobile_app/core/widgets/pdf_viewer_sheet.dart';
 import 'package:mobile_app/data/constants/pdf_archives.dart';
 import 'package:mobile_app/data/models/ca_minute.dart';
 import 'package:mobile_app/data/providers/data_providers.dart';
@@ -88,16 +89,16 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
               HapticFeedback.lightImpact();
               try {
                 await ref.read(authServiceProvider).signOut();
-                if (mounted) context.go('/login');
+                if (!context.mounted) return;
+                context.go('/login');
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Erreur: $e'),
-                      backgroundColor: theme.colorScheme.error,
-                    ),
-                  );
-                }
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Erreur: $e'),
+                    backgroundColor: theme.colorScheme.error,
+                  ),
+                );
               }
             },
           ),
@@ -193,6 +194,20 @@ class _ArchivesTab extends ConsumerWidget {
     } catch (_) {}
   }
 
+  void _showPdfSheet(BuildContext context, String url, String fileName) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => PdfViewerSheet(
+        url: url,
+        fileName: fileName,
+        onClose: () => Navigator.of(ctx).pop(),
+        onOpenInBrowser: (u) => _launchUrl(u),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final caAsync = ref.watch(caMinutesProvider);
@@ -208,6 +223,7 @@ class _ArchivesTab extends ConsumerWidget {
             _CaArchiveSection(
               caAsync: caAsync,
               onLaunchUrl: _launchUrl,
+              onShowPdfSheet: _showPdfSheet,
               formatDate: _formatDate,
             ),
             const SizedBox(height: 24),
@@ -218,6 +234,7 @@ class _ArchivesTab extends ConsumerWidget {
               pdfContext: 'AG',
               labelBuilder: (e) => 'AG ${_formatPdfDate(e.date)}',
               onLaunchUrl: _launchUrl,
+              onShowPdfSheet: _showPdfSheet,
               driveLink: kDriveAgUrl,
             ),
             const SizedBox(height: 24),
@@ -228,6 +245,7 @@ class _ArchivesTab extends ConsumerWidget {
               pdfContext: 'Gazettes',
               labelBuilder: (e) => 'Gazette ${_formatPdfDate(e.date)}',
               onLaunchUrl: _launchUrl,
+              onShowPdfSheet: _showPdfSheet,
             ),
             const SizedBox(height: 24),
             _ExpandablePdfArchiveSection(
@@ -237,6 +255,7 @@ class _ArchivesTab extends ConsumerWidget {
               pdfContext: 'PM',
               labelBuilder: (e) => 'N°${e.date}',
               onLaunchUrl: _launchUrl,
+              onShowPdfSheet: _showPdfSheet,
               driveLink: kDrivePmUrl,
             ),
             const SizedBox(height: kFloatingNavBarBottomPadding),
@@ -269,11 +288,13 @@ class _ArchivesTab extends ConsumerWidget {
 class _CaArchiveSection extends ConsumerStatefulWidget {
   final AsyncValue<List<CaMinute>> caAsync;
   final void Function(String) onLaunchUrl;
+  final void Function(BuildContext, String, String) onShowPdfSheet;
   final String Function(String) formatDate;
 
   const _CaArchiveSection({
     required this.caAsync,
     required this.onLaunchUrl,
+    required this.onShowPdfSheet,
     required this.formatDate,
   });
 
@@ -325,13 +346,13 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
                     runSpacing: spacing,
                     children: displayed.map((m) {
                       final url = m.fileUrl;
+                      final label = 'CA du ${widget.formatDate(m.dateFrom)}';
                       return SizedBox(
                         width: itemWidth,
                         child: _PdfChip(
-                          label: 'CA du ${widget.formatDate(m.dateFrom)}',
-                          onTap: url != null && url.isNotEmpty
-                              ? () => widget.onLaunchUrl(url)
-                              : null,
+                          label: label,
+                          url: url,
+                          onShowPdfSheet: widget.onShowPdfSheet,
                         ),
                       );
                     }).toList(),
@@ -386,6 +407,7 @@ class _ExpandablePdfArchiveSection extends StatefulWidget {
   final String pdfContext;
   final String Function(PdfArchiveEntry) labelBuilder;
   final void Function(String) onLaunchUrl;
+  final void Function(BuildContext, String, String) onShowPdfSheet;
   final String? driveLink;
 
   const _ExpandablePdfArchiveSection({
@@ -395,6 +417,7 @@ class _ExpandablePdfArchiveSection extends StatefulWidget {
     required this.pdfContext,
     required this.labelBuilder,
     required this.onLaunchUrl,
+    required this.onShowPdfSheet,
     this.driveLink,
   });
 
@@ -434,11 +457,13 @@ class _ExpandablePdfArchiveSectionState
                 children: displayed.map((e) {
                   final url =
                       '$kWebsiteBaseUrl/pdf/${widget.pdfContext}/${Uri.encodeComponent(e.name)}';
+                  final label = widget.labelBuilder(e);
                   return SizedBox(
                     width: itemWidth,
                     child: _PdfChip(
-                      label: widget.labelBuilder(e),
-                      onTap: () => widget.onLaunchUrl(url),
+                      label: label,
+                      url: url,
+                      onShowPdfSheet: widget.onShowPdfSheet,
                     ),
                   );
                 }).toList(),
@@ -569,19 +594,30 @@ class _ArchiveSection extends StatelessWidget {
 
 class _PdfChip extends StatelessWidget {
   final String label;
-  final VoidCallback? onTap;
+  final String? url;
+  final void Function(BuildContext, String, String) onShowPdfSheet;
 
-  const _PdfChip({required this.label, this.onTap});
+  const _PdfChip({
+    required this.label,
+    required this.url,
+    required this.onShowPdfSheet,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasUrl = url != null && url!.isNotEmpty;
 
     return Material(
       color: theme.colorScheme.primary,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
-        onTap: onTap,
+        onTap: hasUrl
+            ? () {
+                HapticFeedback.lightImpact();
+                onShowPdfSheet(context, url!, label);
+              }
+            : null,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
