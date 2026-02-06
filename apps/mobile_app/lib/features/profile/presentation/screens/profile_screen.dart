@@ -1,8 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -34,7 +35,8 @@ class ProfileScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                          'Erreur lors de la déconnexion: ${e.toString()}'),
+                        'Erreur lors de la déconnexion: ${e.toString()}',
+                      ),
                     ),
                   );
                 }
@@ -53,7 +55,9 @@ class ProfileScreen extends ConsumerWidget {
 
                   // --- 1. Général ---
                   const FadeInUp(
-                      delay: 100, child: _SectionTitle(title: 'Général')),
+                    delay: 100,
+                    child: _SectionTitle(title: 'Général'),
+                  ),
                   const SizedBox(height: 12),
                   FadeInUp(
                     delay: 150,
@@ -76,7 +80,9 @@ class ProfileScreen extends ConsumerWidget {
 
                   const SizedBox(height: 32),
                   const FadeInUp(
-                      delay: 200, child: _SectionTitle(title: 'Application')),
+                    delay: 200,
+                    child: _SectionTitle(title: 'Application'),
+                  ),
                   const SizedBox(height: 12),
                   FadeInUp(
                     delay: 300,
@@ -107,12 +113,14 @@ class ProfileScreen extends ConsumerWidget {
                   ),
 
                   // --- 3. Superadmin Section (Conditional) ---
-                  if (isSuperadminAsync.valueOrNull == true) ...[/* ... */],
+                  if (isSuperadminAsync.value == true) ...[/* ... */],
 
                   // --- 3. Support ---
                   const SizedBox(height: 32),
                   const FadeInUp(
-                      delay: 400, child: _SectionTitle(title: 'Support')),
+                    delay: 400,
+                    child: _SectionTitle(title: 'Support'),
+                  ),
                   const SizedBox(height: 12),
                   FadeInUp(
                     delay: 500,
@@ -135,13 +143,17 @@ class ProfileScreen extends ConsumerWidget {
                           onTap: () async {
                             final uri = Uri.parse(kPrivacyPolicyUrl);
                             if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri,
-                                  mode: LaunchMode.externalApplication);
+                              await launchUrl(
+                                uri,
+                                mode: LaunchMode.externalApplication,
+                              );
                             } else if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content:
-                                        Text('Impossible d\'ouvrir la page.')),
+                                  content: Text(
+                                    'Impossible d\'ouvrir la page.',
+                                  ),
+                                ),
                               );
                             }
                           },
@@ -153,8 +165,9 @@ class ProfileScreen extends ConsumerWidget {
                   // --- 4. Danger Zone ---
                   const SizedBox(height: 32),
                   const FadeInUp(
-                      delay: 600,
-                      child: _SectionTitle(title: 'Zone de Danger')),
+                    delay: 600,
+                    child: _SectionTitle(title: 'Zone de Danger'),
+                  ),
                   const SizedBox(height: 12),
                   FadeInUp(
                     delay: 700,
@@ -210,8 +223,9 @@ Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
     final uri = Uri(
       scheme: 'mailto',
       path: _kSupportEmail,
-      query:
-          _encodeQueryParameters(subject: 'Demande de suppression de compte'),
+      query: _encodeQueryParameters(
+        subject: 'Demande de suppression de compte',
+      ),
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -267,27 +281,29 @@ class _ProfileAppBar extends ConsumerWidget {
 class _ProfileHeader extends ConsumerWidget {
   const _ProfileHeader();
 
+  String _getInitials(String displayName) {
+    if (displayName.trim().isEmpty) return '?';
+    final parts = displayName.trim().split(' ').where((p) => p.isNotEmpty);
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
+    return parts.first.substring(0, 2).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final displayName = ref.watch(displayNameProvider);
+    final photoUrl = ref.watch(profilePictureUrlProvider);
     final theme = Theme.of(context);
-    final initials = displayName.isNotEmpty
-        ? displayName
-            .trim()
-            .split(' ')
-            .map((l) => l[0])
-            .take(2)
-            .join()
-            .toUpperCase()
-        : '?';
+    final initials = _getInitials(displayName);
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.surface,
-            theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -299,17 +315,19 @@ class _ProfileHeader extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: theme.colorScheme.primary,
-              child: Text(
-                initials,
-                style: GoogleFonts.poppins(
-                  color: theme.colorScheme.onPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            ClipOval(
+              child: photoUrl != null && photoUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: photoUrl,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                          _buildInitialsAvatar(theme, initials),
+                      errorWidget: (_, __, ___) =>
+                          _buildInitialsAvatar(theme, initials),
+                    )
+                  : _buildInitialsAvatar(theme, initials),
             ),
             const SizedBox(height: 16),
             Text(
@@ -320,6 +338,26 @@ class _ProfileHeader extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitialsAvatar(ThemeData theme, String initials) {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: GoogleFonts.poppins(
+          color: theme.colorScheme.onPrimary,
+          fontSize: 28,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -352,9 +390,11 @@ class _SettingsGroup extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         children: List.generate(children.length * 2 - 1, (index) {
@@ -365,7 +405,7 @@ class _SettingsGroup extends StatelessWidget {
             height: 1,
             thickness: 1,
             indent: 60,
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           );
         }),
       ),
@@ -406,32 +446,45 @@ class _SettingsTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                  color: theme.colorScheme.surface, shape: BoxShape.circle),
-              child: Icon(icon,
-                  color: iconColor ?? theme.colorScheme.primary, size: 20),
+                color: theme.colorScheme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: iconColor ?? theme.colorScheme.primary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: titleColor ?? theme.colorScheme.onSurface)),
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: titleColor ?? theme.colorScheme.onSurface,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 12),
-            Icon(Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
           ],
         ),
       ),
@@ -456,11 +509,17 @@ class _FadeInUpState extends State<FadeInUp>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _opacity = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(begin: 30.0, end: 0.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _translateY = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _controller.forward();
     });
@@ -479,7 +538,9 @@ class _FadeInUpState extends State<FadeInUp>
       builder: (context, child) => Opacity(
         opacity: _opacity.value,
         child: Transform.translate(
-            offset: Offset(0, _translateY.value), child: widget.child),
+          offset: Offset(0, _translateY.value),
+          child: widget.child,
+        ),
       ),
     );
   }

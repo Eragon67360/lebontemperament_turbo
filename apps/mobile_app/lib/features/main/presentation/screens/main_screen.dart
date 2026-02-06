@@ -5,8 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'dart:ui'; // Required for ImageFilter.blur
 
-import '../../../concerts/presentation/screens/concerts_screen.dart';
-import '../../../events/presentation/screens/events_screen.dart';
+import '../../../concerts/presentation/screens/concerts_events_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../rehearsals/presentation/screens/rehearsals_screen.dart';
@@ -27,8 +26,7 @@ class _NavItemData {
 
 const List<Widget> _screens = [
   HomeScreen(),
-  EventsScreen(),
-  ConcertsScreen(),
+  ConcertsEventsScreen(),
   RehearsalsScreen(),
   ProfileScreen(),
 ];
@@ -41,15 +39,11 @@ const List<_NavItemData> _navItems = [
   _NavItemData(
       outlinedIcon: Icons.event_outlined,
       filledIcon: Icons.event,
-      label: 'Événements'),
+      label: 'Concerts & Évènements'),
   _NavItemData(
-      outlinedIcon: Icons.music_note_outlined,
-      filledIcon: Icons.music_note,
-      label: 'Concerts'),
-  _NavItemData(
-      outlinedIcon: Icons.repeat_rounded,
-      filledIcon: Icons.repeat_one_rounded,
-      label: 'Répétitions'),
+      outlinedIcon: Icons.calendar_month_outlined,
+      filledIcon: Icons.calendar_month,
+      label: 'Calendrier'),
   _NavItemData(
       outlinedIcon: Icons.person_outline,
       filledIcon: Icons.person,
@@ -66,9 +60,12 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   final Logger _logger = Logger();
 
+  // Note: PageController removed as it is not needed for Fade transitions
+
   @override
   void initState() {
     super.initState();
+    // Notification logic kept from original file
     _initializeNotifications();
   }
 
@@ -92,11 +89,28 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(mainNavigationProvider);
     final theme = Theme.of(context);
 
+    // Note: ref.listen removed. AnimatedSwitcher handles changes declaratively.
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: Stack(
         children: [
-          IndexedStack(index: currentIndex, children: _screens),
+          // Replaced PageView with AnimatedSwitcher for Fade Transition
+          Positioned.fill(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeIn,
+              switchOutCurve: Curves.easeOut,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              },
+              // We explicitly pass the widget from the list based on index
+              child: _screens[currentIndex],
+            ),
+          ),
           _FrostedGlassNavBar(
             items: _navItems,
             currentIndex: currentIndex,
@@ -138,9 +152,9 @@ class _FrostedGlassNavBar extends StatelessWidget {
             child: Container(
               height: 70, // Fixed height for the nav bar
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withOpacity(0.8),
+                color: theme.colorScheme.surface.withValues(alpha: 0.8),
                 border: Border.all(
-                    color: theme.colorScheme.outline.withOpacity(0.2)),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2)),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Row(

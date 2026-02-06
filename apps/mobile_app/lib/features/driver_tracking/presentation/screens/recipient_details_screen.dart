@@ -156,7 +156,7 @@ class RecipientDetailsScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(statusLabel,
@@ -329,9 +329,12 @@ class _ActionButton extends StatelessWidget {
           foregroundColor: color,
           side: BorderSide(
               color: effectiveOnPressed == null
-                  ? Colors.grey.withOpacity(0.4)
+                  ? Colors.grey.withValues(alpha: 0.4)
                   : color ??
-                      Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+                      Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withValues(alpha: 0.5)),
           padding: const EdgeInsets.symmetric(vertical: 14),
           textStyle:
               GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),

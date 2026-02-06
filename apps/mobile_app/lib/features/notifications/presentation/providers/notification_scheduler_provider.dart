@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../data/models/concert.dart';
 import '../../../../data/models/rehearsal.dart';
@@ -57,7 +58,7 @@ final autoScheduleNotificationsProvider = Provider<void>((ref) {
   // Watch for data changes to trigger scheduling
   final concertsAsync = ref.watch(realtimeConcertsProvider);
   final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
-  final settings = ref.watch(notificationSettingsProvider);
+  ref.watch(notificationSettingsProvider); // Rebuild when settings change
 
   // Schedule notifications when data is available and settings change
   if (concertsAsync.hasValue || rehearsalsAsync.hasValue) {

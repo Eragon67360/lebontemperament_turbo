@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:logger/logger.dart';
 import '../services/realtime_service.dart';
 import '../services/notification_service.dart';

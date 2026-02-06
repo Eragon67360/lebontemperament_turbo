@@ -1,13 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import '../../core/utils/date_utils.dart' as app_date_utils;
+import '../models/ca_minute.dart';
 import '../models/event.dart';
 import '../models/concert.dart';
+import '../models/member.dart';
 import '../models/rehearsal.dart';
+import '../services/ca_service.dart';
 import '../services/events_service.dart';
+import '../services/members_service.dart';
 import '../services/concerts_service.dart';
+import '../services/drive_service.dart';
 import '../services/rehearsals_service.dart';
 import '../services/storage_service.dart';
 import 'realtime_notifications_provider.dart';
@@ -37,6 +43,30 @@ final concertsServiceProvider = Provider<ConcertsService>((ref) {
 final rehearsalsServiceProvider = Provider<RehearsalsService>((ref) {
   final storageService = ref.watch(storageServiceProvider);
   return RehearsalsService(storageService: storageService);
+});
+
+final membersServiceProvider = Provider<MembersService>((ref) {
+  return MembersService(logger: Logger());
+});
+
+final caServiceProvider = Provider<CaService>((ref) {
+  return CaService(logger: Logger());
+});
+
+final driveServiceProvider = Provider<DriveService>((ref) {
+  return DriveService(logger: Logger());
+});
+
+// CA minutes provider
+final caMinutesProvider = FutureProvider<List<CaMinute>>((ref) async {
+  final caService = ref.watch(caServiceProvider);
+  return await caService.getCaMinutes();
+});
+
+// Members providers
+final membersProvider = FutureProvider<List<Member>>((ref) async {
+  final membersService = ref.watch(membersServiceProvider);
+  return await membersService.getMembers();
 });
 
 // Refresh trigger provider for real-time updates

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_app/core/config/app_config.dart';
-import 'package:mobile_app/core/constants/support_constants.dart';
+import 'package:lebontemperament/core/config/app_config.dart';
+import 'package:lebontemperament/core/constants/support_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupportContactScreen extends ConsumerStatefulWidget {
@@ -30,9 +30,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
   Future<void> _submit() async {
     if (_selectedSubject == null || _selectedSubject!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez sélectionner un sujet'),
-        ),
+        const SnackBar(content: Text('Veuillez sélectionner un sujet')),
       );
       return;
     }
@@ -73,10 +71,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
             'Authorization': 'Bearer ${session.accessToken}',
           },
         ),
-        data: {
-          'subject': _selectedSubject,
-          'message': message,
-        },
+        data: {'subject': _selectedSubject, 'message': message},
       );
 
       if (mounted) {
@@ -98,9 +93,9 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
           final errorMsg = body != null && body['message'] != null
               ? body['message'] as String
               : 'Une erreur est survenue.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMsg)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(errorMsg)));
         }
       }
     } on DioException catch (e) {
@@ -112,18 +107,16 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
         } else if (e.message != null) {
           errorMsg = e.message!;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMsg)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMsg)));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: ${e.toString()}')));
       }
     }
   }
@@ -199,10 +192,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                             .map(
                               (s) => DropdownMenuItem(
                                 value: s,
-                                child: Text(
-                                  s,
-                                  style: GoogleFonts.poppins(),
-                                ),
+                                child: Text(s, style: GoogleFonts.poppins()),
                               ),
                             )
                             .toList(),

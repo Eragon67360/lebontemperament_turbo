@@ -94,7 +94,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              theme.colorScheme.primary.withOpacity(0.1),
+              theme.colorScheme.primary.withValues(alpha: 0.1),
               theme.colorScheme.surface,
             ],
             begin: Alignment.topCenter,
@@ -119,7 +119,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           color: theme.colorScheme.primary,
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.3),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),

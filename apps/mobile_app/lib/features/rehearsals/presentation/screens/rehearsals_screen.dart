@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_app/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -31,21 +32,18 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
     ref.invalidate(refreshTriggerProvider);
   }
 
-  void _showFilterModal(BuildContext context, GroupType? currentFilter) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _FilterModal(
-        currentFilter: currentFilter,
-        onFilterSelected: (groupType) {
-          ref.read(rehearsalFilterProvider.notifier).setFilter(groupType);
-          Navigator.of(context).pop();
-        },
-      ),
-    );
+  Future<void> _openGoogleCalendar() async {
+    HapticFeedback.lightImpact();
+    final uri = Uri.parse(kGoogleCalendarUrl);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible d\'ouvrir le calendrier.')),
+        );
+      }
+    }
   }
 
   @override
@@ -60,13 +58,13 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surfaceVariant,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // --- 1. Dynamic App Bar ---
+            // --- 1. Dynamic App Bar (Preserved Title Logic) ---
             _RehearsalsAppBar(
-              onFilter: () => _showFilterModal(context, selectedFilter),
+              onCalendar: _openGoogleCalendar,
               onLogout: () async {
                 try {
                   await ref.read(authServiceProvider).signOut();
@@ -84,21 +82,27 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
               },
             ),
 
-            // --- 2. Active Filter Chip ---
-            if (selectedFilter != null)
-              SliverToBoxAdapter(
-                child: FadeInUp(
-                  delay: 50,
-                  child: _FilterChip(
-                    label: _getGroupTypeText(selectedFilter),
-                    onClear: () => ref
-                        .read(rehearsalFilterProvider.notifier)
-                        .clearFilter(),
-                  ),
-                ),
+            // --- 2. Inline Filter Chips ---
+            SliverToBoxAdapter(
+              child: _InlineFilterChips(
+                selectedFilter: selectedFilter,
+                onFilterSelected: (groupType) => ref
+                    .read(rehearsalFilterProvider.notifier)
+                    .setFilter(groupType),
+                onClearFilter: () =>
+                    ref.read(rehearsalFilterProvider.notifier).clearFilter(),
               ),
+            ),
 
-            // --- 3. Main Content based on State ---
+            // --- 3. Calendrier complet Button ---
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: _CalendrierCompletButton(onTap: _openGoogleCalendar),
+              ),
+            ),
+
+            // --- 4. Main Content based on State ---
             rehearsalsAsync.when(
               data: (rehearsals) {
                 if (filteredRehearsals.isEmpty) {
@@ -109,16 +113,25 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
                 }
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
-                      20, 10, 20, kFloatingNavBarBottomPadding),
+                    20,
+                    16,
+                    20,
+                    kFloatingNavBarBottomPadding,
+                  ),
                   sliver: SliverList.builder(
                     itemCount: filteredRehearsals.length,
                     itemBuilder: (context, index) {
                       final rehearsal = filteredRehearsals[index];
-                      return FadeInUp(
-                        delay: 100 + (index * 50),
-                        child: _RehearsalCard(
-                          rehearsal: rehearsal,
-                          isLast: index == filteredRehearsals.length - 1,
+                      // Add a bottom margin unless it's the last item
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index == filteredRehearsals.length - 1
+                              ? 0
+                              : 16,
+                        ),
+                        child: FadeInUp(
+                          delay: 100 + (index * 50),
+                          child: _RehearsalTicketCard(rehearsal: rehearsal),
                         ),
                       );
                     },
@@ -141,10 +154,10 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
 // MARK: - UI Components
 
 class _RehearsalsAppBar extends StatelessWidget {
-  final VoidCallback onFilter;
+  final VoidCallback onCalendar;
   final VoidCallback onLogout;
 
-  const _RehearsalsAppBar({required this.onFilter, required this.onLogout});
+  const _RehearsalsAppBar({required this.onCalendar, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -168,10 +181,10 @@ class _RehearsalsAppBar extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.filter_list_rounded),
+          icon: const Icon(Icons.calendar_month_rounded),
           color: theme.colorScheme.onSurfaceVariant,
-          tooltip: 'Filtrer',
-          onPressed: onFilter,
+          tooltip: 'Calendrier complet',
+          onPressed: onCalendar,
         ),
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
@@ -187,268 +200,399 @@ class _RehearsalsAppBar extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onClear;
+class _InlineFilterChips extends StatelessWidget {
+  final GroupType? selectedFilter;
+  final void Function(GroupType?) onFilterSelected;
+  final VoidCallback onClearFilter;
 
-  const _FilterChip({required this.label, required this.onClear});
+  const _InlineFilterChips({
+    required this.selectedFilter,
+    required this.onFilterSelected,
+    required this.onClearFilter,
+  });
+
+  static const _chipOptions = [
+    (null, 'Tous'),
+    (GroupType.orchestre, 'Orchestre'),
+    (GroupType.hommes, 'Hommes'),
+    (GroupType.femmes, 'Femmes'),
+    (GroupType.jeunesEnfants, 'Jeunes/Enfants'),
+    (GroupType.choeurComplet, 'Chœur complet'),
+  ];
+
+  static Color _getGroupColor(GroupType? group) {
+    switch (group) {
+      case GroupType.orchestre:
+        return const Color(0xFF2196F3); // blue
+      case GroupType.hommes:
+        return const Color(0xFF4CAF50); // green
+      case GroupType.femmes:
+        return const Color(0xFF9C27B0); // purple
+      case GroupType.jeunesEnfants:
+        return const Color(0xFFFFC107); // amber
+      case GroupType.choeurComplet:
+        return const Color(0xFFE53935); // red
+      default:
+        return const Color(0xFF757575); // grey
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Container(
-        padding: const EdgeInsets.only(left: 12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(100),
-        ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
         child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Filtre:',
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.primary,
-                fontSize: 13,
+          children: _chipOptions.map((option) {
+            final (group, label) = option;
+            final isSelected = selectedFilter == group;
+            final baseColor = _getGroupColor(group);
+
+            final bgColor = isSelected
+                ? baseColor
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  );
+            final fgColor = isSelected
+                ? Colors.white
+                : theme.colorScheme.onSurfaceVariant;
+            final borderColor = isSelected
+                ? baseColor
+                : theme.colorScheme.outline.withValues(alpha: 0.2);
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  if (group == null) {
+                    onClearFilter();
+                  } else {
+                    onFilterSelected(group);
+                  }
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Text(
+                    label,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: fgColor,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.close, size: 18),
-              color: theme.colorScheme.primary,
-              onPressed: onClear,
-              visualDensity: VisualDensity.compact,
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ),
     );
   }
 }
 
-class _FilterModal extends StatelessWidget {
-  final GroupType? currentFilter;
-  final Function(GroupType?) onFilterSelected;
+class _CalendrierCompletButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _FilterModal({this.currentFilter, required this.onFilterSelected});
+  const _CalendrierCompletButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Filtrer par groupe',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
             ),
           ),
-          const SizedBox(height: 16),
-          _buildFilterOption(context, 'Tous les groupes', null),
-          ...GroupType.values.map(
-            (group) =>
-                _buildFilterOption(context, _getGroupTypeText(group), group),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.calendar_month_rounded,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Voir le calendrier complet',
+                style: GoogleFonts.poppins(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+        ),
+      ),
+    );
+  }
+}
+
+class _RehearsalTicketCard extends StatelessWidget {
+  final Rehearsal rehearsal;
+
+  const _RehearsalTicketCard({required this.rehearsal});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Parsing logic
+    DateTime? dateObj;
+    if (rehearsal.date != null) {
+      try {
+        dateObj = DateTime.parse(rehearsal.date!);
+      } catch (_) {}
+    }
+
+    return Card(
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      color: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- TOP SECTION ---
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (dateObj != null)
+                  _DateBadge(date: dateObj, color: theme.colorScheme.primary),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _GroupTypeBadge(groupType: rehearsal.groupType),
+                      const SizedBox(height: 6),
+                      Text(
+                        rehearsal.name ?? 'Répétition sans titre',
+                        style: GoogleFonts.poppins(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // --- BOTTOM SECTION (Footer) ---
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHigh.withValues(
+                alpha: 0.3,
+              ),
+              border: Border(
+                top: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.2,
+                  ),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Time
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 15,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _formatTimeRange(rehearsal.startTime, rehearsal.endTime),
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+
+                // Separator
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    '•',
+                    style: TextStyle(color: theme.colorScheme.outline),
+                  ),
+                ),
+
+                // Location
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.place_outlined,
+                        size: 15,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          rehearsal.place ?? "Lieu non défini",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
-
-  Widget _buildFilterOption(
-    BuildContext context,
-    String title,
-    GroupType? value,
-  ) {
-    return RadioListTile<GroupType?>(
-      title: Text(title, style: GoogleFonts.poppins()),
-      value: value,
-      groupValue: currentFilter,
-      onChanged: (newValue) => onFilterSelected(newValue),
-      contentPadding: EdgeInsets.zero,
-      activeColor: Theme.of(context).colorScheme.primary,
-    );
-  }
 }
 
-class _RehearsalCard extends StatelessWidget {
-  final Rehearsal rehearsal;
-  final bool isLast;
+class _DateBadge extends StatelessWidget {
+  final DateTime date;
+  final Color color;
 
-  const _RehearsalCard({required this.rehearsal, this.isLast = false});
+  const _DateBadge({required this.date, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // Helper to get short month name
+    final months = [
+      'Jan',
+      'Fév',
+      'Mar',
+      'Avr',
+      'Mai',
+      'Juin',
+      'Juil',
+      'Août',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Déc',
+    ];
 
-    // Date parsing logic
-    String day = '-';
-    String month = '-';
-    if (rehearsal.date != null) {
-      try {
-        final dateTime = DateTime.parse(rehearsal.date!);
-        day = DateFormat('d', 'fr_FR').format(dateTime);
-        month = DateFormat('MMM', 'fr_FR').format(dateTime).toUpperCase();
-      } catch (e) {
-        // Handle potential parsing error if date format is unexpected
-      }
-    }
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            // --- Date Section ---
-            SizedBox(
-              width: 55,
-              child: Column(
-                children: [
-                  Text(
-                    month,
-                    style: GoogleFonts.poppins(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    day,
-                    style: GoogleFonts.poppins(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 32,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
-              ),
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            date.day.toString(),
+            style: GoogleFonts.poppins(
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+              color: color,
+              height: 1.0,
             ),
-            const SizedBox(width: 16),
-            Container(
-              width: 1,
-              height: 60,
-              color: theme.colorScheme.outline.withOpacity(0.3),
+          ),
+          Text(
+            months[date.month - 1],
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+              height: 1.2,
             ),
-            const SizedBox(width: 16),
-
-            // --- Details Section ---
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _GroupTypeTag(groupType: rehearsal.groupType),
-                  const SizedBox(height: 8),
-                  Text(
-                    rehearsal.name ?? 'Répétition sans titre',
-                    style: GoogleFonts.poppins(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 17,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  _InfoRow(
-                    icon: Icons.access_time_outlined,
-                    text: _formatTimeRange(
-                      rehearsal.startTime,
-                      rehearsal.endTime,
-                    ),
-                  ),
-                  if (rehearsal.place != null &&
-                      rehearsal.place!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    _InfoRow(
-                      icon: Icons.location_on_outlined,
-                      text: rehearsal.place!,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _GroupTypeTag extends StatelessWidget {
+class _GroupTypeBadge extends StatelessWidget {
   final GroupType groupType;
-  const _GroupTypeTag({required this.groupType});
+  const _GroupTypeBadge({required this.groupType});
+
+  static Color _getGroupColor(GroupType group) {
+    switch (group) {
+      case GroupType.orchestre:
+        return const Color(0xFF2196F3);
+      case GroupType.hommes:
+        return const Color(0xFF4CAF50);
+      case GroupType.femmes:
+        return const Color(0xFF9C27B0);
+      case GroupType.jeunesEnfants:
+        return const Color(0xFFFFC107);
+      case GroupType.choeurComplet:
+        return const Color(0xFFE53935);
+      default:
+        return const Color(0xFF757575);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final color = _getGroupColor(groupType);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withOpacity(0.6),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         _getGroupTypeText(groupType),
         style: GoogleFonts.poppins(
-          color: theme.colorScheme.onSecondaryContainer,
+          color: color,
           fontWeight: FontWeight.w600,
-          fontSize: 12,
+          fontSize: 11,
         ),
       ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _InfoRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 14),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.poppins(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 13,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -482,18 +626,29 @@ class _EmptyState extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                isFilterActive
-                    ? Icons.filter_list_off_outlined
-                    : Icons.music_off_outlined,
-                size: 72,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isFilterActive
+                      ? Icons.filter_list_off_outlined
+                      : Icons.music_off_outlined,
+                  size: 48,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               Text(
                 isFilterActive ? 'Aucun résultat' : 'Aucune répétition',
                 style: GoogleFonts.poppins(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
                 ),
@@ -533,14 +688,14 @@ class _ErrorState extends StatelessWidget {
             children: [
               Icon(
                 Icons.cloud_off_outlined,
-                size: 72,
-                color: theme.colorScheme.error.withOpacity(0.7),
+                size: 64,
+                color: theme.colorScheme.error.withValues(alpha: 0.7),
               ),
               const SizedBox(height: 24),
               Text(
                 'Oups, une erreur est survenue',
                 style: GoogleFonts.poppins(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
                 ),
@@ -562,6 +717,9 @@ class _ErrorState extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],

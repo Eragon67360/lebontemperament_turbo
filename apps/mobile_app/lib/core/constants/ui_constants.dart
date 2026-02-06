@@ -26,6 +26,17 @@ const String kSupportEmail = 'contactlebontemperament@gmail.com';
 /// WhatsApp number with country code, no + or spaces (e.g. 33123456789).
 const String kSupportWhatsAppPhone = '33647849308';
 
-/// Google Drive folder for Le Bon Tempérament documents (partitions, etc.).
-const String kDriveFolderUrl =
-    'https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU';
+/// Website base URL for PDFs and static assets.
+const String kWebsiteBaseUrl = 'https://www.lebontemperament.com';
+
+/// Drive folder URLs for administration archives.
+const String kDriveCaUrl =
+    'https://drive.google.com/drive/folders/0B3HMykcVQJAVdmw2aTdyQUJyWUE?resourcekey=0-eSCStZ_H5-WvEpmFYk8sdQ';
+const String kDriveAgUrl =
+    'https://drive.google.com/drive/folders/0B3HMykcVQJAVUGE3SllOZlRDMFk?resourcekey=0-KWWoenv1O_uTnu0GNE1t2Q';
+const String kDrivePmUrl =
+    'https://drive.google.com/drive/folders/0B3HMykcVQJAVcG9Nd1JRa19tM3c?resourcekey=0-kSko9ElajKHa981AXkCz8Q';
+
+/// Google Calendar embed URL for rehearsals (lebontemperament@gmail.com).
+const String kGoogleCalendarUrl =
+    'https://calendar.google.com/calendar/embed?src=lebontemperament%40gmail.com';

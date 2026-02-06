@@ -71,8 +71,8 @@ class _ToastOverlayState extends State<_ToastOverlay>
 
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
-          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-        );
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
@@ -171,8 +171,6 @@ class _ToastOverlayState extends State<_ToastOverlay>
         return Theme.of(context).colorScheme.onSurface;
       case ToastType.info:
         return Theme.of(context).colorScheme.onPrimary;
-      default:
-        return Theme.of(context).colorScheme.onSurface;
     }
   }
 
