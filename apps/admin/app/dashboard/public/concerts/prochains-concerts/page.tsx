@@ -94,6 +94,12 @@ export default function ProchainsConcerts() {
   const [selectedTourForConcerts, setSelectedTourForConcerts] =
     useState<Tour | null>(null);
 
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const upcomingConcerts = concerts.filter((c) => c.date >= todayStr);
+  const upcomingTours = tours.filter(
+    (t) => (t.end_date ?? t.start_date ?? "") >= todayStr,
+  );
+
   const handleDeleteClick = (id: string) => {
     setConcertToDelete(id);
     setDeleteDialogOpen(true);
@@ -616,8 +622,8 @@ export default function ProchainsConcerts() {
   const ConcertSelectionDialog = () => {
     const [selectedConcerts, setSelectedConcerts] = useState<string[]>([]);
 
-    // Filter concerts that are not already in a tour or are in the current tour
-    const availableConcerts = concerts.filter(
+    // Filter concerts that are not already in a tour or are in the current tour (upcoming only)
+    const availableConcerts = upcomingConcerts.filter(
       (concert) =>
         !concert.tour_id || concert.tour_id === selectedTourForConcerts?.id,
     );
@@ -736,11 +742,11 @@ export default function ProchainsConcerts() {
       }
     >
       <ScrollArea className="pr-4">
-        {tours.length > 0 && (
+        {upcomingTours.length > 0 && (
           <div className="mb-8">
             <h2 className="mb-2 text-sm font-semibold">Tournées</h2>
             <div className="space-y-4">
-              {tours.map((tour) => (
+              {upcomingTours.map((tour) => (
                 <TourCard key={tour.id} tour={tour} />
               ))}
             </div>
@@ -748,13 +754,13 @@ export default function ProchainsConcerts() {
         )}
         {loading ? (
           <LoadingState />
-        ) : concerts.length === 0 ? (
+        ) : upcomingConcerts.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="mb-8">
             <h2 className="mb-2 text-sm font-semibold">Concerts</h2>
             <div className="space-y-4">
-              {concerts.map((concert) => (
+              {upcomingConcerts.map((concert) => (
                 <ConcertCard key={concert.id} concert={concert} />
               ))}
             </div>
