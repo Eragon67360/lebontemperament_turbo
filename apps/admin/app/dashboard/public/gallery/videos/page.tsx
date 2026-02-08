@@ -1,4 +1,3 @@
-// app/dashboard/public/videos/page.tsx
 "use client";
 
 import { PageShell } from "@/components/layouts/PageShell";
@@ -12,7 +11,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,27 +22,153 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { VideoForm } from "@/components/VideoForm";
 import { YoutubeIframe } from "@/components/YoutubeIframe";
 import { Video, VideoFormData } from "@/types/video";
 import { extractYouTubeId } from "@/utils/youtube";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Music2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Film, MapPin, Mic2, Pencil, Plus, Trash2, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const loadingMessages = [
-  "Chargement des vidéos... 🎥",
-  "Préparation de la playlist... 🎵",
-  "Les musiciens s'accordent... 🎻",
-  "La scène se prépare... 🎭",
-];
+// --- Utility Components ---
+
+const LoadingSkeleton = () => (
+  <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div
+        key={i}
+        className="bg-muted/40 h-[320px] w-full animate-pulse rounded-2xl border"
+      />
+    ))}
+  </div>
+);
+
+const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
+  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
+    <div className="bg-primary/5 ring-primary/5 flex h-20 w-20 items-center justify-center rounded-full ring-8">
+      <Film className="text-primary/40 h-10 w-10" />
+    </div>
+    <div className="space-y-2">
+      <h2 className="text-xl font-semibold tracking-tight">Vidéothèque vide</h2>
+      <p className="text-muted-foreground max-w-sm text-sm">
+        Aucune vidéo n'est disponible pour le moment. Ajoutez des liens YouTube
+        pour enrichir votre galerie.
+      </p>
+    </div>
+    <Button onClick={onAdd} className="px-8">
+      <Plus className="mr-2 h-4 w-4" />
+      Ajouter une vidéo
+    </Button>
+  </div>
+);
+
+// --- Sub-Component: Video Card ---
+
+const VideoCard = ({
+  video,
+  onEdit,
+  onDelete,
+}: {
+  video: Video;
+  onEdit: (v: Video) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const videoId = extractYouTubeId(video.youtube_url);
+  const dateObj = new Date(video.performance_date);
+
+  return (
+    <Card className="group bg-card hover:border-primary/50 flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-all hover:shadow-md">
+      {/* Video Area */}
+      <div className="relative aspect-video w-full bg-black">
+        {videoId ? (
+          <YoutubeIframe videoId={videoId} title={video.title} />
+        ) : (
+          <div className="text-muted-foreground flex h-full w-full items-center justify-center">
+            <Film className="h-10 w-10 opacity-20" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex gap-4">
+          {/* Date Tile */}
+          <div className="bg-muted/30 hidden flex-col items-center justify-center rounded-xl px-3 py-2 text-center shadow-sm sm:flex">
+            <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
+              {format(dateObj, "MMM", { locale: fr })}
+            </span>
+            <span className="text-foreground text-2xl leading-none font-black">
+              {format(dateObj, "dd")}
+            </span>
+            <span className="text-muted-foreground/80 text-[10px] font-medium">
+              {format(dateObj, "yyyy")}
+            </span>
+          </div>
+
+          <div className="flex-1 space-y-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="line-clamp-2 text-lg leading-tight font-bold tracking-tight">
+                {video.title}
+              </h3>
+            </div>
+            {video.composer && (
+              <Badge variant="secondary" className="font-normal">
+                <User className="mr-1 h-3 w-3 opacity-50" />
+                {video.composer}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="text-muted-foreground mt-4 space-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <MapPin className="text-primary/60 h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{video.venue}</span>
+          </div>
+          {video.soloists && video.soloists.length > 0 && (
+            <div className="flex items-start gap-2">
+              <Mic2 className="text-primary/60 mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span className="line-clamp-1 italic">
+                {video.soloists.join(", ")}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="mt-5 flex items-center justify-end gap-1 border-t pt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:bg-primary/10 hover:text-primary h-8 w-8"
+            onClick={() => onEdit(video)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8"
+            onClick={() => onDelete(video.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// --- Main Page Component ---
 
 export default function VideosPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Dialog States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
@@ -50,8 +177,12 @@ export default function VideosPage() {
   const fetchVideos = async () => {
     try {
       const response = await fetch("/api/videos");
+      if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
       setVideos(data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de charger les vidéos");
     } finally {
       setLoading(false);
     }
@@ -105,7 +236,12 @@ export default function VideosPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = (id: string) => {
+    setVideoToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (!videoToDelete) return;
 
     try {
@@ -117,10 +253,10 @@ export default function VideosPage() {
 
       if (!response.ok) throw new Error("Error deleting video");
 
-      toast.success("Vidéo supprimée avec succès");
+      toast.success("Vidéo supprimée");
       fetchVideos();
     } catch (error) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("Impossible de supprimer la vidéo");
       console.error(error);
     } finally {
       setDeleteDialogOpen(false);
@@ -128,146 +264,69 @@ export default function VideosPage() {
     }
   };
 
-  const LoadingState = () => {
-    const [message, setMessage] = useState(loadingMessages[0]);
-
-    useEffect(() => {
-      const intervalId = setInterval(() => {
-        setMessage(
-          loadingMessages[Math.floor(Math.random() * loadingMessages.length)],
-        );
-      }, 2000);
-      return () => clearInterval(intervalId);
-    }, []);
-
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="space-y-4 text-center">
-          <Music2 className="text-primary/50 mx-auto h-12 w-12 animate-pulse" />
-          <p className="text-muted-foreground text-sm">{message}</p>
-        </div>
-      </div>
-    );
-  };
-  const EmptyState = () => (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
-      <div className="space-y-4 text-center">
-        <Music2 className="text-primary/30 mx-auto h-16 w-16" />
-        <h2 className="text-xl font-medium">Aucune vidéo</h2>
-        <p className="text-muted-foreground max-w-sm text-sm">
-          Commencez par ajouter votre première vidéo pour créer votre collection
-        </p>
-      </div>
-      <AddVideoButton />
-    </div>
-  );
-  const AddVideoButton = () => (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="px-6">
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter une vidéo
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Ajouter une nouvelle vidéo</DialogTitle>
-          <DialogDescription>
-            Entrez les informations pour cette vidéo
-          </DialogDescription>
-        </DialogHeader>
-        <VideoForm onSubmit={handleCreate} />
-      </DialogContent>
-    </Dialog>
-  );
-  const VideoCard = ({ video }: { video: Video }) => {
-    const videoId = extractYouTubeId(video.youtube_url);
-
-    return (
-      <div className="border-border/50 overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-black">
-        <div className="aspect-video">
-          <YoutubeIframe key={videoId} videoId={videoId} />
-        </div>
-        <div className="space-y-4 p-6">
-          <div className="space-y-2">
-            <h3 className="text-lg leading-none font-medium">{video.title}</h3>
-            <p className="text-muted-foreground text-sm">{video.composer}</p>
-          </div>
-
-          <div className="text-muted-foreground space-y-1 text-sm">
-            <p>
-              {format(new Date(video.performance_date), "dd MMMM yyyy", {
-                locale: fr,
-              })}
-            </p>
-            <p>{video.venue}</p>
-            {video.soloists?.length > 0 && (
-              <p className="italic">{video.soloists.join(", ")}</p>
-            )}
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full"
-              onClick={() => {
-                setEditingVideo(video);
-                setEditDialogOpen(true);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive rounded-full"
-              onClick={() => {
-                setVideoToDelete(video.id);
-                setDeleteDialogOpen(true);
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <PageShell
+      fullHeight
       theme="public"
       title="Vidéos"
-      description="Ajoutez ici les vidéos depuis YouTube que vous souhaitez voir apparaître sur le site."
-      headerAction={<AddVideoButton />}
+      description="Gérez votre vidéothèque YouTube et les performances passées."
       className="px-4 py-8 sm:px-6 lg:px-8"
+      headerAction={
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="shadow-md transition-all hover:shadow-lg">
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter une vidéo
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Ajouter une vidéo</DialogTitle>
+              <DialogDescription>
+                Copiez l'URL ou l'ID de la vidéo YouTube.
+              </DialogDescription>
+            </DialogHeader>
+            <VideoForm onSubmit={handleCreate} />
+          </DialogContent>
+        </Dialog>
+      }
     >
-      {loading ? (
-        <LoadingState />
-      ) : videos.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {videos.map((video) => (
-            <VideoCard key={video.id} video={video} />
-          ))}
-        </div>
-      )}
+      <ScrollArea className="h-full w-full pr-4">
+        {loading ? (
+          <LoadingSkeleton />
+        ) : videos.length === 0 ? (
+          <EmptyState onAdd={() => setOpen(true)} />
+        ) : (
+          <div className="grid gap-6 pb-12 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {videos.map((video) => (
+              <VideoCard
+                key={video.id}
+                video={video}
+                onEdit={(v) => {
+                  setEditingVideo(v);
+                  setEditDialogOpen(true);
+                }}
+                onDelete={handleDeleteClick}
+              />
+            ))}
+          </div>
+        )}
+      </ScrollArea>
 
+      {/* Delete Alert */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogTitle>Supprimer cette vidéo ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. La vidéo sera définitivement
-              supprimée.
+              Cette action est irréversible. La vidéo sera retirée de votre
+              galerie.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90 text-white"
             >
               Supprimer
@@ -276,12 +335,13 @@ export default function VideosPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Modifier la vidéo</DialogTitle>
             <DialogDescription>
-              Modifiez les informations de la vidéo
+              Mettez à jour les informations ci-dessous.
             </DialogDescription>
           </DialogHeader>
           <VideoForm onSubmit={handleEdit} initialData={editingVideo} />
