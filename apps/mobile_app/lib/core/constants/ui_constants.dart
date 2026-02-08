@@ -1,5 +1,25 @@
 // This file holds constant values related to the UI.
 
+// --- Screen Layout ---
+
+/// Horizontal padding for screen content (unified UI).
+const double kScreenHorizontalPadding = 20.0;
+
+/// Top padding for home-like screens (no AppBar).
+const double kScreenTopPadding = 60.0;
+
+/// Spacing between major sections.
+const double kSectionSpacing = 32.0;
+
+/// Spacing between section header and content.
+const double kSectionHeaderSpacing = 16.0;
+
+/// Border radius for list cards.
+const double kCardBorderRadius = 16.0;
+
+/// Border radius for bento/banner cards.
+const double kCardBorderRadiusLarge = 24.0;
+
 // --- Navigation Bar ---
 
 // The height of our custom navigation bar in main_screen.dart is 70.

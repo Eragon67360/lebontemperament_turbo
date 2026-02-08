@@ -97,7 +97,12 @@ class DeveloperModeScreen extends ConsumerWidget {
       body: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              kFloatingNavBarBottomPadding,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const _SectionTitle(title: 'Notifications'),
