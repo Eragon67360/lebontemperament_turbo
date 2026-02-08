@@ -74,13 +74,16 @@ class NotificationService {
         iOS: iosSettings,
       );
 
-      // Initialize with callback to track when notifications are triggered
+      // Initialize with callback to track when notifications are triggered and handle tap
       final initialized = await _notifications.initialize(
         initSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           _logger.i('🔔 Notification received: ${response.payload}');
           _logger.i('🔔 Notification ID: ${response.id}');
           _logger.i('🔔 Notification action: ${response.actionId}');
+          if (response.payload != null && response.payload!.isNotEmpty) {
+            _onNotificationTapped(response);
+          }
         },
       );
 
@@ -106,13 +109,14 @@ class NotificationService {
   /// Ensures channels have Importance.max from the start for visibility.
   Future<void> _createRealtimeNotificationChannels() async {
     try {
-      final androidPlugin =
-          _notifications.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidPlugin == null) return;
 
-      const channels = [
-        AndroidNotificationChannel(
+      final channels = [
+        const AndroidNotificationChannel(
           'new_rehearsals',
           'Nouvelles répétitions',
           description: 'Notifications pour les nouvelles répétitions',
@@ -121,7 +125,7 @@ class NotificationService {
           playSound: true,
           showBadge: true,
         ),
-        AndroidNotificationChannel(
+        const AndroidNotificationChannel(
           'new_events',
           'Nouveaux événements',
           description: 'Notifications pour les nouveaux événements',
@@ -130,10 +134,19 @@ class NotificationService {
           playSound: true,
           showBadge: true,
         ),
-        AndroidNotificationChannel(
+        const AndroidNotificationChannel(
           'new_concerts',
           'Nouveaux concerts',
           description: 'Notifications pour les nouveaux concerts',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+        const AndroidNotificationChannel(
+          'fcm_push',
+          'Notifications push',
+          description: 'Notifications envoyées par le serveur (FCM)',
           importance: Importance.max,
           enableVibration: true,
           playSound: true,
@@ -161,8 +174,10 @@ class NotificationService {
       // For iOS, use the flutter_local_notifications plugin directly
       // This is more reliable than using permission_handler on iOS
       try {
-        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+        final iosPlugin = _notifications
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
         if (iosPlugin != null) {
           _logger.i('Using iOS-specific permission request...');
           final iosSettings = await iosPlugin.requestPermissions(
@@ -193,7 +208,8 @@ class NotificationService {
           // This will open system settings for exact alarms on Android 12+
           await _notifications
               .resolvePlatformSpecificImplementation<
-                  AndroidFlutterLocalNotificationsPlugin>()
+                AndroidFlutterLocalNotificationsPlugin
+              >()
               ?.requestExactAlarmsPermission();
         } catch (e) {
           _logger.w('Could not request exact alarm permission: $e');
@@ -211,8 +227,10 @@ class NotificationService {
     try {
       // For iOS, check using flutter_local_notifications first
       try {
-        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+        final iosPlugin = _notifications
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
         if (iosPlugin != null) {
           _logger.i(
             'Checking iOS permissions using flutter_local_notifications...',
@@ -247,9 +265,57 @@ class NotificationService {
     }
   }
 
+  /// Callback for notification tap (set by FcmNotificationHandler to navigate).
+  static void Function(String? payload)? onNotificationTap;
+
   void _onNotificationTapped(NotificationResponse response) {
     _logger.i('Notification tapped: ${response.payload}');
-    // TODO: Navigate to specific event/rehearsal detail
+    onNotificationTap?.call(response.payload);
+  }
+
+  /// Show a notification from FCM (foreground or background handler). Uses a dedicated channel.
+  Future<void> showFromFcm({
+    required String title,
+    required String body,
+    required String payload,
+    int? id,
+  }) async {
+    if (!_isInitialized) return;
+    final notificationId =
+        id ?? (payload.hashCode.abs() % 2147483647).clamp(1000000, 2147483646);
+    try {
+      await _notifications.show(
+        notificationId,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'fcm_push',
+            'Notifications push',
+            channelDescription: 'Notifications envoyées par le serveur (FCM)',
+            importance: Importance.max,
+            priority: Priority.max,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+            category: AndroidNotificationCategory.message,
+            ticker: title,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+            interruptionLevel: InterruptionLevel.active,
+            categoryIdentifier: 'fcm_push',
+          ),
+        ),
+        payload: payload,
+      );
+    } catch (e) {
+      _logger.e('Error showing FCM notification: $e');
+    }
   }
 
   Future<void> scheduleEventNotifications(
@@ -375,7 +441,7 @@ class NotificationService {
               notificationTime,
             ),
             title: 'Concert à venir',
-            body: '${concert.name} dans ${notificationTime.displayName}',
+            body: '${concert.name} dans ${notificationTime.reminderLabel}',
             scheduledDate: scheduledTime,
             payload: 'concert_${concert.id}',
           );
@@ -437,7 +503,7 @@ class NotificationService {
               notificationTime,
             ),
             title: 'Répétition à venir',
-            body: '${rehearsal.name} dans ${notificationTime.displayName}',
+            body: '${rehearsal.name} dans ${notificationTime.reminderLabel}',
             scheduledDate: scheduledTime,
             payload: 'rehearsal_${rehearsal.id}',
           );
@@ -662,8 +728,8 @@ class NotificationService {
   /// Check pending notifications to verify scheduling
   Future<void> _checkPendingNotifications() async {
     try {
-      final pendingNotifications =
-          await _notifications.pendingNotificationRequests();
+      final pendingNotifications = await _notifications
+          .pendingNotificationRequests();
       _logger.i('Pending notifications count: ${pendingNotifications.length}');
 
       for (final notification in pendingNotifications) {
@@ -924,8 +990,9 @@ class NotificationService {
       final canShow = await canShowNotifications();
       if (!canShow) return;
 
-      final notificationId =
-          _generateRealtimeNotificationId('rehearsal_updated_${rehearsal.id}');
+      final notificationId = _generateRealtimeNotificationId(
+        'rehearsal_updated_${rehearsal.id}',
+      );
       final body = _buildRehearsalNotificationBody(rehearsal);
 
       _logger.i(
@@ -972,8 +1039,9 @@ class NotificationService {
       final canShow = await canShowNotifications();
       if (!canShow) return;
 
-      final notificationId =
-          _generateRealtimeNotificationId('rehearsal_deleted_${rehearsal.id}');
+      final notificationId = _generateRealtimeNotificationId(
+        'rehearsal_deleted_${rehearsal.id}',
+      );
       final body = _buildRehearsalNotificationBody(rehearsal);
 
       _logger.i(
@@ -1020,8 +1088,9 @@ class NotificationService {
       final canShow = await canShowNotifications();
       if (!canShow) return;
 
-      final notificationId =
-          _generateRealtimeNotificationId('event_updated_${event.id}');
+      final notificationId = _generateRealtimeNotificationId(
+        'event_updated_${event.id}',
+      );
       final body = _buildEventNotificationBody(event);
 
       _logger.i(
@@ -1068,8 +1137,9 @@ class NotificationService {
       final canShow = await canShowNotifications();
       if (!canShow) return;
 
-      final notificationId =
-          _generateRealtimeNotificationId('event_deleted_${event.id}');
+      final notificationId = _generateRealtimeNotificationId(
+        'event_deleted_${event.id}',
+      );
       final body = _buildEventNotificationBody(event);
 
       _logger.i(
@@ -1116,8 +1186,9 @@ class NotificationService {
       final canShow = await canShowNotifications();
       if (!canShow) return;
 
-      final notificationId =
-          _generateRealtimeNotificationId('concert_updated_${concert.id}');
+      final notificationId = _generateRealtimeNotificationId(
+        'concert_updated_${concert.id}',
+      );
       final body = _buildConcertNotificationBody(concert);
 
       _logger.i(
@@ -1164,8 +1235,9 @@ class NotificationService {
       final canShow = await canShowNotifications();
       if (!canShow) return;
 
-      final notificationId =
-          _generateRealtimeNotificationId('concert_deleted_${concert.id}');
+      final notificationId = _generateRealtimeNotificationId(
+        'concert_deleted_${concert.id}',
+      );
       final body = _buildConcertNotificationBody(concert);
 
       _logger.i(
