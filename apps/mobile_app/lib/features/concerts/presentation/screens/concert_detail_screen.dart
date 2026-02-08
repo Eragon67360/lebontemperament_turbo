@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -59,8 +60,9 @@ class _ConcertDetailScreenState extends ConsumerState<ConcertDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       FadeInUp(
-                          delay: 100,
-                          child: _ConcertInfoCard(concert: concert)),
+                        delay: 100,
+                        child: _ConcertInfoCard(concert: concert),
+                      ),
                       const SizedBox(height: 32),
                       const FadeInUp(
                         delay: 200,
@@ -144,8 +146,9 @@ class _ConcertDetailHeader extends StatelessWidget {
           imageUrl: concert.affiche!,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             child: Center(
               child: CircularProgressIndicator(
                 color: theme.colorScheme.primary,
@@ -165,7 +168,7 @@ class _ConcertDetailHeader extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  Colors.black.withValues(alpha: 0.8)
+                  Colors.black.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -232,8 +235,9 @@ class _ConcertDetailHeader extends StatelessWidget {
             child: Icon(
               Icons.music_note_outlined,
               size: 200,
-              color:
-                  theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.1),
+              color: theme.colorScheme.onPrimaryContainer.withValues(
+                alpha: 0.1,
+              ),
             ),
           ),
           Padding(
@@ -248,8 +252,9 @@ class _ConcertDetailHeader extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.onPrimaryContainer
-                        .withValues(alpha: 0.15),
+                    color: theme.colorScheme.onPrimaryContainer.withValues(
+                      alpha: 0.15,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -294,8 +299,9 @@ class _ConcertInfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         children: [
@@ -515,61 +521,4 @@ String _formatTime(String time) {
     if (timeParts.length >= 2) return '${timeParts[0]}h${timeParts[1]}';
   } catch (e) {}
   return time;
-}
-
-// MARK: - Animation Widget
-class FadeInUp extends StatefulWidget {
-  final Widget child;
-  final int delay;
-  const FadeInUp({super.key, required this.child, this.delay = 0});
-  @override
-  State<FadeInUp> createState() => _FadeInUpState();
-}
-
-class _FadeInUpState extends State<FadeInUp>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<double> _translateY;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _opacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _opacity.value,
-          child: Transform.translate(
-            offset: Offset(0, _translateY.value),
-            child: widget.child,
-          ),
-        );
-      },
-    );
-  }
 }

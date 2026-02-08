@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 
 import '../../../../data/models/event.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -166,12 +167,10 @@ class _EventCard extends StatelessWidget {
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: Container(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.5,
-          ),
-          borderRadius: BorderRadius.circular(20),
+          color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
         child: InkWell(
@@ -179,7 +178,7 @@ class _EventCard extends StatelessWidget {
             HapticFeedback.lightImpact();
             context.push('/events/${event.id}');
           },
-          borderRadius: BorderRadius.circular(19),
+          borderRadius: BorderRadius.circular(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -294,36 +293,37 @@ class _EventTypeTheme {
 }
 
 _EventTypeTheme _getEventTypeTheme(EventType eventType, ThemeData theme) {
+  final scheme = theme.colorScheme;
   switch (eventType) {
     case EventType.concert:
       return _EventTypeTheme(
         icon: Icons.music_note_outlined,
-        backgroundColor: theme.colorScheme.primaryContainer,
-        iconColor: theme.colorScheme.onPrimaryContainer,
+        backgroundColor: scheme.primaryContainer,
+        iconColor: scheme.onPrimaryContainer,
       );
     case EventType.vente:
       return _EventTypeTheme(
         icon: Icons.shopping_cart_outlined,
-        backgroundColor: Colors.green.shade100,
-        iconColor: Colors.green.shade800,
+        backgroundColor: scheme.secondaryContainer,
+        iconColor: scheme.onSecondaryContainer,
       );
     case EventType.repetition:
       return _EventTypeTheme(
         icon: Icons.repeat_rounded,
-        backgroundColor: Colors.orange.shade100,
-        iconColor: Colors.orange.shade800,
+        backgroundColor: scheme.tertiaryContainer,
+        iconColor: scheme.onTertiaryContainer,
       );
     case EventType.sejour:
       return _EventTypeTheme(
         icon: Icons.terrain_outlined,
-        backgroundColor: Colors.amber.shade100,
-        iconColor: Colors.amber.shade800,
+        backgroundColor: scheme.tertiaryContainer.withValues(alpha: 0.6),
+        iconColor: scheme.onTertiaryContainer,
       );
     case EventType.autre:
       return _EventTypeTheme(
         icon: Icons.event_outlined,
-        backgroundColor: theme.colorScheme.secondaryContainer,
-        iconColor: theme.colorScheme.onSecondaryContainer,
+        backgroundColor: scheme.surfaceContainerHighest,
+        iconColor: scheme.onSurfaceVariant,
       );
   }
 }
@@ -436,7 +436,7 @@ class _ErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Nous n\'avons pas pu charger les concerts. Vérifiez votre connexion et réessayez.',
+                'Nous n\'avons pas pu charger les événements. Vérifiez votre connexion et réessayez.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
@@ -451,68 +451,15 @@ class _ErrorState extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class FadeInUp extends StatefulWidget {
-  final Widget child;
-  final int delay;
-  const FadeInUp({super.key, required this.child, this.delay = 0});
-  @override
-  State<FadeInUp> createState() => _FadeInUpState();
-}
-
-class _FadeInUpState extends State<FadeInUp>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<double> _translateY;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _opacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _opacity.value,
-          child: Transform.translate(
-            offset: Offset(0, _translateY.value),
-            child: widget.child,
-          ),
-        );
-      },
     );
   }
 }

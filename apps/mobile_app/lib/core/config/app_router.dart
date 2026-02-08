@@ -32,6 +32,10 @@ class AuthStateListener extends ChangeNotifier {
 }
 
 class AppRouter {
+  /// Global key for FCM/notification tap navigation when app is in background or cold start.
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static const String splash = '/';
   static const String permissions = '/permissions';
   static const String login = '/login';
@@ -39,6 +43,7 @@ class AppRouter {
   static const String main = '/main';
   static const String eventDetail = '/events/:id';
   static const String concertDetail = '/concerts/:id';
+  static const String rehearsals = '/rehearsals';
   static const String driverTracking = '/driver-tracking';
   static const String developer = '/developer';
   // The name for the new sub-route
@@ -46,6 +51,7 @@ class AppRouter {
 
   static GoRouter createRouter() {
     return GoRouter(
+      navigatorKey: navigatorKey,
       initialLocation: splash,
       redirect: (context, state) {
         // Use the auth service directly to check authentication state
@@ -134,6 +140,16 @@ class AppRouter {
                   ConcertDetailScreen(concertId: concertId),
             );
           },
+        ),
+
+        // Rehearsals list (for notification deep link; no detail screen yet)
+        GoRoute(
+          path: rehearsals,
+          name: 'rehearsals',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) =>
+                const MainScreen(initialTabIndex: 2),
+          ),
         ),
 
         // Driver tracking (superadmin only; screen shows "Non autorisé" if not)

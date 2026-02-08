@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "260056965360",
+    "project_id": "lebontemperament-c6af6",
+    "storage_bucket": "lebontemperament-c6af6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260056965360:android:150ecb7e11a85a84e82235",
+        "android_client_info": {
+          "package_name": "com.lebontemperament.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBDRQn6FZW31nFaljPDISolisJ0XULtlg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
