@@ -14,7 +14,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Project } from "@/types/projects";
 import {
   closestCenter,
@@ -27,22 +34,21 @@ import {
 } from "@dnd-kit/core";
 import {
   arrayMove,
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
-  Calendar,
   Database,
-  Eye,
+  ExternalLink,
   FileText,
+  FolderOpen,
   GripVertical,
-  Image as ImageIcon,
-  Music2,
+  ImageIcon,
   Pencil,
   Plus,
   Trash2,
@@ -51,11 +57,248 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const loadingMessages = [
-  "Chargement des projets... 🎵",
-  "Préparation des contenus... 📝",
-  "Organisation des données... 🎭",
-];
+// --- Utility Components ---
+
+const LoadingSkeleton = () => (
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div
+        key={i}
+        className="bg-muted/40 h-[280px] w-full animate-pulse rounded-2xl border"
+      />
+    ))}
+  </div>
+);
+
+const EmptyState = ({
+  onCreate,
+  onMigrate,
+}: {
+  onCreate: () => void;
+  onMigrate: () => void;
+}) => (
+  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
+    <div className="bg-primary/5 ring-primary/5 flex h-20 w-20 items-center justify-center rounded-full ring-8">
+      <FolderOpen className="text-primary/40 h-10 w-10" />
+    </div>
+    <div className="space-y-2">
+      <h2 className="text-xl font-semibold tracking-tight">Aucun projet</h2>
+      <p className="text-muted-foreground max-w-sm text-sm">
+        Votre portfolio est vide. Créez votre premier projet ou importez vos
+        données existantes.
+      </p>
+    </div>
+    <div className="flex flex-col gap-3 sm:flex-row">
+      <Button variant="outline" onClick={onMigrate} className="gap-2">
+        <Database className="h-4 w-4" />
+        Migrer JSON
+      </Button>
+      <Button onClick={onCreate} className="gap-2">
+        <Plus className="h-4 w-4" />
+        Nouveau projet
+      </Button>
+    </div>
+  </div>
+);
+
+// --- Sortable Item Wrapper ---
+
+const SortableProjectItem = ({
+  project,
+  onEdit,
+  onDelete,
+}: {
+  project: Project;
+  onEdit: (p: Project) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: project.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 50 : 1,
+    touchAction: "none",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="h-full">
+      <ProjectCard
+        project={project}
+        dragHandleProps={{ ...attributes, ...listeners }}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    </div>
+  );
+};
+
+// --- Project Card Component ---
+
+const ProjectCard = ({
+  project,
+  dragHandleProps,
+  onEdit,
+  onDelete,
+}: {
+  project: Project;
+  dragHandleProps?: React.HTMLAttributes<HTMLElement>;
+  onEdit: (p: Project) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const dateObj = project.date ? new Date(project.date) : null;
+
+  return (
+    <Card className="group bg-card text-card-foreground hover:border-primary/50 relative flex h-full flex-col overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:scale-[1.01] hover:shadow-lg">
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex items-start gap-4">
+          {/* Date/Icon Tile */}
+          {dateObj ? (
+            <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-300">
+              <span className="text-xs font-bold tracking-wider uppercase">
+                {format(dateObj, "MMM", { locale: fr })}
+              </span>
+              <span className="text-2xl leading-none font-black">
+                {format(dateObj, "yyyy")}
+              </span>
+            </div>
+          ) : (
+            <div className="bg-muted text-muted-foreground flex h-14 w-14 items-center justify-center rounded-xl">
+              <FolderOpen className="h-6 w-6" />
+            </div>
+          )}
+
+          <div className="flex-1 space-y-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="line-clamp-1 text-lg leading-tight font-bold tracking-tight">
+                {project.name}
+              </h3>
+              {/* Drag Handle */}
+              <button
+                {...dragHandleProps}
+                className="text-muted-foreground/30 hover:text-foreground cursor-grab transition-colors active:cursor-grabbing"
+                title="Déplacer"
+              >
+                <GripVertical className="h-5 w-5" />
+              </button>
+            </div>
+            {project.sub_name && (
+              <p className="text-muted-foreground text-sm font-medium">
+                {project.sub_name}
+              </p>
+            )}
+            <div className="pt-1">
+              <Badge variant="outline" className="text-[10px] font-normal">
+                Ordre : {project.display_order}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Preview */}
+        <div className="mt-4 flex-1">
+          {project.explanation ? (
+            <p className="text-muted-foreground/80 line-clamp-3 text-sm">
+              {project.explanation}
+            </p>
+          ) : (
+            <p className="text-muted-foreground/40 text-sm italic">
+              Aucune description...
+            </p>
+          )}
+        </div>
+
+        {/* Assets Indicators */}
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-dashed pt-3">
+          {(project.banniere || project.image2 || project.image3) && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="bg-secondary/50 text-secondary-foreground flex items-center gap-1 rounded-md px-2 py-1 text-xs">
+                    <ImageIcon className="h-3 w-3" />
+                    <span>
+                      {
+                        [
+                          project.banniere,
+                          project.image2,
+                          project.image3,
+                        ].filter(Boolean).length
+                      }
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Images associées</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {(project.text1 || project.text2) && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="bg-secondary/50 text-secondary-foreground flex items-center gap-1 rounded-md px-2 py-1 text-xs">
+                    <FileText className="h-3 w-3" />
+                    <span>
+                      {[project.text1, project.text2].filter(Boolean).length}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Blocs de texte</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="bg-muted/20 flex items-center justify-between border-t px-4 py-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary hover:bg-primary/10 hover:text-primary h-8 gap-1 text-xs font-medium"
+          asChild
+        >
+          <Link
+            href={`/dashboard/public/concerts/projets/preview/${project.slug}`}
+            target="_blank"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Prévisualiser
+          </Link>
+        </Button>
+
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            onClick={() => onEdit(project)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8"
+            onClick={() => onDelete(project.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// --- Main Page Component ---
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -67,7 +310,11 @@ export default function ProjectsPage() {
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Avoid triggering drag on small clicks
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -108,14 +355,11 @@ export default function ProjectsPage() {
 
   const handleDeleteConfirm = async () => {
     if (!projectToDelete) return;
-
     try {
       const response = await fetch(`/api/projects/${projectToDelete}`, {
         method: "DELETE",
       });
-
       if (!response.ok) throw new Error("Échec de la suppression");
-
       toast.success("Projet supprimé avec succès");
       fetchProjects();
     } catch (err) {
@@ -129,298 +373,67 @@ export default function ProjectsPage() {
 
   const handleSubmit = async (data: Partial<Project>) => {
     try {
-      if (selectedProject) {
-        // Update
-        const response = await fetch(`/api/projects/${selectedProject.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
+      const isUpdate = !!selectedProject;
+      const url = isUpdate
+        ? `/api/projects/${selectedProject.id}`
+        : "/api/projects";
+      const method = isUpdate ? "PUT" : "POST";
 
-        if (!response.ok) throw new Error("Échec de la mise à jour");
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-        toast.success("Projet mis à jour avec succès");
-      } else {
-        // Create
-        const response = await fetch("/api/projects", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
+      if (!response.ok) throw new Error(`Échec de l'opération`);
 
-        if (!response.ok) throw new Error("Échec de la création");
-
-        toast.success("Projet créé avec succès");
-      }
-
+      toast.success(
+        isUpdate ? "Projet mis à jour avec succès" : "Projet créé avec succès",
+      );
       fetchProjects();
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error(
-        selectedProject
-          ? "Impossible de mettre à jour le projet"
-          : "Impossible de créer le projet",
-      );
-      throw err;
+      toast.error("Une erreur est survenue lors de l'enregistrement");
     }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) {
-      return;
-    }
+    if (!over || active.id === over.id) return;
 
     const oldIndex = projects.findIndex((p) => p.id === active.id);
     const newIndex = projects.findIndex((p) => p.id === over.id);
 
-    if (oldIndex === -1 || newIndex === -1) {
-      return;
-    }
+    if (oldIndex === -1 || newIndex === -1) return;
 
     const newProjects = arrayMove(projects, oldIndex, newIndex);
     setProjects(newProjects);
 
-    // Update display_order for all affected projects
+    // Optimistic UI update done, now sync with server
     try {
-      const updates = newProjects.map((project: Project, index: number) => ({
+      const updates = newProjects.map((project, index) => ({
         id: project.id,
         display_order: index,
       }));
 
-      const updatePromises = updates.map(
-        (update: { id: string; display_order: number }) =>
-          fetch(`/api/projects/${update.id}`, {
+      await Promise.all(
+        updates.map((u) =>
+          fetch(`/api/projects/${u.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ display_order: update.display_order }),
+            body: JSON.stringify({ display_order: u.display_order }),
           }),
+        ),
       );
-
-      await Promise.all(updatePromises);
-      toast.success("Ordre des projets mis à jour");
+      toast.success("Ordre mis à jour");
     } catch (err) {
       console.error(err);
-      toast.error("Erreur lors de la mise à jour de l'ordre");
-      // Revert on error
-      fetchProjects();
+      toast.error("Erreur de synchronisation de l'ordre");
+      fetchProjects(); // Revert on error
     }
   };
-
-  // Loading State Component
-  const LoadingState = () => {
-    const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
-
-    useEffect(() => {
-      const intervalId = setInterval(() => {
-        setLoadingMessage(
-          loadingMessages[Math.floor(Math.random() * loadingMessages.length)],
-        );
-      }, 2000);
-
-      return () => clearInterval(intervalId);
-    }, []);
-
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="space-y-4 text-center">
-          <Music2 className="text-primary/50 mx-auto h-12 w-12 animate-pulse" />
-          <p className="text-muted-foreground text-sm">
-            {loadingMessage || loadingMessages[0]}
-          </p>
-        </div>
-      </div>
-    );
-  };
-
-  const EmptyState = () => (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
-      <div className="space-y-4 text-center">
-        <FileText className="text-primary/30 mx-auto h-16 w-16" />
-        <h2 className="text-xl font-medium">Aucun projet</h2>
-        <p className="text-muted-foreground max-w-sm text-sm">
-          Commencez par créer votre premier projet ou migrez les projets
-          existants depuis le fichier JSON
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <Button variant="outline" asChild>
-          <Link href="/dashboard/public/concerts/projets/migrate">
-            <Database className="mr-2 h-4 w-4" />
-            Migrer depuis JSON
-          </Link>
-        </Button>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Créer un projet
-        </Button>
-      </div>
-    </div>
-  );
-
-  const ErrorState = () => (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4">
-      <div className="space-y-2 text-center">
-        <p className="text-destructive font-medium">{error}</p>
-        <Button onClick={fetchProjects} variant="outline">
-          Réessayer
-        </Button>
-      </div>
-    </div>
-  );
-
-  const SortableProjectCard = ({ project }: { project: Project }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: project.id });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-      <div ref={setNodeRef} style={style}>
-        <ProjectCard
-          project={project}
-          dragHandleProps={{ ...attributes, ...listeners }}
-        />
-      </div>
-    );
-  };
-
-  const ProjectCard = ({
-    project,
-    dragHandleProps,
-  }: {
-    project: Project;
-    dragHandleProps?: React.HTMLAttributes<HTMLElement>;
-  }) => (
-    <div className="border-border/50 overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:bg-black">
-      <div className="p-6">
-        <div className="mb-4 flex items-start justify-between">
-          <div className="flex-1 space-y-2">
-            {dragHandleProps && (
-              <button
-                {...dragHandleProps}
-                className="text-muted-foreground hover:text-foreground mb-2 cursor-grab active:cursor-grabbing"
-                type="button"
-              >
-                <GripVertical className="h-5 w-5" />
-              </button>
-            )}
-            <div>
-              <h3 className="text-xl font-medium tracking-tight">
-                {project.name}
-              </h3>
-              {project.sub_name && (
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {project.sub_name}
-                </p>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {project.date && (
-                <Badge variant="secondary" className="gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {format(new Date(project.date), "dd MMM yyyy", {
-                    locale: fr,
-                  })}
-                </Badge>
-              )}
-              <Badge variant="outline">Ordre: {project.display_order}</Badge>
-            </div>
-          </div>
-          <div className="ml-4 flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full"
-              onClick={() => handleEdit(project)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive rounded-full"
-              onClick={() => handleDeleteClick(project.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {project.explanation && (
-          <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
-            {project.explanation}
-          </p>
-        )}
-
-        <div className="text-muted-foreground flex items-center gap-2 text-xs">
-          {project.banniere && (
-            <div className="flex items-center gap-1">
-              <ImageIcon className="h-3 w-3" />
-              <span>Bannière</span>
-            </div>
-          )}
-          {project.image2 && (
-            <div className="flex items-center gap-1">
-              <ImageIcon className="h-3 w-3" />
-              <span>Image 2</span>
-            </div>
-          )}
-          {project.image3 && (
-            <div className="flex items-center gap-1">
-              <ImageIcon className="h-3 w-3" />
-              <span>Image 3</span>
-            </div>
-          )}
-          {project.text1 && (
-            <div className="flex items-center gap-1">
-              <FileText className="h-3 w-3" />
-              <span>Texte 1</span>
-            </div>
-          )}
-          {project.text2 && (
-            <div className="flex items-center gap-1">
-              <FileText className="h-3 w-3" />
-              <span>Texte 2</span>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 flex gap-2 border-t pt-4">
-          <Button variant="outline" size="sm" className="flex-1" asChild>
-            <Link
-              href={`/dashboard/public/concerts/projets/preview/${project.slug}`}
-              target="_blank"
-            >
-              <Eye className="mr-2 h-4 w-4" />
-              Prévisualiser
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEdit(project)}
-            className="flex-1"
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            Modifier
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <PageShell
@@ -430,27 +443,47 @@ export default function ProjectsPage() {
       title="Projets"
       description="Gérez vos projets artistiques et concerts passés. Créez, modifiez et organisez vos contenus."
       headerAction={
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" asChild>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="hidden sm:flex"
+          >
             <Link href="/dashboard/public/concerts/projets/migrate">
               <Database className="mr-2 h-4 w-4" />
-              Migrer depuis JSON
+              Migrer JSON
             </Link>
           </Button>
-          <Button onClick={handleCreate}>
+          <Button
+            onClick={handleCreate}
+            className="shadow-md transition-all hover:shadow-lg"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Ajouter un projet
+            <span className="hidden sm:inline">Nouveau Projet</span>
+            <span className="sm:hidden">Ajouter</span>
           </Button>
         </div>
       }
     >
-      <ScrollArea className="pr-4">
+      <ScrollArea className="h-full w-full pr-4">
         {loading ? (
-          <LoadingState />
+          <LoadingSkeleton />
         ) : error ? (
-          <ErrorState />
+          <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-4">
+            <p className="text-destructive font-medium">{error}</p>
+            <Button onClick={fetchProjects} variant="outline">
+              Réessayer
+            </Button>
+          </div>
         ) : projects.length === 0 ? (
-          <EmptyState />
+          <EmptyState
+            onCreate={handleCreate}
+            onMigrate={() =>
+              (window.location.href =
+                "/dashboard/public/concerts/projets/migrate")
+            }
+          />
         ) : (
           <DndContext
             sensors={sensors}
@@ -459,11 +492,16 @@ export default function ProjectsPage() {
           >
             <SortableContext
               items={projects.map((p) => p.id)}
-              strategy={verticalListSortingStrategy}
+              strategy={rectSortingStrategy}
             >
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 px-1 pt-2 pb-12 md:grid-cols-2 xl:grid-cols-3">
                 {projects.map((project) => (
-                  <SortableProjectCard key={project.id} project={project} />
+                  <SortableProjectItem
+                    key={project.id}
+                    project={project}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteClick}
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -481,10 +519,10 @@ export default function ProjectsPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogTitle>Supprimer ce projet ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est
-              irréversible.
+              Cette action est irréversible. Toutes les données associées à ce
+              projet seront perdues.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -493,7 +531,7 @@ export default function ProjectsPage() {
               onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90 text-white"
             >
-              Supprimer
+              Confirmer la suppression
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

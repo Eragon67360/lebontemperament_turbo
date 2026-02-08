@@ -1,4 +1,3 @@
-// pages/users/index.tsx
 "use client";
 
 import { PageShell } from "@/components/layouts/PageShell";
@@ -23,7 +22,6 @@ import { SyncUsersDialog } from "@/components/users/SyncUsersDialog";
 import { UserCard } from "@/components/users/UserCard";
 import { UserEmptyState } from "@/components/users/UserEmptyState";
 import { UserHeader } from "@/components/users/UserHeader";
-import { UserLoadingState } from "@/components/users/UserLoadingState";
 import { UserSearch } from "@/components/users/UserSearch";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
@@ -37,9 +35,21 @@ import {
 import { SortConfig, User } from "@/types/user";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, RefreshCw, UserPlus } from "lucide-react";
+import { Plus, RefreshCw, UserPlus, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
+// --- Internal Loading Component ---
+const UserGridSkeleton = () => (
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div
+        key={i}
+        className="bg-muted/40 h-[220px] w-full animate-pulse rounded-2xl border"
+      />
+    ))}
+  </div>
+);
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
@@ -126,7 +136,6 @@ export default function UsersPage() {
           table: "profiles",
         },
         () => {
-          // Invalidate queries to trigger refetch
           queryClient.invalidateQueries({ queryKey: ["users"] });
         },
       )
@@ -172,7 +181,7 @@ export default function UsersPage() {
     });
   }, [usersWithSyncStatus, sortConfig]);
 
-  // Invite counts - computed from query data
+  // Invite counts
   const inviteCounts = useMemo(() => {
     return users.reduce(
       (acc, user) => {
@@ -187,6 +196,7 @@ export default function UsersPage() {
     );
   }, [users]);
 
+  // Handlers
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -201,7 +211,6 @@ export default function UsersPage() {
         description: "L'utilisateur a été créé avec succès",
       });
 
-      // Reset form
       setIsAddUserOpen(false);
       setNewUserEmail("");
       setNewUserPassword("");
@@ -225,15 +234,9 @@ export default function UsersPage() {
 
     try {
       await deleteUser.mutateAsync(user.id);
-
-      toast.success("Succès", {
-        description: "L'utilisateur a été supprimé avec succès.",
-      });
+      toast.success("Utilisateur supprimé");
     } catch (error) {
-      toast.error("Erreur", {
-        description:
-          error instanceof Error ? error.message : "Une erreur est survenue",
-      });
+      toast.error("Erreur lors de la suppression");
     } finally {
       setUserToDelete(null);
     }
@@ -246,23 +249,13 @@ export default function UsersPage() {
     try {
       const userToUpdate = users.find((u) => u.id === userId);
       if (userToUpdate?.role === "superadmin") {
-        toast.error("Action non autorisée", {
-          description:
-            "Impossible de modifier le rôle d'un super administrateur.",
-        });
+        toast.error("Impossible de modifier un superadmin");
         return;
       }
-
       await updateRole.mutateAsync({ userId, role: newRole });
-
-      toast.success("Succès", {
-        description: "Le rôle a été mis à jour avec succès.",
-      });
+      toast.success("Rôle mis à jour");
     } catch (error) {
-      toast.error("Erreur", {
-        description:
-          error instanceof Error ? error.message : "Une erreur est survenue",
-      });
+      toast.error("Erreur lors de la modification du rôle");
     }
   };
 
@@ -275,17 +268,10 @@ export default function UsersPage() {
         userId,
         display_name: newDisplayName,
       });
-
-      toast.success("Succès", {
-        description: "Nom d'affichage mis à jour avec succès.",
-      });
-
+      toast.success("Nom d'affichage mis à jour");
       setEditingUser(null);
     } catch (error) {
-      toast.error("Erreur", {
-        description:
-          error instanceof Error ? error.message : "Une erreur est survenue",
-      });
+      toast.error("Erreur lors de la mise à jour");
     }
   };
 
@@ -293,36 +279,35 @@ export default function UsersPage() {
     <PageShell
       fullHeight
       theme="admin"
-      className="lg:px-8m overflow-x-hidden px-4 py-8 sm:px-6"
+      className="px-4 py-8 sm:px-6 lg:px-8"
       title="Gestion des utilisateurs"
       description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
       headerAction={
-        <div className="flex shrink-0 gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Sync Button */}
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 px-3"
+            className="h-9 gap-2 shadow-sm"
             onClick={() => setIsSyncOpen(true)}
           >
             <RefreshCw className="h-4 w-4" />
-            <span className="hidden md:inline">Synchroniser</span>
+            <span className="hidden sm:inline">Synchroniser</span>
             {syncData &&
               (syncData.missingInDatabase.length > 0 ||
                 syncData.missingInExcel.length > 0) && (
-                <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs font-medium text-white">
+                <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
                   {syncData.missingInDatabase.length +
                     syncData.missingInExcel.length}
                 </span>
               )}
           </Button>
 
-          {/* Invite Users Button */}
+          {/* Invite Button */}
           <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 px-3">
+              <Button variant="outline" className="h-9 gap-2 shadow-sm">
                 <UserPlus className="h-4 w-4" />
-                <span className="hidden md:inline">Inviter</span>
+                <span className="hidden sm:inline">Inviter</span>
               </Button>
             </DialogTrigger>
           </Dialog>
@@ -330,38 +315,42 @@ export default function UsersPage() {
           {/* Add User Button */}
           <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="h-9 px-3">
+              <Button className="h-9 gap-2 shadow-md transition-all hover:shadow-lg">
                 <Plus className="h-4 w-4" />
-                <span className="hidden md:inline">Nouvel utilisateur</span>
+                <span className="hidden sm:inline">Nouvel utilisateur</span>
+                <span className="sm:hidden">Ajouter</span>
               </Button>
             </DialogTrigger>
           </Dialog>
         </div>
       }
     >
-      <UserHeader
-        pendingInvites={inviteCounts.pending}
-        approvedInvites={inviteCounts.approved}
-      />
+      <div className="mb-6 space-y-6">
+        <UserHeader
+          pendingInvites={inviteCounts.pending}
+          approvedInvites={inviteCounts.approved}
+        />
 
-      <UserSearch
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        sortConfig={sortConfig}
-        setSortConfig={setSortConfig}
-      />
-      <ScrollArea className="flex w-full grow flex-col overflow-x-hidden pr-0">
+        <UserSearch
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          sortConfig={sortConfig}
+          setSortConfig={setSortConfig}
+        />
+      </div>
+
+      <ScrollArea className="h-full w-full pr-4">
         {isLoading ? (
-          <UserLoadingState />
+          <UserGridSkeleton />
         ) : error ? (
-          <div className="py-8 text-center text-red-500">
+          <div className="text-destructive flex h-40 flex-col items-center justify-center space-y-2">
+            <Users className="h-8 w-8" />
             <p>Erreur lors du chargement des utilisateurs</p>
-            <p className="mt-2 text-sm text-gray-500">{error.message}</p>
           </div>
         ) : users.length === 0 ? (
           <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
         ) : (
-          <div className="flex w-full flex-col space-y-2 overflow-x-hidden md:space-y-4">
+          <div className="grid grid-cols-1 gap-4 px-1 pt-2 pb-12 md:grid-cols-2 xl:grid-cols-3">
             {sortedUsers.map((user) => (
               <UserCard
                 key={user.id}
@@ -377,6 +366,7 @@ export default function UsersPage() {
         )}
       </ScrollArea>
 
+      {/* --- Dialogs --- */}
       <AddUserDialog
         isOpen={isAddUserOpen}
         onOpenChange={setIsAddUserOpen}
@@ -408,10 +398,7 @@ export default function UsersPage() {
         isOpen={isInviteOpen}
         onOpenChange={(open) => {
           setIsInviteOpen(open);
-          if (!open) {
-            // Clear pending invitations when dialog closes
-            setPendingInvitations([]);
-          }
+          if (!open) setPendingInvitations([]);
         }}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -444,7 +431,7 @@ export default function UsersPage() {
             <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
             <AlertDialogDescription>
               Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action
-              est irréversible.
+              est irréversible et retirera tous les accès de ce membre.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -453,7 +440,7 @@ export default function UsersPage() {
               onClick={() => userToDelete && handleDeleteUser(userToDelete)}
               className="bg-destructive hover:bg-destructive/90 text-white"
             >
-              Supprimer
+              Supprimer le compte
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

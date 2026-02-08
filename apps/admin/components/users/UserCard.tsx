@@ -21,26 +21,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { User } from "@/types/user";
 import { getRoleLabel } from "@/utils/roleUtils";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import {
   AlertTriangle,
-  Image,
-  MoreHorizontal,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Image as ImageIcon,
+  MoreVertical,
   Pencil,
+  Shield,
   Trash2,
 } from "lucide-react";
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "en attente":
-      return "bg-yellow-500";
-    case "approuvé":
-      return "bg-green-500";
-    default:
-      return "bg-gray-300";
-  }
-};
 
 interface UserCardProps {
   user: User;
@@ -59,63 +55,155 @@ export function UserCard({
   onRoleChange,
   onProfilePicture,
 }: UserCardProps) {
+  const isPending = user.invite_status === "en attente";
+  const isCurrentUser = user.id === currentUser;
+  const isSuperAdmin = user.role === "superadmin";
+
   return (
-    <Card className="transition-all">
-      <div className="flex flex-col gap-4 p-2 sm:flex-row sm:items-center sm:justify-between md:p-4">
-        {/* User Info Section */}
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Avatar className="h-10 w-10 border border-gray-200">
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback className="bg-gray-50 text-sm font-medium text-gray-600">
-                {user.display_name?.[0] || user?.email[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div
-                    className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white ${getStatusColor(user.invite_status)}`}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Statut: {user.invite_status}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+    <Card
+      className={cn(
+        "group bg-card hover:border-primary/50 relative flex flex-col overflow-hidden rounded-xl border transition-all duration-300 hover:scale-[1.01] hover:shadow-md",
+        user.isMissingInExcel && "border-orange-200 bg-orange-50/30",
+      )}
+    >
+      {/* Alert Strip if Missing in Excel */}
+      {user.isMissingInExcel && (
+        <div className="flex w-full items-center justify-center gap-2 bg-orange-100 py-1.5 text-xs font-medium text-orange-700">
+          <AlertTriangle className="h-3 w-3" />
+          <span>Non trouvé dans Excel</span>
+        </div>
+      )}
+
+      <div className="flex h-full flex-col p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex flex-1 items-start gap-4">
+            {/* Avatar with Status Badge */}
+            <div className="relative">
+              <Avatar className="border-background h-14 w-14 border-2 shadow-sm transition-transform group-hover:scale-105">
+                <AvatarImage src={user.avatar} className="object-cover" />
+                <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                  {user.display_name?.[0]?.toUpperCase() ||
+                    user.email[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={cn(
+                        "border-background absolute -right-0.5 -bottom-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2",
+                        isPending ? "bg-amber-400" : "bg-emerald-500",
+                      )}
+                    >
+                      {isPending ? (
+                        <Clock className="h-3 w-3 text-white" />
+                      ) : (
+                        <CheckCircle2 className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="capitalize">
+                      Statut: {user.invite_status || "Inconnu"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {/* User Info */}
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="truncate font-semibold text-gray-900">
+                  {user.display_name || user.email.split("@")[0]}
+                </h3>
+                {isCurrentUser && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                    Moi
+                  </Badge>
+                )}
+              </div>
+              <p
+                className="text-muted-foreground truncate text-sm"
+                title={user.email}
+              >
+                {user.email}
+              </p>
+              <div className="text-muted-foreground/80 flex items-center gap-1.5 pt-1 text-xs">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  Inscrit le{" "}
+                  {format(new Date(user.created_at), "dd MMM yyyy", {
+                    locale: fr,
+                  })}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-sm font-medium text-gray-900">
-                {user.display_name || user.email.split("@")[0]}
-              </h3>
-              {user.isMissingInExcel && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <AlertTriangle className="h-4 w-4 text-orange-500" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cet utilisateur n&apos;est pas dans la liste Excel</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-            <p className="truncate text-xs text-gray-500">{user.email}</p>
-            <p className="mt-0.5 text-xs text-gray-400">
-              Ajouté le {new Date(user.created_at).toLocaleDateString("fr-FR")}
-            </p>
-          </div>
+          {/* Action Menu */}
+          {!isCurrentUser && !isSuperAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:bg-muted h-8 w-8"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() =>
+                    onEdit({
+                      id: user.id,
+                      display_name:
+                        user.display_name || user.email.split("@")[0] || "",
+                    })
+                  }
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Modifier le nom
+                </DropdownMenuItem>
+                {onProfilePicture && (
+                  <DropdownMenuItem onClick={() => onProfilePicture(user)}>
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    Photo de profil
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onDelete(user)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
-        {/* Actions Section */}
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
-          {user.id === currentUser || user.role === "superadmin" ? (
+        {/* Footer: Role Management */}
+        <div className="mt-5 flex items-center justify-between border-t pt-4">
+          <div className="flex items-center gap-2">
+            <Shield className="text-muted-foreground h-3.5 w-3.5" />
+            <span className="text-muted-foreground text-xs font-medium">
+              Rôle
+            </span>
+          </div>
+
+          {isCurrentUser || isSuperAdmin ? (
             <Badge
               variant="outline"
-              className="border-gray-200 bg-gray-50 font-normal text-gray-600"
+              className={cn(
+                "px-2.5 py-0.5 text-xs font-medium",
+                user.role === "superadmin"
+                  ? "border-purple-200 bg-purple-50 text-purple-700"
+                  : user.role === "admin"
+                    ? "border-blue-200 bg-blue-50 text-blue-700"
+                    : "border-gray-200 bg-gray-50 text-gray-700",
+              )}
             >
               {getRoleLabel(user.role)}
             </Badge>
@@ -126,7 +214,7 @@ export function UserCard({
                 onRoleChange(user.id, value)
               }
             >
-              <SelectTrigger className="h-8 w-27.5 border-gray-200 bg-white text-xs">
+              <SelectTrigger className="bg-secondary/50 hover:bg-secondary h-7 w-[100px] border-none px-2 text-xs font-medium">
                 <SelectValue>{getRoleLabel(user.role)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -134,52 +222,6 @@ export function UserCard({
                 <SelectItem value="admin">{getRoleLabel("admin")}</SelectItem>
               </SelectContent>
             </Select>
-          )}
-
-          {user.id !== currentUser && user.role !== "superadmin" && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-gray-600"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={() =>
-                    onEdit({
-                      id: user.id,
-                      display_name:
-                        user.display_name ||
-                        (user.email.split("@")[0] as string),
-                    })
-                  }
-                  className="gap-2 text-xs"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Modifier
-                </DropdownMenuItem>
-                {onProfilePicture && (
-                  <DropdownMenuItem
-                    onClick={() => onProfilePicture(user)}
-                    className="gap-2 text-xs"
-                  >
-                    <Image className="h-3.5 w-3.5" />
-                    Photo de profil
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  onClick={() => onDelete(user)}
-                  className="gap-2 text-xs text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           )}
         </div>
       </div>
