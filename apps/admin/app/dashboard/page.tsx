@@ -21,7 +21,7 @@ import { Event } from "@/types/events";
 import RouteNames from "@/utils/routes";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -69,6 +69,7 @@ function ConcertRowSkeleton() {
     </div>
   );
 }
+
 function getInitials(displayName: string | null): string {
   if (!displayName) return "??";
   return displayName
@@ -78,6 +79,7 @@ function getInitials(displayName: string | null): string {
     .toUpperCase()
     .slice(0, 2);
 }
+
 export default function DashboardPage() {
   // Fetch data using query hooks
   const { data: allUsers = [], isLoading } = useUsers({
@@ -94,7 +96,7 @@ export default function DashboardPage() {
   const users = useMemo(() => allUsers.slice(0, 6), [allUsers]);
   const totalUsers = allUsers.length;
 
-  // Filter upcoming events (not finished yet)
+  // Filter upcoming events
   const upcomingEvents = useMemo(() => {
     const now = new Date();
     return allEvents
@@ -129,18 +131,21 @@ export default function DashboardPage() {
       })
       .slice(0, 3);
   }, [allConcertsData]);
+
   return (
     <PageShell className="h-full md:overflow-hidden">
-      <div className="my-2 flex min-h-0 grow flex-col md:max-h-[calc(100dvh-3rem)]">
+      {/* Main Container - enforces fixed height on desktop */}
+      <div className="my-2 flex min-h-0 grow flex-col gap-4 md:max-h-[calc(100dvh-3rem)]">
         <DashboardWelcomeHeader />
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 pb-2 md:overflow-hidden lg:grid-cols-3">
-          {/* Left Column: Stats & Concerts */}
+        {/* Main Grid: 1 Col Mobile, 3 Cols Desktop */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 pb-2 lg:grid-cols-3">
+          {/* Left Column (Stats & Concerts) */}
           <div className="flex h-full min-h-0 flex-col gap-6 lg:col-span-2">
-            {/* Top Stats Row (Users & Program) - Takes 50% height */}
+            {/* Top Row: Users & Events - Takes 50% available height on desktop */}
             <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 md:grid-cols-2">
               {/* Users Card */}
-              <Card className="flex h-full flex-col bg-white">
+              <Card className="flex h-full min-h-0 flex-col bg-white shadow-sm">
                 <CardHeader className="flex flex-none flex-row items-center justify-between space-y-0 pb-4">
                   <div className="space-y-1">
                     <CardTitle className="text-base font-semibold text-gray-900">
@@ -179,7 +184,7 @@ export default function DashboardPage() {
                       {users.map((user) => (
                         <div
                           key={user.id}
-                          className="flex items-center gap-3 rounded-md p-2 hover:bg-gray-50"
+                          className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-gray-50"
                         >
                           <Avatar className="h-8 w-8 border border-gray-200">
                             <AvatarFallback className="bg-gray-50 text-xs font-medium text-gray-600">
@@ -202,7 +207,7 @@ export default function DashboardPage() {
               </Card>
 
               {/* Events Card */}
-              <Card className="flex h-full flex-col bg-white">
+              <Card className="flex h-full min-h-0 flex-col bg-white shadow-sm">
                 <CardHeader className="flex flex-none flex-row items-center justify-between space-y-0 pb-4">
                   <div className="space-y-1">
                     <CardTitle className="text-base font-semibold text-gray-900">
@@ -253,11 +258,14 @@ export default function DashboardPage() {
                           Event["event_type"],
                           string
                         > = {
-                          concert: "bg-purple-100 text-purple-700",
-                          vente: "bg-green-100 text-green-700",
-                          repetition: "bg-blue-100 text-blue-700",
-                          sejour: "bg-amber-100 text-amber-700",
-                          autre: "bg-gray-100 text-gray-700",
+                          concert:
+                            "bg-purple-100 text-purple-700 border-purple-200",
+                          vente: "bg-green-100 text-green-700 border-green-200",
+                          repetition:
+                            "bg-blue-100 text-blue-700 border-blue-200",
+                          sejour:
+                            "bg-amber-100 text-amber-700 border-amber-200",
+                          autre: "bg-gray-100 text-gray-700 border-gray-200",
                         };
 
                         const dateFrom = new Date(event.date_from);
@@ -270,53 +278,58 @@ export default function DashboardPage() {
                         return (
                           <div
                             key={event.id}
-                            className="flex items-start gap-3 rounded-md border border-gray-100 p-3 hover:bg-gray-50"
+                            className="group flex items-start gap-3 rounded-md border border-gray-100 p-3 transition-all hover:border-gray-200 hover:bg-gray-50"
                           >
-                            <div className="bg-primary/10 rounded-md p-1.5">
+                            <div className="bg-primary/10 text-primary shrink-0 rounded-md p-2">
                               <Calendar className="h-4 w-4" />
                             </div>
-                            <div className="flex-1 space-y-1.5">
+                            <div className="min-w-0 flex-1 space-y-1">
                               <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm font-medium text-gray-900">
+                                <p className="group-hover:text-primary truncate text-sm font-medium text-gray-900 transition-colors">
                                   {event.title}
                                 </p>
                                 <span
-                                  className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-medium ${eventTypeColors[event.event_type]}`}
+                                  className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ${eventTypeColors[event.event_type]}`}
                                 >
                                   {eventTypeLabels[event.event_type]}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <span>
-                                  {isMultiDay
-                                    ? `${dateFrom.toLocaleDateString("fr-FR", {
-                                        day: "numeric",
-                                        month: "short",
-                                      })} - ${dateTo.toLocaleDateString(
-                                        "fr-FR",
-                                        {
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span className="truncate">
+                                    {isMultiDay
+                                      ? `${dateFrom.toLocaleDateString(
+                                          "fr-FR",
+                                          {
+                                            day: "numeric",
+                                            month: "short",
+                                          },
+                                        )} - ${dateTo.toLocaleDateString(
+                                          "fr-FR",
+                                          {
+                                            day: "numeric",
+                                            month: "short",
+                                          },
+                                        )}`
+                                      : dateFrom.toLocaleDateString("fr-FR", {
                                           day: "numeric",
-                                          month: "short",
-                                          year: "numeric",
-                                        },
-                                      )}`
-                                    : dateFrom.toLocaleDateString("fr-FR", {
-                                        day: "numeric",
-                                        month: "long",
-                                        year: "numeric",
-                                      })}
-                                </span>
+                                          month: "long",
+                                        })}
+                                  </span>
+                                </div>
                                 {event.time && (
-                                  <>
-                                    <span className="h-1 w-1 rounded-full bg-gray-300" />
+                                  <div className="flex items-center gap-1">
+                                    <span className="hidden h-1 w-1 rounded-full bg-gray-300 sm:block" />
                                     <span>{event.time}</span>
-                                  </>
+                                  </div>
                                 )}
                               </div>
                               {event.location && (
-                                <p className="text-xs text-gray-400">
-                                  📍 {event.location}
-                                </p>
+                                <div className="flex items-center gap-1 text-xs text-gray-400">
+                                  <MapPin className="h-3 w-3 shrink-0" />
+                                  <p className="truncate">{event.location}</p>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -328,8 +341,8 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            {/* Concerts Card - Takes 50% height */}
-            <Card className="flex h-full min-h-0 flex-1 flex-col bg-white px-2">
+            {/* Concerts Card - Takes remaining 50% height */}
+            <Card className="flex h-full min-h-0 flex-1 flex-col bg-white px-2 shadow-sm">
               <CardHeader className="flex flex-none flex-row items-center justify-between space-y-0 pb-4">
                 <div className="space-y-1">
                   <CardTitle className="text-base font-semibold text-gray-900">
@@ -368,35 +381,41 @@ export default function DashboardPage() {
                     {concerts.map((concert) => (
                       <div
                         key={concert.id}
-                        className="group hover:border-primary/50 relative flex flex-col justify-between rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-sm"
+                        className="group hover:border-primary/50 relative flex flex-col justify-between rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-md"
                       >
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <div className="flex items-start justify-between">
-                            <div className="bg-primary/5 text-primary rounded-md p-2">
+                            <div className="bg-primary/5 text-primary group-hover:bg-primary/10 rounded-md p-2 transition-colors">
                               <Calendar className="h-4 w-4" />
                             </div>
                           </div>
                           <div>
-                            <h4 className="line-clamp-1 font-medium text-gray-900">
+                            <h4
+                              className="line-clamp-1 font-semibold text-gray-900"
+                              title={concert.name ?? "Concert sans nom"}
+                            >
                               {concert.name || "Concert sans nom"}
                             </h4>
-                            <p className="line-clamp-1 text-sm text-gray-500">
-                              {concert.place}
-                            </p>
+                            <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <p className="line-clamp-1 text-xs">
+                                {concert.place}
+                              </p>
+                            </div>
                           </div>
                         </div>
                         <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-                          <span className="text-xs font-medium text-gray-500">
+                          <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                             {format(
                               new Date(`${concert.date}T${concert.time}`),
                               "d MMM yyyy",
                               { locale: fr },
                             )}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="font-mono text-xs text-gray-400">
                             {format(
                               new Date(`${concert.date}T${concert.time}`),
-                              "HH'h'mm",
+                              "HH:mm",
                               { locale: fr },
                             )}
                           </span>

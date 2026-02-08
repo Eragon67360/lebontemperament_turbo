@@ -15,15 +15,15 @@ export default function Repetitions() {
       theme="members"
       className="px-4 py-8 sm:px-6 lg:px-8"
       title="Gestion des répétitions"
-      description="Gérez les prochaines répètes."
+      description="Planifiez et gérez les séances de répétition."
       headerAction={
         <Button
-          size="sm"
-          className="h-9 px-3"
+          className="shadow-md transition-all hover:shadow-lg"
           onClick={() => setIsAddDialogOpen(true)}
         >
-          <Plus className="h-4 w-4 md:mr-2" />
-          <span className="hidden md:inline">Ajouter une répétition</span>
+          <Plus className="mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Ajouter une répétition</span>
+          <span className="sm:hidden">Ajouter</span>
         </Button>
       }
     >
