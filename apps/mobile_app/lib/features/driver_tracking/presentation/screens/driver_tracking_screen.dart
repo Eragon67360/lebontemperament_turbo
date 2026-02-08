@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -1228,6 +1229,7 @@ class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.error});
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Row(
@@ -1253,9 +1255,12 @@ class _ErrorBanner extends StatelessWidget {
                   icon: const Icon(Icons.settings, size: 16),
                   label: const Text('Ouvrir les paramètres'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.green.shade800,
+                    backgroundColor: theme.colorScheme.surface,
+                    foregroundColor: theme.colorScheme.primary,
                     visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -1307,60 +1312,6 @@ class _UnauthorizedState extends StatelessWidget {
               label: const Text('Retour'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class FadeInUp extends StatefulWidget {
-  final Widget child;
-  final int delay;
-  const FadeInUp({super.key, required this.child, this.delay = 0});
-  @override
-  State<FadeInUp> createState() => _FadeInUpState();
-}
-
-class _FadeInUpState extends State<FadeInUp>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<double> _translateY;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _opacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) => Opacity(
-        opacity: _opacity.value,
-        child: Transform.translate(
-          offset: Offset(0, _translateY.value),
-          child: widget.child,
         ),
       ),
     );

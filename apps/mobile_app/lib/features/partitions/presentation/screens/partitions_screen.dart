@@ -29,59 +29,54 @@ class _PartitionTab {
   final Color iconColor;
 }
 
-const List<_PartitionTab> _tabs = [
+List<_PartitionTab> _tabsForScheme(ColorScheme scheme) => [
   _PartitionTab(
     id: 1,
     title: 'Adultes',
     folderId: 'adultes',
     icon: Icons.person_outline,
-    iconColor: Color(0xFF11BBF8),
+    iconColor: scheme.primary,
   ),
   _PartitionTab(
     id: 2,
     title: 'Jeunes',
     folderId: 'jeunes',
     icon: Icons.person_outline,
-    iconColor: Color(0xFFF84E11),
+    iconColor: scheme.secondary,
   ),
   _PartitionTab(
     id: 3,
     title: 'Enfants',
     folderId: 'enfants',
     icon: Icons.child_care_outlined,
-    iconColor: Color(0xFFC211F8),
+    iconColor: scheme.tertiary,
   ),
   _PartitionTab(
     id: 4,
     title: 'Orchestre',
     folderId: 'orchestre',
     icon: Icons.music_note_outlined,
-    iconColor: Color(0xFF41EDBA),
+    iconColor: scheme.tertiaryContainer,
   ),
   _PartitionTab(
     id: 5,
     title: 'Cahier 30 ans',
     folderId: 'cahier30',
     icon: Icons.menu_book_outlined,
-    iconColor: Color(0xFFeb4034),
+    iconColor: scheme.error,
   ),
 ];
 
-String _folderIdForTab(_PartitionTab tab) {
-  switch (tab.folderId) {
-    case 'adultes':
-      return AppConfig.driveFolderIdAdultes;
-    case 'jeunes':
-      return AppConfig.driveFolderIdJeunes;
-    case 'enfants':
-      return AppConfig.driveFolderIdEnfants;
-    case 'orchestre':
-      return AppConfig.driveFolderIdOrchestre;
-    case 'cahier30':
-      return AppConfig.driveFolderIdCahier30Ans;
-    default:
-      return AppConfig.driveFolderIdAdultes;
-  }
+String _folderIdForIndex(int index) {
+  final ids = [
+    AppConfig.driveFolderIdAdultes,
+    AppConfig.driveFolderIdJeunes,
+    AppConfig.driveFolderIdEnfants,
+    AppConfig.driveFolderIdOrchestre,
+    AppConfig.driveFolderIdCahier30Ans,
+  ];
+  if (index < 0 || index >= ids.length) return AppConfig.driveFolderIdAdultes;
+  return ids[index];
 }
 
 class PartitionsScreen extends ConsumerStatefulWidget {
@@ -92,15 +87,16 @@ class PartitionsScreen extends ConsumerStatefulWidget {
 }
 
 class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
-  _PartitionTab _activeTab = _tabs[0];
+  int _activeTabIndex = 0;
   final List<String> _folderStack = [];
   bool _loading = false;
   List<DriveFile> _folders = [];
   List<DriveFile> _files = [];
   String? _error;
 
-  String get _currentFolderId =>
-      _folderStack.isNotEmpty ? _folderStack.last : _folderIdForTab(_activeTab);
+  String get _currentFolderId => _folderStack.isNotEmpty
+      ? _folderStack.last
+      : _folderIdForIndex(_activeTabIndex);
 
   Future<void> _loadFolder(String folderId) async {
     setState(() {
@@ -134,14 +130,14 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     }
   }
 
-  void _onTabSelected(_PartitionTab tab) {
+  void _onTabSelected(int index) {
     HapticFeedback.lightImpact();
     setState(() {
-      _activeTab = tab;
+      _activeTabIndex = index;
       _folderStack.clear();
       _error = null;
     });
-    _loadFolder(_folderIdForTab(tab));
+    _loadFolder(_folderIdForIndex(index));
   }
 
   void _onFolderTap(DriveFile folder) {
@@ -243,7 +239,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadFolder(_folderIdForTab(_activeTab));
+      _loadFolder(_folderIdForIndex(_activeTabIndex));
     });
   }
 
@@ -330,6 +326,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   }
 
   Widget _buildTabBarVertical(ThemeData theme) {
+    final tabs = _tabsForScheme(theme.colorScheme);
     return Container(
       width: 72,
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -342,12 +339,13 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         ),
       ),
       child: Column(
-        children: _tabs.map((tab) {
-          final isActive = _activeTab.id == tab.id;
+        children: List.generate(tabs.length, (i) {
+          final tab = tabs[i];
+          final isActive = _activeTabIndex == i;
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: IconButton(
-              onPressed: () => _onTabSelected(tab),
+              onPressed: () => _onTabSelected(i),
               icon: Icon(
                 tab.icon,
                 color: isActive
@@ -363,18 +361,20 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ),
     );
   }
 
   Widget _buildTabBarHorizontal(ThemeData theme) {
+    final tabs = _tabsForScheme(theme.colorScheme);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
-        children: _tabs.map((tab) {
-          final isActive = _activeTab.id == tab.id;
+        children: List.generate(tabs.length, (i) {
+          final tab = tabs[i];
+          final isActive = _activeTabIndex == i;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
@@ -387,40 +387,47 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                     ? tab.iconColor
                     : theme.colorScheme.onSurfaceVariant,
               ),
-              onSelected: (_) => _onTabSelected(tab),
+              onSelected: (_) => _onTabSelected(i),
               selectedColor: tab.iconColor.withValues(alpha: 0.2),
               checkmarkColor: tab.iconColor,
               showCheckmark: false,
             ),
           );
-        }).toList(),
+        }),
       ),
     );
   }
 
   Widget _buildExplorerContent(ThemeData theme) {
+    final tabs = _tabsForScheme(theme.colorScheme);
+    final activeTab = tabs[_activeTabIndex.clamp(0, tabs.length - 1)];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.fromLTRB(
+            kScreenHorizontalPadding,
+            8,
+            kScreenHorizontalPadding,
+            0,
+          ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _activeTab.iconColor.withValues(alpha: 0.15),
+                  color: activeTab.iconColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  _activeTab.icon,
-                  color: _activeTab.iconColor,
+                  activeTab.icon,
+                  color: activeTab.iconColor,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
-                _activeTab.title,
+                activeTab.title,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -432,7 +439,12 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         ),
         if (_folderStack.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              kScreenHorizontalPadding,
+              8,
+              kScreenHorizontalPadding,
+              0,
+            ),
             child: InkWell(
               onTap: _onBack,
               borderRadius: BorderRadius.circular(8),
@@ -530,9 +542,9 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-        16,
+        kScreenHorizontalPadding,
         0,
-        16,
+        kScreenHorizontalPadding,
         kFloatingNavBarBottomPadding,
       ),
       children: [
@@ -648,19 +660,17 @@ class _FolderTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.5,
-            ),
-            borderRadius: BorderRadius.circular(12),
+            color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.folder_rounded,
-                color: const Color(0xFF4285F4),
+                color: theme.colorScheme.primary,
                 size: 28,
               ),
               const SizedBox(width: 14),
@@ -711,31 +721,29 @@ class _FileTile extends StatelessWidget {
     return Icons.insert_drive_file_rounded;
   }
 
-  Color _colorForMimeType(String mimeType) {
-    if (mimeType.contains('pdf')) return const Color(0xFFE53935);
+  Color _colorForMimeType(String mimeType, ColorScheme scheme) {
+    if (mimeType.contains('pdf')) return scheme.error;
     if (mimeType.contains('audio') || mimeType.contains('mpeg')) {
-      return const Color(0xFF1E88E5);
+      return scheme.primary;
     }
-    if (mimeType.contains('musescore')) return const Color(0xFF7B1FA2);
-    return const Color(0xFF757575);
+    if (mimeType.contains('musescore')) return scheme.tertiary;
+    return scheme.outline;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconColor = _colorForMimeType(file.mimeType);
+    final iconColor = _colorForMimeType(file.mimeType, theme.colorScheme);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.5,
-          ),
-          borderRadius: BorderRadius.circular(12),
+          color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
         child: Row(

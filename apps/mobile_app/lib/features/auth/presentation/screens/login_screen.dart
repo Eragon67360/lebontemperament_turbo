@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/auth_provider.dart';
@@ -21,8 +22,10 @@ class LoginScreen extends ConsumerWidget {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -66,8 +69,11 @@ class _LoginHeader extends StatelessWidget {
             shape: BoxShape.circle,
             color: theme.colorScheme.primary,
           ),
-          child: Icon(Icons.music_note_rounded,
-              size: 40, color: theme.colorScheme.onPrimary),
+          child: Icon(
+            Icons.music_note_rounded,
+            size: 40,
+            color: theme.colorScheme.onPrimary,
+          ),
         ),
         const SizedBox(height: 24),
         Text(
@@ -134,7 +140,8 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
     } catch (e) {
       if (mounted) {
         _showErrorSnackBar(
-            'Erreur de connexion: Email ou mot de passe incorrect.');
+          'Erreur de connexion: Email ou mot de passe incorrect.',
+        );
       }
     }
   }
@@ -148,8 +155,9 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
     // Custom InputDecoration for our text fields
     final customInputDecoration = InputDecoration(
       filled: true,
-      fillColor:
-          theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.5,
+      ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -158,10 +166,11 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
       ),
-      prefixIconColor: WidgetStateColor.resolveWith((states) =>
-          states.contains(WidgetState.focused)
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurfaceVariant),
+      prefixIconColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.focused)
+            ? theme.colorScheme.primary
+            : theme.colorScheme.onSurfaceVariant,
+      ),
     );
 
     return Form(
@@ -198,9 +207,11 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
               labelText: 'Mot de passe',
               prefixIcon: const Icon(Icons.lock_outlined),
               suffixIcon: IconButton(
-                icon: Icon(_obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined),
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
               ),
@@ -219,7 +230,9 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {/* TODO: Navigate to forgot password screen */},
+              onPressed: () {
+                /* TODO: Navigate to forgot password screen */
+              },
               child: const Text('Mot de passe oublié ?'),
             ),
           ),
@@ -231,58 +244,13 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               textStyle: GoogleFonts.poppins(
-                  fontSize: 16, fontWeight: FontWeight.w600),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: const Text('Se connecter'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// MARK: - Animation Widget
-class FadeInUp extends StatefulWidget {
-  final Widget child;
-  final int delay;
-  const FadeInUp({super.key, required this.child, this.delay = 0});
-  @override
-  State<FadeInUp> createState() => _FadeInUpState();
-}
-
-class _FadeInUpState extends State<FadeInUp>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<double> _translateY;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _opacity = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(begin: 30.0, end: 0.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) => Opacity(
-        opacity: _opacity.value,
-        child: Transform.translate(
-            offset: Offset(0, _translateY.value), child: widget.child),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
+import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/constants/support_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -146,7 +147,12 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              kFloatingNavBarBottomPadding,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 Text(

@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:lebontemperament/core/config/app_router.dart';
 import 'package:lebontemperament/core/widgets/custom_toast.dart';
+import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 
 // Provider to fetch package info asynchronously.
 // This is more idiomatic in a Riverpod app than using a StatefulWidget.
@@ -505,63 +506,6 @@ class _Footer extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// MARK: - Animation Widget
-class FadeInUp extends StatefulWidget {
-  final Widget child;
-  final int delay;
-  const FadeInUp({super.key, required this.child, this.delay = 0});
-  @override
-  State<FadeInUp> createState() => _FadeInUpState();
-}
-
-class _FadeInUpState extends State<FadeInUp>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<double> _translateY;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _opacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _opacity.value,
-          child: Transform.translate(
-            offset: Offset(0, _translateY.value),
-            child: widget.child,
-          ),
-        );
-      },
     );
   }
 }

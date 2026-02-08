@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../data/models/rehearsal.dart';
@@ -220,20 +221,37 @@ class _InlineFilterChips extends StatelessWidget {
     (GroupType.choeurComplet, 'Chœur complet'),
   ];
 
-  static Color _getGroupColor(GroupType? group) {
+  static Color _getGroupColor(GroupType? group, ColorScheme scheme) {
     switch (group) {
       case GroupType.orchestre:
-        return const Color(0xFF2196F3); // blue
+        return scheme.primary;
       case GroupType.hommes:
-        return const Color(0xFF4CAF50); // green
+        return scheme.secondary;
       case GroupType.femmes:
-        return const Color(0xFF9C27B0); // purple
+        return scheme.tertiary;
       case GroupType.jeunesEnfants:
-        return const Color(0xFFFFC107); // amber
+        return scheme.tertiaryContainer;
       case GroupType.choeurComplet:
-        return const Color(0xFFE53935); // red
+        return scheme.error;
       default:
-        return const Color(0xFF757575); // grey
+        return scheme.outline;
+    }
+  }
+
+  static Color _getGroupOnColor(GroupType? group, ColorScheme scheme) {
+    switch (group) {
+      case GroupType.orchestre:
+        return scheme.onPrimary;
+      case GroupType.hommes:
+        return scheme.onSecondary;
+      case GroupType.femmes:
+        return scheme.onTertiary;
+      case GroupType.jeunesEnfants:
+        return scheme.onTertiaryContainer;
+      case GroupType.choeurComplet:
+        return scheme.onError;
+      default:
+        return scheme.onSurface;
     }
   }
 
@@ -249,7 +267,7 @@ class _InlineFilterChips extends StatelessWidget {
           children: _chipOptions.map((option) {
             final (group, label) = option;
             final isSelected = selectedFilter == group;
-            final baseColor = _getGroupColor(group);
+            final baseColor = _getGroupColor(group, theme.colorScheme);
 
             final bgColor = isSelected
                 ? baseColor
@@ -257,7 +275,7 @@ class _InlineFilterChips extends StatelessWidget {
                     alpha: 0.5,
                   );
             final fgColor = isSelected
-                ? Colors.white
+                ? _getGroupOnColor(group, theme.colorScheme)
                 : theme.colorScheme.onSurfaceVariant;
             final borderColor = isSelected
                 ? baseColor
@@ -521,8 +539,8 @@ class _DateBadge extends StatelessWidget {
     ];
 
     return Container(
-      width: 50,
-      height: 50,
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -533,7 +551,7 @@ class _DateBadge extends StatelessWidget {
           Text(
             date.day.toString(),
             style: GoogleFonts.poppins(
-              fontSize: 19,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: color,
               height: 1.0,
@@ -558,26 +576,27 @@ class _GroupTypeBadge extends StatelessWidget {
   final GroupType groupType;
   const _GroupTypeBadge({required this.groupType});
 
-  static Color _getGroupColor(GroupType group) {
+  static Color _getGroupColor(GroupType group, ColorScheme scheme) {
     switch (group) {
       case GroupType.orchestre:
-        return const Color(0xFF2196F3);
+        return scheme.primary;
       case GroupType.hommes:
-        return const Color(0xFF4CAF50);
+        return scheme.secondary;
       case GroupType.femmes:
-        return const Color(0xFF9C27B0);
+        return scheme.tertiary;
       case GroupType.jeunesEnfants:
-        return const Color(0xFFFFC107);
+        return scheme.tertiaryContainer;
       case GroupType.choeurComplet:
-        return const Color(0xFFE53935);
+        return scheme.error;
       default:
-        return const Color(0xFF757575);
+        return scheme.outline;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = _getGroupColor(groupType);
+    final theme = Theme.of(context);
+    final color = _getGroupColor(groupType, theme.colorScheme);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -726,63 +745,6 @@ class _ErrorState extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// MARK: - Animation Widget
-class FadeInUp extends StatefulWidget {
-  final Widget child;
-  final int delay;
-  const FadeInUp({super.key, required this.child, this.delay = 0});
-  @override
-  State<FadeInUp> createState() => _FadeInUpState();
-}
-
-class _FadeInUpState extends State<FadeInUp>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<double> _translateY;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _opacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _translateY = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _opacity.value,
-          child: Transform.translate(
-            offset: Offset(0, _translateY.value),
-            child: widget.child,
-          ),
-        );
-      },
     );
   }
 }

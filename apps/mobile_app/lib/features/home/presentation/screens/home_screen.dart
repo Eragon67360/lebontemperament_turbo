@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/data/models/concert.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
@@ -1085,69 +1086,5 @@ class _BetaNoticeCard extends StatelessWidget {
         );
       }
     }
-  }
-}
-
-// MARK: - Animation Widget
-
-class FadeInUp extends StatefulWidget {
-  final Widget child;
-  final int delay;
-
-  const FadeInUp({super.key, required this.child, this.delay = 0});
-
-  @override
-  State<FadeInUp> createState() => _FadeInUpState();
-}
-
-class _FadeInUpState extends State<FadeInUp>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<double> _translateY;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _opacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuad));
-    _translateY = Tween<double>(
-      begin: 20.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuad));
-
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) {
-        _controller.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _opacity.value,
-          child: Transform.translate(
-            offset: Offset(0, _translateY.value),
-            child: widget.child,
-          ),
-        );
-      },
-    );
   }
 }
