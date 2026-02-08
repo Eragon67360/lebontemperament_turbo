@@ -1,5 +1,5 @@
 "use client";
-import { Loader } from "@googlemaps/js-api-loader";
+import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import { useEffect, useRef, useState } from "react";
 
 function Map() {
@@ -24,16 +24,14 @@ function Map() {
       };
 
       try {
-        const loader = new Loader({
-          apiKey: apiKey,
-          version: "weekly",
+        setOptions({
+          key: apiKey,
+          v: "weekly",
           libraries: ["places"],
         });
 
         // Load the maps library
-        const { Map } = (await loader.importLibrary(
-          "maps",
-        )) as google.maps.MapsLibrary;
+        const { Map } = await importLibrary("maps");
 
         const mapOptions: google.maps.MapOptions = {
           center: position,
@@ -46,8 +44,7 @@ function Map() {
         // Try to use AdvancedMarkerElement if map ID is available
         if (mapId) {
           try {
-            const { AdvancedMarkerElement } =
-              await loader.importLibrary("marker");
+            const { AdvancedMarkerElement } = await importLibrary("marker");
             new AdvancedMarkerElement({
               map: map,
               position: position,

@@ -142,7 +142,7 @@ export function InviteUserDialog({
             index,
             error:
               error instanceof z.ZodError
-                ? error.errors[0]?.message
+                ? error.issues[0]?.message
                 : error instanceof Error
                   ? error.message
                   : "Données invalides",

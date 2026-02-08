@@ -39,7 +39,7 @@ const formSchema = z.object({
       "URL YouTube invalide",
     ),
   performance_date: z.date({
-    required_error: "La date est requise",
+    error: "La date est requise",
   }),
   venue: z.string().min(1, "Le lieu est requis"),
   soloists: z.string().optional(),
@@ -53,7 +53,7 @@ interface VideoFormProps {
 
 export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema as never),
     defaultValues: {
       title: initialData?.title || "",
       composer: initialData?.composer || "",
