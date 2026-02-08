@@ -51,7 +51,10 @@ const List<_NavItemData> _navItems = [
 ];
 
 class MainScreen extends ConsumerStatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({super.key, this.initialTabIndex});
+
+  /// When set (e.g. from /rehearsals deep link), opens this tab on first frame.
+  final int? initialTabIndex;
 
   @override
   ConsumerState<MainScreen> createState() => _MainScreenState();
@@ -67,6 +70,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.initState();
     // Notification logic kept from original file
     _initializeNotifications();
+    // Deep link: open specific tab (e.g. rehearsals = 2)
+    if (widget.initialTabIndex != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(mainNavigationProvider.notifier)
+            .setTab(widget.initialTabIndex!.clamp(0, 3));
+      });
+    }
   }
 
   Future<void> _initializeNotifications() async {

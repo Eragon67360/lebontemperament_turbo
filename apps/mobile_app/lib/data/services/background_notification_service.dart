@@ -4,6 +4,9 @@ import '../models/event.dart';
 import '../models/concert.dart';
 import '../models/rehearsal.dart';
 
+/// Deprecated: FCM background handler uses [NotificationService.showFromFcm] instead.
+/// Kept for reference; can be removed once FCM flow is verified.
+@Deprecated('Use NotificationService.showFromFcm from FcmNotificationHandler')
 class BackgroundNotificationService {
   static final BackgroundNotificationService _instance =
       BackgroundNotificationService._internal();

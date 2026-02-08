@@ -1,5 +1,11 @@
 # Background Notifications Guide
 
+## Status: FCM Implemented
+
+The app now uses **Firebase Cloud Messaging (FCM)** for server-sent push notifications when the app is closed or in background. Local scheduled reminders (concerts/rehearsals) still use `flutter_local_notifications`; Realtime (Supabase) still drives in-app updates and optional local notifications when the app is running.
+
+---
+
 ## 🎯 The Problem: App Closed = No Real-time Notifications
 
 When you **completely close** a Flutter app (not just minimize it), all real-time listeners stop working because:
@@ -9,15 +15,15 @@ When you **completely close** a Flutter app (not just minimize it), all real-tim
 - ❌ **No background processing occurs**
 - ❌ **Real-time subscriptions are lost**
 
-## 🔧 Solutions for True Background Notifications
+**Solution:** FCM delivers push notifications from the server (Supabase Edge Function) even when the app is killed.
 
-### **Option 1: Firebase Cloud Messaging (FCM) - RECOMMENDED**
+---
 
-This is the most reliable solution for true background notifications.
+## 🔧 Implementation: Firebase Cloud Messaging (FCM)
 
-#### **How it works:**
+### **How it works:**
 
-1. **Supabase Database Trigger** → **Supabase Edge Function** → **Firebase Cloud Messaging** → **Device Notification**
+1. **Supabase Database Trigger** → **Supabase Edge Function** (`send-push-notification`) → **Firebase Cloud Messaging** → **Device Notification**
 
 #### **Implementation Steps:**
 
@@ -256,6 +262,10 @@ If you want to implement FCM quickly:
 3. **Create the database triggers**
 4. **Update your Flutter code**
 
-This will give you **true background notifications** that work even when the app is completely closed!
+### **Setup checklist (already done in code)**
 
-Would you like me to help you implement the FCM solution?
+- **Mobile app:** Firebase init, FCM handler (`FcmNotificationHandler`), topic `all_users`, tap navigation via GoRouter.
+- **Supabase:** Edge Function `send-push-notification` (FCM HTTP v1), migration with triggers on `rehearsals`, `events`, `concerts`.
+- **Secrets:** `FIREBASE_SERVICE_ACCOUNT_JSON` (Edge Function), vault `project_url` and `anon_key` (triggers).
+
+### **Optional:** Store FCM tokens in Supabase for per-user targeting (currently using topic `all_users`).

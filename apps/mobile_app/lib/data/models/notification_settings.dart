@@ -51,6 +51,24 @@ extension NotificationTimeExtension on NotificationTime {
     }
   }
 
+  /// Label for reminder body: "dans 15 minutes", "dans 1 heure", etc. (no "avant")
+  String get reminderLabel {
+    switch (this) {
+      case NotificationTime.twoDays:
+        return '2 jours';
+      case NotificationTime.oneDay:
+        return '1 jour';
+      case NotificationTime.twoHours:
+        return '2 heures';
+      case NotificationTime.oneHour:
+        return '1 heure';
+      case NotificationTime.thirtyMinutes:
+        return '30 minutes';
+      case NotificationTime.fifteenMinutes:
+        return '15 minutes';
+    }
+  }
+
   Duration get duration {
     switch (this) {
       case NotificationTime.twoDays:

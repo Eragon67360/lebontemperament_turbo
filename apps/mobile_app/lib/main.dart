@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'core/config/dependency_injection.dart';
 import 'core/config/supabase_config.dart';
@@ -8,11 +9,19 @@ import 'core/config/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'data/services/notification_service.dart';
+import 'data/services/fcm_notification_handler.dart';
 import 'data/providers/realtime_notifications_provider.dart';
 import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase (required for FCM)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Register FCM background handler before runApp (must be top-level)
+  FcmNotificationHandler.registerBackgroundHandler();
 
   // Initialize Supabase
   await SupabaseConfig.initialize();
@@ -20,7 +29,7 @@ void main() async {
   // Initialize dependency injection
   await DependencyInjection.init();
 
-  // Initialize notification service
+  // Initialize notification service (local + display for FCM)
   await NotificationService().initialize();
 
   runApp(const ProviderScope(child: LeBonTemperamentApp()));
@@ -41,6 +50,12 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     NotificationService.updateLifecycleState(AppLifecycleState.resumed);
+
+    // FCM: foreground listeners and topic subscription
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FcmNotificationHandler.setupForegroundListeners();
+      FcmNotificationHandler.subscribeToTopic('all_users');
+    });
 
     // Start real-time subscription for list updates (always, regardless of settings)
     WidgetsBinding.instance.addPostFrameCallback((_) {
