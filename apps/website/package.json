@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "2.0.37",
+  "version": "2.0.38",
   "type": "module",
   "private": true,
   "scripts": {
@@ -34,7 +34,7 @@
     "googleapis": "^171.4.0",
     "googleapis-common": "^8.0.1",
     "gsap": "^3.14.2",
-    "maplibre-gl": "^5.17.0",
+    "mapbox-gl": "^3.18.1",
     "micro": "^10.0.1",
     "micro-cors": "^0.1.1",
     "motion": "^12.33.0",
