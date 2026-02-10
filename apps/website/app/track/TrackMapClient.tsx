@@ -1,29 +1,21 @@
 "use client";
 
 import { fetchOSRMRoute } from "@/utils/osrm";
-import { Crosshair, MapPin } from "lucide-react";
-import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import { Crosshair, MapPin, Maximize2 } from "lucide-react";
+import type { GeoJSONSource, Map as MapboxMap } from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 
-// --- Map Constants ---
-const TILE_SOURCES = {
-  light: {
-    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-    attribution:
-      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  },
-  dark: {
-    tiles: [
-      "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-      "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-      "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-    ],
-    attribution:
-      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-  },
-};
+// --- Mapbox Standard style ---
+const MAPBOX_STANDARD_STYLE = "mapbox://styles/mapbox/standard";
+
+/** Light presets for Mapbox Standard: day (light), night (dark). */
+const LIGHT_PRESET = { light: "day" as const, dark: "night" as const };
+
+function getLightPreset(isDark: boolean): "day" | "night" {
+  return isDark ? LIGHT_PRESET.dark : LIGHT_PRESET.light;
+}
 
 const DRIVER_SOURCE_ID = "driver-position";
 const DRIVER_LAYER_ID = "driver-marker";
@@ -32,32 +24,12 @@ const ROUTE_LAYER_ID = "route-line";
 const DESTINATION_SOURCE_ID = "destination-marker";
 const DESTINATION_LAYER_ID = "destination-flag";
 
-// --- MapLibre Style Generator ---
-function getMapStyle(isDark: boolean) {
-  const { tiles, attribution } = isDark
-    ? TILE_SOURCES.dark
-    : TILE_SOURCES.light;
-  return {
-    version: 8 as const,
-    sources: {
-      "raster-tiles": {
-        type: "raster" as const,
-        tiles,
-        tileSize: 256,
-        attribution,
-      },
-    },
-    layers: [
-      {
-        id: "raster-layer",
-        type: "raster" as const,
-        source: "raster-tiles",
-        minzoom: 0,
-        maxzoom: 22,
-      },
-    ],
-  };
-}
+const DRIVER_ICON_ID = "driver-icon";
+const DESTINATION_ICON_ID = "destination-icon";
+
+// Paths to images in the public directory
+const DRIVER_ICON_URL = "/img/cheese.png";
+const DESTINATION_ICON_URL = "/img/race-flag.png";
 
 // --- Component Interfaces ---
 export interface TrackMapDelivery {
@@ -76,7 +48,7 @@ interface TrackMapClientProps {
 
 // --- Map Layer Helpers ---
 function addOrUpdateSource(
-  map: MapLibreMap,
+  map: MapboxMap,
   id: string,
   data: GeoJSON.Feature | GeoJSON.FeatureCollection,
 ) {
@@ -88,10 +60,6 @@ function addOrUpdateSource(
   }
 }
 
-/**
- * The client-side map component responsible for rendering the map,
- * driver position, and route line.
- */
 export function TrackMapClient({
   center,
   delivery,
@@ -103,40 +71,75 @@ export function TrackMapClient({
   const isDark = resolvedTheme === "dark";
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  const isInitialLoad = useRef(true); // Used to differentiate initial jump from subsequent flights.
-  const isProgrammaticMove = useRef(false); // True when we trigger flyTo/jumpTo, so we don't mark as user interaction.
+  const mapRef = useRef<MapboxMap | null>(null);
+
+  const isInitialLoad = useRef(true);
+  const isProgrammaticMove = useRef(false);
+
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   const setUserHasInteractedRef = useRef(setUserHasInteracted);
   setUserHasInteractedRef.current = setUserHasInteracted;
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  // --- Effect 1: Map Instance Management ---
-  // This effect runs ONLY ONCE to create and destroy the map instance.
-  // It has an empty dependency array to prevent re-initialization.
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [styleVersion, setStyleVersion] = useState(0);
+  const lastStyleDarkRef = useRef<boolean | null>(null);
+
+  // Controls when it is safe to add layers that depend on images
+  const [iconsReady, setIconsReady] = useState(false);
+
+  // --- Effect 1: Map Instance Management & Console Patch ---
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
 
-    let map: MapLibreMap;
-    import("maplibre-gl").then((maplibregl) => {
-      // If the component has unmounted by the time the import finishes, do nothing.
+    // 1. Patch console.warn to suppress internal Mapbox warnings we can't control
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      const msg = typeof args[0] === "string" ? args[0] : "";
+      if (
+        msg.includes("featureNamespace place-A") ||
+        msg.includes("The map container element should be empty")
+      ) {
+        return;
+      }
+      originalWarn(...args);
+    };
+
+    const token = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
+    if (!token) {
+      console.warn("NEXT_PUBLIC_MAPBOX_API_KEY is not set.");
+    }
+
+    // 2. Explicitly clear the container to fix "Map container element should be empty"
+    containerRef.current.innerHTML = "";
+
+    import("mapbox-gl").then((mod) => {
+      const mapboxgl = mod.default;
+      if (token) mapboxgl.accessToken = token;
       if (!containerRef.current) return;
 
-      map = new maplibregl.Map({
+      const map = new mapboxgl.Map({
         container: containerRef.current,
-        style: getMapStyle(isDark),
-        center: center, // Use the initial center prop.
+        style: MAPBOX_STANDARD_STYLE,
+        config: {
+          basemap: { lightPreset: getLightPreset(isDark) },
+        },
+        center: center,
         zoom: hasPosition ? 15 : 10,
         minZoom: 0,
         interactive: true,
         touchZoomRotate: true,
       });
 
-      map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+      map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
       mapRef.current = map;
-      map.on("load", () => setIsMapLoaded(true));
 
-      // Track user pan/zoom so we don't auto-recenter when they've manually moved the map.
+      map.on("load", () => {
+        lastStyleDarkRef.current = isDark;
+        setIsMapLoaded(true);
+        // Increment styleVersion to trigger image loading
+        setStyleVersion((v) => v + 1);
+      });
+
       map.on("moveend", () => {
         if (isProgrammaticMove.current) {
           isProgrammaticMove.current = false;
@@ -146,26 +149,72 @@ export function TrackMapClient({
       });
     });
 
-    // Cleanup function: ensures the map is properly removed when the component unmounts.
     return () => {
+      // Restore console on cleanup
+      console.warn = originalWarn;
+
       setIsMapLoaded(false);
-      map?.remove();
-      mapRef.current = null;
+      setIconsReady(false);
+      const m = mapRef.current;
+      if (m) {
+        m.remove();
+        mapRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // <-- Empty array ensures this runs only once.
+  }, []);
 
-  // --- Effect 2: Map Style Management ---
-  // Syncs the map's visual style with the application's light/dark theme.
+  // --- Effect 2: Map Style Configuration ---
   useEffect(() => {
-    if (isMapLoaded && mapRef.current) {
-      mapRef.current.setStyle(getMapStyle(isDark));
-    }
+    if (!isMapLoaded || !mapRef.current) return;
+    if (lastStyleDarkRef.current === isDark) return;
+
+    lastStyleDarkRef.current = isDark;
+    mapRef.current.setConfigProperty(
+      "basemap",
+      "lightPreset",
+      getLightPreset(isDark),
+    );
   }, [isDark, isMapLoaded]);
 
+  // --- Effect 2b: Load PNG Images ---
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!isMapLoaded || !map) return;
+
+    setIconsReady(false);
+
+    const loadIcon = (id: string, url: string): Promise<void> => {
+      return new Promise((resolve) => {
+        if (map.hasImage(id)) {
+          resolve();
+          return;
+        }
+        map.loadImage(url, (error, image) => {
+          if (error) {
+            console.error(`Failed to load PNG: ${url}`, error);
+            // Resolve anyway so we don't block the other icon,
+            // though the marker won't show.
+            resolve();
+            return;
+          }
+          if (image && !map.hasImage(id)) {
+            map.addImage(id, image);
+          }
+          resolve();
+        });
+      });
+    };
+
+    Promise.all([
+      loadIcon(DRIVER_ICON_ID, DRIVER_ICON_URL),
+      loadIcon(DESTINATION_ICON_ID, DESTINATION_ICON_URL),
+    ]).then(() => {
+      setIconsReady(true);
+    });
+  }, [isMapLoaded, styleVersion]);
+
   // --- Effect 3: Map View Management ---
-  // Moves the map's camera to center on the driver's position.
-  // Only auto-recenter if the user hasn't manually panned/zoomed (Waze-like behavior).
   useEffect(() => {
     if (!isMapLoaded || !mapRef.current) return;
     const zoom = hasPosition ? 15 : 10;
@@ -183,16 +232,27 @@ export function TrackMapClient({
   const handleRecenter = () => {
     if (!mapRef.current) return;
     const zoom = hasPosition ? 15 : 10;
-    setUserHasInteracted(false); // Resume auto-follow after recenter.
+    setUserHasInteracted(false);
     isProgrammaticMove.current = true;
     mapRef.current.flyTo({ center, zoom, duration: 800 });
   };
 
-  // --- Effect 4: Driver Marker Data Layer ---
-  // Updates the GeoJSON source for the driver's marker.
+  const handleFitBoth = () => {
+    const map = mapRef.current;
+    if (!map || !hasPosition || !destination) return;
+    const lngs = [center[0], destination[0]];
+    const lats = [center[1], destination[1]];
+    const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)];
+    const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)];
+    isProgrammaticMove.current = true;
+    map.fitBounds([sw, ne], { padding: 40, maxZoom: 14, duration: 800 });
+  };
+
+  // --- Effect 4: Driver Marker Layer ---
   useEffect(() => {
     const map = mapRef.current;
-    if (!isMapLoaded || !map) return;
+    // CRITICAL: Do not attempt to add layers until icons are loaded
+    if (!isMapLoaded || !map || !iconsReady) return;
 
     if (hasPosition && delivery.longitude && delivery.latitude) {
       const coordinates: [number, number] = [
@@ -204,25 +264,31 @@ export function TrackMapClient({
         properties: {},
         geometry: { type: "Point", coordinates },
       });
+
       if (!map.getLayer(DRIVER_LAYER_ID)) {
         map.addLayer({
           id: DRIVER_LAYER_ID,
-          type: "circle",
+          type: "symbol",
           source: DRIVER_SOURCE_ID,
-          paint: {
-            "circle-radius": 10,
-            "circle-color": "#3b82f6",
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#fff",
+          layout: {
+            "icon-image": DRIVER_ICON_ID,
+            "icon-size": 0.05, // Adjusted size for PNGs, tweak as needed
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
           },
         });
       }
     }
-  }, [hasPosition, delivery.longitude, delivery.latitude, isMapLoaded]);
+  }, [
+    hasPosition,
+    delivery.longitude,
+    delivery.latitude,
+    isMapLoaded,
+    iconsReady,
+    styleVersion,
+  ]);
 
-  // --- Effect 5: Route Data Layer ---
-  // Fetches and displays the route from the driver to the destination.
-  // Includes cleanup logic to prevent race conditions.
+  // --- Effect 5: Route Line Layer ---
   useEffect(() => {
     const map = mapRef.current;
     if (
@@ -232,7 +298,6 @@ export function TrackMapClient({
       !delivery.latitude ||
       !delivery.longitude
     ) {
-      // If there's no destination or driver position, clear any existing route.
       if (map && map.getSource(ROUTE_SOURCE_ID)) {
         addOrUpdateSource(map, ROUTE_SOURCE_ID, {
           type: "FeatureCollection",
@@ -243,14 +308,12 @@ export function TrackMapClient({
       return;
     }
 
-    let isCancelled = false; // Flag to ignore stale fetch results.
+    let isCancelled = false;
 
     const fetchAndDrawRoute = async () => {
       const from: [number, number] = [delivery.longitude!, delivery.latitude!];
       const result = await fetchOSRMRoute(from, destination);
 
-      // If the component has unmounted or dependencies have changed,
-      // the 'isCancelled' flag will be true, and we discard the result.
       if (isCancelled || !mapRef.current) return;
 
       if (result?.coordinates?.length) {
@@ -259,6 +322,7 @@ export function TrackMapClient({
           properties: {},
           geometry: { type: "LineString", coordinates: result.coordinates },
         });
+
         if (!mapRef.current.getLayer(ROUTE_LAYER_ID)) {
           mapRef.current.addLayer({
             id: ROUTE_LAYER_ID,
@@ -276,8 +340,6 @@ export function TrackMapClient({
 
     void fetchAndDrawRoute();
 
-    // Cleanup function: when dependencies change, this runs first,
-    // ensuring that any in-flight fetch is ignored.
     return () => {
       isCancelled = true;
     };
@@ -287,12 +349,14 @@ export function TrackMapClient({
     destination,
     isMapLoaded,
     onRouteFetched,
+    styleVersion,
   ]);
 
-  // --- Effect 6: Destination Flag Marker ---
+  // --- Effect 6: Destination Marker Layer ---
   useEffect(() => {
     const map = mapRef.current;
-    if (!isMapLoaded || !map) return;
+    // CRITICAL: Do not attempt to add layers until icons are loaded
+    if (!isMapLoaded || !map || !iconsReady) return;
 
     if (destination) {
       addOrUpdateSource(map, DESTINATION_SOURCE_ID, {
@@ -300,16 +364,17 @@ export function TrackMapClient({
         properties: {},
         geometry: { type: "Point", coordinates: destination },
       });
+
       if (!map.getLayer(DESTINATION_LAYER_ID)) {
         map.addLayer({
           id: DESTINATION_LAYER_ID,
-          type: "circle",
+          type: "symbol",
           source: DESTINATION_SOURCE_ID,
-          paint: {
-            "circle-radius": 10,
-            "circle-color": "#22c55e",
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#fff",
+          layout: {
+            "icon-image": DESTINATION_ICON_ID,
+            "icon-size": 0.05, // Adjusted size for PNGs, tweak as needed
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
           },
         });
       }
@@ -319,19 +384,34 @@ export function TrackMapClient({
         features: [],
       });
     }
-  }, [destination, isMapLoaded]);
+  }, [destination, isMapLoaded, iconsReady, styleVersion]);
 
   return (
     <div
-      ref={containerRef}
       className="absolute inset-0 -z-10 h-full w-full"
       style={{ touchAction: "manipulation" }}
     >
+      <div
+        ref={containerRef}
+        className="absolute inset-0 h-full w-full"
+        aria-hidden
+      />
+      {hasPosition && destination && (
+        <button
+          type="button"
+          onClick={handleFitBoth}
+          className="absolute bottom-18 left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-lg transition hover:bg-white dark:border-gray-700 dark:bg-gray-900/95 dark:hover:bg-gray-800"
+          aria-label="Afficher le trajet complet"
+          title="Afficher le trajet complet"
+        >
+          <Maximize2 className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+        </button>
+      )}
       {hasPosition && userHasInteracted && (
         <button
           type="button"
           onClick={handleRecenter}
-          className="absolute bottom-24 left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-lg transition hover:bg-white dark:border-gray-700 dark:bg-gray-900/95 dark:hover:bg-gray-800"
+          className="absolute bottom-32 left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-lg transition hover:bg-white dark:border-gray-700 dark:bg-gray-900/95 dark:hover:bg-gray-800"
           aria-label="Recentrer sur ma position"
           title="Recentrer sur ma position"
         >
