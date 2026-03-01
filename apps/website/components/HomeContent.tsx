@@ -36,6 +36,7 @@ const HomeContent = () => {
     typeof window !== "undefined" ? Math.max(window.innerHeight, 200) : 600,
   );
   const [showCalendarButton, setShowCalendarButton] = useState<boolean>(false);
+  const [showAGButton, setShowAGButton] = useState<boolean>(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
 
   // Check if we should show the calendar button (before January 15, 2026)
@@ -43,6 +44,13 @@ const HomeContent = () => {
     const expirationDate = new Date("2026-01-15");
     const now = new Date();
     setShowCalendarButton(now < expirationDate);
+  }, []);
+
+  // Check if we should show the AG button (before March 31, 2026)
+  useEffect(() => {
+    const expirationDate = new Date("2026-03-31");
+    const now = new Date();
+    setShowAGButton(now < expirationDate);
   }, []);
 
   // Refs for each section
@@ -179,6 +187,32 @@ const HomeContent = () => {
                     onPress={() => setIsInfoModalOpen(true)}
                   >
                     <IoIosInformationCircle className="h-5 w-5 lg:h-6 lg:w-6" />
+                  </Button>
+                </motion.div>
+              )}
+
+              {/* AG 2026 CTA - Temporary until March 31, 2026 */}
+              {showAGButton && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                  className="mt-6 flex w-fit"
+                >
+                  <Button
+                    as={Link}
+                    href="/ag-2026"
+                    size="lg"
+                    radius="sm"
+                    variant="bordered"
+                    className="border-white/50 text-white hover:bg-white/10"
+                    aria-label="Informations Assemblée Générale 2026"
+                  >
+                    Assemblée Générale – 14 mars 2026
+                    <IoIosArrowRoundForward
+                      className="-mr-1 ml-2 h-3 w-3 lg:h-5 lg:w-5"
+                      aria-hidden="true"
+                    />
                   </Button>
                 </motion.div>
               )}

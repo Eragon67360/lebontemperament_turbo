@@ -75,6 +75,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "yearly" as ChangeFrequency,
       priority: 0.3,
     },
+    {
+      url: `${WEBSITE_URL}/ag-2026`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "monthly" as ChangeFrequency,
+      priority: 0.6,
+    },
   ];
 
   // Fetch projects from database

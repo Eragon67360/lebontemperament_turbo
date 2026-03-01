@@ -20,6 +20,7 @@ const RouteNames = {
   MEMBRES: {
     ROOT: "/membres",
   },
+  AG_2026: "/ag-2026",
   ERROR: "/error",
   UNAUTHORIZED: "/unauthorized",
 };
