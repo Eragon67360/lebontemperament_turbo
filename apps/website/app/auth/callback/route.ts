@@ -1,7 +1,6 @@
 // app/auth/callback/route.ts
 import { ERROR_CODES } from "@/consts/errorMessages";
 import RouteNames from "@/utils/routes";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 export async function GET(request: Request) {
@@ -10,7 +9,6 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const supabaseAdmin = createAdminClient();
     try {
       const {
         data: { user },
@@ -23,25 +21,13 @@ export async function GET(request: Request) {
         throw new Error("Email non disponible");
       }
 
-      const {
-        data: { users },
-        error: usersError,
-      } = await supabaseAdmin.auth.admin.listUsers();
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
 
-      if (usersError) {
-        console.error(
-          "Erreur lors de la récupération des utilisateurs:",
-          usersError,
-        );
-        throw usersError;
-      }
-      const userExists = users.some(
-        (existingUser) =>
-          existingUser.email === user.email &&
-          existingUser.email_confirmed_at !== null,
-      );
-
-      if (!userExists) {
+      if (profileError || !profile) {
         await supabase.auth.signOut();
         return NextResponse.redirect(
           `${requestUrl.origin}${RouteNames.AUTH.LOGIN}?error=${ERROR_CODES.UNAUTHORIZED}&error_description=Compte+non+autorisé`,
