@@ -45,7 +45,7 @@ const UserGridSkeleton = () => (
     {[1, 2, 3, 4, 5, 6].map((i) => (
       <div
         key={i}
-        className="bg-muted/40 h-[220px] w-full animate-pulse rounded-2xl border"
+        className="bg-muted/40 h-55 w-full animate-pulse rounded-2xl border"
       />
     ))}
   </div>
@@ -279,7 +279,7 @@ export default function UsersPage() {
     <PageShell
       fullHeight
       theme="admin"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="px-2 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8"
       title="Gestion des utilisateurs"
       description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
       headerAction={
@@ -295,7 +295,7 @@ export default function UsersPage() {
             {syncData &&
               (syncData.missingInDatabase.length > 0 ||
                 syncData.missingInExcel.length > 0) && (
-                <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
                   {syncData.missingInDatabase.length +
                     syncData.missingInExcel.length}
                 </span>
@@ -325,7 +325,7 @@ export default function UsersPage() {
         </div>
       }
     >
-      <div className="mb-6 space-y-6">
+      <div className="mb-4 space-y-4 sm:mb-6 sm:space-y-6">
         <UserHeader
           pendingInvites={inviteCounts.pending}
           approvedInvites={inviteCounts.approved}
@@ -339,7 +339,7 @@ export default function UsersPage() {
         />
       </div>
 
-      <ScrollArea className="h-full w-full pr-4">
+      <ScrollArea className="h-full w-full pr-2 sm:pr-4">
         {isLoading ? (
           <UserGridSkeleton />
         ) : error ? (
@@ -350,7 +350,7 @@ export default function UsersPage() {
         ) : users.length === 0 ? (
           <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
         ) : (
-          <div className="grid grid-cols-1 gap-4 px-1 pt-2 pb-12 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 px-0.5 pt-1 pb-8 sm:gap-4 sm:pt-2 sm:pb-12 md:grid-cols-2 xl:grid-cols-3">
             {sortedUsers.map((user) => (
               <UserCard
                 key={user.id}
