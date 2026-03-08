@@ -74,9 +74,9 @@ export function UserCard({
         </div>
       )}
 
-      <div className="flex h-full flex-col p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex flex-1 items-start gap-4">
+      <div className="flex h-full flex-col p-3 sm:p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
             {/* Avatar with Status Badge */}
             <div className="relative">
               <Avatar className="border-background h-14 w-14 border-2 shadow-sm transition-transform group-hover:scale-105">
@@ -112,13 +112,19 @@ export function UserCard({
             </div>
 
             {/* User Info */}
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex items-center gap-2">
-                <h3 className="truncate font-semibold text-gray-900">
+            <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
+              <div className="flex min-w-0 items-center gap-2">
+                <h3
+                  className="min-w-0 truncate font-semibold text-gray-900"
+                  title={user.display_name || user.email.split("@")[0]}
+                >
                   {user.display_name || user.email.split("@")[0]}
                 </h3>
                 {isCurrentUser && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                  <Badge
+                    variant="secondary"
+                    className="h-5 shrink-0 px-1.5 text-[10px]"
+                  >
                     Moi
                   </Badge>
                 )}
@@ -141,51 +147,53 @@ export function UserCard({
             </div>
           </div>
 
-          {/* Action Menu */}
+          {/* Action Menu - shrink-0 keeps button top-right regardless of name length */}
           {!isCurrentUser && !isSuperAdmin && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:bg-muted h-8 w-8"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() =>
-                    onEdit({
-                      id: user.id,
-                      display_name:
-                        user.display_name || user.email.split("@")[0] || "",
-                    })
-                  }
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Modifier le nom
-                </DropdownMenuItem>
-                {onProfilePicture && (
-                  <DropdownMenuItem onClick={() => onProfilePicture(user)}>
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    Photo de profil
+            <div className="shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:bg-muted h-8 w-8"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" collisionPadding={16}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onEdit({
+                        id: user.id,
+                        display_name:
+                          user.display_name || user.email.split("@")[0] || "",
+                      })
+                    }
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Modifier le nom
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => onDelete(user)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  {onProfilePicture && (
+                    <DropdownMenuItem onClick={() => onProfilePicture(user)}>
+                      <ImageIcon className="mr-2 h-4 w-4" />
+                      Photo de profil
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => onDelete(user)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Supprimer
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
         </div>
 
         {/* Footer: Role Management */}
-        <div className="mt-5 flex items-center justify-between border-t pt-4">
+        <div className="mt-4 flex items-center justify-between border-t pt-3">
           <div className="flex items-center gap-2">
             <Shield className="text-muted-foreground h-3.5 w-3.5" />
             <span className="text-muted-foreground text-xs font-medium">
@@ -217,7 +225,7 @@ export function UserCard({
               <SelectTrigger className="bg-secondary/50 hover:bg-secondary h-7 w-[100px] border-none px-2 text-xs font-medium">
                 <SelectValue>{getRoleLabel(user.role)}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent collisionPadding={16}>
                 <SelectItem value="user">{getRoleLabel("user")}</SelectItem>
                 <SelectItem value="admin">{getRoleLabel("admin")}</SelectItem>
               </SelectContent>
