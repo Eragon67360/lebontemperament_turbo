@@ -75,6 +75,13 @@ const Footer = () => {
               Rejoindre
             </Link>
             <Link
+              href={"/don"}
+              aria-label="Faire un don à l'association"
+              className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
+            >
+              Faire un don
+            </Link>
+            <Link
               href={"/concerts"}
               aria-label="Aller à la page Nos Concerts"
               className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
