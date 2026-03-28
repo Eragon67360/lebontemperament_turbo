@@ -43,7 +43,7 @@ const faqData = [
   {
     question: "Comment rejoindre Le Bon Tempérament?",
     answer:
-      "Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Pour nous rejoindre, consultez notre page dédiée pour toutes les informations sur le processus d'adhésion, ou contactez-nous directement par email à lebontemperament@gmail.com ou par téléphone au (+33) 09 52 39 57 89. Nous serons ravis de vous accueillir et de discuter de votre intégration dans l'ensemble.",
+      "Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Pour nous rejoindre, consultez notre page dédiée pour toutes les informations sur le processus d'adhésion, ou contactez-nous directement par email à lebontemperament@gmail.com ou par téléphone au (+33) 06 89 68 74 82. Nous serons ravis de vous accueillir et de discuter de votre intégration dans l'ensemble.",
   },
   {
     question: "Faut-il avoir de l'expérience musicale pour rejoindre?",

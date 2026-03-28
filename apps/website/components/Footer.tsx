@@ -75,6 +75,13 @@ const Footer = () => {
               Rejoindre
             </Link>
             <Link
+              href={"/don"}
+              aria-label="Faire un don à l'association"
+              className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
+            >
+              Faire un don
+            </Link>
+            <Link
               href={"/concerts"}
               aria-label="Aller à la page Nos Concerts"
               className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
@@ -115,7 +122,7 @@ const Footer = () => {
                 aria-hidden="true"
               />
               <p className="text-left">
-                3 Rue Clémenceau,
+                3 Rue Clemenceau,
                 <br />
                 67700 SAVERNE, France
               </p>
@@ -143,11 +150,11 @@ const Footer = () => {
                 aria-hidden="true"
               />
               <a
-                href="tel:+33952395789"
+                href="tel:+33689687482"
                 aria-label="Appeler Le Bon Tempérament"
                 className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
               >
-                (+33) 09 52 39 57 89
+                (+33) 06 89 68 74 82
               </a>
             </div>
           </address>

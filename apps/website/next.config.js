@@ -143,6 +143,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["@heroui/react", "react-icons"],
   },
+  serverExternalPackages: ["@react-pdf/renderer"],
   compiler: {
     // eslint-disable-next-line no-undef
     removeConsole: process.env.NODE_ENV === "production",
