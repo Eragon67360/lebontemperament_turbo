@@ -48,7 +48,7 @@ const howToSchema = {
       "@type": "HowToStep",
       position: 1,
       name: "Contactez-nous",
-      text: "Prenez contact avec nous par email à lebontemperament@gmail.com ou par téléphone au (+33) 09 52 39 57 89 pour exprimer votre intérêt et poser vos questions.",
+      text: "Prenez contact avec nous par email à lebontemperament@gmail.com ou par téléphone au (+33) 06 89 68 74 82 pour exprimer votre intérêt et poser vos questions.",
     },
     {
       "@type": "HowToStep",
@@ -226,10 +226,10 @@ export default function RejoindrePage() {
                   </a>{" "}
                   ou par téléphone au{" "}
                   <a
-                    href="tel:+33952395789"
+                    href="tel:+33689687482"
                     className="text-primary font-medium hover:underline"
                   >
-                    (+33) 09 52 39 57 89
+                    (+33) 06 89 68 74 82
                   </a>
                   . Nous serons ravis de répondre à vos questions et de discuter
                   de votre intégration.

@@ -58,7 +58,7 @@ export default function Impressum() {
                   Téléphone :
                 </span>
                 <span className="text-foreground ml-2">
-                  (+33) 09 52 39 57 89
+                  (+33) 06 89 68 74 82
                 </span>
               </div>
               <div>

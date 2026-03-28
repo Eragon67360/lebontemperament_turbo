@@ -484,10 +484,10 @@ const ConcertPageClient: React.FC<ConcertPageClientProps> = ({
                             <li>
                               Nous appeler au{" "}
                               <a
-                                href="tel:+33952395789"
+                                href="tel:+33689687482"
                                 className="text-primary font-medium hover:underline"
                               >
-                                (+33) 09 52 39 57 89
+                                (+33) 06 89 68 74 82
                               </a>
                             </li>
                             <li>

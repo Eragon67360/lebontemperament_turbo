@@ -24,7 +24,7 @@ const Header = () => {
     foundingDate: "1987",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "3 Rue Clémenceau",
+      streetAddress: "3 Rue Clemenceau",
       addressLocality: "Saverne",
       postalCode: "67700",
       addressCountry: "FR",

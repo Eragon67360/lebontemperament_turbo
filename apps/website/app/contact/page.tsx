@@ -54,10 +54,10 @@ const Contact = () => {
           </a>
           <h3 className="text-foreground mt-2 font-bold">Téléphone</h3>
           <a
-            href="tel:+33952395789"
+            href="tel:+33689687482"
             className="text-foreground hover:text-primary"
           >
-            (+33) 09 52 39 57 89
+            (+33) 06 89 68 74 82
           </a>
           <h3 className="text-foreground mt-8 font-bold">
             Questions fréquentes
