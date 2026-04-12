@@ -554,7 +554,7 @@ const ConcertsClient = ({
                       </InfoRow>
                     </div>
                     {event.description && (
-                      <p className="text-default-500 dark:text-default-400 mt-4 line-clamp-4 text-sm whitespace-pre-wrap">
+                      <p className="text-default-500 dark:text-default-400 mt-4 text-sm whitespace-pre-wrap">
                         {event.description}
                       </p>
                     )}
