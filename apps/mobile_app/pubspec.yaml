@@ -2,7 +2,7 @@ name: lebontemperament
 description: "Application mobile du Bon Tempérament"
 publish_to: "none"
 
-version: 2.0.45+61
+version: 2.0.46+62
 environment:
   sdk: ">=3.9.0 <4.0.0"
 
