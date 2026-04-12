@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
 import {
   IoCalendarClearOutline,
@@ -122,18 +122,58 @@ const ConcertsClient = ({
   const [activeSection, setActiveSection] = useState<string>(navItems[0].id);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
+  const sectionIds = useMemo(
+    () => new Set<string>(navItems.map((item) => item.id)),
+    [navItems],
+  );
+
   // --- INTERACTION ---
   const handleImageClick = (imageUrl: string) => {
     setSelectedConcertImage(imageUrl);
     onOpen();
   };
 
-  const scrollToSection = (sectionId: string) => {
-    sectionRefs.current[sectionId]?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
+  const scrollToSection = useCallback(
+    (sectionId: string, scrollBehavior: ScrollBehavior = "smooth") => {
+      if (!sectionIds.has(sectionId)) return;
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}#${sectionId}`,
+      );
+      sectionRefs.current[sectionId]?.scrollIntoView({
+        behavior: scrollBehavior,
+        block: "start",
+      });
+      setActiveSection(sectionId);
+    },
+    [sectionIds],
+  );
+
+  useEffect(() => {
+    const scrollFromHash = () => {
+      const raw = window.location.hash.slice(1);
+      if (!raw) return;
+      let id: string;
+      try {
+        id = decodeURIComponent(raw);
+      } catch {
+        return;
+      }
+      if (!sectionIds.has(id)) return;
+      requestAnimationFrame(() => {
+        sectionRefs.current[id]?.scrollIntoView({
+          behavior: "auto",
+          block: "start",
+        });
+        setActiveSection(id);
+      });
+    };
+
+    scrollFromHash();
+    window.addEventListener("hashchange", scrollFromHash);
+    return () => window.removeEventListener("hashchange", scrollFromHash);
+  }, [sectionIds]);
 
   // --- SCROLLSPY ---
   useEffect(() => {
