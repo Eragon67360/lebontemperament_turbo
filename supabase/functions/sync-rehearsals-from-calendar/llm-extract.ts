@@ -4,6 +4,7 @@ import {
   type GoogleCalendarEvent,
   type LlmExtraction,
 } from "./types.ts";
+import { isAllDayEvent } from "./datetime.ts";
 
 const OPENAI_CHAT_COMPLETIONS_URL =
   "https://api.openai.com/v1/chat/completions";
@@ -16,7 +17,7 @@ est une RÉPÉTITION, puis extraire name, place et group_type.
 Règle de classification (is_rehearsal):
 - is_rehearsal = true UNIQUEMENT pour une répétition (travail musical de préparation).
   Indices: "répétition", "répét", "raccord", "filage", "atelier", "italienne",
-  "mise en place", "travail des pupitres".
+  "mise en place", "travail des pupitres", "Dimanche BT" (souvent journée entière).
 - is_rehearsal = false pour tout le reste, notamment:
   - les CONCERTS, représentations, spectacles, auditions publiques, prestations.
   - les sorties, réunions, assemblées générales (AG), apéros, repas, événements
@@ -67,7 +68,14 @@ Exemple 5 (réunion → exclu):
   summary: "Assemblée générale annuelle"
   description: ""
   location: "Salle paroissiale"
-  → { "is_rehearsal": false, "name": "Assemblée générale annuelle", "place": "Salle paroissiale", "group_type": "Tous" }`;
+  → { "is_rehearsal": false, "name": "Assemblée générale annuelle", "place": "Salle paroissiale", "group_type": "Tous" }
+
+Exemple 6 (Dimanche BT, journée entière → répétition):
+  summary: "Dimanche BT à Église Saint-Pierre"
+  description: ""
+  location: "Église Saint-Pierre"
+  start/end: journée entière (all-day)
+  → { "is_rehearsal": true, "name": "Dimanche BT", "place": "Église Saint-Pierre", "group_type": "Tous" }`;
 
 interface ChatCompletionResponse {
   choices?: Array<{
@@ -81,12 +89,21 @@ interface ChatCompletionResponse {
 }
 
 function userPrompt(event: GoogleCalendarEvent): string {
+  const allDay = isAllDayEvent(event.start);
+  const startLabel = allDay
+    ? `${event.start?.date ?? ""} (journée entière, Europe/Paris)`
+    : `${event.start?.dateTime ?? ""} (Europe/Paris)`;
+  const endLabel = allDay
+    ? `${event.end?.date ?? ""} (journée entière, Europe/Paris)`
+    : `${event.end?.dateTime ?? ""} (Europe/Paris)`;
+
   return [
     `summary: ${event.summary ?? ""}`,
     `description: ${event.description ?? ""}`,
     `location: ${event.location ?? ""}`,
-    `start: ${event.start?.dateTime ?? event.start?.date ?? ""} (Europe/Paris)`,
-    `end: ${event.end?.dateTime ?? event.end?.date ?? ""} (Europe/Paris)`,
+    `all_day: ${allDay}`,
+    `start: ${startLabel}`,
+    `end: ${endLabel}`,
   ].join("\n");
 }
 

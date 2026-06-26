@@ -64,7 +64,7 @@ export interface RehearsalUpsert {
 
 export interface SyncError {
   event_id?: string;
-  phase: "google" | "extract" | "write" | "log" | "auth";
+  phase: "google" | "extract" | "times" | "write" | "log" | "auth";
   message: string;
 }
 

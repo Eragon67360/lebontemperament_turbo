@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { addDays, getParisToday, parseParisDateTimes } from "./datetime.ts";
+import { addDays, getParisToday, isAllDayEvent } from "./datetime.ts";
 import { fetchCalendarEvents } from "./google-calendar.ts";
 import { extractRehearsalFields } from "./llm-extract.ts";
+import { resolveRehearsalTimes } from "./rehearsal-times.ts";
 import type {
   GoogleCalendarEvent,
   RehearsalRow,
@@ -220,6 +221,7 @@ serve(async (req) => {
         id: event.id,
         summary: event.summary ?? "",
         start: startISO(event),
+        all_day: isAllDayEvent(event.start),
         status: event.status ?? "confirmed",
       })),
     });
@@ -254,6 +256,7 @@ serve(async (req) => {
     let skippedCancelled = 0;
     let skippedUnchanged = 0;
     let skippedNonRehearsal = 0;
+    let skippedAllDayNoRule = 0;
 
     for (const event of googleEvents) {
       try {
@@ -268,7 +271,6 @@ serve(async (req) => {
           continue;
         }
 
-        const eventTimes = parseParisDateTimes(event.start, event.end);
         const existing = dbByEventId.get(event.id);
 
         if (!hasGoogleUpdate(existing, event)) {
@@ -301,8 +303,29 @@ serve(async (req) => {
           continue;
         }
 
+        const eventTimes = resolveRehearsalTimes(event);
+        if (!eventTimes) {
+          stats.skipped++;
+          skippedAllDayNoRule++;
+          stats.errors.push({
+            event_id: event.id,
+            phase: "times",
+            message:
+              "All-day rehearsal without a matching time rule (expected e.g. Dimanche BT).",
+          });
+          log("event_skipped", {
+            event_id: event.id,
+            summary: event.summary ?? "",
+            reason: "all_day_no_time_rule",
+            all_day: isAllDayEvent(event.start),
+          });
+          continue;
+        }
+
         upserts.push({
-          ...eventTimes,
+          date: eventTimes.date,
+          start_time: eventTimes.start_time,
+          end_time: eventTimes.end_time,
           name: extracted.name,
           place: extracted.place,
           group_type: extracted.group_type,
@@ -316,6 +339,8 @@ serve(async (req) => {
           date: eventTimes.date,
           start_time: eventTimes.start_time,
           end_time: eventTimes.end_time,
+          all_day: eventTimes.all_day,
+          time_rule: eventTimes.rule_id,
           operation: existing ? "update" : "create",
         });
       } catch (error) {
@@ -350,6 +375,7 @@ serve(async (req) => {
       skipped_cancelled: skippedCancelled,
       skipped_unchanged: skippedUnchanged,
       skipped_non_rehearsal: skippedNonRehearsal,
+      skipped_all_day_no_rule: skippedAllDayNoRule,
       errors: stats.errors.length,
     });
 

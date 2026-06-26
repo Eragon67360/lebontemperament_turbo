@@ -61,3 +61,17 @@ curl -X POST "$SUPABASE_URL/functions/v1/sync-rehearsals-from-calendar?mode=dry-
 ```bash
 supabase functions deploy sync-rehearsals-from-calendar
 ```
+
+## All-day rehearsals
+
+Google Calendar all-day events (`start.date`, no `dateTime`) cannot provide hours directly.
+After the LLM confirms `is_rehearsal`, known patterns get fixed default times in
+`rehearsal-times.ts`:
+
+| Pattern (summary) | Hours (Europe/Paris) |
+| ----------------- | -------------------- |
+| `Dimanche BT`     | 09:30 – 16:00        |
+
+Add new rules in `ALL_DAY_REHEARSAL_RULES` inside `rehearsal-times.ts`.
+All-day events classified as rehearsals but without a matching rule are skipped
+with `phase: "times"` in sync logs.

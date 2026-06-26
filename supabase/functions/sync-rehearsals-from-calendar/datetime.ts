@@ -55,6 +55,23 @@ export function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
+export function isAllDayEvent(start: GoogleCalendarDate | undefined): boolean {
+  return Boolean(start?.date && !start.dateTime);
+}
+
+/** Returns YYYY-MM-DD from a Google all-day event start. */
+export function parseAllDayDate(start: GoogleCalendarDate | undefined): string {
+  if (!start?.date) {
+    throw new Error("All-day event is missing start.date.");
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start.date)) {
+    throw new Error(`All-day event has invalid start.date: ${start.date}`);
+  }
+
+  return start.date;
+}
+
 export function parseParisDateTimes(
   start: GoogleCalendarDate | undefined,
   end: GoogleCalendarDate | undefined,
