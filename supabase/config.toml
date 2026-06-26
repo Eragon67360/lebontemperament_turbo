@@ -275,6 +275,9 @@ enabled = false
 # Obtain from https://clerk.com/setup/supabase
 # domain = "example.clerk.accounts.dev"
 
+[functions.sync-rehearsals-from-calendar]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Configure one of the supported request policies: `oneshot`, `per_worker`.

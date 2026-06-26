@@ -39,6 +39,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   useCreateRehearsal,
   useDeleteRehearsal,
   useRehearsals,
@@ -407,20 +413,40 @@ function RehearsalCard({
               </div>
             </div>
           </div>
-          <Badge
-            variant="outline"
-            className={cn(
-              "whitespace-nowrap",
-              getBadgeStyle(rehearsal.group_type),
+          <div className="flex flex-col items-end gap-2">
+            <Badge
+              variant="outline"
+              className={cn(
+                "whitespace-nowrap",
+                getBadgeStyle(rehearsal.group_type),
+              )}
+            >
+              {rehearsal.group_type === "Tous" ? (
+                <Users className="mr-1 h-3 w-3" />
+              ) : (
+                <Mic2 className="mr-1 h-3 w-3" />
+              )}
+              {rehearsal.group_type}
+            </Badge>
+            {rehearsal.event_id && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="outline"
+                      className="border-emerald-500/20 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                    >
+                      Synchronisé
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-64">
+                    Synchronisé avec Google Calendar. Les modifications
+                    manuelles peuvent être écrasées au prochain sync.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
-          >
-            {rehearsal.group_type === "Tous" ? (
-              <Users className="mr-1 h-3 w-3" />
-            ) : (
-              <Mic2 className="mr-1 h-3 w-3" />
-            )}
-            {rehearsal.group_type}
-          </Badge>
+          </div>
         </div>
 
         <div className="text-muted-foreground space-y-2 text-sm">
