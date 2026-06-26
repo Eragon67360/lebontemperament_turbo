@@ -25,4 +25,6 @@ export interface Rehearsal {
   group_type: GroupType;
   created_at: string;
   updated_at: string;
+  event_id?: string | null;
+  google_updated_at?: string | null;
 }
