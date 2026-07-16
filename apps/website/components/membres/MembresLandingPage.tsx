@@ -198,9 +198,7 @@ export const MembresLandingPage = () => {
   };
 
   return (
-    // LAYOUT FIX: 'min-h-screen' + 'justify-center' keeps content centered.
-    // Removed large py-padding to prevent unnecessary scrolling.
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden p-4 md:p-6 lg:p-8">
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-start overflow-x-hidden p-4 pt-8 pb-44 md:justify-center md:p-6 lg:p-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
         {/* Header Section */}
         <div className="mb-8 flex w-full flex-col items-center text-center md:mb-12">
@@ -208,7 +206,7 @@ export const MembresLandingPage = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="from-primary bg-gradient-to-r via-purple-500 to-pink-500 bg-clip-text text-3xl font-extrabold text-transparent md:text-5xl lg:text-6xl"
+            className="from-primary bg-linear-to-r via-purple-500 to-pink-500 bg-clip-text text-3xl font-extrabold wrap-break-word text-transparent md:text-5xl lg:text-6xl"
           >
             Bienvenue, {firstName}
           </motion.div>
