@@ -3,6 +3,7 @@ import { ConcertProject, DatabaseProject } from "@/types/projects";
 export function transformProjectForFrontend(
   dbProject: DatabaseProject,
 ): ConcertProject {
+  // `projects` is the legacy storage name for public concert stories.
   return {
     id: dbProject.id,
     name: dbProject.name,

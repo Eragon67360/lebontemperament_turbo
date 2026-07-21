@@ -1,4 +1,5 @@
-// app/api/projects/route.ts
+// Legacy endpoint for rich editorial concert stories.
+// The `projects` table name is retained for backward compatibility.
 import { DatabaseProject } from "@/types/projects";
 import { transformProjectForFrontend } from "@/utils/projects";
 import { createClient } from "@/utils/supabase/server";
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    // Transform database projects to frontend format
+    // Transform database records into the public concert-story format.
     const transformedProjects = Array.isArray(projects)
       ? projects.map((p: DatabaseProject) => transformProjectForFrontend(p))
       : [transformProjectForFrontend(projects as DatabaseProject)];

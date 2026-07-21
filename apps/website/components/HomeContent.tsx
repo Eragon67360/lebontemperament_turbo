@@ -286,11 +286,11 @@ const HomeContent = () => {
           </div>
         </motion.section>
 
-        {/* Projects Section */}
+        {/* Concert Stories Section */}
         <motion.section
           ref={projectsRef}
           className="bg-default-50 relative z-10 mt-[100dvh] flex w-full justify-center py-16"
-          aria-labelledby="projects-title"
+          aria-labelledby="concert-stories-title"
           initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
           animate={
             projectsInView
@@ -304,7 +304,7 @@ const HomeContent = () => {
         >
           <div className="w-full max-w-360 px-8 lg:px-24">
             <motion.h2
-              id="projects-title"
+              id="concert-stories-title"
               className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
@@ -312,8 +312,12 @@ const HomeContent = () => {
               }
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Nos derniers projets
+              Histoires de concerts
             </motion.h2>
+            <p className="text-default-600 dark:text-default-400 -mt-8 mb-8 max-w-2xl">
+              Retrouvez les programmes, les images et les coulisses des concerts
+              qui ont marqué notre ensemble.
+            </p>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={
@@ -331,13 +335,13 @@ const HomeContent = () => {
             >
               <Button
                 as={Link}
-                href="/concerts#projets"
+                href="/concerts#histoires"
                 color="primary"
                 radius="sm"
-                aria-label="Voir tous nos projets"
+                aria-label="Lire toutes nos histoires de concerts"
                 className="mx-auto"
               >
-                Voir tous nos projets <IoIosArrowRoundForward />
+                Toutes les histoires <IoIosArrowRoundForward />
               </Button>
             </motion.div>
           </div>

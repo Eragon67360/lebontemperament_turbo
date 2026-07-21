@@ -47,10 +47,10 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
       <NavbarItem>
         <Link
           href={RouteNames.CONCERTS.ROOT}
-          aria-label="Aller à la page Nos Concerts"
+          aria-label="Consulter l’agenda des concerts"
           className={getLinkClassName("/concerts")}
         >
-          Nos prochains concerts
+          Agenda
         </Link>
       </NavbarItem>
       <NavbarItem>

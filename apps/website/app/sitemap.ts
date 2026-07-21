@@ -89,7 +89,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Fetch projects from database
+  // Fetch legacy project records used as editorial concert-story pages.
   let dynamicRoutes: MetadataRoute.Sitemap = [];
   try {
     // Use admin client for sitemap generation (no cookies needed)

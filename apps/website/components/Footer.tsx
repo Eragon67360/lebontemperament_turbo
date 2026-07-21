@@ -83,10 +83,10 @@ const Footer = () => {
             </Link>
             <Link
               href={"/concerts"}
-              aria-label="Aller à la page Nos Concerts"
+              aria-label="Consulter l’agenda des concerts"
               className="hover:text-primary dark:hover:text-primary transition-colors duration-200"
             >
-              Nos concerts
+              Agenda
             </Link>
             <Link
               href={"/contact"}
