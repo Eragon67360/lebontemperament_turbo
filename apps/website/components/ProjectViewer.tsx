@@ -1,247 +1,97 @@
 "use client";
+
 import { ConcertProject } from "@/types/projects";
-import { Button } from "@heroui/react";
+import { Button, Skeleton } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
+import { IoImageOutline } from "react-icons/io5";
 
 const ProjectViewer = () => {
-  const [projects, setProjects] = useState<ConcertProject[]>([]);
+  const [stories, setStories] = useState<ConcertProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchStories = async () => {
       try {
         const response = await fetch("/api/projects");
-        if (!response.ok) throw new Error("Failed to fetch projects");
+        if (!response.ok) throw new Error("Failed to fetch concert stories");
         const data = await response.json();
-        setProjects(Array.isArray(data) ? data : []);
+        setStories(Array.isArray(data) ? data.slice(0, 4) : []);
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        console.error("Error fetching concert stories:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProjects();
+    fetchStories();
   }, []);
 
-  // Sort projects by date (newest first) and take the latest 4
-  const latestProjects = projects
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 4);
-
   if (loading) {
-    return <div className="w-full">Chargement...</div>;
+    return (
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {[0, 1, 2, 3].map((item) => (
+          <Skeleton key={item} className="h-72 rounded-xl" />
+        ))}
+      </div>
+    );
   }
 
   return (
-    <div className="w-full">
-      <div className="my-8 flex flex-col">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-1">
-            <div className="border-divider bg-background block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
-              <Link
-                href={`/concerts/${latestProjects[0]?.slug || ""}`}
-                className="block"
-              >
-                <div className="relative !h-32 overflow-hidden">
-                  <Image
-                    src={latestProjects[0]?.image || ""}
-                    alt={latestProjects[0]?.name || ""}
-                    fill
-                    className="rounded-lg object-cover"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                </div>
-                <div className="space-y-3 p-4">
-                  <div className="flex items-start justify-between">
-                    <h4 className="text-foreground overflow-hidden text-lg font-semibold">
-                      <span className="block truncate">
-                        {latestProjects[0]?.name || ""}{" "}
-                        {latestProjects[0]?.subName || ""}
-                      </span>
-                    </h4>
-                    <span className="bg-primary/10 text-primary ml-2 inline-block rounded-full px-3 py-1 text-xs font-medium">
-                      {latestProjects[0]?.date
-                        ? new Date(latestProjects[0].date).getFullYear()
-                        : ""}
-                    </span>
-                  </div>
-                  <p className="text-default-600 line-clamp-4 overflow-hidden text-sm">
-                    {latestProjects[0]?.explanation || ""}
-                  </p>
-                </div>
-              </Link>
-              <div className="px-4 pb-4">
-                <Button
-                  as={Link}
-                  href={`/concerts/${latestProjects[0]?.slug || ""}`}
-                  color="primary"
-                  variant="light"
-                  radius="sm"
-                  size="sm"
-                  className="flex w-fit items-center gap-2"
-                >
-                  <span className="text-sm">Voir plus</span>
-                  <IoIosArrowRoundForward className="scale-110" />
-                </Button>
-              </div>
-            </div>
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {stories.map((story) => (
+        <article
+          key={story.slug}
+          className="border-divider bg-background group grid overflow-hidden rounded-xl border sm:grid-cols-[180px_1fr]"
+        >
+          <Link
+            href={`/concerts/${story.slug}`}
+            className="bg-default-100 relative min-h-44 overflow-hidden"
+            aria-label={`Lire l’histoire de ${story.name}`}
+          >
+            {story.image ? (
+              <Image
+                src={story.image}
+                alt={`Image de ${story.name}`}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                sizes="(max-width: 640px) 100vw, 180px"
+              />
+            ) : (
+              <span className="text-default-400 flex h-full items-center justify-center">
+                <IoImageOutline className="size-10" aria-hidden="true" />
+              </span>
+            )}
+          </Link>
+          <div className="flex flex-col p-5">
+            <span className="text-primary text-xs font-semibold tracking-[0.16em] uppercase">
+              {new Date(story.date).getFullYear()}
+            </span>
+            <h3 className="text-foreground mt-2 line-clamp-2 text-lg font-bold">
+              {story.name} {story.subName || ""}
+            </h3>
+            {story.explanation && (
+              <p className="text-default-600 dark:text-default-400 mt-3 line-clamp-3 grow text-sm">
+                {story.explanation}
+              </p>
+            )}
+            <Button
+              as={Link}
+              href={`/concerts/${story.slug}`}
+              variant="light"
+              color="primary"
+              radius="sm"
+              size="sm"
+              className="mt-4 w-fit"
+              endContent={<IoIosArrowRoundForward aria-hidden="true" />}
+            >
+              Lire l’histoire
+            </Button>
           </div>
-
-          <div className="lg:col-span-2">
-            <div className="border-divider bg-background flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
-              <Link
-                href={`/concerts/${latestProjects[1]?.slug || ""}`}
-                className="relative h-32 w-full md:h-full md:w-1/2"
-              >
-                <Image
-                  src={latestProjects[1]?.image || ""}
-                  alt={latestProjects[1]?.name || ""}
-                  fill
-                  className="self-start rounded-lg object-cover object-left"
-                  sizes="(max-width: 768px) 100vw, 66vw"
-                />
-              </Link>
-              <div className="w-full space-y-3 p-4 lg:w-1/2">
-                <div className="flex items-start justify-between">
-                  <h4 className="text-foreground overflow-hidden text-lg font-semibold">
-                    <span className="block truncate">
-                      {latestProjects[1]?.name || ""}{" "}
-                      {latestProjects[1]?.subName || ""}
-                    </span>
-                  </h4>
-                  <span className="bg-primary/10 text-primary ml-2 inline-block rounded-full px-3 py-1 text-xs font-medium">
-                    {latestProjects[1]?.date
-                      ? new Date(latestProjects[1].date).getFullYear()
-                      : ""}
-                  </span>
-                </div>
-                <p
-                  className="text-default-600 line-clamp-6 overflow-hidden text-sm"
-                  dangerouslySetInnerHTML={{
-                    __html: latestProjects[1]?.explanation || "",
-                  }}
-                ></p>
-                <Button
-                  as={Link}
-                  href={`/concerts/${latestProjects[1]?.slug || ""}`}
-                  color="primary"
-                  variant="light"
-                  radius="sm"
-                  size="sm"
-                  className="flex w-fit items-center gap-2"
-                >
-                  <span className="text-sm">Voir plus</span>
-                  <IoIosArrowRoundForward className="scale-110" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            <div className="border-divider bg-background flex h-full grow flex-col items-center gap-8 overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md md:flex-row">
-              <Link
-                href={`/concerts/${latestProjects[2]?.slug || ""}`}
-                className="relative h-32 w-full md:h-full md:w-1/2"
-              >
-                <Image
-                  src={latestProjects[2]?.image || ""}
-                  alt={latestProjects[2]?.name || ""}
-                  fill
-                  className="self-start rounded-lg object-cover object-left"
-                  sizes="(max-width: 768px) 100vw, 66vw"
-                />
-              </Link>
-              <div className="w-full space-y-3 p-4 lg:w-1/2">
-                <div className="flex items-start justify-between">
-                  <h4 className="text-foreground overflow-hidden text-lg font-semibold">
-                    <span className="block truncate">
-                      {latestProjects[2]?.name || ""}{" "}
-                      {latestProjects[2]?.subName || ""}
-                    </span>
-                  </h4>
-                  <span className="bg-primary/10 text-primary ml-2 inline-block rounded-full px-3 py-1 text-xs font-medium">
-                    {latestProjects[2]?.date
-                      ? new Date(latestProjects[2].date).getFullYear()
-                      : ""}
-                  </span>
-                </div>
-                <p
-                  className="text-default-600 line-clamp-6 overflow-hidden text-sm"
-                  dangerouslySetInnerHTML={{
-                    __html: latestProjects[2]?.explanation || "",
-                  }}
-                ></p>
-                <Button
-                  as={Link}
-                  href={`/concerts/${latestProjects[2]?.slug || ""}`}
-                  color="primary"
-                  variant="light"
-                  radius="sm"
-                  size="sm"
-                  className="flex w-fit items-center gap-2"
-                >
-                  <span className="text-sm">Voir plus</span>
-                  <IoIosArrowRoundForward className="scale-110" />
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="lg:col-span-1">
-            <div className="border-divider bg-background block overflow-hidden rounded-lg border p-4 shadow-none transition-all duration-300 hover:shadow-md">
-              <Link
-                href={`/concerts/${latestProjects[3]?.slug || ""}`}
-                className="block"
-              >
-                <div className="relative h-32">
-                  <Image
-                    src={latestProjects[3]?.image || ""}
-                    alt={latestProjects[3]?.name || ""}
-                    fill
-                    className="rounded-lg object-cover"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                </div>
-                <div className="space-y-3 p-4">
-                  <div className="flex items-start justify-between">
-                    <h4 className="text-foreground overflow-hidden text-lg font-semibold">
-                      <span className="block truncate">
-                        {latestProjects[3]?.name || ""}{" "}
-                        {latestProjects[3]?.subName || ""}
-                      </span>
-                    </h4>
-                    <span className="bg-primary/10 text-primary ml-2 inline-block rounded-full px-3 py-1 text-xs font-medium">
-                      {latestProjects[3]?.date
-                        ? new Date(latestProjects[3].date).getFullYear()
-                        : ""}
-                    </span>
-                  </div>
-                  <p className="text-default-600 line-clamp-4 overflow-hidden text-sm">
-                    {latestProjects[3]?.explanation || ""}
-                  </p>
-                </div>
-              </Link>
-              <div className="px-4 pb-4">
-                <Button
-                  as={Link}
-                  href={`/concerts/${latestProjects[3]?.slug || ""}`}
-                  color="primary"
-                  variant="light"
-                  radius="sm"
-                  size="sm"
-                  className="flex w-fit items-center gap-2"
-                >
-                  <span className="text-sm">Voir plus</span>
-                  <IoIosArrowRoundForward className="scale-110" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        </article>
+      ))}
     </div>
   );
 };

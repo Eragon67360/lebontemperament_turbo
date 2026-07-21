@@ -18,7 +18,8 @@ export interface PressArticle {
   source: string;
 }
 
-// Database project type (from Supabase)
+// Rich editorial concert story stored in the legacy `projects` table.
+// This is distinct from a dated agenda occurrence in `concerts`.
 export interface DatabaseProject {
   id: string;
   name: string;
@@ -45,7 +46,7 @@ export interface DatabaseProject {
   updated_at: string;
 }
 
-// Frontend project type (transformed from database)
+// Public concert-story model used by editorial detail pages.
 export interface ConcertProject {
   id: string;
   name: string;

@@ -26,7 +26,7 @@ const MainMenuLinks: React.FC<MainMenuLinksProps> = ({ user, isLoading }) => {
           className="w-full"
           color="foreground"
         >
-          Nos prochains concerts
+          Agenda
         </Link>
       </NavbarMenuItem>
       <NavbarMenuItem>

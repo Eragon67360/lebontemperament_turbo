@@ -1,14 +1,15 @@
 import ConcertsClient from "@/components/concerts/ConcertsClient";
-import { ConcertProject, DatabaseProject } from "@/types/projects";
+import { Concert } from "@/types/concerts";
+import { DatabaseProject } from "@/types/projects";
 import { transformProjectForFrontend } from "@/utils/projects";
 import { createClient } from "@/utils/supabase/server";
 import type { Metadata } from "next";
 
 // --- Metadata Configuration ---
 export const metadata: Metadata = {
-  title: "Concerts - Le Bon Tempérament",
+  title: "Agenda des concerts",
   description:
-    "Découvrez tous les concerts et événements de l'ensemble vocal et instrumental Le Bon Tempérament à Saverne. Musique classique, opéra baroque et tournées musicales depuis 1987.",
+    "Consultez les prochains concerts, tournées et rendez-vous publics du Bon Tempérament à Saverne, puis découvrez les histoires de nos concerts.",
   keywords:
     "concerts musique classique Saverne, événements musicaux Alsace, opéra baroque, tournées musicales, Le Bon Tempérament concerts",
   openGraph: {
@@ -16,15 +17,15 @@ export const metadata: Metadata = {
     locale: "fr_FR",
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts`,
     siteName: "Le Bon Tempérament",
-    title: "Concerts - Le Bon Tempérament",
+    title: "Agenda des concerts - Le Bon Tempérament",
     description:
-      "Découvrez tous les concerts et événements de l'ensemble vocal et instrumental Le Bon Tempérament.",
+      "Prochains concerts, tournées et rendez-vous publics du Bon Tempérament.",
     images: [
       {
         url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
         width: 800,
         height: 600,
-        alt: "Concerts Le Bon Tempérament",
+        alt: "Agenda des concerts du Bon Tempérament",
       },
     ],
   },
@@ -33,14 +34,20 @@ export const metadata: Metadata = {
   },
 };
 
-// --- Helper: Generate Schema.org JSON-LD ---
-function generateSchema(projects: ConcertProject[]) {
-  const concerts = projects.map((project) => ({
+// Generate structured data from actual upcoming agenda occurrences.
+function generateSchema(concerts: Concert[]) {
+  const musicEvents = concerts.map((concert) => ({
     "@type": "MusicEvent",
-    name: `${project.name} ${project.subName || ""}`,
-    url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${project.slug}`,
-    startDate: project.date,
-    description: project.explanation,
+    name: concert.name || `Concert à ${concert.place}`,
+    url:
+      concert.related_link ||
+      `${process.env.NEXT_PUBLIC_BASE_URL}/concerts#agenda`,
+    startDate: `${concert.date}T${concert.time}`,
+    description: concert.additional_informations || undefined,
+    location: {
+      "@type": "Place",
+      name: concert.place,
+    },
     organizer: {
       "@type": "Organization",
       name: "Le Bon Tempérament",
@@ -52,19 +59,20 @@ function generateSchema(projects: ConcertProject[]) {
       description: "Ensemble vocal et instrumental",
     },
     eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
   }));
 
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Concerts - Le Bon Tempérament",
+    name: "Agenda des concerts - Le Bon Tempérament",
     description:
-      "Collection de concerts et événements musicaux de l'ensemble vocal et instrumental Le Bon Tempérament à Saverne, Alsace",
+      "Prochains concerts et tournées de l'ensemble vocal et instrumental Le Bon Tempérament",
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts`,
     mainEntity: {
       "@type": "ItemList",
-      numberOfItems: concerts.length,
-      itemListElement: concerts.map((concert, index) => ({
+      numberOfItems: musicEvents.length,
+      itemListElement: musicEvents.map((concert, index) => ({
         "@type": "ListItem",
         position: index + 1,
         item: concert,
@@ -116,6 +124,7 @@ async function getPageData() {
       .from("events")
       .select("*")
       .gte("date_from", today)
+      .eq("is_public", true)
       .order("date_from", { ascending: true }),
 
     // Rehearsals: From today onwards
@@ -141,12 +150,11 @@ async function getPageData() {
 }
 
 // --- Main Page Component ---
-const Projets = async () => {
+const ConcertsPage = async () => {
   // Fetch data on the server
   const { projects, concerts, tours, events, rehearsals } = await getPageData();
 
-  // Generate schema using the fetched projects
-  const collectionSchema = generateSchema(projects);
+  const collectionSchema = generateSchema(concerts);
 
   return (
     <>
@@ -165,4 +173,4 @@ const Projets = async () => {
   );
 };
 
-export default Projets;
+export default ConcertsPage;

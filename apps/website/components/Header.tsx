@@ -69,7 +69,7 @@ const Header = () => {
   // Helper function to get page title
   const getPageTitle = (path: string): string => {
     const titleMap: { [key: string]: string } = {
-      "/concerts": "Nos Concerts",
+      "/concerts": "Agenda des concerts",
       "/concerts/autres": "CDs",
       "/decouvrir": "Nous Découvrir",
       "/galerie": "Galerie",
@@ -79,6 +79,7 @@ const Header = () => {
       "/membres": "Espace Membres",
     };
 
+    if (path.startsWith("/concerts/")) return "Histoire de concert";
     return titleMap[path] || "Page";
   };
 
