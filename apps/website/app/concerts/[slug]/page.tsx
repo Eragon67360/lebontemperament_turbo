@@ -42,9 +42,8 @@ export async function generateMetadata({
 
     if (!dbProject) {
       return {
-        title: "Concert non trouvé",
-        description:
-          "Le concert n'a pas pu être trouvé dans la base de données",
+        title: "Histoire de concert non trouvée",
+        description: "Cette histoire de concert n'a pas pu être trouvée.",
         alternates: {
           canonical: `/concerts/404`,
         },
@@ -83,8 +82,8 @@ export async function generateMetadata({
   } catch (error) {
     console.error("Error generating metadata:", error);
     return {
-      title: "Concert non trouvé",
-      description: "Le concert n'a pas pu être trouvé dans la base de données",
+      title: "Histoire de concert non trouvée",
+      description: "Cette histoire de concert n'a pas pu être trouvée.",
       alternates: {
         canonical: `/concerts/404`,
       },
@@ -92,53 +91,7 @@ export async function generateMetadata({
   }
 }
 
-// Generate structured data for events
-function generateEventSchema(project: ConcertProject, slug: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "MusicEvent",
-    name: `${project.name} ${project.subName}`,
-    description: project.explanation,
-    url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
-    startDate: project.date,
-    organizer: {
-      "@type": "Organization",
-      name: "Le Bon Tempérament",
-      url: process.env.NEXT_PUBLIC_BASE_URL,
-    },
-    performer: {
-      "@type": "MusicGroup",
-      name: "Le Bon Tempérament",
-      description: "Ensemble vocal et instrumental",
-    },
-    eventStatus: "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    inLanguage: "fr-FR",
-    location: {
-      "@type": "Place",
-      name: "Saverne, France",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Saverne",
-        addressCountry: "FR",
-      },
-    },
-    offers: {
-      "@type": "Offer",
-      availability: "https://schema.org/InStock",
-      price: "0",
-      priceCurrency: "EUR",
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/contact`,
-    },
-    keywords: "musique classique, opéra, baroque, concert, Saverne, Alsace",
-    audience: {
-      "@type": "Audience",
-      audienceType: "Tous publics",
-    },
-  };
-}
-
-// Generate Article schema for concert pages
+// Rich project records are editorial concert stories, not agenda occurrences.
 function generateArticleSchema(project: ConcertProject, slug: string) {
   const articleUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`;
 
@@ -154,8 +107,6 @@ function generateArticleSchema(project: ConcertProject, slug: string) {
       "@type": project.author ? "Person" : "Organization",
       name: project.author?.name || "Le Bon Tempérament",
     },
-    datePublished: project.date,
-    dateModified: project.date, // Using date as modified date since no updatedAt field
     publisher: {
       "@type": "Organization",
       name: "Le Bon Tempérament",
@@ -261,10 +212,10 @@ export default async function ConcertPage({
       return (
         <div className="dark:bg-background flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
           <h1 className="text-foreground text-4xl font-bold">
-            Concert non trouvé
+            Histoire de concert non trouvée
           </h1>
           <p className="text-default-600 dark:text-default-400 mt-4 text-lg">
-            Désolé, le concert que vous recherchez n&apos;existe pas ou
+            Désolé, l&apos;histoire que vous recherchez n&apos;existe pas ou
             n&apos;est plus disponible.
           </p>
           <Link
@@ -272,7 +223,7 @@ export default async function ConcertPage({
             className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
           >
             <IoIosArrowRoundBack className="text-xl" />
-            Retourner aux concerts
+            Retour à l&apos;agenda
           </Link>
         </div>
       );
@@ -296,17 +247,10 @@ export default async function ConcertPage({
     // Find related projects
     const relatedProjects = findRelatedProjects(project, allProjects, 3);
 
-    const eventSchema = generateEventSchema(project, slug);
     const articleSchema = generateArticleSchema(project, slug);
 
     return (
       <>
-        {/* MusicEvent Schema */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}
-        />
-        {/* Article Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
@@ -323,14 +267,14 @@ export default async function ConcertPage({
       <div className="dark:bg-background flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
         <h1 className="text-foreground text-4xl font-bold">Erreur</h1>
         <p className="text-default-600 dark:text-default-400 mt-4 text-lg">
-          Une erreur est survenue lors du chargement du concert.
+          Une erreur est survenue lors du chargement de cette histoire.
         </p>
         <Link
           href="/concerts"
           className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
         >
           <IoIosArrowRoundBack className="text-xl" />
-          Retourner aux concerts
+          Retour à l&apos;agenda
         </Link>
       </div>
     );

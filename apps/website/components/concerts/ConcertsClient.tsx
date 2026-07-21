@@ -1,7 +1,7 @@
 "use client";
 
-import CloudinaryImage from "@/components/CloudinaryImage"; // Check this path relative to your folder structure
-import { Concert, Tour } from "@/types/concerts";
+import CloudinaryImage from "@/components/CloudinaryImage";
+import { Concert, Context, Tour } from "@/types/concerts";
 import { Event } from "@/types/events";
 import { ConcertProject } from "@/types/projects";
 import { Rehearsal } from "@/types/rehearsals";
@@ -28,10 +28,10 @@ import {
   IoImageOutline,
   IoLocationOutline,
   IoMusicalNotesOutline,
+  IoPeopleOutline,
   IoTimeOutline,
 } from "react-icons/io5";
 
-// --- Interfaces ---
 interface ConcertsClientProps {
   initialConcerts: Concert[];
   initialEvents: Event[];
@@ -40,52 +40,174 @@ interface ConcertsClientProps {
   initialProjects: ConcertProject[];
 }
 
-// --- Reusable Components ---
+const contextLabels: Record<Context, string> = {
+  orchestre: "Orchestre",
+  choeur: "Chœur",
+  orchestre_et_choeur: "Orchestre et chœur",
+  autre: "Autre",
+};
+
+const eventTypeLabels: Record<Event["event_type"], string> = {
+  concert: "Concert",
+  repetition: "Répétition",
+  sejour: "Séjour",
+  vente: "Vente",
+  autre: "Autre",
+};
+
 const InfoRow = ({
   icon: Icon,
   children,
+  emphasis = false,
 }: {
   icon: React.ElementType;
   children: React.ReactNode;
+  emphasis?: boolean;
 }) => (
-  <div className="flex items-center gap-3 text-sm">
-    <Icon className="text-primary h-5 w-5 shrink-0" />
-    <span className="text-default-500 dark:text-default-400">{children}</span>
+  <div
+    className={`flex items-center gap-3 text-sm ${
+      emphasis
+        ? "text-foreground font-medium"
+        : "text-default-600 dark:text-default-400"
+    }`}
+  >
+    <Icon className="text-primary h-5 w-5 shrink-0" aria-hidden="true" />
+    <span>{children}</span>
   </div>
 );
 
-const EmptyState = ({
-  icon: Icon,
-  title,
-  message,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  message: string;
-  children?: React.ReactNode;
-}) => (
-  <div className="border-divider bg-default-50/50 flex flex-col items-center justify-center rounded-2xl border border-dashed py-16 text-center">
-    <div className="bg-primary/10 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-      <Icon className="text-primary h-8 w-8" />
+const EmptyState = ({ title, message }: { title: string; message: string }) => (
+  <div className="border-divider bg-default-50/60 flex flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-14 text-center">
+    <div className="bg-primary/10 mb-4 flex size-14 items-center justify-center rounded-full">
+      <IoMusicalNotesOutline
+        className="text-primary size-7"
+        aria-hidden="true"
+      />
     </div>
     <h3 className="text-foreground text-xl font-semibold">{title}</h3>
-    <p className="text-default-500 dark:text-default-400 mt-2 max-w-md">
+    <p className="text-default-600 dark:text-default-400 mt-2 max-w-lg">
       {message}
     </p>
-    {children && <div className="mt-6">{children}</div>}
   </div>
 );
 
-const getEventTypeLabel = (type: string) => {
-  const labels: Record<string, string> = {
-    concert: "Concert",
-    repetition: "Répétition",
-    sejour: "Séjour",
-    vente: "Vente",
-    autre: "Autre",
-  };
-  return labels[type] || type;
+const ConcertCard = ({
+  concert,
+  featured = false,
+  showPoster = true,
+  onPosterClick,
+}: {
+  concert: Concert;
+  featured?: boolean;
+  showPoster?: boolean;
+  onPosterClick: (image: string) => void;
+}) => {
+  const title = concert.name || `Concert à ${concert.place}`;
+
+  return (
+    <article
+      className={`border-divider bg-background group overflow-hidden rounded-2xl border ${
+        featured && showPoster
+          ? "grid md:grid-cols-[minmax(220px,0.8fr)_1.2fr]"
+          : "flex h-full flex-col"
+      }`}
+    >
+      {showPoster && (
+        <button
+          type="button"
+          onClick={() => concert.affiche && onPosterClick(concert.affiche)}
+          disabled={!concert.affiche}
+          aria-label={
+            concert.affiche
+              ? `Voir l’affiche de ${title}`
+              : `Aucune affiche disponible pour ${title}`
+          }
+          className={`bg-default-100 relative w-full overflow-hidden ${
+            featured ? "min-h-64 md:min-h-full" : "h-44"
+          } ${concert.affiche ? "cursor-zoom-in" : "cursor-default"}`}
+        >
+          {concert.affiche ? (
+            <Image
+              src={concert.affiche}
+              alt={`Affiche de ${title}`}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              sizes={
+                featured
+                  ? "(max-width: 768px) 100vw, 40vw"
+                  : "(max-width: 768px) 100vw, 33vw"
+              }
+            />
+          ) : (
+            <span className="text-default-400 flex h-full flex-col items-center justify-center gap-2 text-xs">
+              <IoImageOutline className="size-9" aria-hidden="true" />
+              Affiche à venir
+            </span>
+          )}
+        </button>
+      )}
+
+      <div
+        className={`flex flex-1 flex-col ${featured ? "p-7 md:p-10" : "p-6"}`}
+      >
+        {featured && (
+          <span className="text-primary mb-4 text-xs font-semibold tracking-[0.18em] uppercase">
+            Prochain rendez-vous
+          </span>
+        )}
+        <h3
+          className={`text-foreground font-bold ${
+            featured ? "text-3xl md:text-4xl" : "text-xl"
+          }`}
+        >
+          {title}
+        </h3>
+        <div className={`space-y-3 ${featured ? "mt-7" : "mt-5"}`}>
+          <InfoRow icon={IoCalendarClearOutline} emphasis={featured}>
+            {format(new Date(concert.date), "EEEE d MMMM yyyy", {
+              locale: fr,
+            })}
+          </InfoRow>
+          <InfoRow icon={IoTimeOutline}>
+            {concert.time.slice(0, 5).replace(":", "h")}
+          </InfoRow>
+          <InfoRow icon={IoLocationOutline}>{concert.place}</InfoRow>
+        </div>
+
+        {concert.additional_informations && (
+          <p className="text-default-600 dark:text-default-400 mt-5 text-sm whitespace-pre-wrap">
+            {concert.additional_informations}
+          </p>
+        )}
+
+        <div className="mt-auto flex flex-wrap gap-3 pt-7">
+          {concert.related_link && (
+            <Button
+              as={Link}
+              href={concert.related_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              color="primary"
+              radius="sm"
+              endContent={<IoGlobeOutline aria-hidden="true" />}
+            >
+              Informations et réservation
+            </Button>
+          )}
+          {concert.affiche && (
+            <Button
+              variant="bordered"
+              radius="sm"
+              onPress={() => onPosterClick(concert.affiche as string)}
+              startContent={<IoEyeOutline aria-hidden="true" />}
+            >
+              Voir l’affiche
+            </Button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
 };
 
 const ConcertsClient = ({
@@ -95,46 +217,52 @@ const ConcertsClient = ({
   initialTours,
   initialProjects,
 }: ConcertsClientProps) => {
-  // --- STATE ---
-  // Initialize state with Server-Side Data
-  const [concerts] = useState<Array<Concert>>(initialConcerts);
-  const [events] = useState<Array<Event>>(initialEvents);
-  const [rehearsals] = useState<Array<Rehearsal>>(initialRehearsals);
-  const [tours] = useState<Array<Tour>>(initialTours);
-  const [projects] = useState<Array<ConcertProject>>(initialProjects);
+  const concerts = useMemo(
+    () =>
+      [...initialConcerts].sort(
+        (a, b) =>
+          new Date(`${a.date}T${a.time}`).getTime() -
+          new Date(`${b.date}T${b.time}`).getTime(),
+      ),
+    [initialConcerts],
+  );
+  const events = initialEvents;
+  const rehearsals = initialRehearsals;
+  const tours = initialTours;
+  const stories = useMemo(
+    () =>
+      [...initialProjects].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
+    [initialProjects],
+  );
 
-  const [selectedConcertImage, setSelectedConcertImage] = useState<
-    string | null
-  >(null);
+  const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const navItems = useMemo(
     () =>
       [
-        { id: "concerts", label: "Concerts" },
-        { id: "projets", label: "Projets" },
-        { id: "evenements", label: "Événements" },
-        { id: "repetitions", label: "Répétitions" },
+        { id: "agenda", label: "À venir" },
+        { id: "histoires", label: "Histoires de concerts" },
+        { id: "evenements", label: "Autres rendez-vous" },
       ] as const,
     [],
   );
-
   const [activeSection, setActiveSection] = useState<string>(navItems[0].id);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-
   const sectionIds = useMemo(
     () => new Set<string>(navItems.map((item) => item.id)),
     [navItems],
   );
 
-  // --- INTERACTION ---
-  const handleImageClick = (imageUrl: string) => {
-    setSelectedConcertImage(imageUrl);
+  const openPoster = (poster: string) => {
+    setSelectedPoster(poster);
     onOpen();
   };
 
   const scrollToSection = useCallback(
-    (sectionId: string, scrollBehavior: ScrollBehavior = "smooth") => {
+    (sectionId: string, behavior: ScrollBehavior = "smooth") => {
       if (!sectionIds.has(sectionId)) return;
       window.history.replaceState(
         null,
@@ -142,7 +270,7 @@ const ConcertsClient = ({
         `${window.location.pathname}${window.location.search}#${sectionId}`,
       );
       sectionRefs.current[sectionId]?.scrollIntoView({
-        behavior: scrollBehavior,
+        behavior,
         block: "start",
       });
       setActiveSection(sectionId);
@@ -151,22 +279,31 @@ const ConcertsClient = ({
   );
 
   useEffect(() => {
+    const legacyHashes: Record<string, string> = {
+      concerts: "agenda",
+      projets: "histoires",
+    };
+
     const scrollFromHash = () => {
-      const raw = window.location.hash.slice(1);
-      if (!raw) return;
-      let id: string;
+      const rawHash = window.location.hash.slice(1);
+      if (!rawHash) return;
+
+      let decodedHash: string;
       try {
-        id = decodeURIComponent(raw);
+        decodedHash = decodeURIComponent(rawHash);
       } catch {
         return;
       }
-      if (!sectionIds.has(id)) return;
+
+      const sectionId = legacyHashes[decodedHash] || decodedHash;
+      if (!sectionIds.has(sectionId)) return;
+
       requestAnimationFrame(() => {
-        sectionRefs.current[id]?.scrollIntoView({
+        sectionRefs.current[sectionId]?.scrollIntoView({
           behavior: "auto",
           block: "start",
         });
-        setActiveSection(id);
+        setActiveSection(sectionId);
       });
     };
 
@@ -175,514 +312,480 @@ const ConcertsClient = ({
     return () => window.removeEventListener("hashchange", scrollFromHash);
   }, [sectionIds]);
 
-  // --- SCROLLSPY ---
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-            break;
-          }
-        }
+        const visibleEntry = entries.find((entry) => entry.isIntersecting);
+        if (visibleEntry) setActiveSection(visibleEntry.target.id);
       },
-      { rootMargin: "-30% 0px -70% 0px" },
+      { rootMargin: "-25% 0px -65% 0px" },
     );
 
-    Object.values(sectionRefs.current).forEach((el) => {
-      if (el) observer.observe(el);
+    Object.values(sectionRefs.current).forEach((element) => {
+      if (element) observer.observe(element);
     });
 
     return () => observer.disconnect();
   }, []);
 
-  // --- DERIVED DATA ---
-  const standaloneConcerts = concerts.filter((c) => !c.tour_id);
-  const hasRenderedTours = tours.some((tour) =>
-    concerts.some((c) => c.tour_id === tour.id),
+  const nextConcert = concerts[0];
+  const remainingConcerts = concerts.slice(1);
+  const standaloneConcerts = remainingConcerts.filter(
+    (concert) => !concert.tour_id,
   );
+  const toursWithConcerts = tours
+    .map((tour) => ({
+      tour,
+      concerts: remainingConcerts.filter(
+        (concert) => concert.tour_id === tour.id,
+      ),
+    }))
+    .filter(({ concerts: tourConcerts }) => tourConcerts.length > 0);
 
   return (
     <>
       <div className="container mx-auto mb-8 flex w-full flex-col">
-        {/* Header Section */}
-        <div className="px-8 py-4 md:py-8 lg:py-16">
-          <div>
-            <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
-              Nos
-            </h1>
-            <h2 className="text-title text-foreground leading-none font-bold">
-              Concerts
-            </h2>
-          </div>
-          <hr className="border-divider mt-2 md:mt-4 lg:mt-8" />
-          <p className="text-default-600 dark:text-default-400 mt-4 max-w-2xl text-sm md:text-base">
-            Découvrez nos prochains concerts, nos projets musicaux en cours, les
-            événements à venir et le calendrier des répétitions.
+        <header className="px-6 py-10 md:px-8 md:py-14 lg:py-20">
+          <h1 className="text-title leading-none">
+            <span className="text-primary/60 dark:text-primary block font-light">
+              Agenda
+            </span>{" "}
+            <span className="text-foreground block font-bold">
+              des concerts
+            </span>
+          </h1>
+          <hr className="border-divider mt-5 lg:mt-8" />
+          <p className="text-default-600 dark:text-default-400 mt-5 max-w-2xl text-sm leading-relaxed md:text-base">
+            Retrouvez nos prochains concerts et tournées, puis plongez dans les
+            histoires, images et programmes qui ont marqué Le Bon Tempérament.
           </p>
-        </div>
+        </header>
 
-        {/* Sticky Navigation */}
-        <nav className="border-divider bg-background/80 sticky top-0 z-40 mb-8 w-full border-b backdrop-blur-lg">
-          <div className="flex gap-1 overflow-x-auto px-8 py-3 md:gap-4">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => scrollToSection(item.id)}
-                className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:ring-2 focus:outline-none md:text-base ${
-                  activeSection === item.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-default-600 hover:text-primary focus:text-primary focus:ring-primary/50"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        <main className="mx-0 flex w-full max-w-[1440px] flex-col px-4 md:px-0">
-          {/* --- CONCERTS --- */}
-          <section
-            id="concerts"
-            ref={(el) => {
-              sectionRefs.current.concerts = el;
-            }}
-            className="bg-default-50 dark:bg-default-50/5 mb-8 w-full scroll-mt-24 rounded-2xl p-4 md:p-8"
+        <div className="mx-auto w-full max-w-360 px-4 md:px-8">
+          <nav
+            className="border-divider mb-12 border-b pb-3 lg:hidden"
+            aria-label="Sections de l’agenda"
           >
-            <h2 className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light">
-              Prochains concerts
-            </h2>
+            <div className="no-scrollbar flex gap-1 overflow-x-auto">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => scrollToSection(item.id)}
+                  aria-current={
+                    activeSection === item.id ? "location" : undefined
+                  }
+                  className={`shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:ring-2 ${
+                    activeSection === item.id
+                      ? "bg-primary text-white"
+                      : "text-default-600 hover:bg-default-100 hover:text-primary"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </nav>
 
-            {concerts.length === 0 ? (
-              <EmptyState
-                icon={IoMusicalNotesOutline}
-                title="Aucun concert à venir"
-                message="Les prochains concerts arriveront bientôt ! En attendant, consultez nos projets en cours ou nos dates de répétitions."
-              />
-            ) : (
-              <div className="space-y-16">
-                {tours.map((tour) => {
-                  const tourConcerts = concerts.filter(
-                    (c) => c.tour_id === tour.id,
-                  );
-                  if (tourConcerts.length === 0) return null;
+          <div className="flex flex-col items-start gap-12 lg:flex-row xl:gap-16">
+            <div className="flex w-full min-w-0 flex-col gap-16 lg:flex-1">
+              <section
+                id="agenda"
+                ref={(element) => {
+                  sectionRefs.current.agenda = element;
+                }}
+                className="scroll-mt-24"
+                aria-labelledby="agenda-title"
+              >
+                <div className="mb-9 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
+                      À vos agendas
+                    </p>
+                    <h2
+                      id="agenda-title"
+                      className="text-foreground mt-2 text-3xl font-bold md:text-5xl"
+                    >
+                      Prochains concerts
+                    </h2>
+                  </div>
+                  {concerts.length > 0 && (
+                    <p className="text-default-500 text-sm">
+                      {`${concerts.length} ${
+                        concerts.length > 1
+                          ? "dates annoncées"
+                          : "date annoncée"
+                      }`}
+                    </p>
+                  )}
+                </div>
 
-                  return (
-                    <div key={tour.id} className="space-y-8">
-                      {/* Tour Card */}
-                      <div className="from-primary/10 to-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-r p-6 md:p-8">
-                        <div className="relative z-10 grid items-center gap-6 md:grid-cols-3">
-                          {tour.tour_poster && (
-                            <div className="flex justify-center md:col-span-1 md:justify-start">
-                              <Tooltip content="Voir l'affiche">
+                {!nextConcert ? (
+                  <EmptyState
+                    title="La prochaine date se prépare"
+                    message="Aucun concert n’est encore annoncé. Découvrez en attendant nos histoires de concerts ou rejoignez-nous pour vivre la musique de l’intérieur."
+                  />
+                ) : (
+                  <div className="space-y-14">
+                    <ConcertCard
+                      concert={nextConcert}
+                      featured
+                      showPoster={!nextConcert.tour_id}
+                      onPosterClick={openPoster}
+                    />
+
+                    {toursWithConcerts.map(
+                      ({ tour, concerts: tourConcerts }) => (
+                        <section
+                          key={tour.id}
+                          className="border-divider bg-default-50/60 rounded-2xl border p-5 md:p-8"
+                          aria-labelledby={`tour-${tour.id}`}
+                        >
+                          <div className="grid gap-7 md:grid-cols-[160px_1fr] md:items-center">
+                            {tour.tour_poster ? (
+                              <Tooltip content="Voir l’affiche de la tournée">
                                 <button
+                                  type="button"
                                   onClick={() =>
-                                    handleImageClick(tour.tour_poster as string)
+                                    openPoster(tour.tour_poster as string)
                                   }
-                                  className="group block"
+                                  className="relative mx-auto size-40 overflow-hidden rounded-xl"
+                                  aria-label={`Voir l’affiche de la tournée ${tour.name}`}
                                 >
                                   <Image
                                     src={tour.tour_poster}
                                     alt={`Affiche de la tournée ${tour.name}`}
-                                    width={300}
-                                    height={300}
-                                    className="h-32 w-32 rounded-lg object-cover shadow-lg transition-transform duration-300 group-hover:scale-105 md:h-48 md:w-48"
+                                    fill
+                                    className="object-cover"
+                                    sizes="160px"
                                   />
                                 </button>
                               </Tooltip>
-                            </div>
-                          )}
-                          <div className="space-y-4 text-center md:col-span-2 md:text-left">
-                            <h3 className="text-foreground text-3xl font-bold">
-                              {tour.name}
-                            </h3>
-                            <p className="text-default-600 dark:text-default-300">
-                              {tour.description}
-                            </p>
-                            <div className="flex flex-col items-center justify-center gap-4 md:flex-row md:justify-start">
-                              {tour.start_date && tour.end_date && (
-                                <InfoRow icon={IoCalendarClearOutline}>
-                                  Du{" "}
-                                  {format(
-                                    new Date(tour.start_date),
-                                    "dd MMMM",
-                                    { locale: fr },
-                                  )}{" "}
-                                  au{" "}
-                                  {format(
-                                    new Date(tour.end_date),
-                                    "dd MMMM yyyy",
-                                    { locale: fr },
-                                  )}
-                                </InfoRow>
+                            ) : (
+                              <div className="bg-primary/10 text-primary mx-auto flex size-40 items-center justify-center rounded-xl">
+                                <IoMusicalNotesOutline
+                                  className="size-12"
+                                  aria-hidden="true"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+                                Tournée
+                              </span>
+                              <h3
+                                id={`tour-${tour.id}`}
+                                className="text-foreground mt-2 text-2xl font-bold md:text-3xl"
+                              >
+                                {tour.name}
+                              </h3>
+                              {tour.description && (
+                                <p className="text-default-600 dark:text-default-400 mt-3 max-w-3xl">
+                                  {tour.description}
+                                </p>
                               )}
-                              <span className="bg-background/80 text-primary rounded-full px-3 py-1 text-xs font-medium">
-                                {tour.context === "orchestre_et_choeur"
-                                  ? "Orchestre et Chœur"
-                                  : tour.context}
+                              <span className="bg-background text-primary mt-4 inline-flex rounded-full px-3 py-1 text-xs font-medium">
+                                {contextLabels[tour.context]}
                               </span>
                             </div>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Tour Concerts */}
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {tourConcerts.map((concert) => (
-                          <div
-                            key={concert.id}
-                            className="group border-divider bg-background hover:border-primary/50 flex flex-col overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                          >
-                            <div className="grow space-y-4 p-6">
-                              <div className="flex items-start justify-between gap-2">
-                                <h4 className="text-foreground group-hover:text-primary line-clamp-2 text-lg font-semibold transition-colors">
-                                  {concert.name || `Concert à ${concert.place}`}
-                                </h4>
-                                {concert.affiche && (
-                                  <Tooltip content="Voir l'affiche">
-                                    <Button
-                                      isIconOnly
-                                      variant="light"
-                                      radius="full"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleImageClick(
-                                          concert.affiche as string,
-                                        )
-                                      }
-                                    >
-                                      <IoEyeOutline className="text-default-500 h-5 w-5" />
-                                    </Button>
-                                  </Tooltip>
-                                )}
-                              </div>
-                              <div className="space-y-3">
-                                <InfoRow icon={IoCalendarClearOutline}>
-                                  {format(
-                                    new Date(concert.date),
-                                    "dd MMMM yyyy",
-                                    { locale: fr },
-                                  )}
-                                </InfoRow>
-                                <InfoRow icon={IoTimeOutline}>
-                                  {concert.time.slice(0, 5).replace(":", "h")}
-                                </InfoRow>
-                                <InfoRow icon={IoLocationOutline}>
-                                  <span className="font-medium">
-                                    {concert.place}
-                                  </span>
-                                </InfoRow>
-                              </div>
-                            </div>
-                            {concert.additional_informations && (
-                              <div className="border-divider bg-default-50/50 dark:bg-default-100/20 border-t px-6 py-4">
-                                <p className="text-default-500 dark:text-default-400 text-sm whitespace-pre-wrap italic">
-                                  {concert.additional_informations}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Standalone Concerts */}
-                {standaloneConcerts.length > 0 && (
-                  <div className="space-y-8">
-                    {hasRenderedTours && (
-                      <h3 className="text-foreground text-2xl font-bold">
-                        Autres Concerts
-                      </h3>
-                    )}
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {standaloneConcerts.map((concert) => (
-                        <div
-                          key={concert.id}
-                          className="group border-divider bg-background hover:border-primary/50 flex flex-col overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                        >
-                          {/* Standalone Poster/Placeholder Area */}
-                          <div className="bg-default-100 relative h-48 w-full overflow-hidden">
-                            {concert.affiche ? (
-                              <Image
-                                src={concert.affiche}
-                                alt={concert.name || "Affiche"}
-                                fill
-                                className="cursor-pointer object-cover transition-transform duration-500 group-hover:scale-105"
-                                onClick={() =>
-                                  handleImageClick(concert.affiche as string)
-                                }
+                          <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                            {tourConcerts.map((concert) => (
+                              <ConcertCard
+                                key={concert.id}
+                                concert={concert}
+                                showPoster={false}
+                                onPosterClick={openPoster}
                               />
-                            ) : (
-                              <div className="flex h-full w-full flex-col items-center justify-center gap-2">
-                                <IoImageOutline className="text-primary/20 h-10 w-10" />
-                                <span className="text-default-400 text-xs">
-                                  Pas d&apos;affiche
-                                </span>
-                              </div>
-                            )}
+                            ))}
                           </div>
+                        </section>
+                      ),
+                    )}
 
-                          <div className="grow space-y-4 p-6">
-                            <h4 className="text-foreground group-hover:text-primary line-clamp-2 text-lg font-semibold transition-colors">
-                              {concert.name || `Concert à ${concert.place}`}
-                            </h4>
-                            <div className="space-y-3">
-                              <InfoRow icon={IoCalendarClearOutline}>
-                                {format(
-                                  new Date(concert.date),
-                                  "dd MMMM yyyy",
-                                  { locale: fr },
-                                )}
-                              </InfoRow>
-                              <InfoRow icon={IoTimeOutline}>
-                                {concert.time.slice(0, 5).replace(":", "h")}
-                              </InfoRow>
-                              <InfoRow icon={IoLocationOutline}>
-                                <span className="font-medium">
-                                  {concert.place}
-                                </span>
-                              </InfoRow>
-                              {concert.related_link && (
-                                <InfoRow icon={IoGlobeOutline}>
-                                  <Link
-                                    href={concert.related_link}
-                                    target="_blank"
-                                    className="hover:text-primary hover:underline"
-                                  >
-                                    Lien connexe
-                                  </Link>
-                                </InfoRow>
-                              )}
-                            </div>
-                          </div>
-                          {concert.additional_informations && (
-                            <div className="border-divider bg-default-50/50 dark:bg-default-100/20 border-t px-6 py-4">
-                              <p className="text-default-500 dark:text-default-400 text-sm whitespace-pre-wrap italic">
-                                {concert.additional_informations}
-                              </p>
-                            </div>
-                          )}
+                    {standaloneConcerts.length > 0 && (
+                      <div>
+                        <h3 className="text-foreground mb-6 text-2xl font-bold">
+                          Toutes les dates
+                        </h3>
+                        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                          {standaloneConcerts.map((concert) => (
+                            <ConcertCard
+                              key={concert.id}
+                              concert={concert}
+                              onPosterClick={openPoster}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
-          </section>
+              </section>
 
-          {/* --- PROJECTS --- */}
-          <section
-            id="projets"
-            ref={(el) => {
-              sectionRefs.current.projets = el;
-            }}
-            className="mb-8 w-full scroll-mt-24 p-4 md:p-8"
-          >
-            <h2 className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light">
-              Nos projets
-            </h2>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {[...projects]
-                .sort(
-                  (a, b) =>
-                    new Date(b.date).getTime() - new Date(a.date).getTime(),
-                )
-                .map((projet) => (
-                  <div
-                    key={projet.slug}
-                    className="group border-divider bg-background flex flex-col overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              <section
+                id="histoires"
+                ref={(element) => {
+                  sectionRefs.current.histoires = element;
+                }}
+                className="scroll-mt-24"
+                aria-labelledby="stories-title"
+              >
+                <div className="mb-9 max-w-3xl">
+                  <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
+                    Mémoire musicale
+                  </p>
+                  <h2
+                    id="stories-title"
+                    className="text-foreground mt-2 text-3xl font-bold md:text-5xl"
                   >
-                    <Link
-                      href={`/concerts/${projet.slug}`}
-                      className="relative block h-48 w-full overflow-hidden"
-                    >
-                      {projet.banniere?.url ? (
-                        <CloudinaryImage
-                          src={projet.banniere.url}
-                          alt={`Bannière ${projet.name}`}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          width={600}
-                          height={300}
-                          rounded={RoundedSize.NONE}
-                        />
-                      ) : (
-                        <div className="bg-default-100 flex h-full w-full items-center justify-center">
-                          <IoImageOutline className="text-default-400 h-12 w-12" />
+                    Histoires de concerts
+                  </h2>
+                  <p className="text-default-600 dark:text-default-400 mt-4 leading-relaxed">
+                    Programmes, coulisses, photographies et articles de presse :
+                    découvrez les projets artistiques qui ont façonné notre
+                    histoire.
+                  </p>
+                </div>
+
+                {stories.length === 0 ? (
+                  <EmptyState
+                    title="Les histoires arrivent bientôt"
+                    message="Nos archives éditoriales sont en cours de préparation."
+                  />
+                ) : (
+                  <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+                    {stories.map((story) => (
+                      <article
+                        key={story.slug}
+                        className="border-divider bg-background group flex flex-col overflow-hidden rounded-2xl border"
+                      >
+                        <Link
+                          href={`/concerts/${story.slug}`}
+                          className="relative block h-56 overflow-hidden"
+                        >
+                          {story.banniere?.url ? (
+                            <CloudinaryImage
+                              src={story.banniere.url}
+                              alt={`Image de ${story.name}`}
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                              width={720}
+                              height={440}
+                              rounded={RoundedSize.NONE}
+                            />
+                          ) : (
+                            <span className="bg-default-100 text-default-400 flex h-full items-center justify-center">
+                              <IoImageOutline
+                                className="size-12"
+                                aria-hidden="true"
+                              />
+                            </span>
+                          )}
+                        </Link>
+                        <div className="flex flex-1 flex-col p-6">
+                          <span className="text-primary text-xs font-semibold tracking-[0.16em] uppercase">
+                            {new Date(story.date).getFullYear()}
+                          </span>
+                          <h3 className="text-foreground mt-2 text-xl font-bold">
+                            {story.name} {story.subName || ""}
+                          </h3>
+                          {story.explanation && (
+                            <p className="text-default-600 dark:text-default-400 mt-3 line-clamp-4 grow text-sm leading-relaxed">
+                              {story.explanation}
+                            </p>
+                          )}
+                          <Button
+                            as={Link}
+                            href={`/concerts/${story.slug}`}
+                            color="primary"
+                            variant="light"
+                            radius="sm"
+                            className="mt-5 w-fit"
+                            endContent={
+                              <IoIosArrowRoundForward aria-hidden="true" />
+                            }
+                          >
+                            Lire l’histoire
+                          </Button>
                         </div>
-                      )}
-                    </Link>
-                    <div className="flex flex-1 flex-col p-6">
-                      <h3 className="text-foreground line-clamp-2 text-lg font-semibold">
-                        {projet.name} {projet.subName || ""}
-                      </h3>
-                      {projet.explanation && (
-                        <div
-                          className="text-default-500 dark:text-default-400 mt-2 line-clamp-4 grow text-sm"
-                          dangerouslySetInnerHTML={{
-                            __html: projet.explanation,
-                          }}
-                        />
-                      )}
-                      <div className="border-divider mt-4 border-t pt-4">
-                        <Button
-                          as={Link}
-                          href={`/concerts/${projet.slug}`}
-                          color="primary"
-                          variant="flat"
-                          size="sm"
-                          endContent={<IoIosArrowRoundForward />}
-                        >
-                          Voir plus
-                        </Button>
-                      </div>
-                    </div>
+                      </article>
+                    ))}
                   </div>
-                ))}
+                )}
+              </section>
+
+              <section
+                id="evenements"
+                ref={(element) => {
+                  sectionRefs.current.evenements = element;
+                }}
+                className="scroll-mt-24"
+                aria-labelledby="events-title"
+              >
+                <div className="mb-9">
+                  <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
+                    Autour de l’ensemble
+                  </p>
+                  <h2
+                    id="events-title"
+                    className="text-foreground mt-2 text-3xl font-bold md:text-4xl"
+                  >
+                    Autres rendez-vous publics
+                  </h2>
+                </div>
+
+                {events.length === 0 ? (
+                  <p className="text-default-500 border-divider border-t py-8">
+                    Aucun autre rendez-vous public n’est annoncé pour le moment.
+                  </p>
+                ) : (
+                  <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                    {events.map((event) => (
+                      <article
+                        key={event.id}
+                        className="border-divider bg-default-50/50 flex flex-col rounded-xl border p-6"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-foreground text-lg font-semibold">
+                            {event.title}
+                          </h3>
+                          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-3 py-1 text-xs font-medium">
+                            {eventTypeLabels[event.event_type]}
+                          </span>
+                        </div>
+                        <div className="mt-5 grow space-y-3">
+                          <InfoRow icon={IoCalendarClearOutline}>
+                            {format(new Date(event.date_from), "d MMMM yyyy", {
+                              locale: fr,
+                            })}
+                            {event.date_to &&
+                              ` au ${format(
+                                new Date(event.date_to),
+                                "d MMMM yyyy",
+                                {
+                                  locale: fr,
+                                },
+                              )}`}
+                          </InfoRow>
+                          <InfoRow icon={IoTimeOutline}>
+                            {event.time.slice(0, 5).replace(":", "h")}
+                          </InfoRow>
+                          <InfoRow icon={IoLocationOutline}>
+                            {event.location}
+                          </InfoRow>
+                        </div>
+                        {event.description && (
+                          <p className="text-default-600 dark:text-default-400 mt-5 text-sm whitespace-pre-wrap">
+                            {event.description}
+                          </p>
+                        )}
+                        {event.link && (
+                          <Button
+                            as={Link}
+                            href={event.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            variant="light"
+                            color="primary"
+                            radius="sm"
+                            className="mt-5 w-fit"
+                            endContent={<IoGlobeOutline aria-hidden="true" />}
+                          >
+                            Plus d’informations
+                          </Button>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <aside className="bg-primary/10 border-primary/20 grid gap-7 rounded-2xl border p-7 md:grid-cols-[1fr_auto] md:items-center md:p-10">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <IoPeopleOutline
+                      className="text-primary size-7"
+                      aria-hidden="true"
+                    />
+                    <h2 className="text-foreground text-2xl font-bold">
+                      Envie de nous rejoindre ?
+                    </h2>
+                  </div>
+                  <p className="text-default-700 dark:text-default-300 mt-3 max-w-2xl">
+                    Les répétitions sont des temps de travail pour les membres
+                    et futurs membres. Découvrez le fonctionnement de l’ensemble
+                    avant de venir chanter ou jouer avec nous.
+                  </p>
+                  {rehearsals[0] && (
+                    <p className="text-default-600 dark:text-default-400 mt-4 text-sm">
+                      Prochaine répétition annoncée :{" "}
+                      <strong className="text-foreground">
+                        {format(new Date(rehearsals[0].date), "d MMMM yyyy", {
+                          locale: fr,
+                        })}
+                      </strong>
+                    </p>
+                  )}
+                </div>
+                <Button
+                  as={Link}
+                  href="/rejoindre#repetitions"
+                  color="primary"
+                  radius="sm"
+                  size="lg"
+                  endContent={<IoIosArrowRoundForward aria-hidden="true" />}
+                >
+                  Découvrir comment participer
+                </Button>
+              </aside>
             </div>
-          </section>
 
-          {/* --- EVENTS --- */}
-          <section
-            id="evenements"
-            ref={(el) => {
-              sectionRefs.current.evenements = el;
-            }}
-            className="mb-8 w-full scroll-mt-24 p-4 md:p-8"
-          >
-            <h2 className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light">
-              Autres événements
-            </h2>
-            {events.length === 0 ? (
-              <EmptyState
-                icon={IoCalendarClearOutline}
-                title="Aucun événement public"
-                message="Il n'y a pas d'autres événements prévus pour le moment."
-              />
-            ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {events.map((event) => (
-                  <div
-                    key={event.id}
-                    className="border-divider bg-background flex flex-col rounded-xl border p-6 shadow-sm transition-shadow hover:shadow-md"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-foreground line-clamp-2 text-lg font-semibold">
-                        {event.title}
-                      </h4>
-                      <span className="bg-primary/10 text-primary shrink-0 rounded-full px-3 py-1 text-xs font-medium">
-                        {getEventTypeLabel(event.event_type)}
-                      </span>
-                    </div>
-                    <div className="mt-4 grow space-y-3">
-                      <InfoRow icon={IoCalendarClearOutline}>
-                        {format(new Date(event.date_from), "dd MMMM yyyy", {
-                          locale: fr,
-                        })}
-                        {event.date_to &&
-                          ` au ${format(new Date(event.date_to), "dd MMMM yyyy", { locale: fr })}`}
-                      </InfoRow>
-                      <InfoRow icon={IoTimeOutline}>
-                        {event.time.slice(0, 5).replace(":", "h")}
-                      </InfoRow>
-                      <InfoRow icon={IoLocationOutline}>
-                        {event.location}
-                      </InfoRow>
-                    </div>
-                    {event.description && (
-                      <p className="text-default-500 dark:text-default-400 mt-4 text-sm whitespace-pre-wrap">
-                        {event.description}
-                      </p>
-                    )}
-                    {event.link && (
-                      <div className="border-divider mt-4 border-t pt-4">
-                        <Button
-                          as={Link}
-                          href={event.link}
-                          target="_blank"
-                          color="primary"
-                          variant="light"
-                          size="sm"
-                          endContent={<IoGlobeOutline />}
-                        >
-                          Plus d&apos;infos
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* --- REHEARSALS --- */}
-          <section
-            id="repetitions"
-            ref={(el) => {
-              sectionRefs.current.repetitions = el;
-            }}
-            className="bg-default-50 dark:bg-default-50/5 mb-8 w-full scroll-mt-24 rounded-2xl p-4 md:p-8"
-          >
-            <h2 className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light">
-              Prochaines répétitions
-            </h2>
-            {rehearsals.length === 0 ? (
-              <EmptyState
-                icon={IoMusicalNotesOutline}
-                title="Aucune répétition à venir"
-                message="Le calendrier des répétitions sera bientôt mis à jour."
-              />
-            ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {rehearsals.map((rehearsal) => (
-                  <div
-                    key={rehearsal.id}
-                    className="border-divider bg-background rounded-xl border p-6 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-foreground text-lg font-semibold">
-                        {rehearsal.name}
-                      </h4>
-                      <span className="bg-primary/10 text-primary shrink-0 rounded-full px-3 py-1 text-xs font-medium">
-                        {rehearsal.group_type}
-                      </span>
-                    </div>
-                    <div className="mt-4 space-y-3">
-                      <InfoRow icon={IoCalendarClearOutline}>
-                        {format(new Date(rehearsal.date), "dd MMMM yyyy", {
-                          locale: fr,
-                        })}
-                      </InfoRow>
-                      <InfoRow icon={IoTimeOutline}>
-                        {rehearsal.start_time.slice(0, 5).replace(":", "h")} -{" "}
-                        {rehearsal.end_time.slice(0, 5).replace(":", "h")}
-                      </InfoRow>
-                      <InfoRow icon={IoLocationOutline}>
-                        {rehearsal.place}
-                      </InfoRow>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </main>
+            <aside
+              className="hidden h-fit w-56 shrink-0 self-start lg:block"
+              style={{ position: "sticky", top: "6rem" }}
+            >
+              <nav aria-label="Navigation dans l’agenda">
+                <p className="text-default-400 mb-4 text-xs font-semibold tracking-[0.18em] uppercase">
+                  Sur cette page
+                </p>
+                <div className="flex flex-col">
+                  {navItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => scrollToSection(item.id)}
+                      aria-current={
+                        activeSection === item.id ? "location" : undefined
+                      }
+                      className={`border-l-2 px-5 py-3 text-left text-sm font-medium transition-colors focus-visible:ring-2 ${
+                        activeSection === item.id
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-divider text-default-500 hover:border-primary/40 hover:bg-default-50 hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </nav>
+            </aside>
+          </div>
+        </div>
       </div>
 
       <Modal size="3xl" isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {() => (
             <>
-              <ModalHeader className="text-foreground">Affiche</ModalHeader>
+              <ModalHeader className="text-foreground">
+                Affiche du concert
+              </ModalHeader>
               <ModalBody className="p-4">
-                {selectedConcertImage && (
+                {selectedPoster && (
                   <div className="flex justify-center">
                     <Image
-                      src={selectedConcertImage}
+                      src={selectedPoster}
                       alt="Affiche du concert ou de la tournée"
                       width={800}
                       height={1200}

@@ -323,7 +323,7 @@ export default function RejoindrePage() {
         </section>
 
         {/* Répétitions et engagement */}
-        <section className="mb-12">
+        <section id="repetitions" className="mb-12 scroll-mt-24">
           <div className="border-divider bg-default-50 rounded-lg border p-6 md:p-8">
             <h2 className="text-foreground mb-6 flex items-center gap-3 text-2xl font-semibold">
               <IoTime className="text-primary text-3xl" />
