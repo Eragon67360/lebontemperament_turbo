@@ -1,5 +1,8 @@
-import { DonationForm } from "@/components/donations/DonationForm";
 import { Metadata } from "next";
+import { FaHeart } from "react-icons/fa";
+
+const HELLOASSO_CAMPAIGN_URL =
+  "https://www.helloasso.com/associations/le-bon-temperament/formulaires/2";
 
 export const metadata: Metadata = {
   title: "Faire un don - Le Bon Tempérament",
@@ -29,15 +32,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function DonPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ success?: string }>;
-}) {
-  const params = await searchParams;
+export default function DonPage() {
   return (
     <div className="container mx-auto flex min-h-screen w-full flex-col px-4 py-12 pb-16 md:py-16">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto w-full max-w-4xl">
         <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
           Faire un don
         </h1>
@@ -45,20 +43,7 @@ export default async function DonPage({
           Soutenez Le Bon Tempérament
         </h2>
 
-        {params.success === "true" && (
-          <div
-            className="bg-success/10 border-success/30 mb-8 rounded-lg border p-4"
-            role="alert"
-          >
-            <p className="text-success font-semibold">Merci pour votre don !</p>
-            <p className="text-default-600 mt-1 text-sm">
-              Vous recevrez votre reçu fiscal par email sous peu. Conservez-le
-              pour votre déclaration d&apos;impôts.
-            </p>
-          </div>
-        )}
-
-        <div className="bg-default-50 rounded-lg p-6 shadow-lg md:p-8">
+        <div className="bg-default-50 h-full grow rounded-lg p-6 shadow-lg md:p-8">
           <p className="text-default-600 mb-6">
             Votre don permet à l&apos;association Le Bon Tempérament de
             poursuivre ses activités : concerts, tournées, ateliers et
@@ -67,7 +52,21 @@ export default async function DonPage({
             ouvrant droit à une réduction d&apos;impôt de 66 % du montant du don
             (Article 200 du code général des impôts).
           </p>
-          <DonationForm />
+          <p className="text-default-600 mb-6">
+            Les dons sont collectés de manière sécurisée par HelloAsso, notre
+            partenaire de paiement. En cliquant sur le bouton ci-dessous, vous
+            serez redirigé vers notre page de don HelloAsso (nouvel onglet).
+          </p>
+          <a
+            href={HELLOASSO_CAMPAIGN_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Faire un don via HelloAsso (nouvel onglet)"
+            className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold text-white transition-colors"
+          >
+            <FaHeart aria-hidden="true" />
+            Faire un don sur HelloAsso
+          </a>
         </div>
       </div>
     </div>
