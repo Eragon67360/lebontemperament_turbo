@@ -163,12 +163,14 @@ const Navigation = () => {
         />
 
         <NavbarContent justify="end">
-          {/* Donation link - icon only, large screens */}
+          {/* Donation link (HelloAsso, new tab) - icon only, large screens */}
           <div className="hidden items-center lg:flex">
             <Tooltip content="Faire un don">
               <Link
-                href="/don"
-                aria-label="Faire un don à l'association"
+                href="https://www.helloasso.com/associations/le-bon-temperament/formulaires/2"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Faire un don à l'association via HelloAsso (nouvel onglet)"
                 className={`flex size-9 items-center justify-center rounded-md transition-colors ${
                   isSpecialPath && !hasScrolled
                     ? "text-white hover:bg-white/20"
