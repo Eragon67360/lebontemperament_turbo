@@ -56,6 +56,11 @@ const MainMenuLinks: React.FC<MainMenuLinksProps> = ({ user, isLoading }) => {
           Contact
         </Link>
       </NavbarMenuItem>
+      <NavbarMenuItem>
+        <Link href="/don" className="w-full" color="foreground">
+          Faire un don
+        </Link>
+      </NavbarMenuItem>
       {(isAnniversaryEnabled || isAdmin) && (
         <NavbarMenuItem>
           <Link
