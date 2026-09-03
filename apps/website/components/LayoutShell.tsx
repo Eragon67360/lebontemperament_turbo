@@ -4,7 +4,6 @@ import FloatingAnniversaryButton from "@/components/anniversary/FloatingAnnivers
 import { BubbleContainer } from "@/components/BubbleContainer";
 import ConditionalVercelAnalytics from "@/components/cookies/ConditionalVercelAnalytics";
 import { FooterClientWrapper } from "@/components/FooterClientWrapper";
-import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { usePathname } from "next/navigation";
 
@@ -20,7 +19,6 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Header />
       <a
         href="#main-content"
         className="focus:bg-primary focus:ring-primary sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-offset-2 focus:outline-none"

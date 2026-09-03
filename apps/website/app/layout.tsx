@@ -101,6 +101,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
+    ...(process.env.BING_SITE_VERIFICATION
+      ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } }
+      : {}),
   },
 };
 
@@ -130,6 +133,12 @@ export default function RootLayout({
         />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Le Bon Tempérament — Concerts et actualités"
+          href="/feed.xml"
+        />
       </head>
       <body className="bg-background text-foreground z-10 transition-colors duration-200">
         <CookieConsentComponent />
@@ -179,6 +188,24 @@ export default function RootLayout({
               founder: {
                 "@type": "Person",
                 name: "Simone Duclos",
+              },
+            }),
+          }}
+        />
+        {/* WebSite Schema — no SearchAction: the site has no /search page */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Le Bon Tempérament",
+              url: process.env.NEXT_PUBLIC_BASE_URL,
+              description:
+                "Site officiel de l'ensemble vocal et instrumental Le Bon Tempérament",
+              inLanguage: "fr-FR",
+              publisher: {
+                "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#organization`,
               },
             }),
           }}

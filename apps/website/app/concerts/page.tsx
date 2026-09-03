@@ -1,13 +1,15 @@
 import ConcertsClient from "@/components/concerts/ConcertsClient";
+import { JsonLd } from "@/components/JsonLd";
 import { Concert } from "@/types/concerts";
 import { DatabaseProject } from "@/types/projects";
 import { transformProjectForFrontend } from "@/utils/projects";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import type { Metadata } from "next";
 
 // --- Metadata Configuration ---
 export const metadata: Metadata = {
-  title: "Agenda des concerts",
+  title: "Concerts de Musique Classique en Alsace",
   description:
     "Consultez les prochains concerts, tournées et rendez-vous publics du Bon Tempérament à Saverne, puis découvrez les histoires de nos concerts.",
   keywords:
@@ -60,6 +62,8 @@ function generateSchema(concerts: Concert[]) {
     },
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    image:
+      "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
   }));
 
   return {
@@ -161,6 +165,9 @@ const ConcertsPage = async () => {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([{ name: "Concerts", path: "/concerts" }])}
       />
       <ConcertsClient
         initialProjects={projects}

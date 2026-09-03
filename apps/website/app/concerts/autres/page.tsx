@@ -1,5 +1,7 @@
 import CDsViewer from "@/components/cds/CDsViewer";
+import { JsonLd } from "@/components/JsonLd";
 import cds from "@/public/json/cds.json";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -80,6 +82,12 @@ const page = () => {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Concerts", path: "/concerts" },
+          { name: "CDs", path: "/concerts/autres" },
+        ])}
+      />
       <div className="container mx-auto flex w-full flex-col pb-8">
         <div className="py-16">
           <div>
