@@ -1,3 +1,5 @@
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 import Link from "next/link";
 
@@ -43,7 +45,7 @@ const faqData = [
   {
     question: "Comment rejoindre Le Bon Tempérament?",
     answer:
-      "Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Pour nous rejoindre, consultez notre page dédiée pour toutes les informations sur le processus d'adhésion, ou contactez-nous directement par email à lebontemperament@gmail.com ou par téléphone au (+33) 06 89 68 74 82. Nous serons ravis de vous accueillir et de discuter de votre intégration dans l'ensemble.",
+      "Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Pour nous rejoindre, consultez notre page dédiée pour toutes les informations sur le processus d'adhésion, ou contactez-nous directement par email à lebontemperament@gmail.com ou par téléphone au (+33) 09 52 39 57 89. Nous serons ravis de vous accueillir et de discuter de votre intégration dans l'ensemble.",
   },
   {
     question: "Faut-il avoir de l'expérience musicale pour rejoindre?",
@@ -90,6 +92,16 @@ const faqData = [
     answer:
       "Oui, Le Bon Tempérament a enregistré plusieurs CDs que vous pouvez découvrir et acheter. Consultez notre page 'Autres concerts' pour voir nos productions disponibles. Les CDs sont également disponibles lors de certains de nos concerts.",
   },
+  {
+    question: "Le Bon Tempérament part-il en tournée?",
+    answer:
+      "Oui. Chaque été, Le Bon Tempérament organise une tournée d'une dizaine de jours dans une autre région de France. C'est au cours de ces séjours que se peaufine le programme de l'année et que se tissent les liens entre les membres de l'ensemble.",
+  },
+  {
+    question: "Quand et où ont lieu les répétitions?",
+    answer:
+      "Les répétitions générales réunissent tous les chœurs un dimanche par mois, et les répétitions de pupitres (soprano, alto, ténor, basse) ont lieu tous les 15 jours. Les lieux et horaires précis sont communiqués aux membres et aux personnes souhaitant découvrir l'ensemble — contactez-nous pour venir assister à une répétition.",
+  },
 ];
 
 const faqSchema = {
@@ -112,6 +124,7 @@ export default function FAQPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      <JsonLd data={breadcrumbJsonLd([{ name: "FAQ", path: "/faq" }])} />
       <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
         <div className="mb-8">
           <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">

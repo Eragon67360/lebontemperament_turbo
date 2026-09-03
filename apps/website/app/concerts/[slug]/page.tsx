@@ -1,6 +1,8 @@
 import ConcertPageClient from "@/components/ConcertPageClient";
+import { JsonLd } from "@/components/JsonLd";
 import { ConcertProject, DatabaseProject } from "@/types/projects";
 import { transformProjectForFrontend } from "@/utils/projects";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import type { Metadata } from "next";
@@ -254,6 +256,12 @@ export default async function ConcertPage({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        />
+        <JsonLd
+          data={breadcrumbJsonLd([
+            { name: "Concerts", path: "/concerts" },
+            { name: project.name, path: `/concerts/${slug}` },
+          ])}
         />
         <ConcertPageClient
           project={project}
