@@ -21,10 +21,11 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { CiLock } from "react-icons/ci";
-import { FaHeart, FaKey } from "react-icons/fa";
+import { FaKey } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import ChangePasswordModal from "./ChangePasswordModal";
 import CloudinaryImage from "./CloudinaryImage";
+import DonationCampaignShowcase from "./donations/DonationCampaignShowcase";
 import MainLinks from "./links/MainLinks";
 import MainMenuLinks from "./links/MainMenuLinks";
 import { useAuth } from "./providers/AuthProvider";
@@ -163,24 +164,10 @@ const Navigation = () => {
         />
 
         <NavbarContent justify="end">
-          {/* Donation link (HelloAsso, new tab) - icon only, large screens */}
-          <div className="hidden items-center lg:flex">
-            <Tooltip content="Faire un don">
-              <Link
-                href="https://www.helloasso.com/associations/le-bon-temperament/formulaires/2"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Faire un don à l'association via HelloAsso (nouvel onglet)"
-                className={`flex size-9 items-center justify-center rounded-md transition-colors ${
-                  isSpecialPath && !hasScrolled
-                    ? "text-white hover:bg-white/20"
-                    : "text-foreground hover:bg-default-200"
-                }`}
-              >
-                <FaHeart size={18} aria-hidden="true" />
-              </Link>
-            </Tooltip>
-          </div>
+          {/* Donation link - icon only, large screens */}
+          <DonationCampaignShowcase
+            isLight={isSpecialPath && !hasScrolled}
+          />
           {/* Theme Switcher - Always visible */}
           <ThemeSwitcher isLight={isSpecialPath && !hasScrolled} />
 
