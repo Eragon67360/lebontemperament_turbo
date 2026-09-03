@@ -27,16 +27,13 @@ const Hero: React.FC<HeroProps> = ({
   dataTestId = "hero",
 }) => {
   const prefersReducedMotion = useReducedMotion();
-  const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
-    typeof window !== "undefined"
-      ? Math.max(window.innerHeight * 0.6, 200)
-      : 600,
-  );
+  // Must render identically on server and client: measure in the effect below.
+  const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const onResize = () =>
       setMaxScrollPx(Math.max(window.innerHeight * 0.6, 200));
+    onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
