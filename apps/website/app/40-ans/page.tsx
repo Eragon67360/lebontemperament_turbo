@@ -1,5 +1,7 @@
 import { getAnniversaryPageData } from "@/lib/anniversary";
+import { JsonLd } from "@/components/JsonLd";
 import { checkAdminAuth } from "@/utils/auth";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -89,5 +91,14 @@ export default async function AnniversaryPage() {
   // Determine if this is preview mode (feature disabled but admin viewing)
   const isPreview = !isEnabled;
 
-  return <AnniversaryPageClient data={data} isPreview={isPreview} />;
+  return (
+    <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "40 ans du Bon Tempérament", path: "/40-ans" },
+        ])}
+      />
+      <AnniversaryPageClient data={data} isPreview={isPreview} />
+    </>
+  );
 }

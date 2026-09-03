@@ -1,3 +1,5 @@
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -77,6 +79,9 @@ export default function RejoindrePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([{ name: "Rejoindre", path: "/rejoindre" }])}
       />
       <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
         {/* Hero Section */}

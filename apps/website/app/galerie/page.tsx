@@ -1,6 +1,8 @@
 import PhotoGallery from "@/components/PhotoGallery";
+import { JsonLd } from "@/components/JsonLd";
 import { YoutubeVideos } from "@/components/YoutubeVideos";
 import { Video } from "@/types/videos";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import { extractYouTubeId } from "@/utils/youtube";
 import type { Metadata } from "next";
@@ -137,6 +139,9 @@ const Galerie = async () => {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
+      <JsonLd
+        data={breadcrumbJsonLd([{ name: "Galerie", path: "/galerie" }])}
+      />
       <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
         <div id="photos">
           <div className="">

@@ -1,5 +1,7 @@
 import Map from "@/components/Maps";
+import { JsonLd } from "@/components/JsonLd";
 import Subscribe from "@/components/newsletter/Subscribe";
+import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -30,6 +32,9 @@ export const metadata: Metadata = {
 const Contact = () => {
   return (
     <div className="container mx-auto flex min-h-screen w-full flex-col pb-8">
+      <JsonLd
+        data={breadcrumbJsonLd([{ name: "Contact", path: "/contact" }])}
+      />
       <div className="flex flex-col justify-between lg:flex-row">
         <div className="px-8 py-4 md:py-8 lg:py-16">
           <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
@@ -288,7 +293,7 @@ const Contact = () => {
             image:
               "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
             url: process.env.NEXT_PUBLIC_BASE_URL,
-            telephone: "+33-09-52-39-57-89",
+            telephone: "+33-6-89-68-74-82",
             email: "lebontemperament@gmail.com",
             address: {
               "@type": "PostalAddress",
