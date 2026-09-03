@@ -32,9 +32,8 @@ import Footer from "./Footer";
 const HomeContent = () => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
-  const [maxScrollPx, setMaxScrollPx] = useState<number>(() =>
-    typeof window !== "undefined" ? Math.max(window.innerHeight, 200) : 600,
-  );
+  // Must render identically on server and client: measure in the effect below.
+  const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
   const [showCalendarButton, setShowCalendarButton] = useState<boolean>(false);
   const [showAGButton, setShowAGButton] = useState<boolean>(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
@@ -70,8 +69,8 @@ const HomeContent = () => {
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const onResize = () => setMaxScrollPx(Math.max(window.innerHeight, 200));
+    onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
