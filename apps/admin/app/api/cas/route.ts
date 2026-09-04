@@ -1,6 +1,7 @@
-import { CA, UpdateCADTO } from "@/types/ca";
+import { UpdateCADTO } from "@/types/ca";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
+import { CA } from "@repo/domain/types/ca";
 import { getFileNameFromUrl } from "@repo/domain/utils/storage";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";

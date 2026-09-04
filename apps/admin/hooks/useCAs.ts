@@ -1,4 +1,5 @@
-import { CA, CreateCADTO } from "@/types/ca";
+import { CreateCADTO } from "@/types/ca";
+import { CA } from "@repo/domain/types/ca";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Fetch CAs
