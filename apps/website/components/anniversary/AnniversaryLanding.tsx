@@ -216,17 +216,17 @@ const AnniversaryLanding = ({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
+        staggerChildren: 0.12,
       },
     },
   };
 
   const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.7, ease: [0.23, 1, 0.32, 1] },
     },
   };
 
@@ -522,7 +522,7 @@ const AnniversaryLanding = ({
                   <motion.div
                     key={stat.id}
                     whileHover={shouldReduceMotion ? {} : { y: -5 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
                     className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md transition-all duration-300 hover:border-slate-300/80 sm:p-5 dark:border-slate-800/50 dark:bg-slate-900/30 dark:hover:border-slate-700/80"
                   >
                     <div

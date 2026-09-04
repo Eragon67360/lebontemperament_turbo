@@ -78,28 +78,32 @@ const NavigationItem = ({
         >
           {card.description}
         </p>
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{
-            opacity: isActive ? 1 : 0,
-            height: isActive ? "auto" : 0,
-            marginTop: isActive ? "2rem" : "0rem",
-          }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="mx-auto w-fit md:mx-0"
+        {/* grid-rows collapse: reveals the CTA without animating height */}
+        <div
+          className={`grid transition-[grid-template-rows,margin] duration-400 ease-out ${
+            isActive ? "mt-8 grid-rows-[1fr]" : "mt-0 grid-rows-[0fr]"
+          }`}
         >
-          <AnniversaryCTA
-            onClick={() => scrollToSection(card.target_section_id)}
-          >
-            Découvrir
-          </AnniversaryCTA>
-        </motion.div>
+          <div className="overflow-hidden">
+            <div
+              className={`mx-auto w-fit transition-opacity duration-300 md:mx-0 ${
+                isActive ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <AnniversaryCTA
+                onClick={() => scrollToSection(card.target_section_id)}
+              >
+                Découvrir
+              </AnniversaryCTA>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Right side: Visual Icon Card */}
-      <motion.div className="flex shrink-0 items-center justify-center p-4 md:w-1/3">
-        <div className="relative rounded-xl border border-slate-200/80 bg-white/30 p-8 backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/30">
-          <IconComponent className="text-primary text-5xl" />
+      <motion.div className="group/iconcard flex shrink-0 items-center justify-center p-4 md:w-1/3">
+        <div className="relative rounded-xl border border-slate-200/80 bg-white/30 p-8 backdrop-blur-md transition-all duration-300 group-hover/iconcard:-translate-y-1 group-hover/iconcard:border-slate-300/80 group-hover/iconcard:shadow-lg dark:border-slate-800/50 dark:bg-slate-900/30 dark:group-hover/iconcard:border-slate-700/80">
+          <IconComponent className="text-primary text-5xl transition-transform duration-300 group-hover/iconcard:scale-110" />
         </div>
       </motion.div>
     </motion.div>
@@ -141,9 +145,10 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
   });
 
   const scrollToSection = (id: string) => {
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById(id)?.scrollIntoView({
+      behavior: shouldReduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
   };
 
   return (
