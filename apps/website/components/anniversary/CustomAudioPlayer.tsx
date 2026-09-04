@@ -91,10 +91,14 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
       {/* Play/Pause Button */}
       <button
         onClick={togglePlayPause}
-        className="hover:text-primary dark:hover:text-primary shrink-0 text-slate-500 transition-colors dark:text-slate-400"
-        aria-label={isPlaying ? "Pause" : "Play"}
+        className="bg-primary/10 text-primary hover:bg-primary/20 focus-visible:outline-primary flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90"
+        aria-label={isPlaying ? "Pause" : "Lecture"}
       >
-        {isPlaying ? <FaPause size={18} /> : <FaPlay size={18} />}
+        {isPlaying ? (
+          <FaPause size={14} />
+        ) : (
+          <FaPlay size={14} className="ml-0.5" />
+        )}
       </button>
 
       {/* Progress Bar & Timestamps */}
@@ -108,6 +112,7 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
           max={duration}
           value={currentTime}
           onChange={handleProgressChange}
+          aria-label="Progression de la lecture"
           className="accent-primary h-1 w-full grow cursor-pointer appearance-none rounded-full bg-slate-200 dark:bg-slate-700"
         />
         <span className="text-xs font-light text-slate-400 dark:text-slate-500">
@@ -119,7 +124,10 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
       <div className="flex items-center gap-2">
         <button
           onClick={toggleMute}
-          className="hover:text-primary dark:hover:text-primary text-slate-500 transition-colors dark:text-slate-400"
+          className="hover:text-primary focus-visible:outline-primary shrink-0 cursor-pointer rounded-full p-1 text-slate-500 transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90 dark:text-slate-400"
+          aria-label={
+            isMuted || volume === 0 ? "Réactiver le son" : "Couper le son"
+          }
         >
           {isMuted || volume === 0 ? <FaVolumeMute /> : <FaVolumeUp />}
         </button>
@@ -130,7 +138,8 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
           step="0.05"
           value={isMuted ? 0 : volume}
           onChange={handleVolumeChange}
-          className="accent-primary h-1 w-20 cursor-pointer appearance-none rounded-full bg-slate-200 dark:bg-slate-700"
+          aria-label="Volume"
+          className="accent-primary hidden h-1 w-20 cursor-pointer appearance-none rounded-full bg-slate-200 sm:block dark:bg-slate-700"
         />
       </div>
     </div>

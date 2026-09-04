@@ -107,7 +107,16 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
                 }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 onClick={() => setSelectedVideo(video)}
-                className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl dark:border-slate-800/50 dark:bg-slate-900/30"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedVideo(video);
+                  }
+                }}
+                aria-label={`Lire la vidéo ${video.title}`}
+                className="group focus-visible:outline-primary relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-all duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98] dark:border-slate-800/50 dark:bg-slate-900/30"
               >
                 <div className="relative aspect-video overflow-hidden">
                   <CloudinaryImage
@@ -145,7 +154,10 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-12 text-center"
         >
-          <AnniversaryCTA>
+          <AnniversaryCTA
+            href="https://www.youtube.com/@lebontemperament"
+            external
+          >
             Voir Plus sur <FaYoutube />
           </AnniversaryCTA>
         </motion.div>

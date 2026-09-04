@@ -93,38 +93,52 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
         </motion.div>
 
         <div className="columns-1 gap-6 sm:columns-2 sm:gap-8 lg:columns-3">
-          {filteredPhotos.map((photo) => (
-            <motion.div
-              key={photo.id}
-              layout
-              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="group relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl dark:border-slate-800/50 dark:bg-slate-900/30"
-              onClick={() => setSelectedPhoto(photo)}
-            >
-              <CloudinaryImage
-                src={photo.image_url}
-                alt={photo.title}
-                width={800}
-                height={600}
-                rounded={RoundedSize.NONE}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div
-                className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent transition-colors duration-300 md:from-black/20 md:group-hover:from-black/60"
-                aria-hidden="true"
-              />
-              <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
-                <h3 className="font-medium sm:text-lg">{photo.title}</h3>
-                <p className="text-sm font-light text-white/80">{photo.year}</p>
-                <p className="mt-1 line-clamp-1 max-h-0 overflow-hidden text-sm font-light text-white/90 opacity-0 transition-all duration-300 group-hover:max-h-16 group-hover:opacity-100">
-                  {photo.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+          <AnimatePresence>
+            {filteredPhotos.map((photo) => (
+              <motion.div
+                key={photo.id}
+                layout
+                layoutId={photo.id}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="group focus-visible:outline-primary relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-slate-800/50 dark:bg-slate-900/30"
+                onClick={() => setSelectedPhoto(photo)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedPhoto(photo);
+                  }
+                }}
+                aria-label={`Agrandir la photo ${photo.title}`}
+              >
+                <CloudinaryImage
+                  src={photo.image_url}
+                  alt={photo.title}
+                  width={800}
+                  height={600}
+                  rounded={RoundedSize.NONE}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div
+                  className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent transition-colors duration-300 md:from-black/20 md:group-hover:from-black/60"
+                  aria-hidden="true"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
+                  <h3 className="font-medium sm:text-lg">{photo.title}</h3>
+                  <p className="text-sm font-light text-white/80">
+                    {photo.year}
+                  </p>
+                  <p className="mt-1 line-clamp-1 max-h-0 overflow-hidden text-sm font-light text-white/90 opacity-0 transition-all duration-300 group-hover:max-h-16 group-hover:opacity-100">
+                    {photo.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
         <motion.div
@@ -133,7 +147,7 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-6 text-center sm:mt-12"
         >
-          <AnniversaryCTA>Voir Plus de Photos</AnniversaryCTA>
+          <AnniversaryCTA href="/galerie">Voir Plus de Photos</AnniversaryCTA>
         </motion.div>
       </div>
 

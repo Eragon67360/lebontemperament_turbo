@@ -119,7 +119,7 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
                         : "md:mr-auto md:pr-14 md:text-right"
                     }`}
                   >
-                    <div className="rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md sm:p-6 md:text-left dark:border-slate-200/20 dark:bg-slate-900/30">
+                    <div className="rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md transition-shadow duration-300 hover:shadow-lg sm:p-6 md:text-left dark:border-slate-800/50 dark:bg-slate-900/30">
                       <p className="text-primary mb-2 text-sm font-semibold">
                         {event.year}
                       </p>
