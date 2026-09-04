@@ -91,9 +91,9 @@ export function NotificationsPopover() {
                   <p className="text-sm text-gray-500">
                     {notification.message}
                   </p>
-                  {notification.reference_id && (
+                  {notification.bug_report_id && (
                     <Link
-                      href={`/dashboard/bug-reports/${notification.reference_id}`}
+                      href={`/dashboard/bug-reports/${notification.bug_report_id}`}
                       className="mt-1 block text-sm text-blue-500 hover:underline"
                     >
                       Voir les détails

@@ -1,7 +1,6 @@
 import { CreateTourDTO, UpdateTourDTO } from "@/types/tours";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
-import type { TablesInsert } from "@repo/domain/database.types";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -58,10 +57,7 @@ export async function POST(request: Request) {
 
     // Log the activity
     const { error: activityError } = await supabase.from("activities").insert({
-      // TODO(schema): "tour_created" is missing from the DB activity_type enum — this
-      // insert fails at runtime and the activity entry is silently lost (pre-existing).
-      // Add the enum value via a migration, then drop this cast.
-      type: "tour_created" as TablesInsert<"activities">["type"],
+      type: "tour_created",
       user_id: authCheck?.user?.id,
       target_id: newTour.id,
       title: "Nouvelle tournée",

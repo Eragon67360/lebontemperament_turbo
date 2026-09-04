@@ -1519,7 +1519,8 @@ export type Database = {
         | "concert_deleted"
         | "poster_updated"
         | "group_updated"
-        | "ca_created";
+        | "ca_created"
+        | "tour_created";
       group_type:
         | "Orchestre"
         | "Choeur complet"
@@ -1670,6 +1671,7 @@ export const Constants = {
         "poster_updated",
         "group_updated",
         "ca_created",
+        "tour_created",
       ],
       group_type: [
         "Orchestre",
