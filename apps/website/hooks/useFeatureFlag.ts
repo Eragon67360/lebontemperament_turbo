@@ -68,9 +68,6 @@ export function useFeatureFlag(flagKey: string) {
             (payload) => {
               const newFlag = payload.new as FeatureFlag;
               if (isMounted && newFlag) {
-                console.log(
-                  `[FeatureFlag] 🔄 ${flagKey}: ${isEnabled} → ${newFlag.is_enabled}`,
-                );
                 setIsEnabled(newFlag.is_enabled);
               }
             },

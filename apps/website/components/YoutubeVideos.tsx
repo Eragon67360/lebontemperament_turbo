@@ -48,7 +48,10 @@ export const YoutubeVideos = () => {
               key={video.id}
               className="my-8 flex flex-col gap-0 lg:flex-row lg:gap-8"
             >
-              <YouTubeVideo videoId={extractYouTubeId(video.youtube_url)} />
+              <YouTubeVideo
+                videoId={extractYouTubeId(video.youtube_url)}
+                title={video.title}
+              />
               <div className="flex flex-col pt-8">
                 <h2 className="text-default-500 text-xl font-light md:text-2xl lg:text-4xl">
                   {video.title}

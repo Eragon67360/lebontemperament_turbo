@@ -147,7 +147,6 @@ export async function getArchives(): Promise<Archive[]> {
       .eq("is_visible", true)
       .order("year", { ascending: false })
       .order("created_at", { ascending: false });
-    console.log("data", data);
 
     if (error) {
       console.error("Error fetching archives:", error);
