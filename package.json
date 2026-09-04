@@ -7,6 +7,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
+    "db:types": "npm run db:types -w @repo/domain",
     "bump-version": "node scripts/bump-version.js",
     "test:rehearsal-sync": "tsx scripts/test-rehearsal-sync.ts",
     "prepare": "node -e \"if (!process.env.CI && !process.env.VERCEL) { require('child_process').execSync('husky', { stdio: 'inherit' }) }\""

@@ -6,7 +6,8 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "db:types": "sh scripts/db-types.sh"
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
