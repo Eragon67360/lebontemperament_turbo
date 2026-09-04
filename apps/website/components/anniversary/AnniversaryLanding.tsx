@@ -1,8 +1,8 @@
 "use client";
 
 import type { AnniversaryHero, HeroStat } from "@/types/anniversary";
+import { gsap } from "gsap";
 import {
-  AnimatePresence,
   motion,
   useReducedMotion,
   useScroll,
@@ -36,6 +36,11 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FaHeart,
 };
 
+const INTRO_SEEN_KEY = "anniversary-intro-seen";
+const INTRO_YEARS = [1987, 1997, 2007, 2017, 2027];
+const INTRO_WORDS = ["40", "ANS", "DU", "BON", "TEMPÉRAMENT"];
+const NUM_BATONS = 48;
+
 interface AnniversaryLandingProps {
   hero: AnniversaryHero;
   stats: HeroStat[];
@@ -48,23 +53,22 @@ const AnniversaryLanding = ({
   onIntroStateChange,
 }: AnniversaryLandingProps) => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const introRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const [showIntro, setShowIntro] = useState(true);
   const [showContent, setShowContent] = useState(false);
-  const [phase, setPhase] = useState(0);
 
+  // Decide before paint whether the intro plays: CMS flag off, reduced
+  // motion, or already seen this session all skip straight to the hero.
   useLayoutEffect(() => {
-    if (showIntro && hero.enable_intro_animation && !shouldReduceMotion) {
-      window.scrollTo(0, 0);
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }
-  }, [showIntro, hero.enable_intro_animation, shouldReduceMotion]);
+    const seen =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem(INTRO_SEEN_KEY) === "true";
+    const playIntro =
+      hero.enable_intro_animation && !shouldReduceMotion && !seen;
 
-  useEffect(() => {
-    if (!hero.enable_intro_animation || shouldReduceMotion) {
+    if (!playIntro) {
       setShowIntro(false);
       setShowContent(true);
       onIntroStateChange?.(false);
@@ -72,32 +76,132 @@ const AnniversaryLanding = ({
     }
 
     onIntroStateChange?.(true);
-    const runAnimation = async () => {
-      setPhase(1);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setPhase(2);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setPhase(3);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      setPhase(4);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setPhase(5);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setShowIntro(false);
-      setShowContent(true);
-      onIntroStateChange?.(false);
+    window.scrollTo(0, 0);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
     };
-    runAnimation();
   }, [hero.enable_intro_animation, shouldReduceMotion, onIntroStateChange]);
 
-  const handleSkip = () => {
-    setShowIntro(false);
-    setShowContent(true);
-    onIntroStateChange?.(false);
-  };
+  // The intro is one GSAP timeline: a single source of truth that can be
+  // skipped (tl.progress(1)) instead of the old chained setTimeouts.
+  useEffect(() => {
+    if (!showIntro) return;
 
-  const numBatons = 80;
-  const introAngle = 360 / numBatons;
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        defaults: { ease: "power2.out" },
+        onComplete: () => {
+          sessionStorage.setItem(INTRO_SEEN_KEY, "true");
+          setShowIntro(false);
+          setShowContent(true);
+          onIntroStateChange?.(false);
+        },
+      });
+      timelineRef.current = tl;
+
+      tl
+        // Scene 1 — the timeline line draws itself, decade markers pop in
+        .fromTo(
+          ".intro-line",
+          { strokeDashoffset: 1 },
+          { strokeDashoffset: 0, duration: 1.2, ease: "power2.inOut" },
+          0,
+        )
+        .fromTo(
+          ".intro-year-dot",
+          { attr: { r: 0 }, opacity: 0 },
+          { attr: { r: 6 }, opacity: 1, duration: 0.4, stagger: 0.08 },
+          0.3,
+        )
+        .fromTo(
+          ".intro-year-label",
+          { opacity: 0, y: 10 },
+          { opacity: 0.5, y: 0, duration: 0.4, stagger: 0.08 },
+          0.4,
+        )
+        .to(
+          ".intro-timeline-scene",
+          { opacity: 0, duration: 0.5, ease: "power1.in" },
+          1.5,
+        )
+        // Scene 2 — the "40" appears and makes a single slow turn
+        .fromTo(
+          ".intro-forty",
+          { scale: 0.85, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.9, ease: "expo.out" },
+          1.6,
+        )
+        .fromTo(
+          ".intro-glow",
+          { opacity: 0, scale: 0.8 },
+          { opacity: 1, scale: 1, duration: 1.2 },
+          1.6,
+        )
+        .fromTo(
+          ".intro-forty-inner",
+          { rotateY: 0 },
+          { rotateY: 360, duration: 2.2, ease: "power2.inOut" },
+          1.8,
+        )
+        .to(
+          ".intro-forty-scene",
+          {
+            yPercent: -30,
+            opacity: 0,
+            scale: 0.9,
+            duration: 0.6,
+            ease: "power2.in",
+          },
+          3.4,
+        )
+        // Scene 3 — the words rise, subtitle follows
+        .fromTo(
+          ".intro-word",
+          { yPercent: 110 },
+          { yPercent: 0, duration: 0.7, stagger: 0.09, ease: "expo.out" },
+          3.6,
+        )
+        .fromTo(
+          ".intro-subtitle",
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.7 },
+          4.3,
+        )
+        .fromTo(
+          ".intro-edge",
+          { scaleY: 0 },
+          { scaleY: 1, duration: 0.6, stagger: 0.05 },
+          4.4,
+        )
+        .to(".intro-words-scene", { opacity: 0, duration: 0.5 }, 5.6)
+        // Scene 4 — light batons burst from the center, then fade to content
+        .fromTo(
+          ".intro-baton",
+          { height: 0, opacity: 1 },
+          { height: "150vh", opacity: 0, duration: 1, stagger: 0.012 },
+          5.8,
+        )
+        .to(
+          introRef.current,
+          { opacity: 0, duration: 0.7, ease: "power1.inOut" },
+          6.7,
+        );
+    }, introRef);
+
+    return () => ctx.revert();
+  }, [showIntro, onIntroStateChange]);
+
+  const skipIntro = () => timelineRef.current?.progress(1);
+
+  useEffect(() => {
+    if (!showIntro) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") skipIntro();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showIntro]);
 
   const { scrollY } = useScroll();
   const y1Raw = useTransform(scrollY, [0, 500], [0, 150]);
@@ -128,305 +232,207 @@ const AnniversaryLanding = ({
 
   return (
     <>
-      <AnimatePresence>
-        {showIntro && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.8 } }}
-            className="fixed inset-0 z-999 overflow-hidden bg-black"
+      {showIntro && (
+        <div
+          ref={introRef}
+          className="fixed inset-0 z-999 overflow-hidden bg-black"
+        >
+          <button
+            onClick={skipIntro}
+            className="focus-visible:outline-primary absolute top-4 right-4 z-50 cursor-pointer rounded-md px-4 py-2 text-sm font-medium text-white/60 backdrop-blur-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 sm:top-8 sm:right-8 sm:px-6"
           >
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              onClick={handleSkip}
-              className="absolute top-4 right-4 z-50 px-4 py-2 text-sm font-medium text-white/60 backdrop-blur-sm transition-all hover:text-white sm:top-8 sm:right-8 sm:px-6"
+            {hero.skip_button_text}
+          </button>
+
+          {/* Scene 1: timeline */}
+          <div className="intro-timeline-scene absolute inset-0 flex items-center justify-center">
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 1920 1080"
+              className="absolute inset-0"
+              aria-hidden="true"
             >
-              {hero.skip_button_text}
-            </motion.button>
-
-            {phase >= 1 && (
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center"
-                animate={{ opacity: phase >= 3 ? 0 : 1 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-              >
-                <motion.svg
-                  width="100%"
-                  height="100%"
-                  viewBox="0 0 1920 1080"
-                  className="absolute inset-0"
+              <path
+                className="intro-line"
+                d="M 0 540 Q 480 540 960 540 T 1920 540"
+                stroke="url(#timelineGradient)"
+                strokeWidth="2"
+                fill="none"
+                pathLength={1}
+                strokeDasharray={1}
+                strokeDashoffset={1}
+              />
+              <defs>
+                <linearGradient
+                  id="timelineGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="0%"
                 >
-                  <motion.path
-                    d="M 0 540 Q 480 540 960 540 T 1920 540"
-                    stroke="url(#timelineGradient)"
-                    strokeWidth="2"
-                    fill="none"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+                  <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {INTRO_YEARS.map((year, index) => (
+                <g key={year}>
+                  <circle
+                    className="intro-year-dot"
+                    cx={384 + index * 288}
+                    cy="540"
+                    r="0"
+                    fill="#ffffff"
+                    opacity="0"
                   />
-                  <defs>
-                    <linearGradient
-                      id="timelineGradient"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="0%"
-                    >
-                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
-                      <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
-                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  {[1987, 1997, 2007, 2017, 2027].map((year, index) => (
-                    <motion.g key={year}>
-                      <motion.circle
-                        cx={384 + index * 288}
-                        cy="540"
-                        r="6"
-                        fill="#ffffff"
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
-                      />
-                      <motion.text
-                        x={384 + index * 288}
-                        y="515"
-                        textAnchor="middle"
-                        fill="#ffffff"
-                        fontSize="48"
-                        fontWeight="300"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 0.5, y: 0 }}
-                        transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
-                      >
-                        {year}
-                      </motion.text>
-                    </motion.g>
-                  ))}
-                </motion.svg>
-              </motion.div>
-            )}
+                  <text
+                    className="intro-year-label"
+                    x={384 + index * 288}
+                    y="515"
+                    textAnchor="middle"
+                    fill="#ffffff"
+                    fontSize="48"
+                    fontWeight="300"
+                    opacity="0"
+                  >
+                    {year}
+                  </text>
+                </g>
+              ))}
+            </svg>
+          </div>
 
-            {phase >= 2 && (
-              <motion.div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  <motion.div
-                    className="absolute inset-0 -z-10"
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: [1, 1.2, 1], opacity: [0, 0.3, 0.1] }}
-                    transition={{ duration: 2, times: [0, 0.5, 1] }}
+          {/* Scene 2: the "40" */}
+          <div className="intro-forty-scene absolute inset-0 flex items-center justify-center">
+            <div
+              className="intro-glow absolute rounded-full"
+              aria-hidden="true"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
+                filter: "blur(100px)",
+                width: "clamp(300px, 80vw, 600px)",
+                height: "clamp(300px, 80vw, 600px)",
+                opacity: 0,
+              }}
+            />
+            <div style={{ perspective: "1000px" }}>
+              <div
+                className="intro-forty"
+                style={{ opacity: 0, transform: "scale(0.85)" }}
+              >
+                <div
+                  className="intro-forty-inner"
+                  style={{ transformStyle: "preserve-3d" }}
+                >
+                  <span
+                    className="block text-[12rem] leading-none font-thin select-none sm:text-[16rem] lg:text-[20rem]"
+                    aria-hidden="true"
                     style={{
                       background:
-                        "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
-                      filter: "blur(100px)",
-                      width: "clamp(300px, 80vw, 600px)",
-                      height: "clamp(300px, 80vw, 600px)",
-                      left: "50%",
-                      top: "50%",
-                      transform: "translate(-50%, -50%)",
+                        "linear-gradient(135deg, #ffffff 55%, #999999 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      textShadow: "0 0 120px rgba(255,255,255,0.4)",
                     }}
-                  />
-                  <motion.div
-                    className="relative"
-                    initial={{ scale: 0.8, opacity: 0, y: 0 }}
-                    animate={{
-                      scale: phase >= 3 ? 0.7 : 1,
-                      opacity: phase >= 3 ? 0 : 1,
-                      y: phase >= 3 ? "-100%" : 0,
-                    }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <div style={{ perspective: "1000px" }}>
-                      <motion.div
-                        className="relative inline-block"
-                        animate={{ rotateY: [0, 360] }}
-                        transition={{
-                          duration: 4,
-                          ease: "easeInOut",
-                          delay: 0.5,
-                          repeat: Infinity,
-                          repeatType: "loop",
-                        }}
-                        style={{ transformStyle: "preserve-3d" }}
-                      >
-                        <span
-                          className="block text-[12rem] leading-none font-thin text-transparent select-none sm:text-[16rem] lg:text-[20rem]"
-                          aria-hidden="true"
-                        >
-                          40
-                        </span>
-                        {[...Array(5)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute inset-0"
-                            style={{ transform: `translateZ(${-30 * i}px)` }}
-                          >
-                            <span
-                              className="block text-[12rem] leading-none font-thin select-none sm:text-[16rem] lg:text-[20rem]"
-                              style={{
-                                background: `linear-gradient(135deg, #ffffff ${100 - i * 15}%, #999999 100%)`,
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
-                                textShadow:
-                                  i === 0
-                                    ? "0 0 120px rgba(255,255,255,0.5)"
-                                    : "none",
-                                filter: i > 0 ? "blur(1px)" : "none",
-                              }}
-                            >
-                              40
-                            </span>
-                          </motion.div>
-                        ))}
-                        <motion.div
-                          className="absolute inset-0"
-                          style={{
-                            transform: "translateZ(-150px) rotateY(180deg)",
-                            opacity: 0.1,
-                          }}
-                        >
-                          <span className="block text-[12rem] leading-none font-thin text-white/20 sm:text-[16rem] lg:text-[20rem]">
-                            40
-                          </span>
-                        </motion.div>
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
-
-            {phase >= 3 && (
-              <motion.div
-                className="absolute inset-0"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: phase >= 4 ? 0 : 1 }}
-                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="absolute inset-0 flex items-center justify-center p-4">
-                  <motion.div
-                    className="relative text-center"
-                    initial={{ y: 100 }}
-                    animate={{ y: 0 }}
-                    transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <div className="mb-8">
-                      <div className="overflow-hidden">
-                        {["40", "ANS", "DU", "BON", "TEMPÉRAMENT"].map(
-                          (word, wordIndex) => (
-                            <motion.span
-                              key={wordIndex}
-                              className="mx-1 inline-block sm:mx-2"
-                              initial={{ y: "100%", opacity: 0 }}
-                              animate={{ y: "0%", opacity: 1 }}
-                              transition={{
-                                duration: 0.8,
-                                delay: wordIndex * 0.1,
-                                ease: [0.215, 0.61, 0.355, 1],
-                              }}
-                            >
-                              {word.split("").map((letter, letterIndex) => (
-                                <motion.span
-                                  key={letterIndex}
-                                  className="inline-block text-4xl font-thin tracking-wide sm:text-5xl md:text-7xl"
-                                  style={{
-                                    background:
-                                      "linear-gradient(180deg, #ffffff 0%, #888888 100%)",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                  }}
-                                >
-                                  {letter}
-                                </motion.span>
-                              ))}
-                            </motion.span>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                    <motion.p
-                      className="text-lg font-light text-white/60 sm:text-xl md:text-2xl"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.0, duration: 0.8 }}
-                    >
-                      Une célébration de la musique et de la passion
-                    </motion.p>
-                  </motion.div>
-                </div>
-                <motion.div
-                  className="absolute inset-x-0 top-0 h-24"
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ delay: 1.2, duration: 0.6 }}
-                  style={{
-                    background:
-                      "linear-gradient(180deg, #000000 0%, transparent 100%)",
-                    transformOrigin: "top",
-                  }}
-                />
-                <motion.div
-                  className="absolute inset-x-0 bottom-0 h-24"
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ delay: 1.2, duration: 0.6 }}
-                  style={{
-                    background:
-                      "linear-gradient(0deg, #000000 0%, transparent 100%)",
-                    transformOrigin: "bottom",
-                  }}
-                />
-              </motion.div>
-            )}
-
-            {phase >= 4 && (
-              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                <div className="relative h-1 w-1">
-                  {[...Array(numBatons)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute inset-0"
-                      style={{ transform: `rotate(${i * introAngle}deg)` }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.1 }}
-                    >
-                      <motion.div
-                        className="w-px origin-bottom bg-linear-to-t from-transparent via-white/80 to-transparent"
-                        initial={{ height: 0, opacity: 1 }}
-                        animate={{ height: "150vh", opacity: 0 }}
-                        transition={{
-                          duration: 1.2,
-                          delay: i * 0.015,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                      />
-                    </motion.div>
-                  ))}
+                    40
+                  </span>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {phase >= 5 && (
-              <motion.div
-                className="absolute inset-0 bg-black"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8 }}
-              />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Scene 3: the words */}
+          <div
+            className="intro-words-scene absolute inset-0"
+            style={{ opacity: 1 }}
+          >
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+              <div className="relative text-center">
+                <div className="mb-8">
+                  {INTRO_WORDS.map((word) => (
+                    <span
+                      key={word}
+                      className="mx-1 inline-block overflow-hidden align-bottom sm:mx-2"
+                    >
+                      <span
+                        className="intro-word inline-block text-4xl font-thin tracking-wide sm:text-5xl md:text-7xl"
+                        style={{
+                          transform: "translateY(110%)",
+                          background:
+                            "linear-gradient(180deg, #ffffff 0%, #888888 100%)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                        }}
+                      >
+                        {word}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+                <p
+                  className="intro-subtitle text-lg font-light text-white/60 sm:text-xl md:text-2xl"
+                  style={{ opacity: 0 }}
+                >
+                  Une célébration de la musique et de la passion
+                </p>
+              </div>
+            </div>
+            <div
+              className="intro-edge absolute inset-x-0 top-0 h-24"
+              aria-hidden="true"
+              style={{
+                background:
+                  "linear-gradient(180deg, #000000 0%, transparent 100%)",
+                transform: "scaleY(0)",
+                transformOrigin: "top",
+              }}
+            />
+            <div
+              className="intro-edge absolute inset-x-0 bottom-0 h-24"
+              aria-hidden="true"
+              style={{
+                background:
+                  "linear-gradient(0deg, #000000 0%, transparent 100%)",
+                transform: "scaleY(0)",
+                transformOrigin: "bottom",
+              }}
+            />
+          </div>
+
+          {/* Scene 4: light batons */}
+          <div
+            className="absolute inset-0 flex items-center justify-center overflow-hidden"
+            aria-hidden="true"
+          >
+            <div className="relative h-1 w-1">
+              {[...Array(NUM_BATONS)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute inset-0"
+                  style={{
+                    transform: `rotate(${i * (360 / NUM_BATONS)}deg)`,
+                  }}
+                >
+                  <div
+                    className="intro-baton w-px origin-bottom bg-linear-to-t from-transparent via-white/80 to-transparent"
+                    style={{ height: 0 }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showContent && (
         <motion.section
           ref={heroRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.5 }}
+          transition={{ duration: 1 }}
           className="relative min-h-screen overflow-hidden bg-slate-50 pt-20 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
         >
           <div className="absolute inset-0 z-0">
@@ -515,7 +521,7 @@ const AnniversaryLanding = ({
                 return (
                   <motion.div
                     key={stat.id}
-                    whileHover={{ y: -5 }}
+                    whileHover={shouldReduceMotion ? {} : { y: -5 }}
                     transition={{ duration: 0.2 }}
                     className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md transition-all duration-300 hover:border-slate-300/80 sm:p-5 dark:border-slate-800/50 dark:bg-slate-900/30 dark:hover:border-slate-700/80"
                   >
