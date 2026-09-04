@@ -65,7 +65,7 @@ const MainMenuLinks: React.FC<MainMenuLinksProps> = ({ user, isLoading }) => {
         <NavbarMenuItem>
           <Link
             href="/40-ans"
-            className="w-full rounded-lg bg-gradient-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] px-4 py-2 text-center font-bold text-white shadow-lg"
+            className="from-primary-600 via-primary to-primary-400 dark:from-primary-700 dark:via-primary-600 dark:to-primary-500 focus-visible:outline-primary w-full rounded-lg bg-linear-to-r px-4 py-2 text-center font-bold text-white shadow-lg transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98]"
           >
             🎉 40 ans du Bon Tempérament
           </Link>
