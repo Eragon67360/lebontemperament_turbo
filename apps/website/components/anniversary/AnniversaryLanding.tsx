@@ -61,12 +61,13 @@ const AnniversaryLanding = ({
 
   // Decide before paint whether the intro plays: CMS flag off, reduced
   // motion, or already seen this session all skip straight to the hero.
+  // showIntro is a dep so the scroll lock cleanup runs when the intro ends.
   useLayoutEffect(() => {
     const seen =
       typeof window !== "undefined" &&
       sessionStorage.getItem(INTRO_SEEN_KEY) === "true";
     const playIntro =
-      hero.enable_intro_animation && !shouldReduceMotion && !seen;
+      showIntro && hero.enable_intro_animation && !shouldReduceMotion && !seen;
 
     if (!playIntro) {
       setShowIntro(false);
@@ -81,7 +82,12 @@ const AnniversaryLanding = ({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [hero.enable_intro_animation, shouldReduceMotion, onIntroStateChange]);
+  }, [
+    showIntro,
+    hero.enable_intro_animation,
+    shouldReduceMotion,
+    onIntroStateChange,
+  ]);
 
   // The intro is one GSAP timeline: a single source of truth that can be
   // skipped (tl.progress(1)) instead of the old chained setTimeouts.
@@ -192,7 +198,8 @@ const AnniversaryLanding = ({
     return () => ctx.revert();
   }, [showIntro, onIntroStateChange]);
 
-  const skipIntro = () => timelineRef.current?.progress(1);
+  // suppressEvents=false so onComplete still fires (unmount, scroll unlock)
+  const skipIntro = () => timelineRef.current?.progress(1, false);
 
   useEffect(() => {
     if (!showIntro) return;

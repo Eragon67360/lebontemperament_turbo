@@ -34,7 +34,13 @@ const AnniversaryCTA = ({
   className = "",
   ariaLabel,
 }: AnniversaryCTAProps) => {
-  const classes = `group border-primary/40 text-primary enabled:hover:border-primary/80 enabled:hover:text-white focus-visible:outline-primary dark:border-primary/50 relative inline-flex cursor-pointer items-center justify-center overflow-hidden rounded-md border bg-transparent font-medium transition-all duration-300 enabled:active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${sizeClasses[size]} ${className}`;
+  // Note: no `enabled:` variant — it only matches form controls, so the
+  // hover styles would never apply when this renders as an <a>.
+  const classes = `group border-primary/40 text-primary focus-visible:outline-primary dark:border-primary/50 relative inline-flex items-center justify-center overflow-hidden rounded-md border bg-transparent font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 ${
+    disabled
+      ? "cursor-not-allowed opacity-50"
+      : "hover:border-primary/80 hover:text-white cursor-pointer active:scale-[0.97]"
+  } ${sizeClasses[size]} ${className}`;
 
   const content = (
     <>
