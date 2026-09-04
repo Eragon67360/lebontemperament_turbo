@@ -2,7 +2,7 @@
 
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Project } from "@/types/projects";
+import { Project } from "@repo/domain/types/projects";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";

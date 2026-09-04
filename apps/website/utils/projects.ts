@@ -1,4 +1,8 @@
-import { ConcertProject, DatabaseProject } from "@/types/projects";
+import {
+  ConcertProject,
+  DatabaseProject,
+  PressArticle,
+} from "@/types/projects";
 
 export function transformProjectForFrontend(
   dbProject: DatabaseProject,
@@ -56,6 +60,7 @@ export function transformProjectForFrontend(
     text1: dbProject.text1 || undefined,
     text2: dbProject.text2 || undefined,
     author: dbProject.author_name ? { name: dbProject.author_name } : undefined,
-    press_articles: dbProject.press_articles || undefined,
+    press_articles:
+      (dbProject.press_articles as PressArticle[] | null) || undefined,
   };
 }

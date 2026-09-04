@@ -1,4 +1,4 @@
-import { Project } from "@/types/projects";
+import { Project } from "@repo/domain/types/projects";
 
 export function transformProjectForFrontend(dbProject: Project) {
   return {
