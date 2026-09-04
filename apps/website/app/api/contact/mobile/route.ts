@@ -44,15 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[api/contact/mobile] Auth OK - user:", user.email);
-
     const { subject, message } = await parseRequestBody(request);
-    console.log(
-      "[api/contact/mobile] Body parsed - subject:",
-      subject,
-      "messageLength:",
-      message?.length,
-    );
 
     if (!subject?.trim() || !message?.trim()) {
       console.warn(
