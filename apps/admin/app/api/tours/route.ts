@@ -58,7 +58,9 @@ export async function POST(request: Request) {
 
     // Log the activity
     const { error: activityError } = await supabase.from("activities").insert({
-      // Preserve the existing value until the generated enum includes it.
+      // TODO(schema): "tour_created" is missing from the DB activity_type enum — this
+      // insert fails at runtime and the activity entry is silently lost (pre-existing).
+      // Add the enum value via a migration, then drop this cast.
       type: "tour_created" as TablesInsert<"activities">["type"],
       user_id: authCheck?.user?.id,
       target_id: newTour.id,

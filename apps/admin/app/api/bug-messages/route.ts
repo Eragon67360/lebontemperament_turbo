@@ -154,7 +154,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
   }
 
-  if (existingMessage.sender_id !== authCheck?.user?.id) {
+  if (existingMessage.sender_id !== authCheck.user.id) {
     return NextResponse.json(
       { error: "Vous n'êtes pas autorisé à modifier ce message" },
       { status: 403 },
@@ -210,7 +210,7 @@ export async function DELETE(request: Request) {
       throw fetchError;
     }
 
-    if (existingMessage.sender_id !== authCheck?.user?.id) {
+    if (existingMessage.sender_id !== authCheck.user.id) {
       return NextResponse.json(
         { error: "Vous n'êtes pas autorisé à supprimer ce message" },
         { status: 403 },
