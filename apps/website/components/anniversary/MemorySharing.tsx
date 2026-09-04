@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import { FaHeart, FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
 import { toast } from "sonner";
+import AnniversaryCTA from "./AnniversaryCTA";
 
 interface MemorySharingProps {
   config: FormConfig;
@@ -246,36 +247,14 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 )}
               </div>
               <div className="pt-2 text-center">
-                <motion.button
+                <AnniversaryCTA
                   type="submit"
-                  variants={{
-                    initial: { color: "var(--color-primary)" },
-                    hover: { color: "#ffffff" },
-                  }}
-                  initial="initial"
-                  whileHover="hover"
                   disabled={isSubmitDisabled || isSubmitting}
-                  transition={{ duration: 0.3 }}
-                  className="group border-primary/40 text-primary enabled:hover:border-primary/80 dark:border-primary/50 dark:text-primary relative w-full overflow-hidden rounded-md border py-3 font-medium transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full"
                 >
-                  <motion.div
-                    className="bg-primary absolute inset-0 -z-10"
-                    variants={{ initial: { y: "100%" } }}
-                    animate={
-                      !isSubmitDisabled && !isSubmitting
-                        ? "initial"
-                        : { y: "100%" }
-                    }
-                    whileHover={
-                      !isSubmitDisabled && !isSubmitting ? { y: "0%" } : {}
-                    }
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                  />
-                  <span className="flex items-center justify-center gap-2">
-                    {isSubmitting ? "Envoi..." : config.submit_button_text}
-                    {!isSubmitting && <FaPaperPlane />}
-                  </span>
-                </motion.button>
+                  {isSubmitting ? "Envoi..." : config.submit_button_text}
+                  {!isSubmitting && <FaPaperPlane />}
+                </AnniversaryCTA>
               </div>
 
               <p className="pt-2 text-center text-xs font-light text-slate-400 dark:text-slate-500">

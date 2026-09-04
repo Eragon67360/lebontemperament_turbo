@@ -1,6 +1,7 @@
 "use client";
 
 // import { PDFViewer } from "@/components/anniversary/PDFViewer"; // We will remove this static import
+import AnniversaryCTA from "@/components/anniversary/AnniversaryCTA";
 import type { Archive, ArchiveType } from "@/types/anniversary";
 import { Input, Select, SelectItem } from "@heroui/react";
 import { motion, useInView, useReducedMotion } from "motion/react";
@@ -318,34 +319,14 @@ export default function ArchivesPageClient({
                       >
                         <FaEye />
                       </motion.button>
-                      <Link
+                      <AnniversaryCTA
                         href={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload/${doc.file_url}`}
-                        passHref
-                        legacyBehavior
+                        external
+                        size="sm"
+                        ariaLabel={`Télécharger ${doc.title}`}
                       >
-                        <motion.a
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          variants={{
-                            initial: { color: "var(--color-primary)" },
-                            hover: { color: "#ffffff" },
-                          }}
-                          initial="initial"
-                          whileHover="hover"
-                          transition={{ duration: 0.3 }}
-                          className="group/btn border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative inline-flex items-center justify-center overflow-hidden rounded-md border bg-transparent px-3 py-2 text-sm font-medium transition-colors duration-300"
-                        >
-                          <motion.div
-                            className="bg-primary absolute inset-0 -z-10"
-                            variants={{
-                              initial: { y: "100%" },
-                              hover: { y: "0%" },
-                            }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                          />
-                          <FaDownload />
-                        </motion.a>
-                      </Link>
+                        <FaDownload />
+                      </AnniversaryCTA>
                     </div>
                   </div>
                 </motion.div>

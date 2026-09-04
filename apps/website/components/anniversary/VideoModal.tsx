@@ -31,11 +31,10 @@ export function VideoModal({ video, onClose }: VideoModalProps) {
   const time = useTime();
   const rotate = useTransform(time, [0, 4000], [0, 360], { clamp: false });
 
-  const rotatingBg = useTransform(rotate, (r) =>
-    shouldReduceMotion
-      ? "conic-gradient(from 0deg, #1A878D, transparent, #4DB8BD, transparent, #1A878D)"
-      : `conic-gradient(from ${r}deg, #1A878D, transparent, #4DB8BD, transparent, #1A878D)`,
-  );
+  const rotatingBg = useTransform(rotate, (r) => {
+    const angle = shouldReduceMotion ? 0 : r;
+    return `conic-gradient(from ${angle}deg, var(--color-primary), transparent, color-mix(in oklab, var(--color-primary) 55%, white), transparent, var(--color-primary))`;
+  });
 
   useEffect(() => {
     const originalStyle = document.body.style.overflow;

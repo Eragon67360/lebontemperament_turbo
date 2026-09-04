@@ -21,6 +21,7 @@ import {
   FaUsers,
   FaVideo,
 } from "react-icons/fa";
+import AnniversaryCTA from "./AnniversaryCTA";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FaMusic,
@@ -87,27 +88,11 @@ const NavigationItem = ({
           transition={{ duration: 0.4, ease: "easeOut" }}
           className="mx-auto w-fit md:mx-0"
         >
-          <motion.button
-            variants={{
-              initial: { color: "var(--color-primary)" },
-              hover: { color: "#ffffff" },
-            }}
-            initial="initial"
-            whileHover="hover"
-            transition={{ duration: 0.3 }}
-            className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
+          <AnniversaryCTA
             onClick={() => scrollToSection(card.target_section_id)}
           >
-            <motion.div
-              className="bg-primary absolute inset-0 -z-10"
-              variants={{
-                initial: { y: "100%" },
-                hover: { y: "0%" },
-              }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            />
-            <motion.span>Découvrir</motion.span>
-          </motion.button>
+            Découvrir
+          </AnniversaryCTA>
         </motion.div>
       </div>
 

@@ -22,6 +22,7 @@ import {
   FaVideo,
 } from "react-icons/fa";
 import { IoMusicalNote, IoMusicalNotes } from "react-icons/io5";
+import AnniversaryCTA from "./AnniversaryCTA";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FaMusic,
@@ -449,11 +450,10 @@ const AnniversaryLanding = ({
                   return (
                     <motion.div
                       key={i}
-                      className="absolute text-2xl"
+                      className="text-primary/35 absolute text-2xl"
                       style={{
                         left: `${startX}%`,
                         top: `${startY}%`,
-                        color: "rgba(26, 135, 141, 0.35)",
                       }}
                       animate={{
                         y: ["0%", "-10%", `${endY - startY}%`],
@@ -545,31 +545,17 @@ const AnniversaryLanding = ({
             </motion.div>
 
             <motion.div variants={fadeInUp} className="mt-16">
-              <motion.button
-                variants={{
-                  initial: { color: "var(--color-primary)" },
-                  hover: { color: "#ffffff" },
-                }}
-                initial="initial"
-                whileHover="hover"
-                transition={{ duration: 0.3 }}
-                className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
+              <AnniversaryCTA
                 onClick={() => {
                   document
                     .getElementById(hero.cta_target_section)
-                    ?.scrollIntoView({ behavior: "smooth" });
+                    ?.scrollIntoView({
+                      behavior: shouldReduceMotion ? "auto" : "smooth",
+                    });
                 }}
               >
-                <motion.div
-                  className="bg-primary absolute inset-0 -z-10"
-                  variants={{
-                    initial: { y: "100%" },
-                    hover: { y: "0%" },
-                  }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                />
-                <motion.span>{hero.cta_text}</motion.span>
-              </motion.button>
+                {hero.cta_text}
+              </AnniversaryCTA>
             </motion.div>
           </motion.div>
         </motion.section>

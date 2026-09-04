@@ -11,6 +11,7 @@ import {
 } from "motion/react";
 import { useRef, useState } from "react";
 import { FaPlay, FaYoutube } from "react-icons/fa";
+import AnniversaryCTA from "./AnniversaryCTA";
 import { VideoModal } from "./VideoModal";
 
 interface VideoGalleryProps {
@@ -144,29 +145,9 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-12 text-center"
         >
-          <motion.button
-            variants={{
-              initial: { color: "var(--color-primary)" },
-              hover: { color: "#ffffff" },
-            }}
-            initial="initial"
-            whileHover="hover"
-            transition={{ duration: 0.3 }}
-            className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
-            // onClick={() => console.log("Button clicked!")}
-          >
-            <motion.div
-              className="bg-primary absolute inset-0 -z-10"
-              variants={{
-                initial: { y: "100%" },
-                hover: { y: "0%" },
-              }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            />
-            <motion.span className="flex items-center gap-2">
-              Voir Plus sur <FaYoutube />
-            </motion.span>
-          </motion.button>
+          <AnniversaryCTA>
+            Voir Plus sur <FaYoutube />
+          </AnniversaryCTA>
         </motion.div>
       </div>
 
