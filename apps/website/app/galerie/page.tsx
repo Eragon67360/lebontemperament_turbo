@@ -1,5 +1,5 @@
-import PhotoGallery from "@/components/PhotoGallery";
 import { JsonLd } from "@/components/JsonLd";
+import PhotoGallery from "@/components/PhotoGallery";
 import { YoutubeVideos } from "@/components/YoutubeVideos";
 import { Video } from "@/types/videos";
 import { breadcrumbJsonLd } from "@/utils/seo";

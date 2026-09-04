@@ -165,9 +165,7 @@ const Navigation = () => {
 
         <NavbarContent justify="end">
           {/* Donation link - icon only, large screens */}
-          <DonationCampaignShowcase
-            isLight={isSpecialPath && !hasScrolled}
-          />
+          <DonationCampaignShowcase isLight={isSpecialPath && !hasScrolled} />
           {/* Theme Switcher - Always visible */}
           <ThemeSwitcher isLight={isSpecialPath && !hasScrolled} />
 

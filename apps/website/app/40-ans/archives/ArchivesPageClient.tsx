@@ -3,7 +3,7 @@
 // import { PDFViewer } from "@/components/anniversary/PDFViewer"; // We will remove this static import
 import type { Archive, ArchiveType } from "@/types/anniversary";
 import { Input, Select, SelectItem } from "@heroui/react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView } from "motion/react";
 import dynamic from "next/dynamic"; // STEP 1: Import 'dynamic' from Next.js
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";

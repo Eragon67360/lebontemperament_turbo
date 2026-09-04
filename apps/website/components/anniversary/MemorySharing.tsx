@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormConfig, Memory } from "@/types/anniversary";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";

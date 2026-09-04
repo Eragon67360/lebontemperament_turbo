@@ -1,5 +1,5 @@
-import Map from "@/components/Maps";
 import { JsonLd } from "@/components/JsonLd";
+import Map from "@/components/Maps";
 import Subscribe from "@/components/newsletter/Subscribe";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";

@@ -89,11 +89,11 @@ const Decouvrir = () => {
         </h2>
         <hr className="border-divider mt-2 md:mt-4 lg:mt-8" />
         <p className="text-foreground mt-8 max-w-3xl text-base md:text-lg">
-          Le Bon Tempérament est un ensemble vocal et instrumental fondé en
-          1987 à Saverne, en Alsace, et dirigé depuis sa création par Simone
-          Duclos. Il réunit un chœur d&apos;adultes, un chœur de jeunes, un
-          chœur d&apos;enfants et, depuis 2023, un orchestre symphonique dirigé
-          par Charlotte Lienhard.
+          Le Bon Tempérament est un ensemble vocal et instrumental fondé en 1987
+          à Saverne, en Alsace, et dirigé depuis sa création par Simone Duclos.
+          Il réunit un chœur d&apos;adultes, un chœur de jeunes, un chœur
+          d&apos;enfants et, depuis 2023, un orchestre symphonique dirigé par
+          Charlotte Lienhard.
         </p>
       </div>
 

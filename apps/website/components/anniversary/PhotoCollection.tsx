@@ -3,7 +3,7 @@
 import CloudinaryImage from "@/components/CloudinaryImage";
 import type { Photo } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
-import { AnimatePresence, motion, useInView } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "motion/react";
 import { useRef, useState } from "react";
 import { FaImages, FaTimes } from "react-icons/fa";
 

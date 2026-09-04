@@ -1,7 +1,7 @@
 "use client";
 
 import type { AudioMemory } from "@/types/anniversary";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { FaHeadphones } from "react-icons/fa";
 import { CustomAudioPlayer } from "./CustomAudioPlayer";
