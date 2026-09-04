@@ -12,7 +12,7 @@ export const ERROR_CODES = {
 } as const;
 
 export const ERROR_MESSAGES = {
-  [ERROR_CODES.INVALID_CREDENTIALS]: "Email ou mot de passe éronné",
+  [ERROR_CODES.INVALID_CREDENTIALS]: "Email ou mot de passe erroné",
   [ERROR_CODES.UNAUTHORIZED]: "Accès non autorisé",
   [ERROR_CODES.PROFILE_NOT_FOUND]: "Profil non trouvé",
   [ERROR_CODES.SIGNUP_DISABLED]:

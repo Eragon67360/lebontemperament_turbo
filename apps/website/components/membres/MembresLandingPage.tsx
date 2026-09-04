@@ -134,7 +134,7 @@ export const MembresLandingPage = () => {
         icon: IoTicketOutline,
       },
       {
-        title: "Évènements",
+        title: "Événements",
         description: "Répétitions, ventes et autres",
         href: "/membres/concerts#evenements",
         target: "_self" as const,
