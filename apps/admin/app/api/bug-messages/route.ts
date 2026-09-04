@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
   const messageData: CreateBugMessageDTO = await request.json();
-  const currentUserId = authCheck?.user?.id;
+  const currentUserId = authCheck.user.id;
 
   try {
     // Get the bug report to determine receiver_id

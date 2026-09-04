@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     // First create the CA record
     const { data: newCA, error: caError } = await supabase
       .from("cas")
-      .insert([{ ...caData, created_by: authCheck?.user?.id }])
+      .insert([{ ...caData, created_by: authCheck.user.id }])
       .select()
       .single();
 

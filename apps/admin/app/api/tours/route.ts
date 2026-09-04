@@ -1,6 +1,7 @@
 import { CreateTourDTO, UpdateTourDTO } from "@/types/tours";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
+import type { TablesInsert } from "@repo/domain/database.types";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -57,7 +58,8 @@ export async function POST(request: Request) {
 
     // Log the activity
     const { error: activityError } = await supabase.from("activities").insert({
-      type: "tour_created",
+      // Preserve the existing value until the generated enum includes it.
+      type: "tour_created" as TablesInsert<"activities">["type"],
       user_id: authCheck?.user?.id,
       target_id: newTour.id,
       title: "Nouvelle tournée",

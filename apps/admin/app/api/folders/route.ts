@@ -9,6 +9,13 @@ export async function GET(request: Request) {
   const programId = searchParams.get("programId");
   const groupId = searchParams.get("groupId");
 
+  if (!programId || !groupId) {
+    return NextResponse.json(
+      { error: "programId and groupId are required" },
+      { status: 400 },
+    );
+  }
+
   const supabase = await createClient();
 
   const query = supabase

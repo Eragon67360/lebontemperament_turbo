@@ -63,6 +63,13 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("id");
+  if (!projectId) {
+    return NextResponse.json(
+      { error: "Project ID is required" },
+      { status: 400 },
+    );
+  }
+
   try {
     const supabase = await createClient();
     const json = await request.json();
@@ -88,6 +95,13 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("id");
+  if (!projectId) {
+    return NextResponse.json(
+      { error: "Project ID is required" },
+      { status: 400 },
+    );
+  }
+
   try {
     const supabase = await createClient();
 
