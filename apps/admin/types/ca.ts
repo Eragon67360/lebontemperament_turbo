@@ -1,7 +1,3 @@
-import type { CA } from "@repo/domain/types/ca";
-
-export type { CA };
-
 export interface CreateCADTO {
   title: string;
   date_from: string;

@@ -1,7 +1,7 @@
 // Legacy endpoint for rich editorial concert stories.
 // The `projects` table name is retained for backward compatibility.
-import { DatabaseProject } from "@/types/projects";
 import { createClient } from "@/utils/supabase/server";
+import type { Project } from "@repo/domain/types/projects";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import { NextResponse } from "next/server";
 
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
 
-    let projects: DatabaseProject | DatabaseProject[] | null;
+    let projects: Project | Project[] | null;
     let error;
 
     if (slug) {
@@ -40,8 +40,8 @@ export async function GET(request: Request) {
 
     // Transform database records into the public concert-story format.
     const transformedProjects = Array.isArray(projects)
-      ? projects.map((p: DatabaseProject) => transformProjectForFrontend(p))
-      : [transformProjectForFrontend(projects as DatabaseProject)];
+      ? projects.map((p: Project) => transformProjectForFrontend(p))
+      : [transformProjectForFrontend(projects as Project)];
 
     return NextResponse.json(
       Array.isArray(projects) ? transformedProjects : transformedProjects[0],

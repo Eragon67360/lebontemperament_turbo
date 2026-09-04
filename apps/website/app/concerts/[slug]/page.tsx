@@ -1,9 +1,10 @@
 import ConcertPageClient from "@/components/ConcertPageClient";
 import { JsonLd } from "@/components/JsonLd";
-import { ConcertProject, DatabaseProject } from "@/types/projects";
+import { ConcertProject } from "@/types/projects";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
+import type { Project } from "@repo/domain/types/projects";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -52,7 +53,7 @@ export async function generateMetadata({
       };
     }
 
-    const project = transformProjectForFrontend(dbProject as DatabaseProject);
+    const project = transformProjectForFrontend(dbProject as Project);
 
     return {
       title: `${project.name} ${project.subName || ""}`,
@@ -231,7 +232,7 @@ export default async function ConcertPage({
       );
     }
 
-    const project = transformProjectForFrontend(dbProject as DatabaseProject);
+    const project = transformProjectForFrontend(dbProject as Project);
 
     // Fetch all projects for related projects
     const { data: allDbProjects } = await supabase
@@ -241,9 +242,7 @@ export default async function ConcertPage({
       .order("date", { ascending: false });
 
     const allProjects = allDbProjects
-      ? allDbProjects.map((p: DatabaseProject) =>
-          transformProjectForFrontend(p),
-        )
+      ? allDbProjects.map((p: Project) => transformProjectForFrontend(p))
       : [];
 
     // Find related projects

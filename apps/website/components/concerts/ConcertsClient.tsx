@@ -12,7 +12,7 @@ import {
   Tooltip,
   useDisclosure,
 } from "@heroui/react";
-import { Concert, Context, Tour } from "@repo/domain/types/concerts";
+import { Concert, Tour } from "@repo/domain/types/concerts";
 import { Event } from "@repo/domain/types/events";
 import { Rehearsal } from "@repo/domain/types/rehearsals";
 import { format } from "date-fns";
@@ -40,7 +40,7 @@ interface ConcertsClientProps {
   initialProjects: ConcertProject[];
 }
 
-const contextLabels: Record<Context, string> = {
+const contextLabels: Record<string, string> = {
   orchestre: "Orchestre",
   choeur: "Chœur",
   orchestre_et_choeur: "Orchestre et chœur",
@@ -485,7 +485,7 @@ const ConcertsClient = ({
                                 </p>
                               )}
                               <span className="bg-background text-primary mt-4 inline-flex rounded-full px-3 py-1 text-xs font-medium">
-                                {contextLabels[tour.context as Context]}
+                                {contextLabels[tour.context] ?? tour.context}
                               </span>
                             </div>
                           </div>

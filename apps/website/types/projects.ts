@@ -1,5 +1,3 @@
-import type { Project } from "@repo/domain/types/projects";
-
 export interface Photographer {
   name: string;
   url: string;
@@ -19,9 +17,6 @@ export interface PressArticle {
   url: string;
   source: string;
 }
-
-// ponytail: one-line shim kept per design decision; remove in later cleanup.
-export type DatabaseProject = Project;
 
 // Public concert-story model used by editorial detail pages.
 export interface ConcertProject {

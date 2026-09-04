@@ -1,10 +1,10 @@
 import ConcertsClient from "@/components/concerts/ConcertsClient";
 import { JsonLd } from "@/components/JsonLd";
-import { DatabaseProject } from "@/types/projects";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import { Concert } from "@repo/domain/types/concerts";
 import { Event } from "@repo/domain/types/events";
+import type { Project } from "@repo/domain/types/projects";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 
@@ -141,7 +141,7 @@ async function getPageData() {
   ]);
 
   // Transform projects using the utility
-  const projects = (dbProjects || []).map((p: DatabaseProject) =>
+  const projects = (dbProjects || []).map((p: Project) =>
     transformProjectForFrontend(p),
   );
 
@@ -149,7 +149,7 @@ async function getPageData() {
     projects: projects,
     concerts: concerts || [],
     tours: tours || [],
-    events: (events || []) as Event[], // view-model: events table row shape matches deliberate Event type
+    events: (events || []) as Event[], // view-model: deliberate Event type; also narrows event_type from string to a 5-value union
     rehearsals: rehearsals || [],
   };
 }
