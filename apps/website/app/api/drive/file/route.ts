@@ -1,3 +1,4 @@
+import { checkAuthorization } from "@/utils/auth";
 import { google } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -40,6 +41,14 @@ function getDriveClient() {
  * GET /api/drive/file?fileId=xxx
  */
 export async function GET(req: NextRequest) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const fileId = req.nextUrl.searchParams.get("fileId");
 
   if (!fileId) {

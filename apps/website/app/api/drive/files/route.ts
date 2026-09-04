@@ -1,3 +1,4 @@
+import { checkAuthorization } from "@/utils/auth";
 import { google } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
@@ -15,6 +16,14 @@ interface GoogleDriveError {
 }
 
 export async function GET(req: NextRequest) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = "https://developers.google.com/oauthplayground";
@@ -89,6 +98,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   // const auth_uri = "https://accounts.google.com/o/oauth2/auth";
@@ -179,6 +196,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   // const auth_uri = "https://accounts.google.com/o/oauth2/auth";
