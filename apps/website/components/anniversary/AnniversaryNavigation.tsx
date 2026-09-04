@@ -5,6 +5,7 @@ import {
   motion,
   useInView,
   useMotionValueEvent,
+  useReducedMotion,
   useScroll,
   useTransform,
 } from "motion/react";
@@ -37,10 +38,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const NavigationItem = ({
   card,
   isActive,
+  shouldReduceMotion,
   scrollToSection,
 }: {
   card: NavigationCard;
   isActive: boolean;
+  shouldReduceMotion: boolean;
   scrollToSection: (id: string) => void;
 }) => {
   const IconComponent = iconMap[card.icon_name] || FaMusic;
@@ -49,33 +52,31 @@ const NavigationItem = ({
     <motion.div
       animate={{
         opacity: isActive ? 1 : 0.5,
-        scale: isActive ? 1 : 0.95,
+        scale: shouldReduceMotion || isActive ? 1 : 0.95,
       }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center gap-6 md:flex-row md:gap-12"
     >
       {/* Left side: Text Content */}
       <div className="flex-1 text-center md:text-left">
-        <motion.h3
-          animate={{
-            color: isActive
-              ? "var(--color-slate-900)"
-              : "var(--color-slate-500)",
-          }}
-          className="mb-2 text-2xl font-medium sm:text-3xl dark:text-white"
+        <h3
+          className={`mb-2 text-2xl font-medium transition-colors duration-500 sm:text-3xl ${
+            isActive
+              ? "text-slate-900 dark:text-white"
+              : "text-slate-500 dark:text-slate-400"
+          }`}
         >
           {card.title}
-        </motion.h3>
-        <motion.p
-          animate={{
-            color: isActive
-              ? "var(--color-slate-500)"
-              : "var(--color-slate-400)",
-          }}
-          className="font-light text-slate-500 dark:text-slate-400"
+        </h3>
+        <p
+          className={`font-light transition-colors duration-500 ${
+            isActive
+              ? "text-slate-500 dark:text-slate-400"
+              : "text-slate-400 dark:text-slate-500"
+          }`}
         >
           {card.description}
-        </motion.p>
+        </p>
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{
@@ -128,9 +129,11 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
 
   const { scrollY: parallaxScrollY } = useScroll();
-  const y = useTransform(parallaxScrollY, [0, 1000], [50, -50]);
+  const yRaw = useTransform(parallaxScrollY, [0, 1000], [50, -50]);
+  const y = shouldReduceMotion ? 0 : yRaw;
 
   // Scroll progress within the listRef to determine the active card
   const { scrollYProgress } = useScroll({
@@ -171,7 +174,7 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-16 text-center"
@@ -194,6 +197,7 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
               key={card.id}
               card={card}
               isActive={index === activeCard}
+              shouldReduceMotion={shouldReduceMotion ?? false}
               scrollToSection={scrollToSection}
             />
           ))}

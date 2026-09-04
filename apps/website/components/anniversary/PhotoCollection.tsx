@@ -3,7 +3,12 @@
 import CloudinaryImage from "@/components/CloudinaryImage";
 import type { Photo } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
-import { AnimatePresence, motion, useInView } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "motion/react";
 import { useRef, useState } from "react";
 import { FaImages, FaTimes } from "react-icons/fa";
 
@@ -14,6 +19,7 @@ interface PhotoCollectionProps {
 const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
@@ -40,7 +46,7 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
@@ -90,7 +96,7 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
             <motion.div
               key={photo.id}
               layout
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -162,9 +168,17 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
           >
             <motion.div
               layoutId={selectedPhoto.id}
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              initial={{
+                scale: shouldReduceMotion ? 1 : 0.9,
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 20,
+              }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              exit={{
+                scale: shouldReduceMotion ? 1 : 0.9,
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 20,
+              }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
               className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-lg shadow-2xl"
               onClick={(e) => e.stopPropagation()}

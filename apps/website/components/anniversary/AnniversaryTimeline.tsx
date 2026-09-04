@@ -1,7 +1,13 @@
 "use client";
 
 import type { TimelineEvent } from "@/types/anniversary";
-import { motion, useInView, useScroll, useTransform } from "motion/react";
+import {
+  motion,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
 import { useRef } from "react";
 import {
   FaCalendarAlt,
@@ -34,6 +40,7 @@ interface AnniversaryTimelineProps {
 const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -41,7 +48,8 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
   });
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-  const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const yRaw = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const y = shouldReduceMotion ? 0 : yRaw;
 
   return (
     <section
@@ -56,7 +64,7 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center md:mb-16"
@@ -85,7 +93,10 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
               return (
                 <div key={event.id} className="relative">
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
+                    initial={{
+                      opacity: 0,
+                      scale: shouldReduceMotion ? 1 : 0.5,
+                    }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true, amount: 0.5 }}
                     transition={{ duration: 0.5 }}
@@ -95,7 +106,10 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
                   </motion.div>
 
                   <motion.div
-                    initial={{ opacity: 0, x: isEven ? 20 : -20 }}
+                    initial={{
+                      opacity: 0,
+                      x: shouldReduceMotion ? 0 : isEven ? 20 : -20,
+                    }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, amount: 0.5 }}
                     transition={{ duration: 0.6, delay: 0.2 }}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormConfig, Memory } from "@/types/anniversary";
-import { motion, useInView } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -16,6 +16,7 @@ interface MemorySharingProps {
 const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -103,7 +104,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
@@ -124,7 +125,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
             {featuredMemories.map((memory, index) => (
               <motion.div
                 key={memory.id}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: index * 0.1, duration: 0.6 }}
                 className="relative flex flex-col rounded-xl border border-slate-200/80 bg-white/30 p-6 backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/30"
@@ -159,7 +160,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
 
         {config.is_enabled && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.5, duration: 0.6 }}
             className="mx-auto max-w-2xl rounded-xl border border-slate-200/80 bg-white/30 p-6 backdrop-blur-md sm:p-8 dark:border-slate-800/50 dark:bg-slate-900/30"

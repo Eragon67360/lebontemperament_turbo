@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { FaExternalLinkAlt, FaEye, FaTimes } from "react-icons/fa";
 
@@ -14,6 +14,7 @@ const PreviewBanner = ({
   hideDuringIntro = false,
 }: PreviewBannerProps) => {
   const [isDismissed, setIsDismissed] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -54,7 +55,7 @@ const PreviewBanner = ({
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <div className="flex flex-1 items-center gap-3">
               <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
+                animate={shouldReduceMotion ? {} : { rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
                 className="hidden sm:block"
               >

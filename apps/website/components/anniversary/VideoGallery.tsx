@@ -3,7 +3,12 @@
 import CloudinaryImage from "@/components/CloudinaryImage";
 import type { Video } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
-import { AnimatePresence, motion, useInView } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "motion/react";
 import { useRef, useState } from "react";
 import { FaPlay, FaYoutube } from "react-icons/fa";
 import { VideoModal } from "./VideoModal";
@@ -15,6 +20,7 @@ interface VideoGalleryProps {
 const VideoGallery = ({ videos }: VideoGalleryProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
 
@@ -40,7 +46,7 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
@@ -87,9 +93,17 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
               <motion.div
                 layout
                 key={video.id}
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                initial={{
+                  opacity: 0,
+                  y: shouldReduceMotion ? 0 : 30,
+                  scale: shouldReduceMotion ? 1 : 0.95,
+                }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                exit={{
+                  opacity: 0,
+                  y: shouldReduceMotion ? 0 : -30,
+                  scale: shouldReduceMotion ? 1 : 0.95,
+                }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 onClick={() => setSelectedVideo(video)}
                 className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl dark:border-slate-800/50 dark:bg-slate-900/30"

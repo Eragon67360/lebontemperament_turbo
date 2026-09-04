@@ -4,6 +4,7 @@ import type { AnniversaryHero, HeroStat } from "@/types/anniversary";
 import {
   AnimatePresence,
   motion,
+  useReducedMotion,
   useScroll,
   useTransform,
   type Variants,
@@ -46,22 +47,23 @@ const AnniversaryLanding = ({
   onIntroStateChange,
 }: AnniversaryLandingProps) => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const [showIntro, setShowIntro] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [phase, setPhase] = useState(0);
 
   useLayoutEffect(() => {
-    if (showIntro && hero.enable_intro_animation) {
+    if (showIntro && hero.enable_intro_animation && !shouldReduceMotion) {
       window.scrollTo(0, 0);
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
       };
     }
-  }, [showIntro, hero.enable_intro_animation]);
+  }, [showIntro, hero.enable_intro_animation, shouldReduceMotion]);
 
   useEffect(() => {
-    if (!hero.enable_intro_animation) {
+    if (!hero.enable_intro_animation || shouldReduceMotion) {
       setShowIntro(false);
       setShowContent(true);
       onIntroStateChange?.(false);
@@ -85,7 +87,7 @@ const AnniversaryLanding = ({
       onIntroStateChange?.(false);
     };
     runAnimation();
-  }, [hero.enable_intro_animation, onIntroStateChange]);
+  }, [hero.enable_intro_animation, shouldReduceMotion, onIntroStateChange]);
 
   const handleSkip = () => {
     setShowIntro(false);
@@ -97,9 +99,12 @@ const AnniversaryLanding = ({
   const introAngle = 360 / numBatons;
 
   const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 150]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -100]);
-  const scrollOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const y1Raw = useTransform(scrollY, [0, 500], [0, 150]);
+  const y2Raw = useTransform(scrollY, [0, 500], [0, -100]);
+  const scrollOpacityRaw = useTransform(scrollY, [0, 300], [1, 0]);
+  const y1 = shouldReduceMotion ? 0 : y1Raw;
+  const y2 = shouldReduceMotion ? 0 : y2Raw;
+  const scrollOpacity = shouldReduceMotion ? 1 : scrollOpacityRaw;
 
   const staggerContainer: Variants = {
     hidden: { opacity: 0 },
@@ -433,39 +438,41 @@ const AnniversaryLanding = ({
               className="absolute -right-40 -bottom-40 h-120 w-120 rounded-full bg-sky-400/10 blur-3xl md:h-160 md:w-160"
             />
 
-            <div className="absolute inset-0">
-              {[...Array(15)].map((_, i) => {
-                const startX = ((i * 37 + 17) % 95) + (i % 2) * 3;
-                const startY = ((i * 53 + 29) % 90) + (i % 3) * 5;
-                const endY = ((i * 71 + 41) % 85) + 5;
-                const endX1 = ((i * 89 + 13) % 88) + 6;
-                const endX2 = ((i * 97 + 31) % 83) + 8;
-                return (
-                  <motion.div
-                    key={i}
-                    className="absolute text-2xl"
-                    style={{
-                      left: `${startX}%`,
-                      top: `${startY}%`,
-                      color: "rgba(26, 135, 141, 0.35)",
-                    }}
-                    animate={{
-                      y: ["0%", "-10%", `${endY - startY}%`],
-                      x: ["0%", `${endX1 - startX}%`, `${endX2 - startX}%`],
-                      rotate: [0, 360],
-                    }}
-                    transition={{
-                      duration: Math.random() * 20 + 15,
-                      repeat: Infinity,
-                      delay: i * 0.3,
-                      ease: "linear",
-                    }}
-                  >
-                    {i % 3 === 0 ? <IoMusicalNote /> : <IoMusicalNotes />}
-                  </motion.div>
-                );
-              })}
-            </div>
+            {!shouldReduceMotion && (
+              <div className="absolute inset-0">
+                {[...Array(15)].map((_, i) => {
+                  const startX = ((i * 37 + 17) % 95) + (i % 2) * 3;
+                  const startY = ((i * 53 + 29) % 90) + (i % 3) * 5;
+                  const endY = ((i * 71 + 41) % 85) + 5;
+                  const endX1 = ((i * 89 + 13) % 88) + 6;
+                  const endX2 = ((i * 97 + 31) % 83) + 8;
+                  return (
+                    <motion.div
+                      key={i}
+                      className="absolute text-2xl"
+                      style={{
+                        left: `${startX}%`,
+                        top: `${startY}%`,
+                        color: "rgba(26, 135, 141, 0.35)",
+                      }}
+                      animate={{
+                        y: ["0%", "-10%", `${endY - startY}%`],
+                        x: ["0%", `${endX1 - startX}%`, `${endX2 - startX}%`],
+                        rotate: [0, 360],
+                      }}
+                      transition={{
+                        duration: 15 + ((i * 7) % 20),
+                        repeat: Infinity,
+                        delay: i * 0.3,
+                        ease: "linear",
+                      }}
+                    >
+                      {i % 3 === 0 ? <IoMusicalNote /> : <IoMusicalNotes />}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <motion.div
