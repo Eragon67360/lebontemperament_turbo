@@ -15,24 +15,24 @@ const ConcertPhotos = () => {
     "https://res.cloudinary.com/dlt2j3dld/image/upload/f_auto,q_auto/v1/Site/home/concerts/";
 
   useEffect(() => {
-    const photos = [
-      "voyage_operas",
-      "influences_tziganes",
-      "camino_latino",
-      "king_arthur",
-    ];
+    const CONCERT_TITLES: Record<string, string> = {
+      voyage_operas: "Voyage en Opéras",
+      influences_tziganes: "Influences Tziganes",
+      camino_latino: "Camino Latino",
+      king_arthur: "King Arthur",
+    };
     const loadImages = async () => {
-      const imagePromises = photos.map(
-        (image) =>
+      const imagePromises = Object.entries(CONCERT_TITLES).map(
+        ([slug, title]) =>
           new Promise<PhotoData>((resolve) => {
             const img = new window.Image();
-            img.src = `${BASE_IMAGE_URL_CONCERTS}${image}`;
+            img.src = `${BASE_IMAGE_URL_CONCERTS}${slug}`;
             img.onload = () =>
               resolve({
                 src: img.src,
                 width: img.naturalWidth,
                 height: img.naturalHeight,
-                alt: `Image de concert`,
+                alt: `Photographie du concert ${title}`,
               });
           }),
       );

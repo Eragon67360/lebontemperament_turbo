@@ -184,22 +184,14 @@ export default function PhotoGallery() {
 
       <Lightbox
         index={photoIndexConcerts}
-        slides={imagesConcerts.map((photo) => ({
-          src: photo.src,
-          width: photo.width,
-          height: photo.height,
-        }))}
+        slides={imagesConcerts}
         open={photoIndexConcerts >= 0}
         close={() => setPhotoIndexConcerts(-1)}
       />
 
       <Lightbox
         index={photoIndexVieBT}
-        slides={imagesVieBT.map((photo) => ({
-          src: photo.src,
-          width: photo.width,
-          height: photo.height,
-        }))}
+        slides={imagesVieBT}
         open={photoIndexVieBT >= 0}
         close={() => setPhotoIndexVieBT(-1)}
       />
