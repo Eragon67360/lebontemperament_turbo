@@ -51,7 +51,11 @@ import {
   useUpdateRehearsal,
 } from "@/hooks/useRehearsals";
 import { cn } from "@/lib/utils";
-import { GROUP_TYPES, GroupType, Rehearsal } from "@/types/rehearsals";
+import {
+  GROUP_TYPES,
+  GroupType,
+  Rehearsal,
+} from "@repo/domain/types/rehearsals";
 import { addWeeks, format, isAfter, isBefore, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import {

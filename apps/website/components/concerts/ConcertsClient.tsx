@@ -2,7 +2,6 @@
 
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { ConcertProject } from "@/types/projects";
-import { Rehearsal } from "@/types/rehearsals";
 import { RoundedSize } from "@/utils/types";
 import {
   Button,
@@ -15,6 +14,7 @@ import {
 } from "@heroui/react";
 import { Concert, Context, Tour } from "@repo/domain/types/concerts";
 import { Event } from "@repo/domain/types/events";
+import { Rehearsal } from "@repo/domain/types/rehearsals";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
