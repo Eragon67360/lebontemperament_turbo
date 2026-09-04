@@ -1,4 +1,3 @@
-// types/videos.ts
 export interface Video {
   id: string;
   created_at: string;

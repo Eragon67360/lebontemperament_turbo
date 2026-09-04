@@ -1,7 +1,7 @@
 import { CA, UpdateCADTO } from "@/types/ca";
 import { checkAuthorization } from "@/utils/auth";
-import { getFileNameFromUrl } from "@/utils/storage";
 import { createClient } from "@/utils/supabase/server";
+import { getFileNameFromUrl } from "@repo/domain/utils/storage";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { NextResponse } from "next/server";

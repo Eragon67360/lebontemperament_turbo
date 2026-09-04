@@ -25,8 +25,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { VideoForm } from "@/components/VideoForm";
 import { YoutubeIframe } from "@/components/YoutubeIframe";
-import { Video, VideoFormData } from "@/types/video";
 import { extractYouTubeId } from "@/utils/youtube";
+import { Video, VideoFormData } from "@repo/domain/types/videos";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Film, MapPin, Mic2, Pencil, Plus, Trash2, User } from "lucide-react";

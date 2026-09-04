@@ -9,6 +9,7 @@ const nextConfig = {
   turbopack: {
     root: path.join(__dirname, "..", ".."),
   },
+  transpilePackages: ["@repo/domain"],
   async redirects() {
     return [
       {

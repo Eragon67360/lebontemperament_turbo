@@ -23,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Event } from "@/types/events";
+import { Event } from "@repo/domain/types/events";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
