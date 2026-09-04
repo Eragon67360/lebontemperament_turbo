@@ -1,10 +1,10 @@
 import ConcertPageClient from "@/components/ConcertPageClient";
 import { JsonLd } from "@/components/JsonLd";
 import { ConcertProject, DatabaseProject } from "@/types/projects";
-import { transformProjectForFrontend } from "@/utils/projects";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
+import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IoIosArrowRoundBack } from "react-icons/io";

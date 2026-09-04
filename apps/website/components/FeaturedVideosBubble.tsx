@@ -1,8 +1,8 @@
 "use client";
 
-import { extractYouTubeId } from "@/utils/youtube";
 import { Button } from "@heroui/react";
 import { Video } from "@repo/domain/types/videos";
+import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";

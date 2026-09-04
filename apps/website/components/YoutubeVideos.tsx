@@ -1,7 +1,7 @@
 "use client";
 
-import { extractYouTubeId } from "@/utils/youtube";
 import { Video } from "@repo/domain/types/videos";
+import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import { useEffect, useState } from "react";
 import YouTubeVideo from "./YouTubeVideo";
 

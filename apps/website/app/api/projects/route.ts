@@ -1,8 +1,8 @@
 // Legacy endpoint for rich editorial concert stories.
 // The `projects` table name is retained for backward compatibility.
 import { DatabaseProject } from "@/types/projects";
-import { transformProjectForFrontend } from "@/utils/projects";
 import { createClient } from "@/utils/supabase/server";
+import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
