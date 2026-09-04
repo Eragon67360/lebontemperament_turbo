@@ -99,23 +99,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select("slug, date, updated_at");
 
     if (projects) {
-      dynamicRoutes = projects.map(
-        (project: { slug: string; date?: string; updated_at?: string }) => {
-          // Use updated_at if available, otherwise use date, otherwise use current date
-          const lastModified = project.updated_at
-            ? new Date(project.updated_at).toISOString()
-            : project.date
-              ? new Date(project.date).toISOString()
-              : new Date().toISOString();
+      dynamicRoutes = projects.map((project) => {
+        // Use updated_at if available, otherwise use date, otherwise use current date
+        const lastModified = project.updated_at
+          ? new Date(project.updated_at).toISOString()
+          : project.date
+            ? new Date(project.date).toISOString()
+            : new Date().toISOString();
 
-          return {
-            url: `${WEBSITE_URL}/concerts/${project.slug}`,
-            lastModified,
-            changeFrequency: "monthly" as ChangeFrequency,
-            priority: 0.6,
-          };
-        },
-      );
+        return {
+          url: `${WEBSITE_URL}/concerts/${project.slug}`,
+          lastModified,
+          changeFrequency: "monthly" as ChangeFrequency,
+          priority: 0.6,
+        };
+      });
     }
   } catch (error) {
     console.error("Error fetching projects for sitemap:", error);

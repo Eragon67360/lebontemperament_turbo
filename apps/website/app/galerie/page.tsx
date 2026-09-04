@@ -118,7 +118,7 @@ async function getVideos(): Promise<Video[]> {
       return [];
     }
 
-    return videos || [];
+    return (videos || []) as Video[]; // view-model: youtube_links nullability handled by UI defaults
   } catch (error) {
     console.error("Error fetching videos:", error);
     return [];

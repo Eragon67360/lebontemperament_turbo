@@ -4,6 +4,7 @@ import { DatabaseProject } from "@/types/projects";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import { Concert } from "@repo/domain/types/concerts";
+import { Event } from "@repo/domain/types/events";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 
@@ -148,7 +149,7 @@ async function getPageData() {
     projects: projects,
     concerts: concerts || [],
     tours: tours || [],
-    events: events || [],
+    events: (events || []) as Event[], // view-model: events table row shape matches deliberate Event type
     rehearsals: rehearsals || [],
   };
 }

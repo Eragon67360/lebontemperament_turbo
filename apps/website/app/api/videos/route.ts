@@ -1,5 +1,6 @@
 // app/api/videos/route.ts
 import { createClient } from "@/utils/supabase/server";
+import { Video } from "@repo/domain/types/videos";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -16,7 +17,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(videos);
+    return NextResponse.json((videos || []) as Video[]); // view-model: youtube_links nullability handled by UI defaults
   } catch (error) {
     console.error(error);
 

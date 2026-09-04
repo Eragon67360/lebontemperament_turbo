@@ -90,7 +90,7 @@ export async function GET() {
 
         return {
           "NOM Prénom":
-            profile.display_name || profile.email.split("@")[0] || "",
+            profile.display_name || profile.email?.split("@")[0] || "",
           "Adresse mail": profile.email || "",
           "Adresse postale": profile.address || "",
           Domicile: profile.home_phone || "",

@@ -1,3 +1,4 @@
+import type { Database } from "@repo/domain/database.types";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
     const token = authHeader.slice(7);
 
-    const supabase = createClient(
+    const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );

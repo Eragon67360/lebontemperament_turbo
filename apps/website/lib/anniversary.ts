@@ -117,15 +117,16 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
 
     // Construct response with fallbacks for optional data
     return {
-      hero: heroResult.data,
+      hero: heroResult.data as AnniversaryPageData["hero"], // view-model: CMS enforces non-null hero fields
       heroStats: heroStatsResult.data || [],
       navigationCards: navigationCardsResult.data || [],
       timelineEvents: timelineEventsResult.data || [],
       videos: videosResult.data || [],
       audioMemories: audioMemoriesResult.data || [],
       photos: photosResult.data || [],
-      formConfig: formConfigResult.data,
-      featuredMemories: memoriesResult.data || [],
+      formConfig: formConfigResult.data as AnniversaryPageData["formConfig"], // view-model: CMS enforces non-null form labels
+      featuredMemories: (memoriesResult.data ||
+        []) as AnniversaryPageData["featuredMemories"], // view-model: featured filter guarantees non-null flags
     };
   } catch (error) {
     console.error("Error fetching anniversary data:", error);
