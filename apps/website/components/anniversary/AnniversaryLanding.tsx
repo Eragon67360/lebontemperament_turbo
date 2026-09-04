@@ -232,10 +232,17 @@ const AnniversaryLanding = ({
 
   return (
     <>
+      {/* Runs before paint: hides the SSR'd intro overlay for returning
+          visitors / reduced-motion users so it never flashes on screen. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `try{if(sessionStorage.getItem("${INTRO_SEEN_KEY}")==="true"||matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("intro-skip")}catch(e){}`,
+        }}
+      />
       {showIntro && (
         <div
           ref={introRef}
-          className="fixed inset-0 z-999 overflow-hidden bg-black"
+          className="intro-root fixed inset-0 z-999 overflow-hidden bg-black"
         >
           <button
             onClick={skipIntro}
