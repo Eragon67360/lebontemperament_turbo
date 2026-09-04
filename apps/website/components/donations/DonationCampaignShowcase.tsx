@@ -253,4 +253,3 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
 };
 
 export default DonationCampaignShowcase;
-

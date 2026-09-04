@@ -1,7 +1,13 @@
 "use client";
 
 import type { AudioMemory } from "@/types/anniversary";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
 import { useRef } from "react";
 import { FaHeadphones } from "react-icons/fa";
 import { CustomAudioPlayer } from "./CustomAudioPlayer";
@@ -13,9 +19,11 @@ interface AudioMemoriesProps {
 const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
 
   const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 1000], [30, -30]);
+  const yRaw = useTransform(scrollY, [0, 1000], [30, -30]);
+  const y = shouldReduceMotion ? 0 : yRaw;
 
   return (
     <section
@@ -30,7 +38,7 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
@@ -51,7 +59,7 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
           {audioMemories.map((memory, index) => (
             <motion.div
               key={memory.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: index * 0.1, duration: 0.6 }}
               className="group flex flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md sm:p-6 dark:border-slate-800/50 dark:bg-slate-900/30"

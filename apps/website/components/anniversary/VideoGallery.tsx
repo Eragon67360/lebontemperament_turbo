@@ -3,9 +3,15 @@
 import CloudinaryImage from "@/components/CloudinaryImage";
 import type { Video } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
-import { AnimatePresence, motion, useInView } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "motion/react";
 import { useRef, useState } from "react";
 import { FaPlay, FaYoutube } from "react-icons/fa";
+import AnniversaryCTA from "./AnniversaryCTA";
 import { VideoModal } from "./VideoModal";
 
 interface VideoGalleryProps {
@@ -15,6 +21,7 @@ interface VideoGalleryProps {
 const VideoGallery = ({ videos }: VideoGalleryProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
 
@@ -40,7 +47,7 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
@@ -87,12 +94,29 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
               <motion.div
                 layout
                 key={video.id}
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                initial={{
+                  opacity: 0,
+                  y: shouldReduceMotion ? 0 : 30,
+                  scale: shouldReduceMotion ? 1 : 0.95,
+                }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                exit={{
+                  opacity: 0,
+                  y: shouldReduceMotion ? 0 : -30,
+                  scale: shouldReduceMotion ? 1 : 0.95,
+                }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 onClick={() => setSelectedVideo(video)}
-                className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl dark:border-slate-800/50 dark:bg-slate-900/30"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedVideo(video);
+                  }
+                }}
+                aria-label={`Lire la vidéo ${video.title}`}
+                className="group focus-visible:outline-primary relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-all duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98] dark:border-slate-800/50 dark:bg-slate-900/30"
               >
                 <div className="relative aspect-video overflow-hidden">
                   <CloudinaryImage
@@ -130,29 +154,12 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-12 text-center"
         >
-          <motion.button
-            variants={{
-              initial: { color: "var(--color-primary)" },
-              hover: { color: "#ffffff" },
-            }}
-            initial="initial"
-            whileHover="hover"
-            transition={{ duration: 0.3 }}
-            className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
-            // onClick={() => console.log("Button clicked!")}
+          <AnniversaryCTA
+            href="https://www.youtube.com/@lebontemperament"
+            external
           >
-            <motion.div
-              className="bg-primary absolute inset-0 -z-10"
-              variants={{
-                initial: { y: "100%" },
-                hover: { y: "0%" },
-              }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            />
-            <motion.span className="flex items-center gap-2">
-              Voir Plus sur <FaYoutube />
-            </motion.span>
-          </motion.button>
+            Voir Plus sur <FaYoutube />
+          </AnniversaryCTA>
         </motion.div>
       </div>
 

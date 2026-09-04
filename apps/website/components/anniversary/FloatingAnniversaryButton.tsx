@@ -2,7 +2,12 @@
 
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import { gsap } from "gsap";
-import { motion, useMotionValue, useSpring } from "motion/react";
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaBirthdayCake, FaStar } from "react-icons/fa";
@@ -13,6 +18,7 @@ const FloatingAnniversaryButton = () => {
   const router = useRouter();
   const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const [isHovered, setIsHovered] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -24,8 +30,9 @@ const FloatingAnniversaryButton = () => {
   const x = useSpring(mouseX, springConfig);
   const y = useSpring(mouseY, springConfig);
 
-  // Track mouse position
+  // Track mouse position (magnetic follow — skipped under reduced motion)
   useEffect(() => {
+    if (shouldReduceMotion) return;
     const handleMouseMove = (e: MouseEvent) => {
       if (buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
@@ -44,25 +51,16 @@ const FloatingAnniversaryButton = () => {
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, shouldReduceMotion]);
 
   // Create confetti particles
   const createConfetti = () => {
     if (confettiActive) return;
     setConfettiActive(true);
 
-    const colors = [
-      "#1A878D",
-      "#0D6B70",
-      "#1A878D",
-      "#0D6B70",
-      "#1A878D",
-      "#0D6B70",
-      "#1A878D",
-      "#0D6B70",
-      "#1A878D",
-      "#0D6B70",
-    ];
+    // primary-500 / primary-600 from hero.ts (kept as hexes: particles are
+    // created imperatively outside the CSS cascade)
+    const colors = ["#1a878d", "#156C71"];
 
     for (let i = 0; i < 50; i++) {
       const confetti = document.createElement("div");
@@ -70,7 +68,7 @@ const FloatingAnniversaryButton = () => {
       confetti.style.width = `${Math.random() * 10 + 5}px`;
       confetti.style.height = `${Math.random() * 10 + 5}px`;
       confetti.style.backgroundColor =
-        colors[Math.floor(Math.random() * colors.length)] || "#FF6B6B";
+        colors[Math.floor(Math.random() * colors.length)] ?? "#1a878d";
       confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
       confetti.style.left = `${mousePosition.x}px`;
       confetti.style.top = `${mousePosition.y}px`;
@@ -91,6 +89,10 @@ const FloatingAnniversaryButton = () => {
   };
 
   const handleClick = () => {
+    if (shouldReduceMotion) {
+      void router.push("/40-ans");
+      return;
+    }
     createConfetti();
     setTimeout(() => {
       void router.push("/40-ans");
@@ -115,9 +117,9 @@ const FloatingAnniversaryButton = () => {
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="bg-primary group hover:shadow-primary/50 fixed bottom-8 left-8 z-50 hidden h-24 w-24 items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110 lg:flex"
+      className="bg-primary group hover:shadow-primary/50 focus-visible:outline-primary fixed bottom-8 left-8 z-50 hidden h-24 w-24 cursor-pointer items-center justify-center rounded-full shadow-2xl transition-shadow duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 lg:flex"
       style={{ x, y }}
-      whileHover={{ scale: 1.1 }}
+      whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       aria-label="Célébrer 40 ans du Bon Tempérament"
     >
@@ -125,8 +127,8 @@ const FloatingAnniversaryButton = () => {
       <motion.div
         className="absolute inset-0 rounded-full border-4 border-white/30"
         animate={{
-          scale: isHovered ? [1, 1.3, 1] : 1,
-          opacity: isHovered ? [0.5, 0, 0.5] : 0.5,
+          scale: isHovered && !shouldReduceMotion ? [1, 1.3, 1] : 1,
+          opacity: isHovered && !shouldReduceMotion ? [0.5, 0, 0.5] : 0.5,
         }}
         transition={{
           duration: 2,
@@ -136,7 +138,7 @@ const FloatingAnniversaryButton = () => {
       />
 
       {/* Sparkles */}
-      {isHovered && (
+      {isHovered && !shouldReduceMotion && (
         <>
           {[...Array(8)].map((_, i) => (
             <motion.div
@@ -169,7 +171,8 @@ const FloatingAnniversaryButton = () => {
         <motion.span
           className="text-3xl font-black text-white drop-shadow-lg"
           animate={{
-            rotate: isHovered ? [0, -10, 10, -10, 10, 0] : 0,
+            rotate:
+              isHovered && !shouldReduceMotion ? [0, -10, 10, -10, 10, 0] : 0,
           }}
           transition={{ duration: 0.5 }}
         >

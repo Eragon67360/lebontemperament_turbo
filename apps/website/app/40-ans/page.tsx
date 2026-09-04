@@ -1,5 +1,5 @@
-import { getAnniversaryPageData } from "@/lib/anniversary";
 import { JsonLd } from "@/components/JsonLd";
+import { getAnniversaryPageData } from "@/lib/anniversary";
 import { checkAdminAuth } from "@/utils/auth";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";

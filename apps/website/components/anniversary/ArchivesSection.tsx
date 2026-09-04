@@ -1,13 +1,14 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import Link from "next/link";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { useRef } from "react";
 import { FaArchive, FaArrowRight } from "react-icons/fa";
+import AnniversaryCTA from "./AnniversaryCTA";
 
 const ArchivesSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <section
@@ -21,7 +22,7 @@ const ArchivesSection = () => {
       </div>
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="text-center"
@@ -38,37 +39,15 @@ const ArchivesSection = () => {
           </p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.3, duration: 0.6 }}
             className="mt-8"
           >
-            <Link href="/40-ans/archives">
-              {/* @next-codemod-error This Link previously used the now removed `legacyBehavior` prop, and has a child that might not be an anchor. The codemod bailed out of lifting the child props to the Link. Check that the child component does not render an anchor, and potentially move the props manually to Link. */}
-              <motion.a
-                variants={{
-                  initial: { color: "var(--color-primary)" },
-                  hover: { color: "#ffffff" },
-                }}
-                initial="initial"
-                whileHover="hover"
-                transition={{ duration: 0.3 }}
-                className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative inline-flex items-center justify-center overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
-              >
-                <motion.div
-                  className="bg-primary absolute inset-0 -z-10"
-                  variants={{
-                    initial: { y: "100%" },
-                    hover: { y: "0%" },
-                  }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                />
-                <span className="flex items-center gap-3">
-                  Consulter les archives
-                  <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
-                </span>
-              </motion.a>
-            </Link>
+            <AnniversaryCTA href="/40-ans/archives">
+              Consulter les archives
+              <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+            </AnniversaryCTA>
           </motion.div>
         </motion.div>
       </div>

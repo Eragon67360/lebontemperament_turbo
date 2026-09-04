@@ -219,7 +219,10 @@ const HomeContent = () => {
               {/* Anniversary CTA */}
               {(isAnniversaryEnabled || isAdmin) && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
+                  initial={{
+                    opacity: 0,
+                    scale: prefersReducedMotion ? 1 : 0.9,
+                  }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
                   className="!md:max-w-md mt-8 flex w-fit overflow-hidden px-4"
@@ -229,7 +232,7 @@ const HomeContent = () => {
                     href="/40-ans"
                     size="lg"
                     radius="full"
-                    className="hover:shadow-primary/50 flex w-fit max-w-fit bg-linear-to-r from-[#1A878D] via-[#3D7CB2] to-[#9D609B] px-2 py-3 text-xs font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 sm:px-4 sm:text-sm md:w-fit md:max-w-fit md:text-base lg:px-6"
+                    className="hover:shadow-primary/50 from-primary-600 via-primary to-primary-400 dark:from-primary-700 dark:via-primary-600 dark:to-primary-500 flex w-fit max-w-fit bg-linear-to-r px-2 py-3 text-xs font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 sm:px-4 sm:text-sm md:w-fit md:max-w-fit md:text-base lg:px-6"
                     aria-label="Célébrer 40 ans du Bon Tempérament"
                   >
                     <span className="hidden text-sm sm:text-base md:block md:text-xl">
