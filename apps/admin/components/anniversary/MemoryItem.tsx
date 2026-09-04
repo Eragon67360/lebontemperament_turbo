@@ -57,7 +57,9 @@ export function MemoryItem({
               )}
             </div>
             <span className="text-muted-foreground shrink-0 text-xs">
-              {new Date(memory.created_at).toLocaleDateString("fr-FR")}
+              {memory.created_at
+                ? new Date(memory.created_at).toLocaleDateString("fr-FR")
+                : "—"}
             </span>
           </div>
 

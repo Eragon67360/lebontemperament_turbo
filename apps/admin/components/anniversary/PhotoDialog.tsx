@@ -62,7 +62,7 @@ export function PhotoDialog({
         category: photo.category,
         image_url: photo.image_url,
         display_order: photo.display_order,
-        is_visible: photo.is_visible,
+        is_visible: photo.is_visible ?? true,
       });
     } else {
       setFormData({
