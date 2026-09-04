@@ -1,7 +1,7 @@
 // app/auth/callback/route.ts
-import { ERROR_CODES } from "@/consts/errorMessages";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/server";
+import { ERROR_CODES } from "@repo/domain/consts/errorMessages";
 import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);

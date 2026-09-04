@@ -2,10 +2,10 @@
 
 import { login } from "@/app/auth/login/actions";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { ERROR_MESSAGES } from "@/consts/errorMessages";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { Button, Checkbox, Input, addToast } from "@heroui/react";
+import { ERROR_MESSAGES } from "@repo/domain/consts/errorMessages";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";

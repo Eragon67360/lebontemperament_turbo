@@ -4,7 +4,7 @@ import { login } from "@/app/auth/login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ERROR_MESSAGES } from "@/consts/errorMessages";
+import { ERROR_MESSAGES } from "@repo/domain/consts/errorMessages";
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";

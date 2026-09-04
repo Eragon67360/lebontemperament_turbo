@@ -27,12 +27,7 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.ACCOUNT_NOT_FOUND]: "Aucun compte n'existe avec cet email",
 } as const;
 
-// Type pour les codes d'erreur
 export type ErrorCode = keyof typeof ERROR_CODES;
 
-// Fonction utilitaire pour obtenir le message d'erreur
-export const getErrorMessage = (code: ErrorCode | string): string => {
-  return (
-    ERROR_MESSAGES[code as ErrorCode] || "Une erreur inattendue est survenue"
-  );
-};
+export const getErrorMessage = (code: ErrorCode | string): string =>
+  ERROR_MESSAGES[code as ErrorCode] || "Une erreur inattendue est survenue";
