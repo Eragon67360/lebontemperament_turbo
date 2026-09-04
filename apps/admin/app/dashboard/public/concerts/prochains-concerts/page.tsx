@@ -39,8 +39,8 @@ import {
   useTours,
   useUpdateTour,
 } from "@/hooks/useTours";
-import { Concert, Context } from "@/types/concerts";
 import { Tour } from "@/types/tours";
+import { Concert, Context } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -397,7 +397,7 @@ export default function ProchainsConcerts() {
         context: form.context.value,
         name: form.concertName.value,
         additional_informations: form.additional_informations.value,
-        related_link: form.related_link.value,
+        related_link: form.related_link.value || null,
         affiche,
       };
 
@@ -443,7 +443,7 @@ export default function ProchainsConcerts() {
         additional_informations: formData.get(
           "additional_informations",
         ) as string,
-        related_link: formData.get("related_link") as string,
+        related_link: (formData.get("related_link") as string) || null,
         affiche,
       };
 

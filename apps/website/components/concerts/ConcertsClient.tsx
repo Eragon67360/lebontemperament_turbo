@@ -1,7 +1,6 @@
 "use client";
 
 import CloudinaryImage from "@/components/CloudinaryImage";
-import { Concert, Context, Tour } from "@/types/concerts";
 import { ConcertProject } from "@/types/projects";
 import { Rehearsal } from "@/types/rehearsals";
 import { RoundedSize } from "@/utils/types";
@@ -14,6 +13,7 @@ import {
   Tooltip,
   useDisclosure,
 } from "@heroui/react";
+import { Concert, Context, Tour } from "@repo/domain/types/concerts";
 import { Event } from "@repo/domain/types/events";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -485,7 +485,7 @@ const ConcertsClient = ({
                                 </p>
                               )}
                               <span className="bg-background text-primary mt-4 inline-flex rounded-full px-3 py-1 text-xs font-medium">
-                                {contextLabels[tour.context]}
+                                {contextLabels[tour.context as Context]}
                               </span>
                             </div>
                           </div>

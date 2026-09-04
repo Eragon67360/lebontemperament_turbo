@@ -1,6 +1,6 @@
-import { Concert, UpdateConcertDTO } from "@/types/concerts";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
+import { Concert, UpdateConcertDTO } from "@repo/domain/types/concerts";
 import { getFileNameFromUrl } from "@repo/domain/utils/storage";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";

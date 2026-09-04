@@ -1,10 +1,10 @@
 import ConcertsClient from "@/components/concerts/ConcertsClient";
 import { JsonLd } from "@/components/JsonLd";
-import { Concert } from "@/types/concerts";
 import { DatabaseProject } from "@/types/projects";
 import { transformProjectForFrontend } from "@/utils/projects";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
+import { Concert } from "@repo/domain/types/concerts";
 import type { Metadata } from "next";
 
 // --- Metadata Configuration ---
