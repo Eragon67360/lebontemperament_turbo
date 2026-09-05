@@ -30,20 +30,33 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # For deployment_status events: only react to successful Preview deploys
-    # of the dev branch (PR previews and production deploys are ignored).
-    # If this never fires, Vercel may be setting deployment.ref to the commit
-    # SHA instead of the branch name — inspect a run's event payload.
+    # For deployment_status events: only react to successful Preview deploys.
+    # Vercel sets environment to "Preview – <project>" and ref to the commit
+    # SHA, so the dev-branch check happens in the first step below.
     if: >-
       github.event_name != 'deployment_status' ||
       (github.event.deployment_status.state == 'success' &&
-       github.event.deployment.environment == 'Preview' &&
-       github.event.deployment.ref == 'dev')
+       startsWith(github.event.deployment.environment, 'Preview'))
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2] # bump total when the suite grows past ~60 tests
     steps:
+      - name: Confirm deployment is the dev branch head
+        if: github.event_name == 'deployment_status'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Vercel sets deployment.ref to the commit SHA, so compare against
+            // the dev branch head to ignore PR previews and stale deploys.
+            // Exit 78 = neutral conclusion (not a failure, no notification).
+            const { owner, repo } = context.repo;
+            const sha = context.payload.deployment.sha;
+            const { data: branch } = await github.rest.repos.getBranch({ owner, repo, branch: 'dev' });
+            if (branch.commit.sha !== sha) {
+              core.info(`deployment ${sha.slice(0, 7)} is not dev head (${branch.commit.sha.slice(0, 7)}) — skipping.`);
+              process.exit(78);
+            }
       - name: Wait for all Vercel deployments of this commit
         if: github.event_name == 'deployment_status'
         uses: actions/github-script@v7
@@ -110,8 +123,9 @@ jobs:
 
   merge-report:
     needs: test
-    # Skip when the test job was skipped (non-success deployment_status events).
-    if: always() && needs.test.result != 'skipped'
+    # Skip when the test job was skipped (non-success deployment_status events)
+    # or neutral (deployment_status not from the dev head — see gate step).
+    if: always() && !contains(fromJSON('["skipped", "neutral"]'), needs.test.result)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
