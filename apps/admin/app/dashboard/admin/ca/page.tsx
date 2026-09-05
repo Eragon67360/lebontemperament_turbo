@@ -313,7 +313,7 @@ export default function ConseilsAdministration() {
                       mode="single"
                       selected={dateFrom}
                       onSelect={setDateFrom}
-                      initialFocus
+                      autoFocus
                       locale={fr}
                     />
                   </PopoverContent>

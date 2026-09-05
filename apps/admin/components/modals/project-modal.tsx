@@ -487,7 +487,7 @@ export function ProjectModal({
                           onSelect={(date) =>
                             setFormData({ ...formData, date: date || null })
                           }
-                          initialFocus
+                          autoFocus
                           locale={fr}
                         />
                       </PopoverContent>

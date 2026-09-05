@@ -95,7 +95,7 @@ export function EventForm({
                 mode="single"
                 selected={dateFrom}
                 onSelect={setDateFrom}
-                initialFocus
+                autoFocus
                 locale={fr}
               />
             </PopoverContent>
@@ -127,7 +127,7 @@ export function EventForm({
                 selected={dateTo}
                 onSelect={setDateTo}
                 disabled={(date) => (dateFrom ? date < dateFrom : false)}
-                initialFocus
+                autoFocus
                 locale={fr}
               />
             </PopoverContent>

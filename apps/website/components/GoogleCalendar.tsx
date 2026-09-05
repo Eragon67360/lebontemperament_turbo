@@ -1,12 +1,13 @@
 "use client";
-import dayGridPlugin from "@fullcalendar/daygrid";
 import googleCalendarPlugin from "@fullcalendar/google-calendar";
 import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/react/daygrid";
+import frLocale from "@fullcalendar/react/locales/fr";
+import "@fullcalendar/react/skeleton.css";
+import themePlugin from "@fullcalendar/react/themes/classic";
+import "@fullcalendar/react/themes/classic/palette.css";
+import "@fullcalendar/react/themes/classic/theme.css";
 import React from "react";
-
-// Update CSS imports
-// import '@fullcalendar/core/main.css';
-// import '@fullcalendar/daygrid/main.css';
 
 interface GoogleCalendarProps {
   embedId: string;
@@ -16,14 +17,14 @@ const GoogleCalendar: React.FC<GoogleCalendarProps> = () => {
   return (
     <div className="bg-content1 rounded p-4 shadow">
       <FullCalendar
-        plugins={[dayGridPlugin, googleCalendarPlugin]}
+        plugins={[themePlugin, dayGridPlugin, googleCalendarPlugin]}
         initialView="dayGridMonth"
         headerToolbar={{
           left: "prev,next today",
           center: "title",
           right: "dayGridMonth",
         }}
-        locale="fr" // If you want French localization
+        locale={frLocale}
         googleCalendarApiKey={process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_API_KEY}
         eventSources={[
           {

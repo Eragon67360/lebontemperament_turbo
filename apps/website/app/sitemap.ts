@@ -5,13 +5,7 @@ const WEBSITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://www.lebontemperament.com";
 
 type ChangeFrequency =
-  | "always"
-  | "hourly"
-  | "daily"
-  | "weekly"
-  | "monthly"
-  | "yearly"
-  | "never";
+  "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [

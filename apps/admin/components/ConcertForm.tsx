@@ -101,7 +101,7 @@ export function ConcertForm({
                 mode="single"
                 selected={date}
                 onSelect={setDate}
-                initialFocus
+                autoFocus
                 locale={fr}
               />
             </PopoverContent>

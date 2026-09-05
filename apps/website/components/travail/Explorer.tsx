@@ -3,8 +3,7 @@ import { DriveFile } from "@/utils/types";
 import { Button } from "@heroui/react";
 import { FC, useEffect, useState } from "react";
 import { FaFile, FaFolder, FaMusic, FaRegFilePdf } from "react-icons/fa";
-import { IoArrowBack } from "react-icons/io5";
-import { SiMusescore } from "react-icons/si";
+import { IoArrowBack, IoMusicalNotes } from "react-icons/io5";
 import { toast } from "sonner";
 
 interface ExplorerProps {
@@ -71,7 +70,9 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       case "audio/wav":
         return <FaMusic className="text-blue-500 dark:text-blue-400" />;
       case "application/x-musescore":
-        return <SiMusescore className="text-purple-500 dark:text-purple-400" />;
+        return (
+          <IoMusicalNotes className="text-purple-500 dark:text-purple-400" />
+        );
       default:
         return <FaFile className="text-default-500" />;
     }

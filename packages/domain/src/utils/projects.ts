@@ -56,7 +56,6 @@ export function transformProjectForFrontend(dbProject: Project) {
     author: dbProject.author_name ? { name: dbProject.author_name } : undefined,
     press_articles:
       (dbProject.press_articles as
-        | { title: string; url: string; source: string }[]
-        | null) || undefined,
+        { title: string; url: string; source: string }[] | null) || undefined,
   };
 }
