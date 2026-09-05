@@ -10,6 +10,13 @@ export async function GET(request: Request) {
   const groupId = searchParams.get("groupId");
   const folderId = searchParams.get("folderId");
 
+  if (!programId || !groupId) {
+    return NextResponse.json(
+      { error: "programId and groupId are required" },
+      { status: 400 },
+    );
+  }
+
   const supabase = await createClient();
 
   let query = supabase

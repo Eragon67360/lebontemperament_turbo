@@ -2,13 +2,19 @@ import { cloudinary } from "@/cloudinary.config";
 import { ImageResourceProps, PhotoData } from "@/utils/types";
 import { NextRequest, NextResponse } from "next/server";
 
+const FOLDER_LABELS = new Map([
+  ["concerts", "Photo de concert"],
+  ["vie_bt", "Photo de la vie de l'ensemble"],
+]);
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   const folder = searchParams.get("folder");
-  if (!folder) {
+  const label = folder ? FOLDER_LABELS.get(folder) : undefined;
+  if (!label) {
     return NextResponse.json(
-      { message: "Folder parameter is required" },
+      { message: "Invalid folder parameter" },
       { status: 400 },
     );
   }
@@ -20,11 +26,14 @@ export async function GET(request: NextRequest) {
       max_results: 50,
     });
 
-    const images: PhotoData = resources.resources.map(
-      (resource: ImageResourceProps) => ({
+    const images: PhotoData[] = resources.resources.map(
+      (resource: ImageResourceProps, index: number) => ({
+        key: resource.public_id,
         src: resource.secure_url,
         width: resource.width,
         height: resource.height,
+        // ponytail: generic fallback until Cloudinary DAM alt text is backfilled (context.custom.alt)
+        alt: `${label} ${index + 1} — Le Bon Tempérament`,
       }),
     );
 

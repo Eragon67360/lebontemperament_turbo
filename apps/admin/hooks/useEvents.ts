@@ -1,4 +1,8 @@
-import { CreateEventDTO, Event, UpdateEventDTO } from "@/types/events";
+import {
+  CreateEventDTO,
+  Event,
+  UpdateEventDTO,
+} from "@repo/domain/types/events";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Fetch events

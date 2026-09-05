@@ -1,6 +1,6 @@
 {
   "name": "admin",
-  "version": "2.0.60",
+  "version": "2.0.90",
   "type": "module",
   "private": true,
   "scripts": {
@@ -33,9 +33,9 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@repo/ui": "*",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.3",
+    "@repo/domain": "*",
     "@types/papaparse": "^5.5.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

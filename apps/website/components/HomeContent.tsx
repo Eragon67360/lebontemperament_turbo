@@ -76,12 +76,10 @@ const HomeContent = () => {
   }, []);
 
   const { scrollY } = useScroll();
-  const scale = prefersReducedMotion
-    ? 1
-    : useTransform(scrollY, [0, maxScrollPx], [1, 0.82]);
-  const opacity = prefersReducedMotion
-    ? 1
-    : useTransform(scrollY, [0, maxScrollPx], [1, 0]);
+  const animatedScale = useTransform(scrollY, [0, maxScrollPx], [1, 0.82]);
+  const animatedOpacity = useTransform(scrollY, [0, maxScrollPx], [1, 0]);
+  const scale = prefersReducedMotion ? 1 : animatedScale;
+  const opacity = prefersReducedMotion ? 1 : animatedOpacity;
 
   return (
     <>

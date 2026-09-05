@@ -1,8 +1,8 @@
 "use server";
 
-import { ERROR_CODES } from "@/consts/errorMessages";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/server";
+import { ERROR_CODES } from "@repo/domain/consts/errorMessages";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 export async function login(formData: FormData) {

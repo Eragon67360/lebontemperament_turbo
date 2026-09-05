@@ -13,7 +13,7 @@ function Map() {
 
       // Check if API key is set
       if (!apiKey) {
-        setError("Google Maps API key is not configured");
+        setError("La carte n’est pas configurée.");
         console.error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set");
         return;
       }
@@ -77,11 +77,9 @@ function Map() {
           errorMessage.includes("BillingNotEnabled") ||
           errorMessage.includes("billing")
         ) {
-          setError(
-            "Google Maps billing is not enabled. Please enable billing in Google Cloud Console.",
-          );
+          setError("La carte est temporairement indisponible.");
         } else {
-          setError(`Error loading map: ${errorMessage}`);
+          setError("Impossible de charger la carte.");
         }
       }
     };

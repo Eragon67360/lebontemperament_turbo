@@ -39,11 +39,16 @@ export function BugReportDialog({
 
     setIsSubmitting(true);
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User must be authenticated");
+
       const { error } = await supabase.from("bug_reports").insert([
         {
           title,
           description,
-          reported_by: (await supabase.auth.getUser()).data.user?.id,
+          reported_by: user.id,
         },
       ]);
 

@@ -56,7 +56,7 @@ export function NavigationCardDialog({
         icon_name: card.icon_name as IconName,
         target_section_id: card.target_section_id,
         display_order: card.display_order,
-        is_visible: card.is_visible,
+        is_visible: card.is_visible ?? true,
       });
     } else {
       setFormData({

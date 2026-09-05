@@ -1,5 +1,5 @@
 // components/SuccessMessage.tsx
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { VideoCarousel, type Video } from "./VideoCarousel";
 

@@ -34,10 +34,10 @@ export function HeroInlineEditor() {
         hero_number: hero.hero_number,
         hero_subtitle: hero.hero_subtitle,
         description: hero.description || "",
-        cta_text: hero.cta_text,
-        cta_target_section: hero.cta_target_section,
-        enable_intro_animation: hero.enable_intro_animation,
-        skip_button_text: hero.skip_button_text,
+        cta_text: hero.cta_text ?? "",
+        cta_target_section: hero.cta_target_section ?? "",
+        enable_intro_animation: hero.enable_intro_animation ?? true,
+        skip_button_text: hero.skip_button_text ?? "",
       });
     }
   }, [hero]);

@@ -324,8 +324,8 @@ export default function AnniversaryPageClient({
                 email: m.email,
                 message: m.message,
                 year: m.year,
-                is_featured: m.is_featured,
-                created_at: m.created_at,
+                is_featured: m.is_featured ?? false,
+                created_at: m.created_at ?? "",
               })),
             }));
           }

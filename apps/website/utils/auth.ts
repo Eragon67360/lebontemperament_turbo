@@ -1,4 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@repo/domain/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
 
 export async function checkAuthorization() {
@@ -18,7 +19,7 @@ export async function checkAuthorization() {
  * @returns boolean indicating if user is admin
  */
 export async function isAdmin(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<boolean> {
   const { data: profile, error } = await supabase

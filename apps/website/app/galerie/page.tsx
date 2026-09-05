@@ -1,10 +1,10 @@
 import { JsonLd } from "@/components/JsonLd";
 import PhotoGallery from "@/components/PhotoGallery";
 import { YoutubeVideos } from "@/components/YoutubeVideos";
-import { Video } from "@/types/videos";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
-import { extractYouTubeId } from "@/utils/youtube";
+import { Video } from "@repo/domain/types/videos";
+import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
@@ -118,7 +118,7 @@ async function getVideos(): Promise<Video[]> {
       return [];
     }
 
-    return videos || [];
+    return (videos || []) as Video[]; // view-model: youtube_links nullability handled by UI defaults
   } catch (error) {
     console.error("Error fetching videos:", error);
     return [];

@@ -1,7 +1,6 @@
 "use client";
 
 import clsx from "clsx";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   AlertTriangle,
@@ -9,6 +8,7 @@ import {
   Clock, // <-- Import the Clock icon
   ShipWheel,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 
 // --- Data Interfaces (No changes here) ---

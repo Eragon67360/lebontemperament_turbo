@@ -1,6 +1,6 @@
 "use client";
 
-import { CA } from "@/types/ca";
+import { CA } from "@repo/domain/types/ca";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { FaRegFilePdf } from "react-icons/fa6";

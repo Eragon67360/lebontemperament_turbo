@@ -12,7 +12,7 @@ export const ERROR_CODES = {
 } as const;
 
 export const ERROR_MESSAGES = {
-  [ERROR_CODES.INVALID_CREDENTIALS]: "Email ou mot de passe éronné",
+  [ERROR_CODES.INVALID_CREDENTIALS]: "Email ou mot de passe erroné",
   [ERROR_CODES.UNAUTHORIZED]: "Accès non autorisé",
   [ERROR_CODES.PROFILE_NOT_FOUND]: "Profil non trouvé",
   [ERROR_CODES.SIGNUP_DISABLED]:
@@ -27,12 +27,7 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.ACCOUNT_NOT_FOUND]: "Aucun compte n'existe avec cet email",
 } as const;
 
-// Type pour les codes d'erreur
 export type ErrorCode = keyof typeof ERROR_CODES;
 
-// Fonction utilitaire pour obtenir le message d'erreur
-export const getErrorMessage = (code: ErrorCode | string): string => {
-  return (
-    ERROR_MESSAGES[code as ErrorCode] || "Une erreur inattendue est survenue"
-  );
-};
+export const getErrorMessage = (code: ErrorCode | string): string =>
+  ERROR_MESSAGES[code as ErrorCode] || "Une erreur inattendue est survenue";

@@ -1,5 +1,5 @@
-import { DatabaseProject } from "@/types/projects";
 import { createAdminClient } from "@/utils/supabase/admin";
+import type { Project } from "@repo/domain/types/projects";
 
 const WEBSITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://www.lebontemperament.com";
@@ -26,7 +26,7 @@ export async function GET() {
       .limit(20);
 
     if (projects) {
-      items = projects.map((p: DatabaseProject) => {
+      items = projects.map((p: Project) => {
         const url = `${WEBSITE_URL}/concerts/${p.slug}`;
         const pubDate = new Date(p.updated_at || p.date).toUTCString();
         return `    <item>

@@ -1,19 +1,6 @@
-import { Context } from "./concerts";
+import type { Context, Tour as DomainTour } from "@repo/domain/types/concerts";
 
-export interface Tour {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  description: string | null;
-  context: Context;
-  start_date: string | null;
-  end_date: string | null;
-  tour_poster: string | null;
-  is_active: boolean;
-  created_by: string;
-  concert_count?: number;
-}
+export type Tour = DomainTour & { concert_count?: number };
 
 export interface CreateTourDTO {
   name: string;

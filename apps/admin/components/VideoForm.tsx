@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Video, VideoFormData } from "@/types/video";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Video, VideoFormData } from "@repo/domain/types/videos";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";

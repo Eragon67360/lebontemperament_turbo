@@ -1,7 +1,8 @@
-import { CA, UpdateCADTO } from "@/types/ca";
+import { UpdateCADTO } from "@/types/ca";
 import { checkAuthorization } from "@/utils/auth";
-import { getFileNameFromUrl } from "@/utils/storage";
 import { createClient } from "@/utils/supabase/server";
+import { CA } from "@repo/domain/types/ca";
+import { getFileNameFromUrl } from "@repo/domain/utils/storage";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { NextResponse } from "next/server";
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     // First create the CA record
     const { data: newCA, error: caError } = await supabase
       .from("cas")
-      .insert([{ ...caData, created_by: authCheck?.user?.id }])
+      .insert([{ ...caData, created_by: authCheck.user.id }])
       .select()
       .single();
 

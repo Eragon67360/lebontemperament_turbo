@@ -17,7 +17,10 @@ async function checkAuthorization() {
     .eq("id", data.user.id)
     .single();
 
-  if (!userProfile || !["admin", "superadmin"].includes(userProfile.role)) {
+  if (
+    !userProfile?.role ||
+    !["admin", "superadmin"].includes(userProfile.role)
+  ) {
     return { authorized: false, error: "Non autorisé", status: 403 };
   }
 
