@@ -4,9 +4,8 @@ on:
   schedule:
     # ~07:30 Europe/Paris (CEST). GitHub cron is UTC-only and may drift 5-30min.
     - cron: "30 5 * * *"
-  # Staging deploys from dev — re-test after each push lands.
-  push:
-    branches: [dev]
+  # Staging deploys from dev — re-test once Vercel reports the deployments ready.
+  deployment_status:
   workflow_dispatch:
     inputs:
       project:
@@ -15,24 +14,64 @@ on:
         options: [all, website, admin]
         default: all
 
-# Never cancel mid-run against live staging (could leave cleanup half-done).
+# Deployment-triggered runs are per-commit and cancel superseded gate-waiters;
+# scheduled/dispatch runs share one group and are never cancelled mid-run
+# (could leave cleanup half-done against live staging).
 concurrency:
-  group: e2e-daily
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'deployment_status' && format('e2e-deploy-{0}', github.event.deployment.sha) || 'e2e-daily' }}
+  cancel-in-progress: ${{ github.event_name == 'deployment_status' }}
 
 permissions:
   contents: read
   issues: write
+  deployments: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # For deployment_status events: only react to successful Preview deploys
+    # of the dev branch (PR previews and production deploys are ignored).
+    # If this never fires, Vercel may be setting deployment.ref to the commit
+    # SHA instead of the branch name — inspect a run's event payload.
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Preview' &&
+       github.event.deployment.ref == 'dev')
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2] # bump total when the suite grows past ~60 tests
     steps:
+      - name: Wait for all Vercel deployments of this commit
+        if: github.event_name == 'deployment_status'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = context.payload.deployment.sha;
+            const deadline = Date.now() + 10 * 60 * 1000;
+            while (Date.now() < deadline) {
+              const { data: deployments } = await github.rest.repos.listDeployments({ owner, repo, sha });
+              const states = [];
+              for (const d of deployments) {
+                const { data: s } = await github.rest.repos.listDeploymentStatuses({
+                  owner, repo, deployment_id: d.id, per_page: 1,
+                });
+                states.push(`${d.environment}:${s[0]?.state ?? 'unknown'}`);
+              }
+              core.info(`deployments for ${sha.slice(0, 7)}: ${states.join(', ')}`);
+              // ponytail: Vercel registers both projects' deployments within
+              // seconds of the push, long before the first success event —
+              // so "all current deployments succeeded" implies both apps.
+              if (states.length > 0 && states.every((s) => s.endsWith(':success'))) return;
+              if (states.some((s) => s.endsWith(':failure') || s.endsWith(':error'))) {
+                core.setFailed('A Vercel deployment failed for this commit.');
+              }
+              await new Promise((r) => setTimeout(r, 20000));
+            }
+            core.setFailed('Timed out waiting for Vercel deployments.');
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -45,11 +84,6 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      # ponytail: fixed wait for the Vercel staging deploy triggered by the same
-      # push; upgrade path = deployment_status trigger filtered on Vercel success.
-      - name: Wait for Vercel staging deploy
-        if: github.event_name == 'push'
-        run: sleep 180
       - name: Run E2E tests (shard ${{ matrix.shard }}/2)
         working-directory: apps/e2e
         env:
@@ -76,7 +110,8 @@ jobs:
 
   merge-report:
     needs: test
-    if: always()
+    # Skip when the test job was skipped (non-success deployment_status events).
+    if: always() && needs.test.result != 'skipped'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +123,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: blob-report-*
-          path: all-blobs
+          path: apps/e2e/all-blobs
           merge-multiple: true
       - run: npx playwright merge-reports --reporter=html ./all-blobs
         working-directory: apps/e2e
