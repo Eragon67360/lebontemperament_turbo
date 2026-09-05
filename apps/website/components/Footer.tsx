@@ -24,9 +24,8 @@ const Footer = () => {
           <CldImage
             src={"Site/logo"}
             alt="Logo Le Bon Tempérament"
-            width={160}
-            height={160}
-            className="scale-75"
+            width={120}
+            height={120}
           />
           <p className="text-default-600 max-w-xs text-center text-sm lg:text-left">
             Ensemble vocal et instrumental partageant la passion de la musique

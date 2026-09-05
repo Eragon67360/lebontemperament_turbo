@@ -187,6 +187,7 @@ const Navigation = () => {
                     width={16}
                     height={16}
                     rounded={RoundedSize.NONE}
+                    className="size-4"
                   />
                 </Link>
               </Tooltip>

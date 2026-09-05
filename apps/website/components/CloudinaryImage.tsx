@@ -31,14 +31,18 @@ const CloudinaryImage: FC<CloudinaryImageProps> = ({
   // Smart default sizes based on width
   // For full-width images (>= 1000px), use full viewport
   // For medium images (500-999px), use responsive sizing
-  // For small images (< 500px), use fixed width
+  // For small images (< 500px), the rendered size is fixed: don't let the
+  // browser pick a multi-thousand-pixel rendition for a 16px icon
   const defaultSizes =
     sizes ||
     (width >= 1000
       ? "(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
       : width >= 500
         ? "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-        : "(max-width: 768px) 100vw, 500px");
+        : `${width}px`);
+
+  // next/image warns about blur placeholders on tiny images (< 40px)
+  const useBlurPlaceholder = width >= 40 && height >= 40;
 
   return (
     <CldImage
@@ -51,8 +55,13 @@ const CloudinaryImage: FC<CloudinaryImageProps> = ({
       loading={priority ? "eager" : "lazy"}
       quality={quality}
       sizes={defaultSizes}
-      placeholder="blur"
-      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+      {...(useBlurPlaceholder
+        ? {
+            placeholder: "blur" as const,
+            blurDataURL:
+              "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==",
+          }
+        : {})}
       onError={(e) => {
         console.error(`Failed to load image: ${src}`);
         // Fallback to a placeholder or error state
