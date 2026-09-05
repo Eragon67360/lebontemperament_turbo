@@ -110,8 +110,10 @@ const Navigation = () => {
   return (
     !isMembresSection && (
       <nav
-        className={`w-full overflow-x-hidden transition-colors ${
-          isSpecialPath && !hasScrolled ? "bg-background/0" : "bg-background/50"
+        className={`sticky top-0 z-50 w-full overflow-x-hidden transition-colors ${
+          isSpecialPath && !hasScrolled
+            ? "bg-background/0"
+            : "bg-background/50 backdrop-blur-lg"
         }`}
         aria-label="Navigation principale"
       >
