@@ -23,7 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Project } from "@/types/projects";
+import { Project } from "@repo/domain/types/projects";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -223,7 +223,7 @@ export function ProjectModal({
           text1: project.text1 || "",
           text2: project.text2 || "",
           author_name: project.author_name || null,
-          display_order: project.display_order,
+          display_order: project.display_order ?? 0,
         });
       } else {
         // Reset form for new entry

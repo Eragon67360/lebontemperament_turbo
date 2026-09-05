@@ -1,7 +1,7 @@
 "use client";
 
 import type { Video } from "@/types/anniversary";
-import { motion, useTime, useTransform } from "motion/react";
+import { motion, useReducedMotion, useTime, useTransform } from "motion/react";
 import { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 
@@ -27,14 +27,14 @@ const getEmbedUrl = (url: string): string => {
 };
 
 export function VideoModal({ video, onClose }: VideoModalProps) {
+  const shouldReduceMotion = useReducedMotion();
   const time = useTime();
   const rotate = useTransform(time, [0, 4000], [0, 360], { clamp: false });
 
-  const rotatingBg = useTransform(
-    rotate,
-    (r) =>
-      `conic-gradient(from ${r}deg, #1A878D, transparent, #4DB8BD, transparent, #1A878D)`,
-  );
+  const rotatingBg = useTransform(rotate, (r) => {
+    const angle = shouldReduceMotion ? 0 : r;
+    return `conic-gradient(from ${angle}deg, var(--color-primary), transparent, color-mix(in oklab, var(--color-primary) 55%, white), transparent, var(--color-primary))`;
+  });
 
   useEffect(() => {
     const originalStyle = document.body.style.overflow;
@@ -61,9 +61,17 @@ export function VideoModal({ video, onClose }: VideoModalProps) {
     >
       <motion.div
         layout
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        initial={{
+          scale: shouldReduceMotion ? 1 : 0.9,
+          opacity: 0,
+          y: shouldReduceMotion ? 0 : 20,
+        }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        exit={{
+          scale: shouldReduceMotion ? 1 : 0.9,
+          opacity: 0,
+          y: shouldReduceMotion ? 0 : 20,
+        }}
         transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
         className="relative w-full max-w-4xl"
         onClick={(e) => e.stopPropagation()}

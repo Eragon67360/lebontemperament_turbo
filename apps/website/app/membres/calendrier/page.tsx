@@ -1,6 +1,6 @@
 "use client";
 import GoogleCalendar from "@/components/GoogleCalendar";
-import { GroupType, Rehearsal } from "@/types/rehearsals";
+import { GroupType, Rehearsal } from "@repo/domain/types/rehearsals";
 import { format, isAfter, isSameDay, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "motion/react";

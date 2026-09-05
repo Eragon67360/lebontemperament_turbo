@@ -35,13 +35,13 @@ export function FormConfigInlineEditor() {
       setFormData({
         section_title: config.section_title,
         section_description: config.section_description,
-        name_label: config.name_label,
-        email_label: config.email_label,
-        message_label: config.message_label,
-        year_label: config.year_label,
-        submit_button_text: config.submit_button_text,
-        success_message: config.success_message,
-        is_enabled: config.is_enabled,
+        name_label: config.name_label ?? "",
+        email_label: config.email_label ?? "",
+        message_label: config.message_label ?? "",
+        year_label: config.year_label ?? "",
+        submit_button_text: config.submit_button_text ?? "",
+        success_message: config.success_message ?? "",
+        is_enabled: config.is_enabled ?? true,
       });
     }
   }, [config]);

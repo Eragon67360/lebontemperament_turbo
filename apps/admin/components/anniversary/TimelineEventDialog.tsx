@@ -56,7 +56,7 @@ export function TimelineEventDialog({
         description: event.description,
         icon_name: event.icon_name as IconName,
         display_order: event.display_order,
-        is_visible: event.is_visible,
+        is_visible: event.is_visible ?? true,
       });
     } else {
       setFormData({

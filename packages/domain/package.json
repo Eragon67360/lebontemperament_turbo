@@ -1,0 +1,18 @@
+{
+  "name": "@repo/domain",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "db:types": "sh scripts/db-types.sh",
+    "test": "tsx src/utils/youtube.test.ts"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "@types/node": "^22.14.0",
+    "typescript": "5.8.2"
+  }
+}

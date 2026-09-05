@@ -92,10 +92,7 @@ export default function DonationTiers() {
         })}
       </div>
 
-      <div
-        className="bg-default-100 mb-6 rounded-lg p-5"
-        aria-live="polite"
-      >
+      <div className="bg-default-100 mb-6 rounded-lg p-5" aria-live="polite">
         <p className="mb-2 text-3xl" aria-hidden="true">
           {selectedTier.emoji}
         </p>

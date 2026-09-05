@@ -1,6 +1,6 @@
-import { CreateEventDTO, UpdateEventDTO } from "@/types/events";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
+import { CreateEventDTO, UpdateEventDTO } from "@repo/domain/types/events";
 import { NextResponse } from "next/server";
 
 export async function GET() {

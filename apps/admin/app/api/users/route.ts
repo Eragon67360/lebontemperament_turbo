@@ -126,7 +126,10 @@ export async function POST(request: Request) {
       .eq("id", data.user.id)
       .single();
 
-    if (!userProfile || !["admin", "superadmin"].includes(userProfile.role)) {
+    if (
+      !userProfile?.role ||
+      !["admin", "superadmin"].includes(userProfile.role)
+    ) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 

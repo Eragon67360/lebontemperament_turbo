@@ -1,4 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@repo/domain/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
 
 export async function checkAuthorization() {
@@ -6,7 +7,7 @@ export async function checkAuthorization() {
 
   const { data } = await supabase.auth.getUser();
   if (!data.user) {
-    return { error: "Non authentifié", status: 401 };
+    return { error: "Non authentifié", status: 401 } as const;
   }
 
   const { data: userProfile } = await supabase
@@ -15,15 +16,15 @@ export async function checkAuthorization() {
     .eq("id", data.user.id)
     .single();
 
-  if (!userProfile || !["admin", "superadmin"].includes(userProfile.role)) {
-    return { authorized: false, error: "Non autorisé", status: 403 };
+  if (!["admin", "superadmin"].includes(userProfile?.role ?? "user")) {
+    return { authorized: false, error: "Non autorisé", status: 403 } as const;
   }
 
-  return { authorized: true, user: data.user };
+  return { authorized: true, user: data.user } as const;
 }
 
 // utils/auth.ts
-export async function isAdmin(supabase: SupabaseClient) {
+export async function isAdmin(supabase: SupabaseClient<Database>) {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("role")

@@ -22,7 +22,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Project } from "@/types/projects";
 import {
   closestCenter,
   DndContext,
@@ -40,6 +39,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Project } from "@repo/domain/types/projects";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {

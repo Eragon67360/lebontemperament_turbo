@@ -1,4 +1,8 @@
-import { Concert, CreateConcertDTO, UpdateConcertDTO } from "@/types/concerts";
+import {
+  Concert,
+  CreateConcertDTO,
+  UpdateConcertDTO,
+} from "@repo/domain/types/concerts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useConcerts() {

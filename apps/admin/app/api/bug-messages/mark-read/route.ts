@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   }
 
   const { bug_report_id } = await request.json();
-  const currentUserId = authCheck?.user?.id;
+  const currentUserId = authCheck.user.id;
 
   if (!bug_report_id) {
     return NextResponse.json(

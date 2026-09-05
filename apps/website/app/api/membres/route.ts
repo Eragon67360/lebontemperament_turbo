@@ -1,10 +1,19 @@
 // app/api/membres/route.ts
+import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import { User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
     const supabaseAdmin = createAdminClient();
@@ -81,7 +90,7 @@ export async function GET() {
 
         return {
           "NOM Prénom":
-            profile.display_name || profile.email.split("@")[0] || "",
+            profile.display_name || profile.email?.split("@")[0] || "",
           "Adresse mail": profile.email || "",
           "Adresse postale": profile.address || "",
           Domicile: profile.home_phone || "",

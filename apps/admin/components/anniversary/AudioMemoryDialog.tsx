@@ -60,7 +60,7 @@ export function AudioMemoryDialog({
         duration: audio.duration,
         audio_url: audio.audio_url,
         display_order: audio.display_order,
-        is_visible: audio.is_visible,
+        is_visible: audio.is_visible ?? true,
       });
     } else {
       setFormData({

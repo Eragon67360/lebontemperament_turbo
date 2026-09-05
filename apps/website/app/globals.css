@@ -84,6 +84,13 @@
     }
   }
 
+  /* Hide the SSR'd anniversary intro before hydration when it will be
+     skipped anyway (returning visitor or reduced motion) — set by an
+     inline script in AnniversaryLanding. */
+  html.intro-skip .intro-root {
+    display: none;
+  }
+
   /* High contrast accessibility */
   @media (prefers-contrast: high) {
     :root {

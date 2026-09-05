@@ -309,14 +309,9 @@ const ContactForm = () => {
                 sitekey={siteKey}
                 ref={recaptchaRef}
                 onChange={(value) => {
-                  console.log(
-                    "reCAPTCHA onChange triggered with value:",
-                    value,
-                  );
                   setCaptchaValue(value);
                 }}
                 onExpired={() => {
-                  console.log("reCAPTCHA expired");
                   setCaptchaValue(null);
                 }}
                 theme={resolvedTheme === "dark" ? "dark" : "light"}

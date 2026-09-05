@@ -2,7 +2,7 @@
 
 import { useEasterEgg } from "@/hooks/useEasterEgg";
 import { Modal, ModalBody, ModalContent } from "@heroui/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import React, { useEffect, useState } from "react";
 import { SuccessMessage } from "./SuccessMessage";
 const emulateTaps = () => {

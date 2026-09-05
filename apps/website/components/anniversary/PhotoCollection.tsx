@@ -3,9 +3,15 @@
 import CloudinaryImage from "@/components/CloudinaryImage";
 import type { Photo } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
-import { AnimatePresence, motion, useInView } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "motion/react";
 import { useRef, useState } from "react";
 import { FaImages, FaTimes } from "react-icons/fa";
+import AnniversaryCTA from "./AnniversaryCTA";
 
 interface PhotoCollectionProps {
   photos: Photo[];
@@ -14,6 +20,7 @@ interface PhotoCollectionProps {
 const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
@@ -40,7 +47,7 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
@@ -86,38 +93,52 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
         </motion.div>
 
         <div className="columns-1 gap-6 sm:columns-2 sm:gap-8 lg:columns-3">
-          {filteredPhotos.map((photo) => (
-            <motion.div
-              key={photo.id}
-              layout
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="group relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl dark:border-slate-800/50 dark:bg-slate-900/30"
-              onClick={() => setSelectedPhoto(photo)}
-            >
-              <CloudinaryImage
-                src={photo.image_url}
-                alt={photo.title}
-                width={800}
-                height={600}
-                rounded={RoundedSize.NONE}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div
-                className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent transition-colors duration-300 md:from-black/20 md:group-hover:from-black/60"
-                aria-hidden="true"
-              />
-              <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
-                <h3 className="font-medium sm:text-lg">{photo.title}</h3>
-                <p className="text-sm font-light text-white/80">{photo.year}</p>
-                <p className="mt-1 line-clamp-1 max-h-0 overflow-hidden text-sm font-light text-white/90 opacity-0 transition-all duration-300 group-hover:max-h-16 group-hover:opacity-100">
-                  {photo.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+          <AnimatePresence>
+            {filteredPhotos.map((photo) => (
+              <motion.div
+                key={photo.id}
+                layout
+                layoutId={photo.id}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="group focus-visible:outline-primary relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-slate-800/50 dark:bg-slate-900/30"
+                onClick={() => setSelectedPhoto(photo)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedPhoto(photo);
+                  }
+                }}
+                aria-label={`Agrandir la photo ${photo.title}`}
+              >
+                <CloudinaryImage
+                  src={photo.image_url}
+                  alt={photo.title}
+                  width={800}
+                  height={600}
+                  rounded={RoundedSize.NONE}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div
+                  className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent transition-colors duration-300 md:from-black/20 md:group-hover:from-black/60"
+                  aria-hidden="true"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
+                  <h3 className="font-medium sm:text-lg">{photo.title}</h3>
+                  <p className="text-sm font-light text-white/80">
+                    {photo.year}
+                  </p>
+                  <p className="mt-1 line-clamp-1 max-h-0 overflow-hidden text-sm font-light text-white/90 opacity-0 transition-all duration-300 group-hover:max-h-16 group-hover:opacity-100">
+                    {photo.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
         <motion.div
@@ -126,27 +147,7 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-6 text-center sm:mt-12"
         >
-          <motion.button
-            variants={{
-              initial: { color: "var(--color-primary)" },
-              hover: { color: "#ffffff" },
-            }}
-            initial="initial"
-            whileHover="hover"
-            transition={{ duration: 0.3 }}
-            className="group border-primary/40 text-primary hover:border-primary/80 dark:border-primary/50 dark:text-primary relative overflow-hidden rounded-md border bg-transparent px-8 py-3 font-medium transition-colors duration-300"
-            // onClick={() => console.log("Button clicked!")}
-          >
-            <motion.div
-              className="bg-primary absolute inset-0 -z-10"
-              variants={{
-                initial: { y: "100%" },
-                hover: { y: "0%" },
-              }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            />
-            <motion.span>Voir Plus de Photos</motion.span>
-          </motion.button>
+          <AnniversaryCTA href="/galerie">Voir Plus de Photos</AnniversaryCTA>
         </motion.div>
       </div>
 
@@ -162,9 +163,17 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
           >
             <motion.div
               layoutId={selectedPhoto.id}
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              initial={{
+                scale: shouldReduceMotion ? 1 : 0.9,
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 20,
+              }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              exit={{
+                scale: shouldReduceMotion ? 1 : 0.9,
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 20,
+              }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
               className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-lg shadow-2xl"
               onClick={(e) => e.stopPropagation()}

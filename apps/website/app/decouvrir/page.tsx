@@ -9,7 +9,7 @@ import { keyword } from "../layout";
 export const metadata: Metadata = {
   title: "Chœur et Orchestre à Saverne depuis 1987",
   description:
-    'Plongez dans l"univers de Le Bon Tempérament, une association de musique française dédiée à la diffusion de la musique et à la création de moments inoubliables. Découvrez notre mission, nos valeurs, et notre passion pour la musique.',
+    "Plongez dans l’univers de Le Bon Tempérament, une association de musique française dédiée à la diffusion de la musique et à la création de moments inoubliables. Découvrez notre mission, nos valeurs et notre passion pour la musique.",
   keywords: `${keyword.join(", ")}`,
   openGraph: {
     type: "website",
@@ -89,11 +89,11 @@ const Decouvrir = () => {
         </h2>
         <hr className="border-divider mt-2 md:mt-4 lg:mt-8" />
         <p className="text-foreground mt-8 max-w-3xl text-base md:text-lg">
-          Le Bon Tempérament est un ensemble vocal et instrumental fondé en
-          1987 à Saverne, en Alsace, et dirigé depuis sa création par Simone
-          Duclos. Il réunit un chœur d&apos;adultes, un chœur de jeunes, un
-          chœur d&apos;enfants et, depuis 2023, un orchestre symphonique dirigé
-          par Charlotte Lienhard.
+          Le Bon Tempérament est un ensemble vocal et instrumental fondé en 1987
+          à Saverne, en Alsace, et dirigé depuis sa création par Simone Duclos.
+          Il réunit un chœur d&apos;adultes, un chœur de jeunes, un chœur
+          d&apos;enfants et, depuis 2023, un orchestre symphonique dirigé par
+          Charlotte Lienhard.
         </p>
       </div>
 

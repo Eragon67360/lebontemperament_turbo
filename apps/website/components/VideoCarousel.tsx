@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { BiDownArrow, BiUpArrow } from "react-icons/bi";
 import { HiVolumeOff, HiVolumeUp } from "react-icons/hi";

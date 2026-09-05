@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   const supabase = await createClient();
-  const userId = authCheck?.user?.id;
+  const userId = authCheck.user.id;
 
   // Check if user is superadmin
   const { data: profile } = await supabase

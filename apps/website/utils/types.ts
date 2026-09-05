@@ -18,9 +18,11 @@ export interface ImageResourceProps {
 }
 
 export interface PhotoData {
+  key: string;
   src: string;
   width: number;
   height: number;
+  alt: string;
 }
 
 export interface DriveFile {

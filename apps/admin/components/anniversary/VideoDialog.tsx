@@ -64,7 +64,7 @@ export function VideoDialog({
         year: video.year,
         category: video.category,
         display_order: video.display_order,
-        is_visible: video.is_visible,
+        is_visible: video.is_visible ?? true,
       });
     } else {
       setFormData({

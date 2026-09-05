@@ -1,6 +1,7 @@
-import { Project } from "@/types/projects";
+import type { Project } from "../types/projects";
 
 export function transformProjectForFrontend(dbProject: Project) {
+  // `projects` is the legacy storage name for public concert stories.
   return {
     id: dbProject.id,
     name: dbProject.name,
@@ -53,6 +54,9 @@ export function transformProjectForFrontend(dbProject: Project) {
     text1: dbProject.text1 || undefined,
     text2: dbProject.text2 || undefined,
     author: dbProject.author_name ? { name: dbProject.author_name } : undefined,
-    press_articles: dbProject.press_articles || undefined,
+    press_articles:
+      (dbProject.press_articles as
+        | { title: string; url: string; source: string }[]
+        | null) || undefined,
   };
 }

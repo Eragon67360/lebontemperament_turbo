@@ -1,8 +1,8 @@
 "use client";
 
 import MusicList from "@/components/MusicList";
-import { Concert } from "@/types/concerts";
-import { Event } from "@/types/events";
+import { Concert } from "@repo/domain/types/concerts";
+import { Event } from "@repo/domain/types/events";
 import { format, isAfter, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "motion/react";

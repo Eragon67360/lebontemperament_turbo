@@ -1,10 +1,7 @@
 "use client";
 
 import CloudinaryImage from "@/components/CloudinaryImage";
-import { Concert, Context, Tour } from "@/types/concerts";
-import { Event } from "@/types/events";
 import { ConcertProject } from "@/types/projects";
-import { Rehearsal } from "@/types/rehearsals";
 import { RoundedSize } from "@/utils/types";
 import {
   Button,
@@ -15,6 +12,9 @@ import {
   Tooltip,
   useDisclosure,
 } from "@heroui/react";
+import { Concert, Tour } from "@repo/domain/types/concerts";
+import { Event } from "@repo/domain/types/events";
+import { Rehearsal } from "@repo/domain/types/rehearsals";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
@@ -40,7 +40,7 @@ interface ConcertsClientProps {
   initialProjects: ConcertProject[];
 }
 
-const contextLabels: Record<Context, string> = {
+const contextLabels: Record<string, string> = {
   orchestre: "Orchestre",
   choeur: "Chœur",
   orchestre_et_choeur: "Orchestre et chœur",
@@ -485,7 +485,7 @@ const ConcertsClient = ({
                                 </p>
                               )}
                               <span className="bg-background text-primary mt-4 inline-flex rounded-full px-3 py-1 text-xs font-medium">
-                                {contextLabels[tour.context]}
+                                {contextLabels[tour.context] ?? tour.context}
                               </span>
                             </div>
                           </div>

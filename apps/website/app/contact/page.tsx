@@ -1,5 +1,6 @@
-import Map from "@/components/Maps";
+import ContactForm from "@/components/ContactForm";
 import { JsonLd } from "@/components/JsonLd";
+import Map from "@/components/Maps";
 import Subscribe from "@/components/newsletter/Subscribe";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
@@ -87,6 +88,8 @@ const Contact = () => {
           <Map />
         </div>
       </div>
+
+      <ContactForm />
 
       <div className="bg-default-50 my-20 flex w-full flex-col rounded-lg p-8 shadow-lg lg:w-1/2">
         <div className="flex gap-8 py-4 lg:py-12">

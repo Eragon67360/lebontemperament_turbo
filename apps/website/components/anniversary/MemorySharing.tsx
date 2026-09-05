@@ -1,12 +1,13 @@
 "use client";
 
 import type { FormConfig, Memory } from "@/types/anniversary";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import { FaHeart, FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
 import { toast } from "sonner";
+import AnniversaryCTA from "./AnniversaryCTA";
 
 interface MemorySharingProps {
   config: FormConfig;
@@ -16,6 +17,7 @@ interface MemorySharingProps {
 const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const shouldReduceMotion = useReducedMotion();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -103,7 +105,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
@@ -124,7 +126,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
             {featuredMemories.map((memory, index) => (
               <motion.div
                 key={memory.id}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: index * 0.1, duration: 0.6 }}
                 className="relative flex flex-col rounded-xl border border-slate-200/80 bg-white/30 p-6 backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/30"
@@ -159,7 +161,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
 
         {config.is_enabled && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.5, duration: 0.6 }}
             className="mx-auto max-w-2xl rounded-xl border border-slate-200/80 bg-white/30 p-6 backdrop-blur-md sm:p-8 dark:border-slate-800/50 dark:bg-slate-900/30"
@@ -245,36 +247,14 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 )}
               </div>
               <div className="pt-2 text-center">
-                <motion.button
+                <AnniversaryCTA
                   type="submit"
-                  variants={{
-                    initial: { color: "var(--color-primary)" },
-                    hover: { color: "#ffffff" },
-                  }}
-                  initial="initial"
-                  whileHover="hover"
                   disabled={isSubmitDisabled || isSubmitting}
-                  transition={{ duration: 0.3 }}
-                  className="group border-primary/40 text-primary enabled:hover:border-primary/80 dark:border-primary/50 dark:text-primary relative w-full overflow-hidden rounded-md border py-3 font-medium transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full"
                 >
-                  <motion.div
-                    className="bg-primary absolute inset-0 -z-10"
-                    variants={{ initial: { y: "100%" } }}
-                    animate={
-                      !isSubmitDisabled && !isSubmitting
-                        ? "initial"
-                        : { y: "100%" }
-                    }
-                    whileHover={
-                      !isSubmitDisabled && !isSubmitting ? { y: "0%" } : {}
-                    }
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                  />
-                  <span className="flex items-center justify-center gap-2">
-                    {isSubmitting ? "Envoi..." : config.submit_button_text}
-                    {!isSubmitting && <FaPaperPlane />}
-                  </span>
-                </motion.button>
+                  {isSubmitting ? "Envoi..." : config.submit_button_text}
+                  {!isSubmitting && <FaPaperPlane />}
+                </AnniversaryCTA>
               </div>
 
               <p className="pt-2 text-center text-xs font-light text-slate-400 dark:text-slate-500">

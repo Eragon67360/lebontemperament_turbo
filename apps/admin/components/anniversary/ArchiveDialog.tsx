@@ -75,11 +75,11 @@ export function ArchiveDialog({
         title: archive.title,
         description: archive.description,
         year: archive.year,
-        type: archive.type,
+        type: archive.type as (typeof ARCHIVE_TYPES)[number],
         theme: archive.theme,
         file_url: archive.file_url,
         file_size: archive.file_size,
-        is_visible: archive.is_visible,
+        is_visible: archive.is_visible ?? true,
       });
     } else {
       setFormData({

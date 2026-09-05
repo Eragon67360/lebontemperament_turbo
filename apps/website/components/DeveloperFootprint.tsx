@@ -1,8 +1,8 @@
 "use client";
 
 import { Modal, ModalContent } from "@heroui/react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Code, Github, Heart, PawPrint, User } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // --- HOOK (No changes) ---
