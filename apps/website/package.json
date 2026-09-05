@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "2.0.92",
+  "version": "2.0.93",
   "type": "module",
   "private": true,
   "scripts": {
@@ -26,7 +26,7 @@
     "googleapis": "^178.0.0",
     "gsap": "^3.15.0",
     "mapbox-gl": "^3.30.0",
-    "motion": "^12.43.0",
+    "motion": "^13.2.0",
     "next-cloudinary": "^6.18.8",
     "next-themes": "^0.4.6",
     "nodemailer": "^10.0.0",
@@ -37,7 +37,7 @@
     "react-markdown": "^10.1.0",
     "react-pdf": "^10.5.0",
     "react-photo-album": "^3.6.1",
-    "stripe": "20.4.1",
+    "stripe": "^22.6.1",
     "temporal-polyfill": "^1.0.4",
     "vanilla-cookieconsent": "^3.1.0",
     "yet-another-react-lightbox": "^3.32.2"
@@ -50,7 +50,8 @@
     "@types/geojson": "^7946.0.16",
     "@types/google.maps": "^3.66.2",
     "@types/nodemailer": "^8.0.1",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=24"
