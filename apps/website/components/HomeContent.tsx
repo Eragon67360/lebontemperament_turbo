@@ -121,7 +121,6 @@ const HomeContent = () => {
                   size="lg"
                   aria-label="Voir nos concerts"
                   variant="primary"
-                  className="rounded-sm"
                   href={RouteNames.CONCERTS.ROOT}
                 >
                   Nos concerts
@@ -132,9 +131,8 @@ const HomeContent = () => {
                 </LinkButton>
                 <LinkButton
                   size="lg"
-                  variant="primary"
+                  variant="secondary"
                   aria-label="Aller à la section Contact"
-                  className="rounded-sm"
                   href="#contact"
                 >
                   Nous contacter
@@ -152,7 +150,7 @@ const HomeContent = () => {
                   <LinkButton
                     size="lg"
                     variant="outline"
-                    className="rounded-sm border-white/50 text-white hover:bg-white/10"
+                    className="border-white/50 text-white hover:bg-white/10"
                     aria-label="Découvrir le calendrier musical 2025"
                     href="https://view.genially.com/6915ed221c1347062848697b/presentation-calendrier-musical-2025-cadence"
                     target="_blank"
@@ -167,7 +165,7 @@ const HomeContent = () => {
                   <Button
                     isIconOnly
                     size="sm"
-                    variant="tertiary"
+                    variant="ghost"
                     className="rounded-full text-white/80 hover:bg-white/10 hover:text-white"
                     aria-label="En savoir plus sur le calendrier musical"
                     onPress={() => setIsInfoModalOpen(true)}
@@ -188,7 +186,7 @@ const HomeContent = () => {
                   <LinkButton
                     size="lg"
                     variant="outline"
-                    className="rounded-sm border-white/50 text-white hover:bg-white/10"
+                    className="border-white/50 text-white hover:bg-white/10"
                     aria-label="Informations Assemblée Générale 2026"
                     href="/ag-2026"
                   >
@@ -320,7 +318,7 @@ const HomeContent = () => {
             >
               <LinkButton
                 aria-label="Lire toutes nos histoires de concerts"
-                className="mx-auto rounded-sm"
+                className="mx-auto"
                 variant="primary"
                 href="/concerts#histoires"
               >
@@ -451,7 +449,7 @@ const HomeContent = () => {
               <LinkButton
                 variant="outline"
                 aria-label="Aller à la page Nous Découvrir pour en apprendre plus sur l'association"
-                className="mt-8 rounded-sm lg:mt-0"
+                className="mt-8 lg:mt-0"
                 href={"/decouvrir"}
               >
                 <span className="text-xs tracking-[2.4px] uppercase">
@@ -587,7 +585,6 @@ const HomeContent = () => {
                     size="lg"
                     aria-label="Découvrir comment rejoindre l'ensemble"
                     variant="primary"
-                    className="rounded-sm"
                     href={"/rejoindre"}
                   >
                     Rejoindre l&apos;ensemble
@@ -597,7 +594,6 @@ const HomeContent = () => {
                     variant="outline"
                     size="lg"
                     aria-label="Consulter les questions fréquentes"
-                    className="rounded-sm"
                     href={"/faq"}
                   >
                     Questions fréquentes
@@ -668,7 +664,6 @@ const HomeContent = () => {
                 <LinkButton
                   variant="outline"
                   aria-label="Voir tous nos concerts"
-                  className="rounded-sm"
                   href={"/concerts"}
                 >
                   <span className="text-xs tracking-[2.4px] uppercase">
@@ -722,7 +717,6 @@ const HomeContent = () => {
                 <LinkButton
                   variant="outline"
                   aria-label="Voir nos CDs actuellement en vente"
-                  className="rounded-sm"
                   href={"/concerts/autres"}
                 >
                   <span className="text-xs tracking-[2.4px] uppercase">
@@ -813,7 +807,7 @@ const HomeContent = () => {
               </Modal.Body>
               <Modal.Footer>
                 <Button
-                  variant="tertiary"
+                  variant="ghost"
                   onPress={() => setIsInfoModalOpen(false)}
                   aria-label="Fermer"
                 >

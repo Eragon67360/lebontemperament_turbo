@@ -79,9 +79,9 @@ const ProjectViewer = () => {
               </p>
             )}
             <LinkButton
-              variant="tertiary"
+              variant="ghost"
               size="sm"
-              className="mt-4 w-fit rounded-sm"
+              className="text-primary data-[hovered=true]:bg-primary/20 mt-4 w-fit"
               href={`/concerts/${story.slug}`}
             >
               Lire l’histoire

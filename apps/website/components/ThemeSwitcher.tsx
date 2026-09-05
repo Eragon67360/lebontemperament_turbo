@@ -42,6 +42,11 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
     ? "min-w-7 h-7 w-7 p-0 data-[hovered=true]:bg-white/20"
     : "min-w-7 h-7 w-7 p-0 data-[hovered=true]:bg-surface-secondary";
 
+  // v2 parity: selected theme button was variant="flat" color="primary"
+  // (teal-600 tint bg in both modes, primary-600 icon)
+  const selectedClasses =
+    "bg-[#1e848a]/20 text-primary-600 data-[hovered=true]:bg-[#1e848a]/30";
+
   const iconClasses = isLight ? "text-white" : "";
 
   return (
@@ -50,8 +55,8 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
       <Button
         isIconOnly
         size="sm"
-        variant={theme === "light" ? "secondary" : "ghost"}
-        className={buttonBaseClasses}
+        variant="ghost"
+        className={`${buttonBaseClasses} ${theme === "light" ? selectedClasses : ""}`}
         onPress={() => setTheme("light")}
         aria-label="Passer au thème clair"
       >
@@ -62,8 +67,8 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
       <Button
         isIconOnly
         size="sm"
-        variant={theme === "dark" ? "secondary" : "ghost"}
-        className={buttonBaseClasses}
+        variant="ghost"
+        className={`${buttonBaseClasses} ${theme === "dark" ? selectedClasses : ""}`}
         onPress={() => setTheme("dark")}
         aria-label="Passer au thème sombre"
       >
@@ -74,8 +79,8 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
       <Button
         isIconOnly
         size="sm"
-        variant={theme === "system" ? "secondary" : "ghost"}
-        className={buttonBaseClasses}
+        variant="ghost"
+        className={`${buttonBaseClasses} ${theme === "system" ? selectedClasses : ""}`}
         onPress={() => setTheme("system")}
         aria-label="Utiliser le thème du système"
       >

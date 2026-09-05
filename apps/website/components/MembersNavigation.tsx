@@ -173,7 +173,10 @@ export const MembersNavigation = () => {
         {/* Mobile Navigation - Dropdown */}
         <div className="flex w-full items-center md:hidden">
           <Dropdown>
-            <Button variant="tertiary" className="w-full justify-between">
+            <Button
+              variant="ghost"
+              className="bg-default/40 w-full justify-between"
+            >
               <div className="flex items-center gap-2">
                 {currentLink && <currentLink.icon className="h-4 w-4" />}
                 <span>{currentLink?.label || "Navigation"}</span>

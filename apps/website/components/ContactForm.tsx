@@ -332,7 +332,7 @@ const ContactForm = () => {
                 variant="primary"
                 isDisabled={isButtonDisabled || loading}
                 aria-describedby={isButtonDisabled ? "submit-help" : undefined}
-                className="flex items-center gap-2 rounded-sm"
+                className="flex items-center gap-2"
               >
                 {loading ? (
                   <>

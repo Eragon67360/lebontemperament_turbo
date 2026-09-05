@@ -270,7 +270,8 @@ const ConcertPageClient = ({
                     <Tooltip key={name}>
                       <Button
                         isIconOnly
-                        variant="tertiary"
+                        variant="ghost"
+                        className="bg-default/40"
                         aria-label={label}
                         onPress={() => share(name)}
                       >

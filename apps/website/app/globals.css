@@ -26,6 +26,9 @@
   /* v2 parity: v3 defaults are grayish/bluish, v2 site was pure white */
   --background: #ffffff;
   --foreground: #11181c;
+  /* v2 parity: default (neutral) button surface — v2 solid default */
+  --default: #d4d4d8;
+  --default-foreground: #000000;
   --primary: lab(50.9886% -28.3149 -12.1181);
   --primary-50: #e6f1f2;
   --primary-100: #cce4e5;
@@ -48,6 +51,9 @@
   --muted: #b8c5c6;
   --surface-secondary: #1a2c2c;
   --surface-tertiary: #203535;
+  /* v2 parity: dark default surface (hero.ts dark default DEFAULT) */
+  --default: #1a2c2c;
+  --default-foreground: #ecedee;
   --primary: lab(50.9886% -28.3149 -12.1181);
   --primary-50: #e6f4f5;
   --primary-100: #cce9eb;
@@ -180,11 +186,35 @@
    4. COMPONENT LAYER (@layer components)
    ========================================================================== */
 @layer components {
-  /* v2 parity: v3 defaults to pill buttons (rounded-3xl) and 24-32px cards;
-     v2 default radius was md (12px) for buttons, lg (14px) for cards.
-     Utilities (rounded-sm etc.) still win over these. */
+  /* v2 parity: v2 buttons rendered with 8px radius at every size,
+     lg was h-12 px-6, sm was text-xs (v3: pill/12px, lg h-10 px-4,
+     sm text-sm). Utilities (rounded-* etc.) still win over these. */
   .button {
-    border-radius: 12px;
+    border-radius: 8px;
+  }
+  .button--lg {
+    height: calc(var(--spacing) * 12);
+    padding-inline: calc(var(--spacing) * 6);
+  }
+  .button--sm {
+    font-size: var(--text-xs);
+    line-height: var(--tw-leading, var(--text-xs--line-height));
+  }
+  /* v2 parity: solid default buttons had neutral (not teal) text */
+  .button--secondary {
+    --button-fg: var(--default-foreground);
+  }
+  /* v2 parity: light-variant hover was default-100, lighter than
+     the solid default surface */
+  .button--ghost,
+  .button--outline {
+    --button-bg-hover: #f4f4f5;
+    --button-bg-pressed: #f4f4f5;
+  }
+  .dark .button--ghost,
+  .dark .button--outline {
+    --button-bg-hover: #1a2c2c;
+    --button-bg-pressed: #1a2c2c;
   }
   .card {
     border-radius: 14px;

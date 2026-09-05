@@ -37,7 +37,7 @@ export default function LoginPage() {
         {/* Return Button */}
         <Button
           isIconOnly
-          variant="tertiary"
+          variant="ghost"
           className="absolute top-4 left-4 z-50"
           onPress={() => router.push("/")}
         >

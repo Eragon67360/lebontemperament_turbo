@@ -92,7 +92,8 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
             </Modal.Body>
             <Modal.Footer>
               <Button
-                variant="danger-soft"
+                variant="ghost"
+                className="text-danger data-[hovered=true]:bg-danger/20"
                 onPress={onClose}
                 isDisabled={isLoading}
               >

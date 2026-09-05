@@ -138,7 +138,7 @@ export default function DownloadPage() {
             <Button
               onPress={handleManualDownload}
               size="lg"
-              className="flex items-center gap-2 rounded-sm"
+              className="flex items-center gap-2"
 
               variant="primary"
             >

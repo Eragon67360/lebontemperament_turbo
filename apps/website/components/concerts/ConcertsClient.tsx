@@ -173,7 +173,6 @@ const ConcertCard = ({
           {concert.related_link && (
             <LinkButton
               variant="primary"
-              className="rounded-sm"
               href={concert.related_link}
               target="_blank"
               rel="noopener noreferrer"
@@ -185,7 +184,6 @@ const ConcertCard = ({
           {concert.affiche && (
             <Button
               variant="outline"
-              className="rounded-sm"
               onPress={() => onPosterClick(concert.affiche as string)}
             >
               <IoEyeOutline aria-hidden="true" />
@@ -587,8 +585,8 @@ const ConcertsClient = ({
                             </p>
                           )}
                           <LinkButton
-                            variant="tertiary"
-                            className="mt-5 w-fit rounded-sm"
+                            variant="ghost"
+                            className="text-primary data-[hovered=true]:bg-primary/20 mt-5 w-fit"
                             href={`/concerts/${story.slug}`}
                           >
                             Lire l’histoire
@@ -668,8 +666,8 @@ const ConcertsClient = ({
                         )}
                         {event.link && (
                           <LinkButton
-                            variant="tertiary"
-                            className="mt-5 w-fit rounded-sm"
+                            variant="ghost"
+                            className="text-primary data-[hovered=true]:bg-primary/20 mt-5 w-fit"
                             href={event.link}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -714,7 +712,6 @@ const ConcertsClient = ({
                 <LinkButton
                   size="lg"
                   variant="primary"
-                  className="rounded-sm"
                   href="/rejoindre#repetitions"
                 >
                   Découvrir comment participer

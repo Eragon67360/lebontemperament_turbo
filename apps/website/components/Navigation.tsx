@@ -174,7 +174,7 @@ const Navigation = () => {
             isLight={isSpecialPath && !hasScrolled}
           />
 
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-6">
             {/* Donation link - icon only, large screens */}
             <DonationCampaignShowcase isLight={isSpecialPath && !hasScrolled} />
             {/* Theme Switcher - Always visible */}
@@ -252,9 +252,9 @@ const Navigation = () => {
                         </div>
                       </div>
                       <Button
-                        variant="tertiary"
+                        variant="ghost"
                         onPress={() => setIsPasswordModalOpen(true)}
-                        className="flex w-full cursor-pointer items-center justify-start gap-1 rounded-sm"
+                        className="flex w-full cursor-pointer items-center justify-start gap-1"
                         isDisabled={isPending}
                         aria-label="Changer mon mot de passe"
                       >
@@ -262,9 +262,9 @@ const Navigation = () => {
                         Changer mon mot de passe
                       </Button>
                       <Button
-                        variant="tertiary"
+                        variant="ghost"
                         onPress={handleSignOut}
-                        className="flex w-full cursor-pointer items-center justify-start gap-1 rounded-sm"
+                        className="flex w-full cursor-pointer items-center justify-start gap-1"
                         isDisabled={isPending}
                         aria-label="Se déconnecter"
                       >
@@ -280,7 +280,6 @@ const Navigation = () => {
                 <LinkButton
                   size="md"
                   variant="primary"
-                  className="rounded-sm"
                   aria-label="Se connecter à l'espace membres"
                   href={RouteNames.AUTH.LOGIN}
                 >
