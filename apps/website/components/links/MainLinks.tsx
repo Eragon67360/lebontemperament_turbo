@@ -30,7 +30,7 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
     `;
 
   return (
-    <ul className="text-foreground dark:text-foreground hidden items-center justify-center gap-6 text-[16px] tracking-[2.4px] uppercase select-none lg:flex">
+    <ul className="text-foreground dark:text-foreground absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-6 text-[16px] tracking-[2.4px] uppercase select-none lg:flex">
       <li>
         <Link
           href={RouteNames.ROOT}

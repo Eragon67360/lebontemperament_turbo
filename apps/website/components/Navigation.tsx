@@ -117,7 +117,7 @@ const Navigation = () => {
         }`}
         aria-label="Navigation principale"
       >
-        <div className="flex h-16 w-full items-center gap-4 px-4">
+        <div className="relative flex h-16 w-full items-center gap-4 px-4">
           <button
             type="button"
             aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
