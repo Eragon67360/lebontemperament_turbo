@@ -31,11 +31,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # For deployment_status events: only react to successful Preview deploys
-    # (dev branch). The gate step below then waits for BOTH Vercel projects.
+    # of the dev branch (PR previews and production deploys are ignored).
+    # If this never fires, Vercel may be setting deployment.ref to the commit
+    # SHA instead of the branch name — inspect a run's event payload.
     if: >-
       github.event_name != 'deployment_status' ||
       (github.event.deployment_status.state == 'success' &&
-       github.event.deployment.environment == 'Preview')
+       github.event.deployment.environment == 'Preview' &&
+       github.event.deployment.ref == 'dev')
     strategy:
       fail-fast: false
       matrix:
@@ -120,7 +123,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: blob-report-*
-          path: all-blobs
+          path: apps/e2e/all-blobs
           merge-multiple: true
       - run: npx playwright merge-reports --reporter=html ./all-blobs
         working-directory: apps/e2e
