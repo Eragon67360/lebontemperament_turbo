@@ -68,6 +68,16 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "test:e2e": {
+      "cache": false,
+      "env": [
+        "WEBSITE_URL",
+        "ADMIN_URL",
+        "E2E_USER_EMAIL",
+        "E2E_USER_PASSWORD",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ]
     }
   }
 }

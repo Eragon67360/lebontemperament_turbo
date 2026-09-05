@@ -10,6 +10,7 @@
     "db:types": "npm run db:types -w @repo/domain",
     "bump-version": "node scripts/bump-version.js",
     "test:rehearsal-sync": "tsx scripts/test-rehearsal-sync.ts",
+    "test:e2e": "turbo run test:e2e",
     "prepare": "node -e \"if (!process.env.CI && !process.env.VERCEL) { require('child_process').execSync('husky', { stdio: 'inherit' }) }\""
   },
   "dependencies": {
@@ -58,6 +59,7 @@
   "workspaces": [
     "apps/website",
     "apps/admin",
+    "apps/e2e",
     "packages/*"
   ],
   "overrides": {
