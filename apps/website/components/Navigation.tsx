@@ -117,7 +117,7 @@ const Navigation = () => {
         }`}
         aria-label="Navigation principale"
       >
-        <div className="relative flex h-16 w-full items-center gap-4 px-4">
+        <div className="flex h-16 w-full items-center justify-between gap-4 px-6">
           <button
             type="button"
             aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
@@ -154,19 +154,24 @@ const Navigation = () => {
               )}
             </svg>
           </button>
-          <Link
-            href={RouteNames.ROOT}
-            aria-label="Aller à l'accueil - Le Bon Tempérament"
-          >
-            <Image
-              src={"/img/picto.svg"}
-              className="transition-opacity hover:opacity-85"
-              alt="Logo Le Bon Tempérament"
-              width={64}
-              height={64}
-              priority
-            />
-          </Link>
+          {/* v2 parity: NavbarBrand was a grow/basis-0 slot, so the logo
+              shares leftover space symmetrically with the end slot —
+              this is what keeps the centre links centred. */}
+          <div className="flex shrink grow basis-0 flex-row flex-nowrap items-center justify-start">
+            <Link
+              href={RouteNames.ROOT}
+              aria-label="Aller à l'accueil - Le Bon Tempérament"
+            >
+              <Image
+                src={"/img/picto.svg"}
+                className="transition-opacity hover:opacity-85"
+                alt="Logo Le Bon Tempérament"
+                width={64}
+                height={64}
+                priority
+              />
+            </Link>
+          </div>
 
           <MainLinks
             user={user}
@@ -174,7 +179,7 @@ const Navigation = () => {
             isLight={isSpecialPath && !hasScrolled}
           />
 
-          <div className="ml-auto flex items-center gap-6">
+          <div className="flex shrink grow basis-0 flex-row flex-nowrap items-center justify-end gap-4">
             {/* Donation link - icon only, large screens */}
             <DonationCampaignShowcase isLight={isSpecialPath && !hasScrolled} />
             {/* Theme Switcher - Always visible */}
