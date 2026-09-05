@@ -54,5 +54,14 @@ export default defineConfig({
         extraHTTPHeaders: bypassHeaders,
       },
     },
+    {
+      name: "website-members",
+      testDir: "./tests/website-members",
+      use: {
+        baseURL: process.env.WEBSITE_URL ?? "https://dev.lebontemperament.com",
+        storageState: ".auth/website.json",
+        extraHTTPHeaders: bypassHeaders,
+      },
+    },
   ],
 });
