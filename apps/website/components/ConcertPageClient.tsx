@@ -93,17 +93,17 @@ const ConcertPageClient = ({
         <div className="container mx-auto max-w-6xl px-4 md:px-8">
           <Link
             href="/concerts#histoires"
-            className="text-default-600 hover:text-primary mb-8 inline-flex items-center gap-2 text-sm"
+            className="text-muted hover:text-primary mb-8 inline-flex items-center gap-2 text-sm"
           >
             <IoArrowBack aria-hidden="true" />
             Toutes les histoires de concerts
           </Link>
 
-          <MotionSection className="border-divider mb-12 border-b pb-8">
+          <MotionSection className="border-separator mb-12 border-b pb-8">
             <p className="text-primary mb-4 text-xs font-semibold tracking-[0.2em] uppercase">
               Histoire de concert
             </p>
-            <div className="text-default-500 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+            <div className="text-muted flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
               <div className="flex items-center gap-2">
                 <IoCalendarClear className="text-primary text-lg" />
                 <span className="text-foreground font-medium">
@@ -154,7 +154,7 @@ const ConcertPageClient = ({
                         className="w-full"
                       />
                       {project.image2.photographer && (
-                        <figcaption className="text-default-500 mt-2 text-right text-xs italic">
+                        <figcaption className="text-muted mt-2 text-right text-xs italic">
                           Photo : {project.image2.photographer.name}
                         </figcaption>
                       )}
@@ -190,7 +190,7 @@ const ConcertPageClient = ({
                         className="w-full"
                       />
                       {project.image3.photographer && (
-                        <figcaption className="text-default-500 mt-2 text-right text-xs italic">
+                        <figcaption className="text-muted mt-2 text-right text-xs italic">
                           Photo : {project.image3.photographer.name}
                         </figcaption>
                       )}
@@ -207,7 +207,7 @@ const ConcertPageClient = ({
 
               {relatedProjects.length > 0 && (
                 <MotionSection
-                  className="border-divider mt-14 border-t pt-10"
+                  className="border-separator mt-14 border-t pt-10"
                   dataTestId="related-projects"
                   delay={0.2}
                 >
@@ -223,7 +223,7 @@ const ConcertPageClient = ({
                       <Link
                         key={relatedProject.slug}
                         href={`/concerts/${relatedProject.slug}`}
-                        className="border-divider bg-default-50 hover:border-primary/40 group rounded-xl border p-5"
+                        className="border-separator bg-surface-secondary hover:border-primary/40 group rounded-xl border p-5"
                       >
                         <span className="text-primary text-xs font-semibold">
                           {new Date(relatedProject.date).getFullYear()}
@@ -239,7 +239,7 @@ const ConcertPageClient = ({
             </article>
 
             <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-              <div className="border-divider bg-default-50 rounded-xl border p-5">
+              <div className="border-separator bg-surface-secondary rounded-xl border p-5">
                 <h2 className="text-foreground flex items-center gap-2 font-semibold">
                   <IoShareSocial className="text-primary" aria-hidden="true" />
                   Partager
@@ -267,22 +267,23 @@ const ConcertPageClient = ({
                       icon: IoLogoWhatsapp,
                     },
                   ].map(({ name, label, icon: Icon }) => (
-                    <Tooltip key={name} content={label}>
+                    <Tooltip key={name}>
                       <Button
                         isIconOnly
-                        variant="flat"
+                        variant="tertiary"
                         aria-label={label}
                         onPress={() => share(name)}
                       >
                         <Icon className="text-lg" aria-hidden="true" />
                       </Button>
+                      <Tooltip.Content>{label}</Tooltip.Content>
                     </Tooltip>
                   ))}
                 </div>
               </div>
 
               {(photographers.length > 0 || project.author) && (
-                <div className="border-divider bg-default-50 rounded-xl border p-5">
+                <div className="border-separator bg-surface-secondary rounded-xl border p-5">
                   <h2 className="text-foreground flex items-center gap-2 font-semibold">
                     <IoCamera className="text-primary" aria-hidden="true" />
                     Crédits
@@ -290,7 +291,7 @@ const ConcertPageClient = ({
                   <div className="mt-4 space-y-4 text-sm">
                     {photographers.length > 0 && (
                       <div>
-                        <p className="text-default-500 text-xs tracking-wider uppercase">
+                        <p className="text-muted text-xs tracking-wider uppercase">
                           Photographies
                         </p>
                         {photographers.map((photographer) => (
@@ -308,7 +309,7 @@ const ConcertPageClient = ({
                     )}
                     {project.author && (
                       <div>
-                        <p className="text-default-500 text-xs tracking-wider uppercase">
+                        <p className="text-muted text-xs tracking-wider uppercase">
                           Rédaction
                         </p>
                         <p className="text-foreground mt-1 font-medium">
@@ -321,7 +322,7 @@ const ConcertPageClient = ({
               )}
 
               {project.press_articles && project.press_articles.length > 0 && (
-                <div className="border-divider bg-default-50 rounded-xl border p-5">
+                <div className="border-separator bg-surface-secondary rounded-xl border p-5">
                   <h2 className="text-foreground flex items-center gap-2 font-semibold">
                     <IoNewspaper className="text-primary" aria-hidden="true" />
                     Ils parlent de nous
@@ -333,12 +334,12 @@ const ConcertPageClient = ({
                         href={pressArticle.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="border-divider bg-background hover:border-primary/40 block rounded-lg border p-3"
+                        className="border-separator bg-background hover:border-primary/40 block rounded-lg border p-3"
                       >
                         <span className="text-foreground line-clamp-2 text-sm font-medium">
                           {pressArticle.title}
                         </span>
-                        <span className="text-default-500 mt-1 block text-xs">
+                        <span className="text-muted mt-1 block text-xs">
                           {pressArticle.source}
                         </span>
                       </Link>

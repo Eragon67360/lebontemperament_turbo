@@ -87,7 +87,7 @@ const FeaturedVideosBubble = () => {
               <Button
                 isIconOnly
                 size="sm"
-                variant="light"
+                variant="tertiary"
                 onPress={() => setIsOpen(false)}
                 className="text-foreground/50 hover:text-foreground"
               >
@@ -125,7 +125,7 @@ const FeaturedVideosBubble = () => {
                 <Button
                   isIconOnly
                   size="sm"
-                  variant="flat"
+                  variant="tertiary"
                   onPress={prevVideo}
                   isDisabled={videos.length <= 1}
                 >
@@ -134,7 +134,7 @@ const FeaturedVideosBubble = () => {
                 <Button
                   isIconOnly
                   size="sm"
-                  variant="flat"
+                  variant="tertiary"
                   onPress={nextVideo}
                   isDisabled={videos.length <= 1}
                 >

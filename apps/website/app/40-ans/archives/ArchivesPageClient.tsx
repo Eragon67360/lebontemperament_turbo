@@ -3,7 +3,7 @@
 // import { PDFViewer } from "@/components/anniversary/PDFViewer"; // We will remove this static import
 import AnniversaryCTA from "@/components/anniversary/AnniversaryCTA";
 import type { Archive, ArchiveType } from "@/types/anniversary";
-import { Input, Select, SelectItem } from "@heroui/react";
+import { ListBox, SearchField, Select } from "@heroui/react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic"; // STEP 1: Import 'dynamic' from Next.js
 import Link from "next/link";
@@ -21,7 +21,6 @@ import {
   FaNewspaper,
   FaSearch,
   FaSort,
-  FaTimes,
   FaUsers,
 } from "react-icons/fa";
 
@@ -180,83 +179,100 @@ export default function ArchivesPageClient({
             transition={{ delay: 0.2, duration: 0.6 }}
             className="mb-8 space-y-4 rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md sm:p-6 dark:border-slate-800/50 dark:bg-slate-900/30"
           >
-            <Input
+            <SearchField
               aria-label="Rechercher dans les archives"
-              placeholder="Rechercher par titre ou mot-clé..."
               value={searchQuery}
-              onValueChange={setSearchQuery}
-              startContent={<FaSearch className="text-slate-400" />}
-              endContent={
-                searchQuery && (
-                  <button
-                    aria-label="Effacer la recherche"
-                    onClick={() => setSearchQuery("")}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  >
-                    <FaTimes />
-                  </button>
-                )
-              }
-              classNames={{
-                inputWrapper:
-                  "border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500",
-                input: "text-sm",
-              }}
-            />
+              onChange={setSearchQuery}
+              fullWidth
+            >
+              <SearchField.Group className="focus-within:border-primary focus-within:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus-within:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
+                <SearchField.SearchIcon>
+                  <FaSearch className="text-slate-400" />
+                </SearchField.SearchIcon>
+                <SearchField.Input
+                  className="w-full text-sm"
+                  placeholder="Rechercher par titre ou mot-clé..."
+                />
+                <SearchField.ClearButton aria-label="Effacer la recherche" />
+              </SearchField.Group>
+            </SearchField>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               <Select
-                items={[
-                  { key: "all", label: "Tous les types" },
-                  ...types.map((t) => ({ key: t, label: typeLabels[t] })),
-                ]}
                 aria-label="Filtrer par type"
                 placeholder="Filtrer par type"
-                startContent={<FaFilter className="text-slate-400" />}
-                selectedKeys={[selectedType]}
-                onSelectionChange={(keys) =>
-                  setSelectedType(Array.from(keys)[0] as string)
-                }
-                classNames={{
-                  trigger:
-                    "border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500",
-                }}
+                value={selectedType}
+                onChange={(key) => setSelectedType(key as string)}
+                className="w-full"
               >
-                {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                <Select.Trigger className="focus:border-primary focus:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
+                  <FaFilter className="text-slate-400" />
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item id="all" textValue="Tous les types">
+                      Tous les types
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    {types.map((t) => (
+                      <ListBox.Item key={t} id={t} textValue={typeLabels[t]}>
+                        {typeLabels[t]}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
               </Select>
               <Select
-                items={[
-                  { key: "all", label: "Tous les thèmes" },
-                  ...themes.map((t) => ({ key: t, label: t })),
-                ]}
                 aria-label="Filtrer par thème"
                 placeholder="Filtrer par thème"
-                startContent={<FaFilter className="text-slate-400" />}
-                selectedKeys={[selectedTheme]}
-                onSelectionChange={(keys) =>
-                  setSelectedTheme(Array.from(keys)[0] as string)
-                }
-                classNames={{
-                  trigger:
-                    "border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500",
-                }}
+                value={selectedTheme}
+                onChange={(key) => setSelectedTheme(key as string)}
+                className="w-full"
               >
-                {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                <Select.Trigger className="focus:border-primary focus:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
+                  <FaFilter className="text-slate-400" />
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item id="all" textValue="Tous les thèmes">
+                      Tous les thèmes
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    {themes.map((t) => (
+                      <ListBox.Item key={t} id={t} textValue={t}>
+                        {t}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
               </Select>
               <Select
-                items={sortOptions}
                 aria-label="Trier par"
                 placeholder="Trier par..."
-                startContent={<FaSort className="text-slate-400" />}
-                selectedKeys={[sortBy]}
-                onSelectionChange={(keys) =>
-                  setSortBy(Array.from(keys)[0] as SortOption)
-                }
-                classNames={{
-                  trigger:
-                    "border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500",
-                }}
+                value={sortBy}
+                onChange={(key) => setSortBy(key as SortOption)}
+                className="w-full"
               >
-                {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                <Select.Trigger className="focus:border-primary focus:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
+                  <FaSort className="text-slate-400" />
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    {sortOptions.map((o) => (
+                      <ListBox.Item key={o.key} id={o.key} textValue={o.label}>
+                        {o.label}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
               </Select>
             </div>
           </motion.div>

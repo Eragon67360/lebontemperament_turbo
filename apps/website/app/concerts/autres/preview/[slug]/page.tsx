@@ -70,7 +70,10 @@ export default function Preview() {
           <div className="flex flex-col gap-4">
             <div className="flex w-full flex-col items-center justify-between gap-8 lg:flex-row">
               <div className="flex w-full gap-4">
-                <Avatar size="lg" src="/img/picto.svg" />
+                <Avatar className="size-12">
+                  <Avatar.Image src="/img/picto.svg" alt="Le Bon Tempérament" />
+                  <Avatar.Fallback>BT</Avatar.Fallback>
+                </Avatar>
                 <div className="flex-col">
                   <h2 className="font-bold">Le Bon Tempérament</h2>
                   <h3>France</h3>

@@ -92,12 +92,15 @@ export default function DonationTiers() {
         })}
       </div>
 
-      <div className="bg-default-100 mb-6 rounded-lg p-5" aria-live="polite">
+      <div
+        className="bg-surface-secondary mb-6 rounded-lg p-5"
+        aria-live="polite"
+      >
         <p className="mb-2 text-3xl" aria-hidden="true">
           {selectedTier.emoji}
         </p>
         <p className="text-foreground">{selectedTier.description}</p>
-        <p className="text-default-500 mt-3 text-sm">
+        <p className="text-muted mt-3 text-sm">
           Soit {euroFormatter.format(selectedTier.amount * 0.34)} après
           réduction d&apos;impôt de 66 %.
         </p>
@@ -114,7 +117,7 @@ export default function DonationTiers() {
           <FaHeart aria-hidden="true" />
           Continuer sur HelloAsso
         </a>
-        <p className="text-default-500 text-sm">
+        <p className="text-muted text-sm">
           Un autre montant en tête ? Le montant libre est aussi possible.
         </p>
       </div>

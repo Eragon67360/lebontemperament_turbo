@@ -1,8 +1,9 @@
 "use client";
 
+import { LinkButton } from "@/components/LinkButton";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Input, Link } from "@heroui/react";
+import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FiLoader } from "react-icons/fi";
@@ -55,13 +56,13 @@ export default function ResetPasswordForm() {
           <h1 className="text-foreground text-2xl font-bold">
             Mission accomplie ! ✨
           </h1>
-          <p className="text-default-500 text-sm text-balance">
+          <p className="text-muted text-sm text-balance">
             File vite checker ta boîte mail, un message t&apos;attend pour
             récupérer ton accès !
           </p>
         </div>
         <Button
-          onClick={() => router.push(RouteNames.AUTH.LOGIN)}
+          onPress={() => router.push(RouteNames.AUTH.LOGIN)}
           className="w-full"
         >
           Retour à la connexion
@@ -83,22 +84,21 @@ export default function ResetPasswordForm() {
       </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <Input
-            id="email"
-            label="Email"
-            type="email"
-            size="sm"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            isRequired
-            disabled={loading}
-          />
+          <TextField name="email" type="email" isRequired isDisabled={loading}>
+            <Label>Email</Label>
+            <Input
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <FieldError />
+          </TextField>
         </div>
         <div className="flex flex-col gap-2">
           <Button
             type="submit"
+            variant="primary"
             className="w-full gap-2"
-            color="primary"
             isDisabled={loading}
             aria-busy={loading}
           >
@@ -111,15 +111,14 @@ export default function ResetPasswordForm() {
               "Envoyer le sésame ✨"
             )}
           </Button>
-          <Button
-            as={Link}
-            variant="bordered"
+          <LinkButton
+            variant="outline"
             className="w-full"
             href={RouteNames.AUTH.LOGIN}
           >
             <IoIosArrowRoundBack className="mr-2 size-5" />
             Retour à la connexion
-          </Button>
+          </LinkButton>
         </div>
       </div>
     </form>

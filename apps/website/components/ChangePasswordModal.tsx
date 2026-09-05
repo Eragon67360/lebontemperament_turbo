@@ -3,13 +3,12 @@
 import { createClient } from "@/utils/supabase/client";
 import {
   Button,
+  FieldError,
   Input,
+  Label,
   Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  addToast,
+  TextField,
+  toast,
 } from "@heroui/react";
 import { useState } from "react";
 
@@ -26,18 +25,12 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
 
   const handlePasswordChange = async () => {
     if (password !== confirmPassword) {
-      addToast({
-        description: "Les mots de passe ne correspondent pas",
-        color: "danger",
-      });
+      toast.danger("Les mots de passe ne correspondent pas");
       return;
     }
 
     if (password.length < 6) {
-      addToast({
-        description: "Le mot de passe doit contenir au moins 6 caractères",
-        color: "danger",
-      });
+      toast.danger("Le mot de passe doit contenir au moins 6 caractères");
       return;
     }
 
@@ -49,64 +42,73 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
 
       if (error) throw error;
 
-      addToast({
-        description: "Mot de passe modifié avec succès",
-        color: "success",
-      });
+      toast.success("Mot de passe modifié avec succès");
       onClose();
       setPassword("");
       setConfirmPassword("");
     } catch (error) {
       console.error("Error changing password:", error);
-      addToast({
-        description: "Erreur lors du changement de mot de passe",
-        color: "danger",
-      });
+      toast.danger("Erreur lors du changement de mot de passe");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalContent>
-        <ModalHeader>Changer mon mot de passe</ModalHeader>
-        <ModalBody>
-          <div className="flex flex-col gap-4">
-            <Input
-              type="password"
-              label="Nouveau mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Entrez votre nouveau mot de passe"
-            />
-            <Input
-              type="password"
-              label="Confirmer le mot de passe"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmez votre nouveau mot de passe"
-            />
-          </div>
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            color="danger"
-            variant="light"
-            onPress={onClose}
-            disabled={isLoading}
-          >
-            Annuler
-          </Button>
-          <Button
-            color="primary"
-            onPress={handlePasswordChange}
-            disabled={isLoading}
-          >
-            {isLoading ? "Modification..." : "Modifier"}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+    <Modal>
+      <Modal.Backdrop
+        isOpen={isOpen}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+      >
+        <Modal.Container>
+          <Modal.Dialog>
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>Changer mon mot de passe</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <div className="flex flex-col gap-4">
+                <TextField name="password" type="password">
+                  <Label>Nouveau mot de passe</Label>
+                  <Input
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Entrez votre nouveau mot de passe"
+                  />
+                  <FieldError />
+                </TextField>
+                <TextField name="confirmPassword" type="password">
+                  <Label>Confirmer le mot de passe</Label>
+                  <Input
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirmez votre nouveau mot de passe"
+                  />
+                  <FieldError />
+                </TextField>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="danger-soft"
+                onPress={onClose}
+                isDisabled={isLoading}
+              >
+                Annuler
+              </Button>
+              <Button
+                variant="primary"
+                onPress={handlePasswordChange}
+                isPending={isLoading}
+              >
+                {isLoading ? "Modification..." : "Modifier"}
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
 };

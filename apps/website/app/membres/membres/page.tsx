@@ -130,7 +130,7 @@ const Membres = () => {
       return "from-emerald-500/20 to-green-500/20 text-emerald-700 dark:text-emerald-300";
     if (voixLower.includes("jeune") || voixLower.includes("enfant"))
       return "from-yellow-500/20 to-lime-500/20 text-yellow-700 dark:text-yellow-300";
-    return "from-default-500/20 to-default-700/20 text-default-700 dark:text-default-300";
+    return "from-default-500/20 to-default-700/20 text-muted";
   };
 
   const getInitials = (name: string) => {
@@ -193,7 +193,7 @@ const Membres = () => {
                 placeholder="Rechercher un membre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full rounded-xl border-0 py-3 pr-4 pl-12 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none md:text-base"
+                className="bg-surface-secondary/80 text-foreground focus:ring-primary/30 w-full rounded-xl border-0 py-3 pr-4 pl-12 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none md:text-base"
               />
               <FaSearch className="text-foreground/40 absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2" />
             </div>
@@ -202,7 +202,7 @@ const Membres = () => {
                 value={selectedVoice}
                 onChange={(e) => setSelectedVoice(e.target.value)}
                 disabled={voiceWords.length === 0}
-                className="bg-default-100/80 text-foreground focus:ring-primary/30 w-full appearance-none rounded-xl border-0 py-3 pr-10 pl-4 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-base"
+                className="bg-surface-secondary/80 text-foreground focus:ring-primary/30 w-full appearance-none rounded-xl border-0 py-3 pr-10 pl-4 text-sm shadow-sm backdrop-blur-sm transition-all focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-base"
               >
                 <option value="">Toutes les voix</option>
                 {voiceWords.map((word) => (
@@ -229,12 +229,12 @@ const Membres = () => {
           {[...Array(8)].map((_, i) => (
             <div
               key={i}
-              className="bg-default-100/80 animate-pulse rounded-xl p-6 backdrop-blur-sm"
+              className="bg-surface-secondary/80 animate-pulse rounded-xl p-6 backdrop-blur-sm"
             >
               <div className="flex flex-col items-center">
-                <div className="bg-default-200/80 mb-4 h-24 w-24 rounded-full" />
-                <div className="bg-default-200/80 mb-2 h-6 w-32 rounded-lg" />
-                <div className="bg-default-200/80 h-4 w-20 rounded-lg" />
+                <div className="bg-surface-tertiary/80 mb-4 h-24 w-24 rounded-full" />
+                <div className="bg-surface-tertiary/80 mb-2 h-6 w-32 rounded-lg" />
+                <div className="bg-surface-tertiary/80 h-4 w-20 rounded-lg" />
               </div>
             </div>
           ))}
@@ -251,11 +251,11 @@ const Membres = () => {
               className="group relative flex overflow-hidden rounded-xl"
             >
               <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-              <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 flex w-full flex-col p-6 backdrop-blur-sm transition-all duration-300">
+              <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 flex w-full flex-col p-6 backdrop-blur-sm transition-all duration-300">
                 {/* Profile Picture */}
                 <div className="mb-4 flex justify-center">
                   <div className="from-primary relative h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br to-purple-500 p-1 shadow-lg">
-                    <div className="bg-default-50 flex h-full w-full items-center justify-center rounded-full">
+                    <div className="bg-surface-secondary flex h-full w-full items-center justify-center rounded-full">
                       {member.photoUrl ? (
                         <img
                           src={member.photoUrl}
@@ -360,7 +360,7 @@ const Membres = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-foreground/60 bg-default-100/80 rounded-xl py-16 text-center backdrop-blur-sm"
+          className="text-foreground/60 bg-surface-secondary/80 rounded-xl py-16 text-center backdrop-blur-sm"
         >
           <IoPersonCircle className="text-foreground/30 mx-auto mb-4 h-16 w-16" />
           <p className="text-lg font-medium">Aucun résultat trouvé</p>

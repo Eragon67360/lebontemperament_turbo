@@ -114,7 +114,7 @@ const FileExplorer: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="w-full lg:w-80"
         >
-          <div className="bg-default-100/80 rounded-xl p-3 backdrop-blur-sm md:p-4">
+          <div className="bg-surface-secondary/80 rounded-xl p-3 backdrop-blur-sm md:p-4">
             <div className="grid grid-cols-2 gap-2 md:gap-3 lg:grid-cols-1">
               {tabs.map((tab, index) => (
                 <motion.button
@@ -128,7 +128,7 @@ const FileExplorer: React.FC = () => {
                   className={`group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-xl p-3 transition-all duration-300 md:p-4 ${
                     activeTab.id === tab.id
                       ? "from-primary/20 bg-gradient-to-r to-purple-500/20 shadow-lg"
-                      : "hover:bg-default-50/50 bg-transparent"
+                      : "hover:bg-surface-secondary/50 bg-transparent"
                   }`}
                 >
                   <motion.div
@@ -188,7 +188,7 @@ const FileExplorer: React.FC = () => {
         >
           <div className="group relative overflow-hidden rounded-xl">
             <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="bg-default-100/80 relative z-10 backdrop-blur-sm">
+            <div className="bg-surface-secondary/80 relative z-10 backdrop-blur-sm">
               <div className="flex items-center gap-4 p-4 md:p-6">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -217,7 +217,7 @@ const FileExplorer: React.FC = () => {
               </div>
 
               <div className="p-4 md:p-6">
-                <div className="bg-default-50/50 rounded-xl p-3 backdrop-blur-sm md:p-4">
+                <div className="bg-surface-secondary/50 rounded-xl p-3 backdrop-blur-sm md:p-4">
                   {activeTab.component}
                 </div>
               </div>

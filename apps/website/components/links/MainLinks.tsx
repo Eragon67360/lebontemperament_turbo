@@ -1,7 +1,6 @@
 // MainLinks.tsx
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
-import { NavbarContent, NavbarItem } from "@heroui/react";
 import { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,11 +30,8 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
     `;
 
   return (
-    <NavbarContent
-      justify="center"
-      className="text-foreground dark:text-foreground hidden items-center gap-6 text-[16px] tracking-[2.4px] uppercase select-none lg:flex"
-    >
-      <NavbarItem>
+    <ul className="text-foreground dark:text-foreground hidden items-center justify-center gap-6 text-[16px] tracking-[2.4px] uppercase select-none lg:flex">
+      <li>
         <Link
           href={RouteNames.ROOT}
           aria-label="Aller à l'accueil"
@@ -43,8 +39,8 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
         >
           Accueil
         </Link>
-      </NavbarItem>
-      <NavbarItem>
+      </li>
+      <li>
         <Link
           href={RouteNames.CONCERTS.ROOT}
           aria-label="Consulter l’agenda des concerts"
@@ -52,8 +48,8 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
         >
           Agenda
         </Link>
-      </NavbarItem>
-      <NavbarItem>
+      </li>
+      <li>
         <Link
           href={RouteNames.DECOUVRIR.ROOT}
           aria-label="Aller à la page Nous Découvrir"
@@ -61,8 +57,8 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
         >
           Nous découvrir
         </Link>
-      </NavbarItem>
-      <NavbarItem>
+      </li>
+      <li>
         <Link
           href={RouteNames.GALERIE.ROOT}
           aria-label="Aller à la galerie"
@@ -70,8 +66,8 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
         >
           Galerie
         </Link>
-      </NavbarItem>
-      <NavbarItem>
+      </li>
+      <li>
         <Link
           href={RouteNames.CONTACT.ROOT}
           aria-label="Aller à la page Contact"
@@ -79,9 +75,9 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
         >
           Contact
         </Link>
-      </NavbarItem>
+      </li>
       {(isAnniversaryEnabled || isAdmin) && (
-        <NavbarItem>
+        <li>
           <Link
             href="/40-ans"
             aria-label="Célébrer 40 ans du Bon Tempérament"
@@ -91,19 +87,19 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
           >
             🎉 40 ans
           </Link>
-        </NavbarItem>
+        </li>
       )}
       {!isLoading && user && (
-        <NavbarItem>
+        <li>
           <Link
             href={RouteNames.MEMBRES.ROOT}
             className={getLinkClassName("/membres")}
           >
             Membres
           </Link>
-        </NavbarItem>
+        </li>
       )}
-    </NavbarContent>
+    </ul>
   );
 };
 

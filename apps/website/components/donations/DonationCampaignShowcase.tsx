@@ -158,12 +158,12 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
           type="button"
           onClick={dismiss}
           aria-label="Fermer l'annonce de la campagne de dons"
-          className="text-default-400 hover:text-default-600 -mt-1 -mr-1 shrink-0 cursor-pointer rounded-md p-1 transition-colors"
+          className="text-muted hover:text-muted -mt-1 -mr-1 shrink-0 cursor-pointer rounded-md p-1 transition-colors"
         >
           <FaTimes size={12} aria-hidden="true" />
         </button>
       </div>
-      <p className="text-default-500 mb-3 text-xs leading-relaxed">{BODY}</p>
+      <p className="text-muted mb-3 text-xs leading-relaxed">{BODY}</p>
       <Link
         href="/don"
         onPress={dismiss}
@@ -193,7 +193,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
               onAnimationComplete={() => setIsPulsing(false)}
             />
           )}
-          <Tooltip content="Faire un don" isDisabled={isOpen}>
+          <Tooltip isDisabled={isOpen}>
             <Link
               href="/don"
               onPress={dismiss}
@@ -201,11 +201,12 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
               className={`flex size-9 items-center justify-center rounded-md transition-colors ${
                 isLight
                   ? "text-white hover:bg-white/20"
-                  : "text-foreground hover:bg-default-200"
+                  : "text-foreground hover:bg-surface-tertiary"
               }`}
             >
               <FaHeart size={18} aria-hidden="true" />
             </Link>
+            <Tooltip.Content>Faire un don</Tooltip.Content>
           </Tooltip>
         </span>
       </div>

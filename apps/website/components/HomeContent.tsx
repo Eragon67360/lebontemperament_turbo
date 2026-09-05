@@ -13,18 +13,12 @@ import CDPochettePhotos from "@/components/CDPochettePhotos";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import ConcertPhotos from "@/components/ConcertPhotos";
 import ContactForm from "@/components/ContactForm";
+import { LinkButton } from "@/components/LinkButton";
 import ProjectViewer from "@/components/ProjectViewer";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from "@heroui/react";
+import { Button, Modal } from "@heroui/react";
 import Link from "next/link";
 import { IoIosArrowRoundForward, IoIosInformationCircle } from "react-icons/io";
 import Footer from "./Footer";
@@ -123,30 +117,28 @@ const HomeContent = () => {
               </p>
 
               <div className="flex flex-col gap-4 md:flex-row">
-                <Button
-                  as={Link}
-                  href={RouteNames.CONCERTS.ROOT}
+                <LinkButton
                   size="lg"
-                  radius="sm"
-                  color="primary"
                   aria-label="Voir nos concerts"
+                  variant="primary"
+                  className="rounded-sm"
+                  href={RouteNames.CONCERTS.ROOT}
                 >
                   Nos concerts
                   <IoIosArrowRoundForward
                     className="-mr-1 ml-2 h-3 w-3 lg:h-5 lg:w-5"
                     aria-hidden="true"
                   />
-                </Button>
-                <Button
-                  as={Link}
-                  href="#contact"
+                </LinkButton>
+                <LinkButton
                   size="lg"
-                  radius="sm"
-                  variant="solid"
+                  variant="primary"
                   aria-label="Aller à la section Contact"
+                  className="rounded-sm"
+                  href="#contact"
                 >
                   Nous contacter
-                </Button>
+                </LinkButton>
               </div>
 
               {/* Calendar CTA - Temporary until January 15, 2026 */}
@@ -157,29 +149,26 @@ const HomeContent = () => {
                   transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
                   className="mt-6 flex w-fit items-center gap-2"
                 >
-                  <Button
-                    as="a"
+                  <LinkButton
+                    size="lg"
+                    variant="outline"
+                    className="rounded-sm border-white/50 text-white hover:bg-white/10"
+                    aria-label="Découvrir le calendrier musical 2025"
                     href="https://view.genially.com/6915ed221c1347062848697b/presentation-calendrier-musical-2025-cadence"
                     target="_blank"
                     rel="noopener noreferrer"
-                    size="lg"
-                    radius="sm"
-                    variant="bordered"
-                    className="border-white/50 text-white hover:bg-white/10"
-                    aria-label="Découvrir le calendrier musical 2025"
                   >
                     🎄 Calendrier musical 2025
                     <IoIosArrowRoundForward
                       className="-mr-1 ml-2 h-3 w-3 lg:h-5 lg:w-5"
                       aria-hidden="true"
                     />
-                  </Button>
+                  </LinkButton>
                   <Button
                     isIconOnly
                     size="sm"
-                    radius="full"
-                    variant="light"
-                    className="text-white/80 hover:bg-white/10 hover:text-white"
+                    variant="tertiary"
+                    className="rounded-full text-white/80 hover:bg-white/10 hover:text-white"
                     aria-label="En savoir plus sur le calendrier musical"
                     onPress={() => setIsInfoModalOpen(true)}
                   >
@@ -196,21 +185,19 @@ const HomeContent = () => {
                   transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
                   className="mt-6 flex w-fit"
                 >
-                  <Button
-                    as={Link}
-                    href="/ag-2026"
+                  <LinkButton
                     size="lg"
-                    radius="sm"
-                    variant="bordered"
-                    className="border-white/50 text-white hover:bg-white/10"
+                    variant="outline"
+                    className="rounded-sm border-white/50 text-white hover:bg-white/10"
                     aria-label="Informations Assemblée Générale 2026"
+                    href="/ag-2026"
                   >
                     Assemblée Générale – 14 mars 2026
                     <IoIosArrowRoundForward
                       className="-mr-1 ml-2 h-3 w-3 lg:h-5 lg:w-5"
                       aria-hidden="true"
                     />
-                  </Button>
+                  </LinkButton>
                 </motion.div>
               )}
 
@@ -225,13 +212,11 @@ const HomeContent = () => {
                   transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
                   className="!md:max-w-md mt-8 flex w-fit overflow-hidden px-4"
                 >
-                  <Button
-                    as={Link}
-                    href="/40-ans"
+                  <LinkButton
                     size="lg"
-                    radius="full"
-                    className="hover:shadow-primary/50 from-primary-600 via-primary to-primary-400 dark:from-primary-700 dark:via-primary-600 dark:to-primary-500 flex w-fit max-w-fit bg-linear-to-r px-2 py-3 text-xs font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 sm:px-4 sm:text-sm md:w-fit md:max-w-fit md:text-base lg:px-6"
+                    className="hover:shadow-primary/50 from-primary-600 via-primary to-primary-400 dark:from-primary-700 dark:via-primary-600 dark:to-primary-500 flex w-fit max-w-fit rounded-full bg-linear-to-r px-2 py-3 text-xs font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 sm:px-4 sm:text-sm md:w-fit md:max-w-fit md:text-base lg:px-6"
                     aria-label="Célébrer 40 ans du Bon Tempérament"
+                    href="/40-ans"
                   >
                     <span className="hidden text-sm sm:text-base md:block md:text-xl">
                       🎉
@@ -242,7 +227,7 @@ const HomeContent = () => {
                     <span className="ml-1 hidden text-sm sm:ml-2 sm:text-base md:block md:text-xl">
                       🎉
                     </span>
-                  </Button>
+                  </LinkButton>
                 </motion.div>
               )}
             </div>
@@ -289,7 +274,7 @@ const HomeContent = () => {
         {/* Concert Stories Section */}
         <motion.section
           ref={projectsRef}
-          className="bg-default-50 relative z-10 mt-[100dvh] flex w-full justify-center py-16"
+          className="bg-surface-secondary relative z-10 mt-[100dvh] flex w-full justify-center py-16"
           aria-labelledby="concert-stories-title"
           initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
           animate={
@@ -314,7 +299,7 @@ const HomeContent = () => {
             >
               Histoires de concerts
             </motion.h2>
-            <p className="text-default-600 dark:text-default-400 -mt-8 mb-8 max-w-2xl">
+            <p className="text-muted -mt-8 mb-8 max-w-2xl">
               Retrouvez les programmes, les images et les coulisses des concerts
               qui ont marqué notre ensemble.
             </p>
@@ -333,16 +318,14 @@ const HomeContent = () => {
               animate={projectsInView ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <Button
-                as={Link}
-                href="/concerts#histoires"
-                color="primary"
-                radius="sm"
+              <LinkButton
                 aria-label="Lire toutes nos histoires de concerts"
-                className="mx-auto"
+                className="mx-auto rounded-sm"
+                variant="primary"
+                href="/concerts#histoires"
               >
                 Toutes les histoires <IoIosArrowRoundForward />
-              </Button>
+              </LinkButton>
             </motion.div>
           </div>
         </motion.section>
@@ -465,13 +448,11 @@ const HomeContent = () => {
                   </p>
                 </div>
               </div>
-              <Button
-                as={Link}
-                href={"/decouvrir"}
-                variant="bordered"
-                radius="sm"
+              <LinkButton
+                variant="outline"
                 aria-label="Aller à la page Nous Découvrir pour en apprendre plus sur l'association"
-                className="mt-8 lg:mt-0"
+                className="mt-8 rounded-sm lg:mt-0"
+                href={"/decouvrir"}
               >
                 <span className="text-xs tracking-[2.4px] uppercase">
                   En apprendre plus
@@ -480,13 +461,13 @@ const HomeContent = () => {
                   className="scale-110"
                   aria-hidden="true"
                 />
-              </Button>
+              </LinkButton>
             </motion.div>
           </motion.section>
 
           {/* Notre Histoire Section */}
           <motion.section
-            className="bg-default-50 mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
+            className="bg-surface-secondary mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="history-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -602,28 +583,26 @@ const HomeContent = () => {
                   </p>
                 </div>
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                  <Button
-                    as={Link}
-                    href={"/rejoindre"}
-                    color="primary"
-                    radius="sm"
+                  <LinkButton
                     size="lg"
                     aria-label="Découvrir comment rejoindre l'ensemble"
+                    variant="primary"
+                    className="rounded-sm"
+                    href={"/rejoindre"}
                   >
                     Rejoindre l&apos;ensemble
                     <IoIosArrowRoundForward className="scale-110" />
-                  </Button>
-                  <Button
-                    as={Link}
-                    href={"/faq"}
-                    variant="bordered"
-                    radius="sm"
+                  </LinkButton>
+                  <LinkButton
+                    variant="outline"
                     size="lg"
                     aria-label="Consulter les questions fréquentes"
+                    className="rounded-sm"
+                    href={"/faq"}
                   >
                     Questions fréquentes
                     <IoIosArrowRoundForward className="scale-110" />
-                  </Button>
+                  </LinkButton>
                 </div>
               </div>
               <div className="flex flex-1 justify-center lg:justify-end">
@@ -686,12 +665,11 @@ const HomeContent = () => {
               <ConcertPhotos />
 
               <div className="mt-7.5 flex justify-end">
-                <Button
-                  as={Link}
-                  href={"/concerts"}
-                  variant="bordered"
-                  radius="sm"
+                <LinkButton
+                  variant="outline"
                   aria-label="Voir tous nos concerts"
+                  className="rounded-sm"
+                  href={"/concerts"}
                 >
                   <span className="text-xs tracking-[2.4px] uppercase">
                     Voir tous les concerts
@@ -700,7 +678,7 @@ const HomeContent = () => {
                     className="scale-110"
                     aria-hidden="true"
                   />
-                </Button>
+                </LinkButton>
               </div>
             </motion.div>
           </motion.section>
@@ -708,7 +686,7 @@ const HomeContent = () => {
           {/* CDs Section */}
           <motion.section
             ref={cdsRef}
-            className="bg-default-50 mx-auto w-full max-w-360 px-8 py-16 lg:px-24"
+            className="bg-surface-secondary mx-auto w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
@@ -741,12 +719,11 @@ const HomeContent = () => {
               <CDPochettePhotos />
 
               <div className="mt-7.5 flex justify-end">
-                <Button
-                  as={Link}
-                  href={"/concerts/autres"}
-                  variant="bordered"
-                  radius="sm"
+                <LinkButton
+                  variant="outline"
                   aria-label="Voir nos CDs actuellement en vente"
+                  className="rounded-sm"
+                  href={"/concerts/autres"}
                 >
                   <span className="text-xs tracking-[2.4px] uppercase">
                     Acheter nos CDs
@@ -755,7 +732,7 @@ const HomeContent = () => {
                     className="scale-110"
                     aria-hidden="true"
                   />
-                </Button>
+                </LinkButton>
               </div>
             </motion.div>
           </motion.section>
@@ -782,24 +759,23 @@ const HomeContent = () => {
       </div>
 
       {/* Calendar Info Modal */}
-      <Modal
-        isOpen={isInfoModalOpen}
-        onOpenChange={setIsInfoModalOpen}
-        size="lg"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                <h2 className="text-2xl font-bold">
+      <Modal>
+        <Modal.Backdrop
+          isOpen={isInfoModalOpen}
+          onOpenChange={setIsInfoModalOpen}
+        >
+          <Modal.Container size="lg" scroll="inside">
+            <Modal.Dialog>
+              <Modal.CloseTrigger />
+              <Modal.Header>
+                <Modal.Heading className="text-2xl font-bold">
                   🎄 Calendrier Musical 2025
-                </h2>
-                <p className="text-default-500 text-sm font-normal">
+                </Modal.Heading>
+                <p className="text-muted text-sm font-normal">
                   Une reconnaissance pour Le Bon Tempérament
                 </p>
-              </ModalHeader>
-              <ModalBody>
+              </Modal.Header>
+              <Modal.Body>
                 <div className="space-y-4 text-sm leading-relaxed">
                   <p>
                     <strong>Cadence</strong> est un{" "}
@@ -828,33 +804,36 @@ const HomeContent = () => {
                     2024/2025 et témoigne de la qualité et de l&apos;engagement
                     de notre ensemble vocal et instrumental.
                   </p>
-                  <p className="text-default-500 text-xs italic">
+                  <p className="text-muted text-xs italic">
                     Cadence est soutenu par la Direction régionale des affaires
                     culturelles du Grand Est, la Région Grand Est et la
                     Collectivité européenne d&apos;Alsace.
                   </p>
                 </div>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose} aria-label="Fermer">
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  variant="tertiary"
+                  onPress={() => setIsInfoModalOpen(false)}
+                  aria-label="Fermer"
+                >
                   Fermer
                 </Button>
-                <Button
-                  as="a"
+                <LinkButton
+                  onClick={() => setIsInfoModalOpen(false)}
+                  aria-label="Ouvrir le calendrier musical"
+                  variant="primary"
                   href="https://view.genially.com/6915ed221c1347062848697b/presentation-calendrier-musical-2025-cadence"
                   target="_blank"
                   rel="noopener noreferrer"
-                  color="primary"
-                  onPress={onClose}
-                  aria-label="Ouvrir le calendrier musical"
                 >
                   Ouvrir le calendrier
                   <IoIosArrowRoundForward className="ml-2" />
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
+                </LinkButton>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
       </Modal>
     </>
   );

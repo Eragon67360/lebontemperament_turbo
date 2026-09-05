@@ -136,11 +136,11 @@ export default function DownloadPage() {
           {/* Download Button */}
           <div className="mb-6">
             <Button
-              onClick={handleManualDownload}
-              color="primary"
-              radius="sm"
+              onPress={handleManualDownload}
               size="lg"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 rounded-sm"
+
+              variant="primary"
             >
               {downloadError ? (
                 <>

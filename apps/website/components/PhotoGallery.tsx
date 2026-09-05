@@ -1,7 +1,7 @@
 "use client";
 import { setColumns } from "@/utils/setColumns";
 import { PhotoData } from "@/utils/types";
-import { Accordion, AccordionItem } from "@heroui/react";
+import { Accordion } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { MasonryPhotoAlbum } from "react-photo-album";
@@ -83,7 +83,7 @@ export default function PhotoGallery() {
     <div className="animate-pulse space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-default-200 h-64 w-full rounded" />
+          <div key={i} className="bg-surface-tertiary h-64 w-full rounded" />
         ))}
       </div>
     </div>
@@ -108,78 +108,86 @@ export default function PhotoGallery() {
   return (
     <>
       <Accordion>
-        <AccordionItem
-          key="1"
-          aria-label="Nos concerts"
-          title={
-            <p className="text-xl md:text-2xl lg:text-4xl">Nos concerts</p>
-          }
-          className="text-xl font-bold md:text-2xl lg:text-4xl"
-        >
-          <AnimatePresence mode="wait">
-            {isLoadingConcerts ? (
-              <motion.div
-                key="loading-concerts"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <LoadingSkeleton />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="content-concerts"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <MasonryPhotoAlbum
-                  columns={columns}
-                  photos={imagesConcerts}
-                  onClick={({ index: current }) =>
-                    setPhotoIndexConcerts(current)
-                  }
-                  render={{ button: renderAnimatedButton }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </AccordionItem>
-        <AccordionItem
-          key="2"
-          aria-label="La vie au BT"
-          title={
-            <p className="text-xl md:text-2xl lg:text-4xl">La vie au BT</p>
-          }
-          className="text-xl font-bold md:text-2xl lg:text-4xl"
-        >
-          <AnimatePresence mode="wait">
-            {isLoadingVieBT ? (
-              <motion.div
-                key="loading-viebt"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <LoadingSkeleton />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="content-viebt"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <MasonryPhotoAlbum
-                  columns={columns}
-                  photos={imagesVieBT}
-                  onClick={({ index: current }) => setPhotoIndexVieBT(current)}
-                  render={{ button: renderAnimatedButton }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </AccordionItem>
+        <Accordion.Item id="1">
+          <Accordion.Heading>
+            <Accordion.Trigger className="text-xl font-bold md:text-2xl lg:text-4xl">
+              <p className="text-xl md:text-2xl lg:text-4xl">Nos concerts</p>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <AnimatePresence mode="wait">
+                {isLoadingConcerts ? (
+                  <motion.div
+                    key="loading-concerts"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <LoadingSkeleton />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="content-concerts"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <MasonryPhotoAlbum
+                      columns={columns}
+                      photos={imagesConcerts}
+                      onClick={({ index: current }) =>
+                        setPhotoIndexConcerts(current)
+                      }
+                      render={{ button: renderAnimatedButton }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item id="2">
+          <Accordion.Heading>
+            <Accordion.Trigger className="text-xl font-bold md:text-2xl lg:text-4xl">
+              <p className="text-xl md:text-2xl lg:text-4xl">La vie au BT</p>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <AnimatePresence mode="wait">
+                {isLoadingVieBT ? (
+                  <motion.div
+                    key="loading-viebt"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <LoadingSkeleton />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="content-viebt"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <MasonryPhotoAlbum
+                      columns={columns}
+                      photos={imagesVieBT}
+                      onClick={({ index: current }) =>
+                        setPhotoIndexVieBT(current)
+                      }
+                      render={{ button: renderAnimatedButton }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
       </Accordion>
 
       <Lightbox

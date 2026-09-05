@@ -1,8 +1,16 @@
 "use client";
 
+import { LinkButton } from "@/components/LinkButton";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Input, addToast } from "@heroui/react";
+import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  TextField,
+  toast,
+} from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CiMail } from "react-icons/ci";
@@ -53,22 +61,18 @@ export default function CreateProfileForm() {
     setLoading(true);
 
     if (password !== confirmPassword) {
-      addToast({
-        title: "Oups ! 🙈",
+      toast.danger("Oups ! 🙈", {
         description:
           "Les mots de passe ne correspondent pas, un petit effort de coordination !",
-        color: "danger",
       });
       setLoading(false);
       return;
     }
 
     if (password.length < 8) {
-      addToast({
-        title: "Attention ! 📏",
+      toast.danger("Attention ! 📏", {
         description:
           "Il nous faut au moins 8 caractères pour un mot de passe costaud !",
-        color: "danger",
       });
       setLoading(false);
       return;
@@ -81,20 +85,16 @@ export default function CreateProfileForm() {
 
       if (error) throw error;
 
-      addToast({
-        title: "Youhou ! 🎉",
+      toast.success("Youhou ! 🎉", {
         description:
           "Ton compte est prêt ! Cette fois-ci, note bien ton mot de passe quelque part...",
-        color: "success",
       });
 
       router.push(RouteNames.AUTH.LOGIN);
     } catch (error) {
       console.error("Profile creation error:", error);
-      addToast({
-        title: "Aïe aïe aïe ! 😅",
+      toast.danger("Aïe aïe aïe ! 😅", {
         description: "Un petit souci technique... On réessaie ?",
-        color: "danger",
       });
     } finally {
       setLoading(false);
@@ -111,17 +111,16 @@ export default function CreateProfileForm() {
           Il semblerait que ce lien ait expiré ou soit invalide. Tu peux
           contacter l&apos;administrateur pour obtenir un nouveau lien !
         </p>
-        <Button
-          as="a"
-          href="mailto:thomas-moser@orange.fr?subject=Nouveau lien d'invitation - Le Bon Tempérament&body=Bonjour, mon lien d'invitation n'est plus valide. Pourriez-vous m'en envoyer un nouveau ? Merci !"
-          variant="bordered"
+        <LinkButton
+          variant="outline"
           className="mt-2"
+          href="mailto:thomas-moser@orange.fr?subject=Nouveau lien d'invitation - Le Bon Tempérament&body=Bonjour, mon lien d'invitation n'est plus valide. Pourriez-vous m'en envoyer un nouveau ? Merci !"
         >
           <span className="mr-2">
-            <CiMail className="text-default-500" />
+            <CiMail className="text-muted" />
           </span>
           Contacter l&apos;administrateur
-        </Button>
+        </LinkButton>
       </div>
     );
   }
@@ -132,41 +131,48 @@ export default function CreateProfileForm() {
         <h1 className="text-foreground text-2xl font-bold">
           Bienvenue dans l&apos;équipe ! 🎉
         </h1>
-        <p className="text-default-500 text-sm text-balance">
+        <p className="text-muted text-sm text-balance">
           Choisis un mot de passe qui en jette !
         </p>
       </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <Input
-            id="password"
-            size="sm"
+          <TextField
+            name="password"
             type="password"
-            label="Ton mot de passe secret"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             isRequired
-            autoComplete="new-password"
-            disabled={loading}
-          />
+            isDisabled={loading}
+          >
+            <Label>Ton mot de passe secret</Label>
+            <Input
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+            <FieldError />
+          </TextField>
         </div>
         <div className="grid gap-2">
-          <Input
-            id="confirmPassword"
-            size="sm"
+          <TextField
+            name="confirmPassword"
             type="password"
-            label="Redis-le pour être sûr(e) !"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
             isRequired
-            autoComplete="new-password"
-            disabled={loading}
-          />
+            isDisabled={loading}
+          >
+            <Label>Redis-le pour être sûr(e) !</Label>
+            <Input
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+            <FieldError />
+          </TextField>
         </div>
         <Button
-          variant="solid"
+          variant="primary"
           type="submit"
-          color="primary"
           className="w-full gap-2"
           isDisabled={loading}
           aria-busy={loading}

@@ -2,7 +2,7 @@
 import LoginForm from "@/components/auth/LoginForm";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Card, CardBody, CardHeader } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
@@ -37,9 +37,9 @@ export default function LoginPage() {
         {/* Return Button */}
         <Button
           isIconOnly
-          variant="light"
+          variant="tertiary"
           className="absolute top-4 left-4 z-50"
-          onClick={() => router.push("/")}
+          onPress={() => router.push("/")}
         >
           <IoArrowBack className="h-6 w-6" />
         </Button>
@@ -65,7 +65,7 @@ export default function LoginPage() {
 
             {/* Login Card */}
             <Card className="bg-background/60 border-foreground/10 border backdrop-blur-lg">
-              <CardHeader className="flex gap-3 px-8 pt-6 pb-2">
+              <Card.Header className="flex gap-3 px-8 pt-6 pb-2">
                 <div className="bg-primary/10 rounded-md p-2">
                   <IoMusicalNotes className="text-primary h-5 w-5" />
                 </div>
@@ -75,10 +75,10 @@ export default function LoginPage() {
                     Accédez à votre espace personnel
                   </p>
                 </div>
-              </CardHeader>
-              <CardBody className="px-6 pb-6">
+              </Card.Header>
+              <Card.Content className="px-6 pb-6">
                 <LoginForm />
-              </CardBody>
+              </Card.Content>
             </Card>
 
             {/* Footer */}

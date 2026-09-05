@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-default-50 flex h-screen w-screen flex-col overflow-hidden transition-colors duration-200">
+    <div className="bg-surface-secondary flex h-screen w-screen flex-col overflow-hidden transition-colors duration-200">
       <MembersNavigation />
       <Suspense
         fallback={

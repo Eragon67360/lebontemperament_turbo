@@ -4,7 +4,15 @@ import { login } from "@/app/auth/login/actions";
 import { useAuth } from "@/components/providers/AuthProvider";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Checkbox, Input, addToast } from "@heroui/react";
+import {
+  Button,
+  Checkbox,
+  FieldError,
+  Input,
+  Label,
+  TextField,
+  toast,
+} from "@heroui/react";
 import { ERROR_MESSAGES } from "@repo/domain/consts/errorMessages";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -43,10 +51,8 @@ export default function LoginForm() {
         ERROR_MESSAGES[error as keyof typeof ERROR_MESSAGES] ||
         "Une erreur est survenue lors de la connexion";
 
-      addToast({
-        title: "Erreur de connexion",
+      toast.danger("Erreur de connexion", {
         description: errorMessage,
-        color: "danger",
       });
     }
   }, [error, errorDescription]);
@@ -66,27 +72,21 @@ export default function LoginForm() {
       });
 
       if (error) {
-        addToast({
-          title: "Erreur Google",
+        toast.danger("Erreur Google", {
           description: error.message,
-          color: "danger",
         });
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Google login error:", error);
-        addToast({
-          title: "Erreur de connexion",
+        toast.danger("Erreur de connexion", {
           description:
             error.message || "Erreur lors de la connexion avec Google",
-          color: "danger",
         });
       } else {
         console.error("Google login error:", error);
-        addToast({
-          title: "Erreur de connexion",
+        toast.danger("Erreur de connexion", {
           description: "Erreur lors de la connexion avec Google",
-          color: "danger",
         });
       }
     }
@@ -107,10 +107,8 @@ export default function LoginForm() {
             ERROR_MESSAGES[result.error as keyof typeof ERROR_MESSAGES] ||
             "Une erreur est survenue";
 
-          addToast({
-            title: "Échec de la connexion",
+          toast.danger("Échec de la connexion", {
             description: errorMessage,
-            color: "danger",
           });
 
           router.push(`${RouteNames.AUTH.LOGIN}?error=${result.error}`);
@@ -124,20 +122,16 @@ export default function LoginForm() {
           } = await supabase.auth.getUser();
           setUser(user);
 
-          addToast({
-            title: "Bienvenue !",
+          toast.success("Bienvenue !", {
             description: "Connexion réussie",
-            color: "success",
           });
 
           router.push(stayOnPublic ? RouteNames.ROOT : RouteNames.MEMBRES.ROOT);
         }
       } catch (error) {
         console.error("Login error:", error);
-        addToast({
-          title: "Erreur inattendue",
+        toast.danger("Erreur inattendue", {
           description: "Une erreur inattendue est survenue",
-          color: "danger",
         });
       }
     });
@@ -149,18 +143,21 @@ export default function LoginForm() {
         <div className="grid gap-6">
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Input
-                id="email"
-                size="sm"
+              <TextField
                 name="email"
                 type="email"
-                label="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 isRequired
-                autoComplete="email"
-                disabled={isPending}
-              />
+                isDisabled={isPending}
+              >
+                <Label>Email</Label>
+                <Input
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+                <FieldError />
+              </TextField>
             </div>
 
             <div className="grid gap-2">
@@ -174,35 +171,42 @@ export default function LoginForm() {
                   Mot de passe oublié?
                 </Link>
               </div>
-              <Input
-                id="password"
-                size="sm"
+              <TextField
                 name="password"
                 type="password"
-                label="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 isRequired
-                autoComplete="current-password"
-                disabled={isPending}
-              />
+                isDisabled={isPending}
+              >
+                <Label>Mot de passe</Label>
+                <Input
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+                <FieldError />
+              </TextField>
             </div>
 
             <Checkbox
+              id="stayOnPublic"
               isSelected={stayOnPublic}
-              onValueChange={setStayOnPublic}
-              size="sm"
+              onChange={setStayOnPublic}
               isDisabled={isPending}
             >
-              <span className="text-sm">
-                Se connecter mais rester sur la partie publique
-              </span>
+              <Checkbox.Content>
+                <Checkbox.Control>
+                  <Checkbox.Indicator />
+                </Checkbox.Control>
+                <span className="text-sm">
+                  Se connecter mais rester sur la partie publique
+                </span>
+              </Checkbox.Content>
             </Checkbox>
 
             <Button
-              variant="solid"
+              variant="primary"
               type="submit"
-              color="primary"
               className="w-full"
               isDisabled={!email || !password || isPending}
             >
@@ -230,7 +234,7 @@ export default function LoginForm() {
 
           <Button
             type="button"
-            variant="bordered"
+            variant="outline"
             className="w-full"
             onPress={handleGoogleSignIn}
             isDisabled={isPending}

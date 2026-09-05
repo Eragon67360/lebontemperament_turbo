@@ -74,7 +74,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
           <IoMusicalNotes className="text-purple-500 dark:text-purple-400" />
         );
       default:
-        return <FaFile className="text-default-500" />;
+        return <FaFile className="text-muted" />;
     }
   };
 
@@ -84,7 +84,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       {folderStack.length > 1 && (
         <button
           onClick={handleBackClick}
-          className="text-default-600 hover:text-foreground flex items-center gap-2 px-3 py-2 text-sm transition-colors"
+          className="text-muted hover:text-foreground flex items-center gap-2 px-3 py-2 text-sm transition-colors"
         >
           <IoArrowBack className="h-4 w-4" />
           <span>Retour</span>
@@ -93,11 +93,11 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Folders Section */}
       <div className="space-y-4">
-        <h3 className="text-default-500 text-sm font-medium">Dossiers</h3>
+        <h3 className="text-muted text-sm font-medium">Dossiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-default-100 h-12 rounded-lg" />
+              <div key={i} className="bg-surface-secondary h-12 rounded-lg" />
             ))}
           </div>
         ) : (
@@ -122,11 +122,11 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Files Section */}
       <div className="space-y-4">
-        <h3 className="text-default-500 text-sm font-medium">Fichiers</h3>
+        <h3 className="text-muted text-sm font-medium">Fichiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-default-100 h-12 rounded-lg" />
+              <div key={i} className="bg-surface-secondary h-12 rounded-lg" />
             ))}
           </div>
         ) : (
@@ -167,7 +167,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       {/* Empty States */}
       {!loading && folders.length === 0 && individualFiles.length === 0 && (
         <div className="py-12 text-center">
-          <p className="text-default-500 text-sm">Ce dossier est vide</p>
+          <p className="text-muted text-sm">Ce dossier est vide</p>
         </div>
       )}
     </div>

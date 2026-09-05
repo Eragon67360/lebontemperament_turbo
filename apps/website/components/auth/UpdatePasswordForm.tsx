@@ -2,7 +2,7 @@
 
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Input } from "@heroui/react";
+import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FiLoader } from "react-icons/fi";
@@ -63,35 +63,50 @@ export default function UpdatePasswordForm() {
         <h1 className="text-foreground text-2xl font-bold">
           Nouveau départ, nouveau mot de passe ! 🔐
         </h1>
-        <p className="text-default-500 text-sm text-balance">
+        <p className="text-muted text-sm text-balance">
           Cette fois-ci, choisis-en un dont tu te souviendras... enfin, on
           espère ! 😉
         </p>
       </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <Input
-            id="password"
+          <TextField
+            name="password"
             type="password"
-            label="Ton nouveau mot de passe secret"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             isRequired
-            disabled={loading}
-          />
+            isDisabled={loading}
+          >
+            <Label>Ton nouveau mot de passe secret</Label>
+            <Input
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <FieldError />
+          </TextField>
         </div>
         <div className="grid gap-2">
-          <Input
-            id="confirmPassword"
+          <TextField
+            name="confirmPassword"
             type="password"
-            label="Redis-le pour être sûr(e) !"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
             isRequired
-            disabled={loading}
-          />
+            isDisabled={loading}
+          >
+            <Label>Redis-le pour être sûr(e) !</Label>
+            <Input
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <FieldError />
+          </TextField>
         </div>
-        <Button type="submit" className="w-full gap-2" disabled={loading}>
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-full gap-2"
+          isDisabled={loading}
+        >
           {loading ? (
             <>
               <FiLoader className="mr-2 h-4 w-4 animate-spin" />
@@ -102,7 +117,7 @@ export default function UpdatePasswordForm() {
           )}
         </Button>
       </div>
-      <p className="text-default-500 text-center text-xs">
+      <p className="text-muted text-center text-xs">
         Pro tip : évite &quot;123456&quot; ou le nom de ton chat, c&apos;est pas
         top pour la sécurité ! 🐱
       </p>

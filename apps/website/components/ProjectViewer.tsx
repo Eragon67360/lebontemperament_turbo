@@ -1,7 +1,8 @@
 "use client";
 
+import { LinkButton } from "@/components/LinkButton";
 import { ConcertProject } from "@/types/projects";
-import { Button, Skeleton } from "@heroui/react";
+import { Skeleton } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -44,11 +45,11 @@ const ProjectViewer = () => {
       {stories.map((story) => (
         <article
           key={story.slug}
-          className="border-divider bg-background group grid overflow-hidden rounded-xl border sm:grid-cols-[180px_1fr]"
+          className="border-separator bg-background group grid overflow-hidden rounded-xl border sm:grid-cols-[180px_1fr]"
         >
           <Link
             href={`/concerts/${story.slug}`}
-            className="bg-default-100 relative min-h-44 overflow-hidden"
+            className="bg-surface-secondary relative min-h-44 overflow-hidden"
             aria-label={`Lire l’histoire de ${story.name}`}
           >
             {story.image ? (
@@ -60,7 +61,7 @@ const ProjectViewer = () => {
                 sizes="(max-width: 640px) 100vw, 180px"
               />
             ) : (
-              <span className="text-default-400 flex h-full items-center justify-center">
+              <span className="text-muted flex h-full items-center justify-center">
                 <IoImageOutline className="size-10" aria-hidden="true" />
               </span>
             )}
@@ -73,22 +74,19 @@ const ProjectViewer = () => {
               {story.name} {story.subName || ""}
             </h3>
             {story.explanation && (
-              <p className="text-default-600 dark:text-default-400 mt-3 line-clamp-3 grow text-sm">
+              <p className="text-muted mt-3 line-clamp-3 grow text-sm">
                 {story.explanation}
               </p>
             )}
-            <Button
-              as={Link}
-              href={`/concerts/${story.slug}`}
-              variant="light"
-              color="primary"
-              radius="sm"
+            <LinkButton
+              variant="tertiary"
               size="sm"
-              className="mt-4 w-fit"
-              endContent={<IoIosArrowRoundForward aria-hidden="true" />}
+              className="mt-4 w-fit rounded-sm"
+              href={`/concerts/${story.slug}`}
             >
               Lire l’histoire
-            </Button>
+              <IoIosArrowRoundForward aria-hidden="true" />
+            </LinkButton>
           </div>
         </article>
       ))}

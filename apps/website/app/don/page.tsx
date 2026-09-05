@@ -45,8 +45,8 @@ export default function DonPage() {
           Soutenez Le Bon Tempérament
         </h2>
 
-        <div className="bg-default-50 rounded-lg p-6 shadow-lg md:p-8">
-          <p className="text-default-600 mb-6">
+        <div className="bg-surface-secondary rounded-lg p-6 shadow-lg md:p-8">
+          <p className="text-muted mb-6">
             Depuis bientôt 40 ans, notre joyeuse troupe réunit des musiciens de
             7 à 77 ans — parfois moins, parfois plus. Sans subvention et avec
             des cotisations volontairement modérées, chaque coup de pouce nous
@@ -55,7 +55,7 @@ export default function DonPage() {
 
           <DonationTiers />
 
-          <p className="border-default-200 text-default-500 mt-8 border-t pt-5 text-sm">
+          <p className="border-default-200 text-muted mt-8 border-t pt-5 text-sm">
             Le Bon Tempérament est une association d&apos;intérêt général :
             votre don ouvre droit à une réduction d&apos;impôt de 66 % de son
             montant (article 200 du Code général des impôts). Votre reçu fiscal

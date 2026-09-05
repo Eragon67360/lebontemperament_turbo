@@ -39,7 +39,7 @@ export default function PrivacyPolicy() {
         </h1>
 
         <div className="space-y-8">
-          <section className="border-divider border-b pb-8">
+          <section className="border-separator border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Introduction
             </h2>
@@ -51,7 +51,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
-          <section className="border-divider border-b pb-8">
+          <section className="border-separator border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Informations que nous recueillons
             </h2>
@@ -71,7 +71,7 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
-          <section className="border-divider border-b pb-8">
+          <section className="border-separator border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Utilisation des données
             </h2>
@@ -91,7 +91,7 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
-          <section className="border-divider border-b pb-8">
+          <section className="border-separator border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Partage des données
             </h2>
@@ -104,7 +104,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
-          <section className="border-divider border-b pb-8">
+          <section className="border-separator border-b pb-8">
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Utilisation des cookies
             </h2>
@@ -225,7 +225,7 @@ export default function PrivacyPolicy() {
 
           <section
             id="application-mobile"
-            className="border-divider border-b pb-8"
+            className="border-separator border-b pb-8"
           >
             <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
               Application mobile (Le Bon Tempérament)

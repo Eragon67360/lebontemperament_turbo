@@ -245,7 +245,7 @@ export const MembresLandingPage = () => {
                   variants={itemVariants}
                   whileHover="hover"
                   whileTap={{ scale: 0.98 }}
-                  className="group bg-default-50/50 hover:bg-default-100 border-primary/5 hover:border-primary/20 relative flex h-full flex-col gap-3 rounded-xl border p-4 backdrop-blur-sm transition-colors"
+                  className="group bg-surface-secondary/50 hover:bg-surface-secondary border-primary/5 hover:border-primary/20 relative flex h-full flex-col gap-3 rounded-xl border p-4 backdrop-blur-sm transition-colors"
                 >
                   {/* Hover Glow Effect */}
                   <div className="bg-primary/20 absolute -top-4 -right-4 h-20 w-20 rounded-full opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-40" />

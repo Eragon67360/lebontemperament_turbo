@@ -1,9 +1,10 @@
 "use client";
 import CAMinutesList from "@/components/CAMinutesList";
 import CloudinaryImage from "@/components/CloudinaryImage";
+import { LinkButton } from "@/components/LinkButton";
 import PdfList from "@/components/PdfList";
 import { RoundedSize } from "@/utils/types";
-import { Button, Link } from "@heroui/react";
+import { Link } from "@heroui/react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { IconType } from "react-icons";
@@ -40,7 +41,7 @@ const Administration = () => {
         className="group relative overflow-hidden rounded-xl"
       >
         <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 backdrop-blur-sm transition-all duration-300">
+        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
           <div className="flex items-start gap-3 p-4 md:p-6">
             <motion.div
               whileHover={{ scale: 1.1, rotate: 5 }}
@@ -78,7 +79,7 @@ const Administration = () => {
         className="group relative overflow-hidden rounded-xl"
       >
         <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 backdrop-blur-sm transition-all duration-300">
+        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
           <div className="flex items-start gap-3 p-4 md:p-6">
             <motion.div
               whileHover={{ scale: 1.1, rotate: 5 }}
@@ -116,7 +117,7 @@ const Administration = () => {
         className="group relative overflow-hidden rounded-xl"
       >
         <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 backdrop-blur-sm transition-all duration-300">
+        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
           <div className="flex items-start gap-3 p-4 md:p-6">
             <motion.div
               whileHover={{ scale: 1.1, rotate: 5 }}
@@ -147,7 +148,7 @@ const Administration = () => {
         className="group relative overflow-hidden rounded-xl"
       >
         <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 backdrop-blur-sm transition-all duration-300">
+        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
           <div className="flex items-start gap-3 p-4 md:p-6">
             <motion.div
               whileHover={{ scale: 1.1, rotate: 5 }}
@@ -187,7 +188,7 @@ const Administration = () => {
         className="group relative overflow-hidden rounded-xl"
       >
         <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 backdrop-blur-sm transition-all duration-300">
+        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
           <div className="flex flex-col items-start justify-between gap-3 p-4 md:p-6 lg:flex-row lg:items-center">
             <div className="flex items-start gap-3">
               <motion.div
@@ -205,16 +206,15 @@ const Administration = () => {
                 </p>
               </div>
             </div>
-            <Button
-              as={Link}
+            <LinkButton
+              variant="outline"
+              className="transition-transform hover:scale-105"
               href="/pdf/reglement.pdf"
               target="_blank"
-              variant="bordered"
-              startContent={<IoDocumentText />}
-              className="transition-transform hover:scale-105"
             >
+              <IoDocumentText />
               Version complète
-            </Button>
+            </LinkButton>
           </div>
           <div className="space-y-3 px-4 pb-4 md:px-6 md:pb-6">
             {/* Répétitions */}
@@ -222,7 +222,7 @@ const Administration = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="bg-default-50/50 rounded-lg p-4 backdrop-blur-sm"
+              className="bg-surface-secondary/50 rounded-lg p-4 backdrop-blur-sm"
             >
               <h4 className="text-foreground mb-2 font-semibold">
                 Répétitions
@@ -239,7 +239,7 @@ const Administration = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.3 }}
-              className="bg-default-50/50 rounded-lg p-4 backdrop-blur-sm"
+              className="bg-surface-secondary/50 rounded-lg p-4 backdrop-blur-sm"
             >
               <h4 className="text-foreground mb-2 font-semibold">
                 Commission de solidarité
@@ -269,7 +269,7 @@ const Administration = () => {
             className="group relative block overflow-hidden rounded-xl"
           >
             <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 flex items-start gap-4 p-4 backdrop-blur-sm transition-all duration-300">
+            <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 flex items-start gap-4 p-4 backdrop-blur-sm transition-all duration-300">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 className="bg-primary/10 rounded-lg p-2"
@@ -300,7 +300,7 @@ const Administration = () => {
             className="group relative block overflow-hidden rounded-xl"
           >
             <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 flex items-start gap-4 p-4 backdrop-blur-sm transition-all duration-300">
+            <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 flex items-start gap-4 p-4 backdrop-blur-sm transition-all duration-300">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 className="bg-primary/10 rounded-lg p-2"
@@ -397,7 +397,7 @@ const Administration = () => {
             className="group relative overflow-hidden rounded-xl"
           >
             <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 backdrop-blur-sm transition-all duration-300">
+            <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
               <div className="flex items-center gap-3 p-4 md:p-6">
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 5 }}
@@ -425,7 +425,7 @@ const Administration = () => {
                         className="group/item relative block overflow-hidden rounded-lg"
                       >
                         <div className="from-primary/10 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/10 opacity-0 blur-md transition-opacity duration-300 group-hover/item:opacity-100" />
-                        <div className="bg-default-50/80 group-hover/item:bg-default-100/80 relative z-10 flex flex-col items-center p-4 backdrop-blur-sm transition-all duration-300">
+                        <div className="bg-surface-secondary/80 group-hover/item:bg-surface-secondary/80 relative z-10 flex flex-col items-center p-4 backdrop-blur-sm transition-all duration-300">
                           {item.imageType === "icon" && item.icon ? (
                             <item.icon className="mb-3 h-12 w-12 transition-transform group-hover/item:scale-110" />
                           ) : (
@@ -459,7 +459,7 @@ const Administration = () => {
           className="group relative overflow-hidden rounded-xl"
         >
           <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-          <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
             <div className="flex items-center gap-3 p-4 md:p-6">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
@@ -512,7 +512,7 @@ const Administration = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="bg-default-50/50 rounded-xl p-1 backdrop-blur-sm md:p-2"
+        className="bg-surface-secondary/50 rounded-xl p-1 backdrop-blur-sm md:p-2"
       >
         <div className="mb-4 flex gap-2 overflow-x-auto md:mb-6">
           {[
@@ -528,7 +528,7 @@ const Administration = () => {
               className={`rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-300 md:px-6 md:py-3 md:text-base ${
                 selected === tab.key
                   ? "from-primary bg-gradient-to-r to-purple-500 text-white shadow-lg"
-                  : "bg-default-100/80 text-foreground hover:bg-default-200/80 backdrop-blur-sm"
+                  : "bg-surface-secondary/80 text-foreground hover:bg-surface-tertiary/80 backdrop-blur-sm"
               }`}
             >
               {tab.label}

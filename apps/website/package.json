@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "2.0.93",
+  "version": "2.0.94",
   "type": "module",
   "private": true,
   "scripts": {
@@ -16,9 +16,8 @@
     "@fullcalendar/google-calendar": "^7.1.0",
     "@fullcalendar/react": "^7.1.0",
     "@googlemaps/js-api-loader": "^2.1.1",
-    "@heroui/react": "^2.8.10",
-    "@heroui/system": "^2.4.28",
-    "@heroui/theme": "^2.4.26",
+    "@heroui/react": "^3.2.4",
+    "@heroui/styles": "^3.2.4",
     "@next/third-parties": "^16.3.4",
     "@repo/domain": "*",
     "@vercel/speed-insights": "^2.0.0",
