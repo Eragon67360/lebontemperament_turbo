@@ -4,6 +4,9 @@ on:
   schedule:
     # ~07:30 Europe/Paris (CEST). GitHub cron is UTC-only and may drift 5-30min.
     - cron: "30 5 * * *"
+  # Staging deploys from dev — re-test after each push lands.
+  push:
+    branches: [dev]
   workflow_dispatch:
     inputs:
       project:
@@ -42,6 +45,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      # ponytail: fixed wait for the Vercel staging deploy triggered by the same
+      # push; upgrade path = deployment_status trigger filtered on Vercel success.
+      - name: Wait for Vercel staging deploy
+        if: github.event_name == 'push'
+        run: sleep 180
       - name: Run E2E tests (shard ${{ matrix.shard }}/2)
         working-directory: apps/e2e
         env:
@@ -90,7 +98,7 @@ jobs:
           path: apps/e2e/playwright-report/
           retention-days: 7
       - name: Open or update failure issue
-        if: failure() && github.event_name == 'schedule'
+        if: failure() && github.event_name != 'workflow_dispatch'
         uses: actions/github-script@v7
         with:
           script: |
@@ -110,7 +118,7 @@ jobs:
               });
             }
       - name: Close failure issue when green
-        if: success() && github.event_name == 'schedule'
+        if: success() && github.event_name != 'workflow_dispatch'
         uses: actions/github-script@v7
         with:
           script: |
