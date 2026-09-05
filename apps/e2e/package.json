@@ -1,0 +1,19 @@
+{
+  "name": "e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@repo/typescript-config": "*",
+    "@types/node": "^25.9.5",
+    "dotenv": "^17.4.2",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
