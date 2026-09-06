@@ -30,17 +30,22 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
     return (
       <div className="flex items-center gap-0.5 rounded-md bg-transparent p-0.5">
         {/* Skeleton placeholder */}
-        <div className="bg-default-100 h-7 w-7 animate-pulse rounded-sm" />
-        <div className="bg-default-100 h-7 w-7 animate-pulse rounded-sm" />
-        <div className="bg-default-100 h-7 w-7 animate-pulse rounded-sm" />
+        <div className="bg-surface-secondary h-7 w-7 animate-pulse rounded-sm" />
+        <div className="bg-surface-secondary h-7 w-7 animate-pulse rounded-sm" />
+        <div className="bg-surface-secondary h-7 w-7 animate-pulse rounded-sm" />
       </div>
     );
   }
 
   // Dynamic classes based on isLight prop
   const buttonBaseClasses = isLight
-    ? "min-w-7 h-7 w-7 p-0 data-[hover=true]:bg-white/20"
-    : "min-w-7 h-7 w-7 p-0 data-[hover=true]:bg-default-100";
+    ? "min-w-7 h-7 w-7 p-0 data-[hovered=true]:bg-white/20"
+    : "min-w-7 h-7 w-7 p-0 data-[hovered=true]:bg-surface-secondary";
+
+  // v2 parity: selected theme button was variant="flat" color="primary"
+  // (teal-600 tint bg in both modes, primary-600 icon)
+  const selectedClasses =
+    "bg-[#1e848a]/20 text-primary-600 data-[hovered=true]:bg-[#1e848a]/30";
 
   const iconClasses = isLight ? "text-white" : "";
 
@@ -50,13 +55,10 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
       <Button
         isIconOnly
         size="sm"
-        variant={theme === "light" ? "flat" : "light"}
-        color={theme === "light" ? "primary" : "default"}
-        className={buttonBaseClasses}
+        variant="ghost"
+        className={`${buttonBaseClasses} ${theme === "light" ? selectedClasses : ""}`}
         onPress={() => setTheme("light")}
         aria-label="Passer au thème clair"
-        aria-pressed={theme === "light"}
-        title="Thème clair"
       >
         <FiSun className={`h-3.5 w-3.5 ${iconClasses}`} />
       </Button>
@@ -65,13 +67,10 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
       <Button
         isIconOnly
         size="sm"
-        variant={theme === "dark" ? "flat" : "light"}
-        color={theme === "dark" ? "primary" : "default"}
-        className={buttonBaseClasses}
+        variant="ghost"
+        className={`${buttonBaseClasses} ${theme === "dark" ? selectedClasses : ""}`}
         onPress={() => setTheme("dark")}
         aria-label="Passer au thème sombre"
-        aria-pressed={theme === "dark"}
-        title="Thème sombre"
       >
         <FiMoon className={`h-3.5 w-3.5 ${iconClasses}`} />
       </Button>
@@ -80,13 +79,10 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
       <Button
         isIconOnly
         size="sm"
-        variant={theme === "system" ? "flat" : "light"}
-        color={theme === "system" ? "primary" : "default"}
-        className={buttonBaseClasses}
+        variant="ghost"
+        className={`${buttonBaseClasses} ${theme === "system" ? selectedClasses : ""}`}
         onPress={() => setTheme("system")}
         aria-label="Utiliser le thème du système"
-        aria-pressed={theme === "system"}
-        title="Thème système"
       >
         <FiMonitor className={`h-3.5 w-3.5 ${iconClasses}`} />
       </Button>
@@ -110,11 +106,11 @@ export function ThemeSwitcherCompact() {
     return (
       <Button
         isIconOnly
-        variant="light"
+        variant="ghost"
         className="h-9 w-9"
         aria-label="Changer de thème"
       >
-        <div className="bg-default-200 h-5 w-5 animate-pulse rounded-full" />
+        <div className="bg-surface-tertiary h-5 w-5 animate-pulse rounded-full" />
       </Button>
     );
   }
@@ -154,11 +150,10 @@ export function ThemeSwitcherCompact() {
   return (
     <Button
       isIconOnly
-      variant="light"
+      variant="ghost"
       className="h-9 w-9 transition-transform hover:scale-110"
       onPress={cycleTheme}
       aria-label={`Changer de thème. Actuellement: ${getLabel()}`}
-      title={getLabel()}
     >
       {getIcon()}
     </Button>

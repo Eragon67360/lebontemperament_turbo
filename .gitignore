@@ -17,6 +17,12 @@ node_modules
 # Testing
 coverage
 
+# Playwright
+apps/e2e/.auth/
+playwright-report/
+blob-report/
+test-results/
+
 # Turbo
 .turbo
 

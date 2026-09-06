@@ -128,7 +128,7 @@ export function TourForm({
                 selected={startDate}
                 onSelect={setStartDate}
                 locale={fr}
-                initialFocus
+                autoFocus
               />
             </PopoverContent>
           </Popover>
@@ -159,7 +159,7 @@ export function TourForm({
                 selected={endDate}
                 onSelect={setEndDate}
                 locale={fr}
-                initialFocus
+                autoFocus
                 disabled={(date) => (startDate ? date < startDate : false)}
               />
             </PopoverContent>

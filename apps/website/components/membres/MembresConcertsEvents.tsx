@@ -96,10 +96,10 @@ const MembresConcertsEvents = () => {
         "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
       vente:
         "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-      autre: "bg-default-100 text-default-700",
+      autre: "bg-surface-secondary text-muted",
     };
     return (
-      colors[type as keyof typeof colors] || "bg-default-100 text-default-700"
+      colors[type as keyof typeof colors] || "bg-surface-secondary text-muted"
     );
   };
 
@@ -124,12 +124,12 @@ const MembresConcertsEvents = () => {
   );
 
   const LoadingCard = () => (
-    <div className="bg-default-100/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
-      <div className="bg-default-200/80 mb-4 h-6 w-3/4 rounded-lg"></div>
+    <div className="bg-surface-secondary/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
+      <div className="bg-surface-tertiary/80 mb-4 h-6 w-3/4 rounded-lg"></div>
       <div className="space-y-3">
-        <div className="bg-default-200/80 h-4 w-1/2 rounded-lg"></div>
-        <div className="bg-default-200/80 h-4 w-2/3 rounded-lg"></div>
-        <div className="bg-default-200/80 h-4 w-3/4 rounded-lg"></div>
+        <div className="bg-surface-tertiary/80 h-4 w-1/2 rounded-lg"></div>
+        <div className="bg-surface-tertiary/80 h-4 w-2/3 rounded-lg"></div>
+        <div className="bg-surface-tertiary/80 h-4 w-3/4 rounded-lg"></div>
       </div>
     </div>
   );
@@ -149,7 +149,7 @@ const MembresConcertsEvents = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-foreground/60 bg-default-100/80 rounded-xl py-12 text-center backdrop-blur-sm"
+            className="text-foreground/60 bg-surface-secondary/80 rounded-xl py-12 text-center backdrop-blur-sm"
           >
             Aucun concert à venir pour le moment.
           </motion.div>
@@ -172,7 +172,7 @@ const MembresConcertsEvents = () => {
                 className="group relative overflow-hidden rounded-xl"
               >
                 <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-                <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
+                <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
                   <h3 className="text-foreground mb-4 text-lg font-bold">
                     {concert.name ||
                       `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
@@ -225,7 +225,7 @@ const MembresConcertsEvents = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-foreground/60 bg-default-100/80 rounded-xl py-12 text-center backdrop-blur-sm"
+            className="text-foreground/60 bg-surface-secondary/80 rounded-xl py-12 text-center backdrop-blur-sm"
           >
             Aucun événement à venir pour le moment.
           </motion.div>
@@ -248,7 +248,7 @@ const MembresConcertsEvents = () => {
                 className="group relative overflow-hidden rounded-xl"
               >
                 <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-                <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
+                <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
                   <div className="mb-4 flex items-start justify-between gap-3">
                     <h3 className="text-foreground flex-1 text-lg font-bold">
                       {event.title}
@@ -283,7 +283,7 @@ const MembresConcertsEvents = () => {
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {event.responsible_email && (
-                      <span className="bg-default-50/80 text-foreground/70 rounded-lg px-3 py-1.5 text-xs">
+                      <span className="bg-surface-secondary/80 text-foreground/70 rounded-lg px-3 py-1.5 text-xs">
                         Contact:{" "}
                         <a
                           href={`mailto:${event.responsible_email}`}
@@ -319,7 +319,7 @@ const MembresConcertsEvents = () => {
         className="group relative overflow-hidden rounded-xl"
       >
         <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6 lg:p-8">
+        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6 lg:p-8">
           <SectionTitle subtitle="Archives" title="Concert Anniversaire" />
           <p className="text-foreground/70 mb-6 text-sm md:text-base">
             Enregistrement du concert anniversaire pour les 20 ans du Bon

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@heroui/react";
+import { LinkButton } from "@/components/LinkButton";
 import { motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { IoMusicalNotesOutline } from "react-icons/io5";
@@ -20,7 +20,7 @@ const AudioPlayer = () => {
       >
         <div className="group relative overflow-hidden rounded-2xl">
           <div className="from-primary/30 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/30 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
-          <div className="bg-default-100/90 relative z-10 p-6 backdrop-blur-xl md:p-8 lg:p-10">
+          <div className="bg-surface-secondary/90 relative z-10 p-6 backdrop-blur-xl md:p-8 lg:p-10">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -55,7 +55,7 @@ const AudioPlayer = () => {
             >
               {fileUrl ? (
                 <div className="w-full space-y-6">
-                  <div className="bg-default-50/50 overflow-hidden rounded-xl p-4 backdrop-blur-sm">
+                  <div className="bg-surface-secondary/50 overflow-hidden rounded-xl p-4 backdrop-blur-sm">
                     <audio
                       controls
                       src={fileUrl}
@@ -73,15 +73,14 @@ const AudioPlayer = () => {
                     whileTap={{ scale: 0.95 }}
                     className="flex justify-center"
                   >
-                    <Button
-                      as="a"
-                      href={fileUrl + "&export=download"}
-                      download={fileName || "audio"}
+                    <LinkButton
                       aria-label={`Télécharger ${fileName || "le fichier audio"}`}
                       className="from-primary bg-gradient-to-r to-purple-500 px-8 py-6 text-base font-semibold text-white shadow-lg transition-shadow hover:shadow-xl"
+                      href={fileUrl + "&export=download"}
+                      download={fileName || "audio"}
                     >
                       Télécharger le fichier
-                    </Button>
+                    </LinkButton>
                   </motion.div>
                 </div>
               ) : (

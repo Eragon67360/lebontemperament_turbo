@@ -217,7 +217,7 @@ export default async function ConcertPage({
           <h1 className="text-foreground text-4xl font-bold">
             Histoire de concert non trouvée
           </h1>
-          <p className="text-default-600 dark:text-default-400 mt-4 text-lg">
+          <p className="text-muted mt-4 text-lg">
             Désolé, l&apos;histoire que vous recherchez n&apos;existe pas ou
             n&apos;est plus disponible.
           </p>
@@ -273,7 +273,7 @@ export default async function ConcertPage({
     return (
       <div className="dark:bg-background flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
         <h1 className="text-foreground text-4xl font-bold">Erreur</h1>
-        <p className="text-default-600 dark:text-default-400 mt-4 text-lg">
+        <p className="text-muted mt-4 text-lg">
           Une erreur est survenue lors du chargement de cette histoire.
         </p>
         <Link

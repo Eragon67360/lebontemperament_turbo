@@ -156,12 +156,12 @@ const Galerie = async () => {
               </div>
               <Link
                 href="#videos"
-                className="text-default-400 hover:text-default-500 flex items-center justify-center gap-2 rounded-lg p-2 text-xl font-light md:text-2xl lg:text-3xl"
+                className="text-muted hover:text-muted flex items-center justify-center gap-2 rounded-lg p-2 text-xl font-light md:text-2xl lg:text-3xl"
               >
                 <span>Voir vidéos </span> <FaArrowDown />
               </Link>
             </div>
-            <hr className="border-divider mt-8" />
+            <hr className="border-separator mt-8" />
           </div>
           <div>
             <PhotoGallery />
@@ -181,13 +181,13 @@ const Galerie = async () => {
               </div>
               <Link
                 href="#photos"
-                className="text-default-400 hover:text-default-500 flex items-center justify-center gap-2 rounded-lg p-2 text-xl font-light md:text-2xl lg:text-3xl"
+                className="text-muted hover:text-muted flex items-center justify-center gap-2 rounded-lg p-2 text-xl font-light md:text-2xl lg:text-3xl"
               >
                 <span>Voir photos </span> <FaArrowUp />
               </Link>
             </div>
 
-            <hr className="border-divider mt-8" />
+            <hr className="border-separator mt-8" />
           </div>
           <YoutubeVideos />
         </div>

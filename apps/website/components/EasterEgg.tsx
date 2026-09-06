@@ -1,7 +1,7 @@
 "use client";
 
 import { useEasterEgg } from "@/hooks/useEasterEgg";
-import { Modal, ModalBody, ModalContent } from "@heroui/react";
+import { Modal } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import React, { useEffect, useState } from "react";
 import { SuccessMessage } from "./SuccessMessage";
@@ -196,70 +196,67 @@ export const EasterEgg = () => {
         </div>
       )}
 
-      <Modal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        size="md"
-        className="mx-0"
-      >
-        <ModalContent
-          className={`fixed w-full max-w-[95vw] -translate-x-1/2 transform md:max-w-3xl ${
-            isMobile() ? "top-4 left-1/2" : "top-1/2 left-1/2 -translate-y-1/2"
-          } bg-white shadow-xl md:rounded-lg`}
-          style={{
-            maxHeight: isMobile() ? "calc(100vh - 2rem)" : "80vh",
-            overflowY: "auto",
-          }}
-        >
-          <ModalBody className="py-4 md:py-8">
-            <div className="flex min-h-[200px] flex-col items-center justify-center px-2 md:px-4">
-              <AnimatePresence mode="wait">
-                {showInitialMessage && (
-                  <motion.div
-                    key="initial"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="bg-gradient-to-r from-[#1a878d] to-blue-600 bg-clip-text text-center text-xl font-bold text-transparent md:text-3xl"
-                  >
-                    Le BT est-il une secte ?
-                  </motion.div>
-                )}
-
-                {!showInitialMessage && !isSuccess && (
-                  <motion.div
-                    key="code"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex w-full flex-col items-center gap-4 md:gap-6"
-                  >
-                    <div className="text-center text-lg font-bold md:text-xl">
-                      Trouve le code pour avoir la réponse
-                    </div>
-                    <CodeInput
-                      length={11}
-                      onChange={handleCodeChange}
-                      isError={isError}
-                    />
-                    {isError && (
-                      <motion.p
+      <Modal>
+        <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
+          <Modal.Container size="md" className="mx-0">
+            <Modal.Dialog
+              className="w-full max-w-[95vw] bg-white shadow-xl md:max-w-3xl md:rounded-lg dark:bg-zinc-900"
+              style={{
+                maxHeight: isMobile() ? "calc(100vh - 2rem)" : "80vh",
+                overflowY: "auto",
+              }}
+            >
+              <Modal.Body className="py-4 md:py-8">
+                <div className="flex min-h-[200px] flex-col items-center justify-center px-2 md:px-4">
+                  <AnimatePresence mode="wait">
+                    {showInitialMessage && (
+                      <motion.div
+                        key="initial"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="mt-2 text-sm text-red-500 md:text-base"
+                        exit={{ opacity: 0 }}
+                        className="bg-gradient-to-r from-[#1a878d] to-blue-600 bg-clip-text text-center text-xl font-bold text-transparent md:text-3xl"
                       >
-                        Code incorrect, essayez encore !
-                      </motion.p>
+                        Le BT est-il une secte ?
+                      </motion.div>
                     )}
-                  </motion.div>
-                )}
 
-                {isSuccess && (
-                  <SuccessMessage onClose={() => setIsOpen(false)} />
-                )}
-              </AnimatePresence>
-            </div>
-          </ModalBody>
-        </ModalContent>
+                    {!showInitialMessage && !isSuccess && (
+                      <motion.div
+                        key="code"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex w-full flex-col items-center gap-4 md:gap-6"
+                      >
+                        <div className="text-center text-lg font-bold md:text-xl">
+                          Trouve le code pour avoir la réponse
+                        </div>
+                        <CodeInput
+                          length={11}
+                          onChange={handleCodeChange}
+                          isError={isError}
+                        />
+                        {isError && (
+                          <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="mt-2 text-sm text-red-500 md:text-base"
+                          >
+                            Code incorrect, essayez encore !
+                          </motion.p>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {isSuccess && (
+                      <SuccessMessage onClose={() => setIsOpen(false)} />
+                    )}
+                  </AnimatePresence>
+                </div>
+              </Modal.Body>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
       </Modal>
 
       <DevTapButton />

@@ -69,7 +69,7 @@ const Calendrier = () => {
       "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
     "Choeur complet":
       "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-    Tous: "bg-default-100 text-default-700",
+    Tous: "bg-surface-secondary text-muted",
   };
 
   return (
@@ -132,7 +132,7 @@ const Calendrier = () => {
             className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
               selectedGroup === "all"
                 ? "from-primary bg-gradient-to-r to-purple-500 text-white shadow-lg"
-                : "bg-default-100/80 text-foreground hover:bg-default-200/80 backdrop-blur-sm"
+                : "bg-surface-secondary/80 text-foreground hover:bg-surface-tertiary/80 backdrop-blur-sm"
             }`}
           >
             Pas de filtre
@@ -146,7 +146,7 @@ const Calendrier = () => {
               className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
                 selectedGroup === group
                   ? "from-primary bg-gradient-to-r to-purple-500 text-white shadow-lg"
-                  : "bg-default-100/80 text-foreground hover:bg-default-200/80 backdrop-blur-sm"
+                  : "bg-surface-secondary/80 text-foreground hover:bg-surface-tertiary/80 backdrop-blur-sm"
               }`}
             >
               {group}
@@ -170,7 +170,10 @@ const Calendrier = () => {
             {loadingRehearsals ? (
               <div className="animate-pulse space-y-4">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="bg-default-100/80 h-32 rounded-xl" />
+                  <div
+                    key={i}
+                    className="bg-surface-secondary/80 h-32 rounded-xl"
+                  />
                 ))}
               </div>
             ) : filteredRehearsals.length > 0 ? (
@@ -183,7 +186,7 @@ const Calendrier = () => {
                   className="group relative overflow-hidden rounded-xl"
                 >
                   <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-                  <div className="bg-default-100/80 group-hover:bg-default-200/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
+                  <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
                     <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
                       <div className="flex-1">
                         <h3 className="text-foreground mb-1 text-lg font-bold">
@@ -222,7 +225,7 @@ const Calendrier = () => {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-foreground/60 bg-default-100/80 rounded-xl py-16 text-center backdrop-blur-sm"
+                className="text-foreground/60 bg-surface-secondary/80 rounded-xl py-16 text-center backdrop-blur-sm"
               >
                 Aucune répétition trouvée
               </motion.div>

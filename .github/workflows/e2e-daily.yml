@@ -1,0 +1,182 @@
+name: E2E Daily (staging)
+
+on:
+  schedule:
+    # ~07:30 Europe/Paris (CEST). GitHub cron is UTC-only and may drift 5-30min.
+    - cron: "30 5 * * *"
+  # Staging deploys from dev — re-test once Vercel reports the deployments ready.
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Which project to run
+        type: choice
+        options: [all, website, admin]
+        default: all
+
+# Deployment-triggered runs are per-commit and cancel superseded gate-waiters;
+# scheduled/dispatch runs share one group and are never cancelled mid-run
+# (could leave cleanup half-done against live staging).
+concurrency:
+  group: ${{ github.event_name == 'deployment_status' && format('e2e-deploy-{0}', github.event.deployment.sha) || 'e2e-daily' }}
+  cancel-in-progress: ${{ github.event_name == 'deployment_status' }}
+
+permissions:
+  contents: read
+  issues: write
+  deployments: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # For deployment_status events: only react to successful Preview deploys.
+    # Vercel sets environment to "Preview – <project>" and ref to the commit
+    # SHA, so the dev-branch check happens in the first step below.
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       startsWith(github.event.deployment.environment, 'Preview'))
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2] # bump total when the suite grows past ~60 tests
+    steps:
+      - name: Confirm deployment is the dev branch head
+        if: github.event_name == 'deployment_status'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Vercel sets deployment.ref to the commit SHA, so compare against
+            // the dev branch head to ignore PR previews and stale deploys.
+            // Exit 78 = neutral conclusion (not a failure, no notification).
+            const { owner, repo } = context.repo;
+            const sha = context.payload.deployment.sha;
+            const { data: branch } = await github.rest.repos.getBranch({ owner, repo, branch: 'dev' });
+            if (branch.commit.sha !== sha) {
+              core.info(`deployment ${sha.slice(0, 7)} is not dev head (${branch.commit.sha.slice(0, 7)}) — skipping.`);
+              process.exit(78);
+            }
+      - name: Wait for all Vercel deployments of this commit
+        if: github.event_name == 'deployment_status'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = context.payload.deployment.sha;
+            const deadline = Date.now() + 10 * 60 * 1000;
+            while (Date.now() < deadline) {
+              const { data: deployments } = await github.rest.repos.listDeployments({ owner, repo, sha });
+              const states = [];
+              for (const d of deployments) {
+                const { data: s } = await github.rest.repos.listDeploymentStatuses({
+                  owner, repo, deployment_id: d.id, per_page: 1,
+                });
+                states.push(`${d.environment}:${s[0]?.state ?? 'unknown'}`);
+              }
+              core.info(`deployments for ${sha.slice(0, 7)}: ${states.join(', ')}`);
+              // ponytail: Vercel registers both projects' deployments within
+              // seconds of the push, long before the first success event —
+              // so "all current deployments succeeded" implies both apps.
+              if (states.length > 0 && states.every((s) => s.endsWith(':success'))) return;
+              if (states.some((s) => s.endsWith(':failure') || s.endsWith(':error'))) {
+                core.setFailed('A Vercel deployment failed for this commit.');
+              }
+              await new Promise((r) => setTimeout(r, 20000));
+            }
+            core.setFailed('Timed out waiting for Vercel deployments.');
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run E2E tests (shard ${{ matrix.shard }}/2)
+        working-directory: apps/e2e
+        env:
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # Global-teardown orphan sweeper (server-side only):
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: >-
+          npx playwright test --shard=${{ matrix.shard }}/2
+          ${{ inputs.project && inputs.project != 'all' && format('--project={0}', inputs.project) || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: apps/e2e/blob-report/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ matrix.shard }}
+          path: apps/e2e/test-results/
+          retention-days: 14
+
+  merge-report:
+    needs: test
+    # Skip when the test job was skipped (non-success deployment_status events)
+    # or neutral (deployment_status not from the dev head — see gate step).
+    if: always() && !contains(fromJSON('["skipped", "neutral"]'), needs.test.result)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          path: apps/e2e/all-blobs
+          merge-multiple: true
+      - run: npx playwright merge-reports --reporter=html ./all-blobs
+        working-directory: apps/e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report/
+          retention-days: 7
+      - name: Open or update failure issue
+        if: failure() && github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: 'e2e-failure',
+            });
+            const body = `E2E daily run failed: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            if (issues.length) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: issues[0].number, body });
+            } else {
+              await github.rest.issues.create({
+                owner, repo,
+                title: `E2E daily failure – ${new Date().toISOString().slice(0, 10)}`,
+                body,
+                labels: ['e2e-failure'],
+              });
+            }
+      - name: Close failure issue when green
+        if: success() && github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: 'e2e-failure',
+            });
+            for (const i of issues) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: i.number, body: 'Green again, closing.' });
+              await github.rest.issues.update({ owner, repo, issue_number: i.number, state: 'closed' });
+            }

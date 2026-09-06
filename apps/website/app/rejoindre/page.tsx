@@ -92,7 +92,7 @@ export default function RejoindrePage() {
           <h2 className="text-title text-foreground leading-none font-bold">
             Devenez membre de l&apos;ensemble
           </h2>
-          <hr className="border-divider mt-2 md:mt-4 lg:mt-8" />
+          <hr className="border-separator mt-2 md:mt-4 lg:mt-8" />
           <p className="text-foreground mt-8 text-base leading-relaxed md:text-lg">
             Le Bon Tempérament accueille des musiciens de tous horizons,
             qu&apos;ils soient débutants ou expérimentés. Depuis 1987, notre
@@ -103,43 +103,43 @@ export default function RejoindrePage() {
 
         {/* Qui peut nous rejoindre */}
         <section className="mb-12">
-          <div className="border-divider bg-default-50 rounded-lg border p-6 md:p-8">
+          <div className="border-separator bg-surface-secondary rounded-lg border p-6 md:p-8">
             <h2 className="text-foreground mb-6 flex items-center gap-3 text-2xl font-semibold">
               <IoPeople className="text-primary text-3xl" />
               Qui peut nous rejoindre?
             </h2>
-            <p className="text-default-600 dark:text-default-300 mb-4 text-base leading-relaxed">
+            <p className="text-muted mb-4 text-base leading-relaxed">
               Le Bon Tempérament est ouvert à tous ceux qui partagent notre
               passion pour la musique, quel que soit leur niveau ou leur
               parcours musical.
             </p>
             <div className="space-y-4">
-              <div className="border-divider bg-background rounded-lg border p-4">
+              <div className="border-separator bg-background rounded-lg border p-4">
                 <h3 className="text-foreground mb-2 font-semibold">
                   Choristes amateurs
                 </h3>
-                <p className="text-default-600 dark:text-default-400 text-sm leading-relaxed">
+                <p className="text-muted text-sm leading-relaxed">
                   Que vous ayez déjà chanté en chœur ou que vous souhaitiez
                   découvrir le chant choral, vous êtes les bienvenus. Aucune
                   expérience préalable n&apos;est nécessaire pour rejoindre
                   certains de nos chœurs.
                 </p>
               </div>
-              <div className="border-divider bg-background rounded-lg border p-4">
+              <div className="border-separator bg-background rounded-lg border p-4">
                 <h3 className="text-foreground mb-2 font-semibold">
                   Chanteurs solistes professionnels
                 </h3>
-                <p className="text-default-600 dark:text-default-400 text-sm leading-relaxed">
+                <p className="text-muted text-sm leading-relaxed">
                   Nous accueillons également des solistes professionnels pour
                   enrichir nos performances et partager leur expertise avec
                   l&apos;ensemble.
                 </p>
               </div>
-              <div className="border-divider bg-background rounded-lg border p-4">
+              <div className="border-separator bg-background rounded-lg border p-4">
                 <h3 className="text-foreground mb-2 font-semibold">
                   Instrumentistes
                 </h3>
-                <p className="text-default-600 dark:text-default-400 text-sm leading-relaxed">
+                <p className="text-muted text-sm leading-relaxed">
                   L&apos;orchestre symphonique, créé en 2023 et dirigé par
                   Charlotte Lienhard, accueille des instrumentistes de tous
                   niveaux. L&apos;orchestre se produit seul ou avec la chorale
@@ -156,36 +156,36 @@ export default function RejoindrePage() {
             <IoMusicalNotes className="text-primary text-3xl" />
             Nos chœurs
           </h2>
-          <p className="text-default-600 dark:text-default-400 mb-6 text-base leading-relaxed">
+          <p className="text-muted mb-6 text-base leading-relaxed">
             Nous proposons différents chœurs adaptés à tous les âges et tous les
             niveaux :
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="border-divider bg-default-50 rounded-lg border p-6">
+            <div className="border-separator bg-surface-secondary rounded-lg border p-6">
               <h3 className="text-foreground mb-3 text-xl font-semibold">
                 Chœur d&apos;adultes
               </h3>
-              <p className="text-default-600 dark:text-default-400 text-sm leading-relaxed">
+              <p className="text-muted text-sm leading-relaxed">
                 Pour les chanteurs adultes de tous niveaux, dirigé par Simone
                 Duclos. Ce chœur constitue le cœur de l&apos;ensemble depuis sa
                 création en 1987.
               </p>
             </div>
-            <div className="border-divider bg-default-50 rounded-lg border p-6">
+            <div className="border-separator bg-surface-secondary rounded-lg border p-6">
               <h3 className="text-foreground mb-3 text-xl font-semibold">
                 Chœur de jeunes
               </h3>
-              <p className="text-default-600 dark:text-default-400 text-sm leading-relaxed">
+              <p className="text-muted text-sm leading-relaxed">
                 Dirigé par Chloé Rozaire, ce chœur accueille les jeunes
                 passionnés de musique qui souhaitent développer leur pratique
                 vocale dans un cadre convivial.
               </p>
             </div>
-            <div className="border-divider bg-default-50 rounded-lg border p-6">
+            <div className="border-separator bg-surface-secondary rounded-lg border p-6">
               <h3 className="text-foreground mb-3 text-xl font-semibold">
                 Chœur des tout-jeunes
               </h3>
-              <p className="text-default-600 dark:text-default-400 text-sm leading-relaxed">
+              <p className="text-muted text-sm leading-relaxed">
                 Dirigé par Camille Gerlier-Lienhard, où les enfants découvrent
                 la musique à travers le chant, la pratique instrumentale et
                 l&apos;interprétation de spectacles musicaux.
@@ -196,14 +196,14 @@ export default function RejoindrePage() {
 
         {/* Comment nous rejoindre - HowTo Steps */}
         <section className="mb-12">
-          <div className="border-divider bg-default-50 rounded-lg border p-6 md:p-8">
+          <div className="border-separator bg-surface-secondary rounded-lg border p-6 md:p-8">
             <h2 className="text-foreground mb-6 flex items-center gap-3 text-2xl font-semibold">
               <IoPersonAdd className="text-primary text-3xl" />
               Comment nous rejoindre
             </h2>
             <div className="space-y-6">
               <div
-                className="border-divider bg-background rounded-lg border p-6"
+                className="border-separator bg-background rounded-lg border p-6"
                 itemScope
                 itemType="https://schema.org/HowToStep"
               >
@@ -218,10 +218,7 @@ export default function RejoindrePage() {
                     Contactez-nous
                   </h3>
                 </div>
-                <p
-                  className="text-default-600 dark:text-default-400 leading-relaxed"
-                  itemProp="text"
-                >
+                <p className="text-muted leading-relaxed" itemProp="text">
                   Prenez contact avec nous par email à{" "}
                   <a
                     href="mailto:lebontemperament@gmail.com"
@@ -242,7 +239,7 @@ export default function RejoindrePage() {
               </div>
 
               <div
-                className="border-divider bg-background rounded-lg border p-6"
+                className="border-separator bg-background rounded-lg border p-6"
                 itemScope
                 itemType="https://schema.org/HowToStep"
               >
@@ -257,10 +254,7 @@ export default function RejoindrePage() {
                     Échange initial
                   </h3>
                 </div>
-                <p
-                  className="text-default-600 dark:text-default-400 leading-relaxed"
-                  itemProp="text"
-                >
+                <p className="text-muted leading-relaxed" itemProp="text">
                   Nous organisons un échange pour discuter de vos motivations,
                   de votre parcours musical et de votre intégration dans
                   l&apos;ensemble. C&apos;est l&apos;occasion de découvrir nos
@@ -270,7 +264,7 @@ export default function RejoindrePage() {
               </div>
 
               <div
-                className="border-divider bg-background rounded-lg border p-6"
+                className="border-separator bg-background rounded-lg border p-6"
                 itemScope
                 itemType="https://schema.org/HowToStep"
               >
@@ -285,10 +279,7 @@ export default function RejoindrePage() {
                     Participation aux répétitions
                   </h3>
                 </div>
-                <p
-                  className="text-default-600 dark:text-default-400 leading-relaxed"
-                  itemProp="text"
-                >
+                <p className="text-muted leading-relaxed" itemProp="text">
                   Vous êtes invité à participer aux répétitions pour découvrir
                   l&apos;ensemble, rencontrer les membres et vous familiariser
                   avec notre répertoire. Cette période de découverte permet de
@@ -298,7 +289,7 @@ export default function RejoindrePage() {
               </div>
 
               <div
-                className="border-divider bg-background rounded-lg border p-6"
+                className="border-separator bg-background rounded-lg border p-6"
                 itemScope
                 itemType="https://schema.org/HowToStep"
               >
@@ -313,10 +304,7 @@ export default function RejoindrePage() {
                     Intégration officielle
                   </h3>
                 </div>
-                <p
-                  className="text-default-600 dark:text-default-400 leading-relaxed"
-                  itemProp="text"
-                >
+                <p className="text-muted leading-relaxed" itemProp="text">
                   Après la période de découverte, vous pouvez devenir membre
                   officiel de Le Bon Tempérament et participer pleinement à nos
                   activités, concerts et tournées estivales. Vous intégrez alors
@@ -329,35 +317,35 @@ export default function RejoindrePage() {
 
         {/* Répétitions et engagement */}
         <section id="repetitions" className="mb-12 scroll-mt-24">
-          <div className="border-divider bg-default-50 rounded-lg border p-6 md:p-8">
+          <div className="border-separator bg-surface-secondary rounded-lg border p-6 md:p-8">
             <h2 className="text-foreground mb-6 flex items-center gap-3 text-2xl font-semibold">
               <IoTime className="text-primary text-3xl" />
               Répétitions et engagement
             </h2>
             <div className="space-y-4 text-base leading-relaxed">
-              <div className="border-divider bg-background rounded-lg border p-4">
+              <div className="border-separator bg-background rounded-lg border p-4">
                 <h3 className="text-foreground mb-2 font-semibold">
                   Répétitions générales
                 </h3>
-                <p className="text-default-600 dark:text-default-400 text-sm">
+                <p className="text-muted text-sm">
                   Un dimanche par mois, où tous les chœurs se réunissent pour
                   travailler ensemble sur le répertoire de l&apos;année.
                 </p>
               </div>
-              <div className="border-divider bg-background rounded-lg border p-4">
+              <div className="border-separator bg-background rounded-lg border p-4">
                 <h3 className="text-foreground mb-2 font-semibold">
                   Répétitions de pupitres
                 </h3>
-                <p className="text-default-600 dark:text-default-400 text-sm">
+                <p className="text-muted text-sm">
                   Tous les 15 jours, pour approfondir le travail vocal par
                   section (soprano, alto, ténor, basse).
                 </p>
               </div>
-              <div className="border-divider bg-background rounded-lg border p-4">
+              <div className="border-separator bg-background rounded-lg border p-4">
                 <h3 className="text-foreground mb-2 font-semibold">
                   Tournée estivale
                 </h3>
-                <p className="text-default-600 dark:text-default-400 text-sm">
+                <p className="text-muted text-sm">
                   Chaque été, nous organisons une tournée de dix jours dans
                   différentes régions de France, où se peaufine le programme de
                   l&apos;année et où se tissent les liens si particuliers entre
@@ -377,11 +365,11 @@ export default function RejoindrePage() {
           <h2 className="text-foreground mb-6 text-2xl font-semibold">
             Avantages et bénéfices
           </h2>
-          <div className="border-divider bg-default-50 rounded-lg border p-6 md:p-8">
-            <p className="text-default-600 dark:text-default-400 mb-4 text-base leading-relaxed">
+          <div className="border-separator bg-surface-secondary rounded-lg border p-6 md:p-8">
+            <p className="text-muted mb-4 text-base leading-relaxed">
               En rejoignant Le Bon Tempérament, vous bénéficiez de :
             </p>
-            <ul className="text-default-600 dark:text-default-400 space-y-3 text-base leading-relaxed">
+            <ul className="text-muted space-y-3 text-base leading-relaxed">
               <li className="flex items-start gap-3">
                 <span className="text-primary mt-1 shrink-0">✓</span>
                 <span>
@@ -430,12 +418,12 @@ export default function RejoindrePage() {
 
         {/* Frais et adhésion */}
         <section className="mb-12">
-          <div className="border-divider bg-default-50 rounded-lg border p-6 md:p-8">
+          <div className="border-separator bg-surface-secondary rounded-lg border p-6 md:p-8">
             <h2 className="text-foreground mb-4 flex items-center gap-3 text-2xl font-semibold">
               <IoCalendarClear className="text-primary text-3xl" />
               Frais et adhésion
             </h2>
-            <p className="text-default-600 dark:text-default-400 text-base leading-relaxed">
+            <p className="text-muted text-base leading-relaxed">
               Pour obtenir des informations précises sur les frais
               d&apos;adhésion et les modalités d&apos;inscription, nous vous
               invitons à{" "}
@@ -456,7 +444,7 @@ export default function RejoindrePage() {
           <h2 className="text-foreground mb-4 text-2xl font-semibold">
             Prêt à nous rejoindre?
           </h2>
-          <p className="text-default-600 dark:text-default-400 mb-8 text-base leading-relaxed">
+          <p className="text-muted mb-8 text-base leading-relaxed">
             N&apos;hésitez pas à nous contacter pour discuter de votre
             intégration dans l&apos;ensemble. Nous serons ravis de vous
             accueillir et de partager notre passion pour la musique avec vous!

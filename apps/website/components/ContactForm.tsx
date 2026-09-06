@@ -1,6 +1,15 @@
 "use client";
 import { ContactFormProps } from "@/types/contactFormData";
-import { Button, Input, Spinner, Textarea, addToast } from "@heroui/react";
+import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  Spinner,
+  TextArea,
+  TextField,
+  toast,
+} from "@heroui/react";
 import { CldImage } from "next-cloudinary";
 import { useTheme } from "next-themes";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -120,19 +129,13 @@ const ContactForm = () => {
     event.preventDefault();
 
     if (honeypot) {
-      addToast({
-        title: "Erreur",
-        description: "Soumission invalide.",
-        color: "danger",
-      });
+      toast.danger("Erreur", { description: "Soumission invalide." });
       return;
     }
 
     if (!captchaValue) {
-      addToast({
-        title: "Erreur",
+      toast.danger("Erreur", {
         description: "Veuillez vérifier que vous n'êtes pas un robot.",
-        color: "danger",
       });
       return;
     }
@@ -180,20 +183,16 @@ const ContactForm = () => {
       setErrors({});
       setCaptchaValue(null); // Reset CAPTCHA value
       recaptchaRef.current?.reset(); // Reset reCAPTCHA widget
-      addToast({
-        title: "Succès",
+      toast.success("Succès", {
         description: "Votre demande a bien été envoyée",
-        color: "success",
       });
     } catch (err) {
       console.error(err);
       // Reset reCAPTCHA on error
       setCaptchaValue(null);
       recaptchaRef.current?.reset();
-      addToast({
-        title: "Erreur",
+      toast.danger("Erreur", {
         description: "Votre demande n'a pas pu être envoyée",
-        color: "danger",
       });
     } finally {
       setLoading(false);
@@ -221,87 +220,87 @@ const ContactForm = () => {
             aria-label="Formulaire de contact"
           >
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <Input
-                type="text"
-                label="Nom de famille"
-                name="lastName"
-                value={formData.lastName}
-                variant="bordered"
-                radius="sm"
-                isInvalid={!!errors.lastName}
-                errorMessage={errors.lastName}
-                onValueChange={(value) => handleFieldChange("lastName", value)}
-                onBlur={() => handleFieldBlur("lastName", formData.lastName)}
-                aria-describedby={
-                  errors.lastName ? "lastName-error" : undefined
-                }
-              />
+              <TextField name="lastName" isInvalid={!!errors.lastName}>
+                <Label>Nom de famille</Label>
+                <Input
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) =>
+                    handleFieldChange("lastName", e.target.value)
+                  }
+                  onBlur={() => handleFieldBlur("lastName", formData.lastName)}
+                  aria-describedby={
+                    errors.lastName ? "lastName-error" : undefined
+                  }
+                />
+                <FieldError>{errors.lastName}</FieldError>
+              </TextField>
 
-              <Input
-                type="text"
-                label="Prénom"
-                name="firstName"
-                value={formData.firstName}
-                variant="bordered"
-                radius="sm"
-                isInvalid={!!errors.firstName}
-                errorMessage={errors.firstName}
-                onValueChange={(value) => handleFieldChange("firstName", value)}
-                onBlur={() => handleFieldBlur("firstName", formData.firstName)}
-                aria-describedby={
-                  errors.firstName ? "firstName-error" : undefined
-                }
-              />
+              <TextField name="firstName" isInvalid={!!errors.firstName}>
+                <Label>Prénom</Label>
+                <Input
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) =>
+                    handleFieldChange("firstName", e.target.value)
+                  }
+                  onBlur={() =>
+                    handleFieldBlur("firstName", formData.firstName)
+                  }
+                  aria-describedby={
+                    errors.firstName ? "firstName-error" : undefined
+                  }
+                />
+                <FieldError>{errors.firstName}</FieldError>
+              </TextField>
             </div>
 
-            <Input
-              type="email"
-              label="Email"
+            <TextField
               name="email"
-              value={formData.email}
-              variant="bordered"
-              radius="sm"
+              type="email"
               isRequired
               isInvalid={!!errors.email}
-              errorMessage={errors.email}
-              onValueChange={(value) => handleFieldChange("email", value)}
-              onBlur={() => handleFieldBlur("email", formData.email)}
-              aria-describedby={errors.email ? "email-error" : undefined}
-              aria-required="true"
-            />
+            >
+              <Label>Email</Label>
+              <Input
+                value={formData.email}
+                onChange={(e) => handleFieldChange("email", e.target.value)}
+                onBlur={() => handleFieldBlur("email", formData.email)}
+                aria-describedby={errors.email ? "email-error" : undefined}
+              />
+              <FieldError>{errors.email}</FieldError>
+            </TextField>
 
-            <Input
-              type="text"
-              label="Sujet"
-              name="subject"
-              value={formData.subject}
-              variant="bordered"
-              radius="sm"
-              onValueChange={(value) => handleFieldChange("subject", value)}
-            />
+            <TextField name="subject">
+              <Label>Sujet</Label>
+              <Input
+                type="text"
+                value={formData.subject}
+                onChange={(e) => handleFieldChange("subject", e.target.value)}
+              />
+            </TextField>
 
-            <Textarea
-              label="Message"
-              name="message"
-              value={formData.message}
-              variant="bordered"
-              radius="sm"
-              isRequired
-              isInvalid={!!errors.message}
-              errorMessage={errors.message}
-              minRows={6}
-              onValueChange={(value) => handleFieldChange("message", value)}
-              onBlur={() => handleFieldBlur("message", formData.message)}
-              aria-describedby={errors.message ? "message-error" : undefined}
-              aria-required="true"
-            />
+            <TextField name="message" isRequired isInvalid={!!errors.message}>
+              <Label>Message</Label>
+              <TextArea
+                value={formData.message}
+                rows={6}
+                onChange={(e) => handleFieldChange("message", e.target.value)}
+                onBlur={() => handleFieldBlur("message", formData.message)}
+                aria-describedby={errors.message ? "message-error" : undefined}
+              />
+              <FieldError>{errors.message}</FieldError>
+            </TextField>
 
-            <Input
+            <input
               type="text"
               name="honeypot"
               value={honeypot}
               onChange={(e) => setHoneypot(e.target.value)}
               className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+              autoComplete="off"
             />
 
             {siteKey && mounted ? (
@@ -319,7 +318,7 @@ const ContactForm = () => {
                 type="image"
               />
             ) : siteKey ? (
-              <div className="bg-default-100 h-[78px] w-[304px] animate-pulse rounded" />
+              <div className="bg-surface-secondary h-[78px] w-[304px] animate-pulse rounded" />
             ) : (
               <div className="text-danger text-sm">
                 reCAPTCHA non configuré — le formulaire est protégé côté
@@ -330,9 +329,8 @@ const ContactForm = () => {
             <div className="flex items-center gap-4">
               <Button
                 type="submit"
-                color="primary"
-                radius="sm"
-                disabled={isButtonDisabled || loading}
+                variant="primary"
+                isDisabled={isButtonDisabled || loading}
                 aria-describedby={isButtonDisabled ? "submit-help" : undefined}
                 className="flex items-center gap-2"
               >
@@ -353,7 +351,7 @@ const ContactForm = () => {
             </div>
 
             {isButtonDisabled && (
-              <p id="submit-help" className="text-default-600 text-sm">
+              <p id="submit-help" className="text-muted text-sm">
                 Veuillez remplir tous les champs obligatoires (email et message)
                 et compléter la vérification reCAPTCHA pour pouvoir envoyer le
                 formulaire.

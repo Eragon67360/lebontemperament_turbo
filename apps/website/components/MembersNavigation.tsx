@@ -1,16 +1,10 @@
 // components/MembersNavigation.tsx
 "use client";
 import { createClient } from "@/utils/supabase/client";
-import {
-  Button,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
+import { Button, Description, Dropdown, Label } from "@heroui/react";
 import { User } from "@supabase/supabase-js";
 import NextLink from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   IoCalendarOutline,
@@ -32,6 +26,7 @@ interface NavLinkType {
 
 export const MembersNavigation = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
 
@@ -107,7 +102,7 @@ export const MembersNavigation = () => {
         className={`group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
           isActive
             ? "bg-primary/10 text-primary shadow-sm"
-            : "text-foreground/70 hover:bg-default-100 hover:text-foreground"
+            : "text-foreground/70 hover:bg-surface-secondary hover:text-foreground"
         }`}
       >
         <Icon
@@ -132,7 +127,7 @@ export const MembersNavigation = () => {
   }
 
   return (
-    <nav className="border-divider bg-background/95 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur-md">
+    <nav className="border-separator bg-background/95 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
         {/* Desktop Navigation */}
         <div className="hidden flex-wrap items-center gap-1 lg:flex">
@@ -140,7 +135,7 @@ export const MembersNavigation = () => {
             <NavLink key={link.href} link={link} />
           ))}
           {user && (
-            <div className="text-foreground/70 border-divider ml-2 flex items-center gap-2 rounded-lg border-l pl-4 text-sm font-medium">
+            <div className="text-foreground/70 border-separator ml-2 flex items-center gap-2 rounded-lg border-l pl-4 text-sm font-medium">
               <span className="truncate">
                 Bonjour,{" "}
                 <span className="text-primary font-semibold">
@@ -160,7 +155,7 @@ export const MembersNavigation = () => {
               <NavLink key={link.href} link={link} />
             ))}
             {user && (
-              <div className="text-foreground/70 border-divider ml-2 flex items-center gap-2 rounded-lg border-l pl-4 text-sm font-medium">
+              <div className="text-foreground/70 border-separator ml-2 flex items-center gap-2 rounded-lg border-l pl-4 text-sm font-medium">
                 <span className="truncate">
                   Bonjour,{" "}
                   <span className="text-primary font-semibold">
@@ -178,60 +173,60 @@ export const MembersNavigation = () => {
         {/* Mobile Navigation - Dropdown */}
         <div className="flex w-full items-center md:hidden">
           <Dropdown>
-            <DropdownTrigger>
-              <Button
-                variant="flat"
-                endContent={<IoChevronDownOutline className="h-4 w-4" />}
-                className="w-full justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  {currentLink && <currentLink.icon className="h-4 w-4" />}
-                  <span>{currentLink?.label || "Navigation"}</span>
-                </div>
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Navigation membres"
-              className="w-[280px]"
-              itemClasses={{
-                base: "gap-3 py-3",
-              }}
+            <Button
+              variant="ghost"
+              className="bg-default/40 w-full justify-between"
             >
-              {links.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href;
-                return (
-                  <DropdownItem
-                    key={link.href}
-                    as={NextLink}
-                    href={link.href}
-                    startContent={
+              <div className="flex items-center gap-2">
+                {currentLink && <currentLink.icon className="h-4 w-4" />}
+                <span>{currentLink?.label || "Navigation"}</span>
+              </div>
+              <IoChevronDownOutline className="h-4 w-4" />
+            </Button>
+            <Dropdown.Popover>
+              <Dropdown.Menu
+                aria-label="Navigation membres"
+                className="w-[280px]"
+                onAction={(key) => router.push(key as string)}
+              >
+                {links.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = pathname === link.href;
+                  return (
+                    <Dropdown.Item
+                      key={link.href}
+                      id={link.href}
+                      textValue={link.label}
+                      className={`gap-3 py-3 ${isActive ? "bg-primary/5" : ""}`}
+                    >
                       <div
-                        className={`rounded-lg p-1.5 ${isActive ? "bg-primary/10" : "bg-default-100"}`}
+                        className={`rounded-lg p-1.5 ${isActive ? "bg-primary/10" : "bg-surface-secondary"}`}
                       >
                         <Icon
                           className={`h-4 w-4 ${isActive ? "text-primary" : "text-foreground/70"}`}
                         />
                       </div>
-                    }
-                    description={link.description}
-                    className={isActive ? "bg-primary/5" : ""}
-                  >
-                    <span
-                      className={
-                        isActive ? "text-primary font-semibold" : "font-medium"
-                      }
-                    >
-                      {link.label}
-                    </span>
-                  </DropdownItem>
-                );
-              })}
-            </DropdownMenu>
+                      <Label
+                        className={
+                          isActive
+                            ? "text-primary font-semibold"
+                            : "font-medium"
+                        }
+                      >
+                        {link.label}
+                      </Label>
+                      {link.description && (
+                        <Description>{link.description}</Description>
+                      )}
+                    </Dropdown.Item>
+                  );
+                })}
+              </Dropdown.Menu>
+            </Dropdown.Popover>
           </Dropdown>
           <NextLink
             href="/"
-            className="text-foreground/70 hover:text-foreground border-divider hover:border-primary/20 hover:bg-default-100 ml-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+            className="text-foreground/70 hover:text-foreground border-separator hover:border-primary/20 hover:bg-surface-secondary ml-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all"
           >
             <IoGlobeOutline className="h-5 w-5" />
           </NextLink>
@@ -241,7 +236,7 @@ export const MembersNavigation = () => {
         <div className="hidden md:block">
           <NextLink
             href="/"
-            className="text-foreground/70 hover:text-foreground border-divider hover:border-primary/20 hover:bg-default-100 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+            className="text-foreground/70 hover:text-foreground border-separator hover:border-primary/20 hover:bg-surface-secondary flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all"
           >
             <IoGlobeOutline className="h-4 w-4" />
             <span className="hidden lg:inline">Site public</span>

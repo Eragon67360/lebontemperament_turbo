@@ -42,20 +42,20 @@ export default function AG2026Page() {
         <h2 className="text-foreground text-title leading-none font-bold">
           Générale 2026
         </h2>
-        <hr className="border-divider mt-2 md:mt-4 lg:mt-8" />
+        <hr className="border-separator mt-2 md:mt-4 lg:mt-8" />
       </div>
 
       {/* Date et lieu */}
-      <div className="border-divider bg-default-50 mb-8 rounded-lg border p-6 shadow-sm">
+      <div className="border-separator bg-surface-secondary mb-8 rounded-lg border p-6 shadow-sm">
         <h3 className="text-foreground mb-4 text-xl font-semibold">
           Date et lieu
         </h3>
-        <p className="text-default-600 dark:text-default-400 text-base leading-relaxed">
+        <p className="text-muted text-base leading-relaxed">
           <strong>Samedi 14 mars 2026 à 19h</strong>
           <br />
           Freihof, Wangen
           <br />
-          <span className="text-default-500 text-sm">
+          <span className="text-muted text-sm">
             Le parking se fera devant la salle des fêtes.
           </span>
         </p>
@@ -121,7 +121,7 @@ export default function AG2026Page() {
         <h3 className="text-foreground mb-4 text-xl font-semibold">
           Rappels importants
         </h3>
-        <ul className="text-default-600 dark:text-default-400 list-inside list-disc space-y-2 text-base leading-relaxed">
+        <ul className="text-muted list-inside list-disc space-y-2 text-base leading-relaxed">
           <li>
             Si vous ne pouvez pas être présent, il est{" "}
             <strong>impératif</strong> de donner une procuration pour que cette
@@ -143,7 +143,7 @@ export default function AG2026Page() {
         <h3 className="text-foreground mb-4 text-xl font-semibold">
           Droit de vote
         </h3>
-        <p className="text-default-600 dark:text-default-400 text-base leading-relaxed">
+        <p className="text-muted text-base leading-relaxed">
           Ont le droit de vote tous les membres de plus de 16 ans à la date de
           l&apos;AG, à jour de leurs cotisations pour l&apos;année 2025, et
           membres depuis plus de 6 mois. Afin que les votes soient recevables,
@@ -158,7 +158,7 @@ export default function AG2026Page() {
         <h3 className="text-foreground mb-4 text-xl font-semibold">
           Ordre du jour
         </h3>
-        <p className="text-default-600 dark:text-default-400 text-base leading-relaxed">
+        <p className="text-muted text-base leading-relaxed">
           Lors de cette AG, nous procéderons à l&apos;élection du nouveau CA.
           C&apos;est l&apos;occasion de rejoindre cette instance qui gère
           l&apos;association tout au long de l&apos;année.
@@ -166,11 +166,11 @@ export default function AG2026Page() {
       </div>
 
       {/* Apéritif dînatoire */}
-      <div className="border-divider bg-default-50 mb-8 rounded-lg border p-6">
+      <div className="border-separator bg-surface-secondary mb-8 rounded-lg border p-6">
         <h3 className="text-foreground mb-4 text-xl font-semibold">
           Après l&apos;AG
         </h3>
-        <p className="text-default-600 dark:text-default-400 text-base leading-relaxed">
+        <p className="text-muted text-base leading-relaxed">
           Cette AG sera suivie d&apos;un apéritif dînatoire partagé amené par
           vos soins. La boisson sera fournie par l&apos;association.{" "}
           <strong>Apportez vos verres.</strong>

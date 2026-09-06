@@ -1,23 +1,20 @@
 "use client";
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import { HeroUIProvider } from "@heroui/react";
+import { Toast } from "@heroui/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ReactNode } from "react";
 
 /**
  * Providers Component
- * According to HeroUI docs: https://www.heroui.com/docs/customization/dark-mode
- * - Use next-themes for Next.js theme management
- * - Set attribute="class" (required by HeroUI)
- * - Nest HeroUIProvider inside ThemeProvider
+ * HeroUI v3 requires no HeroUIProvider; next-themes still drives dark mode
+ * via the `class` attribute. Toast.Provider mounts the v3 toast queue.
  */
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <NextThemesProvider attribute="class" defaultTheme="system">
-      <HeroUIProvider>
-        <AuthProvider>{children}</AuthProvider>
-      </HeroUIProvider>
+      <AuthProvider>{children}</AuthProvider>
+      <Toast.Provider />
     </NextThemesProvider>
   );
 }

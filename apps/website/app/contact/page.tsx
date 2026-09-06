@@ -44,7 +44,7 @@ const Contact = () => {
           <h2 className="text-title text-foreground leading-none font-bold">
             Informations
           </h2>
-          <hr className="border-divider mt-8" />
+          <hr className="border-separator mt-8" />
           <h3 className="text-foreground mt-8 font-bold">Où nous trouver</h3>
           <p className="text-foreground">
             3 Rue Clemenceau,
@@ -91,7 +91,7 @@ const Contact = () => {
 
       <ContactForm />
 
-      <div className="bg-default-50 my-20 flex w-full flex-col rounded-lg p-8 shadow-lg lg:w-1/2">
+      <div className="bg-surface-secondary my-20 flex w-full flex-col rounded-lg p-8 shadow-lg lg:w-1/2">
         <div className="flex gap-8 py-4 lg:py-12">
           <div className="hidden w-1/2 scale-125 items-center justify-center lg:flex">
             <svg

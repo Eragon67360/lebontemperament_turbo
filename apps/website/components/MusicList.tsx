@@ -59,7 +59,7 @@ const MusicList = () => {
           <button
             key={index}
             onClick={() => setCurrentSong(getMusicSrc(file.name))}
-            className={`hover:bg-default-50 flex w-full items-center gap-3 px-4 py-3 transition-colors ${
+            className={`hover:bg-surface-secondary flex w-full items-center gap-3 px-4 py-3 transition-colors ${
               currentSong === getMusicSrc(file.name)
                 ? "bg-primary/5"
                 : "bg-transparent"
@@ -77,10 +77,10 @@ const MusicList = () => {
               <p className="text-foreground text-sm font-medium">
                 {cleanDisplayName(file.name)}
               </p>
-              <p className="text-default-500 text-xs">Le Bon Tempérament</p>
+              <p className="text-muted text-xs">Le Bon Tempérament</p>
             </div>
 
-            <span className="text-default-400 text-xs">{file.duration}</span>
+            <span className="text-muted text-xs">{file.duration}</span>
           </button>
         ))}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { fetchOSRMRoute } from "@/utils/osrm";
+import type * as GeoJSON from "geojson";
 import { Crosshair, MapPin, Maximize2 } from "lucide-react";
 import type { GeoJSONSource, Map as MapboxMap } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";

@@ -53,7 +53,10 @@ export function useFeatureFlag(flagKey: string) {
     // Subscribe to real-time updates
     const setupSubscription = async () => {
       try {
-        const channelName = `feature-flag-${flagKey}-${Date.now()}`;
+        // Unique per hook instance: two components mounting in the same ms
+        // would otherwise share a channel name and realtime-js throws when
+        // .on() is called on an already-subscribed channel
+        const channelName = `feature-flag-${flagKey}-${crypto.randomUUID()}`;
 
         channelRef.current = supabase
           .channel(channelName)

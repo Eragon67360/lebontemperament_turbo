@@ -15,7 +15,7 @@ const Footer = () => {
   }
   return (
     <footer
-      className="bg-default-50 z-50 flex w-full flex-col justify-center transition-colors duration-200 select-none"
+      className="bg-surface-secondary z-50 flex w-full flex-col justify-center transition-colors duration-200 select-none"
       role="contentinfo"
       aria-label="Pied de page"
     >
@@ -24,11 +24,10 @@ const Footer = () => {
           <CldImage
             src={"Site/logo"}
             alt="Logo Le Bon Tempérament"
-            width={160}
-            height={160}
-            className="scale-75"
+            width={120}
+            height={120}
           />
-          <p className="text-default-600 max-w-xs text-center text-sm lg:text-left">
+          <p className="text-muted max-w-xs text-center text-sm lg:text-left">
             Ensemble vocal et instrumental partageant la passion de la musique
             depuis 1987
           </p>
@@ -37,7 +36,7 @@ const Footer = () => {
         <div className="flex flex-col gap-12 xl:flex-row xl:gap-16">
           {/* Navigation Links */}
           <nav
-            className="text-default-700 flex flex-col items-center gap-4 text-sm select-none lg:items-start"
+            className="text-muted flex flex-col items-center gap-4 text-sm select-none lg:items-start"
             aria-labelledby="footer-navigation"
           >
             <h3
@@ -106,7 +105,7 @@ const Footer = () => {
 
           {/* Contact Information */}
           <address
-            className="text-default-700 flex flex-col items-center gap-4 text-sm not-italic select-none lg:items-start"
+            className="text-muted flex flex-col items-center gap-4 text-sm not-italic select-none lg:items-start"
             aria-labelledby="footer-contact"
           >
             <h3
@@ -161,7 +160,7 @@ const Footer = () => {
 
           {/* Social Media Links */}
           <nav
-            className="text-default-700 flex flex-col items-center gap-4 text-sm select-none lg:items-start"
+            className="text-muted flex flex-col items-center gap-4 text-sm select-none lg:items-start"
             aria-labelledby="footer-social"
           >
             <h3
@@ -176,7 +175,7 @@ const Footer = () => {
                 aria-label="Accéder à la page Facebook de Le Bon Tempérament"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:bg-primary bg-default-100 text-default-700 flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
+                className="hover:bg-primary bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
               >
                 <FaFacebookF size={16} aria-hidden="true" />
               </a>
@@ -185,7 +184,7 @@ const Footer = () => {
                 aria-label="Accéder à la page Instagram de Le Bon Tempérament"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:bg-primary bg-default-100 text-default-700 flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
+                className="hover:bg-primary bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
               >
                 <FaInstagram size={16} aria-hidden="true" />
               </a>
@@ -194,7 +193,7 @@ const Footer = () => {
                 aria-label="Accéder à la chaîne YouTube de Le Bon Tempérament"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:bg-primary bg-default-100 text-default-700 flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
+                className="hover:bg-primary bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
               >
                 <FaYoutube size={16} aria-hidden="true" />
               </a>
@@ -203,7 +202,7 @@ const Footer = () => {
                 aria-label="Accéder à la page TikTok de Le Bon Tempérament"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:bg-primary bg-default-100 text-default-700 flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
+                className="hover:bg-primary bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
               >
                 <FaTiktok size={16} aria-hidden="true" />
               </a>
@@ -211,19 +210,19 @@ const Footer = () => {
           </nav>
         </div>
       </div>
-      <hr className="border-divider" />
-      <div className="text-default-500 flex flex-col items-center justify-center gap-2 py-6 text-center text-sm lg:flex-row">
+      <hr className="border-separator" />
+      <div className="text-muted flex flex-col items-center justify-center gap-2 py-6 text-center text-sm lg:flex-row">
         <p>
           © {new Date().getFullYear()} Tous droits réservés - Le Bon Tempérament
         </p>
         <span className="hidden lg:block">&nbsp;|&nbsp;</span>
-        <CookiePreferencesButton className="hover:text-default-700 cursor-pointer border-none bg-transparent p-0 text-inherit underline transition-colors">
+        <CookiePreferencesButton className="hover:text-muted cursor-pointer border-none bg-transparent p-0 text-inherit underline transition-colors">
           Gérer les cookies
         </CookiePreferencesButton>
         <span className="hidden lg:block">&nbsp;|&nbsp;</span>
         <Link
           href={"/politique-de-confidentialite"}
-          className="hover:text-default-700 underline transition-colors"
+          className="hover:text-muted underline transition-colors"
           aria-label="Lire la politique de confidentialité"
         >
           Politique de Confidentialité
@@ -231,7 +230,7 @@ const Footer = () => {
         <span className="hidden lg:block">&nbsp;|&nbsp;</span>
         <Link
           href={"/impressum"}
-          className="hover:text-default-700 underline transition-colors"
+          className="hover:text-muted underline transition-colors"
           aria-label="Voir les mentions légales"
         >
           Impressum

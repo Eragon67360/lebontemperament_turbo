@@ -1,4 +1,5 @@
 "use client";
+import { LinkButton } from "@/components/LinkButton";
 import { Button } from "@heroui/react";
 import Link from "next/link";
 import { IoArrowBack, IoHome } from "react-icons/io5";
@@ -6,7 +7,7 @@ import { IoArrowBack, IoHome } from "react-icons/io5";
 export default function NotFound() {
   return (
     <div
-      className="bg-default-50 relative flex min-h-screen w-full flex-col items-center justify-center"
+      className="bg-surface-secondary relative flex min-h-screen w-full flex-col items-center justify-center"
       role="main"
       aria-labelledby="error-title"
     >
@@ -17,35 +18,34 @@ export default function NotFound() {
         >
           404 - Page non trouvée
         </h1>
-        <p className="text-default-600 mb-8 text-lg">
+        <p className="text-muted mb-8 text-lg">
           Désolé, la page que vous recherchez n&apos;existe pas ou a été
           déplacée.
         </p>
 
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
-          <Button
-            as={Link}
-            href="/"
-            color="primary"
+          <LinkButton
             size="lg"
-            startContent={<IoHome className="shrink-0" />}
+            variant="primary"
             aria-label="Retour à la page d'accueil"
+            href="/"
           >
+            <IoHome className="shrink-0" />
             Retour à l&apos;accueil
-          </Button>
+          </LinkButton>
 
           <Button
-            variant="bordered"
+            variant="outline"
             size="lg"
-            startContent={<IoArrowBack className="shrink-0" />}
             onPress={() => window.history.back()}
             aria-label="Retour à la page précédente"
           >
+            <IoArrowBack className="shrink-0" />
             Page précédente
           </Button>
         </div>
 
-        <div className="text-default-500 mt-8 text-sm">
+        <div className="text-muted mt-8 text-sm">
           <p>Vous pouvez également :</p>
           <ul className="mt-2 space-y-1">
             <li>

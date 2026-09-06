@@ -1,22 +1,10 @@
 // Navigation.tsx
 "use client";
+import { LinkButton } from "@/components/LinkButton";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { RoundedSize } from "@/utils/types";
-import {
-  addToast,
-  Avatar,
-  Button,
-  Link,
-  Navbar,
-  NavbarBrand,
-  NavbarContent,
-  NavbarMenuToggle,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Tooltip,
-} from "@heroui/react";
+import { Avatar, Button, Link, Popover, toast, Tooltip } from "@heroui/react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -61,6 +49,14 @@ const Navigation = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Block body scroll while the mobile menu is open (was handled by v2 Navbar)
+  useEffect(() => {
+    document.body.style.overflow = isMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -82,10 +78,7 @@ const Navigation = () => {
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        addToast({
-          description: "Erreur lors du chargement du profil",
-          color: "danger",
-        });
+        toast.danger("Erreur lors du chargement du profil");
       } finally {
         setIsLoading(false);
       }
@@ -103,179 +96,219 @@ const Navigation = () => {
         setUser(null);
         setUserProfile(null);
 
-        addToast({
-          description: "Déconnexion réussie",
-          color: "success",
-        });
+        toast.success("Déconnexion réussie");
 
         router.push(RouteNames.ROOT);
         router.refresh();
       } catch (error) {
         console.error("Error signing out:", error);
-        addToast({
-          description: "Erreur lors de la déconnexion",
-          color: "danger",
-        });
+        toast.danger("Erreur lors de la déconnexion");
       }
     });
   };
 
   return (
     !isMembresSection && (
-      <Navbar
-        maxWidth="full"
-        onMenuOpenChange={setIsMenuOpen}
-        className={`w-full overflow-x-hidden transition-colors ${
-          isSpecialPath && !hasScrolled ? "bg-background/0" : "bg-background/50"
+      <nav
+        className={`sticky top-0 z-50 w-full overflow-x-hidden transition-colors ${
+          isSpecialPath && !hasScrolled
+            ? "bg-background/0"
+            : "bg-background/50 backdrop-blur-lg"
         }`}
-        role="navigation"
         aria-label="Navigation principale"
       >
-        <NavbarMenuToggle
-          aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          aria-expanded={isMenuOpen}
-          aria-controls="main-menu"
-          className={
-            isSpecialPath && !hasScrolled
-              ? "text-white lg:hidden dark:text-white"
-              : "text-black lg:hidden dark:text-white"
-          }
-        />
-        <NavbarBrand>
-          <Link
-            href={RouteNames.ROOT}
-            aria-label="Aller à l'accueil - Le Bon Tempérament"
+        <div className="flex h-16 w-full items-center justify-between gap-4 px-6">
+          <button
+            type="button"
+            aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={isMenuOpen}
+            aria-controls="main-menu"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={
+              isSpecialPath && !hasScrolled
+                ? "text-white lg:hidden dark:text-white"
+                : "text-black lg:hidden dark:text-white"
+            }
           >
-            <Image
-              src={"/img/picto.svg"}
-              className="transition-opacity hover:opacity-85"
-              alt="Logo Le Bon Tempérament"
-              width={64}
-              height={64}
-              priority
-            />
-          </Link>
-        </NavbarBrand>
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              {isMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+          {/* v2 parity: NavbarBrand was a grow/basis-0 slot, so the logo
+              shares leftover space symmetrically with the end slot —
+              this is what keeps the centre links centred. */}
+          <div className="flex shrink grow basis-0 flex-row flex-nowrap items-center justify-start">
+            <Link
+              href={RouteNames.ROOT}
+              aria-label="Aller à l'accueil - Le Bon Tempérament"
+            >
+              <Image
+                src={"/img/picto.svg"}
+                className="transition-opacity hover:opacity-85"
+                alt="Logo Le Bon Tempérament"
+                width={64}
+                height={64}
+                priority
+              />
+            </Link>
+          </div>
 
-        <MainLinks
-          user={user}
-          isLoading={isLoading}
-          isLight={isSpecialPath && !hasScrolled}
-        />
+          <MainLinks
+            user={user}
+            isLoading={isLoading}
+            isLight={isSpecialPath && !hasScrolled}
+          />
 
-        <NavbarContent justify="end">
-          {/* Donation link - icon only, large screens */}
-          <DonationCampaignShowcase isLight={isSpecialPath && !hasScrolled} />
-          {/* Theme Switcher - Always visible */}
-          <ThemeSwitcher isLight={isSpecialPath && !hasScrolled} />
+          <div className="flex shrink grow basis-0 flex-row flex-nowrap items-center justify-end gap-4">
+            {/* Donation link - icon only, large screens */}
+            <DonationCampaignShowcase isLight={isSpecialPath && !hasScrolled} />
+            {/* Theme Switcher - Always visible */}
+            <ThemeSwitcher isLight={isSpecialPath && !hasScrolled} />
 
-          {user ? (
-            <div className="flex items-center gap-4">
-              <Tooltip content="Accéder au drive Google">
-                <Link
-                  href={
-                    "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Ouvrir le drive Google dans un nouvel onglet"
-                  className="bg-primary/20 hover:bg-primary/40 dark:bg-primary/30 dark:hover:bg-primary/50 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
-                >
-                  <CloudinaryImage
-                    src={"Site/membres/logos/drive"}
-                    alt="Icône Google Drive"
-                    width={16}
-                    height={16}
-                    rounded={RoundedSize.NONE}
-                  />
-                </Link>
-              </Tooltip>
-              <div className="flex w-full justify-center"></div>
-              <Popover placement="bottom-start">
-                <PopoverTrigger
-                  className="flex shrink-0 cursor-pointer items-center gap-1"
-                  disabled={isPending}
-                  aria-label="Menu utilisateur"
-                  aria-expanded="false"
-                >
-                  <Avatar
-                    className="h-8 w-8 rounded-lg"
-                    src={
-                      userProfile?.profile_picture_url ||
-                      user.user_metadata?.avatar_url
-                    }
-                    alt={`Avatar de ${userProfile?.display_name || user.email}`}
-                  />
-                </PopoverTrigger>
-                <PopoverContent
-                  className="flex flex-col items-start gap-2"
-                  aria-label="Options utilisateur"
-                >
-                  <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm">
-                    <Avatar
-                      className="h-8 w-8 rounded-lg"
-                      src={user.user_metadata?.avatar_url}
-                      alt={`Avatar de ${userProfile?.display_name || user.email}`}
-                    />
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {userProfile?.display_name}
-                      </span>
-                      <span className="text-default-500 truncate text-xs">
-                        {user.email}
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="light"
-                    radius="sm"
-                    onPress={() => setIsPasswordModalOpen(true)}
-                    className="flex w-full cursor-pointer items-center justify-start gap-1"
-                    disabled={isPending}
-                    aria-label="Changer mon mot de passe"
+            {user ? (
+              <div className="flex items-center gap-4">
+                <Tooltip>
+                  <Tooltip.Trigger>
+                    <Link
+                      href={
+                        "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Ouvrir le drive Google dans un nouvel onglet"
+                      className="bg-primary/20 hover:bg-primary/40 dark:bg-primary/30 dark:hover:bg-primary/50 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
+                    >
+                      <CloudinaryImage
+                        src={"Site/membres/logos/drive"}
+                        alt="Icône Google Drive"
+                        width={16}
+                        height={16}
+                        rounded={RoundedSize.NONE}
+                        className="size-4"
+                      />
+                    </Link>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    <p>Accéder au drive Google</p>
+                  </Tooltip.Content>
+                </Tooltip>
+                <Popover>
+                  <Popover.Trigger
+                    className="flex shrink-0 cursor-pointer items-center gap-1"
+                    aria-label="Menu utilisateur"
                   >
-                    <FaKey className="mr-2 size-4" aria-hidden="true" />
-                    Changer mon mot de passe
-                  </Button>
-                  <Button
-                    variant="light"
-                    radius="sm"
-                    onPress={handleSignOut}
-                    className="flex w-full cursor-pointer items-center justify-start gap-1"
-                    disabled={isPending}
-                    aria-label="Se déconnecter"
-                  >
-                    <IoLogOut className="mr-2 size-4" aria-hidden="true" />
-                    {isPending ? "Déconnexion..." : "Se déconnecter"}
-                  </Button>
-                </PopoverContent>
-              </Popover>
-            </div>
-          ) : (
-            !isLoading && (
-              <Button
-                size="md"
-                as={Link}
-                href={RouteNames.AUTH.LOGIN}
-                radius="sm"
-                color="primary"
-                aria-label="Se connecter à l'espace membres"
-                disabled={isPending}
-              >
-                <CiLock aria-hidden="true" />
-                <div>Membres</div>
-              </Button>
-            )
-          )}
-        </NavbarContent>
+                    <Avatar className="h-8 w-8 rounded-lg">
+                      <Avatar.Image
+                        src={
+                          userProfile?.profile_picture_url ||
+                          user.user_metadata?.avatar_url
+                        }
+                        alt={`Avatar de ${userProfile?.display_name || user.email}`}
+                      />
+                      <Avatar.Fallback>
+                        {userProfile?.display_name?.charAt(0) ||
+                          user.email?.charAt(0)}
+                      </Avatar.Fallback>
+                    </Avatar>
+                  </Popover.Trigger>
+                  <Popover.Content placement="bottom start">
+                    <Popover.Dialog
+                      className="flex flex-col items-start gap-2"
+                      aria-label="Options utilisateur"
+                    >
+                      <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm">
+                        <Avatar className="h-8 w-8 rounded-lg">
+                          <Avatar.Image
+                            src={user.user_metadata?.avatar_url}
+                            alt={`Avatar de ${userProfile?.display_name || user.email}`}
+                          />
+                          <Avatar.Fallback>
+                            {userProfile?.display_name?.charAt(0) ||
+                              user.email?.charAt(0)}
+                          </Avatar.Fallback>
+                        </Avatar>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">
+                            {userProfile?.display_name}
+                          </span>
+                          <span className="text-muted truncate text-xs">
+                            {user.email}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        onPress={() => setIsPasswordModalOpen(true)}
+                        className="flex w-full cursor-pointer items-center justify-start gap-1"
+                        isDisabled={isPending}
+                        aria-label="Changer mon mot de passe"
+                      >
+                        <FaKey className="mr-2 size-4" aria-hidden="true" />
+                        Changer mon mot de passe
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onPress={handleSignOut}
+                        className="flex w-full cursor-pointer items-center justify-start gap-1"
+                        isDisabled={isPending}
+                        aria-label="Se déconnecter"
+                      >
+                        <IoLogOut className="mr-2 size-4" aria-hidden="true" />
+                        {isPending ? "Déconnexion..." : "Se déconnecter"}
+                      </Button>
+                    </Popover.Dialog>
+                  </Popover.Content>
+                </Popover>
+              </div>
+            ) : (
+              !isLoading && (
+                <LinkButton
+                  size="md"
+                  variant="primary"
+                  aria-label="Se connecter à l'espace membres"
+                  href={RouteNames.AUTH.LOGIN}
+                >
+                  <CiLock aria-hidden="true" />
+                  <div>Membres</div>
+                </LinkButton>
+              )
+            )}
+          </div>
+        </div>
 
-        <MainMenuLinks user={user} isLoading={isLoading} />
+        {isMenuOpen && (
+          <MainMenuLinks
+            user={user}
+            isLoading={isLoading}
+            onNavigate={() => setIsMenuOpen(false)}
+          />
+        )}
 
         <ChangePasswordModal
           isOpen={isPasswordModalOpen}
           onClose={() => setIsPasswordModalOpen(false)}
         />
-      </Navbar>
+      </nav>
     )
   );
 };

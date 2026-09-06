@@ -44,7 +44,7 @@ const CAMinutesList: React.FC = () => {
   if (loading) {
     return (
       <div className="mt-2 flex flex-wrap gap-6 md:mt-4 lg:mt-8">
-        <p className="text-default-500 text-sm">Chargement...</p>
+        <p className="text-muted text-sm">Chargement...</p>
       </div>
     );
   }
@@ -52,9 +52,7 @@ const CAMinutesList: React.FC = () => {
   if (caMinutes.length === 0) {
     return (
       <div className="mt-2 flex flex-wrap gap-6 md:mt-4 lg:mt-8">
-        <p className="text-default-500 text-sm">
-          Aucun compte-rendu disponible
-        </p>
+        <p className="text-muted text-sm">Aucun compte-rendu disponible</p>
       </div>
     );
   }

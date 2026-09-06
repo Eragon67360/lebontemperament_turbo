@@ -586,7 +586,7 @@ function RehearsalForm({
                 mode="single"
                 selected={formData.date}
                 onSelect={(d) => d && setFormData({ ...formData, date: d })}
-                initialFocus
+                autoFocus
                 locale={fr}
               />
             </PopoverContent>
@@ -721,7 +721,7 @@ function RehearsalForm({
                           })
                         }
                         disabled={(d) => isAfter(formData.date, d)}
-                        initialFocus
+                        autoFocus
                         locale={fr}
                       />
                     </PopoverContent>

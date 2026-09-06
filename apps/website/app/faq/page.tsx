@@ -133,7 +133,7 @@ export default function FAQPage() {
           <h2 className="text-title text-foreground leading-none font-bold">
             Fréquentes
           </h2>
-          <hr className="border-divider mt-2 md:mt-4 lg:mt-8" />
+          <hr className="border-separator mt-2 md:mt-4 lg:mt-8" />
           <p className="text-foreground mt-8 text-base md:text-lg">
             Trouvez ci-dessous les réponses aux questions les plus fréquemment
             posées sur Le Bon Tempérament. Si vous ne trouvez pas la réponse à
@@ -152,7 +152,7 @@ export default function FAQPage() {
           {faqData.map((faq, index) => (
             <div
               key={index}
-              className="border-divider bg-default-50 rounded-lg border p-6 shadow-sm transition-shadow hover:shadow-md"
+              className="border-separator bg-surface-secondary rounded-lg border p-6 shadow-sm transition-shadow hover:shadow-md"
               itemScope
               itemType="https://schema.org/Question"
             >
@@ -163,7 +163,7 @@ export default function FAQPage() {
                 {faq.question}
               </h3>
               <div
-                className="text-default-600 dark:text-default-400 text-base leading-relaxed"
+                className="text-muted text-base leading-relaxed"
                 itemScope
                 itemType="https://schema.org/Answer"
                 itemProp="acceptedAnswer"
@@ -197,7 +197,7 @@ export default function FAQPage() {
           <h3 className="text-foreground mb-4 text-xl font-semibold">
             Vous avez d&apos;autres questions?
           </h3>
-          <p className="text-default-600 dark:text-default-400 mb-6">
+          <p className="text-muted mb-6">
             N&apos;hésitez pas à nous contacter, nous serons ravis de vous
             répondre!
           </p>

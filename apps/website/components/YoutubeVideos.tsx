@@ -29,12 +29,12 @@ export const YoutubeVideos = () => {
             <div className="space-y-8">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex flex-col gap-8 lg:flex-row">
-                  <div className="bg-default-200 h-[45dvw] w-[80dvw] rounded lg:h-[281px] lg:w-[500px]"></div>
+                  <div className="bg-surface-tertiary h-[45dvw] w-[80dvw] rounded lg:h-[281px] lg:w-[500px]"></div>
                   <div className="w-full space-y-4 lg:w-1/2">
-                    <div className="bg-default-200 h-12 w-3/4 rounded"></div>
-                    <div className="bg-default-200 h-6 w-1/2 rounded"></div>
-                    <div className="bg-default-200 h-6 w-1/2 rounded"></div>
-                    <div className="bg-default-200 h-6 w-1/2 rounded"></div>
+                    <div className="bg-surface-tertiary h-12 w-3/4 rounded"></div>
+                    <div className="bg-surface-tertiary h-6 w-1/2 rounded"></div>
+                    <div className="bg-surface-tertiary h-6 w-1/2 rounded"></div>
+                    <div className="bg-surface-tertiary h-6 w-1/2 rounded"></div>
                   </div>
                 </div>
               ))}
@@ -53,7 +53,7 @@ export const YoutubeVideos = () => {
                 title={video.title}
               />
               <div className="flex flex-col pt-8">
-                <h2 className="text-default-500 text-xl font-light md:text-2xl lg:text-4xl">
+                <h2 className="text-muted text-xl font-light md:text-2xl lg:text-4xl">
                   {video.title}
                 </h2>
                 <h2 className="text-foreground mt-8 text-sm font-bold md:text-base lg:text-lg">
