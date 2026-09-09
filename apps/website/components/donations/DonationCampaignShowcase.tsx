@@ -1,7 +1,8 @@
 "use client";
 
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { Link, Tooltip } from "@heroui/react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";

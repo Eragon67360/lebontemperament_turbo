@@ -1,7 +1,8 @@
 "use client";
 
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { FormConfig, Memory } from "@/types/anniversary";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";

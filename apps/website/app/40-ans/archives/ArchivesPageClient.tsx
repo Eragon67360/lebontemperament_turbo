@@ -2,9 +2,10 @@
 
 // import { PDFViewer } from "@/components/anniversary/PDFViewer"; // We will remove this static import
 import AnniversaryCTA from "@/components/anniversary/AnniversaryCTA";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Archive, ArchiveType } from "@/types/anniversary";
 import { ListBox, SearchField, Select } from "@heroui/react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView } from "motion/react";
 import dynamic from "next/dynamic"; // STEP 1: Import 'dynamic' from Next.js
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";

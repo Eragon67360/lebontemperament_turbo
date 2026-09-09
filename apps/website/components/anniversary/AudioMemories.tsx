@@ -1,13 +1,8 @@
 "use client";
 
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { AudioMemory } from "@/types/anniversary";
-import {
-  motion,
-  useInView,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "motion/react";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { FaHeadphones } from "react-icons/fa";
 import { CustomAudioPlayer } from "./CustomAudioPlayer";
