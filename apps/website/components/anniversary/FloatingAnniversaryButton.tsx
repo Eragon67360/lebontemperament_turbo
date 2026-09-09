@@ -1,13 +1,9 @@
 "use client";
 
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { gsap } from "gsap";
-import {
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-} from "motion/react";
+import { motion, useMotionValue, useSpring } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaBirthdayCake, FaStar } from "react-icons/fa";

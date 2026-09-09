@@ -111,9 +111,11 @@ const Navigation = () => {
     !isMembresSection && (
       <nav
         className={`sticky top-0 z-50 w-full overflow-x-hidden transition-colors ${
-          isSpecialPath && !hasScrolled
-            ? "bg-background/0"
-            : "bg-background/50 backdrop-blur-lg"
+          isMenuOpen
+            ? "bg-background"
+            : isSpecialPath && !hasScrolled
+              ? "bg-background/0"
+              : "bg-background/50 backdrop-blur-lg"
         }`}
         aria-label="Navigation principale"
       >
@@ -125,7 +127,7 @@ const Navigation = () => {
             aria-controls="main-menu"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={
-              isSpecialPath && !hasScrolled
+              isSpecialPath && !hasScrolled && !isMenuOpen
                 ? "text-white lg:hidden dark:text-white"
                 : "text-black lg:hidden dark:text-white"
             }

@@ -1,7 +1,8 @@
 "use client";
 
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Video } from "@/types/anniversary";
-import { motion, useReducedMotion, useTime, useTransform } from "motion/react";
+import { motion, useTime, useTransform } from "motion/react";
 import { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 

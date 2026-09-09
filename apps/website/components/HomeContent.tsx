@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  motion,
-  useInView,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "motion/react";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import CDPochettePhotos from "@/components/CDPochettePhotos";
@@ -16,6 +10,7 @@ import ContactForm from "@/components/ContactForm";
 import { LinkButton } from "@/components/LinkButton";
 import ProjectViewer from "@/components/ProjectViewer";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
 import { Button, Modal } from "@heroui/react";

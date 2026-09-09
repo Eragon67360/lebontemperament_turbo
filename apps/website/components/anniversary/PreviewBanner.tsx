@@ -1,6 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { FaExternalLinkAlt, FaEye, FaTimes } from "react-icons/fa";
 

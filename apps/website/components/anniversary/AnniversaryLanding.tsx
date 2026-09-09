@@ -1,14 +1,9 @@
 "use client";
 
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { AnniversaryHero, HeroStat } from "@/types/anniversary";
 import { gsap } from "gsap";
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-  type Variants,
-} from "motion/react";
+import { motion, useScroll, useTransform, type Variants } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   FaCalendarAlt,
