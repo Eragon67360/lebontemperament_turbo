@@ -1,11 +1,11 @@
 "use client";
 
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { NavigationCard } from "@/types/anniversary";
 import {
   motion,
   useInView,
   useMotionValueEvent,
-  useReducedMotion,
   useScroll,
   useTransform,
 } from "motion/react";

@@ -1,11 +1,7 @@
 "use client";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { RoundedSize } from "@/utils/types";
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { useEffect, useState } from "react";
 import CloudinaryImage from "./CloudinaryImage";
 

@@ -21,7 +21,10 @@ const MainMenuLinks: React.FC<MainMenuLinksProps> = ({
   const itemClass = "text-foreground block w-full py-2";
 
   return (
-    <div id="main-menu" className="border-separator border-t pt-6 lg:hidden">
+    <div
+      id="main-menu"
+      className="border-separator h-[calc(100dvh-4rem)] overflow-y-auto border-t pt-6 lg:hidden"
+    >
       <ul className="flex flex-col gap-2 p-4">
         <li>
           <Link

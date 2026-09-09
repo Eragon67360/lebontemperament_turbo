@@ -1,14 +1,10 @@
 "use client";
 
 import CloudinaryImage from "@/components/CloudinaryImage";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Photo } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
-import {
-  AnimatePresence,
-  motion,
-  useInView,
-  useReducedMotion,
-} from "motion/react";
+import { AnimatePresence, motion, useInView } from "motion/react";
 import { useRef, useState } from "react";
 import { FaImages, FaTimes } from "react-icons/fa";
 import AnniversaryCTA from "./AnniversaryCTA";

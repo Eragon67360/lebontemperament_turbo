@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 import { FaArchive, FaArrowRight } from "react-icons/fa";
 import AnniversaryCTA from "./AnniversaryCTA";
