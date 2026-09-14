@@ -8,7 +8,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "db:types": "sh scripts/db-types.sh",
-    "test": "tsx src/utils/youtube.test.ts"
+    "test": "tsx src/utils/youtube.test.ts && tsx src/utils/drive.test.ts"
   },
   "devDependencies": {
     "@repo/typescript-config": "*",

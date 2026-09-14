@@ -3,7 +3,7 @@
 import { RoundedSize } from "@/utils/types";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { JSX, useState } from "react";
+import { useState } from "react";
 import { IconType } from "react-icons";
 import { FaMusic } from "react-icons/fa";
 import { FaPerson } from "react-icons/fa6";
@@ -12,67 +12,38 @@ import { LuBaby, LuExternalLink } from "react-icons/lu";
 import CloudinaryImage from "../CloudinaryImage";
 import Explorer from "./Explorer";
 
-interface TabContent {
-  id: number;
-  title: string;
-  icon: IconType;
-  iconColor: string;
-  component: JSX.Element;
+export interface DriveFolderTab {
+  slug: string;
+  label: string;
+  folder_id: string;
 }
 
-const adultesId =
-  process.env.NEXT_PUBLIC_GDRIVE_ADULTES_FOLDER ||
-  "19vwE3JOMqUGSHGKEQxKuttAhvD0gu3cd";
-const jeunesId =
-  process.env.NEXT_PUBLIC_GDRIVE_JEUNES_FOLDER ||
-  "18ZukzBIhWotJ9UxpUTdodGBSY1wf0Q81";
-const enfantsId =
-  process.env.NEXT_PUBLIC_GDRIVE_ENFANTS_FOLDER ||
-  "1Jcn6pSKBHpOvFXp5j0h6kKcwOBrAIkId";
-const orchestreId =
-  process.env.NEXT_PUBLIC_GDRIVE_ORCHESTRE_FOLDER ||
-  "1t72TgfhowS2WqYDFYLkasqopdUI_FEem";
+/**
+ * Icons and colours stay in code, keyed by slug: the set of folders is fixed in
+ * the database, only the folder they point at is editable from the admin.
+ */
+const TAB_STYLES: Record<string, { icon: IconType; iconColor: string }> = {
+  adultes: { icon: FaPerson, iconColor: "11BBF8" },
+  jeunes: { icon: FaPerson, iconColor: "F84E11" },
+  enfants: { icon: LuBaby, iconColor: "C211F8" },
+  orchestre: { icon: GiTrumpet, iconColor: "41EDBA" },
+  "cahier-30-ans": { icon: FaMusic, iconColor: "eb4034" },
+};
 
-const tabs: TabContent[] = [
-  {
-    id: 1,
-    title: "Adultes",
-    icon: FaPerson,
-    iconColor: "11BBF8",
-    component: <Explorer initialFolderId={adultesId} />,
-  },
-  {
-    id: 2,
-    title: "Jeunes",
-    icon: FaPerson,
-    iconColor: "F84E11",
-    component: <Explorer initialFolderId={jeunesId} />,
-  },
-  {
-    id: 3,
-    title: "Enfants",
-    icon: LuBaby,
-    iconColor: "C211F8",
-    component: <Explorer initialFolderId={enfantsId} />,
-  },
-  {
-    id: 4,
-    title: "Orchestre",
-    icon: GiTrumpet,
-    iconColor: "41EDBA",
-    component: <Explorer initialFolderId={orchestreId} />,
-  },
-  {
-    id: 5,
-    title: "Cahier 30 ans",
-    icon: FaMusic,
-    iconColor: "eb4034",
-    component: <Explorer initialFolderId="1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB" />,
-  },
-];
+const DEFAULT_STYLE = { icon: FaMusic, iconColor: "11BBF8" };
 
-const FileExplorer: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabContent>(tabs[0]!);
+interface FileExplorerProps {
+  folders: DriveFolderTab[];
+  driveUrl?: string;
+}
+
+const FileExplorer: React.FC<FileExplorerProps> = ({ folders, driveUrl }) => {
+  const tabs = folders.map((folder) => ({
+    ...folder,
+    ...(TAB_STYLES[folder.slug] ?? DEFAULT_STYLE),
+  }));
+  const [activeSlug, setActiveSlug] = useState<string>(tabs[0]?.slug ?? "");
+  const activeTab = tabs.find((tab) => tab.slug === activeSlug) ?? tabs[0]!;
 
   return (
     <div className="container mx-auto w-full px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">
@@ -118,15 +89,15 @@ const FileExplorer: React.FC = () => {
             <div className="grid grid-cols-2 gap-2 md:gap-3 lg:grid-cols-1">
               {tabs.map((tab, index) => (
                 <motion.button
-                  key={index}
-                  onClick={() => setActiveTab(tab)}
+                  key={tab.slug}
+                  onClick={() => setActiveSlug(tab.slug)}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 * index }}
                   className={`group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-xl p-3 transition-all duration-300 md:p-4 ${
-                    activeTab.id === tab.id
+                    activeTab.slug === tab.slug
                       ? "from-primary/20 bg-gradient-to-r to-purple-500/20 shadow-lg"
                       : "hover:bg-surface-secondary/50 bg-transparent"
                   }`}
@@ -143,44 +114,42 @@ const FileExplorer: React.FC = () => {
                   </motion.div>
                   <span
                     className={`text-sm font-semibold md:text-base ${
-                      activeTab.id === tab.id
+                      activeTab.slug === tab.slug
                         ? "text-foreground"
                         : "text-foreground/70"
                     }`}
                   >
-                    {tab.title}
+                    {tab.label}
                   </span>
                 </motion.button>
               ))}
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-4 md:mt-6"
-            >
-              <Link
-                href="https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
-                target="_blank"
-                rel="noopener"
+            {driveUrl && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="mt-4 md:mt-6"
               >
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="from-primary flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r to-purple-500 px-4 py-3 text-sm font-medium text-white shadow-lg transition-shadow hover:shadow-xl"
-                >
-                  Accès direct au drive
-                  <LuExternalLink className="h-4 w-4" />
-                </motion.div>
-              </Link>
-            </motion.div>
+                <Link href={driveUrl} target="_blank" rel="noopener">
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="from-primary flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r to-purple-500 px-4 py-3 text-sm font-medium text-white shadow-lg transition-shadow hover:shadow-xl"
+                  >
+                    Accès direct au drive
+                    <LuExternalLink className="h-4 w-4" />
+                  </motion.div>
+                </Link>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 
         {/* Main Content */}
         <motion.div
-          key={activeTab.id}
+          key={activeTab.slug}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
@@ -212,13 +181,13 @@ const FileExplorer: React.FC = () => {
                     color: "transparent",
                   }}
                 >
-                  {activeTab.title}
+                  {activeTab.label}
                 </h2>
               </div>
 
               <div className="p-4 md:p-6">
                 <div className="bg-surface-secondary/50 rounded-xl p-3 backdrop-blur-sm md:p-4">
-                  {activeTab.component}
+                  <Explorer initialFolderId={activeTab.folder_id} />
                 </div>
               </div>
             </div>

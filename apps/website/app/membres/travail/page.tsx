@@ -1,4 +1,6 @@
 import FileExplorer from "@/components/travail/FileExplorer";
+import { createClient } from "@/utils/supabase/server";
+import { DRIVE_ROOT_SLUG, driveFolderUrl } from "@repo/domain/utils/drive";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -22,11 +24,37 @@ export const metadata: Metadata = {
   },
 };
 
-const Travail = () => {
+const Travail = async () => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("drive_folders")
+    .select("slug, label, folder_id")
+    .order("display_order");
+
+  // Rendering an explorer with zero tabs would read as "the drive is empty",
+  // so say what actually happened instead.
+  if (error || !data?.length) {
+    return (
+      <div className="flex w-full flex-1 items-center justify-center p-6">
+        <p className="text-muted text-sm">
+          Les dossiers Drive n&apos;ont pas pu être chargés. Réessayez dans un
+          instant.
+        </p>
+      </div>
+    );
+  }
+
+  const rootFolder = data.find((folder) => folder.slug === DRIVE_ROOT_SLUG);
+
   return (
     <>
       <div className="w-full p-0 md:p-6">
-        <FileExplorer />
+        <FileExplorer
+          folders={data.filter((folder) => folder.slug !== DRIVE_ROOT_SLUG)}
+          driveUrl={
+            rootFolder ? driveFolderUrl(rootFolder.folder_id) : undefined
+          }
+        />
       </div>
     </>
   );
