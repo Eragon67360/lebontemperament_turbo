@@ -1,4 +1,3 @@
-// components/BreadcrumbNav.tsx
 "use client";
 
 import {
@@ -9,100 +8,106 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { buildNavSections, navLabelForHref } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
+import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useMemo } from "react";
 
-interface BreadcrumbItem {
-  label: string;
-  href: string;
-  isCurrentPage?: boolean;
-}
+const DASHBOARD_ROOT = RouteNames.DASHBOARD.ROOT;
 
-export function BreadcrumbNav() {
+type Crumb = { label: string; href?: string };
+
+/**
+ * Where am I: a trail built from the nav tree, so labels match the sidebar
+ * wording. Only known nav destinations become links; routing-only segments
+ * (`/admin`) are skipped because they have no page to land on.
+ */
+export function BreadcrumbNav({ className }: { className?: string }) {
   const pathname = usePathname();
-  const [programNames, setProgramNames] = useState<Record<string, string>>({});
+  const sections = useMemo(() => buildNavSections(), []);
 
-  useEffect(() => {
-    const fetchProgramNames = async () => {
-      const supabase = createClient();
-      const segments = pathname.split("/");
+  const segments = pathname.split("/").filter(Boolean).slice(1);
+  // /dashboard/members/travail/<programId>/<groupSlug>
+  const programId =
+    segments[0] === "members" && segments[1] === "travail"
+      ? segments[2]
+      : undefined;
+  const { data: programName } = useProgramName(programId);
 
-      // Find program IDs in the path
-      const programIdIndex =
-        segments.findIndex((segment) => segment === "travail") + 1;
-
-      if (programIdIndex > 0 && segments[programIdIndex]) {
-        const programId = segments[programIdIndex];
-
-        // Only fetch if we haven't already
-        if (!programNames[programId]) {
-          const { data } = await supabase
-            .from("programs")
-            .select("name")
-            .eq("id", programId)
-            .single();
-
-          if (data) {
-            setProgramNames((prev) => ({
-              ...prev,
-              [programId]: data.name,
-            }));
-          }
-        }
-      }
-    };
-
-    fetchProgramNames();
-  }, [pathname, programNames]);
-
-  const breadcrumbs = useMemo(() => {
-    const segments = pathname
-      .split("/")
-      .filter((segment) => segment !== "" && segment !== "dashboard");
-
-    const items: BreadcrumbItem[] = [
-      { label: "Dashboard", href: "/dashboard" },
-    ];
+  const crumbs = useMemo<Crumb[]>(() => {
+    const trail: Crumb[] = [];
+    let href = DASHBOARD_ROOT;
 
     segments.forEach((segment, index) => {
-      const href = `/dashboard/${segments.slice(0, index + 1).join("/")}`;
+      href = `${href}/${segment}`;
+      const navLabel = navLabelForHref(sections, href);
+      const isLast = index === segments.length - 1;
 
-      // Check if this segment is a program ID
-      const isProgramId = segments[index - 1] === "travail";
-      const label = isProgramId
-        ? programNames[segment] || "Programme..." // Use stored program name
-        : segment
-            .split("-")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
+      if (!navLabel && !isLast && segment !== programId) return;
 
-      items.push({
-        label,
-        href,
-        isCurrentPage: index === segments.length - 1,
+      trail.push({
+        label:
+          navLabel ??
+          (segment === programId
+            ? (programName ?? "Programme…")
+            : humanize(segment)),
+        href: isLast || !navLabel ? undefined : href,
       });
     });
 
-    return items;
-  }, [pathname, programNames]);
+    return trail;
+  }, [segments, sections, programId, programName]);
+
+  if (crumbs.length === 0) return null;
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
-        {breadcrumbs.map((breadcrumb, index) => (
-          <BreadcrumbItem key={breadcrumb.href}>
-            {breadcrumb.isCurrentPage ? (
-              <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
-            ) : (
-              <BreadcrumbLink href={breadcrumb.href}>
-                {breadcrumb.label}
-              </BreadcrumbLink>
-            )}
-            {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-          </BreadcrumbItem>
+    <Breadcrumb className={cn("min-w-0", className)}>
+      <BreadcrumbList className="flex-nowrap text-xs sm:text-sm">
+        <BreadcrumbItem>
+          <BreadcrumbLink href={DASHBOARD_ROOT}>Tableau de bord</BreadcrumbLink>
+        </BreadcrumbItem>
+        {crumbs.map((crumb, index) => (
+          <Fragment key={`${crumb.label}-${index}`}>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="min-w-0">
+              {crumb.href ? (
+                <BreadcrumbLink href={crumb.href} className="truncate">
+                  {crumb.label}
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage className="truncate">
+                  {crumb.label}
+                </BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+          </Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>
   );
+}
+
+function useProgramName(programId?: string) {
+  return useQuery({
+    queryKey: ["program-name", programId],
+    queryFn: async () => {
+      const { data } = await createClient()
+        .from("programs")
+        .select("name")
+        .eq("id", programId!)
+        .single();
+
+      return data?.name ?? null;
+    },
+    enabled: !!programId,
+    staleTime: Infinity,
+  });
+}
+
+function humanize(segment: string) {
+  const words = decodeURIComponent(segment).replace(/-/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
