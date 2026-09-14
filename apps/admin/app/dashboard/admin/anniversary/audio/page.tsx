@@ -5,18 +5,27 @@ import { AudioMemoryItem } from "@/components/anniversary/AudioMemoryItem";
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import {
   useAudioMemories,
   useDeleteAudioMemory,
 } from "@/hooks/useAnniversaryAudio";
 import { AnniversaryAudioMemory } from "@/types/anniversary";
-import { Plus } from "lucide-react";
+import { Mic, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function AudioPage() {
-  const { data: audioMemories, isLoading } = useAudioMemories();
+  const {
+    data: audioMemories = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useAudioMemories();
   const deleteAudio = useDeleteAudioMemory();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -55,67 +64,68 @@ export default function AudioPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageShell
-        title="Mémoires Audio"
-        description="Gérer les témoignages et extraits audio"
-        theme="anniversary"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-      >
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-      </PageShell>
-    );
-  }
-
-  const maxOrder =
-    audioMemories?.reduce(
-      (max, audio) => Math.max(max, audio.display_order),
-      0,
-    ) || 0;
+  const maxOrder = audioMemories.reduce(
+    (max, audio) => Math.max(max, audio.display_order),
+    0,
+  );
 
   return (
     <PageShell
-      title="Mémoires Audio"
+      title="Mémoires audio"
       description="Gérer les témoignages et extraits audio"
       theme="anniversary"
-      fullHeight={true}
-      className="flex h-full flex-col px-4 py-8 sm:px-6 lg:px-8"
-    >
-      <div className="mb-6 flex flex-shrink-0 items-center justify-between">
-        <div className="text-muted-foreground text-sm">
-          {audioMemories?.length || 0} mémoire(s) audio
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+      className="py-4 sm:py-6"
+      headerAction={
+        <Button
+          className="min-h-11 w-full sm:w-auto"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
           Ajouter un souvenir audio
         </Button>
-      </div>
+      }
+    >
+      {audioMemories.length > 0 && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          {audioMemories.length} mémoire{audioMemories.length > 1 ? "s" : ""}{" "}
+          audio
+        </p>
+      )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {audioMemories && audioMemories.length > 0 ? (
-          <div className="space-y-4 pb-4">
-            {audioMemories.map((audio) => (
-              <AudioMemoryItem
-                key={audio.id}
-                audio={audio}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="border-border bg-muted/50 rounded-lg border border-dashed p-12 text-center">
-            <p className="text-muted-foreground">
-              Aucune mémoire audio. Cliquez sur "Ajouter un souvenir audio" pour
-              commencer.
-            </p>
-          </div>
-        )}
-      </div>
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={audioMemories.length === 0}
+        onRetry={() => refetch()}
+        errorDescription="Les mémoires audio n'ont pas pu être chargées."
+        skeleton={
+          <ListSkeleton rows={4} label="Chargement des mémoires audio…" />
+        }
+        empty={
+          <EmptyState
+            icon={Mic}
+            title="Aucune mémoire audio"
+            description="Ajoutez les témoignages et extraits sonores à faire écouter dans la section des 40 ans."
+            action={
+              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter un souvenir audio
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="space-y-4">
+          {audioMemories.map((audio) => (
+            <AudioMemoryItem
+              key={audio.id}
+              audio={audio}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Create/Edit Dialog */}
       <AudioMemoryDialog

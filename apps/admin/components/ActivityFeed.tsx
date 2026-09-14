@@ -1,7 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import { useActivities } from "@/hooks/useActivities";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -22,20 +26,13 @@ function getActivityIcon(type: string) {
   }
 }
 
-function ActivityRowSkeleton() {
-  return (
-    <div className="flex items-start space-x-4 p-3">
-      <Skeleton className="h-10 w-10 rounded-full" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-[200px] rounded-full" />
-        <Skeleton className="h-3 w-[300px] rounded-full" />
-        <Skeleton className="h-3 w-[100px] rounded-full" />
-      </div>
-    </div>
-  );
-}
 export function ActivityFeed() {
-  const { data: activities = [], isLoading } = useActivities(50);
+  const {
+    data: activities = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useActivities(50);
 
   return (
     <Card className="flex h-full flex-col rounded-2xl bg-white">
@@ -56,21 +53,24 @@ export function ActivityFeed() {
       </CardHeader>
       <CardContent className="min-h-0 flex-1">
         <div className="custom-scrollbar h-full max-h-[500px] space-y-1 overflow-y-auto pr-2 lg:max-h-none">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, index) => (
-                <ActivityRowSkeleton key={index} />
-              ))}
-            </div>
-          ) : activities.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Bell className="mb-3 h-8 w-8 text-gray-300" />
-              <p className="text-sm text-gray-500">
-                Aucune activité récente à afficher
-              </p>
-            </div>
-          ) : (
-            activities.map((activity) => (
+          <DataState
+            isLoading={isLoading}
+            isError={isError}
+            isEmpty={activities.length === 0}
+            onRetry={() => refetch()}
+            errorDescription="Le fil d'activités n'a pas pu être chargé."
+            skeleton={
+              <ListSkeleton rows={5} label="Chargement des activités…" />
+            }
+            empty={
+              <EmptyState
+                icon={Bell}
+                title="Aucune activité récente"
+                className="py-10"
+              />
+            }
+          >
+            {activities.map((activity) => (
               <div
                 key={activity.id}
                 className="flex items-start gap-3 rounded-md p-3 hover:bg-gray-50"
@@ -105,8 +105,8 @@ export function ActivityFeed() {
                   </div>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+          </DataState>
         </div>
       </CardContent>
     </Card>

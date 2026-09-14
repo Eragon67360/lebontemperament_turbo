@@ -2,9 +2,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { DataState, ListSkeleton } from "@/components/ui/data-state";
 import { FileRecord, Folder } from "@/types/files";
 import { createClient } from "@/utils/supabase/client";
-import { FolderPlus, Loader2, Upload } from "lucide-react";
+import { FolderPlus, Upload } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BreadcrumbNav } from "./BreadcrumbNav";
@@ -20,6 +21,7 @@ interface FileExplorerProps {
 
 export function FileExplorer({ programId, groupId }: FileExplorerProps) {
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -36,6 +38,7 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
   const loadContent = useCallback(
     async (folderId?: string) => {
       setLoading(true);
+      setFailed(false);
       try {
         const foldersRes = await fetch(
           `/api/folders?programId=${programId}&groupId=${groupId}`,
@@ -52,7 +55,9 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
         setFolders(foldersData);
         setFiles(filesData);
       } catch (error) {
-        toast.error("Impossible de charger le contenu");
+        // A failed load used to leave an empty explorer behind, which reads as
+        // "this folder is empty" rather than "this did not load".
+        setFailed(true);
         console.error(error);
       } finally {
         setLoading(false);
@@ -178,8 +183,8 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
   });
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] space-y-4 px-4 transition-all duration-300 sm:px-6 lg:px-8">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-2">
+    <div className="w-full space-y-4">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-2">
         <div className="w-full overflow-x-auto sm:w-auto">
           <BreadcrumbNav
             currentFolder={currentFolder}
@@ -190,48 +195,51 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
           />
         </div>
 
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+        <div className="flex w-full gap-2 sm:w-auto">
           <Button
             onClick={() => setIsCreateFolderOpen(true)}
             variant="outline"
-            size="sm"
-            className="flex-1 transition-all duration-300 hover:scale-105 sm:flex-none"
+            className="min-h-11 flex-1 sm:flex-none"
           >
-            <FolderPlus className="mr-2 hidden h-4 w-4 sm:inline" />
+            <FolderPlus className="mr-2 h-4 w-4" aria-hidden />
             <span className="whitespace-nowrap">Nouveau dossier</span>
           </Button>
 
           <Button
             onClick={() => setIsUploadFileOpen(true)}
-            variant="default"
-            size="sm"
-            className="flex-1 transition-all duration-300 hover:scale-105 sm:flex-none"
+            className="min-h-11 flex-1 sm:flex-none"
           >
-            <Upload className="mr-2 hidden h-4 w-4 sm:inline" />
-            <span className="whitespace-nowrap">Ajouter un fichier</span>
+            <Upload className="mr-2 h-4 w-4" aria-hidden />
+            <span className="whitespace-nowrap">Ajouter</span>
           </Button>
         </div>
       </div>
 
-      <div className="relative min-h-[200px] transition-all duration-300">
-        {loading ? (
-          <div className="bg-background/50 absolute inset-0 flex items-center justify-center backdrop-blur-sm">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        ) : (
-          <div className="border-border rounded-lg border p-4 transition-all duration-300">
-            <FileList
-              folders={currentFolders}
-              files={files}
-              onFolderClick={(folder) => {
-                setCurrentFolder(folder);
-                loadContent(folder.id);
-              }}
-              onDelete={handleDeleteRequest}
-            />
-          </div>
-        )}
-      </div>
+      <DataState
+        isLoading={loading}
+        isError={failed}
+        onRetry={() => loadContent(currentFolder?.id)}
+        errorDescription="Le contenu de ce dossier n'a pas pu être chargé."
+        skeleton={
+          <ListSkeleton
+            rows={4}
+            label="Chargement des documents…"
+            className="border-border rounded-lg border p-4"
+          />
+        }
+      >
+        <div className="border-border rounded-lg border p-2 sm:p-4">
+          <FileList
+            folders={currentFolders}
+            files={files}
+            onFolderClick={(folder) => {
+              setCurrentFolder(folder);
+              loadContent(folder.id);
+            }}
+            onDelete={handleDeleteRequest}
+          />
+        </div>
+      </DataState>
 
       <CreateFolderDialog
         open={isCreateFolderOpen}

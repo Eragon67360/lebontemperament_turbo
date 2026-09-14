@@ -18,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -114,8 +113,11 @@ const ProjectImageField = ({
 }) => (
   <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
     <div className="mb-2 flex items-center gap-2">
-      <ImageIcon className="text-muted-foreground h-4 w-4" />
-      <Label className="font-semibold">{label}</Label>
+      <ImageIcon
+        className="text-muted-foreground h-4 w-4 shrink-0"
+        aria-hidden
+      />
+      <Label className="min-w-0 font-semibold">{label}</Label>
     </div>
 
     <FileUpload
@@ -127,15 +129,22 @@ const ProjectImageField = ({
     />
 
     {showPhotographerFields && onPhotographerChange && (
-      <div className="grid grid-cols-1 gap-3 pt-2 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label className="text-muted-foreground text-xs">
+          <Label
+            htmlFor={`${fileKey}-photographer-name`}
+            className="text-muted-foreground text-xs"
+          >
             Photographe (Nom)
           </Label>
           <div className="relative">
-            <User className="text-muted-foreground absolute top-2.5 left-2.5 h-3.5 w-3.5" />
+            <User
+              className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2"
+              aria-hidden
+            />
             <Input
-              className="h-9 pl-8 text-sm"
+              id={`${fileKey}-photographer-name`}
+              className="min-h-11 pl-8 text-sm"
               placeholder="ex: Jean Dupont"
               value={photographerName || ""}
               onChange={(e) => onPhotographerChange("name", e.target.value)}
@@ -143,13 +152,20 @@ const ProjectImageField = ({
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-muted-foreground text-xs">
+          <Label
+            htmlFor={`${fileKey}-photographer-url`}
+            className="text-muted-foreground text-xs"
+          >
             Photographe (URL)
           </Label>
           <div className="relative">
-            <LinkIcon className="text-muted-foreground absolute top-2.5 left-2.5 h-3.5 w-3.5" />
+            <LinkIcon
+              className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2"
+              aria-hidden
+            />
             <Input
-              className="h-9 pl-8 text-sm"
+              id={`${fileKey}-photographer-url`}
+              className="min-h-11 pl-8 text-sm"
               placeholder="https://..."
               value={photographerUrl || ""}
               onChange={(e) => onPhotographerChange("url", e.target.value)}
@@ -301,7 +317,9 @@ export function ProjectModal({
     } catch (error) {
       console.error(error);
       toast.error(`Erreur upload ${field}`);
-      return null;
+      // Rethrow: returning null here let the caller write that null over the
+      // project's existing image, so a failed upload erased a stored one.
+      throw error;
     } finally {
       setUploading(null);
     }
@@ -344,17 +362,23 @@ export function ProjectModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[700px] md:max-w-[800px] lg:max-w-[900px]">
+      <DialogContent className="sm:max-w-[700px] md:max-w-[800px] lg:max-w-[900px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             {project ? (
               <>
-                <RefreshCw className="text-muted-foreground h-5 w-5" />
+                <RefreshCw
+                  className="text-muted-foreground h-5 w-5 shrink-0"
+                  aria-hidden
+                />
                 Modifier le projet
               </>
             ) : (
               <>
-                <Layers className="text-muted-foreground h-5 w-5" />
+                <Layers
+                  className="text-muted-foreground h-5 w-5 shrink-0"
+                  aria-hidden
+                />
                 Créer un nouveau projet
               </>
             )}
@@ -365,33 +389,33 @@ export function ProjectModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <div className="px-1">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="general" className="gap-2">
-                  <Info className="h-4 w-4" />
-                  Général
-                </TabsTrigger>
-                <TabsTrigger value="content" className="gap-2">
-                  <AlignLeft className="h-4 w-4" />
-                  Contenu
-                </TabsTrigger>
-                <TabsTrigger value="media" className="gap-2">
-                  <ImageIcon className="h-4 w-4" />
-                  Médias
-                </TabsTrigger>
-              </TabsList>
-            </div>
+        <form onSubmit={handleSubmit}>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger
+                value="general"
+                className="min-h-11 gap-1.5 sm:gap-2"
+              >
+                <Info className="h-4 w-4 shrink-0" aria-hidden />
+                Général
+              </TabsTrigger>
+              <TabsTrigger
+                value="content"
+                className="min-h-11 gap-1.5 sm:gap-2"
+              >
+                <AlignLeft className="h-4 w-4 shrink-0" aria-hidden />
+                Contenu
+              </TabsTrigger>
+              <TabsTrigger value="media" className="min-h-11 gap-1.5 sm:gap-2">
+                <ImageIcon className="h-4 w-4 shrink-0" aria-hidden />
+                Médias
+              </TabsTrigger>
+            </TabsList>
 
-            <ScrollArea className="flex-1 px-1 py-4">
+            <div className="py-4">
               {/* --- TAB: GENERAL --- */}
-              <TabsContent value="general" className="mt-0 space-y-4 px-2">
-                <div className="grid gap-4 md:grid-cols-2">
+              <TabsContent value="general" className="mt-0 space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-foreground">
                       Nom du projet *
@@ -409,7 +433,7 @@ export function ProjectModal({
                         }));
                       }}
                       placeholder="Ex: Concert de Printemps"
-                      className="font-medium"
+                      className="min-h-11 font-medium"
                     />
                   </div>
 
@@ -422,19 +446,20 @@ export function ProjectModal({
                         setFormData({ ...formData, sub_name: e.target.value })
                       }
                       placeholder="Ex: Édition 2024"
+                      className="min-h-11"
                     />
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <Label htmlFor="slug">Slug (URL) *</Label>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="text-muted-foreground h-5 text-[10px]"
+                        className="text-muted-foreground min-h-11 shrink-0 text-xs"
                         onClick={() =>
                           setFormData((prev) => ({
                             ...prev,
@@ -446,31 +471,36 @@ export function ProjectModal({
                       </Button>
                     </div>
                     <div className="relative">
-                      <Globe className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <Globe
+                        className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+                        aria-hidden
+                      />
                       <Input
                         id="slug"
                         value={formData.slug}
                         onChange={(e) =>
                           setFormData({ ...formData, slug: e.target.value })
                         }
-                        className="pl-9 font-mono text-sm"
+                        className="min-h-11 pl-9 font-mono text-sm"
                         placeholder="concert-printemps-2024"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Date de l'événement *</Label>
+                    <Label htmlFor="project-date">Date de l'événement *</Label>
                     <Popover modal>
                       <PopoverTrigger asChild>
                         <Button
+                          id="project-date"
+                          type="button"
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal",
+                            "min-h-11 w-full justify-start text-left font-normal",
                             !formData.date && "text-muted-foreground",
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <CalendarIcon className="mr-2 h-4 w-4" aria-hidden />
                           {formData.date ? (
                             format(formData.date, "dd MMMM yyyy", {
                               locale: fr,
@@ -497,11 +527,14 @@ export function ProjectModal({
 
                 <Separator className="my-2" />
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="author">Auteur de la fiche</Label>
                     <div className="relative">
-                      <User className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <User
+                        className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+                        aria-hidden
+                      />
                       <Input
                         id="author"
                         value={formData.author_name || ""}
@@ -511,7 +544,7 @@ export function ProjectModal({
                             author_name: e.target.value,
                           })
                         }
-                        className="pl-9"
+                        className="min-h-11 pl-9"
                         placeholder="Nom de l'administrateur"
                       />
                     </div>
@@ -522,6 +555,7 @@ export function ProjectModal({
                     <Input
                       id="order"
                       type="number"
+                      className="min-h-11"
                       value={formData.display_order}
                       onChange={(e) =>
                         setFormData({
@@ -535,7 +569,7 @@ export function ProjectModal({
               </TabsContent>
 
               {/* --- TAB: CONTENT --- */}
-              <TabsContent value="content" className="mt-0 space-y-5 px-2">
+              <TabsContent value="content" className="mt-0 space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="explanation" className="text-base">
                     Description principale (Introduction)
@@ -551,7 +585,7 @@ export function ProjectModal({
                   />
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="text1">Bloc de texte #1</Label>
                     <Textarea
@@ -580,8 +614,8 @@ export function ProjectModal({
               </TabsContent>
 
               {/* --- TAB: MEDIA --- */}
-              <TabsContent value="media" className="mt-0 space-y-6 px-2">
-                <div className="grid gap-6 md:grid-cols-2">
+              <TabsContent value="media" className="mt-0 space-y-6">
+                <div className="grid gap-6 sm:grid-cols-2">
                   <ProjectImageField
                     label="Image Principale (Miniature)"
                     fileKey="image"
@@ -648,22 +682,30 @@ export function ProjectModal({
                   />
                 </div>
               </TabsContent>
-            </ScrollArea>
+            </div>
           </Tabs>
 
           <DialogFooter className="border-t pt-4">
             <Button
               type="button"
               variant="outline"
+              className="min-h-11 w-full sm:w-auto"
               onClick={onClose}
               disabled={uploading !== null}
             >
               Annuler
             </Button>
-            <Button type="submit" disabled={uploading !== null}>
+            <Button
+              type="submit"
+              className="min-h-11 w-full sm:w-auto"
+              disabled={uploading !== null}
+            >
               {uploading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2
+                    className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden
+                  />
                   Upload en cours ({uploading})...
                 </>
               ) : project ? (

@@ -9,7 +9,7 @@ export default function HeroPage() {
       title="Section Hero"
       description="Gérer le contenu de la section d'accueil de la page anniversaire"
       theme="anniversary"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
     >
       <HeroInlineEditor />
     </PageShell>

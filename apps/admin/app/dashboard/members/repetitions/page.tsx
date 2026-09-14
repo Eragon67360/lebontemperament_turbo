@@ -11,19 +11,17 @@ export default function Repetitions() {
 
   return (
     <PageShell
-      fullHeight
       theme="members"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
       title="Gestion des répétitions"
       description="Planifiez et gérez les séances de répétition."
       headerAction={
         <Button
-          className="shadow-md transition-all hover:shadow-lg"
+          className="min-h-11 w-full sm:w-auto"
           onClick={() => setIsAddDialogOpen(true)}
         >
-          <Plus className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Ajouter une répétition</span>
-          <span className="sm:hidden">Ajouter</span>
+          <Plus className="mr-2 h-4 w-4" aria-hidden />
+          Ajouter une répétition
         </Button>
       }
     >

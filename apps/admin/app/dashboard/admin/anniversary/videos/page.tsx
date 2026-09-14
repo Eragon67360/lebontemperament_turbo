@@ -5,15 +5,19 @@ import { VideoDialog } from "@/components/anniversary/VideoDialog";
 import { VideoItem } from "@/components/anniversary/VideoItem";
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import { useDeleteVideo, useVideos } from "@/hooks/useAnniversaryVideos";
 import { AnniversaryVideo } from "@/types/anniversary";
-import { Plus } from "lucide-react";
+import { Plus, Video } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function VideosPage() {
-  const { data: videos, isLoading } = useVideos();
+  const { data: videos = [], isLoading, isError, refetch } = useVideos();
   const deleteVideo = useDeleteVideo();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -53,63 +57,65 @@ export default function VideosPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageShell
-        title="Galerie Vidéo"
-        description="Gérer les vidéos de concerts, témoignages et documentaires"
-        theme="anniversary"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-      >
-        <div className="space-y-4">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-48 w-full" />
-        </div>
-      </PageShell>
-    );
-  }
-
-  const maxOrder =
-    videos?.reduce((max, video) => Math.max(max, video.display_order), 0) || 0;
+  const maxOrder = videos.reduce(
+    (max, video) => Math.max(max, video.display_order),
+    0,
+  );
 
   return (
     <PageShell
-      title="Galerie Vidéo"
+      title="Galerie vidéo"
       description="Gérer les vidéos de concerts, témoignages et documentaires"
       theme="anniversary"
-      fullHeight={true}
-      className="flex h-full flex-col px-4 py-8 sm:px-6 lg:px-8"
-    >
-      <div className="mb-6 flex flex-shrink-0 items-center justify-between">
-        <div className="text-muted-foreground text-sm">
-          {videos?.length || 0} vidéo(s)
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+      className="py-4 sm:py-6"
+      headerAction={
+        <Button
+          className="min-h-11 w-full sm:w-auto"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
           Ajouter une vidéo
         </Button>
-      </div>
+      }
+    >
+      {videos.length > 0 && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          {videos.length} vidéo{videos.length > 1 ? "s" : ""}
+        </p>
+      )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {videos && videos.length > 0 ? (
-          <div className="space-y-4 pb-4">
-            {videos.map((video) => (
-              <VideoItem
-                key={video.id}
-                video={video}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="border-border bg-muted/50 rounded-lg border border-dashed p-12 text-center">
-            <p className="text-muted-foreground">
-              Aucune vidéo. Cliquez sur "Ajouter une vidéo" pour commencer.
-            </p>
-          </div>
-        )}
-      </div>
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={videos.length === 0}
+        onRetry={() => refetch()}
+        errorDescription="Les vidéos n'ont pas pu être chargées."
+        skeleton={<ListSkeleton rows={4} label="Chargement des vidéos…" />}
+        empty={
+          <EmptyState
+            icon={Video}
+            title="Aucune vidéo"
+            description="Ajoutez les vidéos de concerts, témoignages et documentaires à afficher dans la galerie des 40 ans."
+            action={
+              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter une vidéo
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="space-y-4">
+          {videos.map((video) => (
+            <VideoItem
+              key={video.id}
+              video={video}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Create/Edit Dialog */}
       <VideoDialog

@@ -67,6 +67,7 @@ export function TourForm({
           name="tourName"
           defaultValue={initialData?.name}
           required
+          className="min-h-11"
           placeholder="Ex: Tournée d'été 2024"
         />
       </div>
@@ -88,7 +89,7 @@ export function TourForm({
           name="context"
           defaultValue={initialData?.context || "orchestre"}
         >
-          <SelectTrigger>
+          <SelectTrigger id="context" className="min-h-11">
             <SelectValue placeholder="Sélectionnez un type" />
           </SelectTrigger>
           <SelectContent>
@@ -104,17 +105,19 @@ export function TourForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Date de début</Label>
+          <Label htmlFor="tour-start-date">Date de début</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                id="tour-start-date"
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "min-h-11 w-full justify-start text-left font-normal",
                   !startDate && "text-muted-foreground",
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="h-4 w-4" aria-hidden />
                 {startDate ? (
                   format(startDate, "dd MMMM yyyy", { locale: fr })
                 ) : (
@@ -135,17 +138,19 @@ export function TourForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Date de fin</Label>
+          <Label htmlFor="tour-end-date">Date de fin</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                id="tour-end-date"
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "min-h-11 w-full justify-start text-left font-normal",
                   !endDate && "text-muted-foreground",
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="h-4 w-4" aria-hidden />
                 {endDate ? (
                   format(endDate, "dd MMMM yyyy", { locale: fr })
                 ) : (
@@ -180,12 +185,22 @@ export function TourForm({
 
       <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
         {onClose && (
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            onClick={onClose}
+          >
             Annuler
           </Button>
         )}
-        <Button type="submit" disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" className="min-h-11" disabled={loading}>
+          {loading && (
+            <Loader2
+              className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+              aria-hidden
+            />
+          )}
           {submitLabel}
         </Button>
       </div>

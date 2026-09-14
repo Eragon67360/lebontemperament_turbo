@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/data-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -15,7 +17,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function HeroInlineEditor() {
-  const { data: hero, isLoading } = useAnniversaryHero();
+  const { data: hero, isLoading, isError, refetch } = useAnniversaryHero();
   const updateHero = useUpdateAnniversaryHero();
 
   const [formData, setFormData] = useState({
@@ -57,8 +59,26 @@ export function HeroInlineEditor() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <CardContent className="space-y-6 py-6" role="status" aria-busy>
+          <span className="sr-only">Chargement du contenu…</span>
+          <Skeleton className="h-10 w-full" aria-hidden />
+          <Skeleton className="h-10 w-full" aria-hidden />
+          <Skeleton className="h-24 w-full" aria-hidden />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Without this branch a failed load left every field empty and enabled: one
+  // "Enregistrer" would have overwritten the live hero content with blanks.
+  if (isError || !hero) {
+    return (
+      <Card>
+        <CardContent className="py-6">
+          <ErrorState
+            description="Le contenu de la section Hero n'a pas pu être chargé. Rien n'est modifiable tant qu'il n'est pas récupéré."
+            onRetry={() => refetch()}
+          />
         </CardContent>
       </Card>
     );
@@ -84,7 +104,7 @@ export function HeroInlineEditor() {
               required
             />
             <p className="text-muted-foreground text-xs">
-              Le nombre affiché en grand (ex: "40")
+              Le nombre affiché en grand (ex.&nbsp;: «&nbsp;40&nbsp;»)
             </p>
           </div>
 
@@ -152,7 +172,7 @@ export function HeroInlineEditor() {
           {/* Skip Button Text */}
           <div className="space-y-2">
             <Label htmlFor="skip_button_text">
-              Texte du bouton "Passer l'animation"
+              Texte du bouton «&nbsp;Passer l&apos;animation&nbsp;»
             </Label>
             <Input
               id="skip_button_text"
@@ -166,13 +186,13 @@ export function HeroInlineEditor() {
           </div>
 
           {/* Enable Intro Animation */}
-          <div className="border-border bg-muted/50 flex items-center justify-between rounded-lg border p-4">
+          <div className="border-border bg-muted/50 flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="enable_intro_animation" className="text-base">
-                Animation d'introduction
+                Animation d&apos;introduction
               </Label>
               <p className="text-muted-foreground text-sm">
-                Activer l'animation GSAP au chargement de la page
+                Activer l&apos;animation GSAP au chargement de la page
               </p>
             </div>
             <Switch
@@ -189,7 +209,7 @@ export function HeroInlineEditor() {
             <Button
               type="submit"
               disabled={updateHero.isPending}
-              className="min-w-[120px]"
+              className="min-h-11 w-full sm:w-auto sm:min-w-[120px]"
             >
               {updateHero.isPending ? (
                 <>
