@@ -20,10 +20,14 @@ import Link from "next/link";
  */
 export default async function TravailPage() {
   const supabase = await createClient();
-  const { data: programs } = await supabase
+  const { data: programs, error } = await supabase
     .from("programs")
     .select("*")
     .order("start_date", { ascending: false });
+
+  // Without this, a failed query renders "Aucun programme" and reads as an
+  // empty account. app/dashboard/error.tsx catches it and offers a retry.
+  if (error) throw error;
 
   return (
     <PageShell

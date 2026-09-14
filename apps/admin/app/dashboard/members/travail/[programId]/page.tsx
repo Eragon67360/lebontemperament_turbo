@@ -21,14 +21,17 @@ export default async function WorkProgramPage({
   const supabase = await createClient();
   const { programId } = await params;
 
-  const [{ data: program }, { data: groups }] = await Promise.all([
-    supabase.from("programs").select("*").eq("id", programId).single(),
-    supabase.from("groups").select("*").order("order_index"),
-  ]);
+  const [{ data: program }, { data: groups, error: groupsError }] =
+    await Promise.all([
+      supabase.from("programs").select("*").eq("id", programId).single(),
+      supabase.from("groups").select("*").order("order_index"),
+    ]);
 
   // A missing program is a bad URL, not a rendering problem: let the app's
   // not-found page handle it instead of printing "Not found" inside the shell.
   if (!program) notFound();
+  // A failed groups query is neither: it must not read as "aucun groupe".
+  if (groupsError) throw groupsError;
 
   return (
     <PageShell
