@@ -157,7 +157,7 @@ export function EmptyState({
           <Icon className="text-muted-foreground h-7 w-7" aria-hidden />
         </div>
       )}
-      <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+      <h2 className="text-base font-semibold text-gray-900">{title}</h2>
       {description && (
         <p className="text-muted-foreground mt-1 max-w-sm text-sm">
           {description}
@@ -191,12 +191,12 @@ export function ErrorState({
       <div className="bg-destructive/10 mb-4 rounded-full p-3">
         <AlertTriangle className="text-destructive h-7 w-7" aria-hidden />
       </div>
-      <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+      <h2 className="text-base font-semibold text-gray-900">{title}</h2>
       <p className="text-muted-foreground mt-1 max-w-sm text-sm">
         {description}
       </p>
       {onRetry && (
-        <Button variant="outline" className="mt-6" onClick={onRetry}>
+        <Button variant="outline" className="mt-6 min-h-11" onClick={onRetry}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Réessayer
         </Button>

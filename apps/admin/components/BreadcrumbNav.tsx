@@ -31,7 +31,10 @@ export function BreadcrumbNav({ className }: { className?: string }) {
   // already on should read the same as its nav entry.
   const sections = useMemo(() => buildNavSections({ isSuperAdmin: true }), []);
 
-  const segments = pathname.split("/").filter(Boolean).slice(1);
+  const segments = useMemo(
+    () => pathname.split("/").filter(Boolean).slice(1),
+    [pathname],
+  );
   // /dashboard/members/travail/<programId>/<groupSlug>
   const programId =
     segments[0] === "members" && segments[1] === "travail"
@@ -56,7 +59,9 @@ export function BreadcrumbNav({ className }: { className?: string }) {
           (segment === programId
             ? (programName ?? "Programme…")
             : humanize(segment)),
-        href: isLast || !navLabel ? undefined : href,
+        // Every surviving intermediate crumb has a page behind it, including the
+        // program id, so only the page you are on is a non-link.
+        href: isLast ? undefined : href,
       });
     });
 
@@ -65,28 +70,47 @@ export function BreadcrumbNav({ className }: { className?: string }) {
 
   if (crumbs.length === 0) return null;
 
+  const trail: Crumb[] = [
+    { label: "Tableau de bord", href: DASHBOARD_ROOT },
+    ...crumbs,
+  ];
+
   return (
     <Breadcrumb className={cn("min-w-0", className)}>
       <BreadcrumbList className="flex-nowrap text-xs sm:text-sm">
-        <BreadcrumbItem>
-          <BreadcrumbLink href={DASHBOARD_ROOT}>Tableau de bord</BreadcrumbLink>
-        </BreadcrumbItem>
-        {crumbs.map((crumb, index) => (
-          <Fragment key={`${crumb.label}-${index}`}>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              {crumb.href ? (
-                <BreadcrumbLink href={crumb.href} className="truncate">
-                  {crumb.label}
-                </BreadcrumbLink>
-              ) : (
-                <BreadcrumbPage className="truncate">
-                  {crumb.label}
-                </BreadcrumbPage>
+        {trail.map((crumb, index) => {
+          // A phone fits about two crumbs before every label truncates to
+          // nothing, so keep the page and the way back to its parent.
+          const hiddenOnMobile = index < trail.length - 2;
+
+          return (
+            <Fragment key={`${crumb.label}-${index}`}>
+              {index > 0 && (
+                // One separator less than crumbs: the first visible crumb must
+                // not be preceded by a dangling chevron on either breakpoint.
+                <BreadcrumbSeparator
+                  className={cn(index < trail.length - 1 && "hidden sm:block")}
+                />
               )}
-            </BreadcrumbItem>
-          </Fragment>
-        ))}
+              <BreadcrumbItem
+                className={cn("min-w-0", hiddenOnMobile && "hidden sm:flex")}
+              >
+                {crumb.href ? (
+                  <BreadcrumbLink
+                    href={crumb.href}
+                    className="truncate whitespace-nowrap"
+                  >
+                    {crumb.label}
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage className="truncate whitespace-nowrap">
+                    {crumb.label}
+                  </BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          );
+        })}
       </BreadcrumbList>
     </Breadcrumb>
   );

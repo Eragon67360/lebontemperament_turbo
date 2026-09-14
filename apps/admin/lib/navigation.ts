@@ -16,7 +16,6 @@ import {
   Map,
   MessageCircle,
   MessageSquare,
-  Music,
   PartyPopper,
   Sparkles,
   Users,
@@ -81,11 +80,6 @@ export function buildNavSections({
       label: "Site public",
       items: [
         {
-          href: RouteNames.DASHBOARD.PUBLIC.CONCERTS,
-          label: "Concerts & projets",
-          icon: Music,
-        },
-        {
           href: RouteNames.DASHBOARD.PUBLIC.PROCHAINS_CONCERTS,
           label: "Prochains concerts",
           icon: Calendar,
@@ -96,13 +90,8 @@ export function buildNavSections({
           icon: Sparkles,
         },
         {
-          href: RouteNames.DASHBOARD.PUBLIC.GALLERY.ROOT,
-          label: "Galerie",
-          icon: ImageIcon,
-        },
-        {
           href: RouteNames.DASHBOARD.PUBLIC.GALLERY.VIDEOS,
-          label: "Vidéos",
+          label: "Galerie vidéos",
           icon: Video,
         },
       ],

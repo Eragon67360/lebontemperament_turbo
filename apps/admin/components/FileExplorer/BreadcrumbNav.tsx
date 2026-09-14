@@ -13,18 +13,33 @@ export function BreadcrumbNav({
   onNavigate,
 }: BreadcrumbNavProps) {
   return (
-    <div className="flex items-center gap-1">
-      <Button variant="ghost" size="sm" onClick={() => onNavigate(null)}>
-        <Home className="h-4 w-4" />
+    <nav
+      aria-label="Fil d'Ariane des dossiers"
+      className="flex min-w-0 items-center gap-1"
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onNavigate(null)}
+        className="size-11 shrink-0"
+      >
+        <Home className="h-4 w-4" aria-hidden />
+        <span className="sr-only">Revenir à la racine</span>
       </Button>
       {currentFolder && (
         <>
-          <ChevronRight className="text-muted-foreground h-4 w-4" />
-          <Button variant="ghost" size="sm">
+          <ChevronRight
+            className="text-muted-foreground h-4 w-4 shrink-0"
+            aria-hidden
+          />
+          <span
+            aria-current="page"
+            className="min-w-0 truncate px-2 text-sm font-medium"
+          >
             {currentFolder.name}
-          </Button>
+          </span>
         </>
       )}
-    </div>
+    </nav>
   );
 }

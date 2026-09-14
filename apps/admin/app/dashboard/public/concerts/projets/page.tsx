@@ -15,13 +15,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
 import {
   closestCenter,
   DndContext,
@@ -57,49 +55,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-// --- Utility Components ---
-
-const LoadingSkeleton = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div
-        key={i}
-        className="bg-muted/40 h-[280px] w-full animate-pulse rounded-2xl border"
-      />
-    ))}
-  </div>
-);
-
-const EmptyState = ({
-  onCreate,
-  onMigrate,
-}: {
-  onCreate: () => void;
-  onMigrate: () => void;
-}) => (
-  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
-    <div className="bg-primary/5 ring-primary/5 flex h-20 w-20 items-center justify-center rounded-full ring-8">
-      <FolderOpen className="text-primary/40 h-10 w-10" />
-    </div>
-    <div className="space-y-2">
-      <h2 className="text-xl font-semibold tracking-tight">Aucun projet</h2>
-      <p className="text-muted-foreground max-w-sm text-sm">
-        Votre portfolio est vide. Créez votre premier projet ou importez vos
-        données existantes.
-      </p>
-    </div>
-    <div className="flex flex-col gap-3 sm:flex-row">
-      <Button variant="outline" onClick={onMigrate} className="gap-2">
-        <Database className="h-4 w-4" />
-        Migrer JSON
-      </Button>
-      <Button onClick={onCreate} className="gap-2">
-        <Plus className="h-4 w-4" />
-        Nouveau projet
-      </Button>
-    </div>
-  </div>
-);
+const MIGRATE_HREF = "/dashboard/public/concerts/projets/migrate";
 
 // --- Sortable Item Wrapper ---
 
@@ -155,14 +111,18 @@ const ProjectCard = ({
   onDelete: (id: string) => void;
 }) => {
   const dateObj = project.date ? new Date(project.date) : null;
+  const imageCount = [project.banniere, project.image2, project.image3].filter(
+    Boolean,
+  ).length;
+  const textCount = [project.text1, project.text2].filter(Boolean).length;
 
   return (
-    <Card className="group bg-card text-card-foreground hover:border-primary/50 relative flex h-full flex-col overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:scale-[1.01] hover:shadow-lg">
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-start gap-4">
+    <Card className="bg-card text-card-foreground hover:border-primary/50 relative flex h-full flex-col overflow-hidden rounded-2xl border shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md motion-reduce:transition-none">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <div className="flex items-start gap-3 sm:gap-4">
           {/* Date/Icon Tile */}
           {dateObj ? (
-            <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-300">
+            <div className="bg-primary/10 text-primary flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm">
               <span className="text-xs font-bold tracking-wider uppercase">
                 {format(dateObj, "MMM", { locale: fr })}
               </span>
@@ -171,27 +131,31 @@ const ProjectCard = ({
               </span>
             </div>
           ) : (
-            <div className="bg-muted text-muted-foreground flex h-14 w-14 items-center justify-center rounded-xl">
-              <FolderOpen className="h-6 w-6" />
+            <div className="bg-muted text-muted-foreground flex h-14 w-14 shrink-0 items-center justify-center rounded-xl">
+              <FolderOpen className="h-6 w-6" aria-hidden />
+              <span className="sr-only">Sans date</span>
             </div>
           )}
 
-          <div className="flex-1 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="line-clamp-1 text-lg leading-tight font-bold tracking-tight">
+              <h3 className="line-clamp-2 min-w-0 text-base leading-tight font-bold tracking-tight sm:text-lg">
                 {project.name}
               </h3>
               {/* Drag Handle */}
               <button
+                type="button"
                 {...dragHandleProps}
-                className="text-muted-foreground/30 hover:text-foreground cursor-grab transition-colors active:cursor-grabbing"
-                title="Déplacer"
+                className="text-muted-foreground hover:text-foreground flex size-11 shrink-0 cursor-grab items-center justify-center transition-colors duration-150 ease-out active:cursor-grabbing motion-reduce:transition-none"
               >
-                <GripVertical className="h-5 w-5" />
+                <GripVertical className="h-5 w-5" aria-hidden />
+                <span className="sr-only">
+                  Déplacer « {project.name} » dans la liste
+                </span>
               </button>
             </div>
             {project.sub_name && (
-              <p className="text-muted-foreground text-sm font-medium">
+              <p className="text-muted-foreground truncate text-sm font-medium">
                 {project.sub_name}
               </p>
             )}
@@ -210,87 +174,67 @@ const ProjectCard = ({
               {project.explanation}
             </p>
           ) : (
-            <p className="text-muted-foreground/40 text-sm italic">
-              Aucune description...
+            <p className="text-muted-foreground/60 text-sm italic">
+              Aucune description
             </p>
           )}
         </div>
 
         {/* Assets Indicators */}
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-dashed pt-3">
-          {(project.banniere || project.image2 || project.image3) && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="bg-secondary/50 text-secondary-foreground flex items-center gap-1 rounded-md px-2 py-1 text-xs">
-                    <ImageIcon className="h-3 w-3" />
-                    <span>
-                      {
-                        [
-                          project.banniere,
-                          project.image2,
-                          project.image3,
-                        ].filter(Boolean).length
-                      }
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>Images associées</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
-          {(project.text1 || project.text2) && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="bg-secondary/50 text-secondary-foreground flex items-center gap-1 rounded-md px-2 py-1 text-xs">
-                    <FileText className="h-3 w-3" />
-                    <span>
-                      {[project.text1, project.text2].filter(Boolean).length}
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>Blocs de texte</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
+        {(imageCount > 0 || textCount > 0) && (
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-dashed pt-3">
+            {imageCount > 0 && (
+              <span className="bg-secondary/50 text-secondary-foreground flex items-center gap-1 rounded-md px-2 py-1 text-xs">
+                <ImageIcon className="h-3 w-3" aria-hidden />
+                {imageCount} image{imageCount > 1 ? "s" : ""}
+              </span>
+            )}
+            {textCount > 0 && (
+              <span className="bg-secondary/50 text-secondary-foreground flex items-center gap-1 rounded-md px-2 py-1 text-xs">
+                <FileText className="h-3 w-3" aria-hidden />
+                {textCount} bloc{textCount > 1 ? "s" : ""} de texte
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Footer Actions */}
-      <div className="bg-muted/20 flex items-center justify-between border-t px-4 py-3">
+      <div className="bg-muted/20 flex items-center justify-between gap-2 border-t px-2 py-2 sm:px-4">
         <Button
           variant="ghost"
-          size="sm"
-          className="text-primary hover:bg-primary/10 hover:text-primary h-8 gap-1 text-xs font-medium"
+          className="text-primary hover:bg-primary/10 hover:text-primary min-h-11 min-w-0 gap-1 text-xs font-medium"
           asChild
         >
           <Link
             href={`/dashboard/public/concerts/projets/preview/${project.slug}`}
             target="_blank"
+            rel="noopener noreferrer"
           >
-            <ExternalLink className="h-3 w-3" />
-            Prévisualiser
+            <ExternalLink className="h-3 w-3" aria-hidden />
+            <span className="truncate">Prévisualiser</span>
+            <span className="sr-only">(nouvel onglet)</span>
           </Link>
         </Button>
 
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            className="hover:bg-primary/10 hover:text-primary size-11"
             onClick={() => onEdit(project)}
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Modifier « {project.name} »</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-11"
             onClick={() => onDelete(project.id)}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Supprimer « {project.name} »</span>
           </Button>
         </div>
       </div>
@@ -325,6 +269,8 @@ export default function ProjectsPage() {
   }, []);
 
   const fetchProjects = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/projects");
       if (!response.ok) throw new Error("Impossible de récupérer les projets");
@@ -332,7 +278,6 @@ export default function ProjectsPage() {
       setProjects(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
-      toast.error("Échec de la récupération des projets");
     } finally {
       setLoading(false);
     }
@@ -437,77 +382,89 @@ export default function ProjectsPage() {
 
   return (
     <PageShell
-      fullHeight
       theme="public"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
       title="Projets"
       description="Gérez vos projets artistiques et concerts passés. Créez, modifiez et organisez vos contenus."
       headerAction={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button
             variant="outline"
-            size="sm"
             asChild
-            className="hidden sm:flex"
+            className="min-h-11 w-full sm:w-auto"
           >
-            <Link href="/dashboard/public/concerts/projets/migrate">
-              <Database className="mr-2 h-4 w-4" />
+            <Link href={MIGRATE_HREF}>
+              <Database className="h-4 w-4" aria-hidden />
               Migrer JSON
             </Link>
           </Button>
-          <Button
-            onClick={handleCreate}
-            className="shadow-md transition-all hover:shadow-lg"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Nouveau Projet</span>
-            <span className="sm:hidden">Ajouter</span>
+          <Button onClick={handleCreate} className="min-h-11 w-full sm:w-auto">
+            <Plus className="h-4 w-4" aria-hidden />
+            Nouveau projet
           </Button>
         </div>
       }
     >
-      <ScrollArea className="h-full w-full pr-4">
-        {loading ? (
-          <LoadingSkeleton />
-        ) : error ? (
-          <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-4">
-            <p className="text-destructive font-medium">{error}</p>
-            <Button onClick={fetchProjects} variant="outline">
-              Réessayer
-            </Button>
-          </div>
-        ) : projects.length === 0 ? (
+      <DataState
+        isLoading={loading}
+        isError={!!error}
+        isEmpty={projects.length === 0}
+        onRetry={fetchProjects}
+        errorDescription={error ?? "Les projets n'ont pas pu être chargés."}
+        skeleton={
+          <CardGridSkeleton cards={6} label="Chargement des projets…" />
+        }
+        empty={
           <EmptyState
-            onCreate={handleCreate}
-            onMigrate={() =>
-              (window.location.href =
-                "/dashboard/public/concerts/projets/migrate")
+            icon={FolderOpen}
+            title="Aucun projet"
+            description="Votre portfolio est vide. Créez votre premier projet ou importez vos données existantes."
+            action={
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  asChild
+                  className="min-h-11 w-full sm:w-auto"
+                >
+                  <Link href={MIGRATE_HREF}>
+                    <Database className="h-4 w-4" aria-hidden />
+                    Migrer JSON
+                  </Link>
+                </Button>
+                <Button
+                  onClick={handleCreate}
+                  className="min-h-11 w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4" aria-hidden />
+                  Nouveau projet
+                </Button>
+              </div>
             }
           />
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+        }
+      >
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={projects.map((p) => p.id)}
+            strategy={rectSortingStrategy}
           >
-            <SortableContext
-              items={projects.map((p) => p.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="grid grid-cols-1 gap-4 px-1 pt-2 pb-12 md:grid-cols-2 xl:grid-cols-3">
-                {projects.map((project) => (
-                  <SortableProjectItem
-                    key={project.id}
-                    project={project}
-                    onEdit={handleEdit}
-                    onDelete={handleDeleteClick}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )}
-      </ScrollArea>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {projects.map((project) => (
+                <SortableProjectItem
+                  key={project.id}
+                  project={project}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </DataState>
 
       <ProjectModal
         project={selectedProject}
@@ -526,10 +483,10 @@ export default function ProjectsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90 text-white"
+              className="bg-destructive hover:bg-destructive/90 min-h-11 text-white"
             >
               Confirmer la suppression
             </AlertDialogAction>

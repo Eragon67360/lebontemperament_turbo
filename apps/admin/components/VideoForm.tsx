@@ -84,33 +84,43 @@ export function VideoForm({ onSubmit, initialData }: VideoFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Titre</FormLabel>
-              <FormControl>
-                <Input placeholder="Titre de l'œuvre" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Titre</FormLabel>
+                <FormControl>
+                  <Input
+                    className="min-h-11"
+                    placeholder="Titre de l'œuvre"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="composer"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Compositeur</FormLabel>
-              <FormControl>
-                <Input placeholder="Nom du compositeur" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="composer"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Compositeur</FormLabel>
+                <FormControl>
+                  <Input
+                    className="min-h-11"
+                    placeholder="Nom du compositeur"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

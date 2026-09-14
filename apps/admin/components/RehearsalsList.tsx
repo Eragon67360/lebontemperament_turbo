@@ -15,6 +15,11 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import {
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -28,7 +33,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -104,46 +108,6 @@ const getBadgeStyle = (type: string) => {
 
 // --- Components ---
 
-const LoadingSkeleton = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div
-        key={i}
-        className="bg-muted/40 h-[200px] w-full animate-pulse rounded-2xl border"
-      />
-    ))}
-  </div>
-);
-
-const EmptyState = ({
-  filter,
-  onClear,
-}: {
-  filter: string;
-  onClear: () => void;
-}) => (
-  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
-    <div className="bg-muted ring-muted/50 flex h-20 w-20 items-center justify-center rounded-full ring-8">
-      <Music className="text-muted-foreground h-10 w-10" />
-    </div>
-    <div className="space-y-2">
-      <h3 className="text-xl font-semibold tracking-tight">
-        Aucune répétition trouvée
-      </h3>
-      <p className="text-muted-foreground max-w-sm text-sm">
-        {filter === "all"
-          ? "Votre calendrier de répétitions est vide pour le moment."
-          : `Aucune répétition prévue pour le groupe "${filter}".`}
-      </p>
-    </div>
-    {filter !== "all" && (
-      <Button variant="outline" onClick={onClear}>
-        Voir toutes les répétitions
-      </Button>
-    )}
-  </div>
-);
-
 interface RehearsalsListProps {
   isAddDialogOpen?: boolean;
   onAddDialogChange?: (open: boolean) => void;
@@ -154,7 +118,12 @@ export default function RehearsalsList({
   onAddDialogChange,
 }: RehearsalsListProps = {}) {
   // Queries
-  const { data: rehearsals = [], isLoading: loading } = useRehearsals();
+  const {
+    data: rehearsals = [],
+    isLoading: loading,
+    isError: failed,
+    refetch: refetchRehearsals,
+  } = useRehearsals();
 
   // Mutations
   const createRehearsal = useCreateRehearsal();
@@ -266,57 +235,80 @@ export default function RehearsalsList({
   }, [rehearsals, selectedGroupFilter]);
 
   return (
-    <div className="flex h-full flex-col space-y-4">
+    <div className="space-y-4">
       {/* Filter Bar */}
-      <div className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-          <Button
-            variant={selectedGroupFilter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedGroupFilter("all")}
-            className="h-8 rounded-full"
+      <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <Select
+          value={selectedGroupFilter}
+          onValueChange={(value) =>
+            setSelectedGroupFilter(value as GroupType | "all")
+          }
+        >
+          <SelectTrigger
+            className="min-h-11 w-full sm:w-64"
+            aria-label="Filtrer par groupe"
           >
-            Tous
-          </Button>
-          <div className="bg-border h-4 w-px" />
-          {GROUP_TYPES.map((type) => (
-            <Button
-              key={type}
-              variant={selectedGroupFilter === type ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedGroupFilter(type)}
-              className="h-8 rounded-full whitespace-nowrap"
-            >
-              {type}
-            </Button>
-          ))}
-        </div>
-        <div className="text-muted-foreground text-xs">
-          {filteredRehearsals.length} à venir
-        </div>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les groupes</SelectItem>
+            {GROUP_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {!loading && !failed && (
+          <p className="text-muted-foreground text-xs">
+            {filteredRehearsals.length} à venir
+          </p>
+        )}
       </div>
 
-      <ScrollArea className="h-full w-full pr-4">
-        {loading ? (
-          <LoadingSkeleton />
-        ) : filteredRehearsals.length === 0 ? (
+      <DataState
+        isLoading={loading}
+        isError={failed}
+        isEmpty={filteredRehearsals.length === 0}
+        onRetry={() => refetchRehearsals()}
+        errorDescription="Les répétitions n'ont pas pu être chargées."
+        skeleton={
+          <CardGridSkeleton cards={6} label="Chargement des répétitions…" />
+        }
+        empty={
           <EmptyState
-            filter={selectedGroupFilter}
-            onClear={() => setSelectedGroupFilter("all")}
+            icon={Music}
+            title="Aucune répétition"
+            description={
+              selectedGroupFilter === "all"
+                ? "Votre calendrier de répétitions est vide pour le moment."
+                : `Aucune répétition prévue pour le groupe « ${selectedGroupFilter} ».`
+            }
+            action={
+              selectedGroupFilter !== "all" ? (
+                <Button
+                  variant="outline"
+                  className="min-h-11"
+                  onClick={() => setSelectedGroupFilter("all")}
+                >
+                  Voir toutes les répétitions
+                </Button>
+              ) : undefined
+            }
           />
-        ) : (
-          <div className="grid grid-cols-1 gap-4 px-1 pt-2 pb-12 md:grid-cols-2 xl:grid-cols-3">
-            {filteredRehearsals.map((rehearsal) => (
-              <RehearsalCard
-                key={rehearsal.id}
-                rehearsal={rehearsal}
-                onEdit={setEditingRehearsal}
-                onDelete={setRehearsalToDelete}
-              />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+        }
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filteredRehearsals.map((rehearsal) => (
+            <RehearsalCard
+              key={rehearsal.id}
+              rehearsal={rehearsal}
+              onEdit={setEditingRehearsal}
+              onDelete={setRehearsalToDelete}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Dialogs */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -364,10 +356,10 @@ export default function RehearsalsList({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-h-11"
             >
               Supprimer
             </AlertDialogAction>
@@ -395,12 +387,12 @@ function RehearsalCard({
   const dayName = format(date, "EEEE", { locale: fr });
 
   return (
-    <Card className="group bg-card text-card-foreground hover:border-primary/50 relative flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:scale-[1.01] hover:shadow-lg">
+    <Card className="group bg-card text-card-foreground hover:border-primary/50 relative flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md motion-reduce:transition-none">
       <div className="flex h-full flex-col p-5">
-        <div className="mb-4 flex items-start justify-between">
-          <div className="flex gap-4">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 gap-4">
             {/* Date Tile */}
-            <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-300">
+            <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-150 ease-out motion-reduce:transition-none">
               <span className="text-xs font-bold tracking-wider uppercase">
                 {monthName}
               </span>
@@ -408,16 +400,16 @@ function RehearsalCard({
                 {dayNumber}
               </span>
             </div>
-            <div>
-              <h3 className="line-clamp-1 text-lg leading-tight font-bold">
+            <div className="min-w-0">
+              <h2 className="line-clamp-1 text-lg leading-tight font-bold">
                 {rehearsal.name}
-              </h3>
-              <div className="text-muted-foreground text-sm capitalize">
+              </h2>
+              <div className="text-muted-foreground truncate text-sm capitalize">
                 {dayName}
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex shrink-0 flex-col items-end gap-2">
             <Badge
               variant="outline"
               className={cn(
@@ -426,9 +418,9 @@ function RehearsalCard({
               )}
             >
               {rehearsal.group_type === "Tous" ? (
-                <Users className="mr-1 h-3 w-3" />
+                <Users className="mr-1 h-3 w-3" aria-hidden />
               ) : (
-                <Mic2 className="mr-1 h-3 w-3" />
+                <Mic2 className="mr-1 h-3 w-3" aria-hidden />
               )}
               {rehearsal.group_type}
             </Badge>
@@ -454,35 +446,38 @@ function RehearsalCard({
         </div>
 
         <div className="text-muted-foreground space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Clock className="text-primary/60 h-4 w-4" />
-            <span>
+          <div className="flex min-w-0 items-center gap-2">
+            <Clock className="text-primary/60 h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">
               {formatTime(rehearsal.start_time)} -{" "}
               {formatTime(rehearsal.end_time)}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="text-primary/60 h-4 w-4" />
+          <div className="flex min-w-0 items-center gap-2">
+            <MapPin className="text-primary/60 h-4 w-4 shrink-0" aria-hidden />
             <span className="truncate">{rehearsal.place}</span>
           </div>
         </div>
 
-        <div className="mt-auto flex items-center justify-end gap-2 pt-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        {/* Always visible: hover-only actions are unreachable on touch. */}
+        <div className="mt-auto flex items-center justify-end gap-2 pt-4">
           <Button
             variant="ghost"
             size="icon"
-            className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            className="hover:bg-primary/10 hover:text-primary size-11"
             onClick={() => onEdit(rehearsal)}
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Modifier « {rehearsal.name} »</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="hover:bg-destructive/10 hover:text-destructive h-8 w-8"
+            className="hover:bg-destructive/10 hover:text-destructive size-11"
             onClick={() => onDelete(rehearsal.id)}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Supprimer « {rehearsal.name} »</span>
           </Button>
         </div>
       </div>
@@ -529,11 +524,12 @@ function RehearsalForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="name">Intitulé</Label>
           <Input
             id="name"
+            className="min-h-11"
             placeholder="Ex: Répétition Générale"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -549,7 +545,7 @@ function RehearsalForm({
               setFormData({ ...formData, group_type: val })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger id="group" className="min-h-11">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -563,17 +559,19 @@ function RehearsalForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Date</Label>
+          <Label htmlFor="rehearsal-date">Date</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                id="rehearsal-date"
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "min-h-11 w-full justify-start text-left font-normal",
                   !formData.date && "text-muted-foreground",
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="h-4 w-4" aria-hidden />
                 {formData.date ? (
                   format(formData.date, "dd MMMM yyyy", { locale: fr })
                 ) : (
@@ -597,6 +595,7 @@ function RehearsalForm({
           <Label htmlFor="place">Lieu</Label>
           <Input
             id="place"
+            className="min-h-11"
             value={formData.place}
             onChange={(e) =>
               setFormData({ ...formData, place: e.target.value })
@@ -610,6 +609,7 @@ function RehearsalForm({
           <Input
             id="start"
             type="time"
+            className="min-h-11"
             value={formData.start_time}
             onChange={(e) =>
               setFormData({ ...formData, start_time: e.target.value })
@@ -623,6 +623,7 @@ function RehearsalForm({
           <Input
             id="end"
             type="time"
+            className="min-h-11"
             value={formData.end_time}
             onChange={(e) =>
               setFormData({ ...formData, end_time: e.target.value })
@@ -636,7 +637,7 @@ function RehearsalForm({
         <div className="bg-muted/40 rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Repeat className="text-muted-foreground h-4 w-4" />
+              <Repeat className="text-muted-foreground h-4 w-4" aria-hidden />
               <Label htmlFor="repeat-switch" className="cursor-pointer">
                 Répétition périodique
               </Label>
@@ -658,19 +659,21 @@ function RehearsalForm({
           </div>
 
           {formData.repeat?.enabled && (
-            <div className="animate-in fade-in slide-in-from-top-2 mt-4 space-y-4">
+            <div className="animate-in fade-in slide-in-from-top-2 mt-4 space-y-4 motion-reduce:animate-none">
               <Separator />
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Fréquence</Label>
+                  <Label htmlFor="repeat-interval">Fréquence</Label>
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground text-sm">
                       Toutes les
                     </span>
                     <Input
+                      id="repeat-interval"
                       type="number"
                       min="1"
-                      className="w-16 text-center"
+                      className="min-h-11 w-16 text-center"
+                      aria-label="Nombre de semaines entre deux répétitions"
                       value={formData.repeat.interval}
                       onChange={(e) =>
                         setFormData({
@@ -689,17 +692,19 @@ function RehearsalForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Jusqu'au</Label>
+                  <Label htmlFor="repeat-end-date">Jusqu&apos;au</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
+                        id="repeat-end-date"
+                        type="button"
                         variant="outline"
                         className={cn(
-                          "bg-background w-full justify-start text-left font-normal",
+                          "bg-background min-h-11 w-full justify-start text-left font-normal",
                           !formData.repeat.endDate && "text-muted-foreground",
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <CalendarIcon className="h-4 w-4" aria-hidden />
                         {formData.repeat.endDate ? (
                           format(formData.repeat.endDate, "dd MMM yyyy", {
                             locale: fr,
@@ -733,7 +738,7 @@ function RehearsalForm({
         </div>
       )}
 
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="min-h-11 w-full">
         {initialData ? "Enregistrer les modifications" : "Créer la répétition"}
       </Button>
     </form>

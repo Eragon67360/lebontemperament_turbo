@@ -1,66 +1,69 @@
-// app/dashboard/travail/[programId]/page.tsx
+import { PageShell } from "@/components/layouts/PageShell";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/data-state";
+import type { WorkGroup } from "@/types/work";
+import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/server";
+import { Users } from "lucide-react";
 import Link from "next/link";
-// import * as Icons from "lucide-react"
-
-interface WorkProgramPageProps {
-  programId: string;
-}
+import { notFound } from "next/navigation";
 
 export default async function WorkProgramPage({
   params,
 }: {
-  params: Promise<WorkProgramPageProps>;
+  params: Promise<{ programId: string }>;
 }) {
   const supabase = await createClient();
   const { programId } = await params;
-  // Get program details
-  const { data: program } = await supabase
-    .from("programs")
-    .select("*")
-    .eq("id", programId)
-    .single();
 
-  // Get all groups (choirs + orchestra)
-  const { data: groups } = await supabase
-    .from("groups")
-    .select("*")
-    .order("order_index");
+  const [{ data: program }, { data: groups }] = await Promise.all([
+    supabase.from("programs").select("*").eq("id", programId).single(),
+    supabase.from("groups").select("*").order("order_index"),
+  ]);
 
-  if (!program || !groups) {
-    return <div>Not found</div>;
-  }
+  // A missing program is a bad URL, not a rendering problem: let the app's
+  // not-found page handle it instead of printing "Not found" inside the shell.
+  if (!program) notFound();
 
   return (
-    <div className="container mx-auto">
-      <h1 className="mb-8 text-2xl font-bold">{program.name}</h1>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {groups.map((group) => {
-          // const IconComponent = Icons[group.icon as keyof typeof Icons]
-
-          return (
+    <PageShell
+      theme="members"
+      title={program.name}
+      description="Choisissez un groupe pour accéder à ses documents."
+    >
+      {groups?.length ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {groups.map((group: WorkGroup) => (
             <Link
               key={group.id}
-              href={`/dashboard/travail/${programId}/${group.slug}`}
+              // The /members segment was missing here, so every group card 404'd.
+              href={`${RouteNames.DASHBOARD.MEMBERS.TRAVAIL_ROOT}/${programId}/${group.slug}`}
+              className="group focus-visible:ring-ring rounded-2xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
-              <Card className="cursor-pointer transition-shadow hover:shadow-lg">
+              <Card className="h-full transition-shadow duration-150 ease-out group-hover:shadow-md motion-reduce:transition-none">
                 <CardHeader>
-                  {/* <IconComponent className="w-8 h-8 mb-2 text-primary" /> */}
-                  <CardTitle>{group.name}</CardTitle>
-                  <CardDescription>{group.description}</CardDescription>
+                  <Users className="text-primary mb-2 h-7 w-7" aria-hidden />
+                  <CardTitle className="text-base">{group.name}</CardTitle>
+                  {group.description && (
+                    <CardDescription>{group.description}</CardDescription>
+                  )}
                 </CardHeader>
               </Card>
             </Link>
-          );
-        })}
-      </div>
-    </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={Users}
+          title="Aucun groupe"
+          description="Aucun groupe n'est configuré pour le moment."
+        />
+      )}
+    </PageShell>
   );
 }
