@@ -17,22 +17,20 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   return (
     <>
-      <div className="from-primary/10 to-primary/50 flex h-screen gap-4 overflow-hidden bg-gradient-to-br p-2 md:p-4">
-        {/* Sidebar for desktop */}
-        <div className="hidden md:block md:w-64 md:flex-shrink-0">
-          <div className="h-full">
-            <Sidebar
-              setMessagesDialogOpen={setMessagesDialogOpen}
-              setBugReportDialogOpen={setBugReportDialogOpen}
-            />
-          </div>
-        </div>
-
-        {/* Mobile Sidebar */}
+      <div className="from-primary/10 to-primary/50 flex h-screen flex-col gap-2 overflow-hidden bg-gradient-to-br p-2 md:flex-row md:gap-4 md:p-4">
+        {/* Mobile top bar (owns the nav sheet trigger) */}
         <MobileSidebar
           setMessagesDialogOpen={setMessagesDialogOpen}
           setBugReportDialogOpen={setBugReportDialogOpen}
         />
+
+        {/* Sidebar for desktop */}
+        <div className="hidden md:block md:w-64 md:shrink-0">
+          <Sidebar
+            setMessagesDialogOpen={setMessagesDialogOpen}
+            setBugReportDialogOpen={setBugReportDialogOpen}
+          />
+        </div>
 
         {/* Main Content */}
         <DashboardMainContent>{children}</DashboardMainContent>
