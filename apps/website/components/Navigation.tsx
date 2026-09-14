@@ -1,6 +1,7 @@
 // Navigation.tsx
 "use client";
 import { LinkButton } from "@/components/LinkButton";
+import { useDriveRootUrl } from "@/hooks/useDriveRootUrl";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { RoundedSize } from "@/utils/types";
@@ -34,6 +35,7 @@ const Navigation = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [hasScrolled, setHasScrolled] = useState(false);
+  const driveUrl = useDriveRootUrl();
   const isMembresSection = pathname.startsWith("/membres");
   const isSpecialPath = pathname === "/" || pathname.startsWith("/concerts/");
   const supabase = createClient();
@@ -189,31 +191,31 @@ const Navigation = () => {
 
             {user ? (
               <div className="flex items-center gap-4">
-                <Tooltip>
-                  <Tooltip.Trigger>
-                    <Link
-                      href={
-                        "https://drive.google.com/drive/folders/1oQGEse5USfg9KhM7dZv7_w6olmk_slaU"
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Ouvrir le drive Google dans un nouvel onglet"
-                      className="bg-primary/20 hover:bg-primary/40 dark:bg-primary/30 dark:hover:bg-primary/50 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
-                    >
-                      <CloudinaryImage
-                        src={"Site/membres/logos/drive"}
-                        alt="Icône Google Drive"
-                        width={16}
-                        height={16}
-                        rounded={RoundedSize.NONE}
-                        className="size-4"
-                      />
-                    </Link>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    <p>Accéder au drive Google</p>
-                  </Tooltip.Content>
-                </Tooltip>
+                {driveUrl && (
+                  <Tooltip>
+                    <Tooltip.Trigger>
+                      <Link
+                        href={driveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Ouvrir le drive Google dans un nouvel onglet"
+                        className="bg-primary/20 hover:bg-primary/40 dark:bg-primary/30 dark:hover:bg-primary/50 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
+                      >
+                        <CloudinaryImage
+                          src={"Site/membres/logos/drive"}
+                          alt="Icône Google Drive"
+                          width={16}
+                          height={16}
+                          rounded={RoundedSize.NONE}
+                          className="size-4"
+                        />
+                      </Link>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
+                      <p>Accéder au drive Google</p>
+                    </Tooltip.Content>
+                  </Tooltip>
+                )}
                 <Popover>
                   <Popover.Trigger
                     className="flex shrink-0 cursor-pointer items-center gap-1"

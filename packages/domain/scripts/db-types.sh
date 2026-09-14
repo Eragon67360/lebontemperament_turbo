@@ -15,5 +15,11 @@ if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
   export SUPABASE_ACCESS_TOKEN
 fi
 
-npx supabase gen types typescript --project-id fsklunxplbbtzgurwqmc > src/database.types.ts
+# Via a temp file: redirecting straight into database.types.ts truncated it
+# before the command ran, so a failed generation (expired token) destroyed the
+# committed types.
+TMP=$(mktemp)
+trap 'rm -f "$TMP"' EXIT
+npx supabase gen types typescript --project-id fsklunxplbbtzgurwqmc > "$TMP"
+mv "$TMP" src/database.types.ts
 npx prettier --write src/database.types.ts

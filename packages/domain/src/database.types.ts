@@ -872,6 +872,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      drive_folders: {
+        Row: {
+          created_at: string;
+          display_order: number;
+          folder_id: string;
+          id: string;
+          label: string;
+          slug: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          display_order?: number;
+          folder_id: string;
+          id?: string;
+          label: string;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          display_order?: number;
+          folder_id?: string;
+          id?: string;
+          label?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       events: {
         Row: {
           created_at: string | null;

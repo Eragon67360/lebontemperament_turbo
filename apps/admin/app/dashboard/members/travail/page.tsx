@@ -1,4 +1,5 @@
 import { PageShell } from "@/components/layouts/PageShell";
+import { DriveFoldersSection } from "@/components/travail/DriveFoldersSection";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -34,6 +35,7 @@ export default async function TravailPage() {
       theme="members"
       title="Espace de travail"
       description="Partitions et ressources pédagogiques, par programme."
+      contentClassName="space-y-8"
     >
       {programs?.length ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -68,6 +70,8 @@ export default async function TravailPage() {
           description="Les programmes de travail apparaîtront ici dès qu'un premier aura été créé."
         />
       )}
+
+      <DriveFoldersSection />
     </PageShell>
   );
 }
