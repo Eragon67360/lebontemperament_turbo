@@ -17,7 +17,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   return (
     <>
-      <div className="from-primary/10 to-primary/50 flex h-screen flex-col gap-2 overflow-hidden bg-gradient-to-br p-2 md:flex-row md:gap-4 md:p-4">
+      {/* h-dvh, not h-screen: 100vh ignores mobile browser chrome and cuts the
+          bottom of the shell off behind Safari's address bar. */}
+      <div className="from-primary/10 to-primary/50 flex h-dvh flex-col gap-2 overflow-hidden bg-gradient-to-br p-2 md:flex-row md:gap-4 md:p-4">
         {/* Mobile top bar (owns the nav sheet trigger) */}
         <MobileSidebar
           setMessagesDialogOpen={setMessagesDialogOpen}
