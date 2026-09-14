@@ -16,6 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import {
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -30,8 +35,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import type { CA } from "@repo/domain/types/ca";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -47,55 +52,21 @@ import { toast } from "sonner";
 
 import { useCAs, useCreateCA, useDeleteCA } from "@/hooks/useCAs";
 
-// --- Utility Components ---
-
-const LoadingSkeleton = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div
-        key={i}
-        className="bg-muted/40 h-[160px] w-full animate-pulse rounded-2xl border"
-      />
-    ))}
-  </div>
-);
-
-const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
-  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
-    <div className="bg-primary/5 ring-primary/5 flex h-20 w-20 items-center justify-center rounded-full ring-8">
-      <FileText className="text-primary/40 h-10 w-10" />
-    </div>
-    <div className="space-y-2">
-      <h2 className="text-xl font-semibold tracking-tight">
-        Aucun compte-rendu
-      </h2>
-      <p className="text-muted-foreground max-w-sm text-sm">
-        Archivez les décisions et les discussions de vos conseils
-        d'administration ici.
-      </p>
-    </div>
-    <Button onClick={onAdd} className="px-8">
-      <Plus className="mr-2 h-4 w-4" />
-      Ajouter un CA
-    </Button>
-  </div>
-);
-
 // --- Sub-Components ---
 
 const CACard = ({
   ca,
   onDelete,
 }: {
-  ca: any; // Using any here if type isn't strictly defined, ideally CA
+  ca: CA;
   onDelete: (id: string) => void;
 }) => {
   const dateObj = new Date(ca.date_from);
 
   return (
-    <Card className="group bg-card hover:border-primary/50 relative flex overflow-hidden rounded-2xl border transition-all duration-300 hover:scale-[1.01] hover:shadow-md">
+    <Card className="bg-card hover:border-primary/50 flex overflow-hidden rounded-2xl border transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md">
       {/* Date Tile */}
-      <div className="bg-muted/20 hidden min-w-[100px] flex-col items-center justify-center border-r px-5 py-4 text-center sm:flex">
+      <div className="bg-muted/20 hidden w-[100px] shrink-0 flex-col items-center justify-center border-r px-5 py-4 text-center sm:flex">
         <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
           {format(dateObj, "MMM", { locale: fr })}
         </span>
@@ -104,24 +75,27 @@ const CACard = ({
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <h3 className="line-clamp-1 text-lg font-bold tracking-tight">
+      <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <h2 className="line-clamp-2 text-base font-bold tracking-tight sm:text-lg">
               {ca.title}
-            </h3>
+            </h2>
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CalendarDays className="h-4 w-4" />
-              <span>{format(dateObj, "dd MMMM yyyy", { locale: fr })}</span>
+              <CalendarDays className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="truncate">
+                {format(dateObj, "dd MMMM yyyy", { locale: fr })}
+              </span>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-11 w-11 shrink-0"
             onClick={() => onDelete(ca.id)}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Supprimer « {ca.title} »</span>
           </Button>
         </div>
 
@@ -129,21 +103,20 @@ const CACard = ({
           {ca.file_url ? (
             <Button
               variant="outline"
-              size="sm"
-              className="bg-secondary/50 hover:bg-secondary w-full justify-start gap-2"
+              className="bg-secondary/50 hover:bg-secondary min-h-11 w-full justify-start gap-2"
               asChild
             >
               <a href={ca.file_url} target="_blank" rel="noopener noreferrer">
-                <FileText className="text-primary h-4 w-4" />
-                <span className="flex-1 truncate text-left">
+                <FileText className="text-primary h-4 w-4" aria-hidden />
+                <span className="min-w-0 flex-1 truncate text-left">
                   Voir le compte-rendu
                 </span>
-                <Download className="h-3 w-3 opacity-50" />
+                <Download className="h-3 w-3 opacity-50" aria-hidden />
               </a>
             </Button>
           ) : (
             <div className="text-muted-foreground flex items-center gap-2 rounded-md border border-dashed p-2 text-sm">
-              <FileText className="h-4 w-4 opacity-50" />
+              <FileText className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
               <span>Aucun fichier joint</span>
             </div>
           )}
@@ -156,7 +129,7 @@ const CACard = ({
 // --- Main Component ---
 
 export default function ConseilsAdministration() {
-  const { data: cas = [], isLoading: loading } = useCAs();
+  const { data: cas = [], isLoading, isError, refetch } = useCAs();
   const createCA = useCreateCA();
   const deleteCA = useDeleteCA();
 
@@ -251,9 +224,8 @@ export default function ConseilsAdministration() {
 
   return (
     <PageShell
-      fullHeight
       theme="admin"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
       title="Compte-rendus de CA"
       description="Gestion et archivage des documents du Conseil d'Administration."
       headerAction={
@@ -265,8 +237,8 @@ export default function ConseilsAdministration() {
           }}
         >
           <DialogTrigger asChild>
-            <Button className="shadow-md transition-all hover:shadow-lg">
-              <Plus className="mr-2 h-4 w-4" />
+            <Button className="min-h-11 w-full sm:w-auto">
+              <Plus className="h-4 w-4" aria-hidden />
               Ajouter un CA
             </Button>
           </DialogTrigger>
@@ -289,18 +261,19 @@ export default function ConseilsAdministration() {
               </div>
 
               <div className="space-y-2">
-                <Label>Date de la réunion</Label>
+                <Label htmlFor="ca-date">Date de la réunion</Label>
                 <Popover modal>
                   <PopoverTrigger asChild>
                     <Button
+                      id="ca-date"
                       type="button"
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "min-h-11 w-full justify-start text-left font-normal",
                         !dateFrom && "text-muted-foreground",
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="h-4 w-4" aria-hidden />
                       {dateFrom ? (
                         format(dateFrom, "PPP", { locale: fr })
                       ) : (
@@ -333,15 +306,20 @@ export default function ConseilsAdministration() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                 <Button
                   type="button"
                   variant="outline"
+                  className="min-h-11"
                   onClick={() => setOpen(false)}
                 >
                   Annuler
                 </Button>
-                <Button type="submit" disabled={isCreating}>
+                <Button
+                  type="submit"
+                  className="min-h-11"
+                  disabled={isCreating}
+                >
                   {isCreating ? "Enregistrement..." : "Ajouter le CA"}
                 </Button>
               </div>
@@ -350,19 +328,35 @@ export default function ConseilsAdministration() {
         </Dialog>
       }
     >
-      <ScrollArea className="h-full w-full pr-4">
-        {loading ? (
-          <LoadingSkeleton />
-        ) : sortedCAs.length === 0 ? (
-          <EmptyState onAdd={() => setOpen(true)} />
-        ) : (
-          <div className="grid grid-cols-1 gap-4 px-1 pt-2 pb-12 md:grid-cols-2 xl:grid-cols-3">
-            {sortedCAs.map((ca) => (
-              <CACard key={ca.id} ca={ca} onDelete={handleDeleteClick} />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={sortedCAs.length === 0}
+        onRetry={() => refetch()}
+        errorDescription="Les comptes-rendus n'ont pas pu être chargés."
+        skeleton={
+          <CardGridSkeleton cards={6} label="Chargement des comptes-rendus…" />
+        }
+        empty={
+          <EmptyState
+            icon={FileText}
+            title="Aucun compte-rendu"
+            description="Archivez les décisions et les discussions de vos conseils d'administration ici."
+            action={
+              <Button className="min-h-11" onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter un CA
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {sortedCAs.map((ca) => (
+            <CACard key={ca.id} ca={ca} onDelete={handleDeleteClick} />
+          ))}
+        </div>
+      </DataState>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -374,10 +368,10 @@ export default function ConseilsAdministration() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-h-11"
             >
               Confirmer la suppression
             </AlertDialogAction>

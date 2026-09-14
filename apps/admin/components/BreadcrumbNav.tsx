@@ -27,7 +27,9 @@ type Crumb = { label: string; href?: string };
  */
 export function BreadcrumbNav({ className }: { className?: string }) {
   const pathname = usePathname();
-  const sections = useMemo(() => buildNavSections(), []);
+  // Labels only, so include role-gated entries: the crumb for a page you are
+  // already on should read the same as its nav entry.
+  const sections = useMemo(() => buildNavSections({ isSuperAdmin: true }), []);
 
   const segments = pathname.split("/").filter(Boolean).slice(1);
   // /dashboard/members/travail/<programId>/<groupSlug>

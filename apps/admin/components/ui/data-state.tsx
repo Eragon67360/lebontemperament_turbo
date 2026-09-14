@@ -10,6 +10,42 @@ import type { ReactNode } from "react";
  * same whether it is users, concerts or archives.
  */
 
+/**
+ * Picks the right state for a query-backed region, so pages stop growing
+ * three-deep ternaries around every list.
+ */
+export function DataState({
+  isLoading,
+  isError,
+  isEmpty,
+  onRetry,
+  errorDescription,
+  skeleton,
+  empty,
+  children,
+}: {
+  isLoading?: boolean;
+  isError?: boolean;
+  isEmpty?: boolean;
+  onRetry?: () => void;
+  errorDescription?: string;
+  skeleton: ReactNode;
+  empty?: ReactNode;
+  children: ReactNode;
+}) {
+  if (isError)
+    return (
+      <ErrorState
+        description={errorDescription}
+        onRetry={onRetry}
+        className="py-8"
+      />
+    );
+  if (isLoading) return <>{skeleton}</>;
+  if (isEmpty) return <>{empty}</>;
+  return <>{children}</>;
+}
+
 /** Wraps a skeleton so assistive tech hears "loading" instead of nothing. */
 function LoadingRegion({
   label = "Chargement…",

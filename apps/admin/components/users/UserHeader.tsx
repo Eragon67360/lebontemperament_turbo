@@ -19,51 +19,50 @@ export function UserHeader({
 }: UserHeaderProps) {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
 
-  return (
-    <div className="mb-3 md:mb-4">
-      {/* Stats - Always visible on desktop, collapsible on mobile */}
-      <div>
-        {/* Desktop Stats - Always visible */}
-        <div className="hidden gap-2 md:flex">
-          <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800">
-            {pendingInvites} en attente
-          </span>
-          <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
-            {approvedInvites} acceptées
-          </span>
-        </div>
+  const totalInvites = pendingInvites + approvedInvites;
 
-        {/* Mobile Stats - Collapsible */}
-        <Collapsible
-          open={isStatsOpen}
-          onOpenChange={setIsStatsOpen}
-          className="md:hidden"
-        >
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-gray-600 hover:text-gray-900"
-            >
-              <span className="mr-1">
-                {pendingInvites + approvedInvites} invitation
-                {pendingInvites + approvedInvites !== 1 ? "s" : ""}
-              </span>
-              <ChevronDown
-                className={`h-3 w-3 transition-transform ${isStatsOpen ? "rotate-180" : ""}`}
-              />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2 flex gap-2">
-            <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800">
-              {pendingInvites} en attente
+  const badges = (
+    <>
+      <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800">
+        {pendingInvites} en attente
+      </span>
+      <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
+        {approvedInvites} acceptées
+      </span>
+    </>
+  );
+
+  return (
+    <div>
+      {/* Desktop Stats - Always visible */}
+      <div className="hidden flex-wrap gap-2 md:flex">{badges}</div>
+
+      {/* Mobile Stats - Collapsible */}
+      <Collapsible
+        open={isStatsOpen}
+        onOpenChange={setIsStatsOpen}
+        className="md:hidden"
+      >
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2 min-h-11 px-2 text-xs text-gray-600 hover:text-gray-900"
+          >
+            <span>
+              {totalInvites} invitation
+              {totalInvites !== 1 ? "s" : ""}
             </span>
-            <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
-              {approvedInvites} acceptées
-            </span>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
+            <ChevronDown
+              aria-hidden
+              className={`transition-transform duration-150 ease-out ${isStatsOpen ? "rotate-180" : ""}`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 flex flex-wrap gap-2">
+          {badges}
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
