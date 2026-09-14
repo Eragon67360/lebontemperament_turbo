@@ -27,7 +27,10 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-card text-card-foreground transition-smooth hover-lift rounded-xl border border-gray-100/50 shadow-none hover:shadow-md md:rounded-2xl",
+          // Was `transition-smooth hover-lift`: a 200ms transition-all plus a
+          // translateY on hover, applied to every card in the app whether or not
+          // it was clickable, and with no reduced-motion guard.
+          "bg-card text-card-foreground rounded-xl border border-gray-100/50 shadow-none transition-shadow duration-150 ease-out hover:shadow-md motion-reduce:transition-none md:rounded-2xl",
           getVariantClasses(),
           className,
         )}

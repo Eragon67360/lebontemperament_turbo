@@ -103,7 +103,7 @@ export function CardGridSkeleton({
 }) {
   return (
     <LoadingRegion label={label} className={className}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: cards }, (_, index) => (
           <Skeleton key={index} className="h-44 w-full rounded-2xl" />
         ))}
@@ -121,7 +121,7 @@ export function PageSkeleton({ cards = 6 }: { cards?: number }) {
           <Skeleton className="h-7 w-56" />
           <Skeleton className="h-4 w-72" />
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: cards }, (_, index) => (
             <Skeleton key={index} className="h-44 w-full rounded-2xl" />
           ))}
@@ -197,7 +197,7 @@ export function ErrorState({
       </p>
       {onRetry && (
         <Button variant="outline" className="mt-6 min-h-11" onClick={onRetry}>
-          <RefreshCw className="mr-2 h-4 w-4" />
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
           Réessayer
         </Button>
       )}

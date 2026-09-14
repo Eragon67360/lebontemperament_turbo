@@ -317,7 +317,9 @@ export function ProjectModal({
     } catch (error) {
       console.error(error);
       toast.error(`Erreur upload ${field}`);
-      return null;
+      // Rethrow: returning null here let the caller write that null over the
+      // project's existing image, so a failed upload erased a stored one.
+      throw error;
     } finally {
       setUploading(null);
     }

@@ -5,7 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { AnniversaryArchive } from "@/types/anniversary";
-import { Calendar, Edit, Eye, EyeOff, FileText, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  Edit,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  FileText,
+  Trash2,
+} from "lucide-react";
 
 const typeLabels: Record<string, string> = {
   "assemblée-générale": "Assemblée Générale",
@@ -82,6 +90,21 @@ export function ArchiveItem({ archive, onEdit, onDelete }: ArchiveItemProps) {
 
             {/* Actions */}
             <div className="mt-4 flex flex-wrap gap-2">
+              {/* The uploaded file had no way to be opened from here, so there
+                  was no way to check what an archive entry actually points at. */}
+              {archive.file_url && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-11"
+                  asChild
+                >
+                  <a href={archive.file_url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="h-4 w-4" aria-hidden />
+                    Voir le document
+                  </a>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

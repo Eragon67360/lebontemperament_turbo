@@ -17,6 +17,7 @@ import {
 import type { AnniversaryHeroStat } from "@/types/anniversary";
 import { BarChart3, Plus } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function HeroStatsPage() {
   const {
@@ -53,9 +54,13 @@ export default function HeroStatsPage() {
 
     try {
       await deleteStat.mutateAsync(selectedStat.id);
+      toast.success("Statistique supprimée");
       setDeleteDialogOpen(false);
       setSelectedStat(undefined);
     } catch (error) {
+      // A failed delete used to only reach the console: the dialog closed and
+      // the row stayed, which reads as "it worked, then came back".
+      toast.error("La suppression a échoué");
       console.error("Error deleting hero stat:", error);
     }
   };
