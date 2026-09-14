@@ -389,7 +389,9 @@ function RehearsalCard({
   return (
     <Card className="group bg-card text-card-foreground hover:border-primary/50 relative flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md motion-reduce:transition-none">
       <div className="flex h-full flex-col p-5">
-        <div className="mb-4 flex items-start justify-between gap-3">
+        {/* Badges sit under the title, not beside it: side by side they took
+            enough width that every rehearsal name clipped to "Répétition d…". */}
+        <div className="mb-4 flex flex-col gap-3">
           <div className="flex min-w-0 gap-4">
             {/* Date Tile */}
             <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-150 ease-out motion-reduce:transition-none">
@@ -409,7 +411,7 @@ function RehearsalCard({
               </div>
             </div>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge
               variant="outline"
               className={cn(

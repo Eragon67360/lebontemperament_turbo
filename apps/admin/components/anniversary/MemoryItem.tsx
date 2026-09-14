@@ -23,7 +23,7 @@ export function MemoryItem({
   return (
     <Card
       className={cn(
-        "transition-all hover:shadow-md",
+        "transition-shadow duration-150 ease-out hover:shadow-md motion-reduce:transition-none",
         !memory.is_approved && "border-yellow-200 bg-yellow-50/30",
         memory.is_featured && "border-primary bg-primary/5",
       )}
@@ -46,13 +46,13 @@ export function MemoryItem({
                   variant="outline"
                   className="border-green-500 text-green-700"
                 >
-                  <CheckCircle className="mr-1 h-3 w-3" />
+                  <CheckCircle className="mr-1 h-3 w-3" aria-hidden />
                   Approuvé
                 </Badge>
               )}
               {memory.is_featured && (
                 <Badge variant="default">
-                  <Star className="mr-1 h-3 w-3" />À la une
+                  <Star className="mr-1 h-3 w-3" aria-hidden />À la une
                 </Badge>
               )}
             </div>
@@ -64,18 +64,18 @@ export function MemoryItem({
           </div>
 
           {/* Author Info */}
-          <div className="flex flex-wrap gap-4 text-sm">
-            <span className="text-muted-foreground flex items-center gap-1.5">
-              <User className="h-4 w-4" />
-              {memory.name}
-            </span>
-            <span className="text-muted-foreground flex items-center gap-1.5">
-              <Mail className="h-4 w-4" />
-              {memory.email}
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
+            <h2 className="text-foreground flex min-w-0 items-center gap-1.5 font-semibold">
+              <User className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="truncate">{memory.name}</span>
+            </h2>
+            <span className="text-muted-foreground flex min-w-0 items-center gap-1.5">
+              <Mail className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="truncate">{memory.email}</span>
             </span>
             {memory.year && (
               <span className="text-muted-foreground flex items-center gap-1.5">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-4 w-4 shrink-0" aria-hidden />
                 {memory.year}
               </span>
             )}
@@ -91,36 +91,34 @@ export function MemoryItem({
             {!memory.is_approved && (
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => onApprove(memory)}
-                className="text-green-600 hover:bg-green-50"
+                className="min-h-11 text-green-600 hover:bg-green-50"
               >
-                <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                <CheckCircle aria-hidden />
                 Approuver
               </Button>
             )}
             {memory.is_approved && (
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => onFeature(memory)}
                 className={cn(
+                  "min-h-11",
                   memory.is_featured
                     ? "bg-primary/10 text-primary"
                     : "text-yellow-600 hover:bg-yellow-50",
                 )}
               >
-                <Star className="mr-1.5 h-3.5 w-3.5" />
+                <Star aria-hidden />
                 {memory.is_featured ? "Retirer de la une" : "Mettre à la une"}
               </Button>
             )}
             <Button
               variant="outline"
-              size="sm"
               onClick={() => onDelete(memory)}
-              className="text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:bg-destructive/10 min-h-11"
             >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              <Trash2 aria-hidden />
               Supprimer
             </Button>
           </div>

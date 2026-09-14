@@ -46,7 +46,7 @@ export function ConcertCard({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col p-4">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2">
           <div className="flex min-w-0 items-start gap-3">
             {concert.affiche ? (
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border shadow-sm">
@@ -86,6 +86,41 @@ export function ConcertCard({
               </div>
             </div>
           </div>
+        </div>
+
+        <Separator className="my-3" />
+
+        {/* Actions live on the meta row, not next to the title: two 44px targets
+            beside a 88px date tile and a poster left the name ~80px, so every
+            concert read "Encha…". */}
+        <div className="flex items-end justify-between gap-2">
+          <div className="text-muted-foreground grid min-w-0 flex-1 gap-1 text-sm">
+            <div className="flex min-h-11 min-w-0 items-center gap-2 sm:min-h-0">
+              <MapPin
+                className="text-primary/60 h-4 w-4 shrink-0"
+                aria-hidden
+              />
+              <span className="truncate" title={concert.place}>
+                {concert.place}
+              </span>
+            </div>
+            {concert.related_link && (
+              <div className="flex min-h-11 min-w-0 items-center gap-2 sm:min-h-0">
+                <LinkIcon
+                  className="text-primary/60 h-4 w-4 shrink-0"
+                  aria-hidden
+                />
+                <a
+                  href={concert.related_link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-primary truncate transition-colors duration-150 ease-out hover:underline motion-reduce:transition-none"
+                >
+                  Lien billetterie/info
+                </a>
+              </div>
+            )}
+          </div>
 
           <div className="flex shrink-0 gap-1">
             <Button
@@ -107,31 +142,6 @@ export function ConcertCard({
               <span className="sr-only">Supprimer « {title} »</span>
             </Button>
           </div>
-        </div>
-
-        <Separator className="my-3" />
-
-        <div className="text-muted-foreground grid gap-1 text-sm sm:grid-cols-2 sm:gap-2">
-          <div className="flex min-h-11 min-w-0 items-center gap-2 sm:min-h-0">
-            <MapPin className="text-primary/60 h-4 w-4 shrink-0" aria-hidden />
-            <span className="truncate">{concert.place}</span>
-          </div>
-          {concert.related_link && (
-            <div className="flex min-h-11 min-w-0 items-center gap-2 sm:min-h-0">
-              <LinkIcon
-                className="text-primary/60 h-4 w-4 shrink-0"
-                aria-hidden
-              />
-              <a
-                href={concert.related_link}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-primary truncate transition-colors duration-150 ease-out hover:underline motion-reduce:transition-none"
-              >
-                Lien billetterie/info
-              </a>
-            </div>
-          )}
         </div>
       </div>
     </Card>

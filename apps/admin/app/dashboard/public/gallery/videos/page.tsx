@@ -81,9 +81,9 @@ const VideoCard = ({
           </div>
 
           <div className="min-w-0 flex-1 space-y-1">
-            <h3 className="line-clamp-2 text-base leading-tight font-bold tracking-tight sm:text-lg">
+            <h2 className="line-clamp-2 text-base leading-tight font-bold tracking-tight sm:text-lg">
               {video.title}
-            </h3>
+            </h2>
             <p className="text-muted-foreground text-xs sm:hidden">
               {format(dateObj, "d MMMM yyyy", { locale: fr })}
             </p>

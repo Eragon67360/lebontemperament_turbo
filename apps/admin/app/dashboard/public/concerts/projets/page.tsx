@@ -139,9 +139,9 @@ const ProjectCard = ({
 
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="line-clamp-2 min-w-0 text-base leading-tight font-bold tracking-tight sm:text-lg">
+              <h2 className="line-clamp-2 min-w-0 text-base leading-tight font-bold tracking-tight sm:text-lg">
                 {project.name}
-              </h3>
+              </h2>
               {/* Drag Handle */}
               <button
                 type="button"

@@ -5,15 +5,19 @@ import { ArchiveItem } from "@/components/anniversary/ArchiveItem";
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import { useArchives, useDeleteArchive } from "@/hooks/useAnniversaryArchives";
 import { AnniversaryArchive } from "@/types/anniversary";
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function ArchivesPage() {
-  const { data: archives, isLoading } = useArchives();
+  const { data: archives = [], isLoading, isError, refetch } = useArchives();
   const deleteArchive = useDeleteArchive();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -52,61 +56,60 @@ export default function ArchivesPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageShell
-        title="Archives Publiques"
-        description="Gérer les documents d'archives (rapports AG, rapports annuels, etc.)"
-        theme="anniversary"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-      >
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-      </PageShell>
-    );
-  }
-
   return (
     <PageShell
-      title="Archives Publiques"
+      title="Archives publiques"
       description="Gérer les documents d'archives (rapports AG, rapports annuels, gazettes, programmes, etc.)"
       theme="anniversary"
-      fullHeight={true}
-      className="flex h-full flex-col px-4 py-8 sm:px-6 lg:px-8"
-    >
-      <div className="mb-6 flex flex-shrink-0 items-center justify-between">
-        <div className="text-muted-foreground text-sm">
-          {archives?.length || 0} archive(s)
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+      className="py-4 sm:py-6"
+      headerAction={
+        <Button
+          className="min-h-11 w-full sm:w-auto"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
           Ajouter une archive
         </Button>
-      </div>
+      }
+    >
+      {archives.length > 0 && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          {archives.length} archive{archives.length > 1 ? "s" : ""}
+        </p>
+      )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {archives && archives.length > 0 ? (
-          <div className="space-y-4 pb-4">
-            {archives.map((archive) => (
-              <ArchiveItem
-                key={archive.id}
-                archive={archive}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="border-border bg-muted/50 rounded-lg border border-dashed p-12 text-center">
-            <p className="text-muted-foreground">
-              Aucune archive. Cliquez sur "Ajouter une archive" pour commencer.
-            </p>
-          </div>
-        )}
-      </div>
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={archives.length === 0}
+        onRetry={() => refetch()}
+        errorDescription="Les archives n'ont pas pu être chargées."
+        skeleton={<ListSkeleton rows={4} label="Chargement des archives…" />}
+        empty={
+          <EmptyState
+            icon={FileText}
+            title="Aucune archive"
+            description="Ajoutez les rapports d'assemblée générale, gazettes et programmes à rendre publics."
+            action={
+              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter une archive
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="space-y-4">
+          {archives.map((archive) => (
+            <ArchiveItem
+              key={archive.id}
+              archive={archive}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Create/Edit Dialog */}
       <ArchiveDialog

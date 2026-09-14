@@ -25,23 +25,22 @@ interface ArchiveItemProps {
 export function ArchiveItem({ archive, onEdit, onDelete }: ArchiveItemProps) {
   return (
     <Card
-      className={cn(
-        "overflow-hidden transition-all hover:shadow-md",
-        !archive.is_visible && "opacity-60",
-      )}
+      className={cn("overflow-hidden", !archive.is_visible && "opacity-60")}
     >
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
           {/* Icon Preview */}
           <div className="bg-muted flex aspect-video w-full shrink-0 items-center justify-center sm:w-48">
-            <FileText className="text-muted-foreground h-12 w-12" />
+            <FileText className="text-muted-foreground h-12 w-12" aria-hidden />
           </div>
 
           {/* Content */}
-          <div className="flex flex-1 flex-col justify-between p-4">
+          <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
             <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-base font-semibold">{archive.title}</h3>
+                <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold">
+                  {archive.title}
+                </h2>
                 <Badge
                   variant={archive.is_visible ? "default" : "secondary"}
                   className="shrink-0"
@@ -82,22 +81,23 @@ export function ArchiveItem({ archive, onEdit, onDelete }: ArchiveItemProps) {
             </div>
 
             {/* Actions */}
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
+                className="min-h-11"
                 onClick={() => onEdit(archive)}
               >
-                <Edit className="mr-1.5 h-3.5 w-3.5" />
+                <Edit className="h-4 w-4" aria-hidden />
                 Modifier
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onDelete(archive)}
-                className="text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:bg-destructive/10 min-h-11"
               >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" aria-hidden />
                 Supprimer
               </Button>
             </div>

@@ -3,7 +3,11 @@
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
 import { MemoryItem } from "@/components/anniversary/MemoryItem";
 import { PageShell } from "@/components/layouts/PageShell";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useDeleteMemory,
@@ -11,14 +15,26 @@ import {
   useUpdateMemory,
 } from "@/hooks/useAnniversaryMemories";
 import { AnniversaryMemory } from "@/types/anniversary";
+import { MessageSquareQuote } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+type MemoryFilter = "pending" | "approved" | "all";
+
+const EMPTY_DESCRIPTIONS: Record<MemoryFilter, string> = {
+  pending: "Aucun témoignage n'attend de modération pour le moment.",
+  approved: "Aucun témoignage n'a encore été approuvé.",
+  all: "Les témoignages soumis par les visiteurs apparaîtront ici.",
+};
+
 export default function MemoriesPage() {
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "all">(
-    "pending",
-  );
-  const { data: memories, isLoading } = useMemories(activeTab);
+  const [activeTab, setActiveTab] = useState<MemoryFilter>("pending");
+  const {
+    data: memories = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useMemories(activeTab);
   const updateMemory = useUpdateMemory();
   const deleteMemory = useDeleteMemory();
 
@@ -75,33 +91,23 @@ export default function MemoriesPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageShell
-        title="Modération des Témoignages"
-        description="Approuver et gérer les témoignages soumis par les visiteurs"
-        theme="anniversary"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-      >
-        <div className="space-y-4">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-48 w-full" />
-        </div>
-      </PageShell>
-    );
-  }
-
-  const renderMemories = () => {
-    if (!memories || memories.length === 0) {
-      return (
-        <div className="border-border bg-muted/50 rounded-lg border border-dashed p-12 text-center">
-          <p className="text-muted-foreground">Aucun témoignage à afficher.</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4 pb-4">
+  const memoryList = (
+    <DataState
+      isLoading={isLoading}
+      isError={isError}
+      isEmpty={memories.length === 0}
+      onRetry={() => refetch()}
+      errorDescription="Les témoignages n'ont pas pu être chargés."
+      skeleton={<ListSkeleton rows={3} label="Chargement des témoignages…" />}
+      empty={
+        <EmptyState
+          icon={MessageSquareQuote}
+          title="Aucun témoignage"
+          description={EMPTY_DESCRIPTIONS[activeTab]}
+        />
+      }
+    >
+      <div className="space-y-4">
         {memories.map((memory) => (
           <MemoryItem
             key={memory.id}
@@ -112,46 +118,53 @@ export default function MemoriesPage() {
           />
         ))}
       </div>
-    );
-  };
+    </DataState>
+  );
 
   return (
     <PageShell
-      title="Modération des Témoignages"
+      title="Modération des témoignages"
       description="Approuver et gérer les témoignages soumis par les visiteurs"
       theme="anniversary"
-      fullHeight={true}
-      className="flex h-full flex-col px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
     >
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as any)}
-        className="flex h-full flex-col"
+        onValueChange={(value) => setActiveTab(value as MemoryFilter)}
       >
-        <div className="mb-6 flex flex-shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList>
-            <TabsTrigger value="pending">En attente</TabsTrigger>
-            <TabsTrigger value="approved">Approuvés</TabsTrigger>
-            <TabsTrigger value="all">Tous</TabsTrigger>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList
+            aria-label="Filtrer les témoignages par statut"
+            className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto"
+          >
+            <TabsTrigger value="pending" className="min-h-11">
+              En attente
+            </TabsTrigger>
+            <TabsTrigger value="approved" className="min-h-11">
+              Approuvés
+            </TabsTrigger>
+            <TabsTrigger value="all" className="min-h-11">
+              Tous
+            </TabsTrigger>
           </TabsList>
-          <div className="text-muted-foreground text-sm">
-            {memories?.length || 0} témoignage(s)
-          </div>
+          {!isLoading && !isError && (
+            <p className="text-muted-foreground text-sm">
+              {memories.length} témoignage{memories.length > 1 ? "s" : ""}
+            </p>
+          )}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <TabsContent value="pending" className="mt-0">
-            {renderMemories()}
-          </TabsContent>
+        <TabsContent value="pending" className="mt-0">
+          {memoryList}
+        </TabsContent>
 
-          <TabsContent value="approved" className="mt-0">
-            {renderMemories()}
-          </TabsContent>
+        <TabsContent value="approved" className="mt-0">
+          {memoryList}
+        </TabsContent>
 
-          <TabsContent value="all" className="mt-0">
-            {renderMemories()}
-          </TabsContent>
-        </div>
+        <TabsContent value="all" className="mt-0">
+          {memoryList}
+        </TabsContent>
       </Tabs>
 
       {/* Delete Confirmation Dialog */}
@@ -160,7 +173,7 @@ export default function MemoriesPage() {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDelete}
         title="Supprimer ce témoignage ?"
-        description={`Êtes-vous sûr de vouloir supprimer le témoignage de "${selectedMemory?.name}" ? Cette action est irréversible.`}
+        description={`Êtes-vous sûr de vouloir supprimer le témoignage de « ${selectedMemory?.name} » ? Cette action est irréversible.`}
         isLoading={deleteMemory.isPending}
       />
     </PageShell>
