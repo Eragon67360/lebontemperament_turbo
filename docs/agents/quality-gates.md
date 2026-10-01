@@ -29,6 +29,7 @@ Add the checks that fit the change:
 
 - Projects: `website` (public pages, API contract, contact-form validation only), `website-members` (members area, logged in), `admin` (auth, dashboard, navigation, and `concerts-write.spec.ts`).
 - **`concerts-write.spec.ts` writes to production**: staging shares the production database, so its `E2E_Concert_…` row is briefly visible on the public site; `global-teardown.ts` sweeps `E2E_` rows older than 24 h with the service-role key. Don't add write tests without the owner's agreement, and namespace any that you add the same way.
+- **Known noise on every PR** (2026-10-01): the workflow also fires on PR preview deployments, skips them with `process.exit(78)` ("neutral" in GitHub Actions v1, a failure today), and `merge-report` then fails on missing blobs. So `test (1)`, `test (2)` and `merge-report` show red on PRs that changed nothing (e.g. #305, #307). Fixing the skip (`core.notice` and a job-level condition instead of exit 78) is an open improvement.
 - To check a change before it reaches `dev`, point `WEBSITE_URL` / `ADMIN_URL` at the PR's preview URLs and run the read-only projects (`npx playwright test --project=website`).
 
 ## Tests worth writing
