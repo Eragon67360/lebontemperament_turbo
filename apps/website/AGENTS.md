@@ -1,3 +1,5 @@
+Project rules, safety and workflow for the whole monorepo: see the root [`CLAUDE.md`](../../CLAUDE.md) and [`docs/agents/`](../../docs/agents/). They take precedence over anything generic below.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
