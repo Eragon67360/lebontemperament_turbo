@@ -53,6 +53,8 @@ Committing runs the Husky pre-commit hook (`.husky/pre-commit`): format everythi
 
 Other docs: [README.md](README.md), [DEPLOYMENT.md](DEPLOYMENT.md) (Vercel root directories), [scripts/README.md](scripts/README.md), `apps/mobile_app/README.md`, `.cursor/rules/seo-geo-optimizer.mdc`, and `apps/website/AGENTS.md` (Next.js 16 notice: read `node_modules/next/dist/docs/` before using an API from memory).
 
+**Subagent models**: small, fully specified tasks go to Sonnet (`quick` agent); audits, searches and reviews to Fable (`scout`); medium implementation packages to Fable (`builder`); orchestration and anything security-sensitive stay on the main model. Details: [orchestration](docs/agents/orchestration.md#model-routing).
+
 ## Agent skills
 
 ### Issue tracker
