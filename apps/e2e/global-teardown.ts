@@ -4,7 +4,16 @@ import { createClient } from "@supabase/supabase-js";
 // than 24h, catching orphans from killed/crashed runs. The 24h window avoids
 // touching rows a concurrent run might still be using.
 // Runs server-side only — the service-role key never enters a browser context.
+// Like the write spec it serves (tests/admin/concerts-write.spec.ts), it only
+// runs with E2E_ALLOW_WRITES=1: the delete hits the production database.
 export default async function globalTeardown() {
+  if (process.env.E2E_ALLOW_WRITES !== "1") {
+    console.log(
+      "[e2e] Writes disabled (E2E_ALLOW_WRITES≠1) — no orphan sweep.",
+    );
+    return;
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {

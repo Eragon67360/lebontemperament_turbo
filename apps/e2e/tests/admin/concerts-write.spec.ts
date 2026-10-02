@@ -6,13 +6,22 @@ import { expect, test } from "@playwright/test";
 // (today's date is required for it to appear in the admin "upcoming" list) —
 // hence the unmistakable name. Orphans older than 24h are swept by
 // global-teardown.ts.
+//
+// Off by default: every environment writes to the production database, so
+// this spec only runs with E2E_ALLOW_WRITES=1, which nothing sets until
+// staging has its own database (#363).
+test.skip(
+  process.env.E2E_ALLOW_WRITES !== "1",
+  "writes to the shared production database — set E2E_ALLOW_WRITES=1 to run (see #363)",
+);
+
 test("create and delete an E2E concert", async ({ page }) => {
   const name = `E2E_Concert_${Date.now()}`;
 
   await page.goto("/dashboard/public/concerts/prochains-concerts");
-  await page.getByRole("button", { name: "Nouveau Concert" }).click();
+  await page.getByRole("button", { name: "Nouveau concert" }).click();
 
-  const dialog = page.getByRole("dialog");
+  const dialog = page.getByRole("dialog", { name: "Ajouter un concert" });
   await dialog.locator("#concertName").fill(name);
   await dialog.locator("#place").fill("E2E Salle de test");
 
@@ -33,7 +42,8 @@ test("create and delete an E2E concert", async ({ page }) => {
   await page.keyboard.press("Escape");
 
   await dialog.locator("#time").fill("20:00");
-  await dialog.getByRole("combobox").click();
+  // The context Select trigger is labelled by <Label htmlFor="context">.
+  await dialog.getByRole("combobox", { name: "Contexte" }).click();
   await page.getByRole("option", { name: "Chœur", exact: true }).click();
   await dialog
     .locator("#additional_informations")
@@ -45,11 +55,9 @@ test("create and delete an E2E concert", async ({ page }) => {
   const heading = page.getByRole("heading", { name });
   await expect(heading).toBeVisible();
 
-  // Delete via the card's trash button (icon-only — matched by its lucide class).
-  const card = heading.locator(
-    "xpath=ancestor::div[contains(@class,'rounded-2xl')]",
-  );
-  await card.locator("button:has(svg.lucide-trash-2)").click();
+  // Delete via the card's trash button, named by its sr-only label
+  // ("Supprimer « <name> »", apps/admin/components/concerts/ConcertCard.tsx).
+  await page.getByRole("button", { name: `Supprimer « ${name} »` }).click();
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Supprimer" })
