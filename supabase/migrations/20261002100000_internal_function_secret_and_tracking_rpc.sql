@@ -141,8 +141,9 @@ AS $$
     ),
     'delivery', jsonb_build_object(
       'id', d.id,
-      'latitude', d.latitude,
-      'longitude', d.longitude,
+      -- The driver's position only while this recipient is the one being served.
+      'latitude', CASE WHEN r.delivered_at IS NULL AND d.current_recipient_id = r.id THEN d.latitude END,
+      'longitude', CASE WHEN r.delivered_at IS NULL AND d.current_recipient_id = r.id THEN d.longitude END,
       'is_tracking_active', d.is_tracking_active,
       'expires_at', d.expires_at,
       'updated_at', d.updated_at,

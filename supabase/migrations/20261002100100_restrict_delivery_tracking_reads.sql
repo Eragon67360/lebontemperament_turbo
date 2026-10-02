@@ -8,8 +8,9 @@
 -- Removes the read policies that let any holder of the public anon key, and
 -- any signed-in member, read every non-expired delivery and recipient.
 -- Kept: "Superadmins can manage all deliveries" / "... delivery_recipients"
--- (the driver's app flow), get_delivery_by_token() (token-checked),
--- get_tracking_by_recipient_token() (part 1).
+-- (the driver's app flow) and get_tracking_by_recipient_token() (part 1).
+-- Also revokes the unused get_delivery_by_token() from visitors and members
+-- (nothing calls it; it returned the driver's id and the round-level token).
 --
 -- Check after applying (expected: only the two superadmin policies):
 --   select tablename, policyname, roles, cmd from pg_policies
@@ -17,7 +18,8 @@
 --
 -- Rollback (re-opens the exposure, emergency only): recreate the four
 -- policies from 20250129000000, 20250131000000 and 20250601000000 and
--- `GRANT SELECT ON deliveries, delivery_recipients TO anon;`.
+-- `GRANT SELECT ON deliveries, delivery_recipients TO anon;`, and
+-- `GRANT EXECUTE ON FUNCTION get_delivery_by_token(TEXT) TO anon;`.
 
 DROP POLICY IF EXISTS "Clients can read non-expired deliveries" ON deliveries;
 DROP POLICY IF EXISTS "Authenticated can read non-expired deliveries" ON deliveries;
@@ -26,3 +28,5 @@ DROP POLICY IF EXISTS "Authenticated can read non-expired delivery_recipients" O
 
 REVOKE SELECT ON deliveries FROM anon;
 REVOKE SELECT ON delivery_recipients FROM anon;
+
+REVOKE EXECUTE ON FUNCTION get_delivery_by_token(TEXT) FROM PUBLIC, anon, authenticated;

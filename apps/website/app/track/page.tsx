@@ -120,7 +120,7 @@ function TrackByTokenContent() {
 
   // Live updates: poll while the page is visible (the tables aren't readable
   // by visitors, so realtime subscriptions can't be used here).
-  const isLive = !!delivery && !!recipient && !recipient.delivered_at;
+  const isLive = !!delivery && !!recipient && !recipient.delivered_at && !error;
   useEffect(() => {
     if (!isLive) return;
     let cancelled = false;
