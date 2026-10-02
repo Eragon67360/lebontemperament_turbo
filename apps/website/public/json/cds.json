@@ -1,6 +1,8 @@
 [
     {
         "slug": "roi-arthur",
+        "cardName": "CD King Arthur (dématérialisé)",
+        "cardOrder": 2,
         "title": "Roi Arthur",
         "description": "Découvrez le projet exceptionnel 'Roi Arthur' par le chœur Le Bon Tempérament. Une performance magistrale qui allie musique et histoire.",
         "image": "Site/cds/king_arthur",
@@ -24,6 +26,8 @@
     },
     {
         "slug": "camino-latino",
+        "cardName": "CD Camino Latino (dématérialisé)",
+        "cardOrder": 3,
         "title": "Camino Latino",
         "description": "Projet Camino Latino",
         "image": "Site/cds/camino_latino",
@@ -47,6 +51,8 @@
     },
     {
         "slug": "vent-d-est",
+        "cardName": "CD Vent d'Est (dématérialisé)",
+        "cardOrder": 1,
         "title": "Vent d'Est",
         "description": "Take a symphonic journey through the ages with this collection of orchestral masterpieces, performed by our leading orchestra.",
         "image": "Site/cds/vent_d_est",
