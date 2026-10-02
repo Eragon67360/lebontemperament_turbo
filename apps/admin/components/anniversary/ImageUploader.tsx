@@ -45,7 +45,10 @@ export function ImageUploader({
         onChange(result.url); // This is the public_id
         toast.success("Image uploadée avec succès");
       } catch (error) {
-        toast.error("Erreur lors de l'upload de l'image");
+        // The API says why it refused (type, size, folder).
+        toast.error("Erreur lors de l'upload de l'image", {
+          description: error instanceof Error ? error.message : undefined,
+        });
         console.error("Upload error:", error);
       }
     },

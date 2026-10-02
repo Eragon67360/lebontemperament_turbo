@@ -1,5 +1,13 @@
 import { cloudinary } from "@/lib/cloudinary";
 import { checkAuthorization } from "@/utils/auth";
+import {
+  CLOUDINARY_IMAGE_FORMATS,
+  isAllowedProjectImageFolder,
+  PROJECT_IMAGE_DEFAULT_FOLDER,
+  resolveUploadFolder,
+  UPLOAD_RULES,
+  validateUpload,
+} from "@/utils/uploads";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -13,28 +21,47 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
-    const folder = formData.get("folder") as string | null;
+    const file = formData.get("file");
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Convert File to buffer
-    const bytes = await file.arrayBuffer();
+    // Project images only: Site/concerts or Site/concerts/<slug>.
+    const folder = resolveUploadFolder(
+      formData.get("folder"),
+      PROJECT_IMAGE_DEFAULT_FOLDER,
+      isAllowedProjectImageFolder,
+    );
+    if (!folder) {
+      return NextResponse.json(
+        { error: "Dossier non autorisé" },
+        { status: 400 },
+      );
+    }
+
+    // JPEG, PNG, WebP, GIF, AVIF, 10 MB max.
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const check = validateUpload(file, bytes, UPLOAD_RULES.projectImage);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 });
+    }
+
     const buffer = Buffer.from(bytes);
 
     // Upload to Cloudinary
-    return new Promise<NextResponse>((resolve, reject) => {
+    return new Promise<NextResponse>((resolve) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: folder || "Site/concerts",
-          resource_type: "auto",
+          folder,
+          resource_type: "image",
+          // Cloudinary checks the actual format too (no SVG).
+          allowed_formats: CLOUDINARY_IMAGE_FORMATS,
         },
         (error, result) => {
           if (error) {
             console.error("Cloudinary upload error:", error);
-            reject(
+            resolve(
               NextResponse.json({ error: "Upload failed" }, { status: 500 }),
             );
           } else {
