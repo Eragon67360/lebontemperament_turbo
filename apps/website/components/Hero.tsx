@@ -86,7 +86,7 @@ const Hero: React.FC<HeroProps> = ({
   const handleScroll = () => {
     window.scrollBy({
       top: window.innerHeight,
-      behavior: "smooth",
+      behavior: prefersReducedMotion ? "auto" : "smooth",
     });
   };
 
@@ -97,7 +97,6 @@ const Hero: React.FC<HeroProps> = ({
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      role="banner"
       aria-labelledby="hero-title"
     >
       {bannerSrc ? (
@@ -142,20 +141,20 @@ const Hero: React.FC<HeroProps> = ({
           }}
           variants={textVariants}
         >
-          <h1
-            id="hero-title"
-            className="text-title mb-4 leading-none font-light text-white drop-shadow-lg"
-          >
-            {title}
+          {/* One H1 holding title and subtitle; the spans keep the former h1/h2 styling. */}
+          <h1 id="hero-title">
+            <span className="text-title mb-4 block leading-none font-light text-white drop-shadow-lg">
+              {title}
+            </span>
+            {subtitle && (
+              <motion.span
+                className="text-title mb-6 block leading-none font-bold text-white drop-shadow-lg"
+                variants={textVariants}
+              >
+                {subtitle}
+              </motion.span>
+            )}
           </h1>
-          {subtitle && (
-            <motion.h2
-              className="text-title mb-6 leading-none font-bold text-white drop-shadow-lg"
-              variants={textVariants}
-            >
-              {subtitle}
-            </motion.h2>
-          )}
           {description && (
             <motion.p
               className="mx-auto max-w-2xl text-lg leading-relaxed text-white/90 drop-shadow-md md:text-xl"
@@ -176,17 +175,18 @@ const Hero: React.FC<HeroProps> = ({
       />
 
       {/* Pulsing Arrow */}
-      <div
+      <button
+        type="button"
         className="absolute bottom-8 left-1/2 -translate-x-1/2 transform cursor-pointer"
         onClick={handleScroll}
-        aria-label="Scroll down"
+        aria-label="Défiler vers le contenu"
       >
         <motion.div
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
-          animate={{ y: [0, 10, 0] }}
+          animate={prefersReducedMotion ? { y: 0 } : { y: [0, 10, 0] }}
           transition={{
             duration: 1.5,
-            repeat: Infinity,
+            repeat: prefersReducedMotion ? 0 : Infinity,
             ease: "easeInOut",
           }}
         >
@@ -196,6 +196,7 @@ const Hero: React.FC<HeroProps> = ({
             stroke="currentColor"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -205,7 +206,7 @@ const Hero: React.FC<HeroProps> = ({
             />
           </svg>
         </motion.div>
-      </div>
+      </button>
     </motion.section>
   );
 };

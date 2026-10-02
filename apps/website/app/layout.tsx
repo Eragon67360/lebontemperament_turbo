@@ -155,20 +155,37 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "Organization",
+              "@type": ["Organization", "MusicGroup"],
               "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#organization`,
               name: "Le Bon Tempérament",
               alternateName: "BT",
               url: process.env.NEXT_PUBLIC_BASE_URL,
               logo: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+              image:
+                "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
               description:
                 "Ensemble vocal et instrumental renommé à Saverne, France, depuis 1987",
+              genre: [
+                "Musique classique",
+                "Musique baroque",
+                "Musique chorale",
+              ],
               address: {
                 "@type": "PostalAddress",
                 streetAddress: "3 Rue Clemenceau",
                 addressLocality: "Saverne",
+                addressRegion: "Alsace",
                 postalCode: "67700",
                 addressCountry: "FR",
+              },
+              location: {
+                "@type": "Place",
+                name: "Saverne",
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: "48.7417",
+                  longitude: "7.3622",
+                },
               },
               contactPoint: {
                 "@type": "ContactPoint",

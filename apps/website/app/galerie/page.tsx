@@ -1,7 +1,7 @@
 import { JsonLd } from "@/components/JsonLd";
 import PhotoGallery from "@/components/PhotoGallery";
 import { YoutubeVideos } from "@/components/YoutubeVideos";
-import { breadcrumbJsonLd } from "@/utils/seo";
+import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import { Video } from "@repo/domain/types/videos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
@@ -10,7 +10,7 @@ import Link from "next/link";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 export const metadata: Metadata = {
-  title: "Galerie - Photos et Vidéos | Le Bon Tempérament",
+  title: "Galerie - Photos et vidéos",
   description:
     "Galerie photos et vidéos de Le Bon Tempérament : concerts, événements et répétitions. Découvrez nos performances musicales à Saverne et en Alsace.",
   keywords:
@@ -79,15 +79,7 @@ function generateVideoSchemas(videos: Video[]) {
       uploadDate: uploadDate,
       contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
       embedUrl: `https://www.youtube.com/embed/${videoId}`,
-      publisher: {
-        "@type": "Organization",
-        name: "Le Bon Tempérament",
-        url: process.env.NEXT_PUBLIC_BASE_URL,
-        logo: {
-          "@type": "ImageObject",
-          url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
-        },
-      },
+      publisher: organizationRef(),
       ...(video.composer && {
         creator: {
           "@type": "Person",
@@ -147,12 +139,14 @@ const Galerie = async () => {
           <div className="">
             <div className="flex items-end justify-between">
               <div>
-                <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
-                  Galerie
+                <h1>
+                  <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+                    Galerie
+                  </span>
+                  <span className="text-title text-foreground block leading-none font-bold">
+                    Photos
+                  </span>
                 </h1>
-                <h2 className="text-title text-foreground leading-none font-bold">
-                  Photos
-                </h2>
               </div>
               <Link
                 href="#videos"
@@ -172,11 +166,13 @@ const Galerie = async () => {
           <div className="py-4 md:py-8 lg:py-16">
             <div className="flex items-end justify-between">
               <div>
-                <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
-                  Galerie
-                </h1>
-                <h2 className="text-title text-foreground leading-none font-bold">
-                  Vidéos
+                <h2>
+                  <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+                    Galerie
+                  </span>
+                  <span className="text-title text-foreground block leading-none font-bold">
+                    Vidéos
+                  </span>
                 </h2>
               </div>
               <Link

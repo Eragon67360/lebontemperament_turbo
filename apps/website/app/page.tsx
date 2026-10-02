@@ -3,7 +3,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Ensemble Vocal et Instrumental à Saverne | Le Bon Tempérament",
+    absolute: "Chœur et orchestre à Saverne | Le Bon Tempérament",
   },
   description:
     "Découvrez Le Bon Tempérament, ensemble vocal et instrumental renommé à Saverne depuis 1987. Concerts de musique classique, opéras baroques, CDs et événements musicaux en Alsace. Rejoignez-nous pour vivre la passion de la musique classique.",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 const Home = () => {
   return (
     <>
-      <HomeContent />;
+      <HomeContent />
     </>
   );
 };

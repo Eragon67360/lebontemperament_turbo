@@ -6,7 +6,7 @@ import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact - Le Bon Tempérament | Saverne",
+  title: "Contact et accès à Saverne",
   description:
     "Contactez Le Bon Tempérament à Saverne. Email, téléphone et adresse pour rejoindre l'ensemble, réserver des places ou obtenir des informations sur nos concerts.",
   keywords:
@@ -284,37 +284,6 @@ const Contact = () => {
         </div>
         <Subscribe />
       </div>
-      {/* LocalBusiness Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#localbusiness`,
-            name: "Le Bon Tempérament",
-            image:
-              "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
-            url: process.env.NEXT_PUBLIC_BASE_URL,
-            telephone: "+33-6-89-68-74-82",
-            email: "lebontemperament@gmail.com",
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: "3 Rue Clemenceau",
-              addressLocality: "Saverne",
-              addressRegion: "Alsace",
-              postalCode: "67700",
-              addressCountry: "FR",
-            },
-            geo: {
-              "@type": "GeoCoordinates",
-              latitude: "48.7417",
-              longitude: "7.3622",
-            },
-            priceRange: "€€",
-          }),
-        }}
-      />
     </div>
   );
 };

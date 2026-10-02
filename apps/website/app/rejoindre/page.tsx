@@ -11,7 +11,7 @@ import {
 } from "react-icons/io5";
 
 export const metadata: Metadata = {
-  title: "Rejoindre Le Bon Tempérament | Adhésion Chœur Saverne",
+  title: "Rejoindre le chœur ou l'orchestre",
   description:
     "Comment rejoindre Le Bon Tempérament à Saverne : chœurs adultes, jeunes et enfants. Processus d'adhésion, répétitions et conditions pour intégrer l'ensemble vocal.",
   keywords:

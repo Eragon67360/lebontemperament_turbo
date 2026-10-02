@@ -1,6 +1,6 @@
 import ConcertsClient from "@/components/concerts/ConcertsClient";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbJsonLd } from "@/utils/seo";
+import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import { Concert } from "@repo/domain/types/concerts";
 import { Event } from "@repo/domain/types/events";
@@ -51,16 +51,8 @@ function generateSchema(concerts: Concert[]) {
       "@type": "Place",
       name: concert.place,
     },
-    organizer: {
-      "@type": "Organization",
-      name: "Le Bon Tempérament",
-      url: process.env.NEXT_PUBLIC_BASE_URL,
-    },
-    performer: {
-      "@type": "MusicGroup",
-      name: "Le Bon Tempérament",
-      description: "Ensemble vocal et instrumental",
-    },
+    organizer: organizationRef(),
+    performer: organizationRef("MusicGroup"),
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     image:
@@ -83,11 +75,7 @@ function generateSchema(concerts: Concert[]) {
         item: concert,
       })),
     },
-    publisher: {
-      "@type": "Organization",
-      name: "Le Bon Tempérament",
-      url: process.env.NEXT_PUBLIC_BASE_URL,
-    },
+    publisher: organizationRef(),
   };
 }
 

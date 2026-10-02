@@ -42,6 +42,8 @@ const PDFViewer = dynamic(
 
 interface ArchivesPageClientProps {
   archives: Archive[];
+  /** Back-link to /40-ans, shown only while the anniversary flag is on. */
+  showAnniversaryLink?: boolean;
 }
 
 // --- LABELS & ICONS (No changes here) ---
@@ -75,6 +77,7 @@ const sortOptions: { key: SortOption; label: string }[] = [
 // --- COMPONENT (No changes to logic) ---
 export default function ArchivesPageClient({
   archives,
+  showAnniversaryLink = true,
 }: ArchivesPageClientProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
@@ -153,13 +156,15 @@ export default function ArchivesPageClient({
             transition={{ duration: 0.6 }}
             className="mb-12"
           >
-            <Link
-              href="/40-ans"
-              className="text-primary hover:text-primary/80 mb-8 inline-flex items-center gap-2 font-medium transition-colors"
-            >
-              <FaArrowLeft />
-              <span>Retour à la page 40 ans</span>
-            </Link>
+            {showAnniversaryLink && (
+              <Link
+                href="/40-ans"
+                className="text-primary hover:text-primary/80 mb-8 inline-flex items-center gap-2 font-medium transition-colors"
+              >
+                <FaArrowLeft />
+                <span>Retour à la page 40 ans</span>
+              </Link>
+            )}
             <div className="text-center">
               <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
                 <FaArchive className="text-3xl sm:text-4xl" />

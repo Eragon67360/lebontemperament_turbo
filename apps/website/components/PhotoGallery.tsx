@@ -6,8 +6,18 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { MasonryPhotoAlbum } from "react-photo-album";
 import "react-photo-album/masonry.css";
-import Lightbox from "yet-another-react-lightbox";
+import Lightbox, { type Labels } from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
+
+// The lightbox ships English strings; the site is French.
+const lightboxLabels: Labels = {
+  Previous: "Photo précédente",
+  Next: "Photo suivante",
+  Close: "Fermer",
+  Slide: "Photo",
+  Carousel: "Diaporama",
+  Lightbox: "Visionneuse de photos",
+};
 
 export default function PhotoGallery() {
   const [imagesConcerts, setImagesConcerts] = useState<PhotoData[]>([]);
@@ -109,7 +119,7 @@ export default function PhotoGallery() {
     <>
       <Accordion>
         <Accordion.Item id="1">
-          <Accordion.Heading>
+          <Accordion.Heading level={2}>
             <Accordion.Trigger className="text-xl font-bold md:text-2xl lg:text-4xl">
               <p className="text-xl md:text-2xl lg:text-4xl">Nos concerts</p>
               <Accordion.Indicator />
@@ -149,7 +159,7 @@ export default function PhotoGallery() {
           </Accordion.Panel>
         </Accordion.Item>
         <Accordion.Item id="2">
-          <Accordion.Heading>
+          <Accordion.Heading level={2}>
             <Accordion.Trigger className="text-xl font-bold md:text-2xl lg:text-4xl">
               <p className="text-xl md:text-2xl lg:text-4xl">La vie au BT</p>
               <Accordion.Indicator />
@@ -195,6 +205,7 @@ export default function PhotoGallery() {
         slides={imagesConcerts}
         open={photoIndexConcerts >= 0}
         close={() => setPhotoIndexConcerts(-1)}
+        labels={lightboxLabels}
       />
 
       <Lightbox
@@ -202,6 +213,7 @@ export default function PhotoGallery() {
         slides={imagesVieBT}
         open={photoIndexVieBT >= 0}
         close={() => setPhotoIndexVieBT(-1)}
+        labels={lightboxLabels}
       />
     </>
   );
