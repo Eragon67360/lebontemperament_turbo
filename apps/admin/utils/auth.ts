@@ -1,64 +1,45 @@
-import type { Database } from "@repo/domain/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+import { decideAccess, type AdminRole } from "./access";
 import { createClient } from "./supabase/server";
 
-export async function checkAuthorization() {
+export type AuthorizationResult =
+  | { authorized: true; user: User; role: AdminRole }
+  | { authorized: false; error: string; status: 401 | 403 };
+
+async function authorize(required: AdminRole): Promise<AuthorizationResult> {
   const supabase = await createClient();
 
   const { data } = await supabase.auth.getUser();
-  if (!data.user) {
-    return { error: "Non authentifié", status: 401 } as const;
+  let role: unknown = null;
+  if (data.user) {
+    const { data: userProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+    role = userProfile?.role;
   }
 
-  const { data: userProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  if (!["admin", "superadmin"].includes(userProfile?.role ?? "user")) {
-    return { authorized: false, error: "Non autorisé", status: 403 } as const;
-  }
-
-  return { authorized: true, user: data.user } as const;
-}
-
-// utils/auth.ts
-export async function isAdmin(supabase: SupabaseClient<Database>) {
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("role")
-    .single();
-
-  if (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-
-  return profile?.role === "admin" || profile?.role === "superadmin";
-}
-
-export async function checkDriverAuthorization() {
-  const supabase = await createClient();
-
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) {
-    return { error: "Non authentifié", status: 401 };
-  }
-
-  const { data: userProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  if (!userProfile || userProfile.role !== "superadmin") {
+  const decision = decideAccess(data.user, role, required);
+  if (!decision.allowed) {
     return {
       authorized: false,
-      error: "Non autorisé - Rôle superadmin requis",
-      status: 403,
+      error: decision.error,
+      status: decision.status,
     };
   }
+  return { authorized: true, user: decision.user, role: decision.role };
+}
 
-  return { authorized: true, user: data.user };
+/**
+ * Signed-in admin or superadmin. Every admin API handler starts with this
+ * (401 when signed out, 403 for any other role) before touching data.
+ */
+export function checkAuthorization() {
+  return authorize("admin");
+}
+
+/** Superadmin only. */
+export function checkDriverAuthorization() {
+  return authorize("superadmin");
 }

@@ -1,13 +1,25 @@
 // app/api/activities/route.ts
+import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "15");
+    const requested = parseInt(searchParams.get("limit") || "15", 10);
+    const limit = Number.isNaN(requested)
+      ? 15
+      : Math.min(Math.max(requested, 1), 100);
 
     const { data, error } = await supabase
       .from("activities")

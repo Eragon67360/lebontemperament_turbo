@@ -4,6 +4,14 @@ import { CreateEventDTO, UpdateEventDTO } from "@repo/domain/types/events";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
