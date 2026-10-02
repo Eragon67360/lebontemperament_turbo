@@ -1,13 +1,24 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireSuperadmin } from "../_shared/caller-auth.ts";
 
-const FELIX_PHONE = "+33677565184";
+// Contact for incomplete orders, set as a function secret (not in the public repo).
+const SUPPORT_PHONE = Deno.env.get("DELIVERY_SUPPORT_PHONE") ?? "";
 
 serve(async (req) => {
   try {
     if (req.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
     }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Only the delivery driver (a superadmin) runs delivery rounds.
+    const caller = await requireSuperadmin(req, supabaseAdmin);
+    if (caller instanceof Response) return caller;
 
     const { recipientId } = await req.json();
     if (!recipientId) {
@@ -16,11 +27,6 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json" },
       });
     }
-
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     const { data: recipient, error } = await supabaseAdmin
       .from("delivery_recipients")
@@ -50,7 +56,9 @@ serve(async (req) => {
 
     const messageBody =
       `Bonjour ${recipient.label}, votre commande a bien été livrée ! Merci pour votre confiance.\n\n` +
-      `Si la commande devait être incomplète, nous en sommes désolés. N'hésitez pas à écrire à Félix au numéro suivant : ${FELIX_PHONE}.\n\n` +
+      (SUPPORT_PHONE
+        ? `Si la commande devait être incomplète, nous en sommes désolés. N'hésitez pas à écrire à Félix au numéro suivant : ${SUPPORT_PHONE}.\n\n`
+        : "") +
       `Si vous voulez en savoir plus sur nous, n'hésitez pas à visiter notre site à cette adresse : ${siteUrl}.\n\n` +
       `- Félix & Thomas`;
 
@@ -80,7 +88,7 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("Error in send-delivery-complete-sms function:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

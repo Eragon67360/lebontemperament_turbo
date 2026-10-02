@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireSuperadmin } from "../_shared/caller-auth.ts";
 
 const OSRM_ROUTE_BASE = "https://router.project-osrm.org/route/v1/driving";
 
@@ -70,6 +71,15 @@ serve(async (req) => {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Only the delivery driver (a superadmin) runs delivery rounds.
+    const caller = await requireSuperadmin(req, supabaseAdmin);
+    if (caller instanceof Response) return caller;
+
     const body = await req.json();
     const { deliveryId, startLat, startLng, sendSms } = body as {
       deliveryId: string;
@@ -84,11 +94,6 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json" },
       });
     }
-
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     const { data: recipients, error } = await supabaseAdmin
       .from("delivery_recipients")
