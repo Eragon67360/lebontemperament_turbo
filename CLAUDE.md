@@ -16,10 +16,11 @@ You are the owner's senior engineer here: you audit, file issues, fix them (alon
 
 ## Open risks to settle first (found 2026-10-01; remove each line once fixed)
 
-1. **Staging and local development share the production database** (_measured_: Vercel gives `NEXT_PUBLIC_SUPABASE_URL`, the anon key and `SUPABASE_SERVICE_ROLE_KEY` one value for Development, Preview and Production). The daily e2e suite writes and sweeps `E2E_` concerts there, and `npm run test:rehearsal-sync` writes real rehearsal rows ([safety](docs/agents/safety.md#one-database-for-everything)).
-2. **Secret scanning is off on this public repo** (_measured_, repository settings). Turning it and push protection on is an owner step.
-3. **Mailbox credentials carry a `NEXT_PUBLIC_` prefix** (`NEXT_PUBLIC_BURNER_USERNAME` / `_PASSWORD`, used by server routes only today; _estimated_ not in browser bundles), and a `NEXT_PUBLIC_ADMIN_PASSWORD` variable exists in every Vercel environment while no code reads it (_measured_). Rename the first, delete the second.
-4. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md)).
+1. **Staging and local development share the production database** (_measured_: Vercel gives `NEXT_PUBLIC_SUPABASE_URL`, the anon key and `SUPABASE_SERVICE_ROLE_KEY` one value for Development, Preview and Production). The daily e2e suite writes and sweeps `E2E_` concerts there, and `npm run test:rehearsal-sync` writes real rehearsal rows ([safety](docs/agents/safety.md#one-database-for-everything)). Decided: a separate Supabase staging project (#363). The website's deployment protection is now on (2026-10-02).
+2. **Mailbox credentials carry a `NEXT_PUBLIC_` prefix** (`NEXT_PUBLIC_BURNER_USERNAME` / `_PASSWORD`, used by server routes only today; _estimated_ not in browser bundles). The rename to `SMTP_USER` / `SMTP_PASSWORD` is pending (#321).
+3. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md); #323).
+
+Audit tracking issue: #369.
 
 ## Commands
 
@@ -51,7 +52,7 @@ Committing runs the Husky pre-commit hook (`.husky/pre-commit`): format everythi
 | [release.md](docs/agents/release.md)                     | Releasing `dev` → `main`, Supabase migrations and functions, mobile releases, checks       |
 | [lessons.md](docs/agents/lessons.md)                     | Hard-won mistakes not to repeat                                                            |
 
-Other docs: [README.md](README.md), [DEPLOYMENT.md](DEPLOYMENT.md) (Vercel root directories), [scripts/README.md](scripts/README.md), `apps/mobile_app/README.md`, `.cursor/rules/seo-geo-optimizer.mdc`, and `apps/website/AGENTS.md` (Next.js 16 notice: read `node_modules/next/dist/docs/` before using an API from memory).
+Other docs: [README.md](README.md), [DEPLOYMENT.md](DEPLOYMENT.md) (Vercel configuration), [scripts/README.md](scripts/README.md), `apps/mobile_app/README.md`, `.cursor/rules/seo-geo-optimizer.mdc`, and `apps/website/AGENTS.md` (Next.js 16 notice: read `node_modules/next/dist/docs/` before using an API from memory).
 
 **Subagent models**: small, fully specified tasks go to Sonnet (`quick` agent); audits, searches and reviews to Fable (`scout`); medium implementation packages to Fable (`builder`); orchestration and anything security-sensitive stay on the main model. Details: [orchestration](docs/agents/orchestration.md#model-routing).
 

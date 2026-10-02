@@ -1,35 +1,27 @@
 # Vercel Deployment Guide (Turborepo)
 
-Each app has its own `vercel.json` with the correct build filter. **You must set the Root Directory per project** so Vercel reads the right config.
+Both Vercel projects build from the **repository root**, with a Turbo filter per app. _Measured on 2026-10-02 through the Vercel API._
 
-## Configuration (required)
+## Configuration (both projects)
 
-### Website project
+| Setting                | Website (`lebontemperament`)   | Admin (`lebontemperament-admin`) |
+| ---------------------- | ------------------------------ | -------------------------------- |
+| **Root Directory**     | _(empty: repository root)_     | _(empty: repository root)_       |
+| **Build Command**      | `turbo build --filter=website` | `turbo build --filter=admin`     |
+| **Output Directory**   | `apps/website/.next`           | `apps/admin/.next`               |
+| **Install Command**    | `npm ci`                       | `npm ci`                         |
+| **Node.js**            | 24.x                           | 24.x                             |
+| **Ignored Build Step** | none                           | none                             |
 
-| Setting              | Value                                                                           |
-| -------------------- | ------------------------------------------------------------------------------- |
-| **Root Directory**   | `apps/website`                                                                  |
-| **Build Command**    | _(from [apps/website/vercel.json](apps/website/vercel.json) – do not override)_ |
-| **Output Directory** | _(Next.js default)_                                                             |
+## `vercel.json` files are not read
 
-### Admin project
+Vercel only reads `vercel.json` from the Root Directory, which is the repository root here. `apps/website/vercel.json` and `apps/admin/vercel.json` are therefore never read: change the settings in the Vercel project, not in those files. Build skipping and the dead `vercel.json` files are tracked in #366.
 
-| Setting              | Value                                                                       |
-| -------------------- | --------------------------------------------------------------------------- |
-| **Root Directory**   | `apps/admin`                                                                |
-| **Build Command**    | _(from [apps/admin/vercel.json](apps/admin/vercel.json) – do not override)_ |
-| **Output Directory** | _(Next.js default)_                                                         |
+## Deployment protection
 
-## Important: Include source files outside Root Directory
+Since 2026-10-02 both projects use Vercel Authentication with `all_except_custom_domains`:
 
-Enable **"Include source files outside of the Root Directory in the Build Step"** for both projects:
-
-1. Project Settings → Build and Deployment
-2. Root Directory section
-3. Enable the toggle
-
-This allows the build to access root `node_modules` and shared packages (`@tailwindcss/postcss`, `next`, etc.).
-
-## Do not use Root Directory = empty
-
-If Root Directory is empty, both projects would read the same config and one would build the wrong app. Always use `apps/website` or `apps/admin`.
+- Staging (`dev.`, `admin-dev.`), every preview and every generated production deployment URL need a Vercel login.
+- `www.lebontemperament.com` and `admin.lebontemperament.com` stay public.
+- The e2e suite uses one automation bypass secret, valid for both projects.
+- Production deployments are retained 36,500 days, so old builds are now behind the protection too.
