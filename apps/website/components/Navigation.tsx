@@ -1,46 +1,33 @@
 // Navigation.tsx
 "use client";
 import { LinkButton } from "@/components/LinkButton";
-import { useDriveRootUrl } from "@/hooks/useDriveRootUrl";
 import RouteNames from "@/utils/routes";
-import { createClient } from "@/utils/supabase/client";
-import { RoundedSize } from "@/utils/types";
-import { Avatar, Button, Link, Popover, toast, Tooltip } from "@heroui/react";
+import { Link } from "@heroui/react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { CiLock } from "react-icons/ci";
-import { FaKey } from "react-icons/fa";
-import { IoLogOut } from "react-icons/io5";
-import ChangePasswordModal from "./ChangePasswordModal";
-import CloudinaryImage from "./CloudinaryImage";
 import DonationCampaignShowcase from "./donations/DonationCampaignShowcase";
 import MainLinks from "./links/MainLinks";
 import MainMenuLinks from "./links/MainMenuLinks";
 import { useAuth } from "./providers/AuthProvider";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
-type UserProfile = {
-  id: string;
-  display_name: string | null;
-  profile_picture_url: string | null;
-};
+// Avatar menu, drive link, password modal and sign-out, with supabase-js:
+// fetched only once a session is known (the server renders neither state).
+const UserMenu = dynamic(() => import("./navigation/UserMenu"), {
+  ssr: false,
+});
 
 const Navigation = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, setUser } = useAuth();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const { user, isLoading } = useAuth();
   const [hasScrolled, setHasScrolled] = useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
-  const driveUrl = useDriveRootUrl();
   const isMembresSection = pathname.startsWith("/membres");
   const isSpecialPath = pathname === "/" || pathname.startsWith("/concerts/");
-  const supabase = createClient();
-  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,56 +59,6 @@ const Navigation = () => {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        setIsLoading(true);
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-
-        if (currentUser) {
-          setUser(currentUser);
-          const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("id, display_name, profile_picture_url")
-            .eq("id", currentUser.id)
-            .single();
-
-          if (error) throw error;
-          setUserProfile(profile);
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-        toast.danger("Erreur lors du chargement du profil");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserProfile();
-  }, [setUser, supabase]);
-
-  const handleSignOut = async () => {
-    startTransition(async () => {
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-
-        setUser(null);
-        setUserProfile(null);
-
-        toast.success("Déconnexion réussie");
-
-        router.push(RouteNames.ROOT);
-        router.refresh();
-      } catch (error) {
-        console.error("Error signing out:", error);
-        toast.danger("Erreur lors de la déconnexion");
-      }
-    });
-  };
 
   return (
     !isMembresSection && (
@@ -205,100 +142,7 @@ const Navigation = () => {
             <ThemeSwitcher isLight={isSpecialPath && !hasScrolled} />
 
             {user ? (
-              <div className="flex items-center gap-4">
-                {driveUrl && (
-                  <Tooltip>
-                    <Tooltip.Trigger>
-                      <Link
-                        href={driveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Ouvrir le drive Google dans un nouvel onglet"
-                        className="bg-primary/20 hover:bg-primary/40 dark:bg-primary/30 dark:hover:bg-primary/50 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
-                      >
-                        <CloudinaryImage
-                          src={"Site/membres/logos/drive"}
-                          alt="Icône Google Drive"
-                          width={16}
-                          height={16}
-                          rounded={RoundedSize.NONE}
-                          className="size-4"
-                        />
-                      </Link>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                      <p>Accéder au drive Google</p>
-                    </Tooltip.Content>
-                  </Tooltip>
-                )}
-                <Popover>
-                  <Popover.Trigger
-                    className="flex shrink-0 cursor-pointer items-center gap-1"
-                    aria-label="Menu utilisateur"
-                  >
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      <Avatar.Image
-                        src={
-                          userProfile?.profile_picture_url ||
-                          user.user_metadata?.avatar_url
-                        }
-                        alt={`Avatar de ${userProfile?.display_name || user.email}`}
-                      />
-                      <Avatar.Fallback>
-                        {userProfile?.display_name?.charAt(0) ||
-                          user.email?.charAt(0)}
-                      </Avatar.Fallback>
-                    </Avatar>
-                  </Popover.Trigger>
-                  <Popover.Content placement="bottom start">
-                    <Popover.Dialog
-                      className="flex flex-col items-start gap-2"
-                      aria-label="Options utilisateur"
-                    >
-                      <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm">
-                        <Avatar className="h-8 w-8 rounded-lg">
-                          <Avatar.Image
-                            src={user.user_metadata?.avatar_url}
-                            alt={`Avatar de ${userProfile?.display_name || user.email}`}
-                          />
-                          <Avatar.Fallback>
-                            {userProfile?.display_name?.charAt(0) ||
-                              user.email?.charAt(0)}
-                          </Avatar.Fallback>
-                        </Avatar>
-                        <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate font-semibold">
-                            {userProfile?.display_name}
-                          </span>
-                          <span className="text-muted truncate text-xs">
-                            {user.email}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        onPress={() => setIsPasswordModalOpen(true)}
-                        className="flex w-full cursor-pointer items-center justify-start gap-1"
-                        isDisabled={isPending}
-                        aria-label="Changer mon mot de passe"
-                      >
-                        <FaKey className="mr-2 size-4" aria-hidden="true" />
-                        Changer mon mot de passe
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onPress={handleSignOut}
-                        className="flex w-full cursor-pointer items-center justify-start gap-1"
-                        isDisabled={isPending}
-                        aria-label="Se déconnecter"
-                      >
-                        <IoLogOut className="mr-2 size-4" aria-hidden="true" />
-                        {isPending ? "Déconnexion..." : "Se déconnecter"}
-                      </Button>
-                    </Popover.Dialog>
-                  </Popover.Content>
-                </Popover>
-              </div>
+              <UserMenu user={user} />
             ) : (
               !isLoading && (
                 <LinkButton
@@ -322,11 +166,6 @@ const Navigation = () => {
             onNavigate={() => setIsMenuOpen(false)}
           />
         )}
-
-        <ChangePasswordModal
-          isOpen={isPasswordModalOpen}
-          onClose={() => setIsPasswordModalOpen(false)}
-        />
       </nav>
     )
   );

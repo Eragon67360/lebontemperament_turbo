@@ -4,8 +4,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import {
   ANNIVERSARY_FLAG_KEY,
   type PublicFeatureFlags,
-} from "@/lib/featureFlags";
-import { createClient } from "@/utils/supabase/client";
+} from "@/lib/featureFlagKeys";
+import { loadBrowserClient } from "@/utils/supabase/lazy";
 import {
   createContext,
   ReactNode,
@@ -43,35 +43,43 @@ export function FeatureFlagProvider({
   useEffect(() => {
     if (!isAdmin) return;
 
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`feature-flags-admin-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "feature_flags",
-          filter: `flag_key=eq.${ANNIVERSARY_FLAG_KEY}`,
-        },
-        (payload) => {
-          const row = payload.new as { is_enabled?: boolean } | null;
-          if (row && typeof row.is_enabled === "boolean") {
-            setAdminOverrides((current) => ({
-              ...current,
-              anniversary: row.is_enabled === true,
-            }));
-          }
-        },
-      )
-      .subscribe((status, err) => {
-        if (err) console.error("[FeatureFlag] Subscription error:", err);
-        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
-          console.error(`[FeatureFlag] Realtime ${status}`);
-      });
+    let cancelled = false;
+    let cleanup: (() => void) | undefined;
+    loadBrowserClient().then((supabase) => {
+      if (cancelled) return;
+      const channel = supabase
+        .channel(`feature-flags-admin-${crypto.randomUUID()}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "feature_flags",
+            filter: `flag_key=eq.${ANNIVERSARY_FLAG_KEY}`,
+          },
+          (payload) => {
+            const row = payload.new as { is_enabled?: boolean } | null;
+            if (row && typeof row.is_enabled === "boolean") {
+              setAdminOverrides((current) => ({
+                ...current,
+                anniversary: row.is_enabled === true,
+              }));
+            }
+          },
+        )
+        .subscribe((status, err) => {
+          if (err) console.error("[FeatureFlag] Subscription error:", err);
+          else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
+            console.error(`[FeatureFlag] Realtime ${status}`);
+        });
+      cleanup = () => {
+        supabase.removeChannel(channel);
+      };
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      cleanup?.();
     };
   }, [isAdmin]);
 

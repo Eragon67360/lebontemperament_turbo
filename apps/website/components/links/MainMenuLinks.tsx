@@ -1,6 +1,6 @@
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
-import { User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import React from "react";
 
