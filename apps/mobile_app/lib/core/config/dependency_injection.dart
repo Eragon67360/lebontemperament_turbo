@@ -2,12 +2,9 @@ import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../data/services/api_service.dart';
 import '../../data/services/storage_service.dart';
 import '../../features/auth/data/services/auth_service.dart';
-import '../../data/models/announcement.dart';
 import '../../data/models/user.dart' as app_user;
 import '../../data/models/event.dart';
 import '../../data/models/concert.dart';
@@ -25,8 +22,8 @@ class DependencyInjection {
     // Initialize Hive
     await Hive.initFlutter();
 
-    // Register Hive adapters
-    Hive.registerAdapter(AnnouncementAdapter());
+    // Register Hive adapters (typeId 2 was Announcement, removed in #362:
+    // keep it unused so old boxes on members' devices never decode wrongly)
     Hive.registerAdapter(app_user.UserAdapter());
     Hive.registerAdapter(EventAdapter());
     Hive.registerAdapter(ConcertAdapter());
@@ -38,7 +35,6 @@ class DependencyInjection {
     Hive.registerAdapter(ContextAdapter());
 
     // Open Hive boxes
-    await Hive.openBox<Announcement>('announcements');
     await Hive.openBox<app_user.User>('users');
     await Hive.openBox<Event>('events');
     await Hive.openBox<Concert>('concerts');
@@ -84,19 +80,6 @@ class DependencyInjection {
   }
 
   static void _registerServices() {
-    // Supabase client
-    _getIt.registerLazySingleton<SupabaseClient>(
-      () => Supabase.instance.client,
-    );
-
-    // API Service
-    _getIt.registerLazySingleton<ApiService>(
-      () => ApiService(
-        supabaseClient: _getIt<SupabaseClient>(),
-        logger: _getIt<Logger>(),
-      ),
-    );
-
     // Storage Service
     _getIt.registerLazySingleton<StorageService>(
       () => StorageService(logger: _getIt<Logger>()),
