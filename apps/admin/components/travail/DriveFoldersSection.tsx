@@ -16,10 +16,20 @@ import {
   useUpdateDriveFolder,
   type DriveFolder,
 } from "@/hooks/useDriveFolders";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { driveFolderUrl } from "@repo/domain/utils/drive";
 import { ExternalLink, Loader2, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+
+/** One editable value per stored folder row. */
+const valuesFromFolders = (folders: DriveFolder[] | undefined) =>
+  folders
+    ? (Object.fromEntries(folders.map((f) => [f.id, f.folder_id])) as Record<
+        string,
+        string
+      >)
+    : {};
 
 /** Explains what each row actually drives on the members site. */
 const HINTS: Record<string, string> = {
@@ -29,19 +39,15 @@ const HINTS: Record<string, string> = {
 export function DriveFoldersSection() {
   const { data: folders, isLoading, isError, refetch } = useDriveFolders();
   const updateFolder = useUpdateDriveFolder();
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    valuesFromFolders(folders),
+  );
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (folders) {
-      setValues(
-        Object.fromEntries(folders.map((f) => [f.id, f.folder_id])) as Record<
-          string,
-          string
-        >,
-      );
-    }
-  }, [folders]);
+  // Loaded (or refetched) rows replace the fields, as before.
+  useResetOnChange([folders], () => {
+    if (folders) setValues(valuesFromFolders(folders));
+  });
 
   const handleSave = async (folder: DriveFolder) => {
     const value = values[folder.id]?.trim();

@@ -2,9 +2,13 @@
 import { setColumns } from "@/utils/setColumns";
 import { PhotoData } from "@/utils/types";
 import { Accordion } from "@heroui/react";
-import { AnimatePresence, m } from "motion/react";
+import { AnimatePresence, m, type HTMLMotionProps } from "motion/react";
 import { useEffect, useState } from "react";
-import { MasonryPhotoAlbum } from "react-photo-album";
+import {
+  MasonryPhotoAlbum,
+  type ElementRef,
+  type RenderButtonProps,
+} from "react-photo-album";
 import "react-photo-album/masonry.css";
 import Lightbox, { type Labels } from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
@@ -24,6 +28,17 @@ type PhotoGalleryProps = {
   initialConcerts?: PhotoData[];
   initialVieBT?: PhotoData[];
 };
+
+// Loading skeleton component
+const LoadingSkeleton = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="bg-surface-tertiary h-64 w-full rounded" />
+      ))}
+    </div>
+  </div>
+);
 
 export default function PhotoGallery({
   initialConcerts,
@@ -103,19 +118,12 @@ export default function PhotoGallery({
     fetchImages();
   }, [initialVieBT]);
 
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <div className="animate-pulse space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-surface-tertiary h-64 w-full rounded" />
-        ))}
-      </div>
-    </div>
-  );
-
   // Custom render function for the interactive button wrapper to add motion
-  const renderAnimatedButton = ({ ref, children, ...restProps }: any) => (
+  const renderAnimatedButton = ({
+    ref,
+    children,
+    ...restProps
+  }: RenderButtonProps & ElementRef<HTMLButtonElement>) => (
     <m.button
       ref={ref}
       initial={{ opacity: 0, scale: 0.9 }}
@@ -124,7 +132,9 @@ export default function PhotoGallery({
         duration: 0.5,
         ease: "easeOut",
       }}
-      {...restProps}
+      // The album passes plain button props; motion only redeclares a few
+      // handler names (onAnimationStart, onDrag...) that it never sends.
+      {...(restProps as HTMLMotionProps<"button">)}
     >
       {children}
     </m.button>

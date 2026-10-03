@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useNextProjectDisplayOrder } from "@/hooks/useProjects";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { cn } from "@/lib/utils";
 import { Project } from "@repo/domain/types/projects";
 import { format } from "date-fns";
@@ -178,6 +179,57 @@ const ProjectImageField = ({
   </div>
 );
 
+const EMPTY_PROJECT_FORM: ProjectFormData = {
+  name: "",
+  sub_name: "",
+  slug: "",
+  date: null,
+  image: null,
+  explanation: "",
+  banniere: null,
+  banniere_photographer_name: null,
+  banniere_photographer_url: null,
+  image2: null,
+  image2_photographer_name: null,
+  image2_photographer_url: null,
+  image3: null,
+  image3_photographer_name: null,
+  image3_photographer_url: null,
+  text1: "",
+  text2: "",
+  author_name: null,
+  display_order: 0,
+};
+
+/** The form as it opens: the project being edited, or a blank one. */
+const buildFormData = (
+  project: Project | undefined,
+  nextDisplayOrder: number,
+): ProjectFormData =>
+  project
+    ? {
+        name: project.name || "",
+        sub_name: project.sub_name || "",
+        slug: project.slug || "",
+        date: project.date ? new Date(project.date) : null,
+        image: project.image || null,
+        explanation: project.explanation || "",
+        banniere: project.banniere || null,
+        banniere_photographer_name: project.banniere_photographer_name || null,
+        banniere_photographer_url: project.banniere_photographer_url || null,
+        image2: project.image2 || null,
+        image2_photographer_name: project.image2_photographer_name || null,
+        image2_photographer_url: project.image2_photographer_url || null,
+        image3: project.image3 || null,
+        image3_photographer_name: project.image3_photographer_name || null,
+        image3_photographer_url: project.image3_photographer_url || null,
+        text1: project.text1 || "",
+        text2: project.text2 || "",
+        author_name: project.author_name || null,
+        display_order: project.display_order ?? 0,
+      }
+    : { ...EMPTY_PROJECT_FORM, display_order: nextDisplayOrder };
+
 // --- Main Component ---
 
 export function ProjectModal({
@@ -202,82 +254,19 @@ export function ProjectModal({
   useEffect(() => {
     nextDisplayOrderRef.current = nextDisplayOrder ?? 0;
   }, [nextDisplayOrder]);
-  const [formData, setFormData] = useState<ProjectFormData>({
-    name: "",
-    sub_name: "",
-    slug: "",
-    date: null,
-    image: null,
-    explanation: "",
-    banniere: null,
-    banniere_photographer_name: null,
-    banniere_photographer_url: null,
-    image2: null,
-    image2_photographer_name: null,
-    image2_photographer_url: null,
-    image3: null,
-    image3_photographer_name: null,
-    image3_photographer_url: null,
-    text1: "",
-    text2: "",
-    author_name: null,
-    display_order: 0,
-  });
+  const [formData, setFormData] = useState<ProjectFormData>(() =>
+    isOpen ? buildFormData(project, nextDisplayOrder ?? 0) : EMPTY_PROJECT_FORM,
+  );
 
-  // Initialization
-  useEffect(() => {
+  // Initialization: re-seed the form each time the modal opens.
+  useResetOnChange([project, isOpen], () => {
     if (isOpen) {
-      if (project) {
-        setFormData({
-          name: project.name || "",
-          sub_name: project.sub_name || "",
-          slug: project.slug || "",
-          date: project.date ? new Date(project.date) : null,
-          image: project.image || null,
-          explanation: project.explanation || "",
-          banniere: project.banniere || null,
-          banniere_photographer_name:
-            project.banniere_photographer_name || null,
-          banniere_photographer_url: project.banniere_photographer_url || null,
-          image2: project.image2 || null,
-          image2_photographer_name: project.image2_photographer_name || null,
-          image2_photographer_url: project.image2_photographer_url || null,
-          image3: project.image3 || null,
-          image3_photographer_name: project.image3_photographer_name || null,
-          image3_photographer_url: project.image3_photographer_url || null,
-          text1: project.text1 || "",
-          text2: project.text2 || "",
-          author_name: project.author_name || null,
-          display_order: project.display_order ?? 0,
-        });
-      } else {
-        // Reset form for new entry
-        setFormData({
-          name: "",
-          sub_name: "",
-          slug: "",
-          date: null,
-          image: null,
-          explanation: "",
-          banniere: null,
-          banniere_photographer_name: null,
-          banniere_photographer_url: null,
-          image2: null,
-          image2_photographer_name: null,
-          image2_photographer_url: null,
-          image3: null,
-          image3_photographer_name: null,
-          image3_photographer_url: null,
-          text1: "",
-          text2: "",
-          author_name: null,
-          display_order: nextDisplayOrderRef.current,
-        });
-        setFiles({});
-      }
+      setFormData(buildFormData(project, nextDisplayOrderRef.current));
+      // Reset the pending uploads for a new entry
+      if (!project) setFiles({});
       setActiveTab("general");
     }
-  }, [project, isOpen]);
+  });
 
   const uploadToCloudinary = async (
     file: File,
@@ -481,7 +470,9 @@ export function ProjectModal({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="project-date">Date de l'événement *</Label>
+                    <Label htmlFor="project-date">
+                      Date de l&apos;événement *
+                    </Label>
                     <Popover modal>
                       <PopoverTrigger asChild>
                         <Button
@@ -544,7 +535,7 @@ export function ProjectModal({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="order">Ordre d'affichage</Label>
+                    <Label htmlFor="order">Ordre d&apos;affichage</Label>
                     <Input
                       id="order"
                       type="number"

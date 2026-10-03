@@ -71,7 +71,7 @@ export default function LoginPage() {
                 </h1>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <Sparkles className="text-primary h-4 w-4 animate-pulse" />
-                  <p>Espace d'administration</p>
+                  <p>Espace d&apos;administration</p>
                 </div>
               </div>
             </div>

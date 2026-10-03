@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { useInviteUsers } from "@/hooks/useUsers";
 import { InvitationProgress } from "@/types/user";
 import { firstIssueMessage, invitationEntrySchema } from "@/utils/formSchemas";
@@ -46,6 +47,26 @@ interface InviteUserDialogProps {
 const emailSchema = invitationEntrySchema.shape.email;
 const MAX_INVITATIONS = 200;
 
+const emptyInvitation = (): InvitationEntry => ({
+  email: "",
+  displayName: "",
+  role: "user",
+  status: "pending",
+});
+
+/** The rows the dialog opens with: the pre-filled list, or one empty row. */
+const invitationsFrom = (
+  initialInvitations: InviteUserDialogProps["initialInvitations"],
+): InvitationEntry[] =>
+  initialInvitations && initialInvitations.length > 0
+    ? initialInvitations.map((inv) => ({
+        email: inv.email,
+        displayName: inv.displayName,
+        role: "user" as const,
+        status: "pending" as const,
+      }))
+    : [emptyInvitation()];
+
 type InvitationField = "email" | "displayName";
 
 /**
@@ -70,9 +91,9 @@ export function InviteUserDialog({
   initialInvitations,
 }: InviteUserDialogProps) {
   const inviteUsers = useInviteUsers();
-  const [invitations, setInvitations] = useState<InvitationEntry[]>([
-    { email: "", displayName: "", role: "user", status: "pending" },
-  ]);
+  const [invitations, setInvitations] = useState<InvitationEntry[]>(() =>
+    isOpen ? invitationsFrom(initialInvitations) : [emptyInvitation()],
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<InvitationProgress>({
     current: 0,
@@ -81,32 +102,22 @@ export function InviteUserDialog({
   });
 
   const resetState = () => {
-    setInvitations([
-      { email: "", displayName: "", role: "user", status: "pending" },
-    ]);
+    setInvitations([emptyInvitation()]);
     setIsProcessing(false);
     setProgress({ current: 0, total: 0, percentage: 0 });
   };
 
   // Load initial invitations when dialog opens
-  React.useEffect(() => {
+  useResetOnChange([isOpen, initialInvitations], () => {
     if (isOpen) {
       if (initialInvitations && initialInvitations.length > 0) {
-        setInvitations(
-          initialInvitations.map((inv) => ({
-            email: inv.email,
-            displayName: inv.displayName,
-            role: "user" as const,
-            status: "pending" as const,
-          })),
-        );
+        setInvitations(invitationsFrom(initialInvitations));
       } else {
         // Reset to empty if no initial data
         resetState();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialInvitations]);
+  });
 
   const addInvitationField = () => {
     setInvitations([

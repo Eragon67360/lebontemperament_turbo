@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Fetch bug reports
 export function useBugReports() {
-  const { data: user, isLoading: isUserLoading } = useCurrentUser();
+  const { data: user } = useCurrentUser();
 
   return useQuery({
     queryKey: ["bug-reports", user?.id],

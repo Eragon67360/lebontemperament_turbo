@@ -12,27 +12,27 @@ import {
   useAnniversaryHero,
   useUpdateAnniversaryHero,
 } from "@/hooks/useAnniversaryHero";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { Loader2, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-export function HeroInlineEditor() {
-  const { data: hero, isLoading, isError, refetch } = useAnniversaryHero();
-  const updateHero = useUpdateAnniversaryHero();
+type Hero = NonNullable<ReturnType<typeof useAnniversaryHero>["data"]>;
 
-  const [formData, setFormData] = useState({
-    hero_number: "",
-    hero_subtitle: "",
-    description: "",
-    cta_text: "",
-    cta_target_section: "",
-    enable_intro_animation: true,
-    skip_button_text: "",
-  });
+const EMPTY_FORM = {
+  hero_number: "",
+  hero_subtitle: "",
+  description: "",
+  cta_text: "",
+  cta_target_section: "",
+  enable_intro_animation: true,
+  skip_button_text: "",
+};
 
-  useEffect(() => {
-    if (hero) {
-      setFormData({
+/** The stored hero section as form fields (empty until it has loaded). */
+const buildFormData = (hero: Hero | undefined) =>
+  hero
+    ? {
         hero_number: hero.hero_number,
         hero_subtitle: hero.hero_subtitle,
         description: hero.description || "",
@@ -40,9 +40,19 @@ export function HeroInlineEditor() {
         cta_target_section: hero.cta_target_section ?? "",
         enable_intro_animation: hero.enable_intro_animation ?? true,
         skip_button_text: hero.skip_button_text ?? "",
-      });
-    }
-  }, [hero]);
+      }
+    : EMPTY_FORM;
+
+export function HeroInlineEditor() {
+  const { data: hero, isLoading, isError, refetch } = useAnniversaryHero();
+  const updateHero = useUpdateAnniversaryHero();
+
+  const [formData, setFormData] = useState(() => buildFormData(hero));
+
+  // Loaded (or refetched) data replaces the fields, as before.
+  useResetOnChange([hero], () => {
+    if (hero) setFormData(buildFormData(hero));
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
