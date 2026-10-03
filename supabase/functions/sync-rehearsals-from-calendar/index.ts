@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import { chunk, mapSettledWithConcurrency } from "./concurrency.ts";
 import { addDays, getParisToday, isAllDayEvent } from "./datetime.ts";
 import { fetchCalendarEvents } from "./google-calendar.ts";
 import { extractRehearsalFields } from "./llm-extract.ts";
-import { resolveRehearsalTimes } from "./rehearsal-times.ts";
+import {
+  resolveRehearsalTimes,
+  type ResolvedRehearsalTimes,
+} from "./rehearsal-times.ts";
 import type {
   GoogleCalendarEvent,
   RehearsalRow,
@@ -12,6 +16,9 @@ import type {
   SyncMode,
   SyncStats,
 } from "./types.ts";
+
+const EXTRACT_CONCURRENCY = 4;
+const WRITE_BATCH_SIZE = 20;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -258,53 +265,106 @@ serve(async (req) => {
     let skippedNonRehearsal = 0;
     let skippedAllDayNoRule = 0;
 
-    for (const event of googleEvents) {
-      try {
-        if (event.status === "cancelled") {
+    type EventOutcome =
+      | { kind: "cancelled" }
+      | { kind: "unchanged" }
+      | { kind: "non_rehearsal"; classifiedName: string; existingId?: string }
+      | { kind: "all_day_no_rule" }
+      | {
+          kind: "upsert";
+          upsert: RehearsalUpsert;
+          times: ResolvedRehearsalTimes;
+          existing: boolean;
+        };
+
+    // Cheap checks stay sequential; only events needing the LLM go in the pool.
+    const processEvent = async (
+      event: GoogleCalendarEvent,
+    ): Promise<EventOutcome> => {
+      if (event.status === "cancelled") return { kind: "cancelled" };
+
+      const existing = dbByEventId.get(event.id);
+      if (!hasGoogleUpdate(existing, event)) return { kind: "unchanged" };
+
+      const extracted = await extractRehearsalFields(openAiKey, event);
+
+      if (!extracted.is_rehearsal) {
+        return {
+          kind: "non_rehearsal",
+          classifiedName: extracted.name,
+          existingId: existing?.id,
+        };
+      }
+
+      const times = resolveRehearsalTimes(event);
+      if (!times) return { kind: "all_day_no_rule" };
+
+      return {
+        kind: "upsert",
+        times,
+        existing: Boolean(existing),
+        upsert: {
+          date: times.date,
+          start_time: times.start_time,
+          end_time: times.end_time,
+          name: extracted.name,
+          place: extracted.place,
+          group_type: extracted.group_type,
+          event_id: event.id,
+          google_updated_at: event.updated,
+        },
+      };
+    };
+
+    const settled = await mapSettledWithConcurrency(
+      googleEvents,
+      EXTRACT_CONCURRENCY,
+      processEvent,
+    );
+
+    googleEvents.forEach((event, index) => {
+      const result = settled[index];
+
+      if (result.status === "rejected") {
+        const message =
+          result.reason instanceof Error
+            ? result.reason.message
+            : String(result.reason);
+        stats.errors.push({
+          event_id: event.id,
+          phase: "extract",
+          message,
+        });
+        log("event_error", { event_id: event.id, phase: "extract", message });
+        return;
+      }
+
+      const outcome = result.value;
+      switch (outcome.kind) {
+        case "cancelled":
           stats.skipped++;
           skippedCancelled++;
-          log("event_skipped", {
-            event_id: event.id,
-            summary: event.summary ?? "",
-            reason: "cancelled",
-          });
-          continue;
-        }
-
-        const existing = dbByEventId.get(event.id);
-
-        if (!hasGoogleUpdate(existing, event)) {
+          log("event_skipped", { event_id: event.id, reason: "cancelled" });
+          break;
+        case "unchanged":
           stats.skipped++;
           skippedUnchanged++;
-          log("event_skipped", {
-            event_id: event.id,
-            summary: event.summary ?? "",
-            reason: "unchanged",
-          });
-          continue;
-        }
-
-        const extracted = await extractRehearsalFields(openAiKey, event);
-
-        if (!extracted.is_rehearsal) {
+          log("event_skipped", { event_id: event.id, reason: "unchanged" });
+          break;
+        case "non_rehearsal":
           stats.skipped++;
           skippedNonRehearsal++;
           // A previously synced rehearsal that is now a concert/other must be removed.
-          if (existing) {
-            reclassifiedDeleteIds.push(existing.id);
+          if (outcome.existingId) {
+            reclassifiedDeleteIds.push(outcome.existingId);
           }
           log("event_skipped", {
             event_id: event.id,
-            summary: event.summary ?? "",
             reason: "not_a_rehearsal",
-            classified_name: extracted.name,
-            removes_existing: Boolean(existing),
+            removes_existing: Boolean(outcome.existingId),
           });
-          continue;
-        }
-
-        const eventTimes = resolveRehearsalTimes(event);
-        if (!eventTimes) {
+          break;
+        case "all_day_no_rule":
           stats.skipped++;
           skippedAllDayNoRule++;
           stats.errors.push({
@@ -315,48 +375,25 @@ serve(async (req) => {
           });
           log("event_skipped", {
             event_id: event.id,
-            summary: event.summary ?? "",
             reason: "all_day_no_time_rule",
             all_day: isAllDayEvent(event.start),
           });
-          continue;
-        }
-
-        upserts.push({
-          date: eventTimes.date,
-          start_time: eventTimes.start_time,
-          end_time: eventTimes.end_time,
-          name: extracted.name,
-          place: extracted.place,
-          group_type: extracted.group_type,
-          event_id: event.id,
-          google_updated_at: event.updated,
-        });
-        log("event_queued", {
-          event_id: event.id,
-          name: extracted.name,
-          group_type: extracted.group_type,
-          date: eventTimes.date,
-          start_time: eventTimes.start_time,
-          end_time: eventTimes.end_time,
-          all_day: eventTimes.all_day,
-          time_rule: eventTimes.rule_id,
-          operation: existing ? "update" : "create",
-        });
-      } catch (error) {
-        stats.errors.push({
-          event_id: event.id,
-          phase: "extract",
-          message: error instanceof Error ? error.message : String(error),
-        });
-        log("event_error", {
-          event_id: event.id,
-          summary: event.summary ?? "",
-          phase: "extract",
-          message: error instanceof Error ? error.message : String(error),
-        });
+          break;
+        case "upsert":
+          upserts.push(outcome.upsert);
+          log("event_queued", {
+            event_id: event.id,
+            group_type: outcome.upsert.group_type,
+            date: outcome.times.date,
+            start_time: outcome.times.start_time,
+            end_time: outcome.times.end_time,
+            all_day: outcome.times.all_day,
+            time_rule: outcome.times.rule_id,
+            operation: outcome.existing ? "update" : "create",
+          });
+          break;
       }
-    }
+    });
 
     const removedFromCalendarIds = dbSynced
       .filter((row) => row.event_id && !googleEventIds.has(row.event_id))
@@ -409,33 +446,59 @@ serve(async (req) => {
       silence_push: silencePush,
     });
 
-    const { data: writeResult, error: writeError } = await supabase.rpc(
-      "rehearsals_sync_write",
-      {
-        p_upserts: upserts,
-        p_delete_ids: deleteIds,
-        p_silence_push: silencePush,
-      },
-    );
+    // Upserts go in batches of WRITE_BATCH_SIZE; deletes ride with the first
+    // call. A failed batch is recorded and the others still run.
+    const upsertBatches = chunk(upserts, WRITE_BATCH_SIZE);
+    const writeCalls = upsertBatches.length > 0 ? upsertBatches : [[]];
+    let writeFailures = 0;
 
-    if (writeError) {
-      stats.errors.push({ phase: "write", message: writeError.message });
-      log("write_failed", { mode, message: writeError.message });
-      await finalizeSyncLog(supabase, logId, stats, "failed");
+    for (const [index, batch] of writeCalls.entries()) {
+      const { data: writeResult, error: writeError } = await supabase.rpc(
+        "rehearsals_sync_write",
+        {
+          p_upserts: batch,
+          p_delete_ids: index === 0 ? deleteIds : [],
+          p_silence_push: silencePush,
+        },
+      );
+
+      if (writeError) {
+        writeFailures++;
+        stats.errors.push({
+          phase: "write",
+          message: `Batch ${index + 1}/${writeCalls.length}: ${writeError.message}`,
+        });
+        log("write_failed", {
+          mode,
+          batch: index + 1,
+          batches: writeCalls.length,
+          message: writeError.message,
+        });
+        continue;
+      }
+
+      const counts = (writeResult ?? {}) as {
+        created?: number;
+        updated?: number;
+        deleted?: number;
+      };
+      stats.created += counts.created ?? 0;
+      stats.updated += counts.updated ?? 0;
+      stats.deleted += counts.deleted ?? 0;
+    }
+
+    if (writeFailures > 0) {
+      await finalizeSyncLog(
+        supabase,
+        logId,
+        stats,
+        writeFailures === writeCalls.length ? "failed" : "partial",
+      );
       return jsonResponse(
         responsePayload(mode, true, stats, logId, upserts),
         500,
       );
     }
-
-    const counts = writeResult as {
-      created?: number;
-      updated?: number;
-      deleted?: number;
-    };
-    stats.created = counts.created ?? 0;
-    stats.updated = counts.updated ?? 0;
-    stats.deleted = counts.deleted ?? 0;
 
     const finalStatus = stats.errors.length > 0 ? "partial" : "success";
     await finalizeSyncLog(supabase, logId, stats, finalStatus);

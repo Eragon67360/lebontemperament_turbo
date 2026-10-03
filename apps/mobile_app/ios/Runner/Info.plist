@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>mobile_app</string>
+	<string>Le Bon Tempérament</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -45,8 +45,6 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>NSUserNotificationUsageDescription</key>
-	<string>Cette application utilise les notifications pour vous informer des nouveaux événements et rappels de répétitions.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Votre position est partagée en temps réel avec les clients lors du suivi de livraison.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

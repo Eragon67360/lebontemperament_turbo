@@ -1,7 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 
-import '../models/announcement.dart';
 import '../models/user.dart';
 import '../models/event.dart';
 import '../models/concert.dart';
@@ -9,7 +8,6 @@ import '../models/rehearsal.dart';
 
 class StorageService {
   final Logger _logger;
-  Box<Announcement>? _announcementsBox;
   Box<User>? _usersBox;
   Box<Event>? _eventsBox;
   Box<Concert>? _concertsBox;
@@ -23,7 +21,6 @@ class StorageService {
     if (_isInitialized) return;
 
     try {
-      _announcementsBox = Hive.box<Announcement>('announcements');
       _usersBox = Hive.box<User>('users');
       _eventsBox = Hive.box<Event>('events');
       _concertsBox = Hive.box<Concert>('concerts');
@@ -46,73 +43,12 @@ class StorageService {
     }
   }
 
-  // Announcements storage
-  Future<void> saveAnnouncements(List<Announcement> announcements) async {
-    await _ensureInitialized();
-    try {
-      await _announcementsBox!.clear();
-      await _announcementsBox!.addAll(announcements);
-      _logger.i('Saved ${announcements.length} announcements to local storage');
-    } catch (e) {
-      _logger.e('Error saving announcements: $e');
-      rethrow;
-    }
-  }
-
-  List<Announcement> getAnnouncements() {
-    if (!_isInitialized || _announcementsBox == null) {
-      _logger.w('Storage not initialized, returning empty list');
-      return [];
-    }
-    try {
-      return _announcementsBox!.values.toList();
-    } catch (e) {
-      _logger.e('Error getting announcements: $e');
-      return [];
-    }
-  }
-
-  Future<void> saveAnnouncement(Announcement announcement) async {
-    await _ensureInitialized();
-    try {
-      await _announcementsBox!.put(announcement.id, announcement);
-      _logger.i('Saved announcement: ${announcement.title}');
-    } catch (e) {
-      _logger.e('Error saving announcement: $e');
-      rethrow;
-    }
-  }
-
-  Announcement? getAnnouncement(String id) {
-    if (!_isInitialized || _announcementsBox == null) {
-      _logger.w('Storage not initialized, returning null');
-      return null;
-    }
-    try {
-      return _announcementsBox!.get(id);
-    } catch (e) {
-      _logger.e('Error getting announcement: $e');
-      return null;
-    }
-  }
-
-  Future<void> deleteAnnouncement(String id) async {
-    await _ensureInitialized();
-    try {
-      await _announcementsBox!.delete(id);
-      _logger.i('Deleted announcement: $id');
-    } catch (e) {
-      _logger.e('Error deleting announcement: $e');
-      rethrow;
-    }
-  }
-
   // Users storage
   Future<void> saveUser(User user) async {
     await _ensureInitialized();
     try {
       await _usersBox!.put(user.id, user);
-      _logger.i('Saved user: ${user.email}');
+      _logger.i('Saved user: ${user.id}');
     } catch (e) {
       _logger.e('Error saving user: $e');
       rethrow;
@@ -330,7 +266,6 @@ class StorageService {
   Future<void> clearAll() async {
     await _ensureInitialized();
     try {
-      await _announcementsBox!.clear();
       await _usersBox!.clear();
       await _eventsBox!.clear();
       await _concertsBox!.clear();
@@ -346,7 +281,6 @@ class StorageService {
   Map<String, int> getStorageStats() {
     if (!_isInitialized) {
       return {
-        'announcements': 0,
         'users': 0,
         'events': 0,
         'concerts': 0,
@@ -355,7 +289,6 @@ class StorageService {
     }
 
     return {
-      'announcements': _announcementsBox?.length ?? 0,
       'users': _usersBox?.length ?? 0,
       'events': _eventsBox?.length ?? 0,
       'concerts': _concertsBox?.length ?? 0,

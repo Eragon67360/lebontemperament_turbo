@@ -8,6 +8,7 @@ import '../models/ca_minute.dart';
 import '../models/drive_folder.dart';
 import '../models/event.dart';
 import '../models/concert.dart';
+import '../models/list_result.dart';
 import '../models/member.dart';
 import '../models/rehearsal.dart';
 import '../services/ca_service.dart';
@@ -86,23 +87,7 @@ final membersProvider = FutureProvider<List<Member>>((ref) async {
 // Refresh trigger provider for real-time updates
 final refreshTriggerProvider = StateProvider<int>((ref) => 0);
 
-// Events providers
-final eventsProvider = FutureProvider<List<Event>>((ref) async {
-  // Ensure storage is initialized
-  await ref.watch(storageInitializationProvider.future);
-
-  final eventsService = ref.watch(eventsServiceProvider);
-  return await eventsService.getEvents();
-});
-
-final publicEventsProvider = FutureProvider<List<Event>>((ref) async {
-  // Ensure storage is initialized
-  await ref.watch(storageInitializationProvider.future);
-
-  final eventsService = ref.watch(eventsServiceProvider);
-  return await eventsService.getPublicEvents();
-});
-
+// Event, concert and rehearsal detail providers
 final eventProvider = FutureProvider.family<Event?, String>((
   ref,
   eventId,
@@ -112,15 +97,6 @@ final eventProvider = FutureProvider.family<Event?, String>((
 
   final eventsService = ref.watch(eventsServiceProvider);
   return await eventsService.getEventById(eventId);
-});
-
-// Concerts providers
-final concertsProvider = FutureProvider<List<Concert>>((ref) async {
-  // Ensure storage is initialized
-  await ref.watch(storageInitializationProvider.future);
-
-  final concertsService = ref.watch(concertsServiceProvider);
-  return await concertsService.getConcerts();
 });
 
 final concertProvider = FutureProvider.family<Concert?, String>((
@@ -134,15 +110,6 @@ final concertProvider = FutureProvider.family<Concert?, String>((
   return await concertsService.getConcertById(concertId);
 });
 
-// Rehearsals providers
-final rehearsalsProvider = FutureProvider<List<Rehearsal>>((ref) async {
-  // Ensure storage is initialized
-  await ref.watch(storageInitializationProvider.future);
-
-  final rehearsalsService = ref.watch(rehearsalsServiceProvider);
-  return await rehearsalsService.getRehearsals();
-});
-
 final rehearsalProvider = FutureProvider.family<Rehearsal?, String>((
   ref,
   rehearsalId,
@@ -154,17 +121,9 @@ final rehearsalProvider = FutureProvider.family<Rehearsal?, String>((
   return await rehearsalsService.getRehearsalById(rehearsalId);
 });
 
-final rehearsalsByGroupProvider =
-    FutureProvider.family<List<Rehearsal>, GroupType>((ref, groupType) async {
-  // Ensure storage is initialized
-  await ref.watch(storageInitializationProvider.future);
-
-  final rehearsalsService = ref.watch(rehearsalsServiceProvider);
-  return await rehearsalsService.getRehearsalsByGroupType(groupType);
-});
-
-// Real-time providers that automatically refresh when changes are detected
-final realtimeEventsProvider = FutureProvider<List<Event>>((ref) async {
+// Real-time list providers: refreshed when the realtime channel reports a
+// change. They carry where the rows came from (server or cache, #361).
+final realtimeEventsProvider = FutureProvider<ListResult<Event>>((ref) async {
   // Ensure storage is initialized
   await ref.watch(storageInitializationProvider.future);
 
@@ -177,7 +136,7 @@ final realtimeEventsProvider = FutureProvider<List<Event>>((ref) async {
   return await eventsService.getEvents();
 });
 
-final realtimeConcertsProvider = FutureProvider<List<Concert>>((ref) async {
+final realtimeConcertsProvider = FutureProvider<ListResult<Concert>>((ref) async {
   // Ensure storage is initialized
   await ref.watch(storageInitializationProvider.future);
 
@@ -190,7 +149,7 @@ final realtimeConcertsProvider = FutureProvider<List<Concert>>((ref) async {
   return await concertsService.getConcerts();
 });
 
-final realtimeRehearsalsProvider = FutureProvider<List<Rehearsal>>((ref) async {
+final realtimeRehearsalsProvider = FutureProvider<ListResult<Rehearsal>>((ref) async {
   // Ensure storage is initialized
   await ref.watch(storageInitializationProvider.future);
 
@@ -203,50 +162,61 @@ final realtimeRehearsalsProvider = FutureProvider<List<Rehearsal>>((ref) async {
   return await rehearsalsService.getRehearsals();
 });
 
-// Upcoming-only list providers (no past events/concerts/rehearsals)
-final upcomingEventsProvider = FutureProvider<List<Event>>((ref) async {
+// Upcoming-only list providers (no past events/concerts/rehearsals), same
+// provenance as the list they filter.
+final upcomingEventsProvider = FutureProvider<ListResult<Event>>((ref) async {
   final events = await ref.watch(realtimeEventsProvider.future);
-  return events.where((e) {
-    return app_date_utils.isEventUpcoming(
-      dateFrom: e.dateFrom,
-      dateTo: e.dateTo,
-      time: e.time,
-    );
-  }).toList();
+  return events.map(
+    (items) => items.where((e) {
+      return app_date_utils.isEventUpcoming(
+        dateFrom: e.dateFrom,
+        dateTo: e.dateTo,
+        time: e.time,
+      );
+    }).toList(),
+  );
 });
 
-final upcomingConcertsProvider = FutureProvider<List<Concert>>((ref) async {
+final upcomingConcertsProvider = FutureProvider<ListResult<Concert>>((
+  ref,
+) async {
   final concerts = await ref.watch(realtimeConcertsProvider.future);
-  return concerts.where((c) {
-    return app_date_utils.isConcertUpcoming(date: c.date, time: c.time);
-  }).toList();
+  return concerts.map(
+    (items) => items.where((c) {
+      return app_date_utils.isConcertUpcoming(date: c.date, time: c.time);
+    }).toList(),
+  );
 });
 
-final upcomingRehearsalsProvider = FutureProvider<List<Rehearsal>>((ref) async {
+final upcomingRehearsalsProvider = FutureProvider<ListResult<Rehearsal>>((
+  ref,
+) async {
   final rehearsals = await ref.watch(realtimeRehearsalsProvider.future);
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
 
-  final upcoming = rehearsals.where((r) {
-    if (r.date == null) return false;
-    final rehearsalDate = DateTime.tryParse(r.date!);
-    return rehearsalDate != null && !rehearsalDate.isBefore(today);
-  }).toList();
+  return rehearsals.map((items) {
+    final upcoming = items.where((r) {
+      if (r.date == null) return false;
+      final rehearsalDate = DateTime.tryParse(r.date!);
+      return rehearsalDate != null && !rehearsalDate.isBefore(today);
+    }).toList();
 
-  // Sort by date, then by start time to ensure correct order
-  upcoming.sort((a, b) {
-    final dateA = DateTime.parse(a.date!);
-    final dateB = DateTime.parse(b.date!);
-    final dateComparison = dateA.compareTo(dateB);
-    if (dateComparison != 0) return dateComparison;
+    // Sort by date, then by start time to ensure correct order
+    upcoming.sort((a, b) {
+      final dateA = DateTime.parse(a.date!);
+      final dateB = DateTime.parse(b.date!);
+      final dateComparison = dateA.compareTo(dateB);
+      if (dateComparison != 0) return dateComparison;
 
-    // If dates are the same, sort by start time
-    final timeA = a.startTime ?? '00:00';
-    final timeB = b.startTime ?? '00:00';
-    return timeA.compareTo(timeB);
+      // If dates are the same, sort by start time
+      final timeA = a.startTime ?? '00:00';
+      final timeB = b.startTime ?? '00:00';
+      return timeA.compareTo(timeB);
+    });
+
+    return upcoming;
   });
-
-  return upcoming;
 });
 
 // --- NEW: Providers specifically for the Home Screen ---
@@ -256,7 +226,7 @@ final upcomingRehearsalsProvider = FutureProvider<List<Rehearsal>>((ref) async {
 final homeUpcomingRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
   final asyncRehearsals = ref.watch(upcomingRehearsalsProvider);
   return asyncRehearsals.when(
-    data: (rehearsals) => rehearsals.take(2).toList(),
+    data: (rehearsals) => rehearsals.items.take(2).toList(),
     loading: () => [],
     error: (_, __) => [],
   );
@@ -270,7 +240,7 @@ final homeUpcomingConcertsProvider = Provider<List<Concert>>((ref) {
   return asyncConcerts.when(
     data: (concerts) {
       // Create a mutable copy to sort
-      final sortedConcerts = List<Concert>.from(concerts);
+      final sortedConcerts = List<Concert>.from(concerts.items);
       sortedConcerts.sort((a, b) {
         final dateA = DateTime.parse(a.date);
         final dateB = DateTime.parse(b.date);
@@ -283,6 +253,15 @@ final homeUpcomingConcertsProvider = Provider<List<Concert>>((ref) {
     loading: () => [],
     error: (_, __) => [],
   );
+});
+
+/// True when either home list is showing cached rows because the server
+/// could not be reached: the home screen says so (#361).
+final homeDataOfflineProvider = Provider<bool>((ref) {
+  bool fromCache<T>(AsyncValue<ListResult<T>> value) =>
+      value.value?.fromCache ?? false;
+  return fromCache(ref.watch(upcomingRehearsalsProvider)) ||
+      fromCache(ref.watch(upcomingConcertsProvider));
 });
 
 // --- NEW: Helper function for formatting dates ---

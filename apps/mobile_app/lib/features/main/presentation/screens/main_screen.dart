@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'dart:ui'; // Required for ImageFilter.blur
 
+import '../../../../data/providers/connectivity_provider.dart';
+import '../../../../data/providers/data_providers.dart';
 import '../../../concerts/presentation/screens/concerts_events_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -97,6 +99,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     ref.watch(autoScheduleNotificationsProvider);
+    // Back online after an offline spell: the lists showing cached rows
+    // reload themselves instead of waiting for a pull-to-refresh (#361).
+    ref.listen(isOnlineProvider, (previous, next) {
+      if (previous?.value == false && next.value == true) {
+        ref.invalidate(realtimeRehearsalsProvider);
+        ref.invalidate(realtimeConcertsProvider);
+        ref.invalidate(realtimeEventsProvider);
+      }
+    });
     final currentIndex = ref.watch(mainNavigationProvider);
     final theme = Theme.of(context);
 
