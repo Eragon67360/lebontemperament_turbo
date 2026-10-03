@@ -132,6 +132,9 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
                     onLoadSuccess={onDocumentLoadSuccess}
                     onLoadError={onDocumentLoadError}
                     loading="" // We use our own custom loader above
+                    // react-pdf 11 renders through Suspense by default, which
+                    // would bypass the loading and error state kept above.
+                    suspense={false}
                   >
                     <Page
                       pageNumber={pageNumber}

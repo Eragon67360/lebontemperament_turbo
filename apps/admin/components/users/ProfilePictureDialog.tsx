@@ -8,6 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  useDeleteProfilePicture,
+  useUploadProfilePicture,
+} from "@/hooks/useUsers";
 import { Loader2, Trash2, Upload } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -20,7 +24,6 @@ interface ProfilePictureDialogProps {
   email: string;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function ProfilePictureDialog({
@@ -30,12 +33,14 @@ export function ProfilePictureDialog({
   email,
   isOpen,
   onOpenChange,
-  onSuccess,
 }: ProfilePictureDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Both refresh the users list on success.
+  const uploadPicture = useUploadProfilePicture();
+  const deletePicture = useDeleteProfilePicture();
+  const isUploading = uploadPicture.isPending;
+  const isDeleting = deletePicture.isPending;
 
   // Reset preview when dialog opens/closes
   useEffect(() => {
@@ -83,24 +88,10 @@ export function ProfilePictureDialog({
   const handleUpload = async () => {
     if (!selectedFile) return;
 
-    setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("userId", userId);
-
-      const response = await fetch("/api/users/profile-picture", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to upload profile picture");
-      }
+      await uploadPicture.mutateAsync({ userId, file: selectedFile });
 
       toast.success("Photo de profil mise à jour avec succès");
-      onSuccess();
       onOpenChange(false);
       setSelectedFile(null);
       setPreview(null);
@@ -110,28 +101,14 @@ export function ProfilePictureDialog({
           ? error.message
           : "Erreur lors du téléversement de la photo",
       );
-    } finally {
-      setIsUploading(false);
     }
   };
 
   const handleDelete = async () => {
-    setIsDeleting(true);
     try {
-      const response = await fetch(
-        `/api/users/profile-picture?userId=${userId}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete profile picture");
-      }
+      await deletePicture.mutateAsync(userId);
 
       toast.success("Photo de profil supprimée avec succès");
-      onSuccess();
       onOpenChange(false);
       setSelectedFile(null);
       setPreview(null);
@@ -141,8 +118,6 @@ export function ProfilePictureDialog({
           ? error.message
           : "Erreur lors de la suppression de la photo",
       );
-    } finally {
-      setIsDeleting(false);
     }
   };
 

@@ -21,6 +21,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useNextProjectDisplayOrder } from "@/hooks/useProjects";
 import { cn } from "@/lib/utils";
 import { Project } from "@repo/domain/types/projects";
 import { format } from "date-fns";
@@ -37,7 +38,7 @@ import {
   RefreshCw,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // --- Types ---
@@ -193,6 +194,14 @@ export function ProjectModal({
   const [activeTab, setActiveTab] = useState("general");
   const [uploading, setUploading] = useState<string | null>(null);
   const [files, setFiles] = useState<FileState>({});
+  // Shares the ["projects"] cache with the list behind the modal. Read
+  // through a ref when the modal opens, so a background refetch that moves
+  // the maximum while an admin types does not reset the form.
+  const { data: nextDisplayOrder } = useNextProjectDisplayOrder();
+  const nextDisplayOrderRef = useRef(0);
+  useEffect(() => {
+    nextDisplayOrderRef.current = nextDisplayOrder ?? 0;
+  }, [nextDisplayOrder]);
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
     sub_name: "",
@@ -262,29 +271,13 @@ export function ProjectModal({
           text1: "",
           text2: "",
           author_name: null,
-          display_order: 0,
+          display_order: nextDisplayOrderRef.current,
         });
         setFiles({});
-        fetchDisplayOrder();
       }
       setActiveTab("general");
     }
   }, [project, isOpen]);
-
-  const fetchDisplayOrder = async () => {
-    try {
-      const response = await fetch("/api/projects");
-      if (!response.ok) return;
-      const projects = await response.json();
-      const maxOrder =
-        projects.length > 0
-          ? Math.max(...projects.map((p: Project) => p.display_order || 0))
-          : -1;
-      setFormData((prev) => ({ ...prev, display_order: maxOrder + 1 }));
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const uploadToCloudinary = async (
     file: File,

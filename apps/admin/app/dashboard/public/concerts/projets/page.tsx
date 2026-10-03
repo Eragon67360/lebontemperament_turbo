@@ -21,6 +21,13 @@ import {
   EmptyState,
 } from "@/components/ui/data-state";
 import {
+  useCreateProject,
+  useDeleteProject,
+  useProjects,
+  useReorderProjects,
+  useUpdateProject,
+} from "@/hooks/useProjects";
+import {
   closestCenter,
   DndContext,
   DragEndEvent,
@@ -52,7 +59,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const MIGRATE_HREF = "/dashboard/public/concerts/projets/migrate";
@@ -245,9 +252,17 @@ const ProjectCard = ({
 // --- Main Page Component ---
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: projects = [],
+    isPending,
+    isError,
+    error,
+    refetch,
+  } = useProjects();
+  const createProject = useCreateProject();
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
+  const reorderProjects = useReorderProjects();
   const [selectedProject, setSelectedProject] = useState<Project | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -263,25 +278,6 @@ export default function ProjectsPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/projects");
-      if (!response.ok) throw new Error("Impossible de récupérer les projets");
-      const data = await response.json();
-      setProjects(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreate = () => {
     setSelectedProject(undefined);
@@ -301,12 +297,8 @@ export default function ProjectsPage() {
   const handleDeleteConfirm = async () => {
     if (!projectToDelete) return;
     try {
-      const response = await fetch(`/api/projects/${projectToDelete}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Échec de la suppression");
+      await deleteProject.mutateAsync(projectToDelete);
       toast.success("Projet supprimé avec succès");
-      fetchProjects();
     } catch (err) {
       console.error(err);
       toast.error("Impossible de supprimer le projet");
@@ -318,24 +310,17 @@ export default function ProjectsPage() {
 
   const handleSubmit = async (data: Partial<Project>) => {
     try {
-      const isUpdate = !!selectedProject;
-      const url = isUpdate
-        ? `/api/projects/${selectedProject.id}`
-        : "/api/projects";
-      const method = isUpdate ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error(`Échec de l'opération`);
+      if (selectedProject) {
+        await updateProject.mutateAsync({ id: selectedProject.id, data });
+      } else {
+        await createProject.mutateAsync(data);
+      }
 
       toast.success(
-        isUpdate ? "Projet mis à jour avec succès" : "Projet créé avec succès",
+        selectedProject
+          ? "Projet mis à jour avec succès"
+          : "Projet créé avec succès",
       );
-      fetchProjects();
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
@@ -353,30 +338,16 @@ export default function ProjectsPage() {
 
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const newProjects = arrayMove(projects, oldIndex, newIndex);
-    setProjects(newProjects);
-
-    // Optimistic UI update done, now sync with server
+    // The mutation shows the new order at once and restores the old one if
+    // the server refuses it.
     try {
-      const updates = newProjects.map((project, index) => ({
-        id: project.id,
-        display_order: index,
-      }));
-
-      await Promise.all(
-        updates.map((u) =>
-          fetch(`/api/projects/${u.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ display_order: u.display_order }),
-          }),
-        ),
+      await reorderProjects.mutateAsync(
+        arrayMove(projects, oldIndex, newIndex),
       );
       toast.success("Ordre mis à jour");
     } catch (err) {
       console.error(err);
       toast.error("Erreur de synchronisation de l'ordre");
-      fetchProjects(); // Revert on error
     }
   };
 
@@ -406,11 +377,13 @@ export default function ProjectsPage() {
       }
     >
       <DataState
-        isLoading={loading}
-        isError={!!error}
+        isLoading={isPending}
+        isError={isError}
         isEmpty={projects.length === 0}
-        onRetry={fetchProjects}
-        errorDescription={error ?? "Les projets n'ont pas pu être chargés."}
+        onRetry={() => refetch()}
+        errorDescription={
+          error?.message ?? "Les projets n'ont pas pu être chargés."
+        }
         skeleton={
           <CardGridSkeleton cards={6} label="Chargement des projets…" />
         }
