@@ -29,12 +29,18 @@ import {
 } from "@/components/ui/dialog";
 import { VideoForm } from "@/components/VideoForm";
 import { YoutubeIframe } from "@/components/YoutubeIframe";
+import {
+  useCreateVideo,
+  useDeleteVideo,
+  useUpdateVideo,
+  useVideos,
+} from "@/hooks/useVideos";
 import { Video, VideoFormData } from "@repo/domain/types/videos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Film, MapPin, Mic2, Pencil, Plus, Trash2, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 // --- Sub-Component: Video Card ---
@@ -146,10 +152,11 @@ const VideoCard = ({
 // --- Main Page Component ---
 
 export default function VideosPage() {
-  const [videos, setVideos] = useState<Video[]>([]);
+  const { data: videos = [], isPending, isError, refetch } = useVideos();
+  const createVideo = useCreateVideo();
+  const updateVideo = useUpdateVideo();
+  const deleteVideo = useDeleteVideo();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
   // Dialog States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -157,39 +164,12 @@ export default function VideosPage() {
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const fetchVideos = async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const response = await fetch("/api/videos");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setVideos(data);
-    } catch (err) {
-      console.error(err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVideos();
-  }, []);
-
   const handleCreate = async (formData: VideoFormData) => {
     try {
-      const response = await fetch("/api/videos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error("Error adding video");
+      await createVideo.mutateAsync(formData);
 
       toast.success("Vidéo ajoutée avec succès");
       setOpen(false);
-      fetchVideos();
     } catch (error) {
       toast.error("Erreur lors de l'ajout de la vidéo");
       console.error(error);
@@ -200,21 +180,11 @@ export default function VideosPage() {
     if (!editingVideo) return;
 
     try {
-      const response = await fetch("/api/videos", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editingVideo.id,
-          ...formData,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Error updating video");
+      await updateVideo.mutateAsync({ id: editingVideo.id, ...formData });
 
       toast.success("Vidéo modifiée avec succès");
       setEditDialogOpen(false);
       setEditingVideo(null);
-      fetchVideos();
     } catch (error) {
       toast.error("Erreur lors de la modification");
       console.error(error);
@@ -230,16 +200,9 @@ export default function VideosPage() {
     if (!videoToDelete) return;
 
     try {
-      const response = await fetch("/api/videos", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: videoToDelete }),
-      });
-
-      if (!response.ok) throw new Error("Error deleting video");
+      await deleteVideo.mutateAsync(videoToDelete);
 
       toast.success("Vidéo supprimée");
-      fetchVideos();
     } catch (error) {
       toast.error("Impossible de supprimer la vidéo");
       console.error(error);
@@ -276,10 +239,10 @@ export default function VideosPage() {
       }
     >
       <DataState
-        isLoading={loading}
-        isError={error}
+        isLoading={isPending}
+        isError={isError}
         isEmpty={videos.length === 0}
-        onRetry={fetchVideos}
+        onRetry={() => refetch()}
         errorDescription="Les vidéos n'ont pas pu être chargées."
         skeleton={<CardGridSkeleton cards={6} label="Chargement des vidéos…" />}
         empty={

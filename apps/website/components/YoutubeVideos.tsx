@@ -1,12 +1,12 @@
 "use client";
 
-import { Video } from "@repo/domain/types/videos";
+import type { PublicVideo } from "@/lib/publicVideos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import { useEffect, useState } from "react";
 import YouTubeVideo from "./YouTubeVideo";
 
 export const YoutubeVideos = () => {
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videos, setVideos] = useState<PublicVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const fetchYoutubeVideos = async () => {
     try {

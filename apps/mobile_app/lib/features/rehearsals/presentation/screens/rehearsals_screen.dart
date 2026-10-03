@@ -7,9 +7,11 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
+import 'package:lebontemperament/core/widgets/notice_banner.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../data/models/rehearsal.dart';
+import '../../../../data/providers/connectivity_provider.dart';
 import '../../../../data/providers/data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/rehearsal_filter_provider.dart';
@@ -52,6 +54,7 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
     final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
     final selectedFilter = ref.watch(rehearsalFilterProvider);
     final filteredRehearsals = ref.watch(filteredRehearsalsProvider);
+    final isOnline = ref.watch(isOnlineProvider).value ?? true;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -95,6 +98,16 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
               ),
             ),
 
+            // --- 2b. Cached rows (server unreachable) ---
+            if (rehearsalsAsync.value?.fromCache == true &&
+                !rehearsalsAsync.value!.isUnavailable)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: OfflineDataBanner(isOnline: isOnline),
+                ),
+              ),
+
             // --- 3. Calendrier complet Button ---
             SliverToBoxAdapter(
               child: Padding(
@@ -106,6 +119,13 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
             // --- 4. Main Content based on State ---
             rehearsalsAsync.when(
               data: (rehearsals) {
+                // Server down and nothing cached: an error, not "no rehearsal".
+                if (rehearsals.isUnavailable) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _ErrorState(onRetry: _onRefresh, isOnline: isOnline),
+                  );
+                }
                 if (filteredRehearsals.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -142,7 +162,7 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
               loading: () => const SliverFillRemaining(child: _LoadingState()),
               error: (error, stack) => SliverFillRemaining(
                 hasScrollBody: false,
-                child: _ErrorState(onRetry: _onRefresh),
+                child: _ErrorState(onRetry: _onRefresh, isOnline: isOnline),
               ),
             ),
           ],
@@ -359,12 +379,16 @@ class _CalendrierCompletButton extends StatelessWidget {
                 size: 20,
               ),
               const SizedBox(width: 12),
-              Text(
-                'Voir le calendrier complet',
-                style: GoogleFonts.poppins(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+              // Wraps instead of overflowing at large text sizes.
+              Flexible(
+                child: Text(
+                  'Voir le calendrier complet',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ],
@@ -693,7 +717,8 @@ class _EmptyState extends StatelessWidget {
 
 class _ErrorState extends StatelessWidget {
   final VoidCallback onRetry;
-  const _ErrorState({required this.onRetry});
+  final bool isOnline;
+  const _ErrorState({required this.onRetry, this.isOnline = true});
 
   @override
   Widget build(BuildContext context) {
@@ -712,7 +737,9 @@ class _ErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Oups, une erreur est survenue',
+                isOnline
+                    ? 'Oups, une erreur est survenue'
+                    : 'Vous êtes hors ligne',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -721,7 +748,9 @@ class _ErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Nous n\'avons pas pu charger les répétitions. Vérifiez votre connexion et réessayez.',
+                isOnline
+                    ? 'Nous n\'avons pas pu charger les répétitions. Vérifiez votre connexion et réessayez.'
+                    : 'Aucune répétition n\'est enregistrée sur cet appareil. Reconnectez-vous pour les charger.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,

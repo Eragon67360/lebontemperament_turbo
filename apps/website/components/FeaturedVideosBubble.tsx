@@ -1,7 +1,7 @@
 "use client";
 
+import type { PublicVideo } from "@/lib/publicVideos";
 import { Button } from "@heroui/react";
-import { Video } from "@repo/domain/types/videos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import { AnimatePresence, m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -12,7 +12,7 @@ import { youTubeEmbedUrl } from "./YouTubeVideo";
 
 const FeaturedVideosBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videos, setVideos] = useState<PublicVideo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const popoverRef = useRef<HTMLDivElement>(null);

@@ -4,14 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:logger/logger.dart';
 import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:lebontemperament/data/models/concert.dart';
 import 'package:lebontemperament/data/models/drive_file.dart';
 import 'package:lebontemperament/data/models/drive_folder.dart';
 import 'package:lebontemperament/data/models/event.dart';
+import 'package:lebontemperament/data/models/list_result.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
+import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
+import 'package:lebontemperament/data/providers/feature_flags_provider.dart';
 import 'package:lebontemperament/data/services/drive_service.dart';
+import 'package:lebontemperament/data/services/feature_flags_service.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/auth_provider.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/profile_role_provider.dart';
 import 'package:lebontemperament/features/profile/presentation/screens/about_screen.dart';
@@ -98,9 +103,25 @@ class FakeDriveService extends DriveService {
   Future<List<int>> downloadFile(String fileId) async => const [0];
 }
 
+/// A flags service answering from memory (the default: no flag set).
+FeatureFlagsService fakeFlagsService([
+  List<Map<String, dynamic>> rows = const [],
+]) => FeatureFlagsService(
+  fetchRows: () async => rows,
+  logger: Logger(level: Level.off),
+);
+
 /// Provider overrides that keep every screen offline: no Supabase, no Hive,
-/// no Drive API, no Firebase.
-List<Override> offlineOverrides({bool superadmin = false}) => [
+/// no Drive API, no Firebase. The lists, the flags and the network state are
+/// parameters because Riverpod refuses a second override of the same provider.
+List<Override> offlineOverrides({
+  bool superadmin = false,
+  ListResult<Rehearsal> rehearsals = const ListResult.fresh([kTestRehearsal]),
+  ListResult<Concert> concerts = const ListResult.fresh([kTestConcert]),
+  ListResult<Event> events = const ListResult.fresh([kTestEvent]),
+  FeatureFlagsService? flagsService,
+  bool online = true,
+}) => [
   authStateProvider.overrideWith((ref) => const Stream<AuthState>.empty()),
   userProfileProvider.overrideWith((ref) async => null),
   isSuperadminProvider.overrideWith((ref) async => superadmin),
@@ -108,8 +129,14 @@ List<Override> offlineOverrides({bool superadmin = false}) => [
   profilePictureUrlProvider.overrideWithValue(null),
   homeUpcomingRehearsalsProvider.overrideWithValue(const [kTestRehearsal]),
   homeUpcomingConcertsProvider.overrideWithValue(const [kTestConcert]),
-  upcomingConcertsProvider.overrideWith((ref) async => const [kTestConcert]),
-  upcomingEventsProvider.overrideWith((ref) async => const [kTestEvent]),
+  realtimeRehearsalsProvider.overrideWith((ref) async => rehearsals),
+  upcomingRehearsalsProvider.overrideWith((ref) async => rehearsals),
+  upcomingConcertsProvider.overrideWith((ref) async => concerts),
+  upcomingEventsProvider.overrideWith((ref) async => events),
+  featureFlagsServiceProvider.overrideWithValue(
+    flagsService ?? fakeFlagsService(),
+  ),
+  isOnlineProvider.overrideWith((ref) => Stream.value(online)),
   caMinutesProvider.overrideWith((ref) async => const []),
   driveFolderCatalogProvider.overrideWith((ref) async => kTestCatalog),
   driveServiceProvider.overrideWithValue(FakeDriveService()),
@@ -131,6 +158,11 @@ Future<void> pumpScreen(
   double textScale = 1.0,
   Size size = const Size(390, 844),
   bool superadmin = false,
+  ListResult<Rehearsal> rehearsals = const ListResult.fresh([kTestRehearsal]),
+  ListResult<Concert> concerts = const ListResult.fresh([kTestConcert]),
+  ListResult<Event> events = const ListResult.fresh([kTestEvent]),
+  FeatureFlagsService? flagsService,
+  bool online = true,
   List<Override> overrides = const [],
 }) async {
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -141,7 +173,14 @@ Future<void> pumpScreen(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        ...offlineOverrides(superadmin: superadmin),
+        ...offlineOverrides(
+          superadmin: superadmin,
+          rehearsals: rehearsals,
+          concerts: concerts,
+          events: events,
+          flagsService: flagsService,
+          online: online,
+        ),
         ...overrides,
       ],
       child: MaterialApp(

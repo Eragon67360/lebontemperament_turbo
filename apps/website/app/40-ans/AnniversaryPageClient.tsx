@@ -9,6 +9,14 @@ import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
 import PreviewBanner from "@/components/anniversary/PreviewBanner";
 import VideoGallery from "@/components/anniversary/VideoGallery";
+import {
+  ANNIVERSARY_AUDIO_MEMORY_COLUMNS,
+  ANNIVERSARY_HERO_STAT_COLUMNS,
+  ANNIVERSARY_NAVIGATION_CARD_COLUMNS,
+  ANNIVERSARY_PHOTO_COLUMNS,
+  ANNIVERSARY_TIMELINE_EVENT_COLUMNS,
+  ANNIVERSARY_VIDEO_COLUMNS,
+} from "@/lib/anniversaryColumns";
 import type { AnniversaryPageData, Memory } from "@/types/anniversary";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
@@ -67,7 +75,7 @@ export default function AnniversaryPageClient({
           // Refetch visible stats
           const { data: stats } = await supabase
             .from("anniversary_hero_stats")
-            .select("*")
+            .select(ANNIVERSARY_HERO_STAT_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -102,7 +110,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: cards } = await supabase
             .from("anniversary_navigation_cards")
-            .select("*")
+            .select(ANNIVERSARY_NAVIGATION_CARD_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -138,7 +146,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: events } = await supabase
             .from("anniversary_timeline_events")
-            .select("*")
+            .select(ANNIVERSARY_TIMELINE_EVENT_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -174,7 +182,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: videos } = await supabase
             .from("anniversary_videos")
-            .select("*")
+            .select(ANNIVERSARY_VIDEO_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -212,7 +220,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: audioMemories } = await supabase
             .from("anniversary_audio_memories")
-            .select("*")
+            .select(ANNIVERSARY_AUDIO_MEMORY_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -250,7 +258,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: photos } = await supabase
             .from("anniversary_photos")
-            .select("*")
+            .select(ANNIVERSARY_PHOTO_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 

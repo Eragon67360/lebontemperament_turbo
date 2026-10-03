@@ -2,6 +2,7 @@ import ConcertsClient from "@/components/concerts/ConcertsClient";
 import { JsonLd } from "@/components/JsonLd";
 import {
   CONCERT_COLUMNS,
+  EVENT_COLUMNS,
   REHEARSAL_COLUMNS,
   TOUR_COLUMNS,
   type PublicConcert,
@@ -144,7 +145,7 @@ async function getPageData(): Promise<PageData> {
       // Events: From today onwards
       supabase
         .from("events")
-        .select("*")
+        .select(EVENT_COLUMNS)
         .gte("date_from", today)
         .eq("is_public", true)
         .order("date_from", { ascending: true }),

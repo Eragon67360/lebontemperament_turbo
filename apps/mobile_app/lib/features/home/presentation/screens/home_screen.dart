@@ -9,9 +9,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
+import 'package:lebontemperament/core/widgets/notice_banner.dart';
 import 'package:lebontemperament/data/models/concert.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
+import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
+import 'package:lebontemperament/data/providers/feature_flags_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -45,6 +48,7 @@ class HomeScreen extends ConsumerWidget {
               delegate: SliverChildListDelegate([
                 const _WelcomeHeader(),
                 const SizedBox(height: 32),
+                const _NoticesSection(),
                 const _UpcomingEventsSection(),
                 const SizedBox(height: 32),
                 const _SectionHeader(
@@ -236,6 +240,57 @@ class _SectionHeader extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// MARK: - Notices (maintenance, update, offline)
+
+/// Banners from the kill switch (`feature_flags`) and the data layer (#361).
+/// Each one is advisory: the app keeps working underneath.
+class _NoticesSection extends ConsumerWidget {
+  const _NoticesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final flags = ref.watch(mobileFlagsProvider).value;
+    final updateAdvised = ref.watch(updateAdvisedProvider).value ?? false;
+    final dataOffline = ref.watch(homeDataOfflineProvider);
+    final isOnline = ref.watch(isOnlineProvider).value ?? true;
+
+    final notices = <Widget>[
+      if (flags?.maintenance == true)
+        const NoticeBanner(
+          icon: Icons.build_circle_outlined,
+          tone: NoticeTone.warning,
+          title: 'Maintenance en cours',
+          message:
+              'Certaines fonctionnalités peuvent être indisponibles ou '
+              'afficher des données incomplètes pendant quelques instants.',
+        ),
+      if (updateAdvised)
+        NoticeBanner(
+          icon: Icons.system_update_outlined,
+          tone: NoticeTone.warning,
+          title: 'Mise à jour recommandée',
+          message:
+              'Cette version de l\'application n\'est plus à jour '
+              '(minimum : ${flags?.minVersion}). Mettez-la à jour depuis '
+              'le store pour éviter les dysfonctionnements.',
+        ),
+      if (dataOffline) OfflineDataBanner(isOnline: isOnline),
+    ];
+    if (notices.isEmpty) return const SizedBox.shrink();
+
+    return FadeInUp(
+      delay: 200,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final notice in notices) ...[notice, const SizedBox(height: 12)],
+          const SizedBox(height: 20),
         ],
       ),
     );

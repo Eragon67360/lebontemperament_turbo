@@ -1,6 +1,7 @@
 "use client";
 import GoogleCalendar from "@/components/GoogleCalendar";
-import { GroupType, Rehearsal } from "@repo/domain/types/rehearsals";
+import type { MemberRehearsal } from "@/lib/publicConcerts";
+import { GroupType } from "@repo/domain/types/rehearsals";
 import { format, isAfter, isSameDay, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "motion/react";
@@ -10,7 +11,7 @@ import { MdCalendarMonth } from "react-icons/md";
 
 const Calendrier = () => {
   const [showGoogleCalendar, setShowGoogleCalendar] = useState(false);
-  const [rehearsals, setRehearsals] = useState<Rehearsal[]>([]);
+  const [rehearsals, setRehearsals] = useState<MemberRehearsal[]>([]);
   const [loadingRehearsals, setLoadingRehearsals] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<GroupType | "all">("all");
 
