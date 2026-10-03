@@ -288,7 +288,7 @@ function EventCard({
         <div
           className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
             event.is_public
-              ? "bg-primary text-primary-foreground border-transparent"
+              ? "bg-primary-600 text-primary-foreground border-transparent"
               : "bg-secondary text-secondary-foreground border-transparent"
           }`}
         >
@@ -304,7 +304,7 @@ function EventCard({
       <div className="flex h-full flex-col p-5">
         <div className="flex items-start gap-4">
           {/* Date Tile */}
-          <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-150 ease-out motion-reduce:transition-none">
+          <div className="bg-primary/10 text-primary group-hover:bg-primary-600 group-hover:text-primary-foreground flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-150 ease-out motion-reduce:transition-none">
             <span className="text-xs font-bold tracking-wider uppercase">
               {monthName}
             </span>

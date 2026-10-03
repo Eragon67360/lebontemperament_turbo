@@ -394,7 +394,7 @@ function RehearsalCard({
         <div className="mb-4 flex flex-col gap-3">
           <div className="flex min-w-0 gap-4">
             {/* Date Tile */}
-            <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-150 ease-out motion-reduce:transition-none">
+            <div className="bg-primary/10 text-primary group-hover:bg-primary-600 group-hover:text-primary-foreground flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-150 ease-out motion-reduce:transition-none">
               <span className="text-xs font-bold tracking-wider uppercase">
                 {monthName}
               </span>
