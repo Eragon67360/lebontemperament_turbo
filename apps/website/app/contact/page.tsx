@@ -38,7 +38,7 @@ const Contact = () => {
       />
       <div className="flex flex-col justify-between lg:flex-row">
         <div className="px-8 py-4 md:py-8 lg:py-16">
-          <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
+          <h1 className="text-title text-primary-400 dark:text-primary leading-none font-light">
             Contact
           </h1>
           <h2 className="text-title text-foreground leading-none font-bold">
@@ -54,14 +54,14 @@ const Contact = () => {
           <h3 className="text-foreground mt-2 font-bold">Email</h3>
           <a
             href="mailto:lebontemperament@gmail.com"
-            className="text-foreground hover:text-primary"
+            className="text-foreground hover:text-primary-text"
           >
             lebontemperament@gmail.com
           </a>
           <h3 className="text-foreground mt-2 font-bold">Téléphone</h3>
           <a
             href="tel:+33689687482"
-            className="text-foreground hover:text-primary"
+            className="text-foreground hover:text-primary-text"
           >
             (+33) 06 89 68 74 82
           </a>
@@ -70,13 +70,16 @@ const Contact = () => {
           </h3>
           <p className="text-foreground mb-2">
             Vous avez des questions? Consultez notre{" "}
-            <a href="/faq" className="text-primary font-medium hover:underline">
+            <a
+              href="/faq"
+              className="text-primary-text font-medium hover:underline"
+            >
               page de questions fréquentes
             </a>
             . Vous souhaitez nous rejoindre? Découvrez notre{" "}
             <a
               href="/rejoindre"
-              className="text-primary font-medium hover:underline"
+              className="text-primary-text font-medium hover:underline"
             >
               page dédiée
             </a>
@@ -259,8 +262,8 @@ const Contact = () => {
                   y2="112.71"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop stopColor="#18858b" />
-                  <stop offset="1" stopColor="#00B1AE" />
+                  <stop stopColor="#1a878d" />
+                  <stop offset="1" stopColor="#66aeb1" />
                 </linearGradient>
               </defs>
             </svg>
@@ -270,7 +273,7 @@ const Contact = () => {
             <div className="text-foreground text-[18px] font-extrabold uppercase">
               Recevez notre
             </div>
-            <div className="from-primary inline-block bg-gradient-to-r to-[#00F1AE] bg-clip-text text-[32px] font-extrabold text-transparent uppercase">
+            <div className="from-primary-600 to-primary-400 inline-block bg-gradient-to-r bg-clip-text text-[32px] font-extrabold text-transparent uppercase">
               Newsletter
             </div>
             <div className="text-foreground mt-8">

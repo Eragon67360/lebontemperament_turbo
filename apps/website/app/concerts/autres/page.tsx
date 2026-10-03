@@ -88,7 +88,7 @@ const page = () => {
         <div className="py-16">
           <div>
             <h1>
-              <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+              <span className="text-title text-primary-400 dark:text-primary block leading-none font-light">
                 Concerts
               </span>
               <span className="text-title block leading-none font-bold text-[#333]">

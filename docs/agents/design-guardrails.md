@@ -14,6 +14,7 @@ No standalone design-system document exists yet; this page records the system as
 ### Website (`apps/website`)
 
 - **HeroUI 3** components with tokens in `app/globals.css` (sections: imports, `@theme` variables, base layer, components, utilities). Light: white background, `#11181c` text, neutral `--default` surface `#d4d4d8`. Dark (`.dark`): teal-tinted `#0d1616` background, `#ecedee` text, surfaces `#1a2c2c` / `#203535`.
+- Contrast tokens (`app/globals.css`, since #337), all aliases of existing steps: `--primary-solid` `#156c71` and `--primary-solid-hover` `#105155` (the light `--primary-600` / `-700` as literals, the same in both themes, because the dark scale's 600 `#1e848a` is only 4.45:1 with white) for every solid teal surface carrying white text: `bg-primary-solid hover:bg-primary-solid-hover` and HeroUI's `.button--primary`. `--primary-text` for small teal text: `text-primary-text`, light `--primary-600` `#156c71` (6.15:1 on white), dark `--primary-500` `#26a5ad` (6.18:1 on `#0d1616`); large headings and icons keep `text-primary`. Faded page titles are `text-primary-400 dark:text-primary` (light `#339397`, 3.65:1, large text only). Light `--muted` is `oklch(44.2% 0.017 285.786)` (zinc-600, 6.7:1 on `#efeff0`). The `prefers-contrast: more` override covers these tokens too.
 - **Roboto** (`next/font/google` in `app/layout.tsx`).
 - Global focus: `:focus-visible` 2px outline in the primary color; `prefers-contrast: high` switches primary and borders to black.
 - Motion: `motion` and GSAP for sections and the anniversary experience (`/40-ans`), guarded by `hooks/useReducedMotion.ts`. The anniversary intro is skipped for returning visitors and under reduced motion.
@@ -21,9 +22,10 @@ No standalone design-system document exists yet; this page records the system as
 
 ### Admin (`apps/admin`)
 
-- **shadcn/ui on Radix** (`components/ui/*`, generated, excluded from Prettier), tokens in `app/globals.css` (oklch, `--radius: 1rem` with `sm`/`md`/`lg`/`xl` derived), light and dark, sidebar tokens.
+- **shadcn/ui on Radix** (`components/ui/*`, generated, excluded from Prettier), tokens in `app/globals.css` (oklch, `--radius: 1rem` with `sm`/`md`/`lg`/`xl` derived), light and dark, sidebar tokens. `--primary-600` (`oklch(0.486 0.0768 200.93)`, the website's `#156c71`) is the darker teal step for small text on teal: the default `Button` background (6.15:1 with `--primary-foreground`; `--primary` itself is 4.10:1).
+- Secondary text uses `text-muted-foreground` (4.73:1 on white, 4.53:1 on the page background), never `text-gray-400` (2.54:1).
 - **Inter**.
-- Shared states and layout: `components/ui/data-state.tsx` (`DataState`, `ListSkeleton`, `CardGridSkeleton`, `PageSkeleton`, `EmptyState`, `ErrorState`), `components/layouts/PageShell.tsx`, `DashboardPageHeader`, `BreadcrumbNav`, `Sidebar` / `MobileSidebar`. New admin pages use these; don't hand-roll loading or error UI.
+- Shared states and layout: `components/ui/data-state.tsx` (`DataState`, `ListSkeleton`, `CardGridSkeleton`, `PageSkeleton`, `EmptyState`, `ErrorState`), `components/layouts/PageShell.tsx`, `BreadcrumbNav`, `Sidebar` / `MobileSidebar`. New admin pages use these; don't hand-roll loading or error UI. Forms with validation use `components/ui/form.tsx` (react-hook-form + the zod schemas in `utils/formSchemas.ts`, as `VideoForm`, `ConcertForm`, `EventForm`, `TourForm` and the users dialogs do): inline `FormMessage`, `aria-invalid`, focus on the first invalid field.
 
 ### Mobile (`apps/mobile_app`)
 
@@ -42,7 +44,7 @@ A change to any of these is a **breaking change**: show before/after and wait fo
 
 ## Improvements you can make without asking
 
-- **Accessibility within the palette.** _Measured_: white on `#1A878D` is **4.29:1**, below WCAG AA's 4.5:1 for normal-size text (fine for large or bold text, ≥ 3:1); teal `#1A878D` text on the dark background `#0d1616` is 4.28:1. Where small text sits on teal, use the darker step `--primary-600` `#156c71` (6.15:1 with white); for teal text in dark mode, use the dark scale's `#26a5ad` (6.18:1). Also: visible focus, target sizes (WCAG 2.2 §2.5.8, at least 24×24 px), reduced-motion guards, accessible names, heading order, form errors announced.
+- **Accessibility within the palette.** _Measured_: white on `#1A878D` is **4.29:1**, below WCAG AA's 4.5:1 for normal-size text (fine for large or bold text, ≥ 3:1); teal `#1A878D` text on the dark background `#0d1616` is 4.28:1. Where white text sits on teal, use `bg-primary-solid` (`#156c71`, 6.15:1; not `bg-primary-600`, whose dark value is 4.45:1); for small teal text use `text-primary-text` (`#156c71` light, the dark scale's `#26a5ad` dark, 6.18:1); faded titles `text-primary-400` (large text only); never `text-primary/50`-style opacity on text. Also: visible focus, target sizes (WCAG 2.2 §2.5.8, at least 24×24 px), reduced-motion guards, accessible names, heading order, form errors announced.
 - **Consistency**: use the existing pieces (HeroUI components and tokens on the website; `components/ui` and `data-state` in the admin; `AppTheme` in the app) instead of one-off styles; replace raw hex and arbitrary values with tokens.
 - **States**: skeletons that match the real layout, empty and error states, pending buttons.
 - **Dark mode**: fix surfaces that hard-code light colors.

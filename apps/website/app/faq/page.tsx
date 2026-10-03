@@ -128,7 +128,7 @@ export default function FAQPage() {
       <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
         <div className="mb-8">
           <h1>
-            <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+            <span className="text-title text-primary-400 dark:text-primary block leading-none font-light">
               Questions
             </span>
             <span className="text-title text-foreground block leading-none font-bold">
@@ -142,7 +142,7 @@ export default function FAQPage() {
             votre question, n&apos;hésitez pas à{" "}
             <Link
               href="/contact"
-              className="text-primary font-medium hover:underline"
+              className="text-primary-text font-medium hover:underline"
             >
               nous contacter
             </Link>
@@ -177,7 +177,7 @@ export default function FAQPage() {
                     tous horizons. Pour nous rejoindre, consultez notre{" "}
                     <Link
                       href="/rejoindre"
-                      className="text-primary font-medium hover:underline"
+                      className="text-primary-text font-medium hover:underline"
                     >
                       page dédiée
                     </Link>{" "}
@@ -205,7 +205,7 @@ export default function FAQPage() {
           </p>
           <Link
             href="/contact"
-            className="bg-primary hover:bg-primary/90 inline-block rounded-md px-6 py-3 text-white transition-colors"
+            className="bg-primary-solid hover:bg-primary-solid-hover inline-block rounded-md px-6 py-3 text-white transition-colors"
           >
             Nous contacter
           </Link>

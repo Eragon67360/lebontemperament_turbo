@@ -157,7 +157,7 @@ const FeaturedVideosBubble = () => {
             type="button"
             onClick={() => setIsOpen(true)}
             aria-label="Vidéos à la une"
-            className="group bg-primary hover:bg-primary/90 relative flex size-10 items-center justify-center rounded-full text-white shadow-lg transition-colors md:size-14"
+            className="group bg-primary-solid hover:bg-primary-solid-hover relative flex size-10 items-center justify-center rounded-full text-white shadow-lg transition-colors md:size-14"
           >
             <span
               aria-hidden="true"

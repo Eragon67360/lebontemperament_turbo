@@ -40,7 +40,7 @@ export default function PrivacyPolicy() {
 
         <div className="space-y-8">
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+            <h2 className="text-primary-text mb-6 text-lg font-semibold xl:text-2xl">
               Introduction
             </h2>
             <p className="text-foreground">
@@ -52,7 +52,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+            <h2 className="text-primary-text mb-6 text-lg font-semibold xl:text-2xl">
               Informations que nous recueillons
             </h2>
             <p className="text-foreground mb-4">
@@ -72,7 +72,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+            <h2 className="text-primary-text mb-6 text-lg font-semibold xl:text-2xl">
               Utilisation des données
             </h2>
             <p className="text-foreground mb-4">
@@ -92,7 +92,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+            <h2 className="text-primary-text mb-6 text-lg font-semibold xl:text-2xl">
               Partage des données
             </h2>
             <p className="text-foreground">
@@ -105,7 +105,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+            <h2 className="text-primary-text mb-6 text-lg font-semibold xl:text-2xl">
               Utilisation des cookies
             </h2>
             <p className="text-foreground mb-4">
@@ -114,7 +114,7 @@ export default function PrivacyPolicy() {
               gérer vos préférences de cookies à tout moment via le panneau de
               gestion des cookies accessible en bas à gauche de chaque page.
             </p>
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Cookies strictement nécessaires
             </h3>
             <p className="text-foreground mb-4">
@@ -136,7 +136,7 @@ export default function PrivacyPolicy() {
               </li>
             </ul>
 
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Cookies d&apos;analyse et de performance
             </h3>
             <p className="text-foreground mb-4">
@@ -163,7 +163,7 @@ export default function PrivacyPolicy() {
               Analytics, Vercel Speed Insights
             </p>
 
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Cookies de ciblage et publicité
             </h3>
             <p className="text-foreground mb-4">
@@ -191,7 +191,7 @@ export default function PrivacyPolicy() {
               Google Ads (si applicable)
             </p>
 
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Gestion de vos préférences de cookies
             </h3>
             <p className="text-foreground mb-4">
@@ -200,7 +200,7 @@ export default function PrivacyPolicy() {
               de page de chaque page :
             </p>
             <div className="mb-4">
-              <CookiePreferencesButton className="text-primary hover:text-primary/80 cursor-pointer border-none bg-transparent p-0 font-medium text-inherit underline transition-colors">
+              <CookiePreferencesButton className="text-primary hover:text-primary-text/80 cursor-pointer border-none bg-transparent p-0 font-medium text-inherit underline transition-colors">
                 Gérer les préférences de cookies
               </CookiePreferencesButton>
             </div>
@@ -215,7 +215,7 @@ export default function PrivacyPolicy() {
               cookies et vos droits, veuillez consulter notre{" "}
               <a
                 href="/politique-de-confidentialite"
-                className="text-primary hover:text-primary/80 underline"
+                className="text-primary-text hover:text-primary-text/80 underline"
               >
                 politique de confidentialité
               </a>
@@ -227,7 +227,7 @@ export default function PrivacyPolicy() {
             id="application-mobile"
             className="border-separator border-b pb-8"
           >
-            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+            <h2 className="text-primary-text mb-6 text-lg font-semibold xl:text-2xl">
               Application mobile (Le Bon Tempérament)
             </h2>
             <p className="text-foreground mb-4">
@@ -239,7 +239,7 @@ export default function PrivacyPolicy() {
               permissions utilisées par l&apos;application.
             </p>
 
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Données collectées par l&apos;application
             </h3>
             <ul className="text-foreground mb-4 list-disc pl-5">
@@ -271,7 +271,7 @@ export default function PrivacyPolicy() {
               </li>
             </ul>
 
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Permissions de l&apos;application
             </h3>
             <ul className="text-foreground mb-4 list-disc pl-5">
@@ -290,7 +290,7 @@ export default function PrivacyPolicy() {
               </li>
             </ul>
 
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Services tiers
             </h3>
             <p className="text-foreground mb-4">
@@ -311,7 +311,7 @@ export default function PrivacyPolicy() {
               </li>
             </ul>
 
-            <h3 className="text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl">
+            <h3 className="text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl">
               Stockage local
             </h3>
             <p className="text-foreground mb-4">
@@ -331,7 +331,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-primary/80 mb-6 text-lg font-semibold xl:text-2xl">
+            <h2 className="text-primary-text mb-6 text-lg font-semibold xl:text-2xl">
               Vos droits RGPD
             </h2>
             <p className="text-foreground mb-4">
@@ -376,7 +376,7 @@ export default function PrivacyPolicy() {
               suivante :{" "}
               <a
                 href="mailto:contactbontemperament@gmail.com"
-                className="text-primary hover:text-primary/80 underline"
+                className="text-primary-text hover:text-primary-text/80 underline"
               >
                 contactbontemperament@gmail.com
               </a>

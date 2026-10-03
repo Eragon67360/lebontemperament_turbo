@@ -132,7 +132,7 @@ export default function LoginPage() {
               </div>
 
               {/* Copyright */}
-              <p className="text-center text-xs text-gray-400">
+              <p className="text-muted-foreground text-center text-xs">
                 &copy; {new Date().getFullYear()} Le Bon Temperament. Tous
                 droits réservés.
               </p>

@@ -101,7 +101,7 @@ export const MembersNavigation = () => {
         href={link.href}
         className={`group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
           isActive
-            ? "bg-primary/10 text-primary shadow-sm"
+            ? "bg-primary/10 text-primary-text shadow-sm"
             : "text-foreground/70 hover:bg-surface-secondary hover:text-foreground"
         }`}
       >
@@ -138,7 +138,7 @@ export const MembersNavigation = () => {
             <div className="text-foreground/70 border-separator ml-2 flex items-center gap-2 rounded-lg border-l pl-4 text-sm font-medium">
               <span className="truncate">
                 Bonjour,{" "}
-                <span className="text-primary font-semibold">
+                <span className="text-primary-text font-semibold">
                   {getFirstName(
                     user.user_metadata.display_name || user.user_metadata.name,
                   )}
@@ -158,7 +158,7 @@ export const MembersNavigation = () => {
               <div className="text-foreground/70 border-separator ml-2 flex items-center gap-2 rounded-lg border-l pl-4 text-sm font-medium">
                 <span className="truncate">
                   Bonjour,{" "}
-                  <span className="text-primary font-semibold">
+                  <span className="text-primary-text font-semibold">
                     {getFirstName(
                       user.user_metadata.display_name ||
                         user.user_metadata.name,
@@ -209,7 +209,7 @@ export const MembersNavigation = () => {
                       <Label
                         className={
                           isActive
-                            ? "text-primary font-semibold"
+                            ? "text-primary-text font-semibold"
                             : "font-medium"
                         }
                       >
