@@ -32,7 +32,7 @@ Any bulk change or deletion (when approved): count first, restrict by the narrow
 
 ## Secrets
 
-- **The repository is public.** Anything committed is published, including in history. Never commit `.env*` files, keys, tokens, service-account JSON, keystores or personal data. Check `git status` and `git show --stat HEAD` around every commit (the pre-commit hook runs `git add -A`).
+- **The repository is public.** Anything committed is published, including in history. Never commit `.env*` files, keys, tokens, service-account JSON, keystores or personal data. Check `git status` and `git show --stat HEAD` around every commit (stage files by path, never `git add -A`).
 - **Secret scanning and push protection are enabled** (since 2026-10-02). They are a net, not a guarantee: still check every commit and diff for secrets before you push.
 - Never print, echo or paste a secret: not in the terminal, issues, PRs or the chat. Read values only inside a process (`node --env-file=apps/website/.env.local -e '…'`) and print harmless facts (a hostname, a length, a boolean). Never `source` an env file.
 - Vercel: list variables by **name and target** only (`vercel env ls`, or the API without decrypting). Setting values is the owner's job; give him exact steps.
