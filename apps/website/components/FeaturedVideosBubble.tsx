@@ -148,7 +148,6 @@ const FeaturedVideosBubble = () => {
         ) : (
           <m.button
             key="button"
-            layoutId="bubble"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}

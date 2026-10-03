@@ -1,6 +1,7 @@
 "use client";
 
 import type { CookieConsentConfig } from "vanilla-cookieconsent";
+import getConfig from "./CookieConsentConfig";
 
 /**
  * The consent library (vanilla-cookieconsent: script and stylesheet) is
@@ -50,8 +51,10 @@ export function validConsent(): boolean {
   }
 }
 
-/** Opens the preferences dialog, once the library has run. */
+/**
+ * Opens the preferences dialog. A click that comes before the idle-time start
+ * (first seconds of a visit, slow devices) starts the library itself.
+ */
 export async function showPreferences(): Promise<void> {
-  if (!started) return;
-  (await started).showPreferences();
+  (await startCookieConsent(getConfig())).showPreferences();
 }

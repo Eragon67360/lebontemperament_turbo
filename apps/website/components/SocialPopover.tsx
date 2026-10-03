@@ -110,7 +110,6 @@ export const SocialPopover = () => {
       </AnimatePresence>
 
       <m.button
-        layoutId="social-bubble"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         type="button"
