@@ -19,10 +19,17 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   const fetchData = async (folderId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/drive/files?folderID=${folderId}`);
+      const response = await fetch(
+        `/api/drive/files?folderID=${encodeURIComponent(folderId)}`,
+      );
       const data = await response.json();
       if (!Array.isArray(data)) {
         throw new Error("Response data is not an array");
+      }
+      if (response.headers.get("x-drive-truncated") === "true") {
+        toast.warning(
+          "Ce dossier contient trop d'éléments : seuls les premiers sont affichés",
+        );
       }
 
       const fetchedFolders = data.filter(
@@ -146,7 +153,9 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                     variant="ghost"
                     size="sm"
                     onPress={() => {
-                      const downloadUrl = `https://drive.google.com/uc?id=${file.id}&export=download`;
+                      // Through the website's proxy (session cookie, scope
+                      // check): the files aren't publicly shared on Drive.
+                      const downloadUrl = `/api/drive/file?fileId=${encodeURIComponent(file.id ?? "")}&download=1`;
                       const link = document.createElement("a");
                       link.href = downloadUrl;
                       link.download = file.name;
