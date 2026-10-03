@@ -16,6 +16,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-600: var(--primary-600);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -51,6 +52,8 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.57 0.0911 200.74);
   --primary-foreground: oklch(0.985 0 0);
+  /* The website's --primary-600 (#156c71): small text on teal, 6.15:1 with --primary-foreground. */
+  --primary-600: oklch(0.486 0.0768 200.93);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -85,6 +88,7 @@
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.57 0.0911 200.74);
   --primary-foreground: oklch(0.985 0 0);
+  --primary-600: oklch(0.486 0.0768 200.93);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

@@ -17,7 +17,10 @@ import {
   DataState,
   EmptyState,
 } from "@/components/ui/data-state";
-import { AddUserDialog } from "@/components/users/AddUserDialog";
+import {
+  AddUserDialog,
+  type AddUserFormValues,
+} from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
 import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
@@ -65,12 +68,6 @@ export default function UsersPage() {
     sortOrder: "desc",
   });
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Form state for adding users
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"user" | "admin">("user");
-  const [newUserDisplayName, setNewUserDisplayName] = useState("");
 
   // Debounced search term for queries
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -188,14 +185,13 @@ export default function UsersPage() {
   }, [users]);
 
   // Handlers
-  const handleAddUser = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddUser = async (values: AddUserFormValues) => {
     try {
       await createUser.mutateAsync({
-        email: newUserEmail,
-        password: newUserPassword,
-        role: newUserRole,
-        display_name: newUserDisplayName || newUserEmail.split("@")[0] || "",
+        email: values.email,
+        password: values.password,
+        role: values.role,
+        display_name: values.display_name || values.email.split("@")[0] || "",
       });
 
       toast.success("Succès", {
@@ -203,10 +199,6 @@ export default function UsersPage() {
       });
 
       setIsAddUserOpen(false);
-      setNewUserEmail("");
-      setNewUserPassword("");
-      setNewUserRole("user");
-      setNewUserDisplayName("");
     } catch (error) {
       toast.error("Erreur", {
         description:
@@ -397,14 +389,6 @@ export default function UsersPage() {
         onOpenChange={setIsAddUserOpen}
         onSubmit={handleAddUser}
         isProcessing={createUser.isPending}
-        newUserEmail={newUserEmail}
-        setNewUserEmail={setNewUserEmail}
-        newUserPassword={newUserPassword}
-        setNewUserPassword={setNewUserPassword}
-        newUserRole={newUserRole}
-        setNewUserRole={setNewUserRole}
-        newUserDisplayName={newUserDisplayName}
-        setNewUserDisplayName={setNewUserDisplayName}
       />
       <SyncUsersDialog
         isOpen={isSyncOpen}

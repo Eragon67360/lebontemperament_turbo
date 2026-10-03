@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InvitationProgress } from "@/types/user";
+import { firstIssueMessage, invitationEntrySchema } from "@/utils/formSchemas";
 import { Check, Plus, RefreshCw, Send, Upload, X } from "lucide-react";
 import Papa from "papaparse";
 import React, { useState } from "react";
@@ -49,8 +50,25 @@ interface ApiResponse {
   error?: string;
 }
 
-const emailSchema = z.string().email("Format d'email invalide");
+const emailSchema = invitationEntrySchema.shape.email;
 const MAX_INVITATIONS = 200;
+
+type InvitationField = "email" | "displayName";
+
+/**
+ * Moves focus to a row's field after the inline error renders. The mobile and
+ * desktop layouts each render the row, so pick the one that is displayed.
+ */
+function focusInvitationField(field: InvitationField, index: number) {
+  requestAnimationFrame(() => {
+    const candidates = document.querySelectorAll<HTMLInputElement>(
+      `[data-invitation-field="${field}-${index}"]`,
+    );
+    Array.from(candidates)
+      .find((el) => el.getClientRects().length > 0)
+      ?.focus();
+  });
+}
 
 export function InviteUserDialog({
   isOpen,
@@ -129,36 +147,21 @@ export function InviteUserDialog({
       return;
     }
 
-    const validationErrors = invitations
-      .map((inv, index) => {
-        try {
-          emailSchema.parse(inv.email.trim());
-          if (!inv.displayName.trim()) {
-            throw new Error("Le nom complet est requis");
-          }
-          return null;
-        } catch (error) {
-          return {
-            index,
-            error:
-              error instanceof z.ZodError
-                ? error.issues[0]?.message
-                : error instanceof Error
-                  ? error.message
-                  : "Données invalides",
-          };
-        }
-      })
-      .filter(Boolean);
+    const validationErrors = invitations.flatMap((inv, index) => {
+      const parsed = invitationEntrySchema.safeParse({
+        email: inv.email.trim(),
+        displayName: inv.displayName.trim(),
+      });
+      if (parsed.success) return [];
+      const field = (parsed.error.issues[0]?.path[0] ??
+        "email") as InvitationField;
+      return [{ index, field, error: firstIssueMessage(parsed.error) }];
+    });
 
     if (validationErrors.length > 0) {
-      const definedValidationErrors = validationErrors.filter(
-        (err): err is { index: number; error: string } => err !== null,
-      );
-
       setInvitations((prevInvitations) =>
         prevInvitations.map((invitation, index) => {
-          const errorForThis = definedValidationErrors.find(
+          const errorForThis = validationErrors.find(
             (err) => err.index === index,
           );
           if (errorForThis) {
@@ -171,6 +174,8 @@ export function InviteUserDialog({
           return invitation;
         }),
       );
+      const first = validationErrors[0];
+      if (first) focusInvitationField(first.field, first.index);
       return;
     }
 
@@ -385,6 +390,15 @@ export function InviteUserDialog({
     });
   };
 
+  const errorId = (
+    invitation: InvitationEntry,
+    index: number,
+    layout: "mobile" | "desktop",
+  ) =>
+    invitation.status === "error" && invitation.errorMessage
+      ? `invitation-error-${layout}-${index}`
+      : undefined;
+
   const isInvitationReady = invitations.some((inv) => inv.email.trim() !== "");
   const allSent = invitations.every(
     (inv) => inv.status === "sent" || inv.email.trim() === "",
@@ -445,12 +459,15 @@ export function InviteUserDialog({
                     </Label>
                     <Input
                       id={`displayName-${index}`}
+                      data-invitation-field={`displayName-${index}`}
                       placeholder="Jean Dupont"
                       value={invitation.displayName}
                       onChange={(e) =>
                         updateInvitation(index, "displayName", e.target.value)
                       }
                       disabled={invitation.status === "sent"}
+                      aria-invalid={invitation.status === "error"}
+                      aria-describedby={errorId(invitation, index, "mobile")}
                       className={
                         invitation.status === "error"
                           ? "border-destructive focus-visible:ring-destructive"
@@ -467,12 +484,15 @@ export function InviteUserDialog({
                     </Label>
                     <Input
                       id={`email-${index}`}
+                      data-invitation-field={`email-${index}`}
                       placeholder="exemple@domaine.com"
                       value={invitation.email}
                       onChange={(e) =>
                         updateInvitation(index, "email", e.target.value)
                       }
                       disabled={invitation.status === "sent"}
+                      aria-invalid={invitation.status === "error"}
+                      aria-describedby={errorId(invitation, index, "mobile")}
                       className={
                         invitation.status === "error"
                           ? "border-destructive focus-visible:ring-destructive"
@@ -481,7 +501,10 @@ export function InviteUserDialog({
                     />
                     {invitation.status === "error" &&
                       invitation.errorMessage && (
-                        <p className="text-destructive mt-1 text-xs">
+                        <p
+                          id={`invitation-error-mobile-${index}`}
+                          className="text-destructive mt-1 text-xs"
+                        >
                           {invitation.errorMessage}
                         </p>
                       )}
@@ -492,13 +515,17 @@ export function InviteUserDialog({
                 <div className="hidden grid-cols-2 gap-4 sm:grid">
                   <div>
                     <Input
-                      id={`displayName-${index}`}
+                      id={`displayName-desktop-${index}`}
+                      data-invitation-field={`displayName-${index}`}
+                      aria-label="Nom complet"
                       placeholder="Jean Dupont"
                       value={invitation.displayName}
                       onChange={(e) =>
                         updateInvitation(index, "displayName", e.target.value)
                       }
                       disabled={invitation.status === "sent"}
+                      aria-invalid={invitation.status === "error"}
+                      aria-describedby={errorId(invitation, index, "desktop")}
                       className={
                         invitation.status === "error"
                           ? "border-destructive focus-visible:ring-destructive"
@@ -508,13 +535,17 @@ export function InviteUserDialog({
                   </div>
                   <div>
                     <Input
-                      id={`email-${index}`}
+                      id={`email-desktop-${index}`}
+                      data-invitation-field={`email-${index}`}
+                      aria-label="Email"
                       placeholder="exemple@domaine.com"
                       value={invitation.email}
                       onChange={(e) =>
                         updateInvitation(index, "email", e.target.value)
                       }
                       disabled={invitation.status === "sent"}
+                      aria-invalid={invitation.status === "error"}
+                      aria-describedby={errorId(invitation, index, "desktop")}
                       className={
                         invitation.status === "error"
                           ? "border-destructive focus-visible:ring-destructive"
@@ -523,7 +554,10 @@ export function InviteUserDialog({
                     />
                     {invitation.status === "error" &&
                       invitation.errorMessage && (
-                        <p className="text-destructive mt-1 text-xs">
+                        <p
+                          id={`invitation-error-desktop-${index}`}
+                          className="text-destructive mt-1 text-xs"
+                        >
                           {invitation.errorMessage}
                         </p>
                       )}

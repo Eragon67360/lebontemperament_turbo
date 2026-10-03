@@ -168,7 +168,7 @@ export default function GoogleGroupsPage() {
                 </div>
               )}
             </div>
-            <p className="mt-4 text-xs text-gray-400">
+            <p className="text-muted-foreground mt-4 text-xs">
               Dernière mise à jour:{" "}
               {new Date(stats.retrievedAt).toLocaleString("fr-FR")}
             </p>
