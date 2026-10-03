@@ -3,10 +3,16 @@
 
 import { Button } from "@/components/ui/button";
 import { DataState, ListSkeleton } from "@/components/ui/data-state";
+import { useCreateFile, useDeleteFile, useFiles } from "@/hooks/useFiles";
+import {
+  useCreateFolder,
+  useDeleteFolder,
+  useFolders,
+} from "@/hooks/useFolders";
 import { FileRecord, Folder } from "@/types/files";
 import { createClient } from "@/utils/supabase/client";
 import { FolderPlus, Upload } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { BreadcrumbNav } from "./BreadcrumbNav";
 import { CreateFolderDialog } from "./CreateFolderDialog";
@@ -20,10 +26,6 @@ interface FileExplorerProps {
 }
 
 export function FileExplorer({ programId, groupId }: FileExplorerProps) {
-  const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [files, setFiles] = useState<FileRecord[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isUploadFileOpen, setIsUploadFileOpen] = useState(false);
@@ -31,62 +33,34 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
     (Folder | FileRecord) | null
   >(null);
 
+  const foldersQuery = useFolders(programId, groupId);
+  const filesQuery = useFiles(programId, groupId, currentFolder?.id);
+  const createFolder = useCreateFolder();
+  const createFile = useCreateFile();
+  const deleteFolder = useDeleteFolder();
+  const deleteFile = useDeleteFile();
+
+  const folders = foldersQuery.data ?? [];
+  const files = filesQuery.data ?? [];
+  const loading = foldersQuery.isPending || filesQuery.isPending;
+  // A failed load used to leave an empty explorer behind, which reads as
+  // "this folder is empty" rather than "this did not load".
+  const failed = foldersQuery.isError || filesQuery.isError;
+
   const handleDeleteRequest = (item: Folder | FileRecord) => {
     setItemToDelete(item);
   };
 
-  const loadContent = useCallback(
-    async (folderId?: string) => {
-      setLoading(true);
-      setFailed(false);
-      try {
-        const foldersRes = await fetch(
-          `/api/folders?programId=${programId}&groupId=${groupId}`,
-        );
-        const foldersData = await foldersRes.json();
-
-        const filesRes = await fetch(
-          `/api/files?programId=${programId}&groupId=${groupId}${
-            folderId ? `&folderId=${folderId}` : ""
-          }`,
-        );
-        const filesData = await filesRes.json();
-
-        setFolders(foldersData);
-        setFiles(filesData);
-      } catch (error) {
-        // A failed load used to leave an empty explorer behind, which reads as
-        // "this folder is empty" rather than "this did not load".
-        setFailed(true);
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [programId, groupId],
-  ); // Dependencies for useCallback
-
-  useEffect(() => {
-    loadContent();
-  }, [loadContent]);
-
   const handleCreateFolder = async (name: string) => {
     toast.promise(
       async () => {
-        const response = await fetch("/api/folders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            program_id: programId,
-            group_id: groupId,
-            parent_folder_id: currentFolder?.id,
-          }),
+        await createFolder.mutateAsync({
+          name,
+          program_id: programId,
+          group_id: groupId,
+          parent_folder_id: currentFolder?.id,
         });
 
-        if (!response.ok) throw new Error();
-
-        await loadContent(currentFolder?.id);
         setIsCreateFolderOpen(false);
       },
       {
@@ -113,24 +87,17 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
 
         if (uploadError) throw uploadError;
 
-        const response = await fetch("/api/files", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: file.name,
-            original_name: file.name,
-            size: file.size,
-            mime_type: file.type,
-            storage_path: path,
-            program_id: programId,
-            group_id: groupId,
-            folder_id: currentFolder?.id,
-          }),
+        await createFile.mutateAsync({
+          name: file.name,
+          original_name: file.name,
+          size: file.size,
+          mime_type: file.type,
+          storage_path: path,
+          program_id: programId,
+          group_id: groupId,
+          folder_id: currentFolder?.id,
         });
 
-        if (!response.ok) throw new Error();
-
-        await loadContent(currentFolder?.id);
         setIsUploadFileOpen(false);
       },
       {
@@ -149,19 +116,12 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
 
     toast.promise(
       async () => {
-        const response = await fetch(
-          `/api/${isFolder ? "folders" : "files"}/${itemToDelete.id}`,
-          { method: "DELETE" },
-        );
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(
-            error.error || `Impossible de supprimer le ${itemType}`,
-          );
+        if (isFolder) {
+          await deleteFolder.mutateAsync(itemToDelete.id);
+        } else {
+          await deleteFile.mutateAsync(itemToDelete.id);
         }
 
-        await loadContent(currentFolder?.id);
         setItemToDelete(null); // Close the dialog
       },
       {
@@ -188,10 +148,7 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
         <div className="w-full overflow-x-auto sm:w-auto">
           <BreadcrumbNav
             currentFolder={currentFolder}
-            onNavigate={(folder) => {
-              setCurrentFolder(folder);
-              loadContent(folder?.id);
-            }}
+            onNavigate={(folder) => setCurrentFolder(folder)}
           />
         </div>
 
@@ -218,7 +175,10 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
       <DataState
         isLoading={loading}
         isError={failed}
-        onRetry={() => loadContent(currentFolder?.id)}
+        onRetry={() => {
+          foldersQuery.refetch();
+          filesQuery.refetch();
+        }}
         errorDescription="Le contenu de ce dossier n'a pas pu être chargé."
         skeleton={
           <ListSkeleton
@@ -232,10 +192,7 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
           <FileList
             folders={currentFolders}
             files={files}
-            onFolderClick={(folder) => {
-              setCurrentFolder(folder);
-              loadContent(folder.id);
-            }}
+            onFolderClick={(folder) => setCurrentFolder(folder)}
             onDelete={handleDeleteRequest}
           />
         </div>
