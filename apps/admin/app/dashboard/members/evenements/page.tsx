@@ -1,6 +1,6 @@
 "use client";
 
-import { EventForm } from "@/components/EventForm";
+import { EventForm, type EventFormValues } from "@/components/EventForm";
 import { PageShell } from "@/components/layouts/PageShell";
 import {
   AlertDialog,
@@ -81,40 +81,26 @@ export default function Evenements() {
     (e) => (e.date_to ?? e.date_from) >= todayStr,
   );
 
-  // Helper to extract form data safely
-  const prepareEventData = (
-    formData: FormData,
-    dateFrom: Date | undefined,
-    dateTo: Date | null | undefined,
-    id?: string,
-  ) => {
+  // Maps the validated form values to the API payload.
+  const prepareEventData = (values: EventFormValues, id?: string) => {
     return {
       id: id,
-      title: formData.get("title") as string,
-      date_from: dateFrom ? format(dateFrom, "yyyy-MM-dd") : "",
-      date_to: dateTo ? format(dateTo, "yyyy-MM-dd") : null,
-      time: formData.get("time") as string,
-      location: formData.get("location") as string,
-      responsible_name: formData.get("responsible_name") as string,
-      responsible_email: (formData.get("responsible_email") as string) || null,
-      event_type: formData.get("event_type") as Event["event_type"],
-      description: (formData.get("description") as string) || null,
-      link: (formData.get("link") as string) || null,
-      is_public: formData.get("is_public") === "on",
+      title: values.title,
+      date_from: format(values.date_from, "yyyy-MM-dd"),
+      date_to: values.date_to ? format(values.date_to, "yyyy-MM-dd") : null,
+      time: values.time,
+      location: values.location,
+      responsible_name: values.responsible_name,
+      responsible_email: values.responsible_email || null,
+      event_type: values.event_type,
+      description: values.description || null,
+      link: values.link || null,
+      is_public: values.is_public,
     };
   };
 
-  const handleCreate = async (
-    e: React.FormEvent<HTMLFormElement>,
-    dateFrom: Date | undefined,
-    dateTo: Date | null | undefined,
-  ) => {
-    e.preventDefault();
-    const eventData = prepareEventData(
-      new FormData(e.currentTarget),
-      dateFrom,
-      dateTo,
-    );
+  const handleCreate = async (values: EventFormValues) => {
+    const eventData = prepareEventData(values);
 
     try {
       await createEvent.mutateAsync(eventData);
@@ -126,19 +112,9 @@ export default function Evenements() {
     }
   };
 
-  const handleEdit = async (
-    e: React.FormEvent<HTMLFormElement>,
-    dateFrom: Date | undefined,
-    dateTo: Date | null | undefined,
-  ) => {
-    e.preventDefault();
+  const handleEdit = async (values: EventFormValues) => {
     if (!editingEvent?.id) return;
-    const eventData = prepareEventData(
-      new FormData(e.currentTarget),
-      dateFrom,
-      dateTo,
-      editingEvent.id,
-    );
+    const eventData = prepareEventData(values, editingEvent.id);
 
     try {
       await updateEvent.mutateAsync({ ...eventData, id: editingEvent.id });

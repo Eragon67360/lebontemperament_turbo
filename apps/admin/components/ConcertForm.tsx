@@ -1,7 +1,17 @@
 // components/ConcertForm.tsx
+"use client";
+
 import { FileUpload } from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,16 +28,20 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { concertFormSchema, type ConcertFormValues } from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Concert } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
+export type { ConcertFormValues };
 
 interface ConcertFormProps {
   onSubmit: (
-    e: React.FormEvent<HTMLFormElement>,
-    date: Date | undefined,
+    values: ConcertFormValues,
     selectedFile: File | null,
   ) => Promise<void>;
   loading: boolean;
@@ -43,149 +57,229 @@ export function ConcertForm({
   submitLabel,
   onClose,
 }: ConcertFormProps) {
-  const [date, setDate] = useState<Date>();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    if (initialData?.date) {
-      setDate(new Date(initialData.date));
-    }
-  }, [initialData]);
+  const form = useForm<ConcertFormValues>({
+    resolver: zodResolver(concertFormSchema),
+    defaultValues: {
+      concertName: initialData?.name || "",
+      place: initialData?.place || "",
+      date: initialData?.date ? new Date(initialData.date) : undefined,
+      time: initialData?.time.slice(0, 5) || "",
+      context: initialData?.context as ConcertFormValues["context"] | undefined,
+      additional_informations: initialData?.additional_informations || "",
+      related_link: initialData?.related_link || "",
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    onSubmit(e, date, selectedFile);
+  const handleSubmit = async (values: ConcertFormValues) => {
+    await onSubmit(values, selectedFile);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="concertName">Nom du concert (optionnel)</Label>
-        <Input
-          id="concertName"
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-4"
+        noValidate
+      >
+        <FormField
+          control={form.control}
           name="concertName"
-          type="text"
-          className="min-h-11"
-          defaultValue={initialData?.name || ""}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="concertName">
+                Nom du concert (optionnel)
+              </FormLabel>
+              <FormControl>
+                <Input
+                  id="concertName"
+                  type="text"
+                  className="min-h-11"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="place">Lieu</Label>
-        <Input
-          id="place"
+        <FormField
+          control={form.control}
           name="place"
-          required
-          className="min-h-11"
-          defaultValue={initialData?.place || ""}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="place">Lieu</FormLabel>
+              <FormControl>
+                <Input
+                  id="place"
+                  aria-required
+                  className="min-h-11"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="concert-date">Date</Label>
-          <Popover modal>
-            <PopoverTrigger asChild>
-              <Button
-                id="concert-date"
-                type="button"
-                variant="outline"
-                className={cn(
-                  "min-h-11 w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground",
-                )}
-              >
-                <CalendarIcon className="h-4 w-4" aria-hidden />
-                {date ? (
-                  format(date, "PPP", { locale: fr })
-                ) : (
-                  <span>Choisir une date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                autoFocus
-                locale={fr}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="time">Heure</Label>
-          <Input
-            id="time"
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="concert-date">Date</FormLabel>
+                <Popover modal>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        id="concert-date"
+                        ref={field.ref}
+                        type="button"
+                        variant="outline"
+                        aria-required
+                        className={cn(
+                          "min-h-11 w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="h-4 w-4" aria-hidden />
+                        {field.value ? (
+                          format(field.value, "PPP", { locale: fr })
+                        ) : (
+                          <span>Choisir une date</span>
+                        )}
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      autoFocus
+                      locale={fr}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="time"
-            type="time"
-            required
-            className="min-h-11"
-            defaultValue={initialData?.time.slice(0, 5) || ""}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="time">Heure</FormLabel>
+                <FormControl>
+                  <Input
+                    id="time"
+                    type="time"
+                    aria-required
+                    className="min-h-11"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="context">Contexte</Label>
-        <Select name="context" required defaultValue={initialData?.context}>
-          <SelectTrigger id="context" className="min-h-11">
-            <SelectValue placeholder="Sélectionner un contexte" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="orchestre">Orchestre</SelectItem>
-            <SelectItem value="choeur">Chœur</SelectItem>
-            <SelectItem value="orchestre_et_choeur">
-              Orchestre et Chœur
-            </SelectItem>
-            <SelectItem value="autre">Autre</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="additional_informations">
-          Informations supplémentaires
-        </Label>
-        <Textarea
-          id="additional_informations"
+        <FormField
+          control={form.control}
+          name="context"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="context">Contexte</FormLabel>
+              <Select
+                name={field.name}
+                value={field.value ?? ""}
+                onValueChange={field.onChange}
+              >
+                <FormControl>
+                  <SelectTrigger
+                    id="context"
+                    ref={field.ref}
+                    aria-required
+                    className="min-h-11"
+                  >
+                    <SelectValue placeholder="Sélectionner un contexte" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="orchestre">Orchestre</SelectItem>
+                  <SelectItem value="choeur">Chœur</SelectItem>
+                  <SelectItem value="orchestre_et_choeur">
+                    Orchestre et Chœur
+                  </SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="additional_informations"
-          rows={3}
-          defaultValue={initialData?.additional_informations || ""}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="additional_informations">
+                Informations supplémentaires
+              </FormLabel>
+              <FormControl>
+                <Textarea id="additional_informations" rows={3} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="space-y-2">
-        <Label>Affiche (optionnel)</Label>
-        <FileUpload
-          onFileSelect={(file) => setSelectedFile(file)}
-          onFileClear={() => setSelectedFile(null)}
-          value={selectedFile}
-          currentImageUrl={initialData?.affiche || null}
-          mode="image"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="related_link">Lien connexe (optionnel)</Label>
-        <Input
-          id="related_link"
+        <div className="space-y-2">
+          <Label>Affiche (optionnel)</Label>
+          <FileUpload
+            onFileSelect={(file) => setSelectedFile(file)}
+            onFileClear={() => setSelectedFile(null)}
+            value={selectedFile}
+            currentImageUrl={initialData?.affiche || null}
+            mode="image"
+          />
+        </div>
+        <FormField
+          control={form.control}
           name="related_link"
-          type="text"
-          className="min-h-11"
-          defaultValue={initialData?.related_link || ""}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="related_link">
+                Lien connexe (optionnel)
+              </FormLabel>
+              <FormControl>
+                <Input
+                  id="related_link"
+                  type="text"
+                  className="min-h-11"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-        {onClose && (
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11"
-            onClick={onClose}
-          >
-            Annuler
+        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+          {onClose && (
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={onClose}
+            >
+              Annuler
+            </Button>
+          )}
+          <Button type="submit" className="min-h-11" disabled={loading}>
+            {loading ? "Chargement..." : submitLabel}
           </Button>
-        )}
-        <Button type="submit" className="min-h-11" disabled={loading}>
-          {loading ? "Chargement..." : submitLabel}
-        </Button>
-      </div>
-    </form>
+        </div>
+      </form>
+    </Form>
   );
 }
