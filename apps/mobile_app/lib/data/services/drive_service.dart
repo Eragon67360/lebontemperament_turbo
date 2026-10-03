@@ -124,7 +124,7 @@ class DriveService {
         fileName: fileNameFromContentDisposition(
           response.headers.value('content-disposition'),
         ),
-        contentType: response.headers.value(Headers.contentTypeHeader),
+        contentType: response.headers.value('content-type'),
       );
     } on DioException catch (e) {
       _logger.e('DriveService downloadFile failed: $e');

@@ -10,6 +10,52 @@ interface ExplorerProps {
   initialFolderId: string;
 }
 
+/** The name the proxy chose (Google Docs gain ".pdf"), from `filename*`. */
+function fileNameFromDisposition(header: string | null): string | null {
+  const encoded = header?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  if (!encoded) return null;
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Downloads through the website's proxy (session cookie, scope check): the
+ * files aren't publicly shared on Drive. The response is checked first, so an
+ * error shows a message instead of being saved as a file named like the score.
+ */
+async function downloadDriveFile(file: DriveFile) {
+  const url = `/api/drive/file?fileId=${encodeURIComponent(file.id ?? "")}&download=1`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      toast.error(
+        response.status === 401
+          ? "Votre session a expiré. Reconnectez-vous pour télécharger."
+          : response.status === 415
+            ? "Ce type de document ne peut pas être téléchargé."
+            : "Le téléchargement a échoué. Réessayez plus tard.",
+      );
+      return;
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download =
+      fileNameFromDisposition(response.headers.get("content-disposition")) ??
+      file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch {
+    toast.error("Le téléchargement a échoué. Vérifiez votre connexion.");
+  }
+}
+
 const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   const [folders, setFolders] = useState<DriveFile[]>([]);
   const [individualFiles, setIndividualFiles] = useState<DriveFile[]>([]);
@@ -152,17 +198,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onPress={() => {
-                      // Through the website's proxy (session cookie, scope
-                      // check): the files aren't publicly shared on Drive.
-                      const downloadUrl = `/api/drive/file?fileId=${encodeURIComponent(file.id ?? "")}&download=1`;
-                      const link = document.createElement("a");
-                      link.href = downloadUrl;
-                      link.download = file.name;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
+                    onPress={() => downloadDriveFile(file)}
                     className="cursor-pointer"
                   >
                     Télécharger
