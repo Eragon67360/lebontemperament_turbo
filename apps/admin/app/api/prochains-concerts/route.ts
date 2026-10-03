@@ -1,4 +1,8 @@
 import { checkAuthorization } from "@/utils/auth";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
 import { Concert, UpdateConcertDTO } from "@repo/domain/types/concerts";
 import { getFileNameFromUrl } from "@repo/domain/utils/storage";
@@ -77,6 +81,7 @@ export async function POST(request: Request) {
       // Don't throw here, just log the error
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json(newConcert);
   } catch (error) {
     console.error("Error creating concert:", error);
@@ -111,6 +116,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidateWebsiteAfterResponse(REVALIDATE.agenda);
   return NextResponse.json(data);
 }
 
@@ -162,6 +168,7 @@ export async function DELETE(request: Request) {
       throw deleteError;
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete operation error:", error);

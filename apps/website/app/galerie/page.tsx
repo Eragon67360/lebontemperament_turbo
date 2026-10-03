@@ -1,13 +1,18 @@
 import { JsonLd } from "@/components/JsonLd";
 import PhotoGallery from "@/components/PhotoGallery";
 import { YoutubeVideos } from "@/components/YoutubeVideos";
+import { tryGetGalleryImages } from "@/lib/galleryImages";
 import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/public";
 import { Video } from "@repo/domain/types/videos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
+
+// Public data only (anon key, no cookies): prerendered and served from the
+// cache for five minutes, or until the admin's edit calls /api/revalidate.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Galerie - Photos et vidéos",
@@ -59,8 +64,22 @@ function formatDateWithTimezone(dateString: string): string {
   return date.toISOString();
 }
 
+// What the schema below reads; the list itself is loaded by YoutubeVideos.
+const GALLERY_VIDEO_COLUMNS =
+  "id, title, composer, venue, youtube_url, performance_date, created_at";
+type GalleryVideo = Pick<
+  Video,
+  | "id"
+  | "title"
+  | "composer"
+  | "venue"
+  | "youtube_url"
+  | "performance_date"
+  | "created_at"
+>;
+
 // Generate VideoObject schema for videos
-function generateVideoSchemas(videos: Video[]) {
+function generateVideoSchemas(videos: GalleryVideo[]) {
   return videos.map((video) => {
     const videoId = extractYouTubeId(video.youtube_url);
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
@@ -96,12 +115,12 @@ function generateVideoSchemas(videos: Video[]) {
   });
 }
 
-async function getVideos(): Promise<Video[]> {
+async function getVideos(): Promise<GalleryVideo[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data: videos, error } = await supabase
       .from("youtube_links")
-      .select("*")
+      .select(GALLERY_VIDEO_COLUMNS)
       .eq("is_active", true)
       .order("display_order", { ascending: true });
 
@@ -110,7 +129,7 @@ async function getVideos(): Promise<Video[]> {
       return [];
     }
 
-    return (videos || []) as Video[]; // view-model: youtube_links nullability handled by UI defaults
+    return (videos || []) as GalleryVideo[]; // view-model: youtube_links nullability handled by UI defaults
   } catch (error) {
     console.error("Error fetching videos:", error);
     return [];
@@ -118,7 +137,13 @@ async function getVideos(): Promise<Video[]> {
 }
 
 const Galerie = async () => {
-  const videos = await getVideos();
+  // The Cloudinary listings are cached for an hour (lib/galleryImages.ts);
+  // when one is unavailable the gallery loads that folder in the browser.
+  const [videos, concertPhotos, lifePhotos] = await Promise.all([
+    getVideos(),
+    tryGetGalleryImages("concerts"),
+    tryGetGalleryImages("vie_bt"),
+  ]);
   const videoSchemas = generateVideoSchemas(videos);
 
   return (
@@ -158,7 +183,10 @@ const Galerie = async () => {
             <hr className="border-separator mt-8" />
           </div>
           <div>
-            <PhotoGallery />
+            <PhotoGallery
+              initialConcerts={concertPhotos}
+              initialVieBT={lifePhotos}
+            />
           </div>
         </div>
 

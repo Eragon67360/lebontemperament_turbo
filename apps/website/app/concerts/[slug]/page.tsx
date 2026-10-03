@@ -2,19 +2,23 @@ import ConcertPageClient from "@/components/ConcertPageClient";
 import { JsonLd } from "@/components/JsonLd";
 import { ConcertProject } from "@/types/projects";
 import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
-import { createAdminClient } from "@/utils/supabase/admin";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/public";
 import type { Project } from "@repo/domain/types/projects";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
+
+// Public data only (anon key, no cookies): every story is prerendered and
+// served from the cache for five minutes, or until the admin's edit calls
+// /api/revalidate. Unknown slugs are still rendered on demand (404 or new).
+export const revalidate = 300;
 
 export async function generateStaticParams() {
   try {
-    // Use admin client for static generation (no cookies needed)
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data: projects } = await supabase.from("projects").select("slug");
 
     if (!projects) return [];
@@ -23,21 +27,22 @@ export async function generateStaticParams() {
       slug: project.slug,
     }));
   } catch (error) {
+    // CI builds with placeholder credentials: nothing prerendered, ISR fills in.
     console.error("Error generating static params:", error);
     return [];
   }
 }
 
-async function fetchProject(slug: string): Promise<Project | null> {
-  // Use admin client for metadata generation (no cookies needed)
-  const supabase = createAdminClient();
+// One query per render for both generateMetadata and the page (React cache).
+const fetchProject = cache(async (slug: string): Promise<Project | null> => {
+  const supabase = createPublicClient();
   const { data: dbProject } = await supabase
     .from("projects")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
   return (dbProject as Project | null) ?? null;
-}
+});
 
 export async function generateMetadata({
   params,
@@ -189,13 +194,7 @@ export default async function ConcertPage({
 
   let dbProject: Project | null = null;
   try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("projects")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-    dbProject = (data as Project | null) ?? null;
+    dbProject = await fetchProject(slug);
   } catch (error) {
     console.error("Error fetching project:", error);
     return <ConcertLoadError />;
@@ -205,7 +204,7 @@ export default async function ConcertPage({
   if (!dbProject) notFound();
 
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const project = transformProjectForFrontend(dbProject);
 
     // Fetch all projects for related projects
