@@ -55,7 +55,9 @@ async function main() {
   );
   assert.equal(await revalidateWebsite(REVALIDATE.stories), true);
   assert.equal(calls.length, 1);
-  const [{ url, init }] = calls;
+  const first = calls[0];
+  assert.ok(first);
+  const { url, init } = first;
   assert.equal(url, "https://www.example.com/api/revalidate");
   assert.equal(init.method, "POST");
   const headers = init.headers as Record<string, string>;
