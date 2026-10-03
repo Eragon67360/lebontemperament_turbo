@@ -1,4 +1,5 @@
 "use client";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { DriveFile } from "@/utils/types";
 import { Button } from "@heroui/react";
 import { FC, useEffect, useState } from "react";
@@ -10,45 +11,53 @@ interface ExplorerProps {
   initialFolderId: string;
 }
 
+/** Lists a Drive folder, split into sub-folders and files. */
+async function loadFolder(folderId: string) {
+  const response = await fetch(`/api/drive/files?folderID=${folderId}`);
+  const data = await response.json();
+  if (!Array.isArray(data)) {
+    throw new Error("Response data is not an array");
+  }
+
+  return {
+    folders: data.filter((file: { type: string }) => file.type === "folder"),
+    files: data.filter((file: { type: string }) => file.type === "file"),
+  };
+}
+
 const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   const [folders, setFolders] = useState<DriveFile[]>([]);
   const [individualFiles, setIndividualFiles] = useState<DriveFile[]>([]);
   const [folderStack, setFolderStack] = useState<string[]>([initialFolderId]);
-  const [loading, setLoading] = useState(false);
+  // The root folder is fetched on mount, so the skeleton shows from the start.
+  const [loading, setLoading] = useState(true);
 
-  const fetchData = async (folderId: string) => {
+  // Callers set `loading` first; this only clears it once the request ends.
+  const fetchData = (folderId: string) =>
+    loadFolder(folderId)
+      .then(({ folders, files }) => {
+        setFolders(folders);
+        setIndividualFiles(files);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch files:", error);
+        toast.error("Erreur lors du chargement des fichiers");
+      })
+      .finally(() => setLoading(false));
+
+  // A new root folder starts a fresh navigation stack.
+  useResetOnChange([initialFolderId], () => {
+    setFolderStack([initialFolderId]);
     setLoading(true);
-    try {
-      const response = await fetch(`/api/drive/files?folderID=${folderId}`);
-      const data = await response.json();
-      if (!Array.isArray(data)) {
-        throw new Error("Response data is not an array");
-      }
-
-      const fetchedFolders = data.filter(
-        (file: { type: string }) => file.type === "folder",
-      );
-      const fetchedFiles = data.filter(
-        (file: { type: string }) => file.type === "file",
-      );
-
-      setFolders(fetchedFolders);
-      setIndividualFiles(fetchedFiles);
-    } catch (error) {
-      console.error("Failed to fetch files:", error);
-      toast.error("Erreur lors du chargement des fichiers");
-    } finally {
-      setLoading(false);
-    }
-  };
+  });
 
   useEffect(() => {
-    setFolderStack([initialFolderId]);
     fetchData(initialFolderId);
   }, [initialFolderId]);
 
   const handleFolderClick = (folderId: string) => {
     setFolderStack((prevStack) => [...prevStack, folderId]);
+    setLoading(true);
     fetchData(folderId);
   };
 
@@ -58,7 +67,10 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       newStack.pop();
       const previousFolderId = newStack[newStack.length - 1];
       setFolderStack(newStack);
-      if (previousFolderId) fetchData(previousFolderId);
+      if (previousFolderId) {
+        setLoading(true);
+        fetchData(previousFolderId);
+      }
     }
   };
 

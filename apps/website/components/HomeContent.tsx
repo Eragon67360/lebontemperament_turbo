@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { LinkButton } from "@/components/LinkButton";
 import ProjectViewer from "@/components/ProjectViewer";
+import { useClientValue } from "@/hooks/useClientValue";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { ConcertProject } from "@/types/projects";
@@ -30,6 +31,13 @@ const CalendarInfoModal = dynamic(
 // Mount a lazy section this far before it scrolls into view.
 const NEAR_VIEW_MARGIN = "0px 0px 1000px 0px";
 
+// Temporary CTAs, decided in the browser only: the server HTML never shows
+// them, so server and client render identically (as the old mount effects did).
+const CALENDAR_CTA_DEADLINE = new Date("2026-01-15").getTime();
+const AG_CTA_DEADLINE = new Date("2026-03-31").getTime();
+const isBeforeCalendarDeadline = () => Date.now() < CALENDAR_CTA_DEADLINE;
+const isBeforeAGDeadline = () => Date.now() < AG_CTA_DEADLINE;
+
 type HomeContentProps = {
   /** Latest concert stories, loaded by the page on the server. */
   stories?: ConcertProject[];
@@ -40,23 +48,11 @@ const HomeContent = ({ stories }: HomeContentProps) => {
   const { isAdmin } = useAdminStatus();
   // Must render identically on server and client: measure in the effect below.
   const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
-  const [showCalendarButton, setShowCalendarButton] = useState<boolean>(false);
-  const [showAGButton, setShowAGButton] = useState<boolean>(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
 
-  // Check if we should show the calendar button (before January 15, 2026)
-  useEffect(() => {
-    const expirationDate = new Date("2026-01-15");
-    const now = new Date();
-    setShowCalendarButton(now < expirationDate);
-  }, []);
-
-  // Check if we should show the AG button (before March 31, 2026)
-  useEffect(() => {
-    const expirationDate = new Date("2026-03-31");
-    const now = new Date();
-    setShowAGButton(now < expirationDate);
-  }, []);
+  // Calendar button before January 15, 2026; AG button before March 31, 2026.
+  const showCalendarButton = useClientValue(isBeforeCalendarDeadline, false);
+  const showAGButton = useClientValue(isBeforeAGDeadline, false);
 
   // Refs for each section
   const projectsRef = useRef(null);

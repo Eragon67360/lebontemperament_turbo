@@ -1,7 +1,8 @@
 "use client";
 
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -36,15 +37,15 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  // Reset state when a new document is opened
+  useResetOnChange([isOpen, url], () => {
     if (isOpen) {
-      // Reset state when a new document is opened
       setPageNumber(1);
       setNumPages(null);
       setLoading(true);
       setError(null);
     }
-  }, [isOpen, url]);
+  });
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);

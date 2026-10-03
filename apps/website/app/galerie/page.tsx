@@ -89,7 +89,7 @@ function generateVideoSchemas(videos: GalleryVideo[]) {
       video.performance_date || video.created_at,
     );
 
-    const schema: any = {
+    const schema: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "VideoObject",
       name: video.title,

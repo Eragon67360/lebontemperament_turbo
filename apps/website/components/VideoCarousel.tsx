@@ -16,6 +16,76 @@ interface VideoCarouselProps {
   onComplete: () => void;
 }
 
+type ControlsProps = {
+  isPortrait: boolean;
+  page: number;
+  total: number;
+  isMuted: boolean;
+  onPaginate: (direction: number) => void;
+  onToggleMute: () => void;
+};
+
+const Controls = ({
+  isPortrait,
+  page,
+  total,
+  isMuted,
+  onPaginate,
+  onToggleMute,
+}: ControlsProps) => (
+  <div
+    className={`flex ${isPortrait ? "mt-4 flex-row justify-center gap-4" : "flex-col gap-4"}`}
+  >
+    <button
+      type="button"
+      onClick={() => onPaginate(-1)}
+      disabled={page === 0}
+      aria-label="Vidéo précédente"
+      className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 md:h-12 md:w-12"
+    >
+      <BiUpArrow className="h-5 w-5 text-gray-700 transition-colors group-hover:text-gray-900 md:h-6 md:w-6" />
+      {page > 0 && (
+        <div className="absolute left-full ml-3 hidden rounded-md bg-black/75 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
+          Vidéo précédente
+        </div>
+      )}
+    </button>
+
+    <div
+      className="flex items-center text-sm font-medium text-gray-600"
+      aria-live="polite"
+    >
+      {page + 1}/{total}
+    </div>
+
+    <button
+      type="button"
+      onClick={() => onPaginate(1)}
+      aria-label={page === total - 1 ? "Terminer" : "Vidéo suivante"}
+      className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#1a878d] to-[#126266] shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
+    >
+      <BiDownArrow className="h-5 w-5 text-white md:h-6 md:w-6" />
+      <div className="absolute left-full ml-3 hidden rounded-md bg-black/75 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
+        {page === total - 1 ? "Terminer" : "Vidéo suivante"}
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={onToggleMute}
+      aria-label={isMuted ? "Activer le son" : "Couper le son"}
+      aria-pressed={!isMuted}
+      className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
+    >
+      {isMuted ? (
+        <HiVolumeOff className="h-5 w-5 text-gray-700 md:h-6 md:w-6" />
+      ) : (
+        <HiVolumeUp className="h-5 w-5 text-gray-700 md:h-6 md:w-6" />
+      )}
+    </button>
+  </div>
+);
+
 export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [[page, direction], setPage] = useState([0, 0]);
@@ -86,59 +156,6 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
     }
   }, [page, isMuted, prefersReducedMotion]);
 
-  const Controls = () => (
-    <div
-      className={`flex ${isPortrait ? "mt-4 flex-row justify-center gap-4" : "flex-col gap-4"}`}
-    >
-      <button
-        type="button"
-        onClick={() => paginate(-1)}
-        disabled={page === 0}
-        aria-label="Vidéo précédente"
-        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 md:h-12 md:w-12"
-      >
-        <BiUpArrow className="h-5 w-5 text-gray-700 transition-colors group-hover:text-gray-900 md:h-6 md:w-6" />
-        {page > 0 && (
-          <div className="absolute left-full ml-3 hidden rounded-md bg-black/75 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
-            Vidéo précédente
-          </div>
-        )}
-      </button>
-
-      <div
-        className="flex items-center text-sm font-medium text-gray-600"
-        aria-live="polite"
-      >
-        {page + 1}/{videos.length}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => paginate(1)}
-        aria-label={page === videos.length - 1 ? "Terminer" : "Vidéo suivante"}
-        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#1a878d] to-[#126266] shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
-      >
-        <BiDownArrow className="h-5 w-5 text-white md:h-6 md:w-6" />
-        <div className="absolute left-full ml-3 hidden rounded-md bg-black/75 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
-          {page === videos.length - 1 ? "Terminer" : "Vidéo suivante"}
-        </div>
-      </button>
-
-      <button
-        type="button"
-        onClick={toggleMute}
-        aria-label={isMuted ? "Activer le son" : "Couper le son"}
-        aria-pressed={!isMuted}
-        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
-      >
-        {isMuted ? (
-          <HiVolumeOff className="h-5 w-5 text-gray-700 md:h-6 md:w-6" />
-        ) : (
-          <HiVolumeUp className="h-5 w-5 text-gray-700 md:h-6 md:w-6" />
-        )}
-      </button>
-    </div>
-  );
   return (
     <div
       className={`flex ${isPortrait ? "flex-col" : "flex-row items-center"} gap-4`}
@@ -191,7 +208,14 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
         </AnimatePresence>
       </div>
 
-      <Controls />
+      <Controls
+        isPortrait={isPortrait}
+        page={page}
+        total={videos.length}
+        isMuted={isMuted}
+        onPaginate={paginate}
+        onToggleMute={toggleMute}
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useHydrated } from "@/hooks/useClientValue";
 import { showPreferences } from "./consent";
 
 interface CookiePreferencesButtonProps {
@@ -12,12 +12,8 @@ const CookiePreferencesButton = ({
   className = "",
   children = "Gérer les cookies",
 }: CookiePreferencesButtonProps) => {
-  // Rendered after mount, as before: the dialog only exists in the browser.
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
+  // Rendered once hydrated, as before: the dialog only exists in the browser.
+  const isReady = useHydrated();
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();

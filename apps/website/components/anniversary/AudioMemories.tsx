@@ -45,8 +45,8 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
             Mémoires Audio
           </h2>
           <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
-            Écoutez les voix et les sons qui ont marqué 40 ans d'histoire du Bon
-            Tempérament.
+            Écoutez les voix et les sons qui ont marqué 40 ans d&apos;histoire
+            du Bon Tempérament.
           </p>
         </motion.div>
 

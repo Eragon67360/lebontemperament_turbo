@@ -1,7 +1,9 @@
 "use client";
 
 import { validConsent } from "@/components/cookies/consent";
+import { useHydrated } from "@/hooks/useClientValue";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { Link, Tooltip } from "@heroui/react";
 import { AnimatePresence, m } from "motion/react";
 import { usePathname } from "next/navigation";
@@ -49,14 +51,16 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
   const heartRef = useRef<HTMLSpanElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  // The portal needs `document`: only after hydration.
+  const isMounted = useHydrated();
   // The navbar is a 64px scroll container, so the card cannot live inside it.
   // It is portaled to the body and pinned to the heart's measured position.
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
     null,
   );
 
-  useEffect(() => setIsMounted(true), []);
+  // Close when the visitor navigates elsewhere.
+  useResetOnChange([pathname], () => setIsOpen(false));
 
   const dismiss = useCallback(() => {
     setIsOpen(false);
@@ -104,11 +108,6 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
       window.removeEventListener("cc:onConsent", scheduleShow);
       clearTimeout(timer);
     };
-  }, [pathname]);
-
-  // Close when the visitor navigates elsewhere.
-  useEffect(() => {
-    setIsOpen(false);
   }, [pathname]);
 
   useEffect(() => {
