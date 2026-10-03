@@ -168,7 +168,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
       <Link
         href="/don"
         onPress={dismiss}
-        className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+        className="bg-primary-solid hover:bg-primary-solid-hover inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-colors"
       >
         Découvrir
       </Link>

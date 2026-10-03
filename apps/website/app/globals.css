@@ -40,6 +40,22 @@
   --primary-700: #105155;
   --primary-800: #0b3638;
   --primary-900: #051b1c;
+  /* Accessibility (#337). Light `--muted` was HeroUI's default
+     (oklch 55% ≈ zinc-500): 4.2:1 on the grey surfaces (#efeff0). One step
+     darker on the same scale (zinc-600): 6.7:1. */
+  --muted: oklch(44.2% 0.017 285.786);
+  /* White on the brand teal is 4.29:1, under WCAG AA for normal text.
+     `--primary-solid` is the surface of solid teal buttons with white text:
+     the light `--primary-600` (6.15:1 with white) as a literal, because the
+     dark scale's 600 (#1e848a) is only 4.45:1 and solid buttons are the same
+     colour in both themes (as `bg-primary` already was). Hover: light 700.
+     `--primary-text` is small teal text: light 600 (6.15:1 on white), the
+     dark scale's 500 in `.dark` (6.18:1 on #0d1616). Large headings and
+     icons may keep `--primary`. Utilities: bg-primary-solid,
+     hover:bg-primary-solid-hover, text-primary-text (see @theme inline). */
+  --primary-solid: #156c71;
+  --primary-solid-hover: #105155;
+  --primary-text: var(--primary-600);
 }
 
 .dark {
@@ -65,6 +81,8 @@
   --primary-700: #176368;
   --primary-800: #0f4245;
   --primary-900: #082123;
+  /* Small teal text follows the dark scale (#26a5ad), not `--primary` */
+  --primary-text: var(--primary-500);
 }
 
 /* High contrast accessibility. Kept outside @layer base: the brand tokens
@@ -77,6 +95,9 @@
     --primary: #000000;
     --accent: #000000;
     --muted: #000000;
+    --primary-text: #000000;
+    --primary-solid: #000000;
+    --primary-solid-hover: #000000;
     --color-primary: #000000;
     --color-border: #000000;
   }
@@ -86,6 +107,9 @@
     --accent: #ffffff;
     --accent-foreground: #000000;
     --muted: #ffffff;
+    --primary-text: #ffffff;
+    --primary-solid: #ffffff;
+    --primary-solid-hover: #ffffff;
     --color-primary: #ffffff;
     --color-border: #ffffff;
   }
@@ -103,6 +127,9 @@
   --color-primary-700: var(--primary-700);
   --color-primary-800: var(--primary-800);
   --color-primary-900: var(--primary-900);
+  --color-primary-solid: var(--primary-solid);
+  --color-primary-solid-hover: var(--primary-solid-hover);
+  --color-primary-text: var(--primary-text);
 }
 
 /* ==========================================================================
@@ -180,14 +207,22 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: color-mix(in oklab, var(--color-primary) 50%, transparent);
+    background-color: color-mix(
+      in oklab,
+      var(--color-primary) 50%,
+      transparent
+    );
     border-radius: 6px;
     border: 3px solid transparent;
     background-clip: content-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in oklab, var(--color-primary) 70%, transparent);
+    background-color: color-mix(
+      in oklab,
+      var(--color-primary) 70%,
+      transparent
+    );
   }
 
   /* For Firefox */
@@ -215,6 +250,13 @@
   .button--sm {
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
+  }
+  /* Accessibility (#337): solid primary buttons sit on the darker step
+     `--primary-solid` (6.15:1 with white) instead of `--accent` (4.29:1) */
+  .button--primary {
+    --button-bg: var(--primary-solid);
+    --button-bg-hover: var(--primary-solid-hover);
+    --button-bg-pressed: var(--primary-solid-hover);
   }
   /* v2 parity: solid default buttons had neutral (not teal) text */
   .button--secondary {

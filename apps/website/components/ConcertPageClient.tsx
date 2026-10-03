@@ -93,14 +93,14 @@ const ConcertPageClient = ({
         <div className="container mx-auto max-w-6xl px-4 md:px-8">
           <Link
             href="/concerts#histoires"
-            className="text-muted hover:text-primary mb-8 inline-flex items-center gap-2 text-sm"
+            className="text-muted hover:text-primary-text mb-8 inline-flex items-center gap-2 text-sm"
           >
             <IoArrowBack aria-hidden="true" />
             Toutes les histoires de concerts
           </Link>
 
           <MotionSection className="border-separator mb-12 border-b pb-8">
-            <p className="text-primary mb-4 text-xs font-semibold tracking-[0.2em] uppercase">
+            <p className="text-primary-text mb-4 text-xs font-semibold tracking-[0.2em] uppercase">
               Histoire de concert
             </p>
             <div className="text-muted flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
@@ -225,10 +225,10 @@ const ConcertPageClient = ({
                         href={`/concerts/${relatedProject.slug}`}
                         className="border-separator bg-surface-secondary hover:border-primary/40 group rounded-xl border p-5"
                       >
-                        <span className="text-primary text-xs font-semibold">
+                        <span className="text-primary-text text-xs font-semibold">
                           {new Date(relatedProject.date).getFullYear()}
                         </span>
-                        <h3 className="text-foreground group-hover:text-primary mt-2 line-clamp-2 font-semibold">
+                        <h3 className="text-foreground group-hover:text-primary-text mt-2 line-clamp-2 font-semibold">
                           {relatedProject.name} {relatedProject.subName}
                         </h3>
                       </Link>
@@ -301,7 +301,7 @@ const ConcertPageClient = ({
                             href={photographer.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-foreground hover:text-primary mt-1 block font-medium"
+                            className="text-foreground hover:text-primary-text mt-1 block font-medium"
                           >
                             {photographer.name}
                           </Link>

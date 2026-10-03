@@ -50,7 +50,7 @@ export default function NotFound() {
             <li>
               <Link
                 href="/concerts"
-                className="text-primary hover:underline"
+                className="text-primary-text hover:underline"
                 aria-label="Voir nos concerts"
               >
                 Voir nos concerts
@@ -59,7 +59,7 @@ export default function NotFound() {
             <li>
               <Link
                 href="/contact"
-                className="text-primary hover:underline"
+                className="text-primary-text hover:underline"
                 aria-label="Nous contacter"
               >
                 Nous contacter
@@ -68,7 +68,7 @@ export default function NotFound() {
             <li>
               <Link
                 href="/decouvrir"
-                className="text-primary hover:underline"
+                className="text-primary-text hover:underline"
                 aria-label="Nous découvrir"
               >
                 Nous découvrir
