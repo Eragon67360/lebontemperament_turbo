@@ -115,7 +115,7 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
                     }`}
                   >
                     <div className="border-separator bg-surface-secondary/30 rounded-xl border p-4 backdrop-blur-md transition-shadow duration-300 hover:shadow-lg sm:p-6 md:text-left">
-                      <p className="text-primary-600 dark:text-primary-500 mb-2 text-sm font-semibold">
+                      <p className="text-primary-text mb-2 text-sm font-semibold">
                         {event.year}
                       </p>
                       <h3 className="text-foreground mb-3 text-lg font-medium sm:text-xl">

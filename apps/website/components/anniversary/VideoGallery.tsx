@@ -132,7 +132,7 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
                 </div>
 
                 <div className="p-4 sm:p-5">
-                  <p className="text-primary-600 dark:text-primary-500 mb-2 text-xs font-semibold tracking-wider uppercase">
+                  <p className="text-primary-text mb-2 text-xs font-semibold tracking-wider uppercase">
                     {video.category}
                   </p>
                   <h3 className="text-foreground mb-2 text-lg font-medium">

@@ -229,7 +229,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 modération. En savoir plus dans notre{" "}
                 <Link
                   href="/politique-de-confidentialite"
-                  className="text-primary-600 dark:text-primary-500 underline hover:no-underline"
+                  className="text-primary-text underline hover:no-underline"
                 >
                   politique de confidentialité
                 </Link>
