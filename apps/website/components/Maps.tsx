@@ -108,7 +108,7 @@ function Map() {
           <button
             type="button"
             onClick={() => setRequested(true)}
-            className="bg-primary-600 hover:bg-primary-700 focus-visible:outline-primary rounded-full px-5 py-2 text-xs font-medium tracking-[2.4px] text-white uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="bg-primary-solid hover:bg-primary-solid-hover focus-visible:outline-primary rounded-full px-5 py-2 text-xs font-medium tracking-[2.4px] text-white uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             Afficher la carte
           </button>
@@ -118,7 +118,7 @@ function Map() {
               href={GOOGLE_MAPS_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary underline hover:no-underline"
+              className="text-primary-text underline hover:no-underline"
             >
               Google Maps
             </a>{" "}
@@ -127,7 +127,7 @@ function Map() {
               href={OPENSTREETMAP_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary underline hover:no-underline"
+              className="text-primary-text underline hover:no-underline"
             >
               OpenStreetMap
             </a>

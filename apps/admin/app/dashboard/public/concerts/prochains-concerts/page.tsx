@@ -1,11 +1,11 @@
 "use client";
 
-import { ConcertForm } from "@/components/ConcertForm";
+import { ConcertForm, type ConcertFormValues } from "@/components/ConcertForm";
 import { ConcertCard } from "@/components/concerts/ConcertCard";
 import { ConcertSelectionDialog } from "@/components/concerts/ConcertSelectionDialog";
 import { TourCard } from "@/components/concerts/TourCard";
 import { PageShell } from "@/components/layouts/PageShell";
-import { TourForm } from "@/components/TourForm";
+import { TourForm, type TourFormValues } from "@/components/TourForm";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +42,7 @@ import {
   useUpdateTour,
 } from "@/hooks/useTours";
 import { Tour } from "@/types/tours";
-import { Concert, Context } from "@repo/domain/types/concerts";
+import { Concert } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { Music2, Plus, Users } from "lucide-react";
 import { useState } from "react";
@@ -86,14 +86,11 @@ export default function ProchainsConcerts() {
 
   // Handlers - Concerts
   const handleCreateConcert = async (
-    e: React.FormEvent<HTMLFormElement>,
-    formDate: Date | undefined,
+    values: ConcertFormValues,
     selectedFile: File | null,
   ) => {
-    e.preventDefault();
     try {
       let affiche = null;
-      const form = e.target as HTMLFormElement;
 
       if (selectedFile) {
         const fileFormData = new FormData();
@@ -108,13 +105,13 @@ export default function ProchainsConcerts() {
       }
 
       const concertData = {
-        place: form.place.value,
-        date: formDate ? format(formDate, "yyyy-MM-dd") : "",
-        time: form.time.value,
-        context: form.context.value,
-        name: form.concertName.value,
-        additional_informations: form.additional_informations.value,
-        related_link: form.related_link.value || null,
+        place: values.place,
+        date: format(values.date, "yyyy-MM-dd"),
+        time: values.time,
+        context: values.context,
+        name: values.concertName,
+        additional_informations: values.additional_informations,
+        related_link: values.related_link || null,
         affiche,
       };
 
@@ -128,15 +125,12 @@ export default function ProchainsConcerts() {
   };
 
   const handleEditConcert = async (
-    e: React.FormEvent<HTMLFormElement>,
-    formDate: Date | undefined,
+    values: ConcertFormValues,
     selectedFile: File | null,
   ) => {
-    e.preventDefault();
     if (!editConcert) return;
     try {
       let affiche = editConcert.affiche;
-      const formData = new FormData(e.currentTarget);
 
       if (selectedFile) {
         const fileData = new FormData();
@@ -152,15 +146,13 @@ export default function ProchainsConcerts() {
 
       const concertData = {
         id: editConcert.id,
-        place: formData.get("place") as string,
-        date: formDate ? format(formDate, "yyyy-MM-dd") : editConcert.date,
-        time: formData.get("time") as string,
-        context: formData.get("context") as Context,
-        name: formData.get("concertName") as string,
-        additional_informations: formData.get(
-          "additional_informations",
-        ) as string,
-        related_link: (formData.get("related_link") as string) || null,
+        place: values.place,
+        date: format(values.date, "yyyy-MM-dd"),
+        time: values.time,
+        context: values.context,
+        name: values.concertName,
+        additional_informations: values.additional_informations,
+        related_link: values.related_link || null,
         affiche,
       };
 
@@ -175,14 +167,10 @@ export default function ProchainsConcerts() {
 
   // Handlers - Tours
   const handleCreateTour = async (
-    e: React.FormEvent<HTMLFormElement>,
-    startDate: Date | undefined,
-    endDate: Date | undefined,
+    values: TourFormValues,
     selectedFile: File | null,
   ) => {
-    e.preventDefault();
     try {
-      const form = e.target as HTMLFormElement;
       let tour_poster = null;
 
       if (selectedFile) {
@@ -198,11 +186,15 @@ export default function ProchainsConcerts() {
       }
 
       await createTour.mutateAsync({
-        name: form.tourName.value,
-        description: form.description.value,
-        context: form.context.value,
-        start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+        name: values.tourName,
+        description: values.description,
+        context: values.context,
+        start_date: values.start_date
+          ? format(values.start_date, "yyyy-MM-dd")
+          : undefined,
+        end_date: values.end_date
+          ? format(values.end_date, "yyyy-MM-dd")
+          : undefined,
         tour_poster,
       });
 
@@ -215,15 +207,11 @@ export default function ProchainsConcerts() {
   };
 
   const handleEditTour = async (
-    e: React.FormEvent<HTMLFormElement>,
-    startDate: Date | undefined,
-    endDate: Date | undefined,
+    values: TourFormValues,
     selectedFile: File | null,
   ) => {
-    e.preventDefault();
     if (!editTour) return;
     try {
-      const form = e.target as HTMLFormElement;
       let tour_poster = editTour.tour_poster;
 
       if (selectedFile) {
@@ -240,11 +228,15 @@ export default function ProchainsConcerts() {
 
       await updateTour.mutateAsync({
         id: editTour.id,
-        name: form.tourName.value,
-        description: form.description.value,
-        context: form.context.value,
-        start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+        name: values.tourName,
+        description: values.description,
+        context: values.context,
+        start_date: values.start_date
+          ? format(values.start_date, "yyyy-MM-dd")
+          : undefined,
+        end_date: values.end_date
+          ? format(values.end_date, "yyyy-MM-dd")
+          : undefined,
         tour_poster,
       });
 

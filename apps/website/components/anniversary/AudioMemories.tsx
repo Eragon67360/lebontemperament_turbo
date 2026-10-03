@@ -24,7 +24,7 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
     <section
       id="audio"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
       <motion.div
         style={{ y }}
@@ -41,10 +41,10 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
           <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
             <FaHeadphones className="text-3xl sm:text-4xl" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
+          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Mémoires Audio
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
             Écoutez les voix et les sons qui ont marqué 40 ans d'histoire du Bon
             Tempérament.
           </p>
@@ -57,30 +57,30 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: index * 0.1, duration: 0.6 }}
-              className="group flex flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md sm:p-6 dark:border-slate-800/50 dark:bg-slate-900/30"
+              className="group border-separator bg-surface-secondary/30 flex flex-col overflow-hidden rounded-xl border p-4 backdrop-blur-md sm:p-6"
             >
               <div className="mb-4 flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="mb-1 text-lg font-medium text-slate-900 sm:text-xl dark:text-white">
+                  <h3 className="text-foreground mb-1 text-lg font-medium sm:text-xl">
                     {memory.title}
                   </h3>
-                  <p className="text-sm font-light text-slate-500 dark:text-slate-400">
+                  <p className="text-muted text-sm font-light">
                     {memory.speaker_name && `Par ${memory.speaker_name}`}
                     {memory.year && ` • ${memory.year}`}
                   </p>
                 </div>
                 <div className="ml-4 shrink-0">
-                  <span className="border-primary/20 bg-primary/5 text-primary dark:border-primary/30 dark:bg-primary/10 inline-flex rounded-full border px-3 py-1 text-xs font-medium">
+                  <span className="border-primary/20 bg-primary/5 text-primary-600 dark:border-primary/30 dark:bg-primary/10 dark:text-primary-500 inline-flex rounded-full border px-3 py-1 text-xs font-medium">
                     {memory.duration}
                   </span>
                 </div>
               </div>
 
-              <p className="mb-6 grow text-sm leading-relaxed font-light text-slate-500 dark:text-slate-400">
+              <p className="text-muted mb-6 grow text-sm leading-relaxed font-light">
                 {memory.description}
               </p>
 
-              <div className="rounded-lg bg-slate-100 p-3 dark:bg-slate-800/50">
+              <div className="bg-surface-secondary/60 rounded-lg p-3">
                 <CustomAudioPlayer
                   src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload/${memory.audio_url}`}
                 />

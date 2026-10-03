@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,10 +9,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  editUserFormSchema,
+  type EditUserFormValues,
+} from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 interface EditUserDialogProps {
   editingUser: { id: string; display_name: string } | null;
@@ -23,23 +37,6 @@ export function EditUserDialog({
   onClose,
   onSubmit,
 }: EditUserDialogProps) {
-  const [displayName, setDisplayName] = useState(
-    editingUser?.display_name || "",
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingUser) return;
-
-    setIsSubmitting(true);
-    try {
-      await onSubmit(editingUser.id, displayName);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <Dialog open={!!editingUser} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -49,38 +46,83 @@ export function EditUserDialog({
             Changez le nom d&apos;affichage de l&apos;utilisateur
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="display_name">Nom d&apos;affichage</Label>
-            <Input
-              id="display_name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Nom d'affichage"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                "Enregistrer"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+        {editingUser && (
+          <EditUserForm
+            key={editingUser.id}
+            editingUser={editingUser}
+            onClose={onClose}
+            onSubmit={onSubmit}
+          />
+        )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function EditUserForm({
+  editingUser,
+  onClose,
+  onSubmit,
+}: {
+  editingUser: { id: string; display_name: string };
+  onClose: () => void;
+  onSubmit: (userId: string, newDisplayName: string) => Promise<void>;
+}) {
+  const form = useForm<EditUserFormValues>({
+    resolver: zodResolver(editUserFormSchema),
+    defaultValues: { display_name: editingUser.display_name || "" },
+  });
+  const isSubmitting = form.formState.isSubmitting;
+
+  const handleSubmit = async (values: EditUserFormValues) => {
+    await onSubmit(editingUser.id, values.display_name);
+  };
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-4"
+        noValidate
+      >
+        <FormField
+          control={form.control}
+          name="display_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="display_name">Nom d&apos;affichage</FormLabel>
+              <FormControl>
+                <Input
+                  id="display_name"
+                  placeholder="Nom d'affichage"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Annuler
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enregistrement...
+              </>
+            ) : (
+              "Enregistrer"
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }

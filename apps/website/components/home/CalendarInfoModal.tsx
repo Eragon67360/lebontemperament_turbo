@@ -40,7 +40,7 @@ export default function CalendarInfoModal({
                     href="https://cadence-musique.fr/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary font-medium hover:underline"
+                    className="text-primary-text font-medium hover:underline"
                   >
                     pôle musical régional
                   </a>{" "}
@@ -55,7 +55,7 @@ export default function CalendarInfoModal({
                   en étant l&apos;ensemble amateur du jour pour le{" "}
                   <strong>24 décembre</strong>.
                 </p>
-                <p className="text-primary font-medium">
+                <p className="text-primary-text font-medium">
                   Cette reconnaissance couronne en beauté notre saison 2024/2025
                   et témoigne de la qualité et de l&apos;engagement de notre
                   ensemble vocal et instrumental.

@@ -151,7 +151,7 @@ export default function Sidebar({
                     {user.email}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+                <ChevronDown className="text-muted-foreground h-4 w-4 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-xl">

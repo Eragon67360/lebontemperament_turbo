@@ -126,7 +126,7 @@ export default function BugReportsPage() {
                           report.profiles?.email}
                       </span>
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-muted-foreground text-xs">
                       {new Date(report.created_at).toLocaleDateString("fr-FR", {
                         year: "numeric",
                         month: "long",

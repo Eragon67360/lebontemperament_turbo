@@ -56,7 +56,7 @@ Mobile: `apps/mobile_app/.env` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`,
 
 ## Known quirks
 
-- **TypeScript versions differ**: the apps use TypeScript 7 (`typescript@^7`), the root pins `5.9.3`. Run type checks through `npm run check-types` (Turbo, per workspace).
+- **TypeScript versions differ on purpose**: the apps type-check with TypeScript 7 (`typescript@^7`); the root pins `5.9.3` because ESLint's parser (typescript-eslint) loads the root TypeScript and doesn't support 7 yet (measured on #417). Run type checks through `npm run check-types` (Turbo, per workspace).
 - **The pre-commit hook is light** (`lint-staged`: Prettier on staged files; no build, no version bump): see [workflow](workflow.md#the-pre-commit-hook).
 - **Versions** live in `version.json` and both apps' `package.json` (bumped on the release PR with `npm run release:bump`); the mobile version is in `pubspec.yaml` (`2.0.109+125` on 2026-10-01).
 - **Prettier has no config file**: defaults plus `prettier-plugin-organize-imports` and `prettier-plugin-tailwindcss` from the root dev dependencies; `.prettierignore` skips shadcn's generated `components/ui/**` and lockfiles.

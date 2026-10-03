@@ -333,7 +333,7 @@ function EventRow({ event }: { event: Event }) {
           {event.time && <span>{event.time}</span>}
         </div>
         {event.location && (
-          <div className="flex items-center gap-1 text-xs text-gray-400">
+          <div className="text-muted-foreground flex items-center gap-1 text-xs">
             <MapPin className="h-3 w-3 shrink-0" />
             <p className="truncate">{event.location}</p>
           </div>
@@ -369,7 +369,7 @@ function ConcertCard({ concert }: { concert: Concert }) {
         <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
           {format(startsAt, "d MMM yyyy", { locale: fr })}
         </span>
-        <span className="font-mono text-xs text-gray-400">
+        <span className="text-muted-foreground font-mono text-xs">
           {format(startsAt, "HH:mm", { locale: fr })}
         </span>
       </div>

@@ -165,7 +165,7 @@ export default function LoginForm() {
                 <div></div>
                 <Link
                   href={RouteNames.AUTH.RESET_PASSWORD}
-                  className="text-primary text-xs hover:underline"
+                  className="text-primary-text text-xs hover:underline"
                   tabIndex={isPending ? -1 : 0}
                 >
                   Mot de passe oublié?

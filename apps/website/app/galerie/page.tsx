@@ -165,7 +165,7 @@ const Galerie = async () => {
             <div className="flex items-end justify-between">
               <div>
                 <h1>
-                  <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+                  <span className="text-title text-primary-400 dark:text-primary block leading-none font-light">
                     Galerie
                   </span>
                   <span className="text-title text-foreground block leading-none font-bold">
@@ -195,7 +195,7 @@ const Galerie = async () => {
             <div className="flex items-end justify-between">
               <div>
                 <h2>
-                  <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+                  <span className="text-title text-primary-400 dark:text-primary block leading-none font-light">
                     Galerie
                   </span>
                   <span className="text-title text-foreground block leading-none font-bold">
