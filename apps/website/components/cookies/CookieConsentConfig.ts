@@ -1,4 +1,4 @@
-import { CookieConsentConfig } from "vanilla-cookieconsent";
+import type { CookieConsentConfig } from "vanilla-cookieconsent";
 
 /**
  * What the site really sets or loads (checked 2026-10, issue #349):

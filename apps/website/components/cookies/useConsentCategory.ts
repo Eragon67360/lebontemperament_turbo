@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import * as CookieConsent from "vanilla-cookieconsent";
+import { acceptedCategory } from "./consent";
 
 /**
  * Whether the visitor accepted a cookie category. Starts as "no" (nothing
@@ -13,13 +13,7 @@ export function useConsentCategory(category: string) {
   const [accepted, setAccepted] = useState(false);
 
   useEffect(() => {
-    const sync = () => {
-      try {
-        setAccepted(CookieConsent.acceptedCategory(category));
-      } catch {
-        setAccepted(false);
-      }
-    };
+    const sync = () => setAccepted(acceptedCategory(category));
 
     sync();
     window.addEventListener("cc:onConsent", sync);
