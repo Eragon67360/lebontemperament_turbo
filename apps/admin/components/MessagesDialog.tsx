@@ -192,12 +192,12 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
                           {report.last_message.message}
                         </p>
                       ) : (
-                        <p className="text-xs text-gray-400 italic">
+                        <p className="text-muted-foreground text-xs italic">
                           Aucun message
                         </p>
                       )}
                       <div className="mt-1 flex min-w-0 items-center justify-between gap-2">
-                        <span className="shrink-0 text-[10px] text-gray-400">
+                        <span className="text-muted-foreground shrink-0 text-[10px]">
                           {new Date(report.created_at).toLocaleDateString(
                             "fr-FR",
                             {
@@ -208,7 +208,7 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
                         </span>
                         <div className="flex shrink-0 items-center gap-2">
                           {report.message_count > 0 && (
-                            <span className="text-[10px] whitespace-nowrap text-gray-400">
+                            <span className="text-muted-foreground text-[10px] whitespace-nowrap">
                               {report.message_count}{" "}
                               {report.message_count === 1
                                 ? "message"
@@ -329,7 +329,7 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
                                   "mt-1 text-[10px]",
                                   isCurrentUser
                                     ? "text-blue-100"
-                                    : "text-gray-400",
+                                    : "text-muted-foreground",
                                 )}
                               >
                                 {new Date(
@@ -374,14 +374,14 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Appuyez sur Entrée pour envoyer, Shift + Entrée pour une
                     nouvelle ligne
                   </p>
                 </div>
               </>
             ) : (
-              <div className="hidden h-full items-center justify-center text-gray-400 md:flex">
+              <div className="text-muted-foreground hidden h-full items-center justify-center md:flex">
                 <div className="text-center">
                   <MessageCircle className="mx-auto mb-4 h-16 w-16 text-gray-300" />
                   <p className="text-sm">Sélectionnez une conversation</p>

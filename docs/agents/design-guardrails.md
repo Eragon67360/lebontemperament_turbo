@@ -21,9 +21,10 @@ No standalone design-system document exists yet; this page records the system as
 
 ### Admin (`apps/admin`)
 
-- **shadcn/ui on Radix** (`components/ui/*`, generated, excluded from Prettier), tokens in `app/globals.css` (oklch, `--radius: 1rem` with `sm`/`md`/`lg`/`xl` derived), light and dark, sidebar tokens.
+- **shadcn/ui on Radix** (`components/ui/*`, generated, excluded from Prettier), tokens in `app/globals.css` (oklch, `--radius: 1rem` with `sm`/`md`/`lg`/`xl` derived), light and dark, sidebar tokens. `--primary-600` (`oklch(0.486 0.0768 200.93)`, the website's `#156c71`) is the darker teal step for small text on teal: the default `Button` background (6.15:1 with `--primary-foreground`; `--primary` itself is 4.10:1).
+- Secondary text uses `text-muted-foreground` (4.73:1 on white, 4.53:1 on the page background), never `text-gray-400` (2.54:1).
 - **Inter**.
-- Shared states and layout: `components/ui/data-state.tsx` (`DataState`, `ListSkeleton`, `CardGridSkeleton`, `PageSkeleton`, `EmptyState`, `ErrorState`), `components/layouts/PageShell.tsx`, `DashboardPageHeader`, `BreadcrumbNav`, `Sidebar` / `MobileSidebar`. New admin pages use these; don't hand-roll loading or error UI.
+- Shared states and layout: `components/ui/data-state.tsx` (`DataState`, `ListSkeleton`, `CardGridSkeleton`, `PageSkeleton`, `EmptyState`, `ErrorState`), `components/layouts/PageShell.tsx`, `BreadcrumbNav`, `Sidebar` / `MobileSidebar`. New admin pages use these; don't hand-roll loading or error UI. Forms with validation use `components/ui/form.tsx` (react-hook-form + the zod schemas in `utils/formSchemas.ts`, as `VideoForm`, `ConcertForm`, `EventForm`, `TourForm` and the users dialogs do): inline `FormMessage`, `aria-invalid`, focus on the first invalid field.
 
 ### Mobile (`apps/mobile_app`)
 

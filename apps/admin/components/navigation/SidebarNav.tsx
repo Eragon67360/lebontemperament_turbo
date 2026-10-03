@@ -67,7 +67,7 @@ export function SidebarNav({
         if (!isCollapsible) {
           return (
             <div key={section.id}>
-              <h3 className="mb-2 px-4 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+              <h3 className="text-muted-foreground mb-2 px-4 text-xs font-semibold tracking-wider uppercase">
                 {section.label}
               </h3>
               {items}
@@ -79,7 +79,7 @@ export function SidebarNav({
           <Collapsible key={section.id} defaultOpen={defaultOpen}>
             <CollapsibleTrigger
               className={cn(
-                "group flex w-full items-center justify-between rounded-lg px-4 text-xs font-semibold tracking-wider text-gray-400 uppercase",
+                "group text-muted-foreground flex w-full items-center justify-between rounded-lg px-4 text-xs font-semibold tracking-wider uppercase",
                 "transition-colors duration-150 ease-out hover:bg-gray-50 hover:text-gray-600",
                 variant === "mobile" ? "min-h-11 py-2" : "mb-2 py-1.5",
               )}
@@ -129,7 +129,9 @@ function NavEntry({
       <Icon
         className={cn(
           "mr-3 h-4 w-4 shrink-0",
-          isActive ? "text-primary" : "text-gray-400 group-hover:text-gray-500",
+          isActive
+            ? "text-primary"
+            : "text-muted-foreground group-hover:text-gray-500",
         )}
       />
       <span className="truncate">{item.label}</span>
