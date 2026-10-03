@@ -1,6 +1,7 @@
 # Dependabot: version and security updates, all against dev (the integration
 # branch; main only receives release PRs). Minor and patch bumps arrive as one
-# grouped PR per ecosystem per week; majors stay separate.
+# grouped PR per ecosystem per week, and majors in a second grouped PR (triaged
+# together; see #400 for the ones that need code changes or device tests).
 version: 2
 updates:
   - package-ecosystem: npm
@@ -16,6 +17,9 @@ updates:
       npm-minor-and-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      npm-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     ignore:
       # Types follow the Node major the apps run on (engines.node 24.x).
       - dependency-name: "@types/node"
@@ -36,6 +40,9 @@ updates:
       pub-minor-and-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      pub-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     commit-message:
       prefix: "chore(mobile)"
 
@@ -51,5 +58,8 @@ updates:
       actions-minor-and-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      actions-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     commit-message:
       prefix: "ci"
