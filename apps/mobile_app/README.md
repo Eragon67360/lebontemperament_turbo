@@ -72,7 +72,7 @@ DRIVE_FOLDER_ORCHESTRE=
 DRIVE_FOLDER_CAHIER_30_ANS=
 ```
 
-The Drive explorer and the file viewers call the website's `/api/drive/*` with the member's Supabase access token (`Authorization: Bearer`), the same way the support form calls `/api/contact/mobile`.
+The Drive explorer, the file viewers and "Télécharger" (which fetches `/api/drive/file?download=1` into a temporary file and opens the share sheet) call the website's `/api/drive/*` with the member's Supabase access token (`Authorization: Bearer`), the same way the support form calls `/api/contact/mobile`.
 
 Push notifications follow the session: the device subscribes to the `all_users` topic when a member is signed in and unsubscribes, deletes its FCM token and clears the local cache on sign-out (`lib/data/services/session_notifications.dart`). Reminders use inexact Android alarms (no exact-alarm permission), and app data is excluded from Android backups and device transfers.
 
