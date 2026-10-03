@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import { keyword } from "../layout";
 
 export const metadata: Metadata = {
-  title: "Nous découvrir : chœur et orchestre",
+  title: "Chœur et Orchestre à Saverne depuis 1987",
   description:
     "Plongez dans l’univers de Le Bon Tempérament, une association de musique française dédiée à la diffusion de la musique et à la création de moments inoubliables. Découvrez notre mission, nos valeurs et notre passion pour la musique.",
   keywords: `${keyword.join(", ")}`,
