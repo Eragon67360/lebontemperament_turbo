@@ -1,24 +1,24 @@
 // app/api/users/sync/route.ts
 import { checkAuthorization } from "@/utils/auth";
+import { fetchRosterRows, RosterSourceError } from "@/utils/roster/source";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import Papa from "papaparse";
 
-interface ExcelMember {
-  "NOM Prénom": string;
-  "Adresse mail": string;
-  "Adresse postale": string;
-  Domicile: string;
-  Portable: string;
-  Voix: string;
-}
-
-if (!process.env.NEXT_EXCEL_CSV_URL) {
-  throw Error("NO EXCEL URL FOUND");
-}
-
-const EXCEL_CSV_URL = process.env.NEXT_EXCEL_CSV_URL;
+// One row of the roster sheet, keyed by its header row (see
+// utils/roster/source.ts). Cells are strings; a column missing from the sheet
+// reads as undefined.
+type ExcelMember = Partial<
+  Record<
+    | "NOM Prénom"
+    | "Adresse mail"
+    | "Adresse postale"
+    | "Domicile"
+    | "Portable"
+    | "Voix",
+    string
+  >
+>;
 
 interface SyncResult {
   missingInDatabase: Array<{
@@ -65,24 +65,11 @@ export async function GET() {
 
     const supabaseAdmin = createAdminClient();
 
-    // Fetch Excel data
-    const excelResponse = await fetch(EXCEL_CSV_URL);
-    if (!excelResponse.ok) {
-      throw new Error("Failed to fetch Excel data");
-    }
-
-    const text = await excelResponse.text();
-    const result = Papa.parse<ExcelMember>(text, { header: true });
-
-    if (!result.data) {
-      return NextResponse.json(
-        { error: "No Excel data found" },
-        { status: 404 },
-      );
-    }
+    // Fetch the roster (private sheet, read with the service account)
+    const rosterRows: ExcelMember[] = await fetchRosterRows();
 
     // Normalize Excel data - separate members with and without emails
-    const allExcelMembers = result.data
+    const allExcelMembers = rosterRows
       .filter((member) => member["NOM Prénom"]?.trim())
       .map((member) => ({
         name: member["NOM Prénom"]?.trim() || "",
@@ -223,6 +210,13 @@ export async function GET() {
 
     return NextResponse.json(syncResult);
   } catch (error) {
+    if (error instanceof RosterSourceError) {
+      console.error(`Roster source (${error.code}):`, error.message);
+      return NextResponse.json(
+        { error: error.userMessage },
+        { status: error.status },
+      );
+    }
     console.error("Error syncing users:", error);
     return NextResponse.json(
       { error: "Erreur lors de la synchronisation" },
@@ -248,24 +242,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch Excel data
-    const excelResponse = await fetch(EXCEL_CSV_URL);
-    if (!excelResponse.ok) {
-      throw new Error("Failed to fetch Excel data");
-    }
-
-    const text = await excelResponse.text();
-    const result = Papa.parse<ExcelMember>(text, { header: true });
-
-    if (!result.data) {
-      return NextResponse.json(
-        { error: "No Excel data found" },
-        { status: 404 },
-      );
-    }
+    // Fetch the roster (private sheet, read with the service account)
+    const rosterRows: ExcelMember[] = await fetchRosterRows();
 
     // Normalize Excel data
-    const excelMembers = result.data
+    const excelMembers = rosterRows
       .filter(
         (member) =>
           member["NOM Prénom"]?.trim() && member["Adresse mail"]?.trim(),
@@ -358,6 +339,13 @@ export async function POST(request: Request) {
       unchanged: unchanged.length,
     });
   } catch (error) {
+    if (error instanceof RosterSourceError) {
+      console.error(`Roster source (${error.code}):`, error.message);
+      return NextResponse.json(
+        { error: error.userMessage },
+        { status: error.status },
+      );
+    }
     console.error("Error syncing users:", error);
     return NextResponse.json(
       { error: "Erreur lors de la synchronisation" },
