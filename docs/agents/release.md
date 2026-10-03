@@ -2,7 +2,7 @@
 
 `main` is production. A release is one PR `dev` → `main`, merged only with the owner's explicit go. What a merge does:
 
-- **Website and admin**: Vercel deploys `www.lebontemperament.com` and `admin.lebontemperament.com` (projects `lebontemperament`, `lebontemperament-admin`, root directories `apps/website` / `apps/admin`).
+- **Website and admin**: Vercel deploys `www.lebontemperament.com` and `admin.lebontemperament.com` (projects `lebontemperament`, `lebontemperament-admin`, built from the repository root with `turbo build --filter=website` / `--filter=admin`, see [DEPLOYMENT.md](../../DEPLOYMENT.md)).
 - **Android**: `.github/workflows/android-build-release.yml` runs on pushes to `main` that touch `apps/mobile_app/**` (a `pubspec.yaml`-only change doesn't trigger it): builds a signed app bundle with production secrets and uploads it to Google Play's **internal** track as a **draft**. Promoting it to testers or production is a manual step in the Play Console (owner).
 - **iOS**: manual (Xcode / App Store Connect), owner.
 - **Supabase**: nothing. Migrations and edge functions are deployed separately ([below](#supabase)).
