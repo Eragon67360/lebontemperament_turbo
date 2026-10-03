@@ -1,22 +1,19 @@
-import js from "@eslint/js";
-import eslintConfigPrettier from "eslint-config-prettier";
-import tseslint from "typescript-eslint";
-import pluginReactHooks from "eslint-plugin-react-hooks";
-import pluginReact from "eslint-plugin-react";
-import globals from "globals";
 import pluginNext from "@next/eslint-plugin-next";
+import pluginReact from "eslint-plugin-react";
+import pluginReactHooks from "eslint-plugin-react-hooks";
+import globals from "globals";
 import { config as baseConfig } from "./base.js";
 
 /**
  * A custom ESLint configuration for libraries that use Next.js.
  *
+ * Builds on the base config (JS recommended, Prettier, typescript-eslint,
+ * Turbo): nothing from it is spread again here.
+ *
  * @type {import("eslint").Linter.Config[]}
  * */
 export const nextJsConfig = [
   ...baseConfig,
-  js.configs.recommended,
-  eslintConfigPrettier,
-  ...tseslint.configs.recommended,
   {
     ...pluginReact.configs.flat.recommended,
     languageOptions: {
@@ -24,6 +21,13 @@ export const nextJsConfig = [
       globals: {
         ...globals.serviceworker,
       },
+    },
+    settings: { react: { version: "detect" } },
+    rules: {
+      ...pluginReact.configs.flat.recommended.rules,
+      // React scope no longer necessary with new JSX transform.
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
     },
   },
   {
@@ -33,20 +37,16 @@ export const nextJsConfig = [
     rules: {
       ...pluginNext.configs.recommended.rules,
       ...pluginNext.configs["core-web-vitals"].rules,
-      'react/prop-types': 'off',
-      'turbo/no-undeclared-env-vars':'off'
+      // Next.js reads env vars through its own config; Turbo's check is noise here.
+      "turbo/no-undeclared-env-vars": "off",
     },
   },
   {
     plugins: {
       "react-hooks": pluginReactHooks,
     },
-    settings: { react: { version: "detect" } },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
-      // React scope no longer necessary with new JSX transform.
-      "react/react-in-jsx-scope": "off",
-      'react/prop-types': 'off',
     },
   },
 ];
