@@ -1529,6 +1529,10 @@ export type Database = {
         }[];
       };
       get_next_receipt_number: { Args: { p_year: number }; Returns: string };
+      get_tracking_by_recipient_token: {
+        Args: { token: string };
+        Returns: Json;
+      };
       is_admin: { Args: never; Returns: boolean };
       is_admin_or_superadmin: { Args: never; Returns: boolean };
       rehearsals_sync_write: {

@@ -1,5 +1,6 @@
 import { serve as serveHttp } from "https://deno.land/std@0.177.0/http/server.ts";
 import * as jose from "npm:jose@5.2.0";
+import { requireInternalSecret } from "../_shared/caller-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -146,6 +147,10 @@ serveHttp(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+
+  // Only the database trigger may broadcast to every member's phone.
+  const refused = requireInternalSecret(req, corsHeaders);
+  if (refused) return refused;
 
   try {
     if (req.method !== "POST") {

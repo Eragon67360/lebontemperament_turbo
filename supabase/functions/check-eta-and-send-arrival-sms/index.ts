@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalSecret } from "../_shared/caller-auth.ts";
 
 const OSRM_BASE = "https://router.project-osrm.org/route/v1/driving";
 const ETA_THRESHOLD_SECONDS = 300; // 5 minutes
@@ -46,6 +47,10 @@ async function fetchOSRMDuration(
 }
 
 serve(async (req) => {
+  // Only the pg_cron job may trigger arrival SMS.
+  const refused = requireInternalSecret(req);
+  if (refused) return refused;
+
   try {
     if (req.method !== "POST" && req.method !== "GET") {
       return new Response("Method Not Allowed", { status: 405 });
