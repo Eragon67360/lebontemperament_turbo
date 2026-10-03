@@ -26,17 +26,17 @@ Audit tracking issue: #369.
 
 | Task                         | Command                                                                                                                                       |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Install                      | `npm ci` (npm 11 workspaces; Node ≥ 24)                                                                                                       |
+| Install                      | `npm ci` (npm 11 workspaces; Node 24)                                                                                                         |
 | Dev (all apps / one)         | `npm run dev` / `npm run dev -- --filter=website` (or `admin`)                                                                                |
 | Lint / typecheck             | `npm run lint` / `npm run check-types`                                                                                                        |
-| Format                       | `npm run format` (Prettier over all `ts`, `tsx`, `md`; the pre-commit hook runs it)                                                           |
+| Format                       | `npm run format` (Prettier over all `ts`, `tsx`, `md`; the pre-commit hook formats staged files)                                              |
 | Build                        | `npm run build` (or `npx turbo build --filter=website`)                                                                                       |
 | Domain unit tests            | `npm test -w @repo/domain`                                                                                                                    |
 | E2E (Playwright, `apps/e2e`) | `npm run test:e2e` against a deployed URL (`WEBSITE_URL`, `ADMIN_URL`): it writes to the database, read [safety](docs/agents/safety.md) first |
 | Supabase types               | `npm run db:types` (needs `SUPABASE_ACCESS_TOKEN`)                                                                                            |
 | Mobile                       | in `apps/mobile_app`: `flutter pub get`, `flutter analyze`, `flutter test`                                                                    |
 
-Committing runs the Husky pre-commit hook (`.husky/pre-commit`): format everything, **`git add -A`**, full build, version bump. Read [workflow](docs/agents/workflow.md#the-pre-commit-hook) before your first commit.
+Committing runs the Husky pre-commit hook (`.husky/pre-commit`): `lint-staged` formats the staged files, nothing else (no build, no version bump). Run the gates yourself. Read [workflow](docs/agents/workflow.md#the-pre-commit-hook) before your first commit.
 
 ## Handbook
 

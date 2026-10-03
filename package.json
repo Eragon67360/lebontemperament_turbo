@@ -9,6 +9,7 @@
     "check-types": "turbo run check-types",
     "db:types": "npm run db:types -w @repo/domain",
     "bump-version": "node scripts/bump-version.js",
+    "release:bump": "node scripts/bump-version.js patch",
     "test:rehearsal-sync": "tsx scripts/test-rehearsal-sync.ts",
     "test:e2e": "turbo run test:e2e",
     "prepare": "node -e \"if (!process.env.CI && !process.env.VERCEL) { require('child_process').execSync('husky', { stdio: 'inherit' }) }\""
@@ -33,7 +34,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^25.9.5",
+    "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@types/react-google-recaptcha": "^2.1.9",
@@ -43,6 +44,7 @@
     "fast-xml-parser": ">=5.11.1",
     "h3": ">=1.15.11",
     "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "postcss": "^8.5.28",
     "prettier": "^3.9.6",
     "prettier-plugin-organize-imports": "^4.3.0",
@@ -53,7 +55,10 @@
     "typescript": "5.9.3"
   },
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,md,json,css}": "prettier --write"
   },
   "packageManager": "npm@11.19.1",
   "workspaces": [

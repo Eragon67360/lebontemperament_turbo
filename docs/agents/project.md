@@ -57,8 +57,8 @@ Mobile: `apps/mobile_app/.env` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`,
 ## Known quirks
 
 - **TypeScript versions differ**: the apps use TypeScript 7 (`typescript@^7`), the root pins `5.9.3`. Run type checks through `npm run check-types` (Turbo, per workspace).
-- **The pre-commit hook is heavy** (format all, `git add -A`, build, version bump): see [workflow](workflow.md#the-pre-commit-hook).
-- **Versions** live in `version.json` and both apps' `package.json` (`npm run bump-version`); the mobile version is in `pubspec.yaml` (`2.0.109+125` on 2026-10-01).
+- **The pre-commit hook is light** (`lint-staged`: Prettier on staged files; no build, no version bump): see [workflow](workflow.md#the-pre-commit-hook).
+- **Versions** live in `version.json` and both apps' `package.json` (bumped on the release PR with `npm run release:bump`); the mobile version is in `pubspec.yaml` (`2.0.109+125` on 2026-10-01).
 - **Prettier has no config file**: defaults plus `prettier-plugin-organize-imports` and `prettier-plugin-tailwindcss` from the root dev dependencies; `.prettierignore` skips shadcn's generated `components/ui/**` and lockfiles.
 - **Vercel builds from the repository root** (Root Directory empty, `turbo build --filter=website` / `--filter=admin`); `apps/*/vercel.json` are never read ([DEPLOYMENT.md](../../DEPLOYMENT.md), follow-up #366).
 - **`next dev` rewrites `apps/website/AGENTS.md`** (the Next.js notice block): commit it with your work rather than fighting it.
