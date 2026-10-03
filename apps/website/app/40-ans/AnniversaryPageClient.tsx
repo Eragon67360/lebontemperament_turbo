@@ -9,7 +9,7 @@ import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
 import PreviewBanner from "@/components/anniversary/PreviewBanner";
 import VideoGallery from "@/components/anniversary/VideoGallery";
-import type { AnniversaryPageData } from "@/types/anniversary";
+import type { AnniversaryPageData, Memory } from "@/types/anniversary";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
@@ -306,28 +306,20 @@ export default function AnniversaryPageClient({
           table: "anniversary_memories",
         },
         async () => {
-          // Refetch featured memories
-          const { data: featuredMemories } = await supabase
-            .from("anniversary_memories")
-            .select("id, name, email, message, year, is_featured, created_at")
-            .eq("is_approved", true)
-            .eq("is_featured", true)
-            .order("created_at", { ascending: false })
-            .limit(10);
-
-          if (featuredMemories) {
-            setData((prev) => ({
-              ...prev,
-              featuredMemories: featuredMemories.map((m) => ({
-                id: m.id,
-                name: m.name,
-                email: m.email,
-                message: m.message,
-                year: m.year,
-                is_featured: m.is_featured ?? false,
-                created_at: m.created_at ?? "",
-              })),
-            }));
+          // Refetch through the server: visitors may not read the table
+          // (RLS), and the route returns the public columns only. On any
+          // failure the memories already rendered stay as they are.
+          try {
+            const response = await fetch("/api/anniversary/featured-memories");
+            if (!response.ok) return;
+            const { memories } = (await response.json()) as {
+              memories: Memory[];
+            };
+            if (Array.isArray(memories)) {
+              setData((prev) => ({ ...prev, featuredMemories: memories }));
+            }
+          } catch (error) {
+            console.error("Error refetching featured memories:", error);
           }
         },
       )

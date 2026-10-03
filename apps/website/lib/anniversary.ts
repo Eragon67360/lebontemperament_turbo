@@ -1,9 +1,47 @@
-import type { AnniversaryPageData, Archive } from "@/types/anniversary";
+import {
+  FEATURED_MEMORIES_LIMIT,
+  PUBLIC_MEMORY_SELECT,
+  toPublicMemory,
+} from "@/lib/anniversaryMemories";
+import type { AnniversaryPageData, Archive, Memory } from "@/types/anniversary";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createPublicClient } from "@/utils/supabase/public";
 import type { Database } from "@repo/domain/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export { ANNIVERSARY_FLAG_KEY } from "@/lib/featureFlags";
+
+/**
+ * The featured memories shown on `/40-ans`, public columns only.
+ *
+ * Row-level security lets visitors insert memories but not read them (only
+ * admins may), so the anon key returns nothing here. The server reads the
+ * approved, featured rows with the service role instead, restricted to the
+ * public columns: the author's email never leaves the database this way.
+ * Server-only: never call this from a client component.
+ */
+export async function getFeaturedMemories(): Promise<Memory[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("anniversary_memories")
+      .select(PUBLIC_MEMORY_SELECT)
+      .eq("is_approved", true)
+      .eq("is_featured", true)
+      .order("created_at", { ascending: false })
+      .limit(FEATURED_MEMORIES_LIMIT);
+
+    if (error) {
+      console.error("Error fetching featured memories:", error);
+      return [];
+    }
+
+    return (data ?? []).map(toPublicMemory);
+  } catch (error) {
+    console.error("Error fetching featured memories:", error);
+    return [];
+  }
+}
 
 /**
  * Server-side read of the `anniversary_40_years` feature flag. Pass the
@@ -50,7 +88,7 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       audioMemoriesResult,
       photosResult,
       formConfigResult,
-      memoriesResult,
+      featuredMemories,
     ] = await Promise.all([
       // Hero (singleton)
       supabase.from("anniversary_hero").select("*").single(),
@@ -100,14 +138,8 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       // Form Config (singleton)
       supabase.from("anniversary_form_config").select("*").single(),
 
-      // Featured Memories (approved + featured only, ordered by creation date)
-      supabase
-        .from("anniversary_memories")
-        .select("id, name, email, message, year, is_featured, created_at")
-        .eq("is_approved", true)
-        .eq("is_featured", true)
-        .order("created_at", { ascending: false })
-        .limit(10), // Limit to 10 featured memories
+      // Featured memories: public columns through the service role (see above)
+      getFeaturedMemories(),
     ]);
 
     // Check for critical errors (hero and form config are required)
@@ -143,8 +175,6 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       );
     if (photosResult.error)
       console.error("Error fetching photos:", photosResult.error);
-    if (memoriesResult.error)
-      console.error("Error fetching memories:", memoriesResult.error);
 
     // Construct response with fallbacks for optional data
     return {
@@ -156,8 +186,7 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       audioMemories: audioMemoriesResult.data || [],
       photos: photosResult.data || [],
       formConfig: formConfigResult.data as AnniversaryPageData["formConfig"], // view-model: CMS enforces non-null form labels
-      featuredMemories: (memoriesResult.data ||
-        []) as AnniversaryPageData["featuredMemories"], // view-model: featured filter guarantees non-null flags
+      featuredMemories,
     };
   } catch (error) {
     console.error("Error fetching anniversary data:", error);
