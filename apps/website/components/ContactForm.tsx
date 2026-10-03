@@ -1,4 +1,5 @@
 "use client";
+import { cloudinaryLoader } from "@/lib/cloudinaryImage";
 import { ContactFormProps } from "@/types/contactFormData";
 import {
   Button,
@@ -11,7 +12,7 @@ import {
   toast,
 } from "@heroui/react";
 import { FILL_TIME_FIELD, HONEYPOT_FIELD } from "@repo/domain/utils/formAbuse";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
 import Link from "next/link";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
@@ -303,7 +304,8 @@ const ContactForm = () => {
         </div>
 
         <div className="hidden w-1/2 shrink-0 justify-end lg:flex">
-          <CldImage
+          <Image
+            loader={cloudinaryLoader}
             src={"Site/logo"}
             alt="Logo Le Bon Tempérament - Contact"
             className="h-auto w-full shrink-0 object-contain"

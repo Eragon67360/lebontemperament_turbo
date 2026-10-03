@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
 import { IoShareSocial } from "react-icons/io5";
@@ -74,7 +74,7 @@ export const SocialPopover = () => {
     >
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -83,7 +83,7 @@ export const SocialPopover = () => {
             className="absolute bottom-full left-0 mb-4 flex flex-col gap-2 md:right-0 md:left-auto"
           >
             {socials.map((social, index) => (
-              <motion.a
+              <m.a
                 key={social.name}
                 href={social.url}
                 target="_blank"
@@ -103,14 +103,13 @@ export const SocialPopover = () => {
                 <span className="text-foreground font-medium dark:text-white">
                   {social.name}
                 </span>
-              </motion.a>
+              </m.a>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
-      <motion.button
-        layoutId="social-bubble"
+      <m.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         type="button"
@@ -126,16 +125,16 @@ export const SocialPopover = () => {
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
-            <motion.div
+            <m.div
               key="close"
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: 90, opacity: 0 }}
             >
               <IoShareSocial className="h-6 w-6" />
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="icon"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -143,7 +142,7 @@ export const SocialPopover = () => {
               className="absolute inset-0 flex items-center justify-center"
             >
               {currentSocial && currentSocial.icon}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -156,7 +155,7 @@ export const SocialPopover = () => {
             Nos réseaux
           </div>
         )}
-      </motion.button>
+      </m.button>
     </div>
   );
 };

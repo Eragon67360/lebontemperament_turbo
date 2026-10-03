@@ -1,13 +1,13 @@
 "use client";
 
+import { validConsent } from "@/components/cookies/consent";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { Link, Tooltip } from "@heroui/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaHeart, FaTimes } from "react-icons/fa";
-import { validConsent } from "vanilla-cookieconsent";
 
 // Bump the version to re-announce a future campaign to everyone.
 const STORAGE_KEY = "lbt.donation-campaign-showcase.v1";
@@ -185,7 +185,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
       <div className="hidden items-center lg:flex">
         <span ref={heartRef} className="relative flex">
           {isPulsing && !prefersReducedMotion && (
-            <motion.span
+            <m.span
               aria-hidden="true"
               className="border-primary pointer-events-none absolute inset-0 rounded-md border-2"
               initial={{ opacity: 0.55, transform: "scale(0.85)" }}
@@ -219,7 +219,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
               <>
                 {/* Desktop: anchored under the heart, with a caret pointing at it. */}
                 {anchor && (
-                  <motion.div
+                  <m.div
                     key="desktop"
                     {...cardMotion}
                     role="region"
@@ -232,11 +232,11 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
                       className="border-default-200 bg-content1 absolute -top-1 right-3.5 size-2 rotate-45 border-t border-l"
                     />
                     {card}
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* Below lg the heart is hidden, so the message gets its own card. */}
-                <motion.div
+                <m.div
                   key="mobile"
                   {...cardMotion}
                   role="region"
@@ -244,7 +244,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
                   className="border-default-200 bg-content1 fixed top-20 right-3 left-3 z-50 mx-auto max-w-sm origin-top rounded-xl border p-4 shadow-lg lg:hidden"
                 >
                   {card}
-                </motion.div>
+                </m.div>
               </>
             )}
           </AnimatePresence>,

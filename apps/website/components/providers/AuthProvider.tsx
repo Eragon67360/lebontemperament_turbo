@@ -1,7 +1,7 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { hasSessionCookie, loadBrowserClient } from "@/utils/supabase/lazy";
+import type { User } from "@supabase/supabase-js";
 import React, {
   createContext,
   ReactNode,
@@ -28,6 +28,20 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+/** The signed-in user, without loading supabase-js when no session cookie exists. */
+async function readSessionUser(): Promise<User | null> {
+  if (!hasSessionCookie()) return null;
+  const supabase = await loadBrowserClient();
+  const { data } = await supabase.auth.getUser();
+  return data?.user ?? null;
+}
+
+/**
+ * Session state for the whole site. Visitors without a session cookie (the
+ * public pages' audience) are known to be signed out at once, and supabase-js
+ * is never fetched for them; members load it on first use, as the members
+ * area and the sign-in form do anyway.
+ */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
@@ -36,17 +50,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [role, setRole] = useState<{ userId: string; isAdmin: boolean } | null>(
     null,
   );
-  const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
-      // Without a session supabase-js answers from storage: no request.
-      const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
+    let cancelled = false;
+    readSessionUser().then((sessionUser) => {
+      if (cancelled) return;
+      setUser(sessionUser);
       setSessionLoaded(true);
+    });
+    return () => {
+      cancelled = true;
     };
-    getUser();
-  }, [supabase]);
+  }, []);
 
   // The role is read once per signed-in user; visitors never query anything.
   const userId = user?.id ?? null;
@@ -54,6 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!userId) return;
     let cancelled = false;
     const getRole = async () => {
+      const supabase = await loadBrowserClient();
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -69,7 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [userId, supabase]);
+  }, [userId]);
 
   const roleLoaded = !!userId && role?.userId === userId;
   const isAdmin = roleLoaded && role.isAdmin;

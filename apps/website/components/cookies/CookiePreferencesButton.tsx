@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import * as CookieConsent from "vanilla-cookieconsent";
+import { showPreferences } from "./consent";
 
 interface CookiePreferencesButtonProps {
   className?: string;
@@ -12,35 +12,18 @@ const CookiePreferencesButton = ({
   className = "",
   children = "Gérer les cookies",
 }: CookiePreferencesButtonProps) => {
+  // Rendered after mount, as before: the dialog only exists in the browser.
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Check if cookie consent is initialized
-    const checkReady = () => {
-      try {
-        if (typeof CookieConsent.showPreferences === "function") {
-          setIsReady(true);
-        } else {
-          // Retry after a short delay
-          setTimeout(checkReady, 100);
-        }
-      } catch (error) {
-        setTimeout(checkReady, 100);
-      }
-    };
-
-    checkReady();
+    setIsReady(true);
   }, []);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    try {
-      if (typeof CookieConsent.showPreferences === "function") {
-        CookieConsent.showPreferences();
-      }
-    } catch (error) {
+    showPreferences().catch((error) => {
       console.error("Error opening cookie preferences:", error);
-    }
+    });
   };
 
   if (!isReady) {

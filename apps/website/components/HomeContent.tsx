@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useInView, useScroll, useTransform } from "motion/react";
+import { m, useInView, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import CloudinaryImage from "@/components/CloudinaryImage";
@@ -108,7 +108,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
     <>
       <div className="relative flex min-h-screen w-full flex-col items-center overflow-x-hidden">
         {/* Hero Section */}
-        <motion.section
+        <m.section
           className="fixed top-0 left-0 z-0 flex h-full w-full justify-center"
           aria-labelledby="hero-title"
           style={{ opacity }}
@@ -130,7 +130,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
             aria-hidden
             className="absolute inset-0 z-10 h-full bg-black/90"
           />
-          <motion.div
+          <m.div
             className="relative z-20 flex w-full justify-between gap-32 px-4 py-16"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -183,7 +183,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
 
               {/* Calendar CTA - Temporary until January 15, 2026 */}
               {showCalendarButton && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
@@ -214,12 +214,12 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                   >
                     <IoIosInformationCircle className="h-5 w-5 lg:h-6 lg:w-6" />
                   </Button>
-                </motion.div>
+                </m.div>
               )}
 
               {/* AG 2026 CTA - Temporary until March 31, 2026 */}
               {showAGButton && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
@@ -238,12 +238,12 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                       aria-hidden="true"
                     />
                   </LinkButton>
-                </motion.div>
+                </m.div>
               )}
 
               {/* Anniversary CTA */}
               {(isAnniversaryEnabled || isAdmin) && (
-                <motion.div
+                <m.div
                   initial={{
                     opacity: 0,
                     scale: prefersReducedMotion ? 1 : 0.9,
@@ -268,10 +268,10 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                       🎉
                     </span>
                   </LinkButton>
-                </motion.div>
+                </m.div>
               )}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Pulsing Arrow */}
           <button
@@ -285,7 +285,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
             }}
             aria-label="Défiler vers le contenu"
           >
-            <motion.div
+            <m.div
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
               animate={prefersReducedMotion ? { y: 0 } : { y: [0, 10, 0] }}
               transition={{
@@ -309,12 +309,12 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </motion.div>
+            </m.div>
           </button>
-        </motion.section>
+        </m.section>
 
         {/* Concert Stories Section */}
-        <motion.section
+        <m.section
           ref={projectsRef}
           className="bg-surface-secondary relative z-10 mt-[100dvh] flex w-full justify-center py-16"
           aria-labelledby="concert-stories-title"
@@ -330,7 +330,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
           }}
         >
           <div className="w-full max-w-360 px-8 lg:px-24">
-            <motion.h2
+            <m.h2
               id="concert-stories-title"
               className="text-primary-400 dark:text-primary text-title mb-14 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
@@ -340,12 +340,12 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               Histoires de concerts
-            </motion.h2>
+            </m.h2>
             <p className="text-muted -mt-8 mb-8 max-w-2xl">
               Retrouvez les programmes, les images et les coulisses des concerts
               qui ont marqué notre ensemble.
             </p>
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 30 }}
               animate={
                 projectsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
@@ -353,8 +353,8 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <ProjectViewer initialStories={stories} />
-            </motion.div>
-            <motion.div
+            </m.div>
+            <m.div
               className="mt-4 flex justify-center"
               initial={{ opacity: 0 }}
               animate={projectsInView ? { opacity: 1 } : { opacity: 0 }}
@@ -368,14 +368,14 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               >
                 Toutes les histoires <IoIosArrowRoundForward />
               </LinkButton>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.section>
+        </m.section>
 
         {/* Main Content Container */}
         <div className="bg-background z-10 mx-0 flex w-full flex-col">
           {/* About Section */}
-          <motion.section
+          <m.section
             ref={aboutRef}
             className="mx-auto mt-16 flex w-full max-w-360 flex-col lg:flex-row"
             aria-labelledby="about-title"
@@ -385,7 +385,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
           >
             <div className="relative flex w-full max-w-360 gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-25">
               <div className="flex w-1/2 flex-col gap-8">
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={
                     aboutInView
@@ -401,8 +401,8 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                     height={270}
                     rounded={RoundedSize.NONE}
                   />
-                </motion.div>
-                <motion.div
+                </m.div>
+                <m.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={
                     aboutInView
@@ -418,9 +418,9 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                     height={270}
                     rounded={RoundedSize.NONE}
                   />
-                </motion.div>
+                </m.div>
               </div>
-              <motion.div
+              <m.div
                 className="w-1/2 pt-8"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={
@@ -437,9 +437,9 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                   height={270}
                   rounded={RoundedSize.NONE}
                 />
-              </motion.div>
+              </m.div>
             </div>
-            <motion.div
+            <m.div
               className="flex w-full flex-col items-start justify-between py-8 pr-8 pl-8 lg:w-2/5 lg:pr-16 lg:pl-0"
               initial={{ opacity: 0, x: 50 }}
               animate={
@@ -504,11 +504,11 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                   aria-hidden="true"
                 />
               </LinkButton>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Notre Histoire Section */}
-          <motion.section
+          <m.section
             className="bg-surface-secondary mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="history-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
@@ -523,7 +523,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               delay: 0.2,
             }}
           >
-            <motion.h2
+            <m.h2
               id="history-title"
               className="text-primary-400 dark:text-primary text-title mb-8 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
@@ -533,8 +533,8 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               Notre histoire
-            </motion.h2>
-            <motion.div
+            </m.h2>
+            <m.div
               className="text-foreground space-y-4 text-sm leading-relaxed font-light md:text-base lg:text-lg"
               initial={{ opacity: 0, y: 30 }}
               animate={
@@ -571,11 +571,11 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                 variées, alliant la puissance vocale de nos chœurs à la richesse
                 instrumentale de notre orchestre.
               </p>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Rejoignez-nous Section */}
-          <motion.section
+          <m.section
             className="bg-background mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="join-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
@@ -590,7 +590,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               delay: 0.4,
             }}
           >
-            <motion.div
+            <m.div
               className="flex flex-col gap-8 lg:flex-row lg:items-center"
               initial={{ opacity: 0 }}
               animate={aboutInView ? { opacity: 1 } : { opacity: 0 }}
@@ -646,7 +646,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                 </div>
               </div>
               <div className="flex flex-1 justify-center lg:justify-end">
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={
                     aboutInView
@@ -662,13 +662,13 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                     height={400}
                     rounded={RoundedSize.MD}
                   />
-                </motion.div>
+                </m.div>
               </div>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Concerts Section */}
-          <motion.section
+          <m.section
             ref={concertsRef}
             className="bg-background mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
@@ -683,7 +683,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               ease: "easeOut",
             }}
           >
-            <motion.h2
+            <m.h2
               id="concerts-title"
               className="text-primary-400 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
@@ -693,8 +693,8 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos concerts
-            </motion.h2>
-            <motion.div
+            </m.h2>
+            <m.div
               className="mt-14"
               initial={{ opacity: 0, y: 30 }}
               animate={
@@ -719,11 +719,11 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                   />
                 </LinkButton>
               </div>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* CDs Section */}
-          <motion.section
+          <m.section
             ref={cdsRef}
             className="bg-surface-secondary mx-auto w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
@@ -738,7 +738,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               ease: "easeOut",
             }}
           >
-            <motion.h2
+            <m.h2
               id="cds-title"
               className="text-primary-400 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
@@ -748,8 +748,8 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos CDs
-            </motion.h2>
-            <motion.div
+            </m.h2>
+            <m.div
               className="mt-14"
               initial={{ opacity: 0, y: 30 }}
               animate={cdsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
@@ -772,11 +772,11 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                   />
                 </LinkButton>
               </div>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Contact Section */}
-          <motion.div
+          <m.div
             ref={contactRef}
             // The wrapper answers the hero's "#contact" link until the form
             // (which carries the id) has mounted; the placeholder keeps the
@@ -801,7 +801,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                 className="mx-auto min-h-[48rem] w-full max-w-[1440px] px-8 py-16 lg:px-24"
               />
             )}
-          </motion.div>
+          </m.div>
         </div>
       </div>
 

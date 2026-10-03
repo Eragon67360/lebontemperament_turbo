@@ -1,8 +1,12 @@
 "use client";
 
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import dynamic from "next/dynamic";
 import { useConsentCategory } from "./useConsentCategory";
+
+// The wrappers' code is fetched with the consent, never before it.
+const VercelAnalytics = dynamic(() => import("./VercelAnalytics"), {
+  ssr: false,
+});
 
 /** Vercel Analytics and Speed Insights, loaded only after consent. */
 const ConditionalVercelAnalytics = () => {
@@ -12,12 +16,7 @@ const ConditionalVercelAnalytics = () => {
     return null;
   }
 
-  return (
-    <>
-      <Analytics />
-      <SpeedInsights />
-    </>
-  );
+  return <VercelAnalytics />;
 };
 
 export default ConditionalVercelAnalytics;

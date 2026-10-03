@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useFeatureFlags } from "@/components/providers/FeatureFlagProvider";
-import type { PublicFeatureFlags } from "@/lib/featureFlags";
+import type { PublicFeatureFlags } from "@/lib/featureFlagKeys";
 
 /**
  * Reads a feature flag from the value rendered on the server

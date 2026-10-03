@@ -1,13 +1,13 @@
 import { CACHE_TAGS } from "@/lib/cacheTags";
+import {
+  ANNIVERSARY_FLAG_KEY,
+  type PublicFeatureFlags,
+} from "@/lib/featureFlagKeys";
 import { createPublicClient } from "@/utils/supabase/public";
 import { unstable_cache } from "next/cache";
 
-export const ANNIVERSARY_FLAG_KEY = "anniversary_40_years";
-
-/** The flags the website reads; every page render gets them from one cached row set. */
-export type PublicFeatureFlags = {
-  anniversary: boolean;
-};
+// Server-only reader (see featureFlagKeys.ts for what client code may import).
+export { ANNIVERSARY_FLAG_KEY, type PublicFeatureFlags };
 
 const DEFAULT_FLAGS: PublicFeatureFlags = { anniversary: false };
 
