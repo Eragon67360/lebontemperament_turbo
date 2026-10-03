@@ -15,6 +15,7 @@ import {
   StoppedOverlay,
   TrackPageError,
   TrackPageLoadingFallback,
+  TrackPrivacyNotice,
 } from "./shared";
 
 // Dynamically import the map component to prevent SSR and reduce initial bundle size
@@ -93,9 +94,9 @@ function TrackByTokenContent() {
 
   // Initial load
   useEffect(() => {
+    // The initial state is already "loading, no error"; the token never
+    // changes during the page's life.
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
     fetchTracking()
       .then((state) => {
         if (cancelled) return;
@@ -195,10 +196,13 @@ function TrackByTokenContent() {
   if (isDelivered) {
     return (
       <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-950">
-        <DeliveredPanel
-          deliveredAt={recipient.delivered_at!}
-          label={recipient.label}
-        />
+        <div className="flex w-full max-w-lg flex-col items-center gap-3">
+          <DeliveredPanel
+            deliveredAt={recipient.delivered_at!}
+            label={recipient.label}
+          />
+          <TrackPrivacyNotice />
+        </div>
       </div>
     );
   }
@@ -231,6 +235,9 @@ function TrackByTokenContent() {
               {(delivery.is_delayed || delivery.problem_message) && (
                 <StatusPanel delivery={delivery} />
               )}
+              <div className="rounded-xl bg-white/90 p-2 shadow dark:bg-gray-900/90">
+                <TrackPrivacyNotice />
+              </div>
             </div>
           </div>
         )}
