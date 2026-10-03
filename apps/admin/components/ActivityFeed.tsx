@@ -86,7 +86,7 @@ export function ActivityFeed() {
                   <p className="text-sm text-gray-500">
                     {activity.description}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <div className="text-muted-foreground flex items-center gap-2 text-xs">
                     <span>
                       {formatDistanceToNow(new Date(activity.created_at), {
                         addSuffix: true,

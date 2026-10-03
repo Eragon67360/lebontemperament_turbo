@@ -173,7 +173,7 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
                       <span className="min-w-0 truncate text-sm font-medium">
                         {message.sender.display_name || message.sender.email}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-muted-foreground text-xs">
                         {new Date(message.created_at).toLocaleString("fr-FR")}
                       </span>
                     </div>

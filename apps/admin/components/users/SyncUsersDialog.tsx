@@ -247,7 +247,7 @@ export function SyncUsersDialog({
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+              <RefreshCw className="text-muted-foreground h-6 w-6 animate-spin" />
             </div>
           ) : typedSyncData ? (
             <Tabs
