@@ -14,7 +14,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  testWidgets('ProviderScope and Consumer work correctly', (WidgetTester tester) async {
+  testWidgets('ProviderScope and Consumer work correctly', (
+    WidgetTester tester,
+  ) async {
     final testProvider = Provider<int>((ref) => 42);
 
     await tester.pumpWidget(

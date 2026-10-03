@@ -10,6 +10,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'data/services/notification_service.dart';
 import 'data/services/fcm_notification_handler.dart';
+import 'data/services/session_notifications.dart';
 import 'data/providers/realtime_notifications_provider.dart';
 import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
 import 'firebase_options.dart';
@@ -32,6 +33,15 @@ void main() async {
   // Initialize notification service (local + display for FCM)
   await NotificationService().initialize();
 
+  // Push notifications follow the session: subscribed to the topic only while
+  // a member is signed in; unsubscribed, token deleted and cache cleared on
+  // sign-out (#358).
+  final auth = SupabaseConfig.client.auth;
+  SessionNotifications.production().bind(
+    currentSession: auth.currentSession,
+    authStateChanges: auth.onAuthStateChange,
+  );
+
   runApp(const ProviderScope(child: LeBonTemperamentApp()));
 }
 
@@ -51,10 +61,10 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
     WidgetsBinding.instance.addObserver(this);
     NotificationService.updateLifecycleState(AppLifecycleState.resumed);
 
-    // FCM: foreground listeners and topic subscription
+    // FCM: foreground listeners (the topic subscription follows the session,
+    // see SessionNotifications in main()).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FcmNotificationHandler.setupForegroundListeners();
-      FcmNotificationHandler.subscribeToTopic('all_users');
     });
 
     // Start real-time subscription for list updates (always, regardless of settings)

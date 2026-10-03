@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -103,6 +104,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Retour',
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -282,8 +284,9 @@ class _HistoryCardState extends State<_HistoryCard> {
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
+                      // green 800: Colors.green was 2.8:1 on the surface.
                       color: deliveredCount == total
-                          ? Colors.green
+                          ? AppTheme.successText
                           : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -327,8 +330,9 @@ class _RecipientRow extends StatelessWidget {
                 ? Icons.check_circle_rounded
                 : Icons.radio_button_unchecked_rounded,
             size: 20,
-            color:
-                isDelivered ? Colors.green : theme.colorScheme.onSurfaceVariant,
+            color: isDelivered
+                ? AppTheme.successText
+                : theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 12),
           Expanded(

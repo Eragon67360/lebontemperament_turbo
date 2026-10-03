@@ -53,6 +53,7 @@ class _NotificationSettingsScreenState
             surfaceTintColor: theme.colorScheme.surface,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              tooltip: 'Retour',
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(

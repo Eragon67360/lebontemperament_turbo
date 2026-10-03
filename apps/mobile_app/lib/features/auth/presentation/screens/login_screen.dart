@@ -212,6 +212,9 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
                 ),
+                tooltip: _obscurePassword
+                    ? 'Afficher le mot de passe'
+                    : 'Masquer le mot de passe',
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
               ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,75 +10,38 @@ import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
 import 'package:lebontemperament/data/models/drive_file.dart';
+import 'package:lebontemperament/data/models/drive_folder.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:lebontemperament/data/services/drive_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-class _PartitionTab {
-  const _PartitionTab({
-    required this.id,
-    required this.title,
-    required this.folderId,
-    required this.icon,
-    required this.iconColor,
-  });
-  final int id;
-  final String title;
-  final String folderId;
+/// Icon and colour of a tab, keyed by the `drive_folders` slug (the set of
+/// folders is fixed in the database; the admin only retargets them).
+class _TabStyle {
+  const _TabStyle(this.icon, this.color);
   final IconData icon;
-  final Color iconColor;
+  final Color color;
 }
 
-List<_PartitionTab> _tabsForScheme(ColorScheme scheme) => [
-  _PartitionTab(
-    id: 1,
-    title: 'Adultes',
-    folderId: 'adultes',
-    icon: Icons.person_outline,
-    iconColor: scheme.primary,
-  ),
-  _PartitionTab(
-    id: 2,
-    title: 'Jeunes',
-    folderId: 'jeunes',
-    icon: Icons.person_outline,
-    iconColor: scheme.secondary,
-  ),
-  _PartitionTab(
-    id: 3,
-    title: 'Enfants',
-    folderId: 'enfants',
-    icon: Icons.child_care_outlined,
-    iconColor: scheme.tertiary,
-  ),
-  _PartitionTab(
-    id: 4,
-    title: 'Orchestre',
-    folderId: 'orchestre',
-    icon: Icons.music_note_outlined,
-    iconColor: scheme.tertiaryContainer,
-  ),
-  _PartitionTab(
-    id: 5,
-    title: 'Cahier 30 ans',
-    folderId: 'cahier30',
-    icon: Icons.menu_book_outlined,
-    iconColor: scheme.error,
-  ),
-];
-
-String _folderIdForIndex(int index) {
-  final ids = [
-    AppConfig.driveFolderIdAdultes,
-    AppConfig.driveFolderIdJeunes,
-    AppConfig.driveFolderIdEnfants,
-    AppConfig.driveFolderIdOrchestre,
-    AppConfig.driveFolderIdCahier30Ans,
-  ];
-  if (index < 0 || index >= ids.length) return AppConfig.driveFolderIdAdultes;
-  return ids[index];
+_TabStyle _styleForSlug(String slug, ColorScheme scheme) {
+  switch (slug) {
+    case 'adultes':
+      return _TabStyle(Icons.person_outline, scheme.primary);
+    case 'jeunes':
+      return _TabStyle(Icons.person_outline, scheme.secondary);
+    case 'enfants':
+      return _TabStyle(Icons.child_care_outlined, scheme.tertiary);
+    case 'orchestre':
+      // onTertiaryContainer: the container tint itself is near-invisible on
+      // the light surface (1.2:1).
+      return _TabStyle(Icons.music_note_outlined, scheme.onTertiaryContainer);
+    case 'cahier-30-ans':
+      return _TabStyle(Icons.menu_book_outlined, scheme.error);
+    default:
+      return _TabStyle(Icons.folder_outlined, scheme.primary);
+  }
 }
 
 class PartitionsScreen extends ConsumerStatefulWidget {
@@ -90,15 +55,26 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   int _activeTabIndex = 0;
   final List<String> _folderStack = [];
   bool _loading = false;
+  bool _initialLoadDone = false;
   List<DriveFile> _folders = [];
   List<DriveFile> _files = [];
   String? _error;
 
-  String get _currentFolderId => _folderStack.isNotEmpty
+  List<DriveFolder> get _tabs =>
+      ref.read(driveFolderCatalogProvider).value?.tabs ?? const [];
+
+  String? _folderIdForIndex(int index) {
+    final tabs = _tabs;
+    if (tabs.isEmpty) return null;
+    return tabs[index.clamp(0, tabs.length - 1)].folderId;
+  }
+
+  String? get _currentFolderId => _folderStack.isNotEmpty
       ? _folderStack.last
       : _folderIdForIndex(_activeTabIndex);
 
-  Future<void> _loadFolder(String folderId) async {
+  Future<void> _loadFolder(String? folderId) async {
+    if (folderId == null) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -128,6 +104,16 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         });
       }
     }
+  }
+
+  /// Loads the first tab once the folder catalog is known (it may already be
+  /// cached from another screen, or arrive after the first build).
+  void _ensureInitialLoad(AsyncValue<DriveFolderCatalog> catalog) {
+    if (_initialLoadDone || !catalog.hasValue) return;
+    _initialLoadDone = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadFolder(_folderIdForIndex(_activeTabIndex));
+    });
   }
 
   void _onTabSelected(int index) {
@@ -177,19 +163,17 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     return m.contains('pdf') || name.endsWith('.pdf');
   }
 
-  String _driveFileProxyUrl(String fileId) =>
-      '${AppConfig.siteUrl}/api/drive/file?fileId=${Uri.encodeComponent(fileId)}';
-
   void _showAudioPlayer(BuildContext context, DriveFile file) {
     if (file.id == null) return;
-    final url = _driveFileProxyUrl(file.id!);
+    final driveService = ref.read(driveServiceProvider);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _DriveAudioPlayerSheet(
-        url: url,
+        fileId: file.id!,
         fileName: file.name,
+        download: driveService.downloadFile,
         onClose: () => Navigator.of(ctx).pop(),
       ),
     );
@@ -197,7 +181,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
 
   void _showPdfViewer(BuildContext context, DriveFile file) {
     if (file.id == null) return;
-    final url = _driveFileProxyUrl(file.id!);
+    final driveService = ref.read(driveServiceProvider);
+    final url = DriveService.fileProxyUrl(file.id!);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -206,9 +191,14 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       builder: (ctx) => PdfViewerSheet(
         url: url,
         fileName: file.name,
+        headers: driveService.authHeaders,
         onClose: () => Navigator.of(ctx).pop(),
         onOpenInBrowser: (u) async {
-          final uri = Uri.parse(u);
+          // The browser has no app session: open the file on Drive instead
+          // of the members-only proxy.
+          final uri = Uri.parse(
+            'https://drive.google.com/file/d/${file.id}/view',
+          );
           try {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           } catch (_) {}
@@ -236,17 +226,11 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadFolder(_folderIdForIndex(_activeTabIndex));
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isWide = MediaQuery.sizeOf(context).width > 600;
+    final catalog = ref.watch(driveFolderCatalogProvider);
+    _ensureInitialLoad(catalog);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -254,13 +238,24 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         child: Column(
           children: [
             _buildAppBar(context, theme),
-            if (isWide)
+            if (catalog.hasError && !catalog.hasValue)
+              Expanded(
+                child: _buildCatalogError(
+                  theme,
+                  onRetry: () => ref.invalidate(driveFolderCatalogProvider),
+                ),
+              )
+            else if (!catalog.hasValue)
+              Expanded(child: _buildLoading(theme))
+            else if (isWide)
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildTabBarVertical(theme),
-                    Expanded(child: _buildExplorerContent(theme)),
+                    _buildTabBarVertical(theme, catalog.value!.tabs),
+                    Expanded(
+                      child: _buildExplorerContent(theme, catalog.value!),
+                    ),
                   ],
                 ),
               )
@@ -268,8 +263,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildTabBarHorizontal(theme),
-                    Expanded(child: _buildExplorerContent(theme)),
+                    _buildTabBarHorizontal(theme, catalog.value!.tabs),
+                    Expanded(
+                      child: _buildExplorerContent(theme, catalog.value!),
+                    ),
                   ],
                 ),
               ),
@@ -286,6 +283,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: 'Retour',
             onPressed: () {
               HapticFeedback.lightImpact();
               context.pop();
@@ -303,6 +301,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.logout_outlined),
+            tooltip: 'Déconnexion',
             onPressed: () async {
               HapticFeedback.lightImpact();
               try {
@@ -325,8 +324,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     );
   }
 
-  Widget _buildTabBarVertical(ThemeData theme) {
-    final tabs = _tabsForScheme(theme.colorScheme);
+  Widget _buildTabBarVertical(ThemeData theme, List<DriveFolder> tabs) {
     return Container(
       width: 72,
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -341,22 +339,24 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       child: Column(
         children: List.generate(tabs.length, (i) {
           final tab = tabs[i];
+          final style = _styleForSlug(tab.slug, theme.colorScheme);
           final isActive = _activeTabIndex == i;
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: IconButton(
               onPressed: () => _onTabSelected(i),
+              isSelected: isActive,
               icon: Icon(
-                tab.icon,
+                style.icon,
                 color: isActive
-                    ? tab.iconColor
+                    ? style.color
                     : theme.colorScheme.onSurfaceVariant,
                 size: 28,
               ),
-              tooltip: tab.title,
+              tooltip: tab.label,
               style: IconButton.styleFrom(
                 backgroundColor: isActive
-                    ? tab.iconColor.withValues(alpha: 0.2)
+                    ? style.color.withValues(alpha: 0.2)
                     : Colors.transparent,
               ),
             ),
@@ -366,30 +366,30 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     );
   }
 
-  Widget _buildTabBarHorizontal(ThemeData theme) {
-    final tabs = _tabsForScheme(theme.colorScheme);
+  Widget _buildTabBarHorizontal(ThemeData theme, List<DriveFolder> tabs) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: List.generate(tabs.length, (i) {
           final tab = tabs[i];
+          final style = _styleForSlug(tab.slug, theme.colorScheme);
           final isActive = _activeTabIndex == i;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
               selected: isActive,
-              label: Text(tab.title),
+              label: Text(tab.label),
               avatar: Icon(
-                tab.icon,
+                style.icon,
                 size: 18,
                 color: isActive
-                    ? tab.iconColor
+                    ? style.color
                     : theme.colorScheme.onSurfaceVariant,
               ),
               onSelected: (_) => _onTabSelected(i),
-              selectedColor: tab.iconColor.withValues(alpha: 0.2),
-              checkmarkColor: tab.iconColor,
+              selectedColor: style.color.withValues(alpha: 0.2),
+              checkmarkColor: style.color,
               showCheckmark: false,
             ),
           );
@@ -398,9 +398,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     );
   }
 
-  Widget _buildExplorerContent(ThemeData theme) {
-    final tabs = _tabsForScheme(theme.colorScheme);
+  Widget _buildExplorerContent(ThemeData theme, DriveFolderCatalog catalog) {
+    final tabs = catalog.tabs;
     final activeTab = tabs[_activeTabIndex.clamp(0, tabs.length - 1)];
+    final style = _styleForSlug(activeTab.slug, theme.colorScheme);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -416,22 +417,20 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: activeTab.iconColor.withValues(alpha: 0.15),
+                  color: style.color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  activeTab.icon,
-                  color: activeTab.iconColor,
-                  size: 24,
-                ),
+                child: Icon(style.icon, color: style.color, size: 24),
               ),
               const SizedBox(width: 12),
-              Text(
-                activeTab.title,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  activeTab.label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -441,36 +440,40 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               kScreenHorizontalPadding,
-              8,
+              4,
               kScreenHorizontalPadding,
               0,
             ),
-            child: InkWell(
-              onTap: _onBack,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 12,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.arrow_back_rounded,
-                      size: 18,
-                      color: theme.colorScheme.primary,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: InkWell(
+                onTap: _onBack,
+                borderRadius: BorderRadius.circular(8),
+                child: ConstrainedBox(
+                  // 48 dp target (WCAG 2.5.8 / Material).
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_rounded,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Dossier parent',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Retour',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -483,7 +486,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               ? _buildLoading(theme)
               : _buildFileList(theme),
         ),
-        _buildDriveLink(theme),
+        _buildDriveLink(theme, catalog),
       ],
     );
   }
@@ -523,7 +526,45 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
 
   Widget _buildLoading(ThemeData theme) {
     return Center(
-      child: CircularProgressIndicator(color: theme.colorScheme.primary),
+      child: CircularProgressIndicator(
+        color: theme.colorScheme.primary,
+        semanticsLabel: 'Chargement',
+      ),
+    );
+  }
+
+  /// The catalog service falls back to `.env` rather than failing, so this
+  /// is only reached on an unexpected error; still, never spin forever.
+  Widget _buildCatalogError(ThemeData theme, {required VoidCallback onRetry}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: theme.colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Les dossiers n\'ont pas pu être chargés.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -585,56 +626,69 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     );
   }
 
-  Widget _buildDriveLink(ThemeData theme) {
+  Widget _buildDriveLink(ThemeData theme, DriveFolderCatalog catalog) {
+    final driveUrl = catalog.rootUrl ?? AppConfig.driveFolderMain;
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: InkWell(
-        onTap: () async {
-          HapticFeedback.lightImpact();
-          final uri = Uri.parse(AppConfig.driveFolderMain);
-          try {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          } catch (_) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Impossible d\'ouvrir le Drive.')),
-              );
+      child: Semantics(
+        button: true,
+        link: true,
+        label: 'Accès direct au Drive',
+        child: InkWell(
+          onTap: () async {
+            HapticFeedback.lightImpact();
+            final uri = Uri.parse(driveUrl);
+            try {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            } catch (_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Impossible d\'ouvrir le Drive.'),
+                  ),
+                );
+              }
             }
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.primary.withValues(alpha: 0.85),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.85),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.folder_open_rounded,
-                color: theme.colorScheme.onPrimary,
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Accès direct au Drive',
-                style: GoogleFonts.poppins(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ExcludeSemantics(
+                  child: Icon(
+                    Icons.folder_open_rounded,
+                    color: theme.colorScheme.onPrimary,
+                    size: 22,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Accès direct au Drive',
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -654,44 +708,51 @@ class _FolderTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+      child: Semantics(
+        button: true,
+        label: 'Dossier ${folder.name}',
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.folder_rounded,
-                color: theme.colorScheme.primary,
-                size: 28,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  folder.name,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface,
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.folder_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 28,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      folder.name,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: theme.colorScheme.onSurfaceVariant,
-                size: 24,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -748,7 +809,13 @@ class _FileTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(_iconForMimeType(file.mimeType), color: iconColor, size: 26),
+            ExcludeSemantics(
+              child: Icon(
+                _iconForMimeType(file.mimeType),
+                color: iconColor,
+                size: 26,
+              ),
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
@@ -767,16 +834,23 @@ class _FileTile extends StatelessWidget {
                 onPressed: onPlay,
                 icon: const Icon(Icons.play_circle_filled_rounded),
                 color: theme.colorScheme.primary,
-                tooltip: 'Écouter',
+                tooltip: 'Écouter ${file.name}',
               ),
             if (onView != null)
               IconButton(
                 onPressed: onView,
                 icon: const Icon(Icons.picture_as_pdf_rounded),
                 color: theme.colorScheme.primary,
-                tooltip: 'Ouvrir',
+                tooltip: 'Ouvrir ${file.name}',
               ),
-            TextButton(onPressed: onDownload, child: const Text('Télécharger')),
+            // An icon like its neighbours: the "Télécharger" text button
+            // overflowed the row at 2× text size.
+            IconButton(
+              onPressed: onDownload,
+              icon: const Icon(Icons.download_rounded),
+              color: theme.colorScheme.primary,
+              tooltip: 'Télécharger ${file.name}',
+            ),
           ],
         ),
       ),
@@ -784,14 +858,19 @@ class _FileTile extends StatelessWidget {
   }
 }
 
+/// Plays a Drive audio file fetched through the website proxy. The proxy
+/// needs the member's token, which the audio player can't send, so the file
+/// is downloaded first (authenticated) and played from a temporary file.
 class _DriveAudioPlayerSheet extends StatefulWidget {
-  final String url;
+  final String fileId;
   final String fileName;
+  final Future<List<int>> Function(String fileId) download;
   final VoidCallback onClose;
 
   const _DriveAudioPlayerSheet({
-    required this.url,
+    required this.fileId,
     required this.fileName,
+    required this.download,
     required this.onClose,
   });
 
@@ -804,6 +883,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
   bool _playing = false;
   bool _loading = false;
   String? _error;
+  File? _tempFile;
 
   @override
   void initState() {
@@ -825,27 +905,49 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
   void dispose() {
     _player.stop();
     _player.dispose();
+    _tempFile?.delete().ignore();
     super.dispose();
+  }
+
+  Future<File> _ensureDownloaded() async {
+    final existing = _tempFile;
+    if (existing != null && await existing.exists()) return existing;
+    final bytes = await widget.download(widget.fileId);
+    final dir = await Directory.systemTemp.createTemp('lbt_audio_');
+    final safeName = widget.fileName.replaceAll(RegExp(r'[^\w.\-]'), '_');
+    final file = File('${dir.path}/$safeName');
+    await file.writeAsBytes(bytes, flush: true);
+    _tempFile = file;
+    return file;
   }
 
   Future<void> _togglePlay() async {
     HapticFeedback.lightImpact();
     if (_playing) {
       await _player.pause();
-    } else {
-      setState(() {
-        _error = null;
-        _loading = true;
-      });
-      try {
-        await _player.play(UrlSource(widget.url));
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _error = 'Impossible de lire l\'audio';
-            _loading = false;
-          });
-        }
+      return;
+    }
+    setState(() {
+      _error = null;
+      _loading = true;
+    });
+    try {
+      final file = await _ensureDownloaded();
+      if (!mounted) return;
+      await _player.play(DeviceFileSource(file.path));
+    } on DriveServiceException catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Impossible de lire l\'audio';
+          _loading = false;
+        });
       }
     }
   }
@@ -916,6 +1018,11 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
               IconButton.filled(
                 onPressed: _loading ? null : _togglePlay,
                 iconSize: 48,
+                tooltip: _loading
+                    ? 'Chargement'
+                    : _playing
+                    ? 'Pause'
+                    : 'Lire',
                 icon: _loading
                     ? SizedBox(
                         width: 48,
@@ -923,6 +1030,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: theme.colorScheme.onPrimary,
+                          semanticsLabel: 'Chargement',
                         ),
                       )
                     : Icon(
@@ -944,6 +1052,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
                   widget.onClose();
                 },
                 icon: const Icon(Icons.close_rounded),
+                tooltip: 'Fermer',
                 style: IconButton.styleFrom(
                   backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   foregroundColor: theme.colorScheme.onSurface,

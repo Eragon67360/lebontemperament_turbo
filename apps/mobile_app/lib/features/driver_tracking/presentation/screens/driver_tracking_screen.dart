@@ -270,6 +270,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
             surfaceTintColor: theme.colorScheme.surface,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              tooltip: 'Retour',
               onPressed: () => context.pop(),
             ),
             title: Text(
