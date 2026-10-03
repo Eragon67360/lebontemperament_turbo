@@ -19,7 +19,7 @@
     "@supabase/ssr": "^0.12.6",
     "@supabase/supabase-js": "^2.115.0",
     "@types/papaparse": "^5.5.2",
-    "@vercel/analytics": "^1.6.1",
+    "@vercel/analytics": "^2.0.1",
     "date-fns": "^4.4.0",
     "lucide-react": "^0.577.0",
     "motion": "^13.2.0",
