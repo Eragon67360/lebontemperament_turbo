@@ -682,7 +682,10 @@ const ConcertsClient = ({
                 )}
               </section>
 
-              <aside className="bg-primary/10 border-primary/20 grid gap-7 rounded-2xl border p-7 md:grid-cols-[1fr_auto] md:items-center md:p-10">
+              <aside
+                aria-label="Rejoindre l’ensemble"
+                className="bg-primary/10 border-primary/20 grid gap-7 rounded-2xl border p-7 md:grid-cols-[1fr_auto] md:items-center md:p-10"
+              >
                 <div>
                   <div className="flex items-center gap-3">
                     <IoPeopleOutline
@@ -721,6 +724,7 @@ const ConcertsClient = ({
             </div>
 
             <aside
+              aria-label="Sommaire de la page"
               className="hidden h-fit w-56 shrink-0 self-start lg:block"
               style={{ position: "sticky", top: "6rem" }}
             >

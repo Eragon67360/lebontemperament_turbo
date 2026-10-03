@@ -6,9 +6,8 @@ import { IoArrowBack, IoHome } from "react-icons/io5";
 
 export default function NotFound() {
   return (
-    <div
+    <section
       className="bg-surface-secondary relative flex min-h-screen w-full flex-col items-center justify-center"
-      role="main"
       aria-labelledby="error-title"
     >
       <div className="bg-background relative z-10 mx-4 max-w-md rounded-lg p-8 text-center shadow-md">
@@ -78,6 +77,6 @@ export default function NotFound() {
           </ul>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -46,3 +46,20 @@ export function webPageJsonLd({
     },
   };
 }
+
+/**
+ * `@id` of the organisation node declared once in `app/layout.tsx`
+ * (`@type: ["Organization", "MusicGroup"]`). Other JSON-LD blocks reference
+ * it instead of redeclaring the entity, so validators see one organisation.
+ */
+export const organizationId = () => `${BASE()}/#organization`;
+
+export function organizationRef(
+  type: "Organization" | "MusicGroup" = "Organization",
+) {
+  return {
+    "@type": type,
+    "@id": organizationId(),
+    name: "Le Bon Tempérament",
+  };
+}

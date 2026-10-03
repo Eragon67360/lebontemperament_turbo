@@ -1,5 +1,36 @@
 import type { AnniversaryPageData, Archive } from "@/types/anniversary";
 import { createClient } from "@/utils/supabase/server";
+import type { Database } from "@repo/domain/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export const ANNIVERSARY_FLAG_KEY = "anniversary_40_years";
+
+/**
+ * Server-side read of the `anniversary_40_years` feature flag. Pass the
+ * cookie-bound server client from pages, or the admin client from routes
+ * that must stay cacheable (sitemap). Any error counts as "disabled".
+ */
+export async function isAnniversaryFeatureEnabled(
+  supabase: SupabaseClient<Database>,
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("feature_flags")
+      .select("is_enabled")
+      .eq("flag_key", ANNIVERSARY_FLAG_KEY)
+      .single();
+
+    if (error) {
+      console.error("Error fetching feature flag:", error);
+      return false;
+    }
+
+    return data?.is_enabled || false;
+  } catch (error) {
+    console.error("Error fetching feature flag:", error);
+    return false;
+  }
+}
 
 /**
  * Fetches all anniversary page data from the database

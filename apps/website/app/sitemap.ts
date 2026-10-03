@@ -1,109 +1,84 @@
+import { isAnniversaryFeatureEnabled } from "@/lib/anniversary";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { MetadataRoute } from "next";
 
 const WEBSITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://www.lebontemperament.com";
 
+// Regenerate at most once per hour instead of freezing at build time.
+export const revalidate = 3600;
+
 type ChangeFrequency =
   "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
 
+type StaticRoute = {
+  path: string;
+  changeFrequency: ChangeFrequency;
+  priority: number;
+};
+
+// No lastModified on static pages: we have no real content-change date, and
+// a fake one (deploy time) is worse than none for crawlers.
+const STATIC_ROUTES: StaticRoute[] = [
+  { path: "", changeFrequency: "daily", priority: 1.0 },
+  { path: "/decouvrir", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/concerts", changeFrequency: "weekly", priority: 0.9 },
+  { path: "/concerts/autres", changeFrequency: "weekly", priority: 0.7 },
+  { path: "/galerie", changeFrequency: "weekly", priority: 0.6 },
+  { path: "/contact", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/rejoindre", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/don", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/impressum", changeFrequency: "yearly", priority: 0.3 },
+  {
+    path: "/politique-de-confidentialite",
+    changeFrequency: "yearly",
+    priority: 0.3,
+  },
+];
+
+// Listed only while the `anniversary_40_years` flag is on (otherwise they 404).
+const ANNIVERSARY_ROUTES: StaticRoute[] = [
+  { path: "/40-ans", changeFrequency: "weekly", priority: 0.8 },
+  { path: "/40-ans/archives", changeFrequency: "monthly", priority: 0.5 },
+];
+
+const toEntry = (route: StaticRoute): MetadataRoute.Sitemap[number] => ({
+  url: `${WEBSITE_URL}${route.path}`,
+  changeFrequency: route.changeFrequency,
+  priority: route.priority,
+});
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticRoutes = [
-    {
-      url: `${WEBSITE_URL}`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "daily" as ChangeFrequency,
-      priority: 1.0,
-    },
-    {
-      url: `${WEBSITE_URL}/decouvrir`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "monthly" as ChangeFrequency,
-      priority: 0.8,
-    },
-    {
-      url: `${WEBSITE_URL}/concerts`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "weekly" as ChangeFrequency,
-      priority: 0.9,
-    },
-    {
-      url: `${WEBSITE_URL}/concerts/autres`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "weekly" as ChangeFrequency,
-      priority: 0.7,
-    },
-    {
-      url: `${WEBSITE_URL}/galerie`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "weekly" as ChangeFrequency,
-      priority: 0.6,
-    },
-    {
-      url: `${WEBSITE_URL}/contact`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "monthly" as ChangeFrequency,
-      priority: 0.5,
-    },
-    {
-      url: `${WEBSITE_URL}/faq`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "monthly" as ChangeFrequency,
-      priority: 0.7,
-    },
-    {
-      url: `${WEBSITE_URL}/rejoindre`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "monthly" as ChangeFrequency,
-      priority: 0.8,
-    },
-    {
-      url: `${WEBSITE_URL}/don`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "monthly" as ChangeFrequency,
-      priority: 0.7,
-    },
-    {
-      url: `${WEBSITE_URL}/impressum`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "yearly" as ChangeFrequency,
-      priority: 0.3,
-    },
-    {
-      url: `${WEBSITE_URL}/politique-de-confidentialite`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "yearly" as ChangeFrequency,
-      priority: 0.3,
-    },
-    {
-      url: `${WEBSITE_URL}/ag-2026`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: "monthly" as ChangeFrequency,
-      priority: 0.6,
-    },
-  ];
+  // Use admin client for sitemap generation (no cookies needed)
+  const supabase = createAdminClient();
+
+  const staticRoutes = STATIC_ROUTES.map(toEntry);
+
+  let anniversaryRoutes: MetadataRoute.Sitemap = [];
+  if (await isAnniversaryFeatureEnabled(supabase)) {
+    anniversaryRoutes = ANNIVERSARY_ROUTES.map(toEntry);
+  }
 
   // Fetch legacy project records used as editorial concert-story pages.
   let dynamicRoutes: MetadataRoute.Sitemap = [];
   try {
-    // Use admin client for sitemap generation (no cookies needed)
-    const supabase = createAdminClient();
     const { data: projects } = await supabase
       .from("projects")
       .select("slug, date, updated_at");
 
     if (projects) {
       dynamicRoutes = projects.map((project) => {
-        // Use updated_at if available, otherwise use date, otherwise use current date
+        // Real dates only: updated_at, else the concert date, else nothing.
         const lastModified = project.updated_at
           ? new Date(project.updated_at).toISOString()
           : project.date
             ? new Date(project.date).toISOString()
-            : new Date().toISOString();
+            : undefined;
 
         return {
           url: `${WEBSITE_URL}/concerts/${project.slug}`,
-          lastModified,
+          ...(lastModified ? { lastModified } : {}),
           changeFrequency: "monthly" as ChangeFrequency,
           priority: 0.6,
         };
@@ -113,5 +88,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching projects for sitemap:", error);
   }
 
-  return [...staticRoutes, ...dynamicRoutes];
+  return [...staticRoutes, ...anniversaryRoutes, ...dynamicRoutes];
 }

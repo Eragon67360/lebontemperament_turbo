@@ -16,7 +16,6 @@ import { RoundedSize } from "@/utils/types";
 import { Button, Modal } from "@heroui/react";
 import Link from "next/link";
 import { IoIosArrowRoundForward, IoIosInformationCircle } from "react-icons/io";
-import Footer from "./Footer";
 
 const HomeContent = () => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
@@ -227,22 +226,23 @@ const HomeContent = () => {
           </motion.div>
 
           {/* Pulsing Arrow */}
-          <div
+          <button
+            type="button"
             className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 transform cursor-pointer"
             onClick={() => {
               window.scrollBy({
                 top: window.innerHeight,
-                behavior: "smooth",
+                behavior: prefersReducedMotion ? "auto" : "smooth",
               });
             }}
-            aria-label="Scroll down"
+            aria-label="Défiler vers le contenu"
           >
             <motion.div
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
-              animate={{ y: [0, 10, 0] }}
+              animate={prefersReducedMotion ? { y: 0 } : { y: [0, 10, 0] }}
               transition={{
                 duration: 1.5,
-                repeat: Infinity,
+                repeat: prefersReducedMotion ? 0 : Infinity,
                 ease: "easeInOut",
               }}
             >
@@ -252,6 +252,7 @@ const HomeContent = () => {
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -261,7 +262,7 @@ const HomeContent = () => {
                 />
               </svg>
             </motion.div>
-          </div>
+          </button>
         </motion.section>
 
         {/* Concert Stories Section */}
@@ -742,8 +743,6 @@ const HomeContent = () => {
           >
             <ContactForm />
           </motion.div>
-
-          <Footer />
         </div>
       </div>
 

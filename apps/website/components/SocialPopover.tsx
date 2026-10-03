@@ -79,6 +79,7 @@ export const SocialPopover = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            id="social-links"
             className="absolute bottom-full left-0 mb-4 flex flex-col gap-2 md:right-0 md:left-auto"
           >
             {socials.map((social, index) => (
@@ -94,6 +95,7 @@ export const SocialPopover = () => {
                 className="group flex items-center gap-3 rounded-full border border-white/20 bg-white/80 p-2 pr-4 shadow-lg backdrop-blur-md transition-colors hover:bg-white dark:bg-zinc-900/80 dark:hover:bg-zinc-900"
               >
                 <div
+                  aria-hidden="true"
                   className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-sm ${social.bgClass}`}
                 >
                   {social.icon}
@@ -111,7 +113,11 @@ export const SocialPopover = () => {
         layoutId="social-bubble"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Nos réseaux sociaux"
+        aria-expanded={isOpen}
+        aria-controls="social-links"
         className={`group relative flex size-10 items-center justify-center rounded-full shadow-lg transition-all duration-500 md:size-14 ${
           isOpen
             ? "text-foreground bg-white dark:bg-zinc-900 dark:text-white"
@@ -143,7 +149,10 @@ export const SocialPopover = () => {
 
         {/* Tooltip */}
         {!isOpen && (
-          <div className="absolute right-full mr-4 hidden rounded-lg bg-black/80 px-3 py-1.5 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
+          <div
+            aria-hidden="true"
+            className="absolute right-full mr-4 hidden rounded-lg bg-black/80 px-3 py-1.5 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100"
+          >
             Nos réseaux
           </div>
         )}

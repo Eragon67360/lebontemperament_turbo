@@ -1,14 +1,17 @@
 import { JsonLd } from "@/components/JsonLd";
-import { getAnniversaryPageData } from "@/lib/anniversary";
+import {
+  getAnniversaryPageData,
+  isAnniversaryFeatureEnabled,
+} from "@/lib/anniversary";
 import { checkAdminAuth } from "@/utils/auth";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import AnniversaryPageClient from "./AnniversaryPageClient";
 
 export const metadata: Metadata = {
-  title: "40 ans du Bon Tempérament | Le Bon Tempérament",
+  title: "40 ans de l'ensemble",
   description:
     "Célébrons les 40 ans du Bon Tempérament ! Découvrez notre histoire, nos souvenirs, témoignages et moments mémorables à travers les décennies.",
   keywords:
@@ -35,40 +38,20 @@ export const metadata: Metadata = {
   },
 };
 
-async function getAnniversaryFeatureStatus() {
-  const supabase = await createClient();
-
-  try {
-    const { data, error } = await supabase
-      .from("feature_flags")
-      .select("is_enabled")
-      .eq("flag_key", "anniversary_40_years")
-      .single();
-
-    if (error) {
-      console.error("Error fetching feature flag:", error);
-      return false;
-    }
-
-    return data?.is_enabled || false;
-  } catch (error) {
-    console.error("Error fetching feature flag:", error);
-    return false;
-  }
-}
-
 export const revalidate = 60; // Cache page for 60 seconds
 
 export default async function AnniversaryPage() {
-  const isEnabled = await getAnniversaryFeatureStatus();
+  const supabase = await createClient();
+  const isEnabled = await isAnniversaryFeatureEnabled(supabase);
 
   // If feature is disabled, check if user is admin
   if (!isEnabled) {
     const { isAdmin } = await checkAdminAuth();
 
-    // Only allow access if user is admin (preview mode)
+    // Only allow access if user is admin (preview mode): everyone else gets
+    // a real 404 (status + noindex) instead of a redirect to /not-found.
     if (!isAdmin) {
-      redirect("/not-found");
+      notFound();
     }
   }
 

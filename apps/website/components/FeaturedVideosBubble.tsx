@@ -154,17 +154,25 @@ const FeaturedVideosBubble = () => {
             exit={{ scale: 0 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            type="button"
             onClick={() => setIsOpen(true)}
+            aria-label="Vidéos à la une"
             className="group bg-primary hover:bg-primary/90 relative flex size-10 items-center justify-center rounded-full text-white shadow-lg transition-colors md:size-14"
           >
-            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span
+              aria-hidden="true"
+              className="absolute -top-1 -right-1 flex h-4 w-4"
+            >
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500"></span>
             </span>
             <IoPlay className="ml-1 h-6 w-6" />
 
             {/* Tooltip */}
-            <div className="absolute right-full mr-4 hidden rounded-lg bg-black/80 px-3 py-1.5 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
+            <div
+              aria-hidden="true"
+              className="absolute right-full mr-4 hidden rounded-lg bg-black/80 px-3 py-1.5 text-sm whitespace-nowrap text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100"
+            >
               Vidéos à la une
             </div>
           </motion.button>

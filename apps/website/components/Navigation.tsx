@@ -8,7 +8,7 @@ import { RoundedSize } from "@/utils/types";
 import { Avatar, Button, Link, Popover, toast, Tooltip } from "@heroui/react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { CiLock } from "react-icons/ci";
 import { FaKey } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
@@ -35,6 +35,7 @@ const Navigation = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [hasScrolled, setHasScrolled] = useState(false);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
   const driveUrl = useDriveRootUrl();
   const isMembresSection = pathname.startsWith("/membres");
   const isSpecialPath = pathname === "/" || pathname.startsWith("/concerts/");
@@ -57,6 +58,19 @@ const Navigation = () => {
     return () => {
       document.body.style.overflow = "";
     };
+  }, [isMenuOpen]);
+
+  // Escape closes the mobile menu and gives focus back to its toggle
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setIsMenuOpen(false);
+      menuToggleRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
 
   useEffect(() => {
@@ -123,6 +137,7 @@ const Navigation = () => {
       >
         <div className="flex h-16 w-full items-center justify-between gap-4 px-6">
           <button
+            ref={menuToggleRef}
             type="button"
             aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={isMenuOpen}

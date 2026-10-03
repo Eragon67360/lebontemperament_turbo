@@ -39,6 +39,7 @@ export default function LoginPage() {
           isIconOnly
           variant="ghost"
           className="absolute top-4 left-4 z-50"
+          aria-label="Retour à l'accueil"
           onPress={() => router.push("/")}
         >
           <IoArrowBack className="h-6 w-6" />
