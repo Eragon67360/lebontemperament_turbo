@@ -29,7 +29,7 @@ const STATIC_ROUTES: StaticRoute[] = [
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/rejoindre", changeFrequency: "monthly", priority: 0.8 },
   { path: "/don", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/impressum", changeFrequency: "yearly", priority: 0.3 },
+  { path: "/mentions-legales", changeFrequency: "yearly", priority: 0.3 },
   {
     path: "/politique-de-confidentialite",
     changeFrequency: "yearly",
