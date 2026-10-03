@@ -1,13 +1,35 @@
 import { NextResponse } from "next/server";
+import { createHash, timingSafeEqual } from "node:crypto";
 
+// Public by design: IndexNow verifies it at `${WEBSITE_URL}/${INDEXNOW_KEY}.txt`.
 const INDEXNOW_KEY = "b7f3e9a2c4d1486f9e0b5a7c3d2f1864";
 const WEBSITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://www.lebontemperament.com";
 const HOST = new URL(WEBSITE_URL).host;
 
+/** Header carrying INDEXNOW_SUBMIT_SECRET; submissions without it are refused. */
+const SECRET_HEADER = "x-indexnow-secret";
+
+const sha256 = (value: string) => createHash("sha256").update(value).digest();
+
+function hasSubmitSecret(request: Request): boolean {
+  const expected = process.env.INDEXNOW_SUBMIT_SECRET;
+  if (!expected) {
+    console.warn("[api/indexnow] INDEXNOW_SUBMIT_SECRET is not set");
+    return false;
+  }
+  const provided = request.headers.get(SECRET_HEADER);
+  return !!provided && timingSafeEqual(sha256(provided), sha256(expected));
+}
+
 // POST { "urls": ["https://www.lebontemperament.com/concerts", ...] }
+// with header `x-indexnow-secret: <INDEXNOW_SUBMIT_SECRET>`.
 // Submits URLs to IndexNow (Bing, Yandex, Seznam, Naver) for instant indexing.
 export async function POST(request: Request) {
+  if (!hasSubmitSecret(request)) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const urls: unknown = body?.urls;

@@ -1,24 +1,20 @@
-// route.ts
+import { CONTACT_EMAIL } from "@/lib/contact";
+import { createMailer } from "@/lib/mail";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 import { ContactFormProps } from "@/types/contactFormData";
+import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 
-async function parseRequestBody(
-  request: NextRequest,
-): Promise<ContactFormProps> {
-  const body = await request.json();
-  return body as ContactFormProps;
-}
+const SEND_FAILED = {
+  success: false,
+  message: "Une erreur est survenue lors de l'envoi du message",
+};
 
 export async function POST(request: NextRequest) {
   try {
-    const username = process.env.NEXT_PUBLIC_BURNER_USERNAME;
-    const password = process.env.NEXT_PUBLIC_BURNER_PASSWORD;
-
     const { firstName, lastName, email, subject, message, captchaValue } =
-      await parseRequestBody(request);
+      (await request.json()) as ContactFormProps;
 
-    // Verify reCAPTCHA token
     if (!captchaValue) {
       return NextResponse.json(
         {
@@ -29,10 +25,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-
-    if (!secretKey) {
-      console.error("RECAPTCHA_SECRET_KEY not found in environment variables");
+    const recaptcha = await verifyRecaptcha(String(captchaValue));
+    if (recaptcha === "not-configured") {
       return NextResponse.json(
         {
           success: false,
@@ -41,68 +35,43 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
-
-    // Verify reCAPTCHA with Google
-    const recaptchaResponse = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaValue}`,
-      {
-        method: "POST",
-      },
-    );
-
-    const recaptchaResult = await recaptchaResponse.json();
-
-    if (!recaptchaResult.success) {
-      console.error(
-        "reCAPTCHA verification failed:",
-        recaptchaResult["error-codes"],
-      );
+    if (recaptcha === "failed") {
       return NextResponse.json(
         {
           success: false,
           message: "Échec de la vérification reCAPTCHA",
-          errorCodes: recaptchaResult["error-codes"],
         },
         { status: 400 },
       );
     }
 
-    const transporter = nodemailer.createTransport({
-      service: "Gmail",
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      tls: {
-        ciphers: "SSLv3",
-        rejectUnauthorized: false,
-      },
-      auth: {
-        user: username,
-        pass: password,
-      },
-    });
+    const mailer = createMailer();
+    if (!mailer) {
+      console.error("[api/contact] Email service not configured");
+      return NextResponse.json(SEND_FAILED, { status: 500 });
+    }
 
     // Send email to BT
-    await transporter.sendMail({
-      from: username,
-      to: "lebontemperament@gmail.com",
+    await mailer.transporter.sendMail({
+      from: mailer.from,
+      to: CONTACT_EMAIL,
       subject: `Nouvelle demande de contact de ${firstName} ${lastName}`,
       html: `
-                <p>Nom: ${lastName} </p>
-                <p>Prénom: ${firstName} </p>
-                <p>Email: ${email} </p>
-                <p>Sujet: ${subject} </p>
-                <p>Message: ${message} </p>
+                <p>Nom: ${escapeHtml(lastName)} </p>
+                <p>Prénom: ${escapeHtml(firstName)} </p>
+                <p>Email: ${escapeHtml(email)} </p>
+                <p>Sujet: ${escapeHtml(subject)} </p>
+                <p>Message: ${escapeHtmlWithBreaks(message)} </p>
             `,
     });
 
     // Send confirmation email to user
-    await transporter.sendMail({
-      from: username,
+    await mailer.transporter.sendMail({
+      from: mailer.from,
       to: email?.toString(),
       subject: `Votre demande de contact est bien arrivée!`,
       html: `
-                <p>Bonjour ${firstName} !</p>
+                <p>Bonjour ${escapeHtml(firstName)} !</p>
                 <p>L'équipe communication du BT vous remercie pour votre demande de contact! Nous essayerons de traiter votre demande le plus vite possible!</p>
                 <p>Chaleureusement et musicalement,</p>
                 <p>L'équipe <strong>Com' du Bon Tempérament</strong></p>
@@ -114,14 +83,7 @@ export async function POST(request: NextRequest) {
       message: "Votre demande de contact a bien été envoyée",
     });
   } catch (error) {
-    console.error("Email sending error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Une erreur est survenue lors de l'envoi du message",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    console.error("[api/contact] Email sending error:", error);
+    return NextResponse.json(SEND_FAILED, { status: 500 });
   }
 }

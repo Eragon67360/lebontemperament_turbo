@@ -1,5 +1,6 @@
 // Legacy endpoint for rich editorial concert stories.
 // The `projects` table name is retained for backward compatibility.
+// Read-only: stories are written from the admin app.
 import { createClient } from "@/utils/supabase/server";
 import type { Project } from "@repo/domain/types/projects";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
@@ -50,82 +51,6 @@ export async function GET(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Error fetching projects" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const json = await request.json();
-
-    const { data, error } = await supabase
-      .from("projects")
-      .insert(json)
-      .select();
-
-    if (error) throw error;
-
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Error creating project" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function PUT(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const projectId = searchParams.get("id");
-  if (!projectId) {
-    return NextResponse.json({ error: "Missing project id" }, { status: 400 });
-  }
-  try {
-    const supabase = await createClient();
-    const json = await request.json();
-
-    const { data, error } = await supabase
-      .from("projects")
-      .update(json)
-      .eq("id", projectId)
-      .select();
-
-    if (error) throw error;
-
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Error updating project" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const projectId = searchParams.get("id");
-  if (!projectId) {
-    return NextResponse.json({ error: "Missing project id" }, { status: 400 });
-  }
-  try {
-    const supabase = await createClient();
-
-    const { error } = await supabase
-      .from("projects")
-      .delete()
-      .eq("id", projectId);
-
-    if (error) throw error;
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Error deleting project" },
       { status: 500 },
     );
   }
