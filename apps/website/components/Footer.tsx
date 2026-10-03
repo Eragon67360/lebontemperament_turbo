@@ -229,11 +229,10 @@ const Footer = () => {
         </Link>
         <span className="hidden lg:block">&nbsp;|&nbsp;</span>
         <Link
-          href={"/impressum"}
+          href={"/mentions-legales"}
           className="hover:text-muted underline transition-colors"
-          aria-label="Voir les mentions légales"
         >
-          Impressum
+          Mentions légales
         </Link>
       </div>
     </footer>

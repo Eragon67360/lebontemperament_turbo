@@ -62,6 +62,13 @@ const nextConfig = {
         destination: "/decouvrir",
         permanent: true,
       },
+      {
+        // French legal notice (LCEN art. 6); the German "Impressum" URL stays
+        // reachable for old links and search results.
+        source: "/impressum",
+        destination: "/mentions-legales",
+        permanent: true,
+      },
     ];
   },
   images: {
