@@ -1,7 +1,7 @@
 "use client";
 
 import MusicList from "@/components/MusicList";
-import { Concert } from "@repo/domain/types/concerts";
+import type { PublicConcert } from "@/lib/publicConcerts";
 import { Event } from "@repo/domain/types/events";
 import { format, isAfter, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -11,7 +11,7 @@ import { IoCalendarClear, IoLocationSharp, IoTime } from "react-icons/io5";
 import { MdOpenInNew } from "react-icons/md";
 
 const MembresConcertsEvents = () => {
-  const [concerts, setConcerts] = useState<Concert[]>([]);
+  const [concerts, setConcerts] = useState<PublicConcert[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ const MembresConcertsEvents = () => {
       ]);
 
       const today = startOfDay(new Date());
-      const futureConcerts = concertsData.filter((concert: Concert) =>
+      const futureConcerts = concertsData.filter((concert: PublicConcert) =>
         isAfter(new Date(concert.date), today),
       );
 
@@ -42,7 +42,7 @@ const MembresConcertsEvents = () => {
 
       // Sort concerts by date
       const sortedConcerts = futureConcerts.sort(
-        (a: Concert, b: Concert) =>
+        (a: PublicConcert, b: PublicConcert) =>
           new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
 
