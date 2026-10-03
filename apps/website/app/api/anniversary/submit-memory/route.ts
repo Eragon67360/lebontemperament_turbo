@@ -1,7 +1,7 @@
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { createMailer } from "@/lib/mail";
-import { verifyRecaptcha } from "@/lib/recaptcha";
 import { createClient } from "@/utils/supabase/server";
+import { detectFormAbuse } from "@repo/domain/utils/formAbuse";
 import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
 import { NextResponse } from "next/server";
 
@@ -215,36 +215,18 @@ const adminNotificationEmailTemplate = (
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, message, year, captchaValue } = body;
+    const { name, email, message, year } = body;
 
-    if (!captchaValue) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Veuillez vérifier que vous n'êtes pas un robot",
-        },
-        { status: 400 },
-      );
-    }
-
-    const recaptcha = await verifyRecaptcha(String(captchaValue));
-    if (recaptcha === "not-configured") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Configuration du serveur incomplète",
-        },
-        { status: 500 },
-      );
-    }
-    if (recaptcha === "failed") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Échec de la vérification reCAPTCHA",
-        },
-        { status: 400 },
-      );
+    // Honeypot filled or submitted faster than a person types: answer like a
+    // real submission (bots learn nothing), store nothing, send nothing.
+    const verdict = detectFormAbuse(body);
+    if (verdict !== "human") {
+      console.warn(`[api/anniversary/submit-memory] Ignored (${verdict})`);
+      return NextResponse.json({
+        success: true,
+        message: "Memory submitted successfully",
+        id: crypto.randomUUID(),
+      });
     }
 
     // Validate required fields (email is mandatory)

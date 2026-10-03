@@ -7,6 +7,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { IoClose, IoPlay } from "react-icons/io5";
+import VideoFacade from "./VideoFacade";
+import { youTubeEmbedUrl } from "./YouTubeVideo";
 
 const FeaturedVideosBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -96,15 +98,13 @@ const FeaturedVideosBubble = () => {
             </div>
 
             {/* Video Player */}
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-inner">
-              <iframe
-                src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1`}
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={currentVideo.title}
-              />
-            </div>
+            <VideoFacade
+              key={videoId}
+              embedUrl={youTubeEmbedUrl(videoId)}
+              provider="YouTube"
+              title={currentVideo.title}
+              className="aspect-video w-full rounded-xl shadow-inner"
+            />
 
             {/* Video Info */}
             <div className="mt-4">

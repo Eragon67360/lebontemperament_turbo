@@ -1,4 +1,8 @@
 import { checkAuthorization } from "@/utils/auth";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
 import { CreateEventDTO, UpdateEventDTO } from "@repo/domain/types/events";
 import { NextResponse } from "next/server";
@@ -46,6 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ message: "Événement créé avec succès" });
   } catch (error) {
     console.error(error);
@@ -79,6 +84,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ message: "Événement mis à jour avec succès" });
   } catch (error) {
     console.error(error);
@@ -110,6 +116,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ message: "Événement supprimé avec succès" });
   } catch (error) {
     console.error(error);

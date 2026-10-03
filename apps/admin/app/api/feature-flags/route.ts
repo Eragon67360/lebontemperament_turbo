@@ -1,5 +1,9 @@
 // app/api/feature-flags/route.ts
 import { checkAuthorization } from "@/utils/auth";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -94,6 +98,7 @@ export async function PATCH(request: Request) {
       );
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.featureFlags);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error in PATCH /api/feature-flags:", error);

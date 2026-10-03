@@ -1,5 +1,6 @@
 "use client";
 import { NEWSLETTER_HONEYPOT_FIELD } from "@repo/domain/utils/newsletter";
+import Link from "next/link";
 import React, { useState } from "react";
 import { FiLoader } from "react-icons/fi";
 import { toast } from "sonner";
@@ -158,6 +159,17 @@ const Subscribe = () => {
           {emailError}
         </p>
       )}
+      <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+        Votre adresse e-mail sert uniquement à vous envoyer la newsletter ; vous
+        pouvez vous désinscrire à tout moment. En savoir plus dans notre{" "}
+        <Link
+          href="/politique-de-confidentialite"
+          className="text-primary underline hover:no-underline"
+        >
+          politique de confidentialité
+        </Link>
+        .
+      </p>
     </div>
   );
 };

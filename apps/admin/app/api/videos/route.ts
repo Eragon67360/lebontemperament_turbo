@@ -1,6 +1,10 @@
 // app/api/videos/route.ts
 
 import { checkAuthorization } from "@/utils/auth";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -50,6 +54,7 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.videos);
     return NextResponse.json({ message: "Video added successfully" });
   } catch (error) {
     console.error("Error:", error);
@@ -78,6 +83,7 @@ export async function PATCH(request: Request) {
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.videos);
     return NextResponse.json({ message: "Video updated successfully" });
   } catch (error) {
     console.error("Error:", error);
@@ -108,6 +114,7 @@ export async function DELETE(request: Request) {
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.videos);
     return NextResponse.json({ message: "Video deleted successfully" });
   } catch (error) {
     console.error("Error:", error);

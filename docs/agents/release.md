@@ -21,13 +21,14 @@ There is one database, used by production, staging, previews and local developme
 
 1. Make sure `dev` contains exactly what should ship: `git log --oneline origin/main..origin/dev`.
 2. Confirm the gates on the `dev` head: lint, check-types, builds, domain tests, `flutter analyze` / `flutter test` if the app changed, the latest e2e run on staging green (Actions → "E2E Daily (staging)").
-3. Open the release PR with a body the owner can approve from his phone:
+3. Bump versions in a small PR into `dev` (`dev` requires pull requests): on a `chore/release-<version>` branch run `npm run release:bump` (patch; `npm run bump-version -- minor` or `major` for bigger ones), commit `version.json`, both apps' `package.json` and `apps/mobile_app/pubspec.yaml`, open the PR and merge it once CI is green. If the app version changed and Flutter is installed, run `flutter pub get --no-example` in `apps/mobile_app` and commit `pubspec.lock` if it changed (the old hook did it). The script does not touch `package-lock.json`.
+4. Open the release PR with a body the owner can approve from his phone:
    - a table of what ships (PR, one line, issue numbers);
    - what visitors, members, admins and app users will notice;
    - Supabase migrations and function deploys involved, confirmed applied (or the order to apply them);
    - whether an Android build will be uploaded, and what to do with it in the Play Console; iOS steps if any;
    - owner steps in order (settings that depend on the new code come **after** the deploy); risks and rollback.
-4. Wait for "merge it". Then `gh pr merge <n> --merge` (no `--delete-branch`: the head is `dev`).
+5. Wait for "merge it". Then `gh pr merge <n> --merge` (no `--delete-branch`: the head is `dev`).
 
 ## After merging
 

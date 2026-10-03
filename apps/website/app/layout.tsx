@@ -3,6 +3,7 @@ import CookieConsentComponent from "@/components/cookies/CookieConsent";
 import { DeveloperFootprint } from "@/components/DeveloperFootprint";
 import { EasterEgg } from "@/components/EasterEgg";
 import { LayoutShell } from "@/components/LayoutShell";
+import { getPublicFeatureFlags } from "@/lib/featureFlags";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
@@ -107,11 +108,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read once per render from the data cache (no cookies: pages stay static)
+  // and handed to client components through FeatureFlagProvider.
+  const featureFlags = await getPublicFeatureFlags();
+
   return (
     <html lang="fr" className={roboto.className} suppressHydrationWarning>
       <head>
@@ -125,12 +130,6 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/logo.png" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link
@@ -142,7 +141,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background text-foreground z-10 transition-colors duration-200">
         <CookieConsentComponent />
-        <Providers>
+        <Providers featureFlags={featureFlags}>
           <DeveloperFootprint />
           <EasterEgg />
           <LayoutShell>{children}</LayoutShell>

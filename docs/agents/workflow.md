@@ -23,18 +23,13 @@ Never use `--delete-branch` on a release PR (its head is `dev`).
 
 ## The pre-commit hook
 
-`.husky/pre-commit` runs on every commit made in a checkout where `npm ci`/`npm install` has installed Husky (the `prepare` script; skipped on CI and Vercel):
-
-1. `npm run format` — Prettier over **every** `ts`, `tsx` and `md` file in the repo;
-2. `git add -A` — stages **everything** in the working tree, untracked files included;
-3. `npm run build` — builds all apps (slow, and the website build may need its env variables);
-4. `node scripts/bump-version.js patch --if-changed` — bumps `version.json` and the changed apps' versions, and syncs the Flutter version when `pubspec.yaml` changed.
+`.husky/pre-commit` runs `npx lint-staged` on every commit made in a checkout where `npm ci`/`npm install` has installed Husky (the `prepare` script; skipped on CI and Vercel). It runs `prettier --write` on the **staged** `ts`, `tsx`, `js`, `mjs`, `md`, `json` and `css` files only (the `lint-staged` key in the root `package.json`), and re-stages those files. It stages nothing else, builds nothing and bumps no version.
 
 Consequences for you:
 
-- **Keep the working tree clean** before committing: anything lying around (screenshots, logs, scratch scripts, `.env` copies not covered by `.gitignore`) gets committed. Keep scratch files outside the repository, run `git status` before committing, and check `git show --stat HEAD` after.
-- **Expect version bumps** in commits that touch an app. That is the owner's convention; keep them.
-- **Commits take minutes** (full build). Batch related changes into one commit rather than many tiny ones.
+- **Still check `git status` before committing** and `git show --stat HEAD` after: the hook no longer stages untracked files, but you do. Keep scratch files outside the repository; stage by path, never `git add -A`.
+- **Commits take seconds**, so commit as often as is useful. The hook does not lint, type-check or build: run the gates in [quality-gates.md](quality-gates.md) yourself; CI builds on the PR.
+- **Don't bump versions** in feature PRs. Versions are bumped once, on the release PR ([release.md](release.md#preparing-a-release)).
 - If the hook fails, fix the cause. Don't bypass it with `--no-verify` unless the owner agrees for that case.
 - A worktree without `node_modules` has no `.husky/_` directory, so the hook does not run there (docs-only commits); after `npm ci` in a worktree it does.
 

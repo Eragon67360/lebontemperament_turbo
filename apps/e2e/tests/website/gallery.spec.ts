@@ -7,6 +7,8 @@ test(
   { tag: "@live-cdn" },
   async ({ page }) => {
     await page.goto("/galerie");
+    // Sections mount their photos when opened (#404): open the first one.
+    await page.locator("#photos button[aria-expanded]").first().click();
     // The gallery grid must render Cloudinary URLs...
     const firstImage = page.locator("#photos img").first();
     await expect(firstImage).toBeAttached();

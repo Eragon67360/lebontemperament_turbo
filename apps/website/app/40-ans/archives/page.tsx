@@ -1,6 +1,6 @@
-import { getArchives, isAnniversaryFeatureEnabled } from "@/lib/anniversary";
+import { getArchives } from "@/lib/anniversary";
+import { getPublicFeatureFlags } from "@/lib/featureFlags";
 import { checkAdminAuth } from "@/utils/auth";
-import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ArchivesPageClient from "./ArchivesPageClient";
@@ -31,8 +31,7 @@ export const revalidate = 60;
 export default async function ArchivesPage() {
   // Same gate as /40-ans: public only while the anniversary flag is on,
   // admins may preview; everyone else gets a real 404.
-  const supabase = await createClient();
-  const isEnabled = await isAnniversaryFeatureEnabled(supabase);
+  const { anniversary: isEnabled } = await getPublicFeatureFlags();
 
   if (!isEnabled) {
     const { isAdmin } = await checkAdminAuth();
