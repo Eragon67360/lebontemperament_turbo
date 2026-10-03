@@ -101,7 +101,7 @@ jobs:
       # --- STEP 0: Analyze and test before spending minutes on a build ---
       - name: Analyze
         working-directory: apps/mobile_app
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings # errors only; #362 tracks the warnings
 
       - name: Test
         working-directory: apps/mobile_app

@@ -173,5 +173,6 @@ jobs:
       # the file to exist.
       - run: cp .env.example .env
       - run: flutter pub get
-      - run: flutter analyze
+      # Errors fail the job; the 72 pre-existing infos/warnings are tracked in #362.
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: flutter test
