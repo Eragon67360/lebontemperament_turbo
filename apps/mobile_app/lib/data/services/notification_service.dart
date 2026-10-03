@@ -202,20 +202,8 @@ class NotificationService {
       final status = await Permission.notification.request();
       _logger.i('Permission handler request result: $status');
 
-      // For Android 12+, also request exact alarm permission
-      if (status.isGranted) {
-        try {
-          // This will open system settings for exact alarms on Android 12+
-          await _notifications
-              .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin
-              >()
-              ?.requestExactAlarmsPermission();
-        } catch (e) {
-          _logger.w('Could not request exact alarm permission: $e');
-        }
-      }
-
+      // Reminders use inexact alarms (a few minutes of drift is fine for a
+      // concert or rehearsal reminder), so no exact-alarm permission is asked.
       return status.isGranted;
     } catch (e) {
       _logger.e('Error requesting notification permissions: $e');
@@ -532,7 +520,9 @@ class NotificationService {
     String? payload,
   }) async {
     try {
-      // Use exact scheduling for reliability when app is killed (Doze mode)
+      // Inexact scheduling (owner decision 23): reminders may arrive a few
+      // minutes late in Doze, which needs no SCHEDULE_EXACT_ALARM permission
+      // and no Play Console declaration.
       await _notifications.zonedSchedule(
         id,
         title,
@@ -559,7 +549,7 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: payload,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,
@@ -1649,7 +1639,7 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: 'test_scheduled_$testNotificationId',
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,

@@ -71,6 +71,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
         backgroundColor: theme.colorScheme.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Retour',
           onPressed: () {
             HapticFeedback.lightImpact();
             context.pop();
@@ -86,6 +87,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_outlined),
+            tooltip: 'Déconnexion',
             onPressed: () async {
               HapticFeedback.lightImpact();
               try {
@@ -159,20 +161,33 @@ class _TabBar extends StatelessWidget {
                         alpha: 0.5,
                       ),
                 borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  onTap: () => onTap(i),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      tabs[i],
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onSurfaceVariant,
+                child: Semantics(
+                  button: true,
+                  selected: isSelected,
+                  label: tabs[i],
+                  child: InkWell(
+                    onTap: () => onTap(i),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      // 48 dp target.
+                      constraints: const BoxConstraints(minHeight: 48),
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 4,
+                      ),
+                      child: ExcludeSemantics(
+                        child: Text(
+                          tabs[i],
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -571,26 +586,46 @@ class _ArchiveSection extends StatelessWidget {
           const SizedBox(height: 16),
           child,
           if (driveLink != null) ...[
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _launchUrl(driveLink!),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.open_in_new,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Voir toutes les archives',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: theme.colorScheme.primary,
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Semantics(
+                link: true,
+                label: 'Voir toutes les archives sur le Drive',
+                child: InkWell(
+                  onTap: () => _launchUrl(driveLink!),
+                  borderRadius: BorderRadius.circular(8),
+                  child: ConstrainedBox(
+                    // Was a bare GestureDetector ~20 dp tall; 48 dp target now.
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ExcludeSemantics(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.open_in_new,
+                              size: 16,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Voir toutes les archives',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ],

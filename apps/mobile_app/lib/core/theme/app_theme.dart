@@ -15,6 +15,19 @@ class AppTheme {
   static const Color lightWarning = Color(0xFFFF9800);
   static const Color lightBorder = Color(0xFFE0E0E0);
 
+  // Feedback text on the pastel feedback backgrounds below (toasts, badges).
+  // The 500/600 steps used before were 2.2–3.3:1; these are the next darker
+  // steps of the same Material hues, measured against their backgrounds:
+  //  - successText on successBackground: 4.56:1 (on white 5.13:1)
+  //  - errorText on errorBackground: 4.92:1 (on white 5.62:1)
+  //  - warningText on warningBackground: 5.11:1 (on white 5.60:1)
+  static const Color successBackground = Color(0xFFE8F5E9); // green 50
+  static const Color successText = Color(0xFF2E7D32); // green 800
+  static const Color errorBackground = Color(0xFFFFEBEE); // red 50
+  static const Color errorText = Color(0xFFC62828); // red 800
+  static const Color warningBackground = Color(0xFFFFF3E0); // orange 50
+  static const Color warningText = Color(0xFFBF360C); // deep orange 900
+
   // Dark theme colors
   static const Color darkBackground = Color(0xFF181C1F);
   static const Color darkSurface = Color(0xFF23272A);

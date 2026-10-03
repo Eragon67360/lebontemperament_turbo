@@ -84,6 +84,7 @@ class DeveloperModeScreen extends ConsumerWidget {
         surfaceTintColor: theme.colorScheme.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Retour',
           onPressed: () => context.pop(),
         ),
         title: Text(

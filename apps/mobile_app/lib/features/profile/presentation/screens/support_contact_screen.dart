@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/constants/support_constants.dart';
@@ -84,7 +85,8 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Votre demande a bien été envoyée.'),
-              backgroundColor: Colors.green,
+              // green 800: white on Colors.green was 2.8:1.
+              backgroundColor: AppTheme.successText,
             ),
           );
           _messageController.clear();
@@ -136,6 +138,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
             surfaceTintColor: theme.colorScheme.surface,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              tooltip: 'Retour',
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(

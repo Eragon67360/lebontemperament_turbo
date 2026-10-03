@@ -161,7 +161,9 @@ class _FrostedGlassNavBar extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
             child: Container(
-              height: 70, // Fixed height for the nav bar
+              // 70 at the default text size; grows with large text instead
+              // of clipping the selected label.
+              constraints: const BoxConstraints(minHeight: 70),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.8),
                 border: Border.all(
@@ -212,51 +214,59 @@ class _NavBarItem extends StatelessWidget {
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
+    // Unselected tabs show no text, so the accessible name comes from here
+    // (TalkBack / VoiceOver read "Accueil, onglet, sélectionné").
     return Expanded(
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          // CORRECTED: Reduced vertical padding to give contents more space.
-          padding: const EdgeInsets.symmetric(vertical: 6.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            // CORRECTED: mainAxisSize.min ensures the column is only as tall as its children,
-            // which helps the parent center it correctly.
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isSelected ? filledIcon : outlinedIcon,
-                color: color,
-                size: 24,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: ExcludeSemantics(
+            child: Padding(
+              // Reduced vertical padding to give contents more space.
+              padding: const EdgeInsets.symmetric(vertical: 6.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                // mainAxisSize.min keeps the column as tall as its children,
+                // so the parent centers it correctly.
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isSelected ? filledIcon : outlinedIcon,
+                    color: color,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 2),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(scale: animation, child: child),
+                    ),
+                    child: isSelected
+                        ? Text(
+                            label,
+                            key: ValueKey<String>(label),
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            // Prevents the text itself from wrapping
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
               ),
-              // CORRECTED: Added a small, predictable spacer.
-              const SizedBox(height: 2),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(scale: animation, child: child),
-                ),
-                child: isSelected
-                    ? Text(
-                        label,
-                        key: ValueKey<String>(label),
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        // Prevents the text itself from wrapping
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
+            ),
           ),
         ),
       ),

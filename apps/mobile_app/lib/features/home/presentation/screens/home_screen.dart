@@ -17,7 +17,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
-import '../../../profile/presentation/screens/about_screen.dart';
+
+/// Text scale factor (1.0 at the default size), capped at 2× for layout math.
+double _textScale(BuildContext context) =>
+    MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 2.0);
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -95,32 +98,39 @@ class _WelcomeHeader extends ConsumerWidget {
                     width: 2,
                   ),
                 ),
-                child: ClipOval(
-                  child: photoUrl != null && photoUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: photoUrl,
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => _buildInitialsAvatar(
-                            theme,
-                            displayName.isNotEmpty
-                                ? displayName[0].toUpperCase()
-                                : '?',
-                          ),
-                          errorWidget: (_, __, ___) => _buildInitialsAvatar(
-                            theme,
-                            displayName.isNotEmpty
-                                ? displayName[0].toUpperCase()
-                                : '?',
-                          ),
-                        )
-                      : _buildInitialsAvatar(
-                          theme,
-                          displayName.isNotEmpty
-                              ? displayName[0].toUpperCase()
-                              : '?',
-                        ),
+                child: Semantics(
+                  label: 'Photo de profil',
+                  image: true,
+                  child: ExcludeSemantics(
+                    child: ClipOval(
+                      child: photoUrl != null && photoUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: photoUrl,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => _buildInitialsAvatar(
+                                theme,
+                                displayName.isNotEmpty
+                                    ? displayName[0].toUpperCase()
+                                    : '?',
+                              ),
+                              errorWidget: (_, __, ___) =>
+                                  _buildInitialsAvatar(
+                                    theme,
+                                    displayName.isNotEmpty
+                                        ? displayName[0].toUpperCase()
+                                        : '?',
+                                  ),
+                            )
+                          : _buildInitialsAvatar(
+                              theme,
+                              displayName.isNotEmpty
+                                  ? displayName[0].toUpperCase()
+                                  : '?',
+                            ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -244,6 +254,9 @@ class _UpcomingEventsSection extends ConsumerWidget {
 
     final nextRehearsals = ref.watch(homeUpcomingRehearsalsProvider);
     final nextConcerts = ref.watch(homeUpcomingConcertsProvider);
+    // Horizontal lists need a fixed height; it grows with the text size so
+    // the cards never clip at 1.3× or 2×.
+    final scale = _textScale(context);
 
     return FadeInUp(
       delay: 300,
@@ -258,7 +271,7 @@ class _UpcomingEventsSection extends ConsumerWidget {
           const SizedBox(height: 12),
           if (nextRehearsals.isNotEmpty)
             SizedBox(
-              height: 165, // Fixed height for scrolling cards
+              height: 165 * scale,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
@@ -289,7 +302,7 @@ class _UpcomingEventsSection extends ConsumerWidget {
           const SizedBox(height: 12),
           if (nextConcerts.isNotEmpty)
             SizedBox(
-              height: 155, // Slightly taller for concerts
+              height: 155 * scale,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
@@ -633,15 +646,18 @@ class _DateBadge extends StatelessWidget {
       'Déc',
     ];
 
+    // 48×48 at the default text size; grows with large text instead of
+    // clipping the day number.
     return Container(
-      width: 48,
-      height: 48,
+      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             date.day.toString(),
@@ -803,13 +819,15 @@ class _MembresGrid extends ConsumerWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final crossAxisCount = constraints.maxWidth > 500 ? 3 : 2;
+          // Cells get taller with large text so a wrapped title still fits.
+          final scale = _textScale(context);
           return GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: crossAxisCount,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 1.3,
+            childAspectRatio: 1.3 / scale,
             children: [
               _MembresBentoCard(
                 icon: Icons.library_music_rounded,
@@ -853,7 +871,14 @@ class _MembresGrid extends ConsumerWidget {
                 colorIndex: 4,
                 onTap: () async {
                   HapticFeedback.lightImpact();
-                  final uri = Uri.parse(AppConfig.driveFolderMain);
+                  // The root folder is configured in `drive_folders`; the
+                  // `.env` value is only the fallback.
+                  final catalog = await ref.read(
+                    driveFolderCatalogProvider.future,
+                  );
+                  final uri = Uri.parse(
+                    catalog.rootUrl ?? AppConfig.driveFolderMain,
+                  );
                   try {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   } catch (_) {
@@ -908,46 +933,59 @@ class _MembresBentoCard extends StatelessWidget {
     final bgColor = colors[colorIndex % colors.length];
     final fgColor = onColors[colorIndex % onColors.length];
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.1),
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.shadow.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+    return Semantics(
+      button: true,
+      label: title,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: ExcludeSemantics(
+          child: Container(
+            decoration: BoxDecoration(
+              color: bgColor.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.shadow.withValues(
+                          alpha: 0.05,
+                        ),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Icon(icon, size: 28, color: fgColor),
+                  child: Icon(icon, size: 28, color: fgColor),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1028,47 +1066,61 @@ class _BetaNoticeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // The whole card is the target (the old 50×30 "Contacter" button was
+    // below the 48 dp minimum); "Contacter" stays as the visual affordance.
     return FadeInUp(
       delay: 500,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
+      child: Semantics(
+        button: true,
+        label: 'Version bêta : signaler un bug, contacter par e-mail',
+        child: Material(
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          child: InkWell(
+            onTap: () => _launchEmail(context),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                ),
+              ),
+              child: ExcludeSemantics(
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.science,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Version Bêta - Signaler un bug',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Contacter',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.science, size: 16, color: theme.colorScheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Version Bêta - Signaler un bug',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => _launchEmail(context),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(50, 30),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                'Contacter',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

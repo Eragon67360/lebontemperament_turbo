@@ -417,6 +417,11 @@ class _ConcertCard extends StatelessWidget {
       } catch (_) {}
     }
 
+    // The date column is 55 wide at the default text size and grows with
+    // large text so "31" at 2× doesn't overflow.
+    final dateWidth =
+        55 * MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 2.0);
+
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: InkWell(
@@ -440,11 +445,13 @@ class _ConcertCard extends StatelessWidget {
             children: [
               // --- Date Section ---
               SizedBox(
-                width: 55,
+                width: dateWidth,
                 child: Column(
                   children: [
                     Text(
                       month,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.poppins(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
@@ -454,6 +461,7 @@ class _ConcertCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       day,
+                      maxLines: 1,
                       style: GoogleFonts.poppins(
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
