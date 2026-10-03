@@ -1,6 +1,7 @@
 "use client";
 
 import { DensityProvider } from "@/components/DensityProvider";
+import { Toaster } from "@/components/ui/sonner";
 import { queryClient } from "@/lib/query-client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -30,6 +31,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <DensityProvider>
         <QueryClientProvider client={queryClient}>
           <AnimatePresence mode="wait">{children}</AnimatePresence>
+          {/* Inside ThemeProvider so toasts follow the app's theme. */}
+          <Toaster position="top-right" richColors />
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </DensityProvider>
