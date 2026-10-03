@@ -62,22 +62,12 @@ const NavigationItem = ({
       <div className="flex-1 text-center md:text-left">
         <h3
           className={`mb-2 text-2xl font-medium transition-colors duration-500 sm:text-3xl ${
-            isActive
-              ? "text-slate-900 dark:text-white"
-              : "text-slate-500 dark:text-slate-400"
+            isActive ? "text-foreground" : "text-muted"
           }`}
         >
           {card.title}
         </h3>
-        <p
-          className={`font-light transition-colors duration-500 ${
-            isActive
-              ? "text-slate-500 dark:text-slate-400"
-              : "text-slate-400 dark:text-slate-500"
-          }`}
-        >
-          {card.description}
-        </p>
+        <p className="text-muted font-light">{card.description}</p>
         {/* grid-rows collapse: reveals the CTA without animating height */}
         <div
           className={`grid transition-[grid-template-rows,margin] duration-400 ease-out ${
@@ -102,7 +92,7 @@ const NavigationItem = ({
 
       {/* Right side: Visual Icon Card */}
       <motion.div className="group/iconcard flex shrink-0 items-center justify-center p-4 md:w-1/3">
-        <div className="relative rounded-xl border border-slate-200/80 bg-white/30 p-8 backdrop-blur-md transition-all duration-300 group-hover/iconcard:-translate-y-1 group-hover/iconcard:border-slate-300/80 group-hover/iconcard:shadow-lg dark:border-slate-800/50 dark:bg-slate-900/30 dark:group-hover/iconcard:border-slate-700/80">
+        <div className="border-separator bg-surface-secondary/30 group-hover/iconcard:border-muted/40 relative rounded-xl border p-8 backdrop-blur-md transition-all duration-300 group-hover/iconcard:-translate-y-1 group-hover/iconcard:shadow-lg">
           <IconComponent className="text-primary text-5xl transition-transform duration-300 group-hover/iconcard:scale-110" />
         </div>
       </motion.div>
@@ -155,7 +145,7 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
     <section
       id="anniversary-navigation"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
       <motion.div
         style={{ y }}
@@ -169,10 +159,10 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
           transition={{ duration: 0.6 }}
           className="mb-16 text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
+          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Explorez Notre Célébration
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
             Faites défiler pour découvrir 40 ans d'histoire à travers différents
             médias et témoignages.
           </p>

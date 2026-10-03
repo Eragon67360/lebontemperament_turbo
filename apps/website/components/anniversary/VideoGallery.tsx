@@ -35,7 +35,7 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
     <section
       id="videos"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
       <div className="absolute inset-0 z-0">
         <div className="bg-primary/5 absolute top-1/4 left-0 h-125 w-125 rounded-full blur-[100px]" />
@@ -48,10 +48,10 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
+          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Galerie Vidéo
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
             Revivez nos concerts, témoignages et moments mémorables en vidéo.
           </p>
         </motion.div>
@@ -60,7 +60,7 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full bg-slate-200/50 p-1 dark:bg-slate-800/50"
+          className="bg-surface-secondary/60 mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full p-1"
         >
           {categories.map((category) => (
             <button
@@ -69,13 +69,13 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
               className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${
                 selectedCategory === category
                   ? "text-white"
-                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  : "text-muted hover:text-foreground"
               }`}
             >
               {selectedCategory === category && (
                 <motion.div
                   layoutId="video-category-pill"
-                  className="bg-primary absolute inset-0 -z-10 rounded-full"
+                  className="bg-primary-600 dark:bg-primary-700 absolute inset-0 -z-10 rounded-full"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
@@ -112,7 +112,7 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
                   }
                 }}
                 aria-label={`Lire la vidéo ${video.title}`}
-                className="group focus-visible:outline-primary relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-all duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98] dark:border-slate-800/50 dark:bg-slate-900/30"
+                className="group focus-visible:outline-primary border-separator bg-surface-secondary/30 relative cursor-pointer overflow-hidden rounded-xl border backdrop-blur-md transition-all duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98]"
               >
                 <div className="relative aspect-video overflow-hidden">
                   <CloudinaryImage
@@ -132,10 +132,10 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
                 </div>
 
                 <div className="p-4 sm:p-5">
-                  <p className="text-primary mb-2 text-xs font-semibold tracking-wider uppercase">
+                  <p className="text-primary-text mb-2 text-xs font-semibold tracking-wider uppercase">
                     {video.category}
                   </p>
-                  <h3 className="mb-2 text-lg font-medium text-slate-900 dark:text-white">
+                  <h3 className="text-foreground mb-2 text-lg font-medium">
                     {video.title}
                   </h3>
                 </div>

@@ -80,10 +80,14 @@ export interface FormConfig {
   is_enabled: boolean;
 }
 
+/**
+ * A featured memory as visitors see it. The author's email stays in the
+ * database for the admin's moderation screens and never reaches the website
+ * (see `lib/anniversaryMemories.ts`).
+ */
 export interface Memory {
   id: string;
   name: string;
-  email: string;
   message: string;
   year: number | null;
   is_featured: boolean;

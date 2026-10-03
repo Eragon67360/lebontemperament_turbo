@@ -442,7 +442,7 @@ const AnniversaryLanding = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
-          className="relative min-h-screen overflow-hidden bg-slate-50 pt-20 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
+          className="bg-background text-foreground relative min-h-screen overflow-hidden pt-20"
         >
           <div className="absolute inset-0 z-0">
             <motion.div
@@ -498,7 +498,7 @@ const AnniversaryLanding = ({
           >
             <motion.div variants={fadeInUp}>
               <div className="relative mx-auto mb-8 inline-block">
-                <div className="from-primary/10 to-primary/5 absolute inset-0 -z-10 rounded-3xl bg-linear-to-br backdrop-blur-lg dark:from-slate-800 dark:to-slate-900" />
+                <div className="from-primary/10 to-primary/5 dark:from-surface-tertiary dark:to-background absolute inset-0 -z-10 rounded-3xl bg-linear-to-br backdrop-blur-lg" />
                 <div
                   className="absolute inset-0 -z-10 rounded-3xl opacity-50"
                   style={{
@@ -511,11 +511,11 @@ const AnniversaryLanding = ({
                 </h1>
               </div>
 
-              <p className="mx-auto mt-6 max-w-3xl text-xl font-light text-slate-500 md:text-2xl dark:text-slate-400">
+              <p className="text-muted mx-auto mt-6 max-w-3xl text-xl font-light md:text-2xl">
                 {hero.hero_subtitle}
               </p>
               {hero.description && (
-                <p className="mx-auto mt-4 max-w-2xl text-base font-light text-slate-400 dark:text-slate-500">
+                <p className="text-muted mx-auto mt-4 max-w-2xl text-base font-light">
                   {hero.description}
                 </p>
               )}
@@ -532,7 +532,7 @@ const AnniversaryLanding = ({
                     key={stat.id}
                     whileHover={shouldReduceMotion ? {} : { y: -5 }}
                     transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-                    className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md transition-all duration-300 hover:border-slate-300/80 sm:p-5 dark:border-slate-800/50 dark:bg-slate-900/30 dark:hover:border-slate-700/80"
+                    className="group border-separator bg-surface-secondary/30 hover:border-muted/40 relative overflow-hidden rounded-xl border p-4 backdrop-blur-md transition-all duration-300 sm:p-5"
                   >
                     <div
                       className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -546,10 +546,10 @@ const AnniversaryLanding = ({
                         <IconComponent className="text-xl" />
                       </div>
                       <div>
-                        <p className="text-2xl font-semibold text-slate-800 dark:text-white">
+                        <p className="text-foreground text-2xl font-semibold">
                           {stat.number}
                         </p>
-                        <p className="text-sm font-light text-slate-500 dark:text-slate-400">
+                        <p className="text-muted text-sm font-light">
                           {stat.label}
                         </p>
                       </div>
