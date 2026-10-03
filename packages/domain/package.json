@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.19.0",
     "typescript": "^7.0.2"
   }
 }
