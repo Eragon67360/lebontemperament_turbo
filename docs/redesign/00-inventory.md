@@ -2,6 +2,8 @@
 
 Phase 0 of the admin redesign (#433). Read-only: no application file changes in this phase. Base: `origin/dev` at `a3110c0` (after #345 moved the admin list screens to TanStack Query), crawled on 2026-10-03.
 
+**Revision 2 (2026-10-03).** The owner answered the Phase 0 questions and widened the scope to functional changes (#433). Sections c and d are rewritten, and a new section e covers the member-roster and Drive syncs. Sections a and b are unchanged.
+
 **How this was produced.** Three read-only crawls of `apps/admin`, each with a partitioned scope:
 
 - public site and 40 years campaign screens;
@@ -16,8 +18,9 @@ The lead then merged their findings and wrote the audit synthesis, jobs and IA. 
 
 - [a) Feature inventory](#a-feature-inventory): shell and navigation, every screen and affordance with the API call it makes, the 104 API handlers, design system, data layer
 - [b) UX audit](#b-ux-audit)
-- [c) Inferred jobs-to-be-done](#c-inferred-jobs-to-be-done)
+- [c) Jobs-to-be-done](#c-jobs-to-be-done), confirmed by the owner
 - [d) Proposed information architecture](#d-proposed-information-architecture): navigation tree and before/after mapping
+- [e) The two syncs: today and target](#e-the-two-syncs-today-and-target): member roster and Google Drive programmes
 
 **At a glance (measured):**
 
@@ -1179,25 +1182,29 @@ Severity per the audit playbook. Each is **measured** unless marked.
 
 ---
 
-## c) Inferred jobs-to-be-done
+## c) Jobs-to-be-done
 
-Deduced from the navigation, the route structure, the handlers and what each screen writes. Confidence is how sure the code makes me; the questions are what I need from the owner.
+First inferred from the code, then confirmed and corrected by the owner on 2026-10-03 (answers recorded on #433).
 
-| #   | Job (in the admins' words)                                                                                                                                                                | Screens today                                                                                | Frequency (estimated)                          | Confidence                                              |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------- |
-| J1  | **"Keep our concerts and what the public sees up to date"** — announce a concert or a tour, publish a concert story, add a video                                                          | Prochains concerts, Projets (+ preview, migration), Galerie vidéos                           | Monthly, peaks before concerts                 | High                                                    |
-| J2  | **"Organise the members' season"** — rehearsals (some synced from Google Calendar), members' events, work materials (Drive folders, programmes → groups → files)                          | Répétitions, Événements, Espace de travail (+ programme and group pages), the home dashboard | Weekly                                         | High                                                    |
-| J3  | **"Manage who's in and what they can do"** — onboard (sync with the Excel roster, invite, create), adjust roles, offboard, check the mailing list                                         | Utilisateurs (+ six dialogs), Groupes Google                                                 | A few times a season, but irreversible actions | High                                                    |
-| J4  | **"Run the 40 years campaign page"** — build its content (hero, figures, navigation cards, timeline, videos, audio, photos, archives), configure and moderate submitted memories, publish | The 11 Campagne 40 ans screens                                                               | Bursts; time-bound                             | Medium (is the campaign still ahead, and for how long?) |
-| J5  | **"Keep the association's records and get help"** — file board minutes, report a problem, follow up bug reports                                                                           | Conseil d'administration, Messages, Signaler un problème, Rapports de bugs                   | Occasional                                     | Medium                                                  |
+**Who uses the admin.** The association's **communication commission**, about 10 people out of more than 120 users. They are occasional users, focused on content. Most members never open the admin; they use the website's members area and the mobile app.
 
-**Questions for the owner**
+| #   | Job (in the admins' words)                                                                                                                                                                                                    | Screens today                                                              | Frequency                                                 | Owner input                                                                                    |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| J1  | **"Keep our concerts and what the public sees up to date"**: announce a concert or a tour, publish a concert story, add a video                                                                                               | Prochains concerts, Projets (+ preview, migration), Galerie vidéos         | Monthly, with peaks before concerts                       | Past concerts must stay reachable, but **in a separate view or tab**                           |
+| J2  | **"Prepare the members' season"**: rehearsals (some synced from Google Calendar), members' events, and above all **programmes and their documents, which are created in Google Drive and synced from the admin**              | Répétitions, Événements, Espace de travail, the home                       | Weekly. Programmes are the members' **most used feature** | The Drive sync is the main action of this job; past events and rehearsals go in a separate tab |
+| J3  | **"Keep the member list in step with the association's roster"**: the Excel roster is the **source of truth**; the sync invites newcomers, updates details, and handles people who left                                       | Utilisateurs (+ six dialogs), Groupes Google                               | A few times a season; irreversible actions                | The sync exists for this, but has **many gaps and broken functions**                           |
+| J4  | **"Prepare and publish the 40 years page"**: build its content (hero, figures, navigation cards, timeline, videos, audio, photos, archives), set up and moderate the memory submissions, **publish at the beginning of 2027** | The 11 Campagne 40 ans screens                                             | Steady until launch, then moderation                      | **Very important**; publication early 2027                                                     |
+| J5  | **"Keep the association's records and get help"**: file board minutes, report a problem, follow up bug reports                                                                                                                | Conseil d'administration, Messages, Signaler un problème, Rapports de bugs | Occasional                                                | —                                                                                              |
 
-1. Who uses the admin besides you, and for which jobs? (e.g. board members for J5, section leads for J2, the anniversary team for J4.) This decides what the home screen surfaces first.
-2. Is the 40 years campaign still to be published, and until when? If it's a one-off, it should live under "Campagnes" and fade out afterwards rather than shape the main navigation.
-3. Should past concerts, events and rehearsals be visible (and correctable) in the admin, or is "upcoming only" deliberate?
-4. Where are programmes and groups for the work materials created today (by hand in the database)? Should the admin do it?
-5. Is the Excel roster the source of truth for members (so the sync is a core step of J3), or a migration aid?
+**Scope.** The owner allows every function that needs it to change, not only the look (#433). The redesign therefore includes the functional fixes in section e and the "past" views. Security boundaries can only get stricter, and production data changes still go through the owner.
+
+**Questions still open** (they shape phases 3–4, not Phase 1):
+
+1. **Drive structure:** is it root → programme → group, or root → group → programme? Is it a personal Google Drive or a shared drive (Workspace)?
+2. **Members who leave:** deactivate them (hidden, reversible) or delete them? How long are their data kept?
+3. **Field ownership:** which fields does the roster own, and which does a member edit themselves (mobile phone, voice part)? This is decided together with #350.
+4. **Who can sync:** can every commission member run the member sync and the removals, or only a superadmin?
+5. **Old work files:** what happens to the files uploaded to the admin's old "Espace de travail" storage (members never saw them): move them to Drive, or delete them?
 
 ### Evidence: workflows seen in the screens
 
@@ -1229,76 +1236,212 @@ Deduced from the navigation, the route structure, the handlers and what each scr
 
 ## d) Proposed information architecture
 
-**Constraint**: every route path is frozen (deep links, bookmarks, e2e). So the IA changes the **navigation grouping and labels, page headers, breadcrumbs and the home screen** — never a URL. Breadcrumbs follow the new navigation labels; URLs keep their current segments.
+**Constraint.** Every existing route path stays: deep links, bookmarks and the e2e tests depend on them. The IA changes the **navigation grouping and labels, the page headers, the breadcrumbs and the home screen**. It adds **two new routes** (marked _new_), both of which need the owner's approval. Breadcrumbs follow the new navigation labels, while URLs keep their current segments.
 
-**Principles**: one section per job (J1–J5), named in plain French; one accent colour for the whole app (section identity by label and icon, not hue); the home screen becomes a hub ("à faire" + "à venir" + one shortcut per job); one-off or contextual screens leave the navigation and are reached from the page they belong to; the campaign is a secondary, collapsible section.
+**Principles:**
+
+- One section per job, named in plain French.
+- One accent colour for the whole app: sections are identified by label and icon, not by colour.
+- The home screen becomes a hub with three parts: what needs doing, what's coming, and one shortcut per job.
+- Lists split **"À venir" and "Passés"** into tabs; the past is reachable but never mixed in.
+- The two syncs (Drive and roster) become pages that **show what will change before anything is written**.
+- One-off or contextual screens leave the navigation and are reached from the page they belong to.
+- The campaign is a **primary** section until it's published early 2027. After that it moves under "Archives des campagnes" (a later decision).
 
 ### d.1 Proposed navigation tree
 
-1. **Accueil** — `/dashboard`: what needs attention (memories awaiting moderation, unread messages, pending invitations), what's coming (next rehearsals, events, concerts), one shortcut per job.
-2. **Saison des membres** (J2)
-   - Répétitions — `/dashboard/members/repetitions`
-   - Événements — `/dashboard/members/evenements`
-   - Partitions et documents — `/dashboard/members/travail` (programme and group pages nested below it, reached from it)
+1. **Accueil** (`/dashboard`):
+   - **À faire:** memories to moderate, unread messages, pending invitations, last sync results (Drive, roster) with their errors.
+   - **À venir:** next rehearsals, events and concerts.
+   - **Campagne 40 ans, publication readiness:** content per section, items hidden or awaiting moderation.
+   - One shortcut per job.
+2. **Campagne 40 ans** (J4, primary until launch)
+   - Vue d'ensemble et publication (`/dashboard/admin/anniversary`): a readiness checklist per section, a preview link, and a **deliberate publication step** (confirmation that names the effect, and who and when it was published).
+   - Contenu: En-tête de la page, Chiffres clés, Cartes de navigation, Chronologie, Vidéos, Souvenirs audio, Photos, Archives.
+   - Témoignages: Formulaire, Modération.
 3. **Concerts et site public** (J1)
-   - Concerts et tournées — `/dashboard/public/concerts/prochains-concerts`
-   - Histoires de concerts — `/dashboard/public/concerts/projets` (preview reached per story; migration moved to a "Plus" menu in this page's header)
-   - Vidéos — `/dashboard/public/gallery/videos`
-4. **Membres et accès** (J3)
-   - Membres — `/dashboard/admin/users` (one primary action "Inviter des membres"; "Synchroniser avec le tableau Excel" and "Créer un compte" as secondary actions)
-   - Liste de diffusion — `/dashboard/admin/google-groups`
-5. **Association** (J5)
-   - Comptes rendus du CA — `/dashboard/admin/ca`
-   - Signalements — `/dashboard/admin/bug-reports` (superadmin, as today)
-6. **Campagne 40 ans** (J4, secondary, collapsed)
-   - Vue d'ensemble et publication — `/dashboard/admin/anniversary`
-   - Contenu: En-tête de la page (hero), Chiffres clés (stats), Cartes de navigation, Chronologie, Vidéos, Souvenirs audio, Photos, Archives
-   - Témoignages: Formulaire, Modération
+   - Concerts et tournées (`…/prochains-concerts`): tabs **À venir / Passés**. Past concerts can be corrected.
+   - Histoires de concerts (`…/projets`): preview per story; the one-off migration moves to a "Plus" menu.
+   - Vidéos (`…/gallery/videos`), with an ordering control.
+4. **Saison des membres** (J2)
+   - **Partitions et documents** (`/dashboard/members/travail`). Main action: **"Synchroniser depuis Drive"** (section e.2). It shows the programmes → groups → documents as members see them, with "Ouvrir" on every document.
+   - Répétitions: tabs **À venir / Passées**.
+   - Événements: tabs **À venir / Passés**.
+5. **Membres et accès** (J3)
+   - Membres (`/dashboard/admin/users`). Main action: **"Synchroniser avec la liste des membres"**, which opens the review page; "Inviter" and "Créer un compte" are secondary.
+   - _New:_ Synchronisation de la liste (`/dashboard/admin/users/sync`): the reviewed diff (section e.1), reached from Membres.
+   - Liste de diffusion (`/dashboard/admin/google-groups`).
+6. **Association** (J5)
+   - Comptes rendus du CA (`/dashboard/admin/ca`), now editable.
+   - Signalements (`/dashboard/admin/bug-reports`): superadmin only, now gated by its route (#440).
 
-**Header (all pages)**: breadcrumb joined to the page title; account menu with "Signaler un problème", "Messages" (moved out of the navigation list, with its unread badge on the menu button), theme toggle and sign-out.
+**Header (all pages):** the breadcrumb joined to the page title, and an account menu with "Signaler un problème", "Messages" (moved out of the navigation, with its unread badge on the menu button), a theme toggle and sign-out.
 
 ### d.2 Before/after mapping (no screen orphaned)
 
-| Today: nav label (section)                    | Route (unchanged)                                              | Proposed: section › label                                        | Reached from     |
-| --------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------- |
-| Tableau de bord (Général)                     | `/dashboard`                                                   | Accueil                                                          | navigation       |
-| Messages (Général, dialog)                    | — (dialog)                                                     | Header › account menu › Messages                                 | header (badge)   |
-| Signaler un problème (account menu, dialog)   | — (dialog)                                                     | Header › account menu › Signaler un problème                     | header           |
-| Prochains concerts (Site public)              | `/dashboard/public/concerts/prochains-concerts`                | Concerts et site public › Concerts et tournées                   | navigation       |
-| Projets (Site public)                         | `/dashboard/public/concerts/projets`                           | Concerts et site public › Histoires de concerts                  | navigation       |
-| — (link in Projets)                           | `/dashboard/public/concerts/projets/migrate`                   | Histoires de concerts › "Plus" › Importer l'ancien fichier       | page header menu |
-| — (link per project)                          | `/dashboard/public/concerts/projets/preview/[slug]`            | Histoires de concerts › Aperçu                                   | each story       |
-| Galerie vidéos (Site public)                  | `/dashboard/public/gallery/videos`                             | Concerts et site public › Vidéos                                 | navigation       |
-| Répétitions (Espace membres)                  | `/dashboard/members/repetitions`                               | Saison des membres › Répétitions                                 | navigation       |
-| Événements (Espace membres)                   | `/dashboard/members/evenements`                                | Saison des membres › Événements                                  | navigation       |
-| Espace de travail (Espace membres)            | `/dashboard/members/travail`                                   | Saison des membres › Partitions et documents                     | navigation       |
-| — (programme card)                            | `/dashboard/members/travail/[programId]`                       | Partitions et documents › programme                              | programme list   |
-| — (group card)                                | `/dashboard/members/travail/[programId]/[groupSlug]`           | … › programme › groupe                                           | group list       |
-| Utilisateurs (Administration)                 | `/dashboard/admin/users`                                       | Membres et accès › Membres                                       | navigation       |
-| Groupes Google (Administration)               | `/dashboard/admin/google-groups`                               | Membres et accès › Liste de diffusion                            | navigation       |
-| Conseil d'administration (Administration)     | `/dashboard/admin/ca`                                          | Association › Comptes rendus du CA                               | navigation       |
-| Rapports de bugs (Administration, superadmin) | `/dashboard/admin/bug-reports`                                 | Association › Signalements (superadmin)                          | navigation       |
-| Gestion de la page (Campagne 40 ans)          | `/dashboard/admin/anniversary`                                 | Campagne 40 ans › Vue d'ensemble et publication                  | navigation       |
-| Section Hero                                  | `…/anniversary/hero`                                           | Campagne 40 ans › Contenu › En-tête de la page                   | navigation       |
-| Statistiques Hero                             | `…/anniversary/hero-stats`                                     | Campagne 40 ans › Contenu › Chiffres clés                        | navigation       |
-| Cartes de navigation                          | `…/anniversary/navigation`                                     | Campagne 40 ans › Contenu › Cartes de navigation                 | navigation       |
-| Chronologie                                   | `…/anniversary/timeline`                                       | Campagne 40 ans › Contenu › Chronologie                          | navigation       |
-| Galerie vidéo                                 | `…/anniversary/videos`                                         | Campagne 40 ans › Contenu › Vidéos                               | navigation       |
-| Mémoires audio                                | `…/anniversary/audio`                                          | Campagne 40 ans › Contenu › Souvenirs audio                      | navigation       |
-| Collection photos                             | `…/anniversary/photos`                                         | Campagne 40 ans › Contenu › Photos                               | navigation       |
-| Archives publiques                            | `…/anniversary/archives`                                       | Campagne 40 ans › Contenu › Archives                             | navigation       |
-| Configuration formulaire                      | `…/anniversary/form`                                           | Campagne 40 ans › Témoignages › Formulaire                       | navigation       |
-| Modération témoignages                        | `…/anniversary/memories`                                       | Campagne 40 ans › Témoignages › Modération                       | navigation       |
-| — (auth)                                      | `/auth/login`, `/auth/reset-password`, `/auth/update-password` | unchanged (outside the shell; restyled on the system in phase 5) | redirects        |
-| —                                             | `/unauthorized`, `/error`, not-found                           | unchanged routes; on the system, with a way back                 | redirects        |
+| Today: nav label (section)                    | Route                                                          | Proposed: section › label                                         | Reached from               |
+| --------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------- |
+| Tableau de bord (Général)                     | `/dashboard`                                                   | Accueil                                                           | navigation                 |
+| Messages (Général, dialog)                    | — (dialog)                                                     | Header › account menu › Messages                                  | header (badge)             |
+| Signaler un problème (account menu, dialog)   | — (dialog)                                                     | Header › account menu › Signaler un problème                      | header                     |
+| Gestion de la page (Campagne 40 ans)          | `/dashboard/admin/anniversary`                                 | Campagne 40 ans › Vue d'ensemble et publication                   | navigation                 |
+| Section Hero                                  | `…/anniversary/hero`                                           | Campagne 40 ans › Contenu › En-tête de la page                    | navigation                 |
+| Statistiques Hero                             | `…/anniversary/hero-stats`                                     | Campagne 40 ans › Contenu › Chiffres clés                         | navigation                 |
+| Cartes de navigation                          | `…/anniversary/navigation`                                     | Campagne 40 ans › Contenu › Cartes de navigation                  | navigation                 |
+| Chronologie                                   | `…/anniversary/timeline`                                       | Campagne 40 ans › Contenu › Chronologie                           | navigation                 |
+| Galerie vidéo                                 | `…/anniversary/videos`                                         | Campagne 40 ans › Contenu › Vidéos                                | navigation                 |
+| Mémoires audio                                | `…/anniversary/audio`                                          | Campagne 40 ans › Contenu › Souvenirs audio                       | navigation                 |
+| Collection photos                             | `…/anniversary/photos`                                         | Campagne 40 ans › Contenu › Photos                                | navigation                 |
+| Archives publiques                            | `…/anniversary/archives`                                       | Campagne 40 ans › Contenu › Archives                              | navigation                 |
+| Configuration formulaire                      | `…/anniversary/form`                                           | Campagne 40 ans › Témoignages › Formulaire                        | navigation                 |
+| Modération témoignages                        | `…/anniversary/memories`                                       | Campagne 40 ans › Témoignages › Modération                        | navigation, home "À faire" |
+| Prochains concerts (Site public)              | `/dashboard/public/concerts/prochains-concerts`                | Concerts et site public › Concerts et tournées (À venir / Passés) | navigation                 |
+| Projets (Site public)                         | `/dashboard/public/concerts/projets`                           | Concerts et site public › Histoires de concerts                   | navigation                 |
+| — (link in Projets)                           | `/dashboard/public/concerts/projets/migrate`                   | Histoires de concerts › "Plus" › Importer l'ancien fichier        | page header menu           |
+| — (link per project)                          | `/dashboard/public/concerts/projets/preview/[slug]`            | Histoires de concerts › Aperçu                                    | each story                 |
+| Galerie vidéos (Site public)                  | `/dashboard/public/gallery/videos`                             | Concerts et site public › Vidéos                                  | navigation                 |
+| Espace de travail (Espace membres)            | `/dashboard/members/travail`                                   | Saison des membres › Partitions et documents (Drive sync)         | navigation                 |
+| — (programme card)                            | `/dashboard/members/travail/[programId]`                       | Partitions et documents › programme                               | programme list             |
+| — (group card)                                | `/dashboard/members/travail/[programId]/[groupSlug]`           | … › programme › groupe                                            | group list                 |
+| Répétitions (Espace membres)                  | `/dashboard/members/repetitions`                               | Saison des membres › Répétitions (À venir / Passées)              | navigation                 |
+| Événements (Espace membres)                   | `/dashboard/members/evenements`                                | Saison des membres › Événements (À venir / Passés)                | navigation                 |
+| Utilisateurs (Administration)                 | `/dashboard/admin/users`                                       | Membres et accès › Membres                                        | navigation                 |
+| — (sync dialog today)                         | _new_ `/dashboard/admin/users/sync`                            | Membres et accès › Membres › Synchronisation de la liste          | Membres, home "À faire"    |
+| Groupes Google (Administration)               | `/dashboard/admin/google-groups`                               | Membres et accès › Liste de diffusion                             | navigation                 |
+| Conseil d'administration (Administration)     | `/dashboard/admin/ca`                                          | Association › Comptes rendus du CA                                | navigation                 |
+| Rapports de bugs (Administration, superadmin) | `/dashboard/admin/bug-reports`                                 | Association › Signalements (superadmin)                           | navigation                 |
+| — (auth)                                      | `/auth/login`, `/auth/reset-password`, `/auth/update-password` | unchanged (outside the shell; restyled in phase 5)                | redirects                  |
+| —                                             | `/unauthorized`, `/error`, not-found                           | unchanged routes; on the system, with a way back                  | redirects                  |
 
-All 32 pages and both shell dialogs are mapped; none is removed or left without an entry point. Routing-only segments (`/dashboard/admin`, …) keep answering "not found" (adding index pages there would be a route change: not proposed).
+All 32 pages and both shell dialogs are mapped; none is removed or left without an entry point. The only addition is the sync review page; the Drive sync's review fits inside "Partitions et documents" (a second route would be optional). Routing-only segments (`/dashboard/admin`, …) keep answering "not found".
 
 ### d.3 Risks to watch in later phases (what neither `tsc` nor today's e2e would catch)
 
-- **e2e asserting labels**: `apps/e2e/tests/admin/navigation.spec.ts` and `dashboard.spec.ts` find pages by navigation labels and headings; renaming labels breaks them (expected: update the specs in the same PR, never the routes).
-- **Breadcrumbs are derived from navigation labels** (`BreadcrumbNav.tsx`): changing the tree changes every trail; the dynamic programme name (`useProgramName`) must keep working.
-- **Realtime and polling in the shell**: the users list's Realtime subscription and the Messages/bug-report badge polling live in shell components; moving Messages to the header must keep the badge query alive.
-- **Role-gated entries**: "Signalements" stays superadmin-only in the navigation; the route itself isn't gated (b.10), so a visual-only change must not imply a guard that doesn't exist.
-- **Dialog-mounting order on mobile** (`setTimeout(…, 0)` in `SidebarNav.tsx:151`): moving dialog triggers into a header menu needs the same care, or the sheet closes before the dialog mounts.
-- **Dark mode**: mounting `ThemeProvider` flips every hard-coded `bg-white`/grey surface in dark; phase 2 must sweep shared components before enabling a toggle.
+- **e2e asserts labels.** `apps/e2e/tests/admin/navigation.spec.ts` and `dashboard.spec.ts` find pages by their navigation labels and headings, so renaming breaks them. The specs get updated in the same PR; the routes never change.
+- **Breadcrumbs come from the navigation labels** (`BreadcrumbNav.tsx`). Changing the tree changes every trail, and the dynamic programme name (`useProgramName`) must keep working.
+- **Realtime and polling in the shell.** The users list's Realtime subscription and the Messages and bug-report badge polling live in shell components. Moving Messages into the header must keep the badge query alive.
+- **Dialog mounting on mobile** (`setTimeout(…, 0)` in `SidebarNav.tsx:151`). Moving dialog triggers into a header menu needs the same care, or the sheet closes before the dialog mounts.
+- **Dark mode.** Mounting `ThemeProvider` turns every hard-coded `bg-white` or grey surface wrong in dark mode, so phase 2 must sweep the shared components before enabling a toggle.
+- **The two syncs touch member-facing data.** Their changes reach the website and the mobile app. They need their own tests (pure diff functions in `@repo/domain`) and an e2e against the separate staging project (#363). Installed apps must keep working while the old tables live on (`drive_folders`, `/api/drive/*`).
+
+---
+
+## e) The two syncs: today and target
+
+Both are investigated in depth, read-only. Defects carry file:line evidence and are marked verified or inferred.
+
+### e.1 Member roster → accounts (J3)
+
+**Today.** Three almost identical route files (`app/api/users/sync`, `users/sync-data`, `members/excel`) download the roster at request time and parse it with PapaParse (exact header names, no validation, parse errors ignored). They match roster rows to `profiles` **by lowercased email only**. The dialog then offers:
+
+- invite;
+- bulk delete;
+- a one-click "Synchroniser toutes les données", which overwrites `address`, `home_phone`, `mobile_phone` and `voice` on every matched profile.
+
+Today the sync is the only writer of those four fields; members can't edit them yet (#350 will change that).
+
+| #   | Defect                                                                                  | Failure scenario                                                                                                                                                                                  | Evidence                                                               | Severity                                                     |
+| --- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | Former members with active accounts are never surfaced                                  | Someone who left is removed from the roster, but their account is `approuvé`, so it's excluded from "missing". They keep members-area and app access, and the directory still lists their details | `api/users/sync/route.ts:178-185`, `users/page.tsx:96-107`             | P1 wrong data (verified)                                     |
+| 2   | Bulk delete: no confirmation, sequential, stops midway, hard delete, no log             | The 5th of 12 deletions fails: 4 accounts are already gone for good, and nothing records who deleted whom                                                                                         | `SyncUsersDialog.tsx:141-173`, `api/users/route.ts:248-255`            | P1 data loss (verified)                                      |
+| 3   | "Synchroniser toutes les données": no preview, no confirmation, no log, failures hidden | Four fields overwritten on every matched profile in one click; failed updates are counted as "ignoré"                                                                                             | `SyncUsersDialog.tsx:175-221`, `sync-data/route.ts:71-79, 141-153`     | P1 wrong data (verified)                                     |
+| 4   | No sanity check on the fetched file                                                     | An empty or truncated download parses "successfully": every pending account is offered for deletion                                                                                               | `sync/route.ts:69-82`, `sync-data/route.ts:39-52`                      | P1 data loss via #2 (verified)                               |
+| 5   | Header names must match exactly                                                         | A trailing space or "Adresse e-mail" in the sheet silently empties that column; with no email column, everyone becomes "sans email"                                                               | `sync/route.ts:8-15, 85-94`                                            | P1 wrong data (verified)                                     |
+| 6   | A changed email creates a duplicate account                                             | The new email shows up under "Inviter"; the old account is never flagged (see #1). Result: two profiles for one person                                                                            | `sync/route.ts:170-185`                                                | P1 wrong data (verified)                                     |
+| 7   | The "acceptés à supprimer" section can never fill                                       | The server says `approuvé`; the dialog tests for `accepted`/`accepté`                                                                                                                             | `SyncUsersDialog.tsx:101-107`, `api/users/route.ts:94`                 | P2 confusing (verified)                                      |
+| 8   | Names get mangled                                                                       | The CSV import splits on the first two words: "DE LA FONTAINE Jean" → "LA DE". Sync stores "NOM Prénom" while import stores "Prénom NOM"; names are never re-synced                               | `InviteUsersDialog.tsx:331-334, 347`, `SyncUsersDialog.tsx:950-953`    | P2 wrong data (verified)                                     |
+| 9   | Duplicate emails in the roster aren't merged                                            | A couple sharing one address: the second invitation fails, and the sync silently takes the first row                                                                                              | `sync/route.ts:170-175`, `sync-data/route.ts:98-100`                   | P2 confusing (verified)                                      |
+| 10  | Rows with an email but no name vanish                                                   | They're listed nowhere: not invited, not counted                                                                                                                                                  | `sync/route.ts:86`, `sync-data/route.ts:56-59`                         | P2 wrong data (verified)                                     |
+| 11  | The roster is downloaded on every visit and window focus                                | Constant fetches with no timeout; recent sheet edits may not show for minutes                                                                                                                     | `users/page.tsx:93`, `useUsers.ts:152-163`                             | P2 confusing (verified)                                      |
+| 12  | Voice, phones and addresses are free text                                               | "Soprane 1", "S1" and "soprano" become three filter chips on the website and in the app; differently formatted phones count as a change on every run                                              | `sync-data/route.ts:111-134`, `membres/page.tsx:107-135`               | P2 wrong data (voice verified)                               |
+| 13  | Invitation volume vs e-mail limits; expired links mean a manual re-invite               | 120 invitations against the built-in sender's rate limits; an expired link sends the member to a mailto                                                                                           | `invite-users/route.ts:41-47, 76-143`, `CreateProfileForm.tsx:105-128` | P1 confusing (inferred: SMTP setting not readable from code) |
+| 14  | Dead or duplicated routes and hooks; a module-level `throw` on a missing env var        | `POST /api/users/sync`, `GET /api/members/excel`, `useSyncUsersMutation` and `useSyncAllUserData` have no callers                                                                                 | see a.4 / a.6                                                          | P2 (verified)                                                |
+| 15  | No tests                                                                                | Nothing covers parsing, matching or applying; e2e only checks the 401                                                                                                                             | `apps/e2e/tests/admin/access-control.spec.ts`                          | P2 (verified)                                                |
+
+**Target flow:**
+
+1. **Fetch:** one server module reads the sheet privately through the association's Google service account (the pattern the calendar sync already uses). It has a timeout and runs at request time.
+2. **Validate:** a pure, unit-tested function in `@repo/domain`. It **refuses** when:
+   - a required header is missing (headers are normalised: trimmed, accent- and case-insensitive, with a small alias list);
+   - the row count drops below half of the active members or of the last run.
+
+   It **warns** on duplicates, invalid emails, rows without a name, and voice values outside the agreed list. It normalises emails, phones and names ("Prénom NOM" by an explicit rule, never by splitting words).
+
+3. **Review (_new_ page `/dashboard/admin/users/sync`).** The rows are grouped:
+   - **new:** to invite;
+   - **changed:** field by field, old → new, roster-owned fields only;
+   - **no longer in the list:** every status;
+   - **conflicts:** duplicates, no email, name-only matches proposed as suggestions (this handles changed emails without creating a second account).
+
+   Each row has a checkbox. The destructive group is collapsed by default and shows the last sign-in.
+
+4. **Apply:** one server call carrying the selected changes and the roster's fingerprint. The server refuses if the roster changed since the preview, then:
+   - runs the updates in one transaction;
+   - sends invitations in throttled batches;
+   - returns a per-item result;
+   - logs a sync-run row and activity entries, which the home feed shows.
+5. **Removals deactivate; they don't delete.** A status such as `active | left` (additive migration, owner-applied). A deactivated member:
+   - disappears from the website and app directories;
+   - loses members-area access;
+   - comes back automatically if their email returns to the roster.
+
+   Hard deletion stays a separate, confirmed, superadmin-only action for erasure requests.
+
+6. **Field ownership:** the roster owns membership, name, voice, home phone and address; the member owns their photo (and possibly their mobile phone, see open question 3). A difference on a member-owned field shows up as a conflict, never as an overwrite.
+
+### e.2 Google Drive → programmes and documents (J2)
+
+**Today.** Members use **only the Drive mechanism**:
+
+- **The website's "Partitions" page** (`/membres/travail`) reads the six `drive_folders` roots and browses Drive through the website's `/api/drive/files`. That route uses a personal OAuth refresh token and is scoped to those roots.
+- **The mobile app** does the same, through the website's API.
+- **The admin's "Espace de travail"** (programmes → groups → explorer, Storage bucket `programs`) has **no reader outside the admin**. No code creates `programs` or `groups` (created by hand in the dashboard, inferred), and `programs` has no Drive column.
+
+| #   | Defect                                                                    | Failure scenario                                                                                                                                        | Evidence                                                                                           | Severity                                            |
+| --- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1   | The admin's Storage explorer is a dead end                                | An admin uploads a score; members never see it, and the admin can't open it either                                                                      | no reader outside the admin; `FileExplorer/FileList.tsx:45-53, 82-87`                              | P1 (verified)                                       |
+| 2   | No screen creates programmes or groups; programmes aren't linked to Drive | The empty state promises programmes "dès qu'un premier aura été créé", but nothing can create one                                                       | `members/travail/page.tsx:70`, `types/work.ts:15-22`                                               | P1 (verified)                                       |
+| 3   | Members' downloads bypass the website's proxy and rely on Drive sharing   | Once #347 restricts the folders, "Télécharger" shows a Google sign-in page instead of the file (website and app)                                        | `apps/website/components/travail/Explorer.tsx:149`, `apps/mobile_app/…/partitions_screen.dart:213` | P1 (code verified, outcome inferred; noted on #347) |
+| 4   | `/api/drive/files` ignores pagination and shared drives                   | Folders with more than 100 items are cut off without warning                                                                                            | `apps/website/app/api/drive/files/route.ts:39-42`                                                  | P2 (verified)                                       |
+| 5   | Drive access depends on one person's OAuth refresh token                  | A password change or revoked consent breaks Partitions on the website and the app at once; the website refuses to start without the OAuth ID and secret | `apps/website/lib/drive.ts:14-28`, `app/layout.tsx:22-24`                                          | P1 (code verified)                                  |
+| 6   | The app ships fallback folder IDs compiled in                             | When the table read fails, it shows last season's folders, which the website then refuses                                                               | `app_config.dart:34-46`                                                                            | P2 (verified)                                       |
+| 7   | Every tab click calls Drive, with up to 8 parent lookups                  | Slow, and spends quota on the members' busiest feature                                                                                                  | `driveScope.ts:24`, `lib/drive.ts:45-59`                                                           | P2 (estimated)                                      |
+
+Plus #439 and #440, already filed, and some dead code (`apps/admin/utils/navigation.ts`, `utils/programs.ts`, `apps/website/utils/storage.ts`).
+
+**Target design.** Drive stays the source of truth. Supabase keeps an **index** (Drive IDs and metadata), never copies of the files. Members open documents through the website's existing proxy.
+
+1. **Admin, once:** paste the root Drive folder. "Vérifier" shows its name as the service account sees it, and warns if it isn't shared.
+2. **"Synchroniser depuis Drive"** does a dry run: new, renamed, moved and removed programmes, groups and documents, with their paths. "Appliquer" writes them. Removed items are soft-deleted, so a mistaken move in Drive hides a document but never destroys anything.
+3. **Afterwards, the page shows:**
+   - each programme with editable season dates and an "active" switch;
+   - its groups and documents, with "Ouvrir";
+   - the last sync result.
+
+   A nightly run (a cron job calling an edge function, the same shape as the rehearsal sync, with its own log table) keeps it current.
+
+4. **Storage:** `programs` gains a Drive folder ID; new `program_groups` and `documents` tables (Drive file ID, name, type, size, modified time, path, removed_at), via owner-applied migrations. `drive_folders` stays during the transition for installed apps.
+5. **Members** list from the index (instant, cacheable offline in the app) and open or download through `/api/drive/file`. Drive files stay **restricted**, shared only with the service account; **members need no Google account**.
+6. **Credentials:** the calendar sync's service account, with `drive.readonly` scope and the root folder shared with it. The website's `/api/drive/*` moves to it as well, which retires the personal refresh token.
+7. **The old Storage files** are frozen (no new uploads) and counted read-only. The owner then decides: move them into Drive, or delete them. The tables and bucket are dropped in a later release.
+
+**Order of work:**
+
+1. Website and app downloads through the proxy, plus pagination. This fixes defect 3, unblocks #347, and needs no schema change.
+2. Owner: service-account access and Drive sharing.
+3. Migrations, the edge function and the admin page.
+4. The members' pages read the index; app update.
+5. Retire the Storage explorer.
+
+### e.3 What this means for the phases
+
+- **Phase 1 (three design directions)** designs the shell, the hub home, the "À venir / Passés" pattern and the **review-then-apply pattern** that both syncs and the campaign publication share. It doesn't redesign the sync logic itself.
+- **Functional work** runs as separate PRs into `dev`, each with its own tests, so the visual phases stay reviewable:
+  - **F1:** Drive downloads through the proxy, plus pagination (website and app; audit work, can start now).
+  - **F2:** roster sync rebuild (validate, review, apply, deactivate).
+  - **F3:** Drive index and sync.
+  - **F4:** past tabs and edit-in-past.
+  - **F5:** campaign publication step and readiness checklist.
+  - **F6:** route gate on bug reports and upload limits (#440).
+
+  F2, F3 and F5 need the open questions above answered, and migrations approved by the owner.
