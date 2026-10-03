@@ -8,12 +8,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:lebontemperament/core/config/app_router.dart';
 import 'package:lebontemperament/core/widgets/custom_toast.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
+import 'package:lebontemperament/data/providers/app_info_provider.dart';
 
-// Provider to fetch package info asynchronously.
-// This is more idiomatic in a Riverpod app than using a StatefulWidget.
-final packageInfoProvider = FutureProvider<PackageInfo>((ref) async {
-  return await PackageInfo.fromPlatform();
-});
+export 'package:lebontemperament/data/providers/app_info_provider.dart'
+    show packageInfoProvider;
 
 class AboutScreen extends ConsumerStatefulWidget {
   const AboutScreen({super.key});

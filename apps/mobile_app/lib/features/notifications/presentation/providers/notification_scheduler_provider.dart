@@ -33,8 +33,8 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       List<Rehearsal> rehearsals = [];
 
       // Extract data from async values
-      concertsAsync.whenData((data) => concerts = data);
-      rehearsalsAsync.whenData((data) => rehearsals = data);
+      concertsAsync.whenData((data) => concerts = data.items);
+      rehearsalsAsync.whenData((data) => rehearsals = data.items);
 
       // Schedule notifications
       await notificationService.scheduleEventNotifications(

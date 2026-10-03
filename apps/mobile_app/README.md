@@ -76,6 +76,27 @@ The Drive explorer and the file viewers call the website's `/api/drive/*` with t
 
 Push notifications follow the session: the device subscribes to the `all_users` topic when a member is signed in and unsubscribes, deletes its FCM token and clears the local cache on sign-out (`lib/data/services/session_notifications.dart`). Reminders use inexact Android alarms (no exact-alarm permission), and app data is excluded from Android backups and device transfers.
 
+### Remote flags (kill switch)
+
+At launch the app reads two rows of the `feature_flags` table (`lib/data/services/feature_flags_service.dart`); each one only adds a banner on the home screen, and a failed read (offline, RLS, missing rows) means "no flag", never a blocked app. Create the rows from the Supabase dashboard (SQL below is for reference; the owner runs it):
+
+| `flag_key`           | Effect when `is_enabled`                                                                          | Where the value goes                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `mobile_maintenance` | "Maintenance en cours" banner on the home screen                                                  | `is_enabled` only                                                                |
+| `mobile_min_version` | "Mise à jour recommandée" banner when the installed version is older than the value (never blocks) | the version string (`2.1.0`) in the `description` column; the table has no other text column |
+
+```sql
+insert into feature_flags (flag_key, flag_name, description, is_enabled) values
+  ('mobile_maintenance', 'App mobile : maintenance', null, false),
+  ('mobile_min_version', 'App mobile : version minimale', '2.0.0', false);
+```
+
+The rows must be readable by signed-in members (the same `select` policy the website uses with the anon key for `anniversary_40_years`).
+
+### Offline states
+
+The rehearsals, concerts and events lists are cached in Hive. When the server cannot be reached they show the cached rows under a "Données hors ligne" banner; with nothing cached they show an error with a retry (worded "Vous êtes hors ligne" when `connectivity_plus` reports no network), and a fresh empty list shows the empty state. The lists reload by themselves when the network comes back.
+
 ## Architecture
 
 The app follows a clean architecture pattern with:
