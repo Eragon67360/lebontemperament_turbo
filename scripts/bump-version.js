@@ -46,7 +46,7 @@ function bumpVersion(current, type) {
       return { major: major + 1, minor: 0, patch: 0, build: newBuild };
     default:
       throw new Error(
-        `Invalid bump type: ${type}. Use build, patch, minor, or major.`
+        `Invalid bump type: ${type}. Use build, patch, minor, or major.`,
       );
   }
 }
@@ -82,7 +82,7 @@ function hasAppChanges() {
       .filter(Boolean);
     const untracked = execSync(
       "git ls-files --others --exclude-standard apps/",
-      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
     )
       .trim()
       .split("\n")
@@ -101,7 +101,7 @@ function main() {
   const type = args.find((a) => !a.startsWith("--"));
   if (!type) {
     console.error(
-      "Usage: node scripts/bump-version.js <build|patch|minor|major> [--if-changed]"
+      "Usage: node scripts/bump-version.js <build|patch|minor|major> [--if-changed]",
     );
     process.exit(1);
   }
@@ -121,7 +121,8 @@ function main() {
   // Write version.json
   fs.writeFileSync(
     VERSION_PATH,
-    JSON.stringify({ version: newVersion, build: bumped.build }, null, 2) + "\n"
+    JSON.stringify({ version: newVersion, build: bumped.build }, null, 2) +
+      "\n",
   );
 
   // Write website package.json
@@ -138,19 +139,9 @@ function main() {
   const pubspecContent = fs.readFileSync(PUBSPEC_PATH, "utf8");
   const newPubspec = pubspecContent.replace(
     VERSION_REGEX,
-    `version: ${newMobile}`
+    `version: ${newMobile}`,
   );
   fs.writeFileSync(PUBSPEC_PATH, newPubspec);
-
-  // Update package-lock.json (workspace versions)
-  try {
-    execSync("npm install", { stdio: "ignore", cwd: ROOT });
-  } catch (err) {
-    console.warn(
-      "npm install failed (package-lock may be stale):",
-      err.message
-    );
-  }
 
   // Output for scripts (build-local.sh uses tail -1)
   console.log(oldMobile);

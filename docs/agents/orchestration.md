@@ -31,7 +31,7 @@ Choose the model per subagent when spawning it: one of the user-level agents in 
 
 ## Before starting a crew: the commit hook
 
-Every commit in a worktree with `node_modules` runs `.husky/pre-commit`: format the whole repo, `git add -A`, build every app, bump versions. With several agents that means parallel full builds and a `version.json` bump on every branch. Ask the owner once, with this recommendation: **crew commits skip the hook** (`git -c core.hooksPath=/dev/null commit …`), and the lead runs format, lint, types and builds before each PR and lets the hook run on the merge into `dev` (or bumps versions once per release). Without his OK, keep the hook and serialize commits through the build lock below.
+Every commit in a worktree with `node_modules` runs `.husky/pre-commit`, which is `npx lint-staged`: Prettier on the staged files only, no `git add -A`, no build, no version bump. It is fast and safe for a crew, so agents can keep it on. The lead and the agents still run lint, types, tests and builds themselves before each PR (the hook does not), and builds go through the lock below. A crew may skip the hook (`git -c core.hooksPath=/dev/null commit …`) only if the brief says so; then each agent runs `npx prettier --write` on the files it changed.
 
 ## Packaging
 
