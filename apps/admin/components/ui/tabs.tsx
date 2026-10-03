@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const Tabs = TabsPrimitive.Root;
 
+/** A segmented control: bordered track, the active tab in the soft teal. */
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
@@ -14,7 +15,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-auto items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+      "inline-flex h-auto items-center justify-center gap-0.5 rounded-md border border-input bg-card p-0.5 text-muted-foreground",
       className,
     )}
     {...props}
@@ -30,7 +31,7 @@ const TabsTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       // 44px on touch, back to the compact height where a pointer is precise.
-      "inline-flex min-h-11 items-center justify-center rounded-sm px-2 py-1.5 text-sm font-medium ring-offset-background transition-[color,background-color,box-shadow] duration-150 ease-out motion-reduce:transition-none sm:min-h-9 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:px-3 sm:whitespace-nowrap",
+      "inline-flex min-h-10 items-center justify-center rounded-[4px] px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-[color,background-color] motion-reduce:transition-none pointer-coarse:min-h-11 hover:text-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-primary-soft data-[state=active]:text-primary-text",
       className,
     )}
     {...props}
@@ -44,10 +45,7 @@ const TabsContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className,
-    )}
+    className={cn("mt-3", className)}
     {...props}
   />
 ));

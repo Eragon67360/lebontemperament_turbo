@@ -78,7 +78,7 @@ export function ListSkeleton({
     <LoadingRegion label={label} className={className}>
       <div className="space-y-3">
         {Array.from({ length: rows }, (_, index) => (
-          <div key={index} className="flex items-center gap-3 rounded-lg p-2">
+          <div key={index} className="flex items-center gap-3 rounded-md p-2">
             <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-3.5 w-1/3" />
@@ -105,7 +105,7 @@ export function CardGridSkeleton({
     <LoadingRegion label={label} className={className}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: cards }, (_, index) => (
-          <Skeleton key={index} className="h-44 w-full rounded-2xl" />
+          <Skeleton key={index} className="h-44 w-full rounded-lg" />
         ))}
       </div>
     </LoadingRegion>
@@ -123,7 +123,7 @@ export function PageSkeleton({ cards = 6 }: { cards?: number }) {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: cards }, (_, index) => (
-            <Skeleton key={index} className="h-44 w-full rounded-2xl" />
+            <Skeleton key={index} className="h-44 w-full rounded-lg" />
           ))}
         </div>
       </LoadingRegion>
@@ -153,13 +153,15 @@ export function EmptyState({
       )}
     >
       {Icon && (
-        <div className="bg-muted mb-4 rounded-full p-3">
-          <Icon className="text-muted-foreground h-7 w-7" aria-hidden />
+        <div className="mb-4 grid size-12 place-items-center rounded-md bg-primary-soft text-primary-text">
+          <Icon className="size-6" aria-hidden />
         </div>
       )}
-      <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+      <h2 className="text-base leading-6 font-semibold text-foreground">
+        {title}
+      </h2>
       {description && (
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+        <p className="mt-1 max-w-sm text-detail text-muted-foreground">
           {description}
         </p>
       )}
@@ -188,16 +190,18 @@ export function ErrorState({
         className,
       )}
     >
-      <div className="bg-destructive/10 mb-4 rounded-full p-3">
-        <AlertTriangle className="text-destructive h-7 w-7" aria-hidden />
+      <div className="mb-4 grid size-12 place-items-center rounded-md bg-danger-soft text-danger">
+        <AlertTriangle className="size-6" aria-hidden />
       </div>
-      <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-      <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+      <h2 className="text-base leading-6 font-semibold text-foreground">
+        {title}
+      </h2>
+      <p className="mt-1 max-w-sm text-detail text-muted-foreground">
         {description}
       </p>
       {onRetry && (
-        <Button variant="outline" className="mt-6 min-h-11" onClick={onRetry}>
-          <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
+        <Button variant="outline" className="mt-6" onClick={onRetry}>
+          <RefreshCw aria-hidden />
           Réessayer
         </Button>
       )}

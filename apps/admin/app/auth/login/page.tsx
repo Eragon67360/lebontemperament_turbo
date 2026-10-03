@@ -21,10 +21,10 @@ export default function LoginPage() {
         {/* Animated Background Elements */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {/* Floating decorative blobs */}
-          <div className="bg-primary/5 animate-blob absolute top-20 left-[10%] h-20 w-20 rounded-full blur-2xl"></div>
-          <div className="bg-primary/10 animate-blob animation-delay-2000 absolute top-40 right-[15%] h-32 w-32 rounded-full blur-3xl"></div>
-          <div className="bg-primary/5 animate-blob animation-delay-4000 absolute bottom-32 left-[20%] h-24 w-24 rounded-full blur-2xl"></div>
-          <div className="bg-primary/10 animate-blob absolute right-[25%] bottom-20 h-28 w-28 rounded-full blur-3xl"></div>
+          <div className="bg-primary/5 absolute top-20 left-[10%] h-20 w-20 rounded-full blur-2xl"></div>
+          <div className="bg-primary/10 absolute top-40 right-[15%] h-32 w-32 rounded-full blur-3xl"></div>
+          <div className="bg-primary/5 absolute bottom-32 left-[20%] h-24 w-24 rounded-full blur-2xl"></div>
+          <div className="bg-primary/10 absolute right-[25%] bottom-20 h-28 w-28 rounded-full blur-3xl"></div>
 
           {/* Grid pattern overlay */}
           <div
