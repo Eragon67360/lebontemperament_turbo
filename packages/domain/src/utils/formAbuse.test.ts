@@ -21,14 +21,22 @@ assert.equal(
 );
 assert.equal(detectFormAbuse({ website: 1, fillTimeMs: 60_000 }), "honeypot");
 
-// Submitted faster than a person can type, or without the measurement.
+// Submitted faster than a person can type.
 assert.equal(detectFormAbuse({ fillTimeMs: MIN_FILL_TIME_MS - 1 }), "too-fast");
 assert.equal(detectFormAbuse({ fillTimeMs: 0 }), "too-fast");
 assert.equal(detectFormAbuse({ fillTimeMs: -5 }), "too-fast");
-assert.equal(detectFormAbuse({ fillTimeMs: "soon" }), "too-fast");
-assert.equal(detectFormAbuse({ fillTimeMs: Infinity }), "too-fast");
-for (const body of [{}, null, "text", { website: "" }]) {
-  assert.equal(detectFormAbuse(body), "too-fast");
+assert.equal(detectFormAbuse({ fillTimeMs: "1200" }), "too-fast");
+
+// No usable measurement (a page loaded before this check, a failed script):
+// never drop a real person's message; the honeypot still applies.
+for (const body of [{}, null, "text", { website: "" }, { fillTimeMs: "" }]) {
+  assert.equal(detectFormAbuse(body), "human");
 }
+assert.equal(detectFormAbuse({ fillTimeMs: "soon" }), "human");
+assert.equal(detectFormAbuse({ fillTimeMs: Infinity }), "human");
+assert.equal(
+  detectFormAbuse({ website: "x", fillTimeMs: undefined }),
+  "honeypot",
+);
 
 console.log("detectFormAbuse: all assertions passed");

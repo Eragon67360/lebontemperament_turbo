@@ -34,9 +34,16 @@ export const detectFormAbuse = (body: unknown): FormAbuseVerdict => {
     return "honeypot";
   }
 
+  // A missing or unreadable timing (a page loaded before this check existed,
+  // a script that failed) never drops a real person's message: only a
+  // measured duration below the minimum counts. The honeypot and the rate
+  // limit still apply to everyone.
   const fillTime = fields[FILL_TIME_FIELD];
+  if (fillTime === undefined || fillTime === null || fillTime === "") {
+    return "human";
+  }
   const elapsed = typeof fillTime === "number" ? fillTime : Number(fillTime);
-  if (!Number.isFinite(elapsed) || elapsed < MIN_FILL_TIME_MS) {
+  if (Number.isFinite(elapsed) && elapsed < MIN_FILL_TIME_MS) {
     return "too-fast";
   }
 
