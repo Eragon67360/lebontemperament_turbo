@@ -164,7 +164,7 @@ export const DeveloperFootprint = () => {
                                     href="https://github.com/Eragon67360"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-foreground/80 hover:text-primary transition-colors"
+                                    className="text-foreground/80 hover:text-primary-text transition-colors"
                                   >
                                     @Eragon67360
                                   </a>
@@ -239,7 +239,7 @@ export const DeveloperFootprint = () => {
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
-                          className={`${activeTab === tab.id ? "" : "hover:bg-primary/5"} text-primary relative flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors`}
+                          className={`${activeTab === tab.id ? "" : "hover:bg-primary/5"} text-primary-text relative flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors`}
                           style={{ WebkitTapHighlightColor: "transparent" }}
                         >
                           {activeTab === tab.id && (

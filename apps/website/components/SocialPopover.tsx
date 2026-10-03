@@ -121,7 +121,7 @@ export const SocialPopover = () => {
         className={`group relative flex size-10 items-center justify-center rounded-full shadow-lg transition-all duration-500 md:size-14 ${
           isOpen
             ? "text-foreground bg-white dark:bg-zinc-900 dark:text-white"
-            : `${currentSocial?.bgClass || "bg-primary"} text-white`
+            : `${currentSocial?.bgClass || "bg-primary-solid"} text-white`
         }`}
       >
         <AnimatePresence mode="wait">

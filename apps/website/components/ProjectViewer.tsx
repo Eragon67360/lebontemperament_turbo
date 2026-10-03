@@ -75,7 +75,7 @@ const ProjectViewer = ({ initialStories }: ProjectViewerProps) => {
             )}
           </Link>
           <div className="flex flex-col p-5">
-            <span className="text-primary text-xs font-semibold tracking-[0.16em] uppercase">
+            <span className="text-primary-text text-xs font-semibold tracking-[0.16em] uppercase">
               {new Date(story.date).getFullYear()}
             </span>
             <h3 className="text-foreground mt-2 line-clamp-2 text-lg font-bold">
@@ -89,7 +89,7 @@ const ProjectViewer = ({ initialStories }: ProjectViewerProps) => {
             <LinkButton
               variant="ghost"
               size="sm"
-              className="text-primary data-[hovered=true]:bg-primary/20 mt-4 w-fit"
+              className="text-primary-text data-[hovered=true]:bg-primary/20 mt-4 w-fit"
               href={`/concerts/${story.slug}`}
             >
               Lire l’histoire

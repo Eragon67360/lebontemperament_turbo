@@ -155,7 +155,7 @@ const ContactForm = () => {
     >
       <h2
         id="contact-title"
-        className="text-primary/50 dark:text-primary text-title leading-none font-light"
+        className="text-primary-400 dark:text-primary text-title leading-none font-light"
       >
         Nous contacter
       </h2>
@@ -293,7 +293,7 @@ const ContactForm = () => {
               votre demande. En savoir plus dans notre{" "}
               <Link
                 href="/politique-de-confidentialite"
-                className="text-primary underline hover:no-underline"
+                className="text-primary-text underline hover:no-underline"
               >
                 politique de confidentialité
               </Link>

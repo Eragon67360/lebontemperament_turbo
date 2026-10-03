@@ -86,7 +86,7 @@ export default function RejoindrePage() {
       <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
         {/* Hero Section */}
         <div className="mb-12">
-          <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
+          <h1 className="text-title text-primary-400 dark:text-primary leading-none font-light">
             Rejoignez-nous
           </h1>
           <h2 className="text-title text-foreground leading-none font-bold">
@@ -208,7 +208,7 @@ export default function RejoindrePage() {
                 itemType="https://schema.org/HowToStep"
               >
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="bg-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
+                  <span className="bg-primary-solid flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
                     1
                   </span>
                   <h3
@@ -222,14 +222,14 @@ export default function RejoindrePage() {
                   Prenez contact avec nous par email à{" "}
                   <a
                     href="mailto:lebontemperament@gmail.com"
-                    className="text-primary font-medium hover:underline"
+                    className="text-primary-text font-medium hover:underline"
                   >
                     lebontemperament@gmail.com
                   </a>{" "}
                   ou par téléphone au{" "}
                   <a
                     href="tel:+33689687482"
-                    className="text-primary font-medium hover:underline"
+                    className="text-primary-text font-medium hover:underline"
                   >
                     (+33) 06 89 68 74 82
                   </a>
@@ -244,7 +244,7 @@ export default function RejoindrePage() {
                 itemType="https://schema.org/HowToStep"
               >
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="bg-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
+                  <span className="bg-primary-solid flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
                     2
                   </span>
                   <h3
@@ -269,7 +269,7 @@ export default function RejoindrePage() {
                 itemType="https://schema.org/HowToStep"
               >
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="bg-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
+                  <span className="bg-primary-solid flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
                     3
                   </span>
                   <h3
@@ -294,7 +294,7 @@ export default function RejoindrePage() {
                 itemType="https://schema.org/HowToStep"
               >
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="bg-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
+                  <span className="bg-primary-solid flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
                     4
                   </span>
                   <h3
@@ -371,42 +371,42 @@ export default function RejoindrePage() {
             </p>
             <ul className="text-muted space-y-3 text-base leading-relaxed">
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1 shrink-0">✓</span>
+                <span className="text-primary-text mt-1 shrink-0">✓</span>
                 <span>
                   Une pratique musicale régulière dans un cadre structuré et
                   professionnel
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1 shrink-0">✓</span>
+                <span className="text-primary-text mt-1 shrink-0">✓</span>
                 <span>
                   Un esprit convivial et familial unique, où se mêlent les
                   générations
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1 shrink-0">✓</span>
+                <span className="text-primary-text mt-1 shrink-0">✓</span>
                 <span>
                   La diversité des parcours et le mélange des générations,
                   enrichissant l&apos;expérience musicale
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1 shrink-0">✓</span>
+                <span className="text-primary-text mt-1 shrink-0">✓</span>
                 <span>
                   La participation à des concerts et événements musicaux de
                   qualité
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1 shrink-0">✓</span>
+                <span className="text-primary-text mt-1 shrink-0">✓</span>
                 <span>
                   L&apos;opportunité de découvrir un répertoire varié, de la
                   Renaissance à nos jours
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1 shrink-0">✓</span>
+                <span className="text-primary-text mt-1 shrink-0">✓</span>
                 <span>
                   Des moments de partage inoubliables lors des tournées
                   estivales
@@ -429,7 +429,7 @@ export default function RejoindrePage() {
               invitons à{" "}
               <Link
                 href="/contact"
-                className="text-primary font-medium hover:underline"
+                className="text-primary-text font-medium hover:underline"
               >
                 nous contacter directement
               </Link>
@@ -452,13 +452,13 @@ export default function RejoindrePage() {
           <div className="mx-auto flex w-fit flex-col gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/contact"
-              className="bg-primary hover:bg-primary/90 inline-block rounded-md px-8 py-3 text-center text-white transition-colors"
+              className="bg-primary-solid hover:bg-primary-solid-hover inline-block rounded-md px-8 py-3 text-center text-white transition-colors"
             >
               Nous contacter
             </Link>
             <Link
               href="/faq"
-              className="border-primary text-primary hover:bg-primary/10 inline-block rounded-md border px-8 py-3 text-center transition-colors"
+              className="border-primary text-primary-text hover:bg-primary/10 inline-block rounded-md border px-8 py-3 text-center transition-colors"
             >
               Consulter la FAQ
             </Link>

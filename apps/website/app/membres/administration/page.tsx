@@ -63,7 +63,7 @@ const Administration = () => {
             <Link
               href="https://drive.google.com/drive/folders/0B3HMykcVQJAVdmw2aTdyQUJyWUE?resourcekey=0-eSCStZ_H5-WvEpmFYk8sdQ"
               target="_blank"
-              className="text-primary mt-4 flex items-center gap-2 transition-transform hover:scale-105"
+              className="text-primary-text mt-4 flex items-center gap-2 transition-transform hover:scale-105"
             >
               Voir toutes les archives <MdOpenInNew />
             </Link>
@@ -101,7 +101,7 @@ const Administration = () => {
             <Link
               href="https://drive.google.com/drive/folders/0B3HMykcVQJAVUGE3SllOZlRDMFk?resourcekey=0-KWWoenv1O_uTnu0GNE1t2Q"
               target="_blank"
-              className="text-primary mt-4 flex items-center gap-2 transition-transform hover:scale-105"
+              className="text-primary-text mt-4 flex items-center gap-2 transition-transform hover:scale-105"
             >
               Voir toutes les archives <MdOpenInNew />
             </Link>
@@ -168,7 +168,7 @@ const Administration = () => {
             <Link
               href="https://drive.google.com/drive/folders/0B3HMykcVQJAVcG9Nd1JRa19tM3c?resourcekey=0-kSko9ElajKHa981AXkCz8Q"
               target="_blank"
-              className="text-primary mt-4 flex items-center gap-2 transition-transform hover:scale-105"
+              className="text-primary-text mt-4 flex items-center gap-2 transition-transform hover:scale-105"
             >
               Voir toutes les archives <MdOpenInNew />
             </Link>

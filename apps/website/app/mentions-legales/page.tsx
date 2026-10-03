@@ -47,7 +47,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-const linkClass = "text-primary hover:text-primary/80 underline";
+const linkClass = "text-primary-text hover:text-primary-text/80 underline";
 
 export default function MentionsLegales() {
   return (
@@ -65,7 +65,7 @@ export default function MentionsLegales() {
 
         <div className="space-y-8">
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-2xl font-semibold">
+            <h2 className="text-primary-text mb-6 text-2xl font-semibold">
               Éditeur du site
             </h2>
             <div className="space-y-4">
@@ -89,7 +89,7 @@ export default function MentionsLegales() {
           </section>
 
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-2xl font-semibold">
+            <h2 className="text-primary-text mb-6 text-2xl font-semibold">
               Direction de la publication
             </h2>
             <div className="space-y-4">
@@ -103,12 +103,12 @@ export default function MentionsLegales() {
           </section>
 
           <section className="border-separator border-b pb-8">
-            <h2 className="text-primary/80 mb-6 text-2xl font-semibold">
+            <h2 className="text-primary-text mb-6 text-2xl font-semibold">
               Hébergement
             </h2>
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-primary/70 text-xl font-semibold">
+                <h3 className="text-primary-text text-xl font-semibold">
                   Site web
                 </h3>
                 <Row label="Hébergeur">Vercel Inc.</Row>
@@ -123,7 +123,7 @@ export default function MentionsLegales() {
                 </Row>
               </div>
               <div className="space-y-4">
-                <h3 className="text-primary/70 text-xl font-semibold">
+                <h3 className="text-primary-text text-xl font-semibold">
                   Base de données, comptes et fichiers
                 </h3>
                 <Row label="Hébergeur">Supabase Pte. Ltd.</Row>
@@ -143,7 +143,7 @@ export default function MentionsLegales() {
           </section>
 
           <section>
-            <h2 className="text-primary/80 mb-6 text-2xl font-semibold">
+            <h2 className="text-primary-text mb-6 text-2xl font-semibold">
               Données personnelles et cookies
             </h2>
             <p className="text-foreground">

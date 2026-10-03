@@ -198,7 +198,7 @@ const MembresConcertsEvents = () => {
                   </div>
 
                   <div className="mt-4">
-                    <span className="from-primary/20 text-primary inline-block rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-semibold md:text-sm">
+                    <span className="from-primary/20 text-primary-text inline-block rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-semibold md:text-sm">
                       {concert.context === "orchestre_et_choeur"
                         ? "Orchestre et Chœur"
                         : concert.context.charAt(0).toUpperCase() +
@@ -287,7 +287,7 @@ const MembresConcertsEvents = () => {
                         Contact:{" "}
                         <a
                           href={`mailto:${event.responsible_email}`}
-                          className="text-primary font-medium hover:underline"
+                          className="text-primary-text font-medium hover:underline"
                         >
                           {event.responsible_name || event.responsible_email}
                         </a>
@@ -298,7 +298,7 @@ const MembresConcertsEvents = () => {
                         href={event.link}
                         target="_blank"
                         rel="noreferrer"
-                        className="from-primary/20 hover:from-primary/30 text-primary flex items-center gap-1 rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-medium transition-all hover:to-purple-500/30"
+                        className="from-primary/20 hover:from-primary/30 text-primary-text flex items-center gap-1 rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-medium transition-all hover:to-purple-500/30"
                       >
                         <span>Infos</span> <MdOpenInNew className="h-3 w-3" />
                       </a>

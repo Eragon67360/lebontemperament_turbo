@@ -332,7 +332,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
           <div className="w-full max-w-360 px-8 lg:px-24">
             <motion.h2
               id="concert-stories-title"
-              className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title mb-14 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 projectsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -450,7 +450,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               <div className="flex flex-col gap-5">
                 <h2
                   id="about-title"
-                  className="text-primary/50 dark:text-primary text-title leading-none font-light"
+                  className="text-primary-400 dark:text-primary text-title leading-none font-light"
                   style={{ fontWeight: 300 }}
                 >
                   Nous découvrir
@@ -482,7 +482,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                     différents{" "}
                     <Link
                       href="/concerts"
-                      className="text-primary font-medium hover:underline"
+                      className="text-primary-text font-medium hover:underline"
                     >
                       concerts
                     </Link>{" "}
@@ -525,7 +525,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
           >
             <motion.h2
               id="history-title"
-              className="text-primary/50 dark:text-primary text-title mb-8 leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title mb-8 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 aboutInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -557,7 +557,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                 passion commune pour la musique. Découvrez nos{" "}
                 <Link
                   href="/concerts"
-                  className="text-primary font-medium hover:underline"
+                  className="text-primary-text font-medium hover:underline"
                 >
                   concerts et événements
                 </Link>{" "}
@@ -599,7 +599,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
               <div className="flex-1">
                 <h2
                   id="join-title"
-                  className="text-primary/50 dark:text-primary text-title mb-6 leading-none font-light"
+                  className="text-primary-400 dark:text-primary text-title mb-6 leading-none font-light"
                 >
                   Rejoignez-nous
                 </h2>
@@ -685,7 +685,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
           >
             <motion.h2
               id="concerts-title"
-              className="text-primary/50 dark:text-primary text-title leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 concertsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -740,7 +740,7 @@ const HomeContent = ({ stories }: HomeContentProps) => {
           >
             <motion.h2
               id="cds-title"
-              className="text-primary/50 dark:text-primary text-title leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 cdsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }

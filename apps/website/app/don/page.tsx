@@ -38,7 +38,7 @@ export default function DonPage() {
         data={breadcrumbJsonLd([{ name: "Faire un don", path: "/don" }])}
       />
       <div className="mx-auto w-full max-w-4xl">
-        <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
+        <h1 className="text-title text-primary-400 dark:text-primary leading-none font-light">
           Faire un don
         </h1>
         <h2 className="text-title text-foreground mb-8 leading-none font-bold">

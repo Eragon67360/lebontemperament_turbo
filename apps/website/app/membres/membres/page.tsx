@@ -312,7 +312,7 @@ const Membres = () => {
                       <IoMailOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`mailto:${member["Adresse mail"]}`}
-                        className="text-primary break-all transition-colors hover:underline"
+                        className="text-primary-text break-all transition-colors hover:underline"
                       >
                         {member["Adresse mail"]}
                       </a>
@@ -324,7 +324,7 @@ const Membres = () => {
                       <IoPhonePortraitOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`tel:${member.Portable.replace(/\s/g, "")}`}
-                        className="text-foreground/70 hover:text-primary transition-colors"
+                        className="text-foreground/70 hover:text-primary-text transition-colors"
                       >
                         {member.Portable}
                       </a>
@@ -336,7 +336,7 @@ const Membres = () => {
                       <IoCallOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`tel:${member.Domicile.replace(/\s/g, "")}`}
-                        className="text-foreground/70 hover:text-primary transition-colors"
+                        className="text-foreground/70 hover:text-primary-text transition-colors"
                       >
                         {member.Domicile}
                       </a>
