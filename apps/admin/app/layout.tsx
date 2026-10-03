@@ -18,7 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    // next-themes sets the theme class on <html> before hydration.
+    <html lang="fr" suppressHydrationWarning>
       <Analytics />
       <body className={cn(inter.className, "overflow-y-hidden")}>
         <Toaster position="top-right" richColors />
