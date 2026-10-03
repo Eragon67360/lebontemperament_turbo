@@ -1,0 +1,178 @@
+name: CI
+
+# Checks on every pull request into dev or main (and on demand). Vercel's
+# preview builds run separately; these are the gates docs/agents/quality-gates.md
+# asks for: lint, types, domain tests, a build of each changed app, and the
+# Flutter analyzer and tests when the mobile app changed.
+
+on:
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+  # The Next.js builds evaluate a few modules at build time that insist on these
+  # variables existing (website: app/layout.tsx, Stripe routes, Cloudinary;
+  # admin: the Excel sync routes). Obvious placeholders satisfy the existence
+  # checks; no real value is needed to compile, and no network call succeeds.
+  NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+  NEXT_PUBLIC_BASE_URL: https://www.example.com
+  NEXT_PUBLIC_SITE_URL: https://www.example.com
+  NEXT_PUBLIC_ADMIN_URL: https://admin.example.com
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ci-placeholder
+  GOOGLE_CLIENT_ID: ci-placeholder
+  GOOGLE_CLIENT_SECRET: ci-placeholder
+  STRIPE_SECRET_KEY: ci-placeholder
+  NEXT_EXCEL_CSV_URL: https://www.example.com/placeholder.csv
+
+jobs:
+  changes:
+    name: Changed paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read # paths-filter lists the PR's files through the API
+    outputs:
+      # On workflow_dispatch there is no base to diff against: run everything.
+      website: ${{ github.event_name != 'pull_request' || steps.filter.outputs.website == 'true' }}
+      admin: ${{ github.event_name != 'pull_request' || steps.filter.outputs.admin == 'true' }}
+      mobile: ${{ github.event_name != 'pull_request' || steps.filter.outputs.mobile == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            shared: &shared
+              - package.json
+              - package-lock.json
+              - turbo.json
+              - packages/**
+              - .github/workflows/ci.yml
+            website:
+              - *shared
+              - apps/website/**
+            admin:
+              - *shared
+              - apps/admin/**
+            mobile:
+              - apps/mobile_app/**
+              - .github/workflows/ci.yml
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  types:
+    name: Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check-types
+
+  domain-tests:
+    name: Domain tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm test -w @repo/domain
+
+  build-website:
+    name: Build website
+    needs: changes
+    if: needs.changes.outputs.website == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: apps/website/.next/cache
+          key: next-website-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/website/**/*.ts', 'apps/website/**/*.tsx', 'apps/website/**/*.js', 'packages/**/*.ts', 'packages/**/*.tsx') }}
+          restore-keys: |
+            next-website-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - run: npm ci
+      - run: npx turbo build --filter=website
+
+  build-admin:
+    name: Build admin
+    needs: changes
+    if: needs.changes.outputs.admin == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: apps/admin/.next/cache
+          key: next-admin-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/admin/**/*.ts', 'apps/admin/**/*.tsx', 'apps/admin/**/*.js', 'packages/**/*.ts', 'packages/**/*.tsx') }}
+          restore-keys: |
+            next-admin-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - run: npm ci
+      - run: npx turbo build --filter=admin
+
+  flutter:
+    name: Flutter
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/mobile_app
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          # pubspec.lock resolves against Dart >=3.9 / Flutter >=3.35; keep in
+          # step with android-build-release.yml.
+          flutter-version: "3.35.7"
+          channel: stable
+          cache: true
+      # pubspec.yaml declares .env as an asset; the analyzer and tests only need
+      # the file to exist.
+      - run: cp .env.example .env
+      - run: flutter pub get
+      # Errors fail the job; the 72 pre-existing infos/warnings are tracked in #362.
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test

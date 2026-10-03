@@ -27,39 +27,48 @@ permissions:
   deployments: read
 
 jobs:
-  test:
+  # Decides whether this event is worth a run. Vercel fires deployment_status
+  # for every PR preview too (environment "Preview – <project>", ref = commit
+  # SHA), so only a successful Preview deployment of the dev branch head
+  # passes. Everything else is skipped at job level: no red checks on PRs.
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    # For deployment_status events: only react to successful Preview deploys.
-    # Vercel sets environment to "Preview – <project>" and ref to the commit
-    # SHA, so the dev-branch check happens in the first step below.
-    if: >-
-      github.event_name != 'deployment_status' ||
-      (github.event.deployment_status.state == 'success' &&
-       startsWith(github.event.deployment.environment, 'Preview'))
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2] # bump total when the suite grows past ~60 tests
+    timeout-minutes: 15
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+      ref: ${{ steps.decide.outputs.ref }}
     steps:
-      - name: Confirm deployment is the dev branch head
-        if: github.event_name == 'deployment_status'
-        uses: actions/github-script@v7
+      - name: Decide whether to run
+        id: decide
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
-            // Vercel sets deployment.ref to the commit SHA, so compare against
-            // the dev branch head to ignore PR previews and stale deploys.
-            // Exit 78 = neutral conclusion (not a failure, no notification).
             const { owner, repo } = context.repo;
-            const sha = context.payload.deployment.sha;
+            if (context.eventName !== 'deployment_status') {
+              core.setOutput('run', 'true');
+              core.setOutput('ref', 'dev');
+              return;
+            }
+            const status = context.payload.deployment_status;
+            const deployment = context.payload.deployment;
+            const sha = deployment.sha;
+            const environment = deployment.environment ?? '';
+            if (status.state !== 'success' || !environment.startsWith('Preview')) {
+              core.notice(`Ignoring ${environment} deployment ${sha.slice(0, 7)} (${status.state}).`);
+              core.setOutput('run', 'false');
+              return;
+            }
             const { data: branch } = await github.rest.repos.getBranch({ owner, repo, branch: 'dev' });
             if (branch.commit.sha !== sha) {
-              core.info(`deployment ${sha.slice(0, 7)} is not dev head (${branch.commit.sha.slice(0, 7)}) — skipping.`);
-              process.exit(78);
+              core.notice(`Deployment ${sha.slice(0, 7)} is not the dev head (${branch.commit.sha.slice(0, 7)}): a PR preview or a stale deploy, skipping.`);
+              core.setOutput('run', 'false');
+              return;
             }
+            core.setOutput('run', 'true');
+            core.setOutput('ref', sha);
       - name: Wait for all Vercel deployments of this commit
-        if: github.event_name == 'deployment_status'
-        uses: actions/github-script@v7
+        if: steps.decide.outputs.run == 'true' && github.event_name == 'deployment_status'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -75,23 +84,39 @@ jobs:
                 states.push(`${d.environment}:${s[0]?.state ?? 'unknown'}`);
               }
               core.info(`deployments for ${sha.slice(0, 7)}: ${states.join(', ')}`);
-              // ponytail: Vercel registers both projects' deployments within
-              // seconds of the push, long before the first success event —
-              // so "all current deployments succeeded" implies both apps.
+              // Vercel registers both projects' deployments within seconds of
+              // the push, long before the first success event — so "all
+              // current deployments succeeded" implies both apps.
               if (states.length > 0 && states.every((s) => s.endsWith(':success'))) return;
               if (states.some((s) => s.endsWith(':failure') || s.endsWith(':error'))) {
                 core.setFailed('A Vercel deployment failed for this commit.');
+                return;
               }
               await new Promise((r) => setTimeout(r, 20000));
             }
             core.setFailed('Timed out waiting for Vercel deployments.');
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+  test:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2] # bump total when the suite grows past ~60 tests
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          node-version: 24
+          # Scheduled and manual runs test the dev branch (what staging serves);
+          # deployment runs test the exact commit Vercel deployed.
+          ref: ${{ needs.gate.outputs.ref }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
           cache: npm
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -99,23 +124,24 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Run E2E tests (shard ${{ matrix.shard }}/2)
         working-directory: apps/e2e
+        # Read-only run: E2E_ALLOW_WRITES is deliberately not set, so
+        # concerts-write.spec.ts is skipped and global-teardown sweeps nothing
+        # (staging shares the production database, see #363). The job
+        # therefore needs no Supabase key.
         env:
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-          # Global-teardown orphan sweeper (server-side only):
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: >-
           npx playwright test --shard=${{ matrix.shard }}/2
           ${{ inputs.project && inputs.project != 'all' && format('--project={0}', inputs.project) || '' }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: blob-report-${{ matrix.shard }}
           path: apps/e2e/blob-report/
           retention-days: 7
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: test-results-${{ matrix.shard }}
@@ -123,40 +149,45 @@ jobs:
           retention-days: 14
 
   merge-report:
-    needs: test
-    # Skip when the test job was skipped (non-success deployment_status events)
-    # or neutral (deployment_status not from the dev head — see gate step).
-    if: always() && !contains(fromJSON('["skipped", "neutral"]'), needs.test.result)
+    needs: [gate, test]
+    # Runs only when the tests actually ran (not when the gate skipped them or
+    # a superseding deployment cancelled them).
+    if: always() && contains(fromJSON('["success", "failure"]'), needs.test.result)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          node-version: 24
+          ref: ${{ needs.gate.outputs.ref }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: blob-report-*
           path: apps/e2e/all-blobs
           merge-multiple: true
       - run: npx playwright merge-reports --reporter=html ./all-blobs
         working-directory: apps/e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report
           path: apps/e2e/playwright-report/
           retention-days: 7
+      # The issue steps read the test job's result, not this job's: a step-level
+      # failure() here only sees the merge steps above, so it never fired.
       - name: Open or update failure issue
-        if: failure() && github.event_name != 'workflow_dispatch'
-        uses: actions/github-script@v7
+        if: always() && needs.test.result == 'failure' && github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const { owner, repo } = context.repo;
             const { data: issues } = await github.rest.issues.listForRepo({
               owner, repo, state: 'open', labels: 'e2e-failure',
             });
-            const body = `E2E daily run failed: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const body = `E2E run failed (${context.eventName}): ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
             if (issues.length) {
               await github.rest.issues.createComment({ owner, repo, issue_number: issues[0].number, body });
             } else {
@@ -168,8 +199,8 @@ jobs:
               });
             }
       - name: Close failure issue when green
-        if: success() && github.event_name != 'workflow_dispatch'
-        uses: actions/github-script@v7
+        if: always() && needs.test.result == 'success' && github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const { owner, repo } = context.repo;
