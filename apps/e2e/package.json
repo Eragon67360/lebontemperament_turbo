@@ -9,8 +9,8 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@repo/typescript-config": "*",
-    "@supabase/supabase-js": "^2.115.0",
-    "@types/node": "^25.9.5",
+    "@supabase/supabase-js": "^2.117.2",
+    "@types/node": "^24.13.3",
     "dotenv": "^17.4.2",
     "typescript": "^7.0.2"
   },

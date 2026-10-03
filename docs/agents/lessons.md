@@ -13,7 +13,7 @@ Mistakes and near-misses from running this way of working on the owner's project
 
 - **Never `source` an env file.** A URL containing `&` split in the shell and printed a production password, which then had to be rotated. Use `node --env-file`.
 - **Never reuse what the owner pastes.** A real password-reset token from a chat message ended up in a unit test, in git, flagged by a secret scanner. Fixtures are always made up, and here the repo is public.
-- **`git add -A` picks up everything.** This repo's pre-commit hook stages the whole tree. Scratch files, screenshots and env copies belong outside the repository.
+- **`git add -A` picks up everything.** Stage files by path. Scratch files, screenshots and env copies belong outside the repository.
 - **Clean up test data with exact criteria**: delete by exact patterns, count before and after, in a transaction (here: only with the owner's agreement, since it's production).
 - **Credits don't make a photo legal.** A provenance check found unlicensed images on a sister site; check licences when media matters.
 
