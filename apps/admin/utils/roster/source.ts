@@ -47,7 +47,7 @@ export type RosterSourceErrorCode =
 const USER_MESSAGES: Record<RosterSourceErrorCode, string> = {
   not_configured: ROSTER_NOT_CONFIGURED_MESSAGE,
   not_shared:
-    "Le tableau des membres n'est pas partagé avec le compte de service.",
+    "Le tableau des membres n'est pas partagé avec le compte de service, ou l'API Google Sheets n'est pas activée sur son projet.",
   not_found: "Le tableau des membres est introuvable (identifiant incorrect).",
   timeout: "Le tableau des membres n'a pas répondu à temps.",
   token_failed:
@@ -271,7 +271,8 @@ async function getAccessToken(account: ServiceAccount): Promise<string> {
 /**
  * Converts a Sheets `values` grid into the row objects `Papa.parse(text,
  * { header: true })` gave for the CSV export. Header cells are kept as-is
- * (accents, spaces, BOM, empty strings); downstream code matches on them.
+ * (accents, spaces, empty strings); downstream code matches on them. The
+ * Sheets API never returns a byte-order mark, so there is none to strip.
  */
 export function rosterRowsFromGrid(
   values: ReadonlyArray<ReadonlyArray<unknown>> | undefined,
