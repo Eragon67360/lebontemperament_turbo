@@ -20,12 +20,26 @@
 --
 -- Rollback:
 --   select cron.unschedule('sync-drive-index');
---   drop function public.drive_index_apply(uuid, jsonb, text[], jsonb, jsonb);
+--   drop function public.drive_index_apply(uuid, jsonb, text[], jsonb, jsonb, text, text);
 --   drop table public.drive_sync_runs;
 --   drop table public.drive_index_nodes;
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- The cron job below reads the Vault secrets at run time and silently sends
+-- nothing when one is missing (net.http_post gets a null header value and
+-- the function answers 401): refuse to apply without them, as
+-- 20261002100000_internal_function_secret_and_tracking_rpc.sql does.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'internal_function_secret')
+     OR NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'project_url')
+     OR NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'anon_key') THEN
+    RAISE EXCEPTION 'Create the Vault secrets project_url, anon_key and internal_function_secret before applying this migration';
+  END IF;
+END;
+$$;
 
 -- 1. The index: one row per folder or file seen under a root.
 CREATE TABLE IF NOT EXISTS public.drive_index_nodes (
@@ -48,9 +62,6 @@ CREATE TABLE IF NOT EXISTS public.drive_index_nodes (
 
 CREATE INDEX IF NOT EXISTS drive_index_nodes_root_parent_idx
   ON public.drive_index_nodes (root_slug, parent_drive_id);
-
-CREATE INDEX IF NOT EXISTS drive_index_nodes_drive_id_idx
-  ON public.drive_index_nodes (drive_id);
 
 COMMENT ON TABLE public.drive_index_nodes IS
   'Index of the Google Drive folders and files under the drive_folders roots, as seen by the service account. Filled by the sync-drive-index edge function; removed_at marks nodes no longer seen (soft delete). Never holds file contents.';
@@ -110,19 +121,24 @@ CREATE POLICY "Admins read drive sync runs"
 
 -- 4. Atomic apply, called by the edge function with the service role:
 --    upserts every node of the walk, soft-deletes the ones no longer seen
---    under a readable root, and closes the run row, in one transaction.
---    p_nodes: array of {drive_id, parent_drive_id, root_slug, kind, name,
---    mime_type, size, modified_time, md5_checksum, path, depth}.
+--    under a readable root, and closes the run row (p_status / p_error let a
+--    cron run that held back a root be recorded as an error), in one
+--    transaction. p_nodes: array of {drive_id, parent_drive_id, root_slug,
+--    kind, name, mime_type, size, modified_time, md5_checksum, path, depth}.
+--    SECURITY INVOKER: only service_role may execute it (grants below) and
+--    service_role already bypasses RLS, so definer rights would add nothing.
 CREATE OR REPLACE FUNCTION public.drive_index_apply(
   p_run_id uuid,
   p_nodes jsonb,
   p_remove_ids text[],
   p_counts jsonb,
-  p_diff jsonb
+  p_diff jsonb,
+  p_status text DEFAULT 'success',
+  p_error text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
@@ -175,20 +191,28 @@ BEGIN
     GET DIAGNOSTICS v_removed = ROW_COUNT;
   END IF;
 
+  IF p_status NOT IN ('success', 'error') THEN
+    RAISE EXCEPTION 'drive_index_apply: p_status must be success or error';
+  END IF;
+
   UPDATE public.drive_sync_runs
   SET finished_at = v_now,
-      status = 'success',
+      status = p_status,
       counts = COALESCE(p_counts, '{}'::jsonb),
       diff = COALESCE(p_diff, '{}'::jsonb),
-      error = NULL
+      error = p_error
   WHERE id = p_run_id;
 
   RETURN jsonb_build_object('upserted', v_upserted, 'removed', v_removed);
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.drive_index_apply(uuid, jsonb, text[], jsonb, jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.drive_index_apply(uuid, jsonb, text[], jsonb, jsonb) TO service_role;
+-- Supabase's default privileges grant EXECUTE on new public functions to
+-- anon and authenticated explicitly; revoking from PUBLIC alone leaves them.
+REVOKE ALL ON FUNCTION public.drive_index_apply(uuid, jsonb, text[], jsonb, jsonb, text, text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.drive_index_apply(uuid, jsonb, text[], jsonb, jsonb, text, text)
+  TO service_role;
 
 -- 5. Nightly apply at 03:30 Europe/Paris.
 --    The database clock is UTC: 03:30 Paris is 01:30 UTC in summer (CEST)

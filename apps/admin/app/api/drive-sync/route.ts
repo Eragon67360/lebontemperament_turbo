@@ -15,6 +15,40 @@ export const maxDuration = 60;
 const FUNCTION_TIMEOUT_MS = 55_000;
 const RUNS_SHOWN = 10;
 
+const INTERNAL_ERROR =
+  "La synchronisation a échoué. Le détail est dans les journaux de la fonction.";
+
+const ERROR_BY_CODE: Record<string, string> = {
+  limit: "", // the function's own message is already plain French
+  cron_removals: "",
+  google_auth:
+    "Le compte de service n'a pas pu s'authentifier auprès de Google. Vérifiez sa clé et l'activation de l'API Drive.",
+  drive: "Google Drive n'a pas répondu correctement. Réessayez plus tard.",
+  database:
+    "La base de données a refusé l'opération. Le détail est dans les journaux de la fonction.",
+  config: "La fonction de synchronisation n'est pas configurée.",
+  internal: INTERNAL_ERROR,
+};
+
+/** Plain French for whatever the function answered; never its technical detail. */
+function plainFunctionError(
+  status: number,
+  payload: Record<string, unknown>,
+): string {
+  if (status === 401) {
+    return "Session refusée par la fonction de synchronisation : reconnectez-vous.";
+  }
+  if (status === 403) {
+    return "Seuls les administrateurs peuvent lancer la synchronisation.";
+  }
+  const code = typeof payload.error_code === "string" ? payload.error_code : "";
+  const message = typeof payload.error === "string" ? payload.error : "";
+  const known = ERROR_BY_CODE[code];
+  if (known !== undefined) return known || message || INTERNAL_ERROR;
+  if (status === 400) return "Requête invalide.";
+  return INTERNAL_ERROR;
+}
+
 // GET - The last runs (RLS lets admins read drive_sync_runs)
 export async function GET() {
   try {
@@ -127,16 +161,18 @@ export async function POST(request: Request) {
     }
 
     if (!response.ok) {
-      const error =
-        response.status === 401
-          ? "Session refusée par la fonction de synchronisation : reconnectez-vous."
-          : response.status === 403
-            ? "Seuls les administrateurs peuvent lancer la synchronisation."
-            : typeof payload.error === "string"
-              ? payload.error
-              : "La synchronisation a échoué.";
+      // Technical detail stays in the logs; the admin gets plain French.
+      console.error(
+        "POST /api/drive-sync: function answered",
+        response.status,
+        payload,
+      );
       return NextResponse.json(
-        { ...payload, ok: false, error },
+        {
+          ...payload,
+          ok: false,
+          error: plainFunctionError(response.status, payload),
+        },
         { status: response.status === 400 ? 400 : 502 },
       );
     }

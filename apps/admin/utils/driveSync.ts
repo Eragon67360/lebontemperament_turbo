@@ -95,13 +95,23 @@ function isCounts(value: unknown): value is DriveSyncCounts {
   );
 }
 
+/** A run still "running" after this long was cut short (function timeout, crash). */
+export const STALE_RUN_MS = 10 * 60 * 1000;
+
 /** The "Résultat" column of a past run. */
-export function describeRun(run: {
-  status: string;
-  counts: unknown;
-  error: string | null;
-}): string {
-  if (run.status === "running") return "En cours…";
+export function describeRun(
+  run: {
+    status: string;
+    counts: unknown;
+    error: string | null;
+    started_at?: string;
+  },
+  now: number = Date.now(),
+): string {
+  if (run.status === "running") {
+    const startedAt = run.started_at ? new Date(run.started_at).getTime() : now;
+    return now - startedAt > STALE_RUN_MS ? "Interrompue" : "En cours…";
+  }
   if (run.status === "error") {
     return run.error ? `Erreur : ${run.error}` : "Erreur";
   }

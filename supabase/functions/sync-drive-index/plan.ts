@@ -438,3 +438,155 @@ export function toRunDiff(diff: IndexDiff, cap = RUN_DIFF_CAP): RunDiff {
     truncated,
   };
 }
+
+/** Removal limits for an automatic (cron) apply, per root. */
+export type RemovalLimits = {
+  /** Removals above this share of a root's live nodes are refused. */
+  maxRatio: number;
+  /** Removals above this absolute count are refused. */
+  maxCount: number;
+};
+
+export const CRON_REMOVAL_LIMITS: RemovalLimits = {
+  maxRatio: 0.2,
+  maxCount: 50,
+};
+
+export const CRON_REMOVALS_REFUSED =
+  "Trop de retraits pour une synchronisation automatique : vérifiez dans l'admin";
+
+export type ApplyPlan = {
+  nodes: IndexNode[];
+  removeIds: string[];
+  /** Roots left untouched because the cron limits were exceeded. */
+  blockedRoots: string[];
+  status: "success" | "error";
+  error: string | null;
+};
+
+/**
+ * What an apply may write. An admin apply (confirmed in the UI) writes the
+ * whole diff. A cron apply refuses a root whose removals exceed the limits
+ * (a mass "removal" is more likely a moved or unshared folder than real
+ * deletions): that root is left untouched, the others are applied, and the
+ * run is recorded as an error so somebody looks at it in the admin.
+ */
+export function planApply(
+  walk: WalkResult,
+  diff: IndexDiff,
+  existing: readonly ExistingNode[],
+  trigger: "cron" | "admin",
+  limits: RemovalLimits = CRON_REMOVAL_LIMITS,
+): ApplyPlan {
+  if (trigger === "admin") {
+    return {
+      nodes: walk.nodes,
+      removeIds: diff.removeIds,
+      blockedRoots: [],
+      status: "success",
+      error: null,
+    };
+  }
+
+  const liveByRoot = new Map<string, number>();
+  for (const row of existing) {
+    if (row.removed_at) continue;
+    liveByRoot.set(row.root_slug, (liveByRoot.get(row.root_slug) ?? 0) + 1);
+  }
+  const rootOf = new Map(existing.map((row) => [row.drive_id, row.root_slug]));
+  const removedByRoot = new Map<string, number>();
+  for (const id of diff.removeIds) {
+    const slug = rootOf.get(id);
+    if (!slug) continue;
+    removedByRoot.set(slug, (removedByRoot.get(slug) ?? 0) + 1);
+  }
+
+  const blocked = new Set<string>();
+  for (const [slug, removed] of removedByRoot) {
+    const live = liveByRoot.get(slug) ?? 0;
+    if (removed > limits.maxCount || removed > limits.maxRatio * live) {
+      blocked.add(slug);
+    }
+  }
+
+  if (blocked.size === 0) {
+    return {
+      nodes: walk.nodes,
+      removeIds: diff.removeIds,
+      blockedRoots: [],
+      status: "success",
+      error: null,
+    };
+  }
+
+  const blockedRoots = [...blocked].sort();
+  return {
+    nodes: walk.nodes.filter((node) => !blocked.has(node.root_slug)),
+    removeIds: diff.removeIds.filter(
+      (id) => !blocked.has(rootOf.get(id) ?? ""),
+    ),
+    blockedRoots,
+    status: "error",
+    error: `${CRON_REMOVALS_REFUSED} (${blockedRoots.join(", ")}).`,
+  };
+}
+
+export type FailureCode =
+  "limit" | "google_auth" | "drive" | "database" | "config" | "internal";
+
+export type Failure = {
+  code: FailureCode;
+  /** Plain French, safe to show to an admin. */
+  message: string;
+  /** The technical detail, for the function's logs only. */
+  detail: string;
+};
+
+/** Turns any thrown error into a code and a plain French message. */
+export function describeFailure(error: unknown): Failure {
+  const detail = error instanceof Error ? error.message : String(error);
+  if (error instanceof WalkLimitError) {
+    return { code: "limit", message: detail, detail };
+  }
+  if (error instanceof DriveAccessError) {
+    return {
+      code: "drive",
+      message:
+        "Google Drive n'a pas répondu correctement. Réessayez plus tard.",
+      detail,
+    };
+  }
+  if (/environment variable/i.test(detail)) {
+    return {
+      code: "config",
+      message: "La fonction de synchronisation n'est pas configurée.",
+      detail,
+    };
+  }
+  if (/google token|service_account|client_email|private_key/i.test(detail)) {
+    return {
+      code: "google_auth",
+      message:
+        "Le compte de service n'a pas pu s'authentifier auprès de Google. Vérifiez sa clé et l'activation de l'API Drive.",
+      detail,
+    };
+  }
+  if (
+    /^(drive_folders|drive_index_nodes|drive_sync_runs|drive_index_apply):/.test(
+      detail,
+    )
+  ) {
+    return {
+      code: "database",
+      message:
+        "La base de données a refusé l'opération. Le détail est dans les journaux de la fonction.",
+      detail,
+    };
+  }
+  return {
+    code: "internal",
+    message:
+      "La synchronisation a échoué. Le détail est dans les journaux de la fonction.",
+    detail,
+  };
+}

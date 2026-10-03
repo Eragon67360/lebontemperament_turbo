@@ -5,13 +5,16 @@ import {
   assertRejects,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
+  CRON_REMOVALS_REFUSED,
   DriveAccessError,
   FOLDER_MIME,
   SHORTCUT_MIME,
   WalkLimitError,
+  describeFailure,
   diffIndex,
   joinPath,
   kindOf,
+  planApply,
   toIndexNode,
   toRunDiff,
   walkRoots,
@@ -443,4 +446,187 @@ Deno.test("toRunDiff caps each group and records the full length", () => {
   assertEquals(run.unreadable_roots[0].slug, "jeunes");
   // Names and paths only: no Drive IDs leak into the run row.
   assertEquals(Object.keys(run.added[0]).sort(), ["kind", "name", "path"]);
+});
+
+// --- Cron apply safety --------------------------------------------------
+
+const liveRows = (slug: string, n: number): ExistingNode[] =>
+  Array.from({ length: n }, (_, i) =>
+    existing(`${slug}-${i}`, `f${i}.pdf`, `${slug} / f${i}.pdf`, {
+      root_slug: slug,
+      parent_drive_id: slug,
+    }),
+  );
+
+const emptyWalk = (...slugs: string[]): WalkResult => ({
+  nodes: slugs.map((slug) =>
+    toIndexNode(folder(slug, slug), slug, null, null, 0),
+  ),
+  readableRootSlugs: slugs,
+  unreadableRoots: [],
+});
+
+Deno.test("planApply: an admin apply writes the whole diff", () => {
+  const rows = liveRows("adultes", 10);
+  const walk = emptyWalk("adultes"); // everything under adultes disappeared
+  const diff = diffIndex(walk, rows);
+  assertEquals(diff.counts.removed, 10);
+  const plan = planApply(walk, diff, rows, "admin");
+  assertEquals(plan.status, "success");
+  assertEquals(plan.removeIds.length, 10);
+  assertEquals(plan.blockedRoots, []);
+});
+
+Deno.test(
+  "planApply: a cron apply refuses removals above 20 % of a root",
+  () => {
+    const rows = liveRows("adultes", 10);
+    const walk = emptyWalk("adultes");
+    const diff = diffIndex(walk, rows);
+    const plan = planApply(walk, diff, rows, "cron");
+    assertEquals(plan.status, "error");
+    assert(plan.error?.startsWith(CRON_REMOVALS_REFUSED));
+    assert(plan.error?.includes("adultes"));
+    assertEquals(plan.blockedRoots, ["adultes"]);
+    // Nothing of that root is written, not even the root node.
+    assertEquals(plan.removeIds, []);
+    assertEquals(plan.nodes, []);
+  },
+);
+
+Deno.test("planApply: a cron apply within the limits goes through", () => {
+  const rows = liveRows("adultes", 10);
+  // Nine of ten files still there: one removal, 10 %.
+  const walk: WalkResult = {
+    nodes: rows
+      .slice(1)
+      .map((row) =>
+        toIndexNode(
+          file(row.drive_id, row.name),
+          "adultes",
+          "adultes",
+          "adultes",
+          1,
+        ),
+      ),
+    readableRootSlugs: ["adultes"],
+    unreadableRoots: [],
+  };
+  const diff = diffIndex(walk, rows);
+  assertEquals(diff.counts.removed, 1);
+  const plan = planApply(walk, diff, rows, "cron");
+  assertEquals(plan.status, "success");
+  assertEquals(plan.removeIds, ["adultes-0"]);
+});
+
+Deno.test(
+  "planApply: the absolute cap applies even on a big root, and other roots still apply",
+  () => {
+    const rows = [...liveRows("racine", 1000), ...liveRows("jeunes", 10)];
+    // 60 removals under racine (6 %), all 10 under jeunes (100 %).
+    const keptRacine = rows.slice(60, 1000);
+    const walk: WalkResult = {
+      nodes: keptRacine.map((row) =>
+        toIndexNode(
+          file(row.drive_id, row.name),
+          "racine",
+          "racine",
+          "racine",
+          1,
+        ),
+      ),
+      readableRootSlugs: ["racine", "jeunes"],
+      unreadableRoots: [],
+    };
+    const diff = diffIndex(walk, rows);
+    assertEquals(diff.counts.removed, 70);
+    const plan = planApply(walk, diff, rows, "cron");
+    assertEquals(plan.status, "error");
+    assertEquals(plan.blockedRoots, ["jeunes", "racine"]);
+    assertEquals(plan.removeIds, []);
+    // With only the ratio exceeded on jeunes, racine applies and jeunes is held back.
+    const smallDiff = diffIndex(
+      {
+        ...walk,
+        nodes: rows
+          .slice(10, 1000)
+          .map((row) =>
+            toIndexNode(
+              file(row.drive_id, row.name),
+              "racine",
+              "racine",
+              "racine",
+              1,
+            ),
+          ),
+      },
+      rows,
+    );
+    const plan2 = planApply(walk, smallDiff, rows, "cron");
+    assertEquals(plan2.blockedRoots, ["jeunes"]);
+    assertEquals(plan2.removeIds.length, 10);
+    assert(plan2.removeIds.every((id) => id.startsWith("racine-")));
+    assert(plan2.nodes.every((n) => n.root_slug === "racine"));
+  },
+);
+
+Deno.test("planApply: a cron apply with no removals is never blocked", () => {
+  const rows = liveRows("adultes", 3);
+  const walk: WalkResult = {
+    nodes: rows.map((row) =>
+      toIndexNode(
+        file(row.drive_id, row.name),
+        "adultes",
+        "adultes",
+        "adultes",
+        1,
+      ),
+    ),
+    readableRootSlugs: ["adultes"],
+    unreadableRoots: [],
+  };
+  const plan = planApply(walk, diffIndex(walk, rows), rows, "cron");
+  assertEquals(plan.status, "success");
+  assertEquals(plan.nodes.length, 3);
+});
+
+// --- Failure wording -------------------------------------------------------
+
+Deno.test("describeFailure: plain French for admins, detail kept apart", () => {
+  const limit = describeFailure(
+    new WalkLimitError(
+      "Plus de 5000 éléments sous les dossiers Drive : la synchronisation s'arrête.",
+    ),
+  );
+  assertEquals(limit.code, "limit");
+  assert(limit.message.startsWith("Plus de 5000"));
+
+  const drive = describeFailure(new DriveAccessError(500, "Backend Error"));
+  assertEquals(drive.code, "drive");
+  assert(!drive.message.includes("Backend Error"));
+  assertEquals(drive.detail, "Backend Error");
+
+  const auth = describeFailure(
+    new Error("Google token request failed: invalid_grant"),
+  );
+  assertEquals(auth.code, "google_auth");
+  assert(!auth.message.includes("invalid_grant"));
+
+  const db = describeFailure(
+    new Error(
+      "drive_index_apply: permission denied for table drive_index_nodes",
+    ),
+  );
+  assertEquals(db.code, "database");
+  assert(!db.message.includes("permission denied"));
+
+  assertEquals(
+    describeFailure(
+      new Error(
+        "Missing required environment variable: GOOGLE_SERVICE_ACCOUNT_JSON",
+      ),
+    ).code,
+    "config",
+  );
+  assertEquals(describeFailure("boom").code, "internal");
 });

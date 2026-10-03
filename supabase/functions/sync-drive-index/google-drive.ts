@@ -44,7 +44,11 @@ interface DriveErrorBody {
 interface ListResponse extends DriveErrorBody {
   files?: DriveItem[];
   nextPageToken?: string;
+  /** Drive could not search every corpus: the listing may be missing items. */
+  incompleteSearch?: boolean;
 }
+
+export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
 function parseServiceAccount(rawJson: string): ServiceAccount {
   const parsed = JSON.parse(rawJson) as Partial<ServiceAccount>;
@@ -105,10 +109,11 @@ export async function getDriveAccessToken(
 async function driveGet<T extends DriveErrorBody>(
   url: string,
   accessToken: string,
+  fetchImpl: FetchLike,
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await fetchImpl(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
   } catch (error) {
@@ -128,8 +133,15 @@ async function driveGet<T extends DriveErrorBody>(
   return body;
 }
 
-/** A DriveReader over the Drive v3 API, shared drives included. */
-export function createDriveReader(accessToken: string): DriveReader {
+/**
+ * A DriveReader over the Drive v3 API, shared drives included. A listing
+ * Drive reports as incomplete is treated like a failure: the planner then
+ * leaves that root untouched rather than removing what wasn't listed.
+ */
+export function createDriveReader(
+  accessToken: string,
+  fetchImpl: FetchLike = fetch,
+): DriveReader {
   return {
     async getFolder(id) {
       const params = new URLSearchParams({
@@ -139,6 +151,7 @@ export function createDriveReader(accessToken: string): DriveReader {
       return await driveGet<DriveItem & DriveErrorBody>(
         `${FILES_BASE}/${encodeURIComponent(id)}?${params.toString()}`,
         accessToken,
+        fetchImpl,
       );
     },
 
@@ -150,7 +163,7 @@ export function createDriveReader(accessToken: string): DriveReader {
       do {
         const params = new URLSearchParams({
           q: `'${folderId}' in parents and trashed = false`,
-          fields: `nextPageToken,files(${ITEM_FIELDS})`,
+          fields: `nextPageToken,incompleteSearch,files(${ITEM_FIELDS})`,
           pageSize: String(PAGE_SIZE),
           orderBy: "folder,name",
           supportsAllDrives: "true",
@@ -161,7 +174,14 @@ export function createDriveReader(accessToken: string): DriveReader {
         const body = await driveGet<ListResponse>(
           `${FILES_BASE}?${params.toString()}`,
           accessToken,
+          fetchImpl,
         );
+        if (body.incompleteSearch === true) {
+          throw new DriveAccessError(
+            0,
+            `Drive returned an incomplete listing for folder ${folderId} (incompleteSearch).`,
+          );
+        }
         page++;
         items.push(...(body.files ?? []));
         pageToken = body.nextPageToken;

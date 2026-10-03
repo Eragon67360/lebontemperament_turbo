@@ -1614,9 +1614,11 @@ export type Database = {
         Args: {
           p_counts: Json;
           p_diff: Json;
+          p_error?: string;
           p_nodes: Json;
           p_remove_ids: string[];
           p_run_id: string;
+          p_status?: string;
         };
         Returns: Json;
       };

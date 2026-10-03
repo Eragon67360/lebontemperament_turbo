@@ -52,6 +52,15 @@ assert.equal(
   describeRun({ status: "running", counts: {}, error: null }),
   "En cours…",
 );
+const t0 = Date.parse("2026-10-03T10:00:00.000Z");
+const running = {
+  status: "running",
+  counts: {},
+  error: null,
+  started_at: "2026-10-03T10:00:00.000Z",
+};
+assert.equal(describeRun(running, t0 + 9 * 60 * 1000), "En cours…");
+assert.equal(describeRun(running, t0 + 11 * 60 * 1000), "Interrompue");
 assert.equal(
   describeRun({
     status: "error",

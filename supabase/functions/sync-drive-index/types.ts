@@ -72,6 +72,8 @@ export type Database = {
           p_remove_ids: string[];
           p_counts: DiffCounts;
           p_diff: RunDiff;
+          p_status?: "success" | "error";
+          p_error?: string | null;
         };
         Returns: { upserted: number; removed: number };
       };

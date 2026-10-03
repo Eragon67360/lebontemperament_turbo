@@ -154,7 +154,7 @@ export function DriveSyncSection() {
               <AlertDialogTitle>Appliquer les changements ?</AlertDialogTitle>
               <AlertDialogDescription>
                 {preview
-                  ? `L'index du site sera mis à jour : ${describeCounts(preview.counts)}. Les éléments retirés restent en mémoire et reviennent s'ils réapparaissent dans Drive. Les dossiers Drive eux-mêmes ne sont jamais modifiés.`
+                  ? `L'index du site sera mis à jour : ${describeCounts(preview.counts)}. Les éléments retirés restent en mémoire et reviennent s'ils réapparaissent dans Drive. Les dossiers Drive eux-mêmes ne sont jamais modifiés. Le Drive est relu au moment d'appliquer : si quelque chose a changé depuis la vérification, le résultat l'indiquera.`
                   : ""}
               </AlertDialogDescription>
             </AlertDialogHeader>

@@ -21,7 +21,9 @@ import {
 } from "./google-drive.ts";
 import {
   DEFAULT_CAPS,
+  describeFailure,
   diffIndex,
+  planApply,
   toRunDiff,
   walkRoots,
   type ExistingNode,
@@ -193,6 +195,8 @@ serve(async (req) => {
     log("diff_complete", { ...diff.counts });
 
     let applied: { upserted: number; removed: number } | undefined;
+    let blockedRoots: string[] = [];
+    let error: string | null = null;
     if (mode === "dry_run") {
       await closeRun(supabase, runId, {
         status: "success",
@@ -200,36 +204,65 @@ serve(async (req) => {
         diff: runDiff,
       });
     } else {
-      const { data, error } = await supabase.rpc("drive_index_apply", {
-        p_run_id: runId,
-        p_nodes: walk.nodes,
-        p_remove_ids: diff.removeIds,
-        p_counts: diff.counts,
-        p_diff: runDiff,
-      });
-      if (error) throw new Error(`drive_index_apply: ${error.message}`);
+      // A cron apply never mass-removes: see planApply.
+      const plan = planApply(walk, diff, existing, trigger);
+      blockedRoots = plan.blockedRoots;
+      error = plan.error;
+      const { data, error: rpcError } = await supabase.rpc(
+        "drive_index_apply",
+        {
+          p_run_id: runId,
+          p_nodes: plan.nodes,
+          p_remove_ids: plan.removeIds,
+          p_counts: diff.counts,
+          p_diff: runDiff,
+          p_status: plan.status,
+          p_error: plan.error,
+        },
+      );
+      if (rpcError) throw new Error(`drive_index_apply: ${rpcError.message}`);
       applied = data;
-      log("apply_complete", applied);
+      log("apply_complete", { ...applied, blocked_roots: blockedRoots });
     }
 
-    return jsonResponse({
-      ok: true,
-      run_id: runId,
-      mode,
-      trigger,
-      counts: diff.counts,
-      diff: runDiff,
-      applied,
-      service_account: serviceAccountEmail(serviceAccountJson),
-    });
+    return jsonResponse(
+      {
+        ok: error === null,
+        run_id: runId,
+        mode,
+        trigger,
+        counts: diff.counts,
+        diff: runDiff,
+        applied,
+        blocked_roots: blockedRoots,
+        error: error ?? undefined,
+        error_code: error ? "cron_removals" : undefined,
+        service_account: serviceAccountEmail(serviceAccountJson),
+      },
+      error === null ? 200 : 409,
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    log("fatal", { mode, run_id: runId, message });
+    const failure = describeFailure(error);
+    log("fatal", {
+      mode,
+      run_id: runId,
+      code: failure.code,
+      detail: failure.detail,
+    });
     if (runId) {
-      await closeRun(supabase, runId, { status: "error", error: message });
+      await closeRun(supabase, runId, {
+        status: "error",
+        error: failure.message,
+      });
     }
     return jsonResponse(
-      { ok: false, run_id: runId, mode, error: message },
+      {
+        ok: false,
+        run_id: runId,
+        mode,
+        error: failure.message,
+        error_code: failure.code,
+      },
       500,
     );
   }
