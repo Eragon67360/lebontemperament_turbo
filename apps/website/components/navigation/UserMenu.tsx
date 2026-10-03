@@ -122,8 +122,7 @@ const UserMenu = ({ user }: { user: User }) => {
                 alt={`Avatar de ${userProfile?.display_name || user.email}`}
               />
               <Avatar.Fallback>
-                {userProfile?.display_name?.charAt(0) ||
-                  user.email?.charAt(0)}
+                {userProfile?.display_name?.charAt(0) || user.email?.charAt(0)}
               </Avatar.Fallback>
             </Avatar>
           </Popover.Trigger>
