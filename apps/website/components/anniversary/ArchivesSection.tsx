@@ -35,8 +35,9 @@ const ArchivesSection = () => {
             Archives
           </h2>
           <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
-            Explorez nos archives historiques : rapports d'Assemblée Générale,
-            documents officiels, programmes de concerts et bien plus encore.
+            Explorez nos archives historiques : rapports d&apos;Assemblée
+            Générale, documents officiels, programmes de concerts et bien plus
+            encore.
           </p>
 
           <motion.div

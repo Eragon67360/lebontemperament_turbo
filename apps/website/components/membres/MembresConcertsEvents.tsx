@@ -10,6 +10,37 @@ import { useEffect, useState } from "react";
 import { IoCalendarClear, IoLocationSharp, IoTime } from "react-icons/io5";
 import { MdOpenInNew } from "react-icons/md";
 
+const SectionTitle = ({
+  subtitle,
+  title,
+}: {
+  subtitle: string;
+  title: string;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className="mb-6"
+  >
+    <p className="text-foreground/60 text-sm md:text-base">{subtitle}</p>
+    <h2 className="from-primary via-foreground mt-1 bg-gradient-to-r to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl">
+      {title}
+    </h2>
+  </motion.div>
+);
+
+const LoadingCard = () => (
+  <div className="bg-surface-secondary/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
+    <div className="bg-surface-tertiary/80 mb-4 h-6 w-3/4 rounded-lg"></div>
+    <div className="space-y-3">
+      <div className="bg-surface-tertiary/80 h-4 w-1/2 rounded-lg"></div>
+      <div className="bg-surface-tertiary/80 h-4 w-2/3 rounded-lg"></div>
+      <div className="bg-surface-tertiary/80 h-4 w-3/4 rounded-lg"></div>
+    </div>
+  </div>
+);
+
 const MembresConcertsEvents = () => {
   const [concerts, setConcerts] = useState<PublicConcert[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -102,37 +133,6 @@ const MembresConcertsEvents = () => {
       colors[type as keyof typeof colors] || "bg-surface-secondary text-muted"
     );
   };
-
-  const SectionTitle = ({
-    subtitle,
-    title,
-  }: {
-    subtitle: string;
-    title: string;
-  }) => (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="mb-6"
-    >
-      <p className="text-foreground/60 text-sm md:text-base">{subtitle}</p>
-      <h2 className="from-primary via-foreground mt-1 bg-gradient-to-r to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl">
-        {title}
-      </h2>
-    </motion.div>
-  );
-
-  const LoadingCard = () => (
-    <div className="bg-surface-secondary/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
-      <div className="bg-surface-tertiary/80 mb-4 h-6 w-3/4 rounded-lg"></div>
-      <div className="space-y-3">
-        <div className="bg-surface-tertiary/80 h-4 w-1/2 rounded-lg"></div>
-        <div className="bg-surface-tertiary/80 h-4 w-2/3 rounded-lg"></div>
-        <div className="bg-surface-tertiary/80 h-4 w-3/4 rounded-lg"></div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="container mx-auto flex w-full flex-col space-y-8 px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">

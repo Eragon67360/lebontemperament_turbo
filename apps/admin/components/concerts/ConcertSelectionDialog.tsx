@@ -11,13 +11,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { cn } from "@/lib/utils";
 import type { Tour } from "@/types/tours";
 import type { Concert } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Music2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+/** Ids of the concerts already assigned to the tour. */
+const concertIdsInTour = (concerts: Concert[], tour: Tour | null) =>
+  tour ? concerts.filter((c) => c.tour_id === tour.id).map((c) => c.id) : [];
 
 export function ConcertSelectionDialog({
   isOpen,
@@ -32,17 +37,14 @@ export function ConcertSelectionDialog({
   concerts: Concert[];
   onConfirm: (ids: string[]) => void;
 }) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(() =>
+    isOpen ? concertIdsInTour(concerts, tour) : [],
+  );
 
   // Reset selection when modal opens
-  useEffect(() => {
-    if (isOpen && tour) {
-      const alreadyInTour = concerts
-        .filter((c) => c.tour_id === tour.id)
-        .map((c) => c.id);
-      setSelectedIds(alreadyInTour);
-    }
-  }, [isOpen, tour, concerts]);
+  useResetOnChange([isOpen, tour, concerts], () => {
+    if (isOpen && tour) setSelectedIds(concertIdsInTour(concerts, tour));
+  });
 
   // Assignable concerts: already in this tour, or not in any tour yet.
   const availableConcerts = concerts.filter(

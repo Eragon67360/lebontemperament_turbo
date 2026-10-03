@@ -1,13 +1,13 @@
 {
   "name": "admin",
-  "version": "2.0.117",
+  "version": "2.0.118",
   "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "tsx utils/access.test.ts && tsx utils/uploads.test.ts && tsx utils/revalidateWebsite.test.ts && tsx utils/formSchemas.test.ts && tsx utils/roster/source.test.ts"
   },

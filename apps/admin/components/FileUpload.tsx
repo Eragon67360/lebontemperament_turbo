@@ -1,9 +1,17 @@
 // components/FileUpload.tsx
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+
+/** Stands in for a PDF already stored, so the field shows its name. */
+const pdfPlaceholder = (url: string) => {
+  const fileName = url.split("/").pop() || "document.pdf";
+  return new File([], fileName, { type: "application/pdf" });
+};
+
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
   onFileClear: () => void;
@@ -20,18 +28,21 @@ export function FileUpload({
   currentPDFUrl,
   mode,
 }: FileUploadProps) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(
+    currentImageUrl || null,
+  );
+  const [pdfFile, setPdfFile] = useState<File | null>(() =>
+    !currentImageUrl && currentPDFUrl ? pdfPlaceholder(currentPDFUrl) : null,
+  );
 
-  useEffect(() => {
+  // A new stored file from the parent replaces what the field shows.
+  useResetOnChange([currentImageUrl, currentPDFUrl], () => {
     if (currentImageUrl) {
       setPreview(currentImageUrl);
     } else if (currentPDFUrl) {
-      const fileName = currentPDFUrl.split("/").pop() || "document.pdf";
-      const fakeFile = new File([], fileName, { type: "application/pdf" });
-      setPdfFile(fakeFile);
+      setPdfFile(pdfPlaceholder(currentPDFUrl));
     }
-  }, [currentImageUrl, currentPDFUrl]);
+  });
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {

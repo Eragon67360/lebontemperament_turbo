@@ -22,10 +22,46 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreatePhoto, useUpdatePhoto } from "@/hooks/useAnniversaryPhotos";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { AnniversaryPhoto, PHOTO_CATEGORIES } from "@/types/anniversary";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+
+type PhotoFormData = {
+  title: string;
+  description: string;
+  year: number | null;
+  category: string;
+  image_url: string;
+  display_order: number;
+  is_visible: boolean;
+};
+
+/** The form as it opens: the photo being edited, or a blank one. */
+const buildFormData = (
+  photo: AnniversaryPhoto | undefined,
+  maxOrder: number,
+): PhotoFormData =>
+  photo
+    ? {
+        title: photo.title,
+        description: photo.description || "",
+        year: photo.year,
+        category: photo.category,
+        image_url: photo.image_url,
+        display_order: photo.display_order,
+        is_visible: photo.is_visible ?? true,
+      }
+    : {
+        title: "",
+        description: "",
+        year: null,
+        category: "Concert",
+        image_url: "",
+        display_order: maxOrder + 1,
+        is_visible: true,
+      };
 
 interface PhotoDialogProps {
   open: boolean;
@@ -43,39 +79,14 @@ export function PhotoDialog({
   const createPhoto = useCreatePhoto();
   const updatePhoto = useUpdatePhoto();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    year: null as number | null,
-    category: "Concert" as string,
-    image_url: "",
-    display_order: maxOrder + 1,
-    is_visible: true,
-  });
+  const [formData, setFormData] = useState(() =>
+    buildFormData(photo, maxOrder),
+  );
 
-  useEffect(() => {
-    if (photo) {
-      setFormData({
-        title: photo.title,
-        description: photo.description || "",
-        year: photo.year,
-        category: photo.category,
-        image_url: photo.image_url,
-        display_order: photo.display_order,
-        is_visible: photo.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        year: null,
-        category: "Concert",
-        image_url: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-  }, [photo, maxOrder, open]);
+  // Re-seed the form each time the dialog opens or the photo changes.
+  useResetOnChange([photo, maxOrder, open], () =>
+    setFormData(buildFormData(photo, maxOrder)),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,7 +218,7 @@ export function PhotoDialog({
 
           {/* Display Order */}
           <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
+            <Label htmlFor="display_order">Ordre d&apos;affichage</Label>
             <Input
               id="display_order"
               type="number"

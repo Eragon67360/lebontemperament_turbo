@@ -203,9 +203,14 @@ export default async function ConcertPage({
   // Unknown slug: real 404 status and the site's not-found page.
   if (!dbProject) notFound();
 
+  // Everything that can fail happens here; the JSX below is built outside the
+  // try so a rendering error reaches the route's error boundary, not this catch.
+  let project: ReturnType<typeof transformProjectForFrontend>;
+  let relatedProjects: ReturnType<typeof findRelatedProjects>;
+  let articleSchema: ReturnType<typeof generateArticleSchema>;
   try {
     const supabase = createPublicClient();
-    const project = transformProjectForFrontend(dbProject);
+    project = transformProjectForFrontend(dbProject);
 
     // Fetch all projects for related projects
     const { data: allDbProjects } = await supabase
@@ -219,32 +224,29 @@ export default async function ConcertPage({
       : [];
 
     // Find related projects
-    const relatedProjects = findRelatedProjects(project, allProjects, 3);
+    relatedProjects = findRelatedProjects(project, allProjects, 3);
 
-    const articleSchema = generateArticleSchema(project, slug);
-
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
-        />
-        <JsonLd
-          data={breadcrumbJsonLd([
-            { name: "Concerts", path: "/concerts" },
-            { name: project.name, path: `/concerts/${slug}` },
-          ])}
-        />
-        <ConcertPageClient
-          project={project}
-          relatedProjects={relatedProjects}
-        />
-      </>
-    );
+    articleSchema = generateArticleSchema(project, slug);
   } catch (error) {
     console.error("Error fetching project:", error);
     return <ConcertLoadError />;
   }
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Concerts", path: "/concerts" },
+          { name: project.name, path: `/concerts/${slug}` },
+        ])}
+      />
+      <ConcertPageClient project={project} relatedProjects={relatedProjects} />
+    </>
+  );
 }
 
 function ConcertLoadError() {

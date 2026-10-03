@@ -12,29 +12,29 @@ import {
   useFormConfig,
   useUpdateFormConfig,
 } from "@/hooks/useAnniversaryFormConfig";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { Loader2, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-export function FormConfigInlineEditor() {
-  const { data: config, isLoading, isError, refetch } = useFormConfig();
-  const updateConfig = useUpdateFormConfig();
+type FormConfig = NonNullable<ReturnType<typeof useFormConfig>["data"]>;
 
-  const [formData, setFormData] = useState({
-    section_title: "",
-    section_description: "",
-    name_label: "",
-    email_label: "",
-    message_label: "",
-    year_label: "",
-    submit_button_text: "",
-    success_message: "",
-    is_enabled: true,
-  });
+const EMPTY_FORM = {
+  section_title: "",
+  section_description: "",
+  name_label: "",
+  email_label: "",
+  message_label: "",
+  year_label: "",
+  submit_button_text: "",
+  success_message: "",
+  is_enabled: true,
+};
 
-  useEffect(() => {
-    if (config) {
-      setFormData({
+/** The stored configuration as form fields (empty until it has loaded). */
+const buildFormData = (config: FormConfig | undefined) =>
+  config
+    ? {
         section_title: config.section_title,
         section_description: config.section_description,
         name_label: config.name_label ?? "",
@@ -44,9 +44,19 @@ export function FormConfigInlineEditor() {
         submit_button_text: config.submit_button_text ?? "",
         success_message: config.success_message ?? "",
         is_enabled: config.is_enabled ?? true,
-      });
-    }
-  }, [config]);
+      }
+    : EMPTY_FORM;
+
+export function FormConfigInlineEditor() {
+  const { data: config, isLoading, isError, refetch } = useFormConfig();
+  const updateConfig = useUpdateFormConfig();
+
+  const [formData, setFormData] = useState(() => buildFormData(config));
+
+  // Loaded (or refetched) configuration replaces the fields, as before.
+  useResetOnChange([config], () => {
+    if (config) setFormData(buildFormData(config));
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -189,7 +189,7 @@ export async function GET() {
     });
 
     const duplicates = Array.from(emailMap.entries())
-      .filter(([_, entries]) => entries.length > 1)
+      .filter(([, entries]) => entries.length > 1)
       .map(([email, entries]) => ({
         email,
         entries,

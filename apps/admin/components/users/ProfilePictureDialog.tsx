@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import {
   useDeleteProfilePicture,
   useUploadProfilePicture,
@@ -42,20 +43,19 @@ export function ProfilePictureDialog({
   const isUploading = uploadPicture.isPending;
   const isDeleting = deletePicture.isPending;
 
-  // Reset preview when dialog opens/closes
-  useEffect(() => {
+  // Reset state when dialog opens
+  useResetOnChange([isOpen], () => {
     if (isOpen) {
-      // Reset state when dialog opens
       setSelectedFile(null);
       setPreview(null);
     }
-    // Cleanup function to revoke object URLs when component unmounts or dialog closes
-    return () => {
-      if (preview && preview.startsWith("blob:")) {
-        URL.revokeObjectURL(preview);
-      }
-    };
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  });
+
+  // Revoke a blob preview once it is replaced or the dialog unmounts.
+  useEffect(() => {
+    if (!preview?.startsWith("blob:")) return;
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];

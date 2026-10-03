@@ -65,6 +65,7 @@ const AnniversaryLanding = ({
       showIntro && hero.enable_intro_animation && !shouldReduceMotion && !seen;
 
     if (!playIntro) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs with sessionStorage before paint: a lazy initializer would mismatch the server HTML, and useSyncExternalStore re-renders after paint (the intro would flash)
       setShowIntro(false);
       setShowContent(true);
       onIntroStateChange?.(false);

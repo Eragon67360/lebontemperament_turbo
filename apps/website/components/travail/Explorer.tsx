@@ -1,4 +1,5 @@
 "use client";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { DriveFile } from "@/utils/types";
 import { Button } from "@heroui/react";
 import { FC, useEffect, useState } from "react";
@@ -10,45 +11,108 @@ interface ExplorerProps {
   initialFolderId: string;
 }
 
+/** Lists a Drive folder, split into sub-folders and files. */
+async function loadFolder(folderId: string) {
+  const response = await fetch(
+    `/api/drive/files?folderID=${encodeURIComponent(folderId)}`,
+  );
+  const data = await response.json();
+  if (!Array.isArray(data)) {
+    throw new Error("Response data is not an array");
+  }
+
+  return {
+    folders: data.filter((file: { type: string }) => file.type === "folder"),
+    files: data.filter((file: { type: string }) => file.type === "file"),
+    // Set by the proxy when the listing hit its item cap.
+    truncated: response.headers.get("x-drive-truncated") === "true",
+  };
+}
+
+/** The name the proxy chose (Google Docs gain ".pdf"), from `filename*`. */
+function fileNameFromDisposition(header: string | null): string | null {
+  const encoded = header?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  if (!encoded) return null;
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Downloads through the website's proxy (session cookie, scope check): the
+ * files aren't publicly shared on Drive. The response is checked first, so an
+ * error shows a message instead of being saved as a file named like the score.
+ */
+async function downloadDriveFile(file: DriveFile) {
+  const url = `/api/drive/file?fileId=${encodeURIComponent(file.id ?? "")}&download=1`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      toast.error(
+        response.status === 401
+          ? "Votre session a expiré. Reconnectez-vous pour télécharger."
+          : response.status === 415
+            ? "Ce type de document ne peut pas être téléchargé."
+            : "Le téléchargement a échoué. Réessayez plus tard.",
+      );
+      return;
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download =
+      fileNameFromDisposition(response.headers.get("content-disposition")) ??
+      file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch {
+    toast.error("Le téléchargement a échoué. Vérifiez votre connexion.");
+  }
+}
+
 const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   const [folders, setFolders] = useState<DriveFile[]>([]);
   const [individualFiles, setIndividualFiles] = useState<DriveFile[]>([]);
   const [folderStack, setFolderStack] = useState<string[]>([initialFolderId]);
-  const [loading, setLoading] = useState(false);
+  // The root folder is fetched on mount, so the skeleton shows from the start.
+  const [loading, setLoading] = useState(true);
 
-  const fetchData = async (folderId: string) => {
+  // Callers set `loading` first; this only clears it once the request ends.
+  const fetchData = (folderId: string) =>
+    loadFolder(folderId)
+      .then(({ folders, files, truncated }) => {
+        setFolders(folders);
+        setIndividualFiles(files);
+        if (truncated) {
+          toast.warning(
+            "Ce dossier contient trop d'éléments : seuls les premiers sont affichés",
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch files:", error);
+        toast.error("Erreur lors du chargement des fichiers");
+      })
+      .finally(() => setLoading(false));
+
+  // A new root folder starts a fresh navigation stack.
+  useResetOnChange([initialFolderId], () => {
+    setFolderStack([initialFolderId]);
     setLoading(true);
-    try {
-      const response = await fetch(`/api/drive/files?folderID=${folderId}`);
-      const data = await response.json();
-      if (!Array.isArray(data)) {
-        throw new Error("Response data is not an array");
-      }
-
-      const fetchedFolders = data.filter(
-        (file: { type: string }) => file.type === "folder",
-      );
-      const fetchedFiles = data.filter(
-        (file: { type: string }) => file.type === "file",
-      );
-
-      setFolders(fetchedFolders);
-      setIndividualFiles(fetchedFiles);
-    } catch (error) {
-      console.error("Failed to fetch files:", error);
-      toast.error("Erreur lors du chargement des fichiers");
-    } finally {
-      setLoading(false);
-    }
-  };
+  });
 
   useEffect(() => {
-    setFolderStack([initialFolderId]);
     fetchData(initialFolderId);
   }, [initialFolderId]);
 
   const handleFolderClick = (folderId: string) => {
     setFolderStack((prevStack) => [...prevStack, folderId]);
+    setLoading(true);
     fetchData(folderId);
   };
 
@@ -58,7 +122,10 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       newStack.pop();
       const previousFolderId = newStack[newStack.length - 1];
       setFolderStack(newStack);
-      if (previousFolderId) fetchData(previousFolderId);
+      if (previousFolderId) {
+        setLoading(true);
+        fetchData(previousFolderId);
+      }
     }
   };
 
@@ -145,15 +212,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onPress={() => {
-                      const downloadUrl = `https://drive.google.com/uc?id=${file.id}&export=download`;
-                      const link = document.createElement("a");
-                      link.href = downloadUrl;
-                      link.download = file.name;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
+                    onPress={() => downloadDriveFile(file)}
                     className="cursor-pointer"
                   >
                     Télécharger

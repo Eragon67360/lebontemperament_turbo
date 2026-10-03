@@ -13,6 +13,7 @@ import 'package:lebontemperament/data/models/drive_file.dart';
 import 'package:lebontemperament/data/models/drive_folder.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:lebontemperament/data/services/drive_service.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -59,6 +60,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   List<DriveFile> _folders = [];
   List<DriveFile> _files = [];
   String? _error;
+  String? _downloadingFileId;
 
   List<DriveFolder> get _tabs =>
       ref.read(driveFolderCatalogProvider).value?.tabs ?? const [];
@@ -207,22 +209,60 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     );
   }
 
+  /// Downloads the file through the website proxy (the member's token; the
+  /// files aren't publicly shared on Drive) into a temporary file, then
+  /// opens the platform share sheet so the member saves or forwards it.
   Future<void> _onFileDownload(DriveFile file) async {
-    if (file.id == null) return;
+    final fileId = file.id;
+    if (fileId == null || _downloadingFileId != null) return;
     HapticFeedback.lightImpact();
-    final url = 'https://drive.google.com/uc?id=${file.id}&export=download';
-    final uri = Uri.parse(url);
+    setState(() => _downloadingFileId = fileId);
+
+    Directory? tempDir;
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final download = await ref
+          .read(driveServiceProvider)
+          .downloadAttachment(fileId);
+      final name = _safeFileName(download.fileName ?? file.name);
+      tempDir = await Directory.systemTemp.createTemp('lbt_download_');
+      final tempFile = File('${tempDir.path}/$name');
+      await tempFile.writeAsBytes(download.bytes, flush: true);
+      if (!mounted) return;
+
+      // iPad presents the sheet as a popover and needs an anchor.
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box == null || !box.hasSize
+          ? null
+          : box.localToGlobal(Offset.zero) & box.size;
+      await Share.shareXFiles(
+        [XFile(tempFile.path, mimeType: download.contentType, name: name)],
+        subject: name,
+        sharePositionOrigin: origin,
+      );
+    } on DriveServiceException catch (e) {
+      _showMessage(e.message);
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible de télécharger le fichier.'),
-          ),
-        );
-      }
+      _showMessage('Impossible de télécharger le fichier.');
+    } finally {
+      // The share sheet has copied or handed off the file by now.
+      tempDir?.delete(recursive: true).ignore();
+      if (mounted) setState(() => _downloadingFileId = null);
     }
+  }
+
+  /// A file name the device file system accepts; accents are kept.
+  static String _safeFileName(String name) {
+    final cleaned = name
+        .replaceAll(RegExp(r'[/\\:*?"<>|\x00-\x1f]'), '_')
+        .trim();
+    return cleaned.isEmpty ? 'fichier' : cleaned;
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -603,6 +643,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
           ..._files.map(
             (f) => _FileTile(
               file: f,
+              downloading: _downloadingFileId == f.id,
               onDownload: () => _onFileDownload(f),
               onPlay: _isAudioFile(f)
                   ? () => _showAudioPlayer(context, f)
@@ -766,11 +807,15 @@ class _FileTile extends StatelessWidget {
   final VoidCallback? onPlay;
   final VoidCallback? onView;
 
+  /// True while this file is being fetched for the share sheet.
+  final bool downloading;
+
   const _FileTile({
     required this.file,
     required this.onDownload,
     this.onPlay,
     this.onView,
+    this.downloading = false,
   });
 
   IconData _iconForMimeType(String mimeType) {
@@ -845,12 +890,27 @@ class _FileTile extends StatelessWidget {
               ),
             // An icon like its neighbours: the "Télécharger" text button
             // overflowed the row at 2× text size.
-            IconButton(
-              onPressed: onDownload,
-              icon: const Icon(Icons.download_rounded),
-              color: theme.colorScheme.primary,
-              tooltip: 'Télécharger ${file.name}',
-            ),
+            if (downloading)
+              IconButton(
+                onPressed: null,
+                icon: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: theme.colorScheme.primary,
+                    semanticsLabel: 'Téléchargement de ${file.name}',
+                  ),
+                ),
+                tooltip: 'Téléchargement de ${file.name}',
+              )
+            else
+              IconButton(
+                onPressed: onDownload,
+                icon: const Icon(Icons.download_rounded),
+                color: theme.colorScheme.primary,
+                tooltip: 'Télécharger ${file.name}',
+              ),
           ],
         ),
       ),

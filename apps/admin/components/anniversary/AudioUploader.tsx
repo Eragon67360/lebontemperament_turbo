@@ -126,7 +126,7 @@ export function AudioUploader({
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Cliquez pour parcourir</p>
                   <p className="text-muted-foreground text-xs">
-                    MP3, WAV jusqu'à 50MB
+                    MP3, WAV jusqu&apos;à 50MB
                   </p>
                 </div>
               </>
