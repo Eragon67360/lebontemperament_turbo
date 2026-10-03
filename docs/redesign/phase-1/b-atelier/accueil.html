@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accueil · Administration · Le Bon Tempérament</title>
+<script>(function(){var p=new URLSearchParams(location.search);if(p.get('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');if(p.get('density')==='compact')document.documentElement.setAttribute('data-density','compact');})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+@theme inline {
+  --font-sans: var(--font-sans);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-border: var(--accent-soft-border);
+  --color-on-accent: var(--on-accent);
+  --color-focus: var(--focus);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-strong: var(--danger-strong);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --text-title: var(--fs-title);     --text-title--line-height: var(--lh-title);     --text-title--font-weight: 600;
+  --text-section: var(--fs-section); --text-section--line-height: var(--lh-section); --text-section--font-weight: 600;
+  --text-body: var(--fs-body);       --text-body--line-height: var(--lh-body);
+  --text-detail: var(--fs-detail);   --text-detail--line-height: var(--lh-detail);
+  --text-note: var(--fs-note);       --text-note--line-height: var(--lh-note);
+}
+@layer base {
+  html { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--text); font-size: var(--fs-body); line-height: var(--lh-body); }
+  h1 { font-size: var(--fs-title); line-height: var(--lh-title); font-weight: 600; letter-spacing: -0.01em; }
+  @media (max-width: 1023px) { h1 { font-size: 24px; line-height: 32px; } }
+  h2 { font-size: var(--fs-section); line-height: var(--lh-section); font-weight: 600; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+  * { transition-duration: var(--motion); transition-timing-function: var(--ease); }
+  button, [role="button"], a, summary { cursor: pointer; }
+  ::selection { background: var(--accent-soft-border); }
+}
+@layer components {
+  .skip-link { position: absolute; left: 16px; top: -64px; z-index: 100; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); }
+  .skip-link:focus { top: 12px; }
+
+  /* Sidebar */
+  .nav-item { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--radius-md); color: var(--text); min-height: 44px; transition: background var(--motion) var(--ease); }
+  .nav-item:hover { background: var(--sunken); }
+  .nav-item.is-open { color: var(--text); }
+  .nav-item.is-current { background: var(--accent-soft); color: var(--accent-text); box-shadow: inset 3px 0 0 var(--accent); }
+  .nav-item.is-current .nav-desc { color: var(--accent-text); opacity: .85; }
+  .nav-item[aria-expanded="true"] .nav-chevron { transform: rotate(180deg); }
+  .nav-children { margin: 2px 0 6px 0; padding-left: 32px; display: flex; flex-direction: column; gap: 2px; }
+  .nav-sub { display: flex; align-items: center; min-height: 40px; padding: 6px 12px; border-radius: var(--radius-sm); color: var(--text-muted); font-size: 15px; line-height: 22px; }
+  .nav-sub:hover { background: var(--sunken); color: var(--text); }
+  .nav-sub.is-current { background: var(--accent-soft); color: var(--accent-text); font-weight: 500; box-shadow: inset 3px 0 0 var(--accent); }
+
+  .crumb-link { color: var(--text-muted); }
+  .crumb-link:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--control-h); padding: 0 16px; border-radius: var(--radius-md); font-size: 15px; line-height: 20px; font-weight: 500; white-space: nowrap; border: 1px solid transparent; transition: background var(--motion) var(--ease), border-color var(--motion) var(--ease), color var(--motion) var(--ease); }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+  .btn-primary { background: var(--accent-strong); color: var(--on-accent); }
+  .btn-primary:hover:not(:disabled) { background: #105155; }
+  .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+  .btn-secondary:hover:not(:disabled) { background: var(--sunken); }
+  .btn-ghost { background: transparent; color: var(--accent-text); }
+  .btn-ghost:hover:not(:disabled) { background: var(--accent-soft); }
+  .btn-quiet { background: transparent; color: var(--text-muted); }
+  .btn-quiet:hover:not(:disabled) { background: var(--sunken); color: var(--text); }
+  .btn-danger { background: var(--danger-strong); color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #951d14; }
+  .btn-danger-outline { background: var(--surface); color: var(--danger); border-color: var(--danger); }
+  .btn-danger-outline:hover:not(:disabled) { background: var(--danger-soft); }
+  .btn-sm { min-height: 40px; padding: 0 12px; font-size: 14px; }
+  .btn-icon { width: var(--control-h); padding: 0; }
+  @media (pointer: coarse) { .btn-sm { min-height: 44px; } }
+
+  /* Chips */
+  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; font-size: var(--fs-note); line-height: var(--lh-note); font-weight: 500; background: var(--sunken); color: var(--text); white-space: nowrap; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex: none; }
+  .chip-success { background: var(--success-soft); color: var(--success); }
+  .chip-warning { background: var(--warning-soft); color: var(--warning); }
+  .chip-danger { background: var(--danger-soft); color: var(--danger); }
+  .chip-info { background: var(--info-soft); color: var(--info); }
+  .chip-accent { background: var(--accent-soft); color: var(--accent-text); }
+  .chip-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--text-muted); }
+  .count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1; background: var(--accent-strong); color: #fff; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 24px 0; }
+  .card-body { padding: 20px 24px 24px; }
+  @media (max-width: 1023px) { .card-head { padding: 16px 16px 0; } .card-body { padding: 16px; } }
+
+  /* Help disclosure */
+  .help { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+  .help > summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 14px; font-size: 15px; font-weight: 500; color: var(--accent-text); border-radius: var(--radius-md); }
+  .help > summary::-webkit-details-marker { display: none; }
+  .help > summary:hover { background: var(--sunken); }
+  .help[open] > summary { border-bottom: 1px solid var(--border); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .help .help-body { padding: 14px 16px 16px; font-size: 15px; line-height: 24px; color: var(--text); }
+  .help .help-body p + p, .help .help-body ol + p { margin-top: 8px; }
+  .help .help-body ol { list-style: decimal; padding-left: 22px; display: grid; gap: 4px; }
+  .help kbd { font: 500 12px/1 var(--font-sans); padding: 3px 6px; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 6px; background: var(--surface); color: var(--text); }
+
+  /* Fields */
+  .field { display: grid; gap: 6px; align-content: start; }
+  .label { font-size: 15px; line-height: 22px; font-weight: 500; color: var(--text); }
+  .label .req { color: var(--danger); font-weight: 600; margin-left: 2px; }
+  .label .opt { color: var(--text-muted); font-weight: 400; margin-left: 6px; font-size: 14px; }
+  .hint { font-size: var(--fs-detail); line-height: var(--lh-detail); color: var(--text-muted); }
+  .input { width: 100%; min-height: var(--control-h); padding: 0 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); color: var(--text); font-size: 16px; line-height: 24px; }
+  .input::placeholder { color: var(--text-faint); }
+  .input:hover { border-color: var(--text-faint); }
+  .input:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--focus); }
+  textarea.input { padding: 10px 14px; min-height: 112px; resize: vertical; }
+  .input[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+  .error { display: flex; align-items: flex-start; gap: 6px; font-size: var(--fs-detail); line-height: var(--lh-detail); color: var(--danger); font-weight: 500; }
+  .select-wrap { position: relative; }
+  .select-wrap .input { appearance: none; padding-right: 40px; }
+  .select-wrap > svg { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); }
+  .checkbox { appearance: none; width: 20px; height: 20px; border: 1.5px solid var(--border-strong); border-radius: 5px; background: var(--surface); display: inline-grid; place-content: center; flex: none; cursor: pointer; }
+  .checkbox:checked { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .checkbox:checked::after { content: ""; width: 10px; height: 6px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+  .checkbox:indeterminate { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .checkbox:indeterminate::after { content: ""; width: 10px; height: 2px; background: #fff; }
+  .check-target { display: inline-grid; place-items: center; width: 44px; height: 44px; margin: -12px; }
+
+  /* Stepper */
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+  .step-n { width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; font-size: 14px; font-weight: 600; flex: none; background: var(--sunken); color: var(--text-muted); }
+  .step.is-active { border-color: var(--accent-soft-border); background: var(--accent-soft); }
+  .step.is-active .step-n { background: var(--accent-strong); color: #fff; }
+  .step.is-done .step-n { background: var(--success-soft); color: var(--success); }
+  @media (max-width: 767px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Menu */
+  .menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 272px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 6px; z-index: 60; }
+  .menu-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 15px; color: var(--text); text-align: left; }
+  .menu-item:hover { background: var(--sunken); }
+  .menu-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+  .menu-label { padding: 8px 12px 4px; font-size: var(--fs-note); color: var(--text-muted); }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 2px; gap: 2px; background: var(--surface); }
+  .seg button { min-height: 32px; padding: 0 10px; border-radius: 4px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); }
+
+  /* Dialog */
+  dialog.dlg { position: fixed; inset: 0; margin: auto; max-height: calc(100dvh - 32px); overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--raised); color: var(--text); padding: 0; width: min(560px, calc(100vw - 32px)); box-shadow: var(--shadow-lg); }
+  dialog.dlg::backdrop { background: rgba(10, 16, 16, .55); }
+  dialog.dlg .dlg-body { padding: 24px 24px 8px; }
+  dialog.dlg .dlg-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; padding: 16px 24px 24px; }
+  @media (max-width: 639px) { dialog.dlg .dlg-actions { flex-direction: column-reverse; } dialog.dlg .dlg-actions .btn { width: 100%; } }
+
+  /* Progress */
+  .progress { height: 8px; border-radius: 999px; background: var(--sunken); overflow: hidden; }
+  .progress > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
+  /* Avatar */
+  .avatar { display: inline-grid; place-items: center; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-weight: 600; flex: none; }
+
+  /* Sticky action bars */
+  .action-bar { position: sticky; bottom: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--border); margin: 0 calc(-1 * var(--space-page)); padding: 12px var(--space-page); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  @media (max-width: 1023px) { :root { --space-page: 16px; } }
+  .reduced-motion-note { display: none; }
+}
+
+@layer components {
+  .task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 16px 20px; }
+  .task + .task { border-top: 1px solid var(--border); }
+  .task-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: grid; place-items: center; flex: none; }
+  @media (max-width: 767px) { .task { grid-template-columns: auto minmax(0, 1fr); padding: 16px; } .task .task-action { grid-column: 2; } }
+  .job { min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-sm); min-height: 100%; }
+  .job h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+  .job ul { display: grid; gap: 6px; font-size: var(--fs-detail); line-height: var(--lh-detail); color: var(--text-muted); }
+  .job ul li { display: flex; gap: 8px; align-items: flex-start; }
+  .job ul li i { margin-top: 2px; flex: none; }
+  .ready li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 40px; padding: 4px 0; }
+  .ready li + li { border-top: 1px solid var(--border); }
+  .agenda li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; padding: 12px 0; align-items: start; }
+  .agenda li + li { border-top: 1px solid var(--border); }
+  .date-badge { display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--sunken); line-height: 1; }
+  .date-badge b { font-size: 18px; font-weight: 600; }
+  .date-badge span { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-top: 3px; }
+}
+</style>
+</head>
+<body class="min-h-dvh bg-bg text-text">
+<a href="#main" class="skip-link">Aller au contenu</a>
+<div class="flex min-h-dvh">
+  <div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden lg:hidden" aria-hidden="true"></div>
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 lg:h-dvh lg:self-start flex flex-col bg-surface border-r border-border transition-transform" aria-label="Navigation principale">
+    <div class="flex items-center gap-3 px-4 h-16 border-b border-border shrink-0">
+      <span class="avatar size-9 bg-accent-strong! text-on-accent! text-[13px] tracking-wide" aria-hidden="true">LBT</span>
+      <div class="min-w-0 leading-tight">
+        <div class="font-semibold text-[15px] truncate">Le Bon Tempérament</div>
+        <div class="text-note text-muted">Administration</div>
+      </div>
+      <button type="button" id="close-nav" class="btn btn-quiet btn-icon ml-auto lg:hidden" aria-label="Fermer la navigation"><i data-lucide="x" class="size-5" aria-hidden="true"></i></button>
+    </div>
+    <nav class="flex-1 overflow-y-auto px-3 py-4">
+      <ul class="flex flex-col gap-1"><li>
+      <a href="accueil.html" aria-current="page"
+        class="nav-item is-open is-current" data-nav="accueil" title="Ce qui vous attend cette semaine">
+        <i data-lucide="house" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Accueil</span>
+          <span class="nav-desc block text-note text-muted truncate">Ce qui vous attend cette semaine</span>
+        </span>
+        
+      </a></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-campagne"
+        class="nav-item  " data-nav="campagne" title="Préparer et publier la page des 40 ans">
+        <i data-lucide="cake" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Campagne 40 ans</span>
+          <span class="nav-desc block text-note text-muted truncate">Préparer et publier la page des 40 ans</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-campagne" class="nav-children hidden"><li><a href="#" class="nav-sub " >Vue d'ensemble et publication</a></li><li><a href="#" class="nav-sub " >Contenu de la page</a></li><li><a href="#" class="nav-sub " >Témoignages</a></li></ul></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-concerts"
+        class="nav-item  " data-nav="concerts" title="Ce que le public voit sur le site">
+        <i data-lucide="music-2" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Concerts et site public</span>
+          <span class="nav-desc block text-note text-muted truncate">Ce que le public voit sur le site</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-concerts" class="nav-children hidden"><li><a href="nouveau-concert.html" class="nav-sub " >Concerts et tournées</a></li><li><a href="#" class="nav-sub " >Histoires de concerts</a></li><li><a href="#" class="nav-sub " >Vidéos</a></li></ul></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-saison"
+        class="nav-item  " data-nav="saison" title="Partitions, répétitions et événements">
+        <i data-lucide="calendar-days" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Saison des membres</span>
+          <span class="nav-desc block text-note text-muted truncate">Partitions, répétitions et événements</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-saison" class="nav-children hidden"><li><a href="#" class="nav-sub " >Partitions et documents</a></li><li><a href="#" class="nav-sub " >Répétitions</a></li><li><a href="#" class="nav-sub " >Événements</a></li></ul></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-membres"
+        class="nav-item  " data-nav="membres" title="Qui fait partie de l'association">
+        <i data-lucide="users" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Membres et accès</span>
+          <span class="nav-desc block text-note text-muted truncate">Qui fait partie de l'association</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-membres" class="nav-children hidden"><li><a href="membres.html" class="nav-sub " >Membres</a></li><li><a href="#" class="nav-sub " >Liste de diffusion</a></li></ul></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-association"
+        class="nav-item  " data-nav="association" title="Comptes rendus du conseil d'administration">
+        <i data-lucide="landmark" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Association</span>
+          <span class="nav-desc block text-note text-muted truncate">Comptes rendus du conseil d'administration</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-association" class="nav-children hidden"><li><a href="#" class="nav-sub " >Comptes rendus du CA</a></li></ul></li></ul>
+    </nav>
+    <div class="shrink-0 border-t border-border p-3">
+      <a href="#" class="nav-item">
+        <i data-lucide="external-link" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6">Voir le site public</span>
+          <span class="nav-desc block text-note text-muted">lebontemperament.com, dans un nouvel onglet</span>
+        </span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <header class="sticky top-0 z-30 h-16 flex items-center gap-2 lg:gap-4 px-4 lg:px-8 border-b border-border bg-bg/85 backdrop-blur">
+      <button type="button" id="open-nav" class="btn btn-quiet btn-icon lg:hidden -ml-2" aria-label="Ouvrir la navigation" aria-controls="sidebar" aria-expanded="false"><i data-lucide="menu" class="size-6" aria-hidden="true"></i></button>
+      <nav aria-label="Vous êtes ici" class="min-w-0 flex items-center gap-2 text-detail">
+        <span class="text-muted shrink-0 max-sm:hidden">Vous êtes ici :</span>
+        <ol class="flex items-center gap-1.5 min-w-0"><li class="flex items-center gap-1.5 min-w-0 "><span aria-current="page" class="font-medium text-text truncate">Accueil</span></li></ol>
+      </nav>
+      <div class="ml-auto flex items-center gap-1 lg:gap-2">
+        <a href="#" class="btn btn-quiet btn-sm max-lg:hidden" title="Signaler un problème"><i data-lucide="life-buoy" class="size-5" aria-hidden="true"></i>Aide</a>
+        <div class="relative">
+          <button type="button" id="account-btn" class="btn btn-quiet pl-1.5 pr-2 gap-2" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu">
+            <span class="relative">
+              <span class="avatar size-9 text-[13px]" aria-hidden="true">CM</span>
+              <span class="absolute -top-1 -right-1 count min-w-[18px] h-[18px] px-1 text-[11px]" aria-hidden="true">2</span>
+            </span>
+            <span class="max-lg:hidden text-[15px] font-medium">Camille Martin</span>
+            <span class="sr-only">Compte de Camille Martin, 2 messages non lus</span>
+            <i data-lucide="chevron-down" class="size-4 text-muted max-lg:hidden" aria-hidden="true"></i>
+          </button>
+          <div id="account-menu" role="menu" class="menu hidden" aria-labelledby="account-btn">
+            <div class="px-3 pt-2 pb-3">
+              <div class="font-medium">Camille Martin</div>
+              <div class="text-detail text-muted">Administratrice · camille.martin@example.org</div>
+            </div>
+            <div class="menu-sep"></div>
+            <a href="#" role="menuitem" class="menu-item"><i data-lucide="mail" class="size-5 text-muted" aria-hidden="true"></i><span class="flex-1">Messages</span><span class="count">2</span></a>
+            <a href="#" role="menuitem" class="menu-item"><i data-lucide="life-buoy" class="size-5 text-muted" aria-hidden="true"></i>Signaler un problème</a>
+            <div class="menu-sep"></div>
+            <div class="menu-label">Apparence</div>
+            <div class="menu-item" role="none">
+              <i data-lucide="sun-moon" class="size-5 text-muted" aria-hidden="true"></i><span class="flex-1">Thème</span>
+              <div class="seg" role="group" aria-label="Thème">
+                <button type="button" role="menuitemradio" data-theme-set="light" aria-pressed="true">Clair</button>
+                <button type="button" role="menuitemradio" data-theme-set="dark" aria-pressed="false">Sombre</button>
+              </div>
+            </div>
+            <div class="menu-item" role="none">
+              <i data-lucide="rows-3" class="size-5 text-muted" aria-hidden="true"></i><span class="flex-1">Listes</span>
+              <div class="seg" role="group" aria-label="Densité des listes">
+                <button type="button" role="menuitemradio" data-density-set="comfortable" aria-pressed="true">Aérées</button>
+                <button type="button" role="menuitemradio" data-density-set="compact" aria-pressed="false">Compactes</button>
+              </div>
+            </div>
+            <div class="menu-sep"></div>
+            <a href="#" role="menuitem" class="menu-item"><i data-lucide="log-out" class="size-5 text-muted" aria-hidden="true"></i>Se déconnecter</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="flex-1 w-full max-w-[1120px] px-4 py-6 lg:px-8 lg:py-8" style="--space-page: 16px" tabindex="-1">
+
+<div class="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between lg:gap-6 mb-6">
+  <div class="min-w-0">
+    <h1>Bonjour Camille</h1>
+    <p class="text-muted mt-1 max-w-[62ch]">Voici ce qui vous attend. Commencez par la première tâche&nbsp;; chacune s'explique en une phrase et se termine en quelques clics.</p>
+  </div>
+  <p class="text-detail text-muted shrink-0">Vendredi 3 octobre 2026</p>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+  <div class="flex flex-col gap-6 min-w-0">
+
+    <section class="card" aria-labelledby="todo-h">
+      <div class="card-head">
+        <div>
+          <h2 id="todo-h">À faire <span class="count align-middle ml-1">5</span></h2>
+          <p class="text-detail text-muted mt-1">Classées de la plus ancienne à la plus récente.</p>
+        </div>
+      </div>
+      <div class="mt-4 border-t border-border">
+        <article class="task">
+          <span class="task-icon bg-accent-soft text-accent-text"><i data-lucide="refresh-cw" class="size-5" aria-hidden="true"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-medium">La liste des membres a changé : 4 changements à vérifier</h3>
+            <p class="text-detail text-muted mt-0.5">Membres et accès · dernière vérification il y a 6 jours. Rien n'est modifié tant que vous n'avez pas choisi quoi appliquer.</p>
+            <ol class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-note text-muted" aria-label="Étapes">
+              <li class="flex items-center gap-1.5"><span class="step-n size-5! text-[11px]! bg-accent-strong! text-white!">1</span>Vérifier</li><li aria-hidden="true">·</li>
+              <li class="flex items-center gap-1.5"><span class="step-n size-5! text-[11px]!">2</span>Choisir</li><li aria-hidden="true">·</li>
+              <li class="flex items-center gap-1.5"><span class="step-n size-5! text-[11px]!">3</span>Appliquer</li>
+            </ol>
+          </div>
+          <a href="membres.html" class="btn btn-primary task-action">Vérifier les changements</a>
+        </article>
+        <article class="task">
+          <span class="task-icon bg-warning-soft text-warning"><i data-lucide="folder-sync" class="size-5" aria-hidden="true"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-medium">Synchronisation Drive : 12 nouveaux documents, 1 dossier non reconnu</h3>
+            <p class="text-detail text-muted mt-0.5">Saison des membres · cette nuit à 3 h 30. Le dossier « Programme Noël 2026/Brouillons » n'est ni un programme ni un groupe connu&nbsp;: il n'a pas été importé.</p>
+          </div>
+          <a href="#" class="btn btn-secondary task-action">Voir le détail</a>
+        </article>
+        <article class="task">
+          <span class="task-icon bg-accent-soft text-accent-text"><i data-lucide="message-square-heart" class="size-5" aria-hidden="true"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-medium">3 témoignages attendent votre avis</h3>
+            <p class="text-detail text-muted mt-0.5">Campagne 40 ans · envoyés par des visiteurs du site. Ils ne seront visibles qu'après votre validation.</p>
+          </div>
+          <a href="#" class="btn btn-secondary task-action">Modérer</a>
+        </article>
+        <article class="task">
+          <span class="task-icon bg-sunken text-muted"><i data-lucide="mail-x" class="size-5" aria-hidden="true"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-medium">L'invitation de Hugo Lefèvre a expiré</h3>
+            <p class="text-detail text-muted mt-0.5">Membres et accès · il n'a pas créé son compte dans les 7 jours. Renvoyer l'invitation lui donne un nouveau lien.</p>
+          </div>
+          <a href="#" class="btn btn-secondary task-action">Renvoyer l'invitation</a>
+        </article>
+        <article class="task">
+          <span class="task-icon bg-sunken text-muted"><i data-lucide="mail" class="size-5" aria-hidden="true"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-medium">2 messages non lus</h3>
+            <p class="text-detail text-muted mt-0.5">Réponses à vos signalements, dans le menu de votre compte.</p>
+          </div>
+          <a href="#" class="btn btn-secondary task-action">Lire</a>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="jobs-h">
+      <div class="flex items-end justify-between gap-4 mb-3">
+        <div>
+          <h2 id="jobs-h">Que voulez-vous faire ?</h2>
+          <p class="text-detail text-muted mt-1">Un espace par tâche, avec ce qui vous y attend.</p>
+        </div>
+      </div>
+      <div class="grid gap-4 grid-cols-[minmax(0,1fr)] sm:grid-cols-2">
+        <article class="job">
+          <div class="flex items-center gap-3"><span class="task-icon bg-accent-soft text-accent-text"><i data-lucide="cake" class="size-5" aria-hidden="true"></i></span><h3>Campagne 40 ans</h3></div>
+          <p class="text-detail text-muted -mt-1">Préparer et publier la page des 40 ans.</p>
+          <ul>
+            <li><i data-lucide="circle-alert" class="size-4 text-warning" aria-hidden="true"></i><span>3 témoignages à modérer</span></li>
+            <li><i data-lucide="circle-alert" class="size-4 text-warning" aria-hidden="true"></i><span>2 sections à compléter</span></li>
+          </ul>
+          <a href="#" class="btn btn-ghost btn-sm self-start -ml-3 mt-auto">Ouvrir la campagne<i data-lucide="arrow-right" class="size-4" aria-hidden="true"></i></a>
+        </article>
+        <article class="job">
+          <div class="flex items-center gap-3"><span class="task-icon bg-accent-soft text-accent-text"><i data-lucide="music-2" class="size-5" aria-hidden="true"></i></span><h3>Concerts et site public</h3></div>
+          <p class="text-detail text-muted -mt-1">Ce que le public voit sur le site.</p>
+          <ul>
+            <li><i data-lucide="calendar" class="size-4 text-muted" aria-hidden="true"></i><span>Prochain concert le 15 novembre</span></li>
+            <li><i data-lucide="check" class="size-4 text-success" aria-hidden="true"></i><span>Histoires et vidéos à jour</span></li>
+          </ul>
+          <a href="nouveau-concert.html" class="btn btn-ghost btn-sm self-start -ml-3 mt-auto">Ajouter un concert<i data-lucide="arrow-right" class="size-4" aria-hidden="true"></i></a>
+        </article>
+        <article class="job">
+          <div class="flex items-center gap-3"><span class="task-icon bg-accent-soft text-accent-text"><i data-lucide="calendar-days" class="size-5" aria-hidden="true"></i></span><h3>Saison des membres</h3></div>
+          <p class="text-detail text-muted -mt-1">Partitions, répétitions et événements.</p>
+          <ul>
+            <li><i data-lucide="circle-alert" class="size-4 text-warning" aria-hidden="true"></i><span>1 dossier Drive non reconnu</span></li>
+            <li><i data-lucide="check" class="size-4 text-success" aria-hidden="true"></i><span>12 documents ajoutés cette nuit</span></li>
+          </ul>
+          <a href="#" class="btn btn-ghost btn-sm self-start -ml-3 mt-auto">Synchroniser depuis Drive<i data-lucide="arrow-right" class="size-4" aria-hidden="true"></i></a>
+        </article>
+        <article class="job">
+          <div class="flex items-center gap-3"><span class="task-icon bg-accent-soft text-accent-text"><i data-lucide="users" class="size-5" aria-hidden="true"></i></span><h3>Membres et accès</h3></div>
+          <p class="text-detail text-muted -mt-1">Qui fait partie de l'association.</p>
+          <ul>
+            <li><i data-lucide="circle-alert" class="size-4 text-warning" aria-hidden="true"></i><span>4 changements à vérifier, 1 invitation expirée</span></li>
+            <li><i data-lucide="users" class="size-4 text-muted" aria-hidden="true"></i><span>127 membres, 2 invitations en cours</span></li>
+          </ul>
+          <a href="membres.html" class="btn btn-ghost btn-sm self-start -ml-3 mt-auto">Ouvrir les membres<i data-lucide="arrow-right" class="size-4" aria-hidden="true"></i></a>
+        </article>
+        <article class="job sm:col-span-2">
+          <div class="flex items-center gap-3"><span class="task-icon bg-accent-soft text-accent-text"><i data-lucide="landmark" class="size-5" aria-hidden="true"></i></span><h3>Association</h3></div>
+          <div class="flex gap-4 items-start rounded-md border border-dashed border-border-strong p-4">
+            <span class="task-icon bg-sunken text-muted"><i data-lucide="inbox" class="size-5" aria-hidden="true"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-medium">Aucun signalement en attente</p>
+              <p class="text-detail text-muted mt-0.5">Quand un membre signale un problème depuis le site ou l'application, il apparaît ici. Le dernier a été résolu le 20 septembre.</p>
+              <a href="#" class="btn btn-secondary btn-sm mt-3">Déposer un compte rendu du CA</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <div class="flex flex-col gap-6 min-w-0">
+    <section class="card" aria-labelledby="camp-h">
+      <div class="card-head">
+        <div class="min-w-0">
+          <h2 id="camp-h">Campagne 40 ans</h2>
+          <p class="text-detail text-muted mt-1">Publication prévue début 2027. La page reste masquée jusqu'à ce que vous la publiiez.</p>
+        </div>
+        <span class="chip chip-outline shrink-0"><i data-lucide="eye-off" class="size-3.5" aria-hidden="true"></i>Page masquée</span>
+      </div>
+      <div class="card-body">
+        <div class="flex items-baseline justify-between gap-3">
+          <p class="font-medium">7 sections prêtes sur 10</p>
+          <p class="text-detail text-muted">70 %</p>
+        </div>
+        <div class="progress mt-2" role="progressbar" aria-valuenow="7" aria-valuemin="0" aria-valuemax="10" aria-label="Sections prêtes"><span style="width:70%"></span></div>
+        <ul class="ready mt-4 text-[15px]">
+          <li><i data-lucide="circle-check" class="size-5 text-success" aria-hidden="true"></i><span>En-tête</span><span class="text-note text-muted">Prêt</span></li>
+          <li><i data-lucide="circle-check" class="size-5 text-success" aria-hidden="true"></i><span>Chiffres clés</span><span class="text-note text-muted">Prêt</span></li>
+          <li><i data-lucide="circle-check" class="size-5 text-success" aria-hidden="true"></i><span>Cartes de navigation</span><span class="text-note text-muted">Prêt</span></li>
+          <li><i data-lucide="circle-alert" class="size-5 text-warning" aria-hidden="true"></i><span>Chronologie <span class="text-muted">· 2 événements sans date</span></span><a href="#" class="btn btn-ghost btn-sm -mr-3">Compléter</a></li>
+          <li><i data-lucide="circle-check" class="size-5 text-success" aria-hidden="true"></i><span>Vidéos</span><span class="text-note text-muted">Prêt</span></li>
+          <li><i data-lucide="circle-dashed" class="size-5 text-muted" aria-hidden="true"></i><span>Souvenirs audio <span class="text-muted">· vide</span></span><a href="#" class="btn btn-ghost btn-sm -mr-3">Ajouter</a></li>
+          <li><i data-lucide="circle-check" class="size-5 text-success" aria-hidden="true"></i><span>Photos</span><span class="text-note text-muted">Prêt</span></li>
+          <li><i data-lucide="circle-check" class="size-5 text-success" aria-hidden="true"></i><span>Archives</span><span class="text-note text-muted">Prêt</span></li>
+          <li><i data-lucide="circle-check" class="size-5 text-success" aria-hidden="true"></i><span>Formulaire</span><span class="text-note text-muted">Prêt</span></li>
+          <li><i data-lucide="circle-alert" class="size-5 text-warning" aria-hidden="true"></i><span>Modération <span class="text-muted">· 3 en attente</span></span><a href="#" class="btn btn-ghost btn-sm -mr-3">Modérer</a></li>
+        </ul>
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+          <a href="#" class="btn btn-secondary">Prévisualiser la page</a>
+          <p class="text-note text-muted">La publication se fait en 3 étapes : Vérifier · Prévisualiser · Publier.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="agenda-h">
+      <div class="card-head">
+        <div>
+          <h2 id="agenda-h">À venir</h2>
+          <p class="text-detail text-muted mt-1">Les prochains rendez-vous de l'association.</p>
+        </div>
+      </div>
+      <div class="card-body pt-2!">
+        <ul class="agenda">
+          <li><span class="date-badge" aria-hidden="true"><b>7</b><span>oct.</span></span><div class="min-w-0"><p class="font-medium">Répétition Adultes</p><p class="text-detail text-muted">Mardi 7 octobre, 20 h · Salle Saint-Thomas</p></div></li>
+          <li><span class="date-badge" aria-hidden="true"><b>8</b><span>oct.</span></span><div class="min-w-0"><p class="font-medium">Répétition Jeunes</p><p class="text-detail text-muted">Mercredi 8 octobre, 18 h 30</p></div></li>
+          <li><span class="date-badge" aria-hidden="true"><b>18</b><span>oct.</span></span><div class="min-w-0"><p class="font-medium">Assemblée générale</p><p class="text-detail text-muted">Samedi 18 octobre, 14 h</p></div></li>
+          <li><span class="date-badge bg-accent-soft! text-accent-text!" aria-hidden="true"><b>15</b><span class="text-accent-text!">nov.</span></span><div class="min-w-0"><p class="font-medium">Concert « Entre terre et ciel »</p><p class="text-detail text-muted">Samedi 15 novembre, 20 h 30 · Église Saint-Paul, Strasbourg</p><span class="chip chip-accent mt-1.5">Public</span></div></li>
+        </ul>
+      </div>
+    </section>
+
+    <details class="help">
+      <summary><i data-lucide="circle-help" class="size-5" aria-hidden="true"></i>Comment ça marche ?</summary>
+      <div class="help-body">
+        <p><strong>À faire</strong> rassemble tout ce qui attend une décision de votre part. Quand la liste est vide, tout est à jour.</p>
+        <p><strong>Que voulez-vous faire ?</strong> reprend les mêmes espaces que le menu de gauche, avec ce qui vous y attend. Vous pouvez aussi y aller par le menu.</p>
+        <p>Les vérifications de la liste des membres et de Drive ne modifient rien sans vous : vous voyez d'abord les changements, vous choisissez, puis vous appliquez.</p>
+      </div>
+    </details>
+  </div>
+</div>
+
+    </main>
+  </div>
+</div>
+<script>
+(function(){
+  var html = document.documentElement;
+  function syncSeg(){
+    var t = html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    document.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.themeSet === t)); });
+    var d = html.getAttribute('data-density') === 'compact' ? 'compact' : 'comfortable';
+    document.querySelectorAll('[data-density-set]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.densitySet === d)); });
+  }
+  function setParam(k, v){ var u = new URL(location.href); if (v) u.searchParams.set(k, v); else u.searchParams.delete(k); history.replaceState(null, '', u); }
+  document.querySelectorAll('[data-theme-set]').forEach(function(b){ b.addEventListener('click', function(){ if (b.dataset.themeSet === 'dark') { html.setAttribute('data-theme','dark'); setParam('theme','dark'); } else { html.removeAttribute('data-theme'); setParam('theme', null); } syncSeg(); }); });
+  document.querySelectorAll('[data-density-set]').forEach(function(b){ b.addEventListener('click', function(){ if (b.dataset.densitySet === 'compact') { html.setAttribute('data-density','compact'); setParam('density','compact'); } else { html.removeAttribute('data-density'); setParam('density', null); } syncSeg(); }); });
+  syncSeg();
+
+  // Account menu
+  var btn = document.getElementById('account-btn'), menu = document.getElementById('account-menu');
+  function closeMenu(){ menu.classList.add('hidden'); btn.setAttribute('aria-expanded','false'); }
+  btn.addEventListener('click', function(){ var open = menu.classList.toggle('hidden') === false; btn.setAttribute('aria-expanded', String(open)); if (open) { var f = menu.querySelector('[role="menuitem"]'); f && f.focus(); } });
+  document.addEventListener('click', function(e){ if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeMenu(); closeNav(); } });
+
+  // Mobile navigation drawer
+  var sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), openBtn = document.getElementById('open-nav');
+  function openNav(){ sb.classList.remove('-translate-x-full'); bd.classList.remove('hidden'); openBtn.setAttribute('aria-expanded','true'); var f = sb.querySelector('a, button'); f && f.focus(); }
+  function closeNav(){ sb.classList.add('-translate-x-full'); bd.classList.add('hidden'); openBtn.setAttribute('aria-expanded','false'); }
+  openBtn.addEventListener('click', openNav);
+  document.getElementById('close-nav').addEventListener('click', function(){ closeNav(); openBtn.focus(); });
+  bd.addEventListener('click', closeNav);
+
+  // Sidebar accordion
+  document.querySelectorAll('.nav-item[aria-expanded]').forEach(function(b){
+    b.addEventListener('click', function(){ var open = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', String(!open)); b.classList.toggle('is-open', !open); document.getElementById(b.getAttribute('aria-controls')).classList.toggle('hidden', open); });
+  });
+
+  lucide.createIcons();
+  
+})();
+</script>
+</body>
+</html>
