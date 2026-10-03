@@ -9,11 +9,19 @@ import { useEffect, useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
 import { IoImageOutline } from "react-icons/io5";
 
-const ProjectViewer = () => {
-  const [stories, setStories] = useState<ConcertProject[]>([]);
-  const [loading, setLoading] = useState(true);
+type ProjectViewerProps = {
+  /** Loaded on the server by the page; when missing, fetched from /api/projects. */
+  initialStories?: ConcertProject[];
+};
+
+const ProjectViewer = ({ initialStories }: ProjectViewerProps) => {
+  const [stories, setStories] = useState<ConcertProject[]>(
+    initialStories ?? [],
+  );
+  const [loading, setLoading] = useState(!initialStories);
 
   useEffect(() => {
+    if (initialStories) return;
     const fetchStories = async () => {
       try {
         const response = await fetch("/api/projects");
@@ -28,7 +36,7 @@ const ProjectViewer = () => {
     };
 
     fetchStories();
-  }, []);
+  }, [initialStories]);
 
   if (loading) {
     return (
