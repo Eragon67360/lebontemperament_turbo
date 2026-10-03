@@ -1,11 +1,8 @@
 import { JsonLd } from "@/components/JsonLd";
-import {
-  getAnniversaryPageData,
-  isAnniversaryFeatureEnabled,
-} from "@/lib/anniversary";
+import { getAnniversaryPageData } from "@/lib/anniversary";
+import { getPublicFeatureFlags } from "@/lib/featureFlags";
 import { checkAdminAuth } from "@/utils/auth";
 import { breadcrumbJsonLd } from "@/utils/seo";
-import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AnniversaryPageClient from "./AnniversaryPageClient";
@@ -38,11 +35,13 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 60; // Cache page for 60 seconds
+// Cached for a minute while the flag is on (the flag itself comes from the
+// data cache and is expired by the admin's toggle). While it is off the
+// admin preview below reads cookies, which makes the page dynamic.
+export const revalidate = 60;
 
 export default async function AnniversaryPage() {
-  const supabase = await createClient();
-  const isEnabled = await isAnniversaryFeatureEnabled(supabase);
+  const { anniversary: isEnabled } = await getPublicFeatureFlags();
 
   // If feature is disabled, check if user is admin
   if (!isEnabled) {

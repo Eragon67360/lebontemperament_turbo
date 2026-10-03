@@ -1,5 +1,9 @@
 import { cloudinary } from "@/lib/cloudinary";
 import { checkAuthorization } from "@/utils/auth";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -31,6 +35,7 @@ export async function POST(request: Request) {
       );
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.galleryImages);
     return NextResponse.json({ success: true, result: result.result });
   } catch (error) {
     console.error("Cloudinary delete error:", error);

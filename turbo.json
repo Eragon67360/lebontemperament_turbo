@@ -35,7 +35,8 @@
         "NEXT_PUBLIC_SITE_URL",
         "GOOGLE_APPS_SCRIPT_URL",
         "ADMIN_EMAIL",
-        "INDEXNOW_SUBMIT_SECRET"
+        "INDEXNOW_SUBMIT_SECRET",
+        "REVALIDATE_SECRET"
       ],
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],

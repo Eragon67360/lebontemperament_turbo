@@ -19,13 +19,26 @@ const lightboxLabels: Labels = {
   Lightbox: "Visionneuse de photos",
 };
 
-export default function PhotoGallery() {
-  const [imagesConcerts, setImagesConcerts] = useState<PhotoData[]>([]);
-  const [imagesVieBT, setImagesVieBT] = useState<PhotoData[]>([]);
+type PhotoGalleryProps = {
+  /** Listed on the server (cached); when missing, the folder is fetched here. */
+  initialConcerts?: PhotoData[];
+  initialVieBT?: PhotoData[];
+};
+
+export default function PhotoGallery({
+  initialConcerts,
+  initialVieBT,
+}: PhotoGalleryProps) {
+  const [imagesConcerts, setImagesConcerts] = useState<PhotoData[]>(
+    initialConcerts ?? [],
+  );
+  const [imagesVieBT, setImagesVieBT] = useState<PhotoData[]>(
+    initialVieBT ?? [],
+  );
   const [photoIndexConcerts, setPhotoIndexConcerts] = useState(-1);
   const [photoIndexVieBT, setPhotoIndexVieBT] = useState(-1);
-  const [isLoadingConcerts, setIsLoadingConcerts] = useState(true);
-  const [isLoadingVieBT, setIsLoadingVieBT] = useState(true);
+  const [isLoadingConcerts, setIsLoadingConcerts] = useState(!initialConcerts);
+  const [isLoadingVieBT, setIsLoadingVieBT] = useState(!initialVieBT);
 
   const [columns, setColumnsState] = useState<number>(2);
 
@@ -48,6 +61,7 @@ export default function PhotoGallery() {
   }, []);
 
   useEffect(() => {
+    if (initialConcerts) return;
     const fetchImages = async () => {
       try {
         setIsLoadingConcerts(true);
@@ -66,9 +80,10 @@ export default function PhotoGallery() {
     };
 
     fetchImages();
-  }, []);
+  }, [initialConcerts]);
 
   useEffect(() => {
+    if (initialVieBT) return;
     const fetchImages = async () => {
       try {
         setIsLoadingVieBT(true);
@@ -86,7 +101,7 @@ export default function PhotoGallery() {
       }
     };
     fetchImages();
-  }, []);
+  }, [initialVieBT]);
 
   // Loading skeleton component
   const LoadingSkeleton = () => (

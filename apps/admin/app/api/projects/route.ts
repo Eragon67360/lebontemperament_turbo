@@ -1,5 +1,9 @@
 // app/api/projects/route.ts
 import { checkAuthorization } from "@/utils/auth";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -58,6 +62,7 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.stories);
     return NextResponse.json(data);
   } catch (error) {
     console.error(error);
@@ -98,6 +103,7 @@ export async function PUT(request: Request) {
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.stories);
     return NextResponse.json(data);
   } catch (error) {
     console.error(error);
@@ -136,6 +142,7 @@ export async function DELETE(request: Request) {
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.stories);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

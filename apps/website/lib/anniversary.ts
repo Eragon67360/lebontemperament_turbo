@@ -1,9 +1,9 @@
 import type { AnniversaryPageData, Archive } from "@/types/anniversary";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/public";
 import type { Database } from "@repo/domain/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const ANNIVERSARY_FLAG_KEY = "anniversary_40_years";
+export { ANNIVERSARY_FLAG_KEY } from "@/lib/featureFlags";
 
 /**
  * Server-side read of the `anniversary_40_years` feature flag. Pass the
@@ -17,7 +17,7 @@ export async function isAnniversaryFeatureEnabled(
     const { data, error } = await supabase
       .from("feature_flags")
       .select("is_enabled")
-      .eq("flag_key", ANNIVERSARY_FLAG_KEY)
+      .eq("flag_key", "anniversary_40_years")
       .single();
 
     if (error) {
@@ -33,12 +33,12 @@ export async function isAnniversaryFeatureEnabled(
 }
 
 /**
- * Fetches all anniversary page data from the database
- * Used by Server Components with Next.js caching
+ * Fetches all anniversary page data from the database. Public rows only
+ * (anon key, no cookies), so the pages can be cached with `revalidate`.
  */
 export async function getAnniversaryPageData(): Promise<AnniversaryPageData | null> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     // Fetch all data in parallel for better performance
     const [
@@ -166,12 +166,11 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
 }
 
 /**
- * Fetches all visible archives from the database
- * Used by Server Components with Next.js caching
+ * Fetches all visible archives from the database (anon key, no cookies).
  */
 export async function getArchives(): Promise<Archive[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const { data, error } = await supabase
       .from("anniversary_archives")
