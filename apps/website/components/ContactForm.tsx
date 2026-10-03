@@ -10,58 +10,32 @@ import {
   TextField,
   toast,
 } from "@heroui/react";
+import { FILL_TIME_FIELD, HONEYPOT_FIELD } from "@repo/domain/utils/formAbuse";
 import { CldImage } from "next-cloudinary";
-import { useTheme } from "next-themes";
+import Link from "next/link";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
 import { IoIosArrowRoundForward } from "react-icons/io";
 
+const EMPTY_FORM: ContactFormProps = {
+  lastName: "",
+  firstName: "",
+  email: "",
+  subject: "",
+  message: "",
+};
+
 const ContactForm = () => {
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Track mounted state for theme
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Global reCAPTCHA error handler
-  useEffect(() => {
-    const handleRecaptchaError = (event: any) => {
-      console.error("Global reCAPTCHA error:", event);
-    };
-
-    // Listen for reCAPTCHA errors
-    window.addEventListener("recaptcha-error", handleRecaptchaError);
-
-    return () => {
-      window.removeEventListener("recaptcha-error", handleRecaptchaError);
-    };
-  }, []);
-
-  const [formData, setFormData] = useState<ContactFormProps>({
-    lastName: "",
-    firstName: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
+  const [formData, setFormData] = useState<ContactFormProps>(EMPTY_FORM);
 
   const [loading, setLoading] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
   const [errors, setErrors] = useState<Partial<ContactFormProps>>({});
+  // Spam checks without a third party: a field people never see, and the
+  // time they needed to fill the form (measured from the first render).
   const [honeypot, setHoneypot] = useState<string>("");
-  const [captchaValue, setCaptchaValue] = useState<string | null>(null); // State for CAPTCHA value
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
-
-  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+  const openedAt = useRef<number>(0);
   useEffect(() => {
-    if (!siteKey) {
-      console.warn(
-        "reCAPTCHA site key missing. Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and rebuild to enable CAPTCHA.",
-      );
-    }
-  }, [siteKey]);
+    openedAt.current = performance.now();
+  }, []);
 
   // Validate email format
   const isValidEmail = (email: string) => {
@@ -97,19 +71,12 @@ const ContactForm = () => {
     [],
   );
 
-  // Check form validity
-  useEffect(() => {
-    const emailError = validateField("email", formData.email);
-    const messageError = validateField("message", formData.message);
-
-    setIsButtonDisabled(
-      !formData.email ||
-        !formData.message ||
-        Boolean(emailError) ||
-        Boolean(messageError) ||
-        !captchaValue, // Disable button if CAPTCHA is not verified
-    );
-  }, [formData, validateField, captchaValue]);
+  // The button follows the required fields (derived, not stored)
+  const isButtonDisabled =
+    !formData.email ||
+    !formData.message ||
+    Boolean(validateField("email", formData.email)) ||
+    Boolean(validateField("message", formData.message));
 
   const handleFieldChange = (name: keyof ContactFormProps, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -127,18 +94,6 @@ const ContactForm = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (honeypot) {
-      toast.danger("Erreur", { description: "Soumission invalide." });
-      return;
-    }
-
-    if (!captchaValue) {
-      toast.danger("Erreur", {
-        description: "Veuillez vérifier que vous n'êtes pas un robot.",
-      });
-      return;
-    }
 
     const newErrors: Partial<ContactFormProps> = {};
     Object.keys(formData).forEach((key) => {
@@ -165,7 +120,11 @@ const ContactForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...formData, captchaValue }), // Send CAPTCHA value to the server
+        body: JSON.stringify({
+          ...formData,
+          [HONEYPOT_FIELD]: honeypot,
+          [FILL_TIME_FIELD]: Math.round(performance.now() - openedAt.current),
+        }),
       });
 
       if (!response.ok) {
@@ -173,24 +132,13 @@ const ContactForm = () => {
       }
 
       await response.json();
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
+      setFormData(EMPTY_FORM);
       setErrors({});
-      setCaptchaValue(null); // Reset CAPTCHA value
-      recaptchaRef.current?.reset(); // Reset reCAPTCHA widget
       toast.success("Succès", {
         description: "Votre demande a bien été envoyée",
       });
     } catch (err) {
       console.error(err);
-      // Reset reCAPTCHA on error
-      setCaptchaValue(null);
-      recaptchaRef.current?.reset();
       toast.danger("Erreur", {
         description: "Votre demande n'a pas pu être envoyée",
       });
@@ -292,39 +240,22 @@ const ContactForm = () => {
               <FieldError>{errors.message}</FieldError>
             </TextField>
 
-            <input
-              type="text"
-              name="honeypot"
-              value={honeypot}
-              onChange={(e) => setHoneypot(e.target.value)}
-              className="hidden"
+            {/* Honeypot, off-screen and hidden from assistive technologies */}
+            <div
               aria-hidden="true"
-              tabIndex={-1}
-              autoComplete="off"
-            />
-
-            {siteKey && mounted ? (
-              <ReCAPTCHA
-                sitekey={siteKey}
-                ref={recaptchaRef}
-                onChange={(value) => {
-                  setCaptchaValue(value);
-                }}
-                onExpired={() => {
-                  setCaptchaValue(null);
-                }}
-                theme={resolvedTheme === "dark" ? "dark" : "light"}
-                size="normal"
-                type="image"
+              className="absolute -left-[10000px] h-px w-px overflow-hidden"
+            >
+              <label htmlFor="contact-website">Site web</label>
+              <input
+                id="contact-website"
+                type="text"
+                name={HONEYPOT_FIELD}
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
               />
-            ) : siteKey ? (
-              <div className="bg-surface-secondary h-[78px] w-[304px] animate-pulse rounded" />
-            ) : (
-              <div className="text-danger text-sm">
-                reCAPTCHA non configuré — le formulaire est protégé côté
-                serveur. Veuillez contacter l&apos;administrateur.
-              </div>
-            )}
+            </div>
 
             <div className="flex items-center gap-4">
               <Button
@@ -353,10 +284,21 @@ const ContactForm = () => {
             {isButtonDisabled && (
               <p id="submit-help" className="text-muted text-sm">
                 Veuillez remplir tous les champs obligatoires (email et message)
-                et compléter la vérification reCAPTCHA pour pouvoir envoyer le
-                formulaire.
+                pour pouvoir envoyer le formulaire.
               </p>
             )}
+
+            <p className="text-muted text-xs">
+              Vos nom, adresse e-mail et message servent uniquement à répondre à
+              votre demande. En savoir plus dans notre{" "}
+              <Link
+                href="/politique-de-confidentialite"
+                className="text-primary underline hover:no-underline"
+              >
+                politique de confidentialité
+              </Link>
+              .
+            </p>
           </form>
         </div>
 

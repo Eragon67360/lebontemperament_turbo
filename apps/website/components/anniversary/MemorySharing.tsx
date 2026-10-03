@@ -2,10 +2,10 @@
 
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { FormConfig, Memory } from "@/types/anniversary";
+import { FILL_TIME_FIELD, HONEYPOT_FIELD } from "@repo/domain/utils/formAbuse";
 import { motion, useInView } from "motion/react";
-import { useTheme } from "next-themes";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
 import { FaHeart, FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
 import { toast } from "sonner";
 import AnniversaryCTA from "./AnniversaryCTA";
@@ -26,42 +26,24 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
     year: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
 
-  const [mounted, setMounted] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
-  const { resolvedTheme } = useTheme();
-
-  useEffect(() => setMounted(true), []);
-
-  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+  // Spam checks without a third party: a field people never see, and the
+  // time they needed to fill the form (measured from the first render).
+  const [honeypot, setHoneypot] = useState("");
+  const openedAt = useRef(0);
   useEffect(() => {
-    if (!siteKey) {
-      console.warn(
-        "reCAPTCHA site key is missing. Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY to enable CAPTCHA.",
-      );
-    }
-  }, [siteKey]);
+    openedAt.current = performance.now();
+  }, []);
 
-  useEffect(() => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isFormValid =
-      formData.name.trim() !== "" &&
-      formData.email.trim() !== "" &&
-      emailRegex.test(formData.email) &&
-      formData.message.trim() !== "";
-
-    setIsSubmitDisabled(!isFormValid || !captchaValue);
-  }, [formData, captchaValue]);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isSubmitDisabled =
+    formData.name.trim() === "" ||
+    formData.email.trim() === "" ||
+    !emailRegex.test(formData.email) ||
+    formData.message.trim() === "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!captchaValue) {
-      toast.error("Veuillez vérifier que vous n'êtes pas un robot.");
-      return;
-    }
 
     if (isSubmitDisabled) return;
 
@@ -71,7 +53,11 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
       const response = await fetch("/api/anniversary/submit-memory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, captchaValue }),
+        body: JSON.stringify({
+          ...formData,
+          [HONEYPOT_FIELD]: honeypot,
+          [FILL_TIME_FIELD]: Math.round(performance.now() - openedAt.current),
+        }),
       });
 
       if (!response.ok) throw new Error("API submission failed");
@@ -83,8 +69,6 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
       toast.error("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
-      setCaptchaValue(null);
-      recaptchaRef.current?.reset();
     }
   };
 
@@ -234,18 +218,21 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                   className="focus:border-primary focus:ring-primary w-full rounded-md border border-slate-300 bg-white/50 px-4 py-2 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500"
                 />
               </div>
-              <div className="flex justify-center pt-2">
-                {siteKey && mounted ? (
-                  <ReCAPTCHA
-                    sitekey={siteKey}
-                    ref={recaptchaRef}
-                    onChange={(value) => setCaptchaValue(value)}
-                    onExpired={() => setCaptchaValue(null)}
-                    theme={resolvedTheme === "dark" ? "dark" : "light"}
-                  />
-                ) : (
-                  <div className="h-19.5 w-76 animate-pulse rounded-md bg-slate-200 dark:bg-slate-800" />
-                )}
+              {/* Honeypot, off-screen and hidden from assistive technologies */}
+              <div
+                aria-hidden="true"
+                className="absolute -left-[10000px] h-px w-px overflow-hidden"
+              >
+                <label htmlFor="memory-website">Site web</label>
+                <input
+                  id="memory-website"
+                  type="text"
+                  name={HONEYPOT_FIELD}
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
               </div>
               <div className="pt-2 text-center">
                 <AnniversaryCTA
@@ -258,8 +245,18 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 </AnniversaryCTA>
               </div>
 
-              <p className="pt-2 text-center text-xs font-light text-slate-400 dark:text-slate-500">
-                Les témoignages sont modérés avant publication.
+              <p className="pt-2 text-center text-xs font-light text-slate-500 dark:text-slate-400">
+                Les témoignages sont modérés avant publication. Votre nom et
+                votre témoignage peuvent être publiés sur cette page ; votre
+                adresse e-mail reste privée et sert à vous prévenir. En savoir
+                plus dans notre{" "}
+                <Link
+                  href="/politique-de-confidentialite"
+                  className="text-primary underline hover:no-underline"
+                >
+                  politique de confidentialité
+                </Link>
+                .
               </p>
             </form>
           </motion.div>
