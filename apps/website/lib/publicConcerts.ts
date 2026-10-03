@@ -39,3 +39,19 @@ export type PublicTour = Pick<
 /** The agenda only shows the date of the next rehearsal. */
 export const REHEARSAL_COLUMNS = "id, date";
 export type PublicRehearsal = Pick<Rehearsal, "id" | "date">;
+
+/**
+ * Events as the agenda and the members area show them (`/api/events`): the
+ * whole `Event` view-model, which the UI needs in full (`date_to`, contact,
+ * link, description all render).
+ */
+export const EVENT_COLUMNS =
+  "id, title, date_from, date_to, time, location, responsible_name, responsible_email, event_type, description, link, is_public, created_at, updated_at";
+
+/** The members' calendar lists rehearsals by group, place and time. */
+export const MEMBER_REHEARSAL_COLUMNS =
+  "id, name, date, start_time, end_time, place, group_type";
+export type MemberRehearsal = Pick<
+  Rehearsal,
+  "id" | "name" | "date" | "start_time" | "end_time" | "place" | "group_type"
+>;

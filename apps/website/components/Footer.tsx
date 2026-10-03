@@ -1,6 +1,7 @@
 "use client";
 import CookiePreferencesButton from "@/components/cookies/CookiePreferencesButton";
-import { CldImage } from "next-cloudinary";
+import { cloudinaryLoader } from "@/lib/cloudinaryImage";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CiMail } from "react-icons/ci";
@@ -21,7 +22,8 @@ const Footer = () => {
     >
       <div className="z-50 mx-auto flex h-full max-w-[1440px] flex-col items-center justify-evenly gap-12 py-16 lg:flex-row lg:items-start lg:px-24">
         <div className="flex flex-col items-center gap-6 lg:items-start">
-          <CldImage
+          <Image
+            loader={cloudinaryLoader}
             src={"Site/logo"}
             alt="Logo Le Bon Tempérament"
             width={120}

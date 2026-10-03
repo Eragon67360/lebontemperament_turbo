@@ -16,9 +16,39 @@ import {
   useCreateHeroStat,
   useUpdateHeroStat,
 } from "@/hooks/useAnniversaryHeroStats";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import type { AnniversaryHeroStat, IconName } from "@/types/anniversary";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { IconPicker } from "./IconPicker";
+
+type HeroStatFormData = {
+  icon_name: IconName;
+  number: string;
+  label: string;
+  display_order: number;
+  is_visible: boolean;
+};
+
+/** The form as it opens: the stat being edited, or a blank one. */
+const buildFormData = (
+  stat: AnniversaryHeroStat | undefined,
+  maxOrder: number,
+): HeroStatFormData =>
+  stat
+    ? {
+        icon_name: stat.icon_name as IconName,
+        number: stat.number,
+        label: stat.label,
+        display_order: stat.display_order,
+        is_visible: stat.is_visible,
+      }
+    : {
+        icon_name: "FaMusic",
+        number: "",
+        label: "",
+        display_order: maxOrder + 1,
+        is_visible: true,
+      };
 
 interface HeroStatDialogProps {
   open: boolean;
@@ -36,43 +66,15 @@ export function HeroStatDialog({
   const createStat = useCreateHeroStat();
   const updateStat = useUpdateHeroStat();
 
-  const [formData, setFormData] = useState<{
-    icon_name: IconName;
-    number: string;
-    label: string;
-    display_order: number;
-    is_visible: boolean;
-  }>({
-    icon_name: "FaMusic",
-    number: "",
-    label: "",
-    display_order: 0,
-    is_visible: true,
-  });
+  const [formData, setFormData] = useState(() => buildFormData(stat, maxOrder));
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Populate form when editing or reset when creating
-  useEffect(() => {
-    if (stat) {
-      setFormData({
-        icon_name: stat.icon_name as IconName,
-        number: stat.number,
-        label: stat.label,
-        display_order: stat.display_order,
-        is_visible: stat.is_visible,
-      });
-    } else {
-      setFormData({
-        icon_name: "FaMusic",
-        number: "",
-        label: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
+  useResetOnChange([stat, maxOrder, open], () => {
+    setFormData(buildFormData(stat, maxOrder));
     setErrors({});
-  }, [stat, maxOrder, open]);
+  });
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -185,7 +187,7 @@ export function HeroStatDialog({
 
           {/* Display Order */}
           <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
+            <Label htmlFor="display_order">Ordre d&apos;affichage</Label>
             <Input
               id="display_order"
               type="number"

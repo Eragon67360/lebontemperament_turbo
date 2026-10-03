@@ -18,10 +18,43 @@ import {
   useCreateNavigationCard,
   useUpdateNavigationCard,
 } from "@/hooks/useAnniversaryNavigation";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { AnniversaryNavigationCard, IconName } from "@/types/anniversary";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+
+type NavigationCardFormData = {
+  title: string;
+  description: string;
+  icon_name: IconName;
+  target_section_id: string;
+  display_order: number;
+  is_visible: boolean;
+};
+
+/** The form as it opens: the card being edited, or a blank one. */
+const buildFormData = (
+  card: AnniversaryNavigationCard | undefined,
+  maxOrder: number,
+): NavigationCardFormData =>
+  card
+    ? {
+        title: card.title,
+        description: card.description,
+        icon_name: card.icon_name as IconName,
+        target_section_id: card.target_section_id,
+        display_order: card.display_order,
+        is_visible: card.is_visible ?? true,
+      }
+    : {
+        title: "",
+        description: "",
+        icon_name: "FaMusic",
+        target_section_id: "",
+        display_order: maxOrder + 1,
+        is_visible: true,
+      };
 
 interface NavigationCardDialogProps {
   open: boolean;
@@ -39,36 +72,12 @@ export function NavigationCardDialog({
   const createCard = useCreateNavigationCard();
   const updateCard = useUpdateNavigationCard();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    icon_name: "FaMusic" as IconName,
-    target_section_id: "",
-    display_order: maxOrder + 1,
-    is_visible: true,
-  });
+  const [formData, setFormData] = useState(() => buildFormData(card, maxOrder));
 
-  useEffect(() => {
-    if (card) {
-      setFormData({
-        title: card.title,
-        description: card.description,
-        icon_name: card.icon_name as IconName,
-        target_section_id: card.target_section_id,
-        display_order: card.display_order,
-        is_visible: card.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        icon_name: "FaMusic",
-        target_section_id: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-  }, [card, maxOrder, open]);
+  // Re-seed the form each time the dialog opens or the card changes.
+  useResetOnChange([card, maxOrder, open], () =>
+    setFormData(buildFormData(card, maxOrder)),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,13 +173,14 @@ export function NavigationCardDialog({
               required
             />
             <p className="text-muted-foreground text-xs">
-              L'ID HTML de la section vers laquelle naviguer (ex: "timeline")
+              L&apos;ID HTML de la section vers laquelle naviguer (ex:
+              &quot;timeline&quot;)
             </p>
           </div>
 
           {/* Display Order */}
           <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
+            <Label htmlFor="display_order">Ordre d&apos;affichage</Label>
             <Input
               id="display_order"
               type="number"

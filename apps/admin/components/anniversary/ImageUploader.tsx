@@ -150,7 +150,7 @@ export function ImageUploader({
                     Glissez une image ou cliquez pour parcourir
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    PNG, JPG, WebP jusqu'à 10MB
+                    PNG, JPG, WebP jusqu&apos;à 10MB
                   </p>
                 </div>
               </>

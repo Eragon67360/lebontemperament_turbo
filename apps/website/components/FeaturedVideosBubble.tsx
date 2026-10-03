@@ -1,9 +1,9 @@
 "use client";
 
+import type { PublicVideo } from "@/lib/publicVideos";
 import { Button } from "@heroui/react";
-import { Video } from "@repo/domain/types/videos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { IoClose, IoPlay } from "react-icons/io5";
@@ -12,7 +12,7 @@ import { youTubeEmbedUrl } from "./YouTubeVideo";
 
 const FeaturedVideosBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videos, setVideos] = useState<PublicVideo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -72,7 +72,7 @@ const FeaturedVideosBubble = () => {
     <div className="pointer-events-auto relative flex flex-col items-end">
       <AnimatePresence mode="wait">
         {isOpen ? (
-          <motion.div
+          <m.div
             ref={popoverRef}
             key="content"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -144,11 +144,10 @@ const FeaturedVideosBubble = () => {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.button
+          <m.button
             key="button"
-            layoutId="bubble"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
@@ -175,7 +174,7 @@ const FeaturedVideosBubble = () => {
             >
               Vidéos à la une
             </div>
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
     </div>

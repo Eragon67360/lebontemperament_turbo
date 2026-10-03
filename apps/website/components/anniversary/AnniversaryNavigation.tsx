@@ -163,8 +163,8 @@ const AnniversaryNavigation = ({ cards }: AnniversaryNavigationProps) => {
             Explorez Notre Célébration
           </h2>
           <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
-            Faites défiler pour découvrir 40 ans d'histoire à travers différents
-            médias et témoignages.
+            Faites défiler pour découvrir 40 ans d&apos;histoire à travers
+            différents médias et témoignages.
           </p>
         </motion.div>
 

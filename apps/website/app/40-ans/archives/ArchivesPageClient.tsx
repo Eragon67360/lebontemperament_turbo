@@ -100,7 +100,7 @@ export default function ArchivesPageClient({
   );
 
   const filteredDocuments = useMemo(() => {
-    let filtered = archives.filter((doc) => {
+    const filtered = archives.filter((doc) => {
       const matchesSearch =
         searchQuery === "" ||
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -150,8 +150,6 @@ export function useUpdateUserDisplayName() {
 
 // SYNC users with Excel
 export function useSyncUsers() {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: ["users-sync"],
     queryFn: async () => {
@@ -210,6 +208,98 @@ export function useSyncAllUserData() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["users-sync"] });
+    },
+  });
+}
+
+// INVITE users (one request, batched server-side)
+export interface InvitationResult {
+  email: string;
+  displayName: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface InviteUsersResponse {
+  invitationResults: InvitationResult[];
+  summary: { total: number; successful: number; failed: number };
+}
+
+export function useInviteUsers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      emails: Array<{ email: string; displayName: string }>,
+    ) => {
+      const response = await fetch("/api/invite-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Échec de l'invitation");
+      }
+
+      return result as InviteUsersResponse;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+// UPLOAD profile picture mutation
+export function useUploadProfilePicture() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, file }: { userId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", userId);
+
+      const response = await fetch("/api/users/profile-picture", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload profile picture");
+      }
+
+      return response.json() as Promise<{ url: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+// DELETE profile picture mutation
+export function useDeleteProfilePicture() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch(
+        `/api/users/profile-picture?userId=${userId}`,
+        { method: "DELETE" },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete profile picture");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 }

@@ -258,7 +258,7 @@ export default function UsersPage() {
       });
       toast.success("Nom d'affichage mis à jour");
       setEditingUser(null);
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la mise à jour");
     }
   };
@@ -409,10 +409,7 @@ export default function UsersPage() {
           setIsInviteOpen(open);
           if (!open) setPendingInvitations([]);
         }}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["users"] });
-          setPendingInvitations([]);
-        }}
+        onSuccess={() => setPendingInvitations([])}
         initialInvitations={pendingInvitations}
       />
       <EditUserDialog
@@ -427,9 +424,6 @@ export default function UsersPage() {
         email={profilePictureUser?.email || ""}
         isOpen={!!profilePictureUser}
         onOpenChange={(open) => !open && setProfilePictureUser(null)}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["users"] });
-        }}
       />
       <AlertDialog
         open={!!userToDelete}

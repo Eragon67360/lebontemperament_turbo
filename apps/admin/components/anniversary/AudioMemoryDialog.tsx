@@ -18,10 +18,49 @@ import {
   useCreateAudioMemory,
   useUpdateAudioMemory,
 } from "@/hooks/useAnniversaryAudio";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { AnniversaryAudioMemory } from "@/types/anniversary";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+
+type AudioMemoryFormData = {
+  title: string;
+  description: string;
+  speaker_name: string;
+  year: number | null;
+  duration: string;
+  audio_url: string;
+  display_order: number;
+  is_visible: boolean;
+};
+
+/** The form as it opens: the memory being edited, or a blank one. */
+const buildFormData = (
+  audio: AnniversaryAudioMemory | undefined,
+  maxOrder: number,
+): AudioMemoryFormData =>
+  audio
+    ? {
+        title: audio.title,
+        description: audio.description,
+        speaker_name: audio.speaker_name || "",
+        year: audio.year,
+        duration: audio.duration,
+        audio_url: audio.audio_url,
+        display_order: audio.display_order,
+        is_visible: audio.is_visible ?? true,
+      }
+    : {
+        title: "",
+        description: "",
+        speaker_name: "",
+        year: null,
+        duration: "",
+        audio_url: "",
+        display_order: maxOrder + 1,
+        is_visible: true,
+      };
 
 interface AudioMemoryDialogProps {
   open: boolean;
@@ -39,42 +78,14 @@ export function AudioMemoryDialog({
   const createAudio = useCreateAudioMemory();
   const updateAudio = useUpdateAudioMemory();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    speaker_name: "",
-    year: null as number | null,
-    duration: "",
-    audio_url: "",
-    display_order: maxOrder + 1,
-    is_visible: true,
-  });
+  const [formData, setFormData] = useState(() =>
+    buildFormData(audio, maxOrder),
+  );
 
-  useEffect(() => {
-    if (audio) {
-      setFormData({
-        title: audio.title,
-        description: audio.description,
-        speaker_name: audio.speaker_name || "",
-        year: audio.year,
-        duration: audio.duration,
-        audio_url: audio.audio_url,
-        display_order: audio.display_order,
-        is_visible: audio.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        speaker_name: "",
-        year: null,
-        duration: "",
-        audio_url: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-  }, [audio, maxOrder, open]);
+  // Re-seed the form each time the dialog opens or the memory changes.
+  useResetOnChange([audio, maxOrder, open], () =>
+    setFormData(buildFormData(audio, maxOrder)),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,7 +234,7 @@ export function AudioMemoryDialog({
 
           {/* Display Order */}
           <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
+            <Label htmlFor="display_order">Ordre d&apos;affichage</Label>
             <Input
               id="display_order"
               type="number"

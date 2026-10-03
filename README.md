@@ -37,7 +37,6 @@ Authentication, rehearsal/event calendar, file access, push notifications, offli
 ## Packages
 
 - **`@repo/domain`** — shared domain code used by both Next apps: generated Supabase types (`database.types.ts`), domain types (concerts, events, rehearsals, projects, anniversary, …), consts and utils. `npm run db:types` regenerates the DB types.
-- **`@repo/ui`** — shared React component library (minimal; apps mostly carry their own components).
 - **`@repo/eslint-config`** — shared ESLint flat configs (`base`, `next`, `react-internal`).
 - **`@repo/typescript-config`** — shared tsconfigs (`base`, `nextjs`, `react-library`).
 
@@ -88,7 +87,6 @@ npm run test:rehearsal-sync  # test the calendar sync function (see scripts/READ
 │   └── mobile_app/     # Flutter app (not a turbo workspace)
 ├── packages
 │   ├── domain/         # @repo/domain — shared types & utils
-│   ├── ui/             # @repo/ui — shared components
 │   ├── eslint-config/
 │   └── typescript-config/
 ├── supabase/           # migrations + edge functions

@@ -1,4 +1,15 @@
 import {
+  ANNIVERSARY_ARCHIVE_COLUMNS,
+  ANNIVERSARY_AUDIO_MEMORY_COLUMNS,
+  ANNIVERSARY_FORM_CONFIG_COLUMNS,
+  ANNIVERSARY_HERO_COLUMNS,
+  ANNIVERSARY_HERO_STAT_COLUMNS,
+  ANNIVERSARY_NAVIGATION_CARD_COLUMNS,
+  ANNIVERSARY_PHOTO_COLUMNS,
+  ANNIVERSARY_TIMELINE_EVENT_COLUMNS,
+  ANNIVERSARY_VIDEO_COLUMNS,
+} from "@/lib/anniversaryColumns";
+import {
   FEATURED_MEMORIES_LIMIT,
   PUBLIC_MEMORY_SELECT,
   toPublicMemory,
@@ -91,52 +102,58 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       featuredMemories,
     ] = await Promise.all([
       // Hero (singleton)
-      supabase.from("anniversary_hero").select("*").single(),
+      supabase
+        .from("anniversary_hero")
+        .select(ANNIVERSARY_HERO_COLUMNS)
+        .single(),
 
       // Hero Stats (visible only, ordered)
       supabase
         .from("anniversary_hero_stats")
-        .select("*")
+        .select(ANNIVERSARY_HERO_STAT_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Navigation Cards (visible only, ordered)
       supabase
         .from("anniversary_navigation_cards")
-        .select("*")
+        .select(ANNIVERSARY_NAVIGATION_CARD_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Timeline Events (visible only, ordered)
       supabase
         .from("anniversary_timeline_events")
-        .select("*")
+        .select(ANNIVERSARY_TIMELINE_EVENT_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Videos (visible only, ordered)
       supabase
         .from("anniversary_videos")
-        .select("*")
+        .select(ANNIVERSARY_VIDEO_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Audio Memories (visible only, ordered)
       supabase
         .from("anniversary_audio_memories")
-        .select("*")
+        .select(ANNIVERSARY_AUDIO_MEMORY_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Photos (visible only, ordered)
       supabase
         .from("anniversary_photos")
-        .select("*")
+        .select(ANNIVERSARY_PHOTO_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Form Config (singleton)
-      supabase.from("anniversary_form_config").select("*").single(),
+      supabase
+        .from("anniversary_form_config")
+        .select(ANNIVERSARY_FORM_CONFIG_COLUMNS)
+        .single(),
 
       // Featured memories: public columns through the service role (see above)
       getFeaturedMemories(),
@@ -203,7 +220,7 @@ export async function getArchives(): Promise<Archive[]> {
 
     const { data, error } = await supabase
       .from("anniversary_archives")
-      .select("*")
+      .select(ANNIVERSARY_ARCHIVE_COLUMNS)
       .eq("is_visible", true)
       .order("year", { ascending: false })
       .order("created_at", { ascending: false });

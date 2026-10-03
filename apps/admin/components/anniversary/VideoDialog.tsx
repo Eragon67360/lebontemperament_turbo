@@ -22,10 +22,49 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateVideo, useUpdateVideo } from "@/hooks/useAnniversaryVideos";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { AnniversaryVideo, VIDEO_CATEGORIES } from "@/types/anniversary";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+
+type VideoFormData = {
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  video_url: string;
+  year: number | null;
+  category: string;
+  display_order: number;
+  is_visible: boolean;
+};
+
+/** The form as it opens: the video being edited, or a blank one. */
+const buildFormData = (
+  video: AnniversaryVideo | undefined,
+  maxOrder: number,
+): VideoFormData =>
+  video
+    ? {
+        title: video.title,
+        description: video.description,
+        thumbnail_url: video.thumbnail_url,
+        video_url: video.video_url || "",
+        year: video.year,
+        category: video.category,
+        display_order: video.display_order,
+        is_visible: video.is_visible ?? true,
+      }
+    : {
+        title: "",
+        description: "",
+        thumbnail_url: "",
+        video_url: "",
+        year: null,
+        category: "Concert",
+        display_order: maxOrder + 1,
+        is_visible: true,
+      };
 
 interface VideoDialogProps {
   open: boolean;
@@ -43,42 +82,14 @@ export function VideoDialog({
   const createVideo = useCreateVideo();
   const updateVideo = useUpdateVideo();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    thumbnail_url: "",
-    video_url: "",
-    year: null as number | null,
-    category: "Concert" as string,
-    display_order: maxOrder + 1,
-    is_visible: true,
-  });
+  const [formData, setFormData] = useState(() =>
+    buildFormData(video, maxOrder),
+  );
 
-  useEffect(() => {
-    if (video) {
-      setFormData({
-        title: video.title,
-        description: video.description,
-        thumbnail_url: video.thumbnail_url,
-        video_url: video.video_url || "",
-        year: video.year,
-        category: video.category,
-        display_order: video.display_order,
-        is_visible: video.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        thumbnail_url: "",
-        video_url: "",
-        year: null,
-        category: "Concert",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-  }, [video, maxOrder, open]);
+  // Re-seed the form each time the dialog opens or the video changes.
+  useResetOnChange([video, maxOrder, open], () =>
+    setFormData(buildFormData(video, maxOrder)),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,7 +246,7 @@ export function VideoDialog({
 
           {/* Display Order */}
           <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
+            <Label htmlFor="display_order">Ordre d&apos;affichage</Label>
             <Input
               id="display_order"
               type="number"

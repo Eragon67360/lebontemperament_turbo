@@ -6,7 +6,6 @@ import { LayoutShell } from "@/components/LayoutShell";
 import { getPublicFeatureFlags } from "@/lib/featureFlags";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
-import { Toaster } from "sonner";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -146,7 +145,6 @@ export default async function RootLayout({
           <EasterEgg />
           <LayoutShell>{children}</LayoutShell>
         </Providers>
-        <Toaster position="top-right" richColors />
         <ConditionalGoogleAnalytics />
         {/* Organization Schema */}
         <script

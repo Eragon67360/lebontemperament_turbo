@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
+import { useInviteUsers } from "@/hooks/useUsers";
 import { InvitationProgress } from "@/types/user";
 import { firstIssueMessage, invitationEntrySchema } from "@/utils/formSchemas";
 import { Check, Plus, RefreshCw, Send, Upload, X } from "lucide-react";
@@ -41,17 +43,29 @@ interface InviteUserDialogProps {
     displayName: string;
   }>;
 }
-interface InvitationResult {
-  success: boolean;
-  error?: string;
-}
-interface ApiResponse {
-  invitationResults: InvitationResult[];
-  error?: string;
-}
 
 const emailSchema = invitationEntrySchema.shape.email;
 const MAX_INVITATIONS = 200;
+
+const emptyInvitation = (): InvitationEntry => ({
+  email: "",
+  displayName: "",
+  role: "user",
+  status: "pending",
+});
+
+/** The rows the dialog opens with: the pre-filled list, or one empty row. */
+const invitationsFrom = (
+  initialInvitations: InviteUserDialogProps["initialInvitations"],
+): InvitationEntry[] =>
+  initialInvitations && initialInvitations.length > 0
+    ? initialInvitations.map((inv) => ({
+        email: inv.email,
+        displayName: inv.displayName,
+        role: "user" as const,
+        status: "pending" as const,
+      }))
+    : [emptyInvitation()];
 
 type InvitationField = "email" | "displayName";
 
@@ -76,9 +90,10 @@ export function InviteUserDialog({
   onSuccess,
   initialInvitations,
 }: InviteUserDialogProps) {
-  const [invitations, setInvitations] = useState<InvitationEntry[]>([
-    { email: "", displayName: "", role: "user", status: "pending" },
-  ]);
+  const inviteUsers = useInviteUsers();
+  const [invitations, setInvitations] = useState<InvitationEntry[]>(() =>
+    isOpen ? invitationsFrom(initialInvitations) : [emptyInvitation()],
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<InvitationProgress>({
     current: 0,
@@ -87,32 +102,22 @@ export function InviteUserDialog({
   });
 
   const resetState = () => {
-    setInvitations([
-      { email: "", displayName: "", role: "user", status: "pending" },
-    ]);
+    setInvitations([emptyInvitation()]);
     setIsProcessing(false);
     setProgress({ current: 0, total: 0, percentage: 0 });
   };
 
   // Load initial invitations when dialog opens
-  React.useEffect(() => {
+  useResetOnChange([isOpen, initialInvitations], () => {
     if (isOpen) {
       if (initialInvitations && initialInvitations.length > 0) {
-        setInvitations(
-          initialInvitations.map((inv) => ({
-            email: inv.email,
-            displayName: inv.displayName,
-            role: "user" as const,
-            status: "pending" as const,
-          })),
-        );
+        setInvitations(invitationsFrom(initialInvitations));
       } else {
         // Reset to empty if no initial data
         resetState();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialInvitations]);
+  });
 
   const addInvitationField = () => {
     setInvitations([
@@ -183,33 +188,21 @@ export function InviteUserDialog({
     setProgress({ current: 0, total: invitations.length, percentage: 0 });
 
     try {
-      const response = await fetch("/api/invite-users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          emails: invitations
-            .filter((inv) => inv.email.trim() && inv.displayName.trim())
-            .map((inv) => ({
-              email: inv.email.trim(),
-              displayName: inv.displayName.trim(),
-            })),
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Échec de l'invitation");
-      }
+      const result = await inviteUsers.mutateAsync(
+        invitations
+          .filter((inv) => inv.email.trim() && inv.displayName.trim())
+          .map((inv) => ({
+            email: inv.email.trim(),
+            displayName: inv.displayName.trim(),
+          })),
+      );
 
       const updatedInvitations: InvitationEntry[] = invitations.map(
         (invitation) => {
           if (!invitation.email.trim()) return invitation;
 
           const invitationResult = result.invitationResults.find(
-            (r: { email: string }) => r.email === invitation.email.trim(),
+            (r) => r.email === invitation.email.trim(),
           );
 
           return {
@@ -269,27 +262,18 @@ export function InviteUserDialog({
 
     try {
       const invitation = invitations[index];
-      const emailTrimmed = invitation?.email.trim();
 
       // Validate email
-      emailSchema.parse(emailTrimmed);
+      const emailTrimmed = emailSchema.parse(invitation?.email.trim());
 
-      // Send invitation via API route
-      const response = await fetch("/api/invite-users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Send invitation via API route (it expects the name too; a bare
+      // email string used to fail its validation)
+      const result = await inviteUsers.mutateAsync([
+        {
+          email: emailTrimmed,
+          displayName: invitation?.displayName.trim() ?? "",
         },
-        body: JSON.stringify({
-          emails: [emailTrimmed],
-        }),
-      });
-
-      const result = (await response.json()) as ApiResponse;
-
-      if (!response.ok) {
-        throw new Error(result.error || "Échec de l'invitation");
-      }
+      ]);
 
       const invitationResult = result.invitationResults[0];
 

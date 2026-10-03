@@ -45,7 +45,7 @@ import { Tour } from "@/types/tours";
 import { Concert } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { Music2, Plus, Users } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function ProchainsConcerts() {
@@ -79,7 +79,13 @@ export default function ProchainsConcerts() {
 
   // Derived Data
   const todayStr = format(new Date(), "yyyy-MM-dd");
-  const upcomingConcerts = concerts.filter((c) => c.date >= todayStr);
+  // Memoised: ConcertSelectionDialog re-seeds its ticks when this array
+  // changes, so a fresh array on every render (e.g. a window-focus refetch)
+  // would drop the admin's unsaved selection.
+  const upcomingConcerts = useMemo(
+    () => (concertsQuery.data ?? []).filter((c) => c.date >= todayStr),
+    [concertsQuery.data, todayStr],
+  );
   const upcomingTours = tours.filter(
     (t) => (t.end_date ?? t.start_date ?? "") >= todayStr,
   );

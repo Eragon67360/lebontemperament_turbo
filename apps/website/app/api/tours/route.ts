@@ -1,3 +1,4 @@
+import { TOUR_COLUMNS } from "@/lib/publicConcerts";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -6,7 +7,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("tours")
-    .select("*")
+    .select(TOUR_COLUMNS)
     .eq("is_active", true)
     .order("start_date", { ascending: true });
 

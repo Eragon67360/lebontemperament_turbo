@@ -31,9 +31,45 @@ import {
   ARCHIVE_TYPES,
 } from "@/types/anniversary";
 
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+
+type ArchiveFormData = {
+  title: string;
+  description: string;
+  year: number;
+  type: (typeof ARCHIVE_TYPES)[number];
+  theme: string;
+  file_url: string;
+  file_size: string;
+  is_visible: boolean;
+};
+
+/** The form as it opens: the archive being edited, or a blank one. */
+const buildFormData = (archive?: AnniversaryArchive): ArchiveFormData =>
+  archive
+    ? {
+        title: archive.title,
+        description: archive.description,
+        year: archive.year,
+        type: archive.type as (typeof ARCHIVE_TYPES)[number],
+        theme: archive.theme,
+        file_url: archive.file_url,
+        file_size: archive.file_size,
+        is_visible: archive.is_visible ?? true,
+      }
+    : {
+        title: "",
+        description: "",
+        year: new Date().getFullYear(),
+        type: "assemblée-générale",
+        theme: "Gouvernance",
+        file_url: "",
+        file_size: "",
+        is_visible: true,
+      };
 
 const typeLabels: Record<string, string> = {
   "assemblée-générale": "Assemblée Générale",
@@ -58,42 +94,10 @@ export function ArchiveDialog({
   const createArchive = useCreateArchive();
   const updateArchive = useUpdateArchive();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    year: new Date().getFullYear(),
-    type: "assemblée-générale" as (typeof ARCHIVE_TYPES)[number],
-    theme: "Gouvernance" as string,
-    file_url: "",
-    file_size: "",
-    is_visible: true,
-  });
+  const [formData, setFormData] = useState(() => buildFormData(archive));
 
-  useEffect(() => {
-    if (archive) {
-      setFormData({
-        title: archive.title,
-        description: archive.description,
-        year: archive.year,
-        type: archive.type as (typeof ARCHIVE_TYPES)[number],
-        theme: archive.theme,
-        file_url: archive.file_url,
-        file_size: archive.file_size,
-        is_visible: archive.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        year: new Date().getFullYear(),
-        type: "assemblée-générale",
-        theme: "Gouvernance",
-        file_url: "",
-        file_size: "",
-        is_visible: true,
-      });
-    }
-  }, [archive, open]);
+  // Re-seed the form each time the dialog opens or the archive changes.
+  useResetOnChange([archive, open], () => setFormData(buildFormData(archive)));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

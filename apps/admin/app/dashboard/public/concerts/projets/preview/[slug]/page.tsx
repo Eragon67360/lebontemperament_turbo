@@ -2,43 +2,18 @@
 
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Project } from "@repo/domain/types/projects";
+import { useProject } from "@/hooks/useProjects";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function ProjectPreviewPage() {
-  const { slug } = useParams();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { slug } = useParams<{ slug: string }>();
+  // A failed load leaves `project` undefined, which shows the not-found screen
+  // like the former fetch did.
+  const { data: project, isPending } = useProject(slug);
 
-  useEffect(() => {
-    if (slug) {
-      fetchProject();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
-
-  const fetchProject = async () => {
-    try {
-      const response = await fetch(`/api/projects`);
-      if (!response.ok) throw new Error("Failed to fetch projects");
-      const projects = await response.json();
-      const projectData = Array.isArray(projects)
-        ? projects.find((p: Project) => p.slug === slug)
-        : null;
-      if (projectData) {
-        setProject(projectData);
-      }
-    } catch (error) {
-      console.error("Error fetching project:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isPending) {
     return (
       <PageShell
         theme="public"
