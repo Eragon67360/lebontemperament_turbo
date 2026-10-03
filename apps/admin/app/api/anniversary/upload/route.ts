@@ -1,5 +1,14 @@
 import { cloudinary } from "@/lib/cloudinary";
 import { checkAuthorization } from "@/utils/auth";
+import {
+  ANNIVERSARY_DEFAULT_FOLDER,
+  ANNIVERSARY_KINDS,
+  anniversaryKind,
+  CLOUDINARY_IMAGE_FORMATS,
+  isAllowedAnniversaryFolder,
+  resolveUploadFolder,
+  validateUpload,
+} from "@/utils/uploads";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -13,39 +22,59 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
-    const folder = formData.get("folder") as string | null;
-    const resourceType = formData.get("resourceType") as string | null; // 'image', 'video', 'audio'
+    const file = formData.get("file");
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Convert File to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Determine resource type if not provided
-    let type: "image" | "video" | "raw" | "auto" = "auto";
-    if (resourceType) {
-      if (resourceType === "audio" || resourceType === "raw") {
-        type = "raw"; // Audio files and PDFs are uploaded as 'raw' in Cloudinary
-      } else if (resourceType === "image" || resourceType === "video") {
-        type = resourceType;
-      }
+    // Only the anniversary CMS folders (photos, audio, archives, thumbnails).
+    const folder = resolveUploadFolder(
+      formData.get("folder"),
+      ANNIVERSARY_DEFAULT_FOLDER,
+      isAllowedAnniversaryFolder,
+    );
+    if (!folder) {
+      return NextResponse.json(
+        { error: "Dossier non autorisé" },
+        { status: 400 },
+      );
     }
 
+    // resourceType "image" (10 MB), "audio" (50 MB) or "raw" for PDF/Word
+    // documents (50 MB); audio and documents are stored as Cloudinary "raw".
+    const kind = anniversaryKind(formData.get("resourceType"), file.type);
+    if (!kind) {
+      return NextResponse.json(
+        { error: "Type de fichier non autorisé" },
+        { status: 400 },
+      );
+    }
+    const { rule, resourceType } = ANNIVERSARY_KINDS[kind];
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const check = validateUpload(file, bytes, rule);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(bytes);
+
     // Upload to Cloudinary
-    return new Promise<NextResponse>((resolve, reject) => {
+    return new Promise<NextResponse>((resolve) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: folder || "Site/anniversary",
-          resource_type: type,
+          folder,
+          resource_type: resourceType,
+          // Cloudinary checks the actual format of images too (no SVG).
+          ...(resourceType === "image"
+            ? { allowed_formats: CLOUDINARY_IMAGE_FORMATS }
+            : {}),
         },
         (error, result) => {
           if (error) {
             console.error("Cloudinary upload error:", error);
-            reject(
+            resolve(
               NextResponse.json({ error: "Upload failed" }, { status: 500 }),
             );
           } else {

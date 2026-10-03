@@ -43,7 +43,10 @@ export function AudioUploader({
         onChange(result.url); // This is the public_id
         toast.success("Audio uploadé avec succès");
       } catch (error) {
-        toast.error("Erreur lors de l'upload du fichier audio");
+        // The API says why it refused (type, size, folder).
+        toast.error("Erreur lors de l'upload du fichier audio", {
+          description: error instanceof Error ? error.message : undefined,
+        });
         console.error("Upload error:", error);
       }
     },

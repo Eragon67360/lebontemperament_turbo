@@ -1,6 +1,6 @@
 // app/api/invite-users/route.ts
+import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 // Input validation schema
@@ -30,14 +30,12 @@ interface InvitationResult {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    // Inviting creates accounts: admins and superadmins only.
+    const auth = await checkAuthorization();
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const user = auth.user;
 
     const body = await request.json();
     const BATCH_SIZE = 10; // Process 10 emails at a time

@@ -2,6 +2,7 @@
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
+import { isUuid, UPLOAD_RULES, validateUpload } from "@/utils/uploads";
 import { NextResponse } from "next/server";
 
 // Upload profile picture
@@ -16,42 +17,33 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
-    const userId = formData.get("userId") as string;
+    const file = formData.get("file");
+    const userId = formData.get("userId");
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!userId) {
+    // The id names the stored file, so it must be a plain UUID.
+    if (!isUuid(userId)) {
       return NextResponse.json(
         { error: "User ID is required" },
         { status: 400 },
       );
     }
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json(
-        { error: "Only image files are allowed" },
-        { status: 400 },
-      );
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "File size must be less than 5MB" },
-        { status: 400 },
-      );
+    // JPEG, PNG, WebP, GIF, AVIF (no SVG), 5 MB max.
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const check = validateUpload(file, bytes, UPLOAD_RULES.profilePicture);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 });
     }
 
     const supabase = await createClient();
     const supabaseAdmin = createAdminClient();
 
-    // Get file extension
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}_${Date.now()}.${fileExt || "jpg"}`;
+    // Extension and content type come from the validated type.
+    const fileName = `${userId}_${Date.now()}.${check.extension}`;
 
     // Delete old profile picture if it exists
     const { data: existingProfile } = await supabaseAdmin
@@ -75,8 +67,9 @@ export async function POST(request: Request) {
     // Upload new file to profile-picture bucket
     const { error: uploadError } = await supabase.storage
       .from("profile-pictures")
-      .upload(fileName, file, {
+      .upload(fileName, bytes, {
         cacheControl: "3600",
+        contentType: check.mimeType,
         upsert: false,
       });
 

@@ -69,7 +69,14 @@ export function ProfilePictureDialog({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "image/*": [".jpeg", ".jpg", ".png", ".gif", ".svg", ".webp"] },
+    // Same types as the API accepts (no SVG: it can carry scripts).
+    accept: {
+      "image/jpeg": [".jpeg", ".jpg"],
+      "image/png": [".png"],
+      "image/gif": [".gif"],
+      "image/webp": [".webp"],
+      "image/avif": [".avif"],
+    },
     maxFiles: 1,
   });
 

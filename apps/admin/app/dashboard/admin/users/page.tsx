@@ -227,7 +227,9 @@ export default function UsersPage() {
       await deleteUser.mutateAsync(user.id);
       toast.success("Utilisateur supprimé");
     } catch (error) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("Erreur lors de la suppression", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     } finally {
       setUserToDelete(null);
     }
@@ -246,7 +248,10 @@ export default function UsersPage() {
       await updateRole.mutateAsync({ userId, role: newRole });
       toast.success("Rôle mis à jour");
     } catch (error) {
-      toast.error("Erreur lors de la modification du rôle");
+      // Shows the API's reason, e.g. a refused superadmin or self change.
+      toast.error("Erreur lors de la modification du rôle", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 

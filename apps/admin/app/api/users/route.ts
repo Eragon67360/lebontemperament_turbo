@@ -1,16 +1,28 @@
 // app/api/users/route.ts
+import {
+  decideRoleChange,
+  decideUserCreation,
+  decideUserDeletion,
+  type UserRole,
+} from "@/utils/access";
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { createClient } from "@/utils/supabase/server";
 import { User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+
+const roleLabel = (role: UserRole) =>
+  role === "admin"
+    ? "administrateur"
+    : role === "superadmin"
+      ? "super administrateur"
+      : "utilisateur";
 export async function GET(request: Request) {
   try {
     const auth = await checkAuthorization();
-    const supabaseAdmin = createAdminClient();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const supabaseAdmin = createAdminClient();
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -113,27 +125,31 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const supabaseAdmin = createAdminClient();
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-
-    const { data: userProfile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (
-      !userProfile?.role ||
-      !["admin", "superadmin"].includes(userProfile.role)
-    ) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    const auth = await checkAuthorization();
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { email, password, role, display_name } = await request.json();
+
+    if (typeof email !== "string" || !email || typeof password !== "string") {
+      return NextResponse.json(
+        { error: "Email et mot de passe requis" },
+        { status: 400 },
+      );
+    }
+
+    // Admins create `user` accounts; only a superadmin creates admins.
+    const decision = decideUserCreation(auth.role, role);
+    if (!decision.allowed) {
+      return NextResponse.json(
+        { error: decision.error },
+        { status: decision.status },
+      );
+    }
+    const newRole = role as UserRole;
+
+    const supabaseAdmin = createAdminClient();
 
     // Create user with metadata
     const { data: authData, error: authError } =
@@ -153,26 +169,31 @@ export async function POST(request: Request) {
       const { error: profileError } = await supabaseAdmin
         .from("profiles")
         .update({
-          role,
+          role: newRole,
           display_name: display_name || email.split("@")[0],
         })
         .eq("id", authData.user.id);
 
       if (profileError) throw profileError;
-      await supabaseAdmin.from("activities").insert({
-        type: "user_created",
-        user_id: data.user.id, // ID of the admin who created the user
-        target_id: authData.user.id, // ID of the created user
-        title: "Nouveau membre",
-        description: `${
-          display_name || email.split("@")[0]
-        } a rejoint la plateforme`,
-        metadata: {
-          created_user_id: authData.user.id,
-          created_user_email: email,
-          created_user_role: role,
-        },
-      });
+      const { error: activityError } = await supabaseAdmin
+        .from("activities")
+        .insert({
+          type: "user_created",
+          user_id: auth.user.id, // ID of the admin who created the user
+          target_id: authData.user.id, // ID of the created user
+          title: "Nouveau membre",
+          description: `${
+            display_name || email.split("@")[0]
+          } a rejoint la plateforme`,
+          metadata: {
+            created_user_id: authData.user.id,
+            created_user_email: email,
+            created_user_role: newRole,
+          },
+        });
+      if (activityError) {
+        console.error("Error logging user creation:", activityError);
+      }
       return NextResponse.json({
         message: "Utilisateur créé avec succès",
         user: authData.user,
@@ -190,10 +211,10 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const auth = await checkAuthorization();
-    const supabaseAdmin = createAdminClient();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const supabaseAdmin = createAdminClient();
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("id");
@@ -202,6 +223,25 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         { error: "ID utilisateur requis" },
         { status: 400 },
+      );
+    }
+
+    // A user without a profile row has no role beyond the default `user`.
+    const { data: targetProfile, error: targetError } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (targetError) throw targetError;
+
+    const decision = decideUserDeletion(
+      { id: auth.user.id, role: auth.role },
+      { id: userId, role: targetProfile?.role ?? "user" },
+    );
+    if (!decision.allowed) {
+      return NextResponse.json(
+        { error: decision.error },
+        { status: decision.status },
       );
     }
 
@@ -225,10 +265,10 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const auth = await checkAuthorization();
-    const supabaseAdmin = createAdminClient();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const supabaseAdmin = createAdminClient();
 
     const { userId, role } = await request.json();
 
@@ -239,61 +279,69 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const { data: targetUser } = await supabaseAdmin
+    const { data: targetUser, error: targetError } = await supabaseAdmin
       .from("profiles")
-      .select("role")
+      .select("role, display_name, email")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
+    if (targetError) throw targetError;
 
-    if (targetUser?.role === "superadmin") {
+    if (!targetUser) {
       return NextResponse.json(
-        { error: "Impossible de modifier le rôle d'un super administrateur" },
-        { status: 403 },
+        { error: "Utilisateur introuvable" },
+        { status: 404 },
       );
     }
 
-    const { error: updateError } = await supabaseAdmin
-      .from("profiles")
-      .update({ role })
-      .eq("id", userId);
+    // Admins switch others between user and admin; only a superadmin grants
+    // or revokes superadmin; nobody changes their own role.
+    const decision = decideRoleChange(
+      { id: auth.user.id, role: auth.role },
+      { id: userId, role: targetUser.role ?? "user" },
+      role,
+    );
+    if (!decision.allowed) {
+      return NextResponse.json(
+        { error: decision.error },
+        { status: decision.status },
+      );
+    }
+    const newRole = role as UserRole;
 
-    if (updateError) throw updateError;
-
-    if (!updateError) {
-      // Get user details for the activity description
-      const { data: updatedUser } = await supabaseAdmin
+    if (newRole !== targetUser.role) {
+      const { error: updateError } = await supabaseAdmin
         .from("profiles")
-        .select("display_name, email")
-        .eq("id", userId)
-        .single();
+        .update({ role: newRole })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
 
       // Log activity
-      await supabaseAdmin.from("activities").insert({
-        type: "user_role_changed",
-        user_id: auth?.user?.id, // ID of the admin making the change
-        target_id: userId, // ID of the user whose role changed
-        title: "Changement de rôle",
-        description: `${
-          updatedUser?.display_name || updatedUser?.email
-        } est maintenant ${
-          role === "admin"
-            ? "administrateur"
-            : role === "superadmin"
-              ? "super administrateur"
-              : "utilisateur"
-        }`,
-        metadata: {
-          target_user_id: userId,
-          previous_role: targetUser?.role,
-          new_role: role,
-          changed_by: auth?.user?.id,
-        },
-      });
-
-      return NextResponse.json({
-        message: "Rôle utilisateur mis à jour avec succès",
-      });
+      const { error: activityError } = await supabaseAdmin
+        .from("activities")
+        .insert({
+          type: "user_role_changed",
+          user_id: auth.user.id, // ID of the admin making the change
+          target_id: userId, // ID of the user whose role changed
+          title: "Changement de rôle",
+          description: `${
+            targetUser.display_name || targetUser.email
+          } est maintenant ${roleLabel(newRole)}`,
+          metadata: {
+            target_user_id: userId,
+            previous_role: targetUser.role,
+            new_role: newRole,
+            changed_by: auth.user.id,
+          },
+        });
+      if (activityError) {
+        console.error("Error logging role change:", activityError);
+      }
     }
+
+    return NextResponse.json({
+      message: "Rôle utilisateur mis à jour avec succès",
+    });
   } catch (error) {
     console.error("Error updating user role:", error);
     return NextResponse.json(

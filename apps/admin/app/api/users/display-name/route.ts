@@ -1,39 +1,15 @@
 // app/api/users/display-name/route.ts
+import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
-
-async function checkAuthorization() {
-  const supabase = await createClient();
-
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) {
-    return { error: "Non authentifié", status: 401 };
-  }
-
-  const { data: userProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  if (
-    !userProfile?.role ||
-    !["admin", "superadmin"].includes(userProfile.role)
-  ) {
-    return { authorized: false, error: "Non autorisé", status: 403 };
-  }
-
-  return { authorized: true, data };
-}
 
 export async function PATCH(request: Request) {
   try {
     const auth = await checkAuthorization();
-    const supabaseAdmin = createAdminClient();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const supabaseAdmin = createAdminClient();
 
     const { userId, display_name } = await request.json();
 
