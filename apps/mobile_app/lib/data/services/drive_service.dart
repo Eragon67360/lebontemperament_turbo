@@ -42,8 +42,11 @@ class DriveService {
   }
 
   /// URL of the website proxy that streams a Drive file (needs [authHeaders]).
-  static String fileProxyUrl(String fileId) =>
-      '${AppConfig.siteUrl}/api/drive/file?fileId=${Uri.encodeComponent(fileId)}';
+  /// With [download], the proxy answers an attachment named like the Drive
+  /// file (Google Docs and Sheets exported as PDF).
+  static String fileProxyUrl(String fileId, {bool download = false}) =>
+      '${AppConfig.siteUrl}/api/drive/file?fileId=${Uri.encodeComponent(fileId)}'
+      '${download ? '&download=1' : ''}';
 
   /// Fetches files and folders for the given folder ID.
   Future<List<DriveFile>> getFolderContents(String folderId) async {
@@ -91,10 +94,22 @@ class DriveService {
   }
 
   /// Downloads a Drive file through the website proxy, authenticated.
-  Future<List<int>> downloadFile(String fileId) async {
+  Future<List<int>> downloadFile(String fileId) async =>
+      (await _fetchFile(fileId, download: false)).bytes;
+
+  /// Downloads a Drive file as an attachment, to save or share: the proxy
+  /// names it like the Drive file (Google Docs exported as PDF) and the name
+  /// comes back in [DriveDownload.fileName].
+  Future<DriveDownload> downloadAttachment(String fileId) =>
+      _fetchFile(fileId, download: true);
+
+  Future<DriveDownload> _fetchFile(
+    String fileId, {
+    required bool download,
+  }) async {
     try {
       final response = await _dio.get<List<int>>(
-        fileProxyUrl(fileId),
+        fileProxyUrl(fileId, download: download),
         options: Options(
           headers: authHeaders,
           responseType: ResponseType.bytes,
@@ -104,7 +119,13 @@ class DriveService {
       if (bytes == null || bytes.isEmpty) {
         throw DriveServiceException('Fichier vide');
       }
-      return bytes;
+      return DriveDownload(
+        bytes: bytes,
+        fileName: fileNameFromContentDisposition(
+          response.headers.value('content-disposition'),
+        ),
+        contentType: response.headers.value(Headers.contentTypeHeader),
+      );
     } on DioException catch (e) {
       _logger.e('DriveService downloadFile failed: $e');
       final status = e.response?.statusCode;
@@ -116,11 +137,62 @@ class DriveService {
       if (status == 403) {
         throw DriveServiceException('Ce fichier n\'est pas accessible.');
       }
+      if (status == 415) {
+        throw DriveServiceException(
+          'Ce type de document ne peut pas être téléchargé.',
+        );
+      }
       throw DriveServiceException(
         e.message ?? 'Impossible de télécharger le fichier',
       );
     }
   }
+}
+
+/// A file fetched through the proxy, with what the response said about it.
+class DriveDownload {
+  const DriveDownload({required this.bytes, this.fileName, this.contentType});
+
+  final List<int> bytes;
+
+  /// Name from the `Content-Disposition` header, or null without one.
+  final String? fileName;
+
+  /// `Content-Type` of the bytes (a Google Doc comes back as a PDF).
+  final String? contentType;
+}
+
+final _extendedFileName = RegExp(
+  r'''filename\*\s*=\s*(?:utf-8|iso-8859-1)'[^']*'([^;]+)''',
+  caseSensitive: false,
+);
+final _quotedFileName = RegExp(r'filename\s*=\s*"((?:[^"\\]|\\.)*)"');
+final _bareFileName = RegExp(r'filename\s*=\s*([^;\s]+)');
+
+/// The file name a `Content-Disposition` header carries: the RFC 8187
+/// `filename*` (UTF-8, accents intact) first, then the plain `filename`.
+/// Path separators are dropped so the name can't escape a directory.
+String? fileNameFromContentDisposition(String? header) {
+  if (header == null || header.isEmpty) return null;
+
+  String? name;
+  final extended = _extendedFileName.firstMatch(header);
+  if (extended != null) {
+    try {
+      name = Uri.decodeComponent(extended.group(1)!.trim());
+    } on ArgumentError {
+      name = null;
+    }
+  }
+  name ??= _quotedFileName
+      .firstMatch(header)
+      ?.group(1)
+      ?.replaceAllMapped(RegExp(r'\\(.)'), (m) => m.group(1)!);
+  name ??= _bareFileName.firstMatch(header)?.group(1);
+  if (name == null) return null;
+
+  final cleaned = name.replaceAll(RegExp(r'[/\\]'), '_').trim();
+  return cleaned.isEmpty ? null : cleaned;
 }
 
 class DriveServiceException implements Exception {
