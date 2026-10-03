@@ -2,7 +2,7 @@
 import { setColumns } from "@/utils/setColumns";
 import { PhotoData } from "@/utils/types";
 import { Accordion } from "@heroui/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useState } from "react";
 import { MasonryPhotoAlbum } from "react-photo-album";
 import "react-photo-album/masonry.css";
@@ -116,7 +116,7 @@ export default function PhotoGallery({
 
   // Custom render function for the interactive button wrapper to add motion
   const renderAnimatedButton = ({ ref, children, ...restProps }: any) => (
-    <motion.button
+    <m.button
       ref={ref}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -127,7 +127,7 @@ export default function PhotoGallery({
       {...restProps}
     >
       {children}
-    </motion.button>
+    </m.button>
   );
 
   return (
@@ -144,16 +144,16 @@ export default function PhotoGallery({
             <Accordion.Body>
               <AnimatePresence mode="wait">
                 {isLoadingConcerts ? (
-                  <motion.div
+                  <m.div
                     key="loading-concerts"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <LoadingSkeleton />
-                  </motion.div>
+                  </m.div>
                 ) : (
-                  <motion.div
+                  <m.div
                     key="content-concerts"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -167,7 +167,7 @@ export default function PhotoGallery({
                       }
                       render={{ button: renderAnimatedButton }}
                     />
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </Accordion.Body>
@@ -184,16 +184,16 @@ export default function PhotoGallery({
             <Accordion.Body>
               <AnimatePresence mode="wait">
                 {isLoadingVieBT ? (
-                  <motion.div
+                  <m.div
                     key="loading-viebt"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <LoadingSkeleton />
-                  </motion.div>
+                  </m.div>
                 ) : (
-                  <motion.div
+                  <m.div
                     key="content-viebt"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -207,7 +207,7 @@ export default function PhotoGallery({
                       }
                       render={{ button: renderAnimatedButton }}
                     />
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </Accordion.Body>

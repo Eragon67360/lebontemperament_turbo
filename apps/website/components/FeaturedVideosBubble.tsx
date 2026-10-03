@@ -3,7 +3,7 @@
 import { Button } from "@heroui/react";
 import { Video } from "@repo/domain/types/videos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { IoClose, IoPlay } from "react-icons/io5";
@@ -72,7 +72,7 @@ const FeaturedVideosBubble = () => {
     <div className="pointer-events-auto relative flex flex-col items-end">
       <AnimatePresence mode="wait">
         {isOpen ? (
-          <motion.div
+          <m.div
             ref={popoverRef}
             key="content"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -144,9 +144,9 @@ const FeaturedVideosBubble = () => {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.button
+          <m.button
             key="button"
             layoutId="bubble"
             initial={{ scale: 0 }}
@@ -175,7 +175,7 @@ const FeaturedVideosBubble = () => {
             >
               Vidéos à la une
             </div>
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
     </div>
