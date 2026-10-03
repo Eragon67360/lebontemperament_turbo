@@ -14,12 +14,17 @@ class PdfViewerSheet extends StatefulWidget {
   /// Optional: when provided, shows an "open in browser" button in the header.
   final Future<void> Function(String url)? onOpenInBrowser;
 
+  /// Optional request headers (e.g. the member's bearer token for the
+  /// website's Drive proxy, which refuses anonymous requests).
+  final Map<String, String>? headers;
+
   const PdfViewerSheet({
     super.key,
     required this.url,
     required this.fileName,
     required this.onClose,
     this.onOpenInBrowser,
+    this.headers,
   });
 
   @override
@@ -41,7 +46,10 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
     try {
       final response = await Dio().get(
         widget.url,
-        options: Options(responseType: ResponseType.bytes),
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: widget.headers,
+        ),
       );
       final doc = await PdfDocument.openData(response.data);
       if (!mounted) return;

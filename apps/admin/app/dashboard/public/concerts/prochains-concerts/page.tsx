@@ -1,7 +1,9 @@
 "use client";
 
 import { ConcertForm } from "@/components/ConcertForm";
-import { ConcertPoster } from "@/components/ConcertPoster";
+import { ConcertCard } from "@/components/concerts/ConcertCard";
+import { ConcertSelectionDialog } from "@/components/concerts/ConcertSelectionDialog";
+import { TourCard } from "@/components/concerts/TourCard";
 import { PageShell } from "@/components/layouts/PageShell";
 import { TourForm } from "@/components/TourForm";
 import {
@@ -14,10 +16,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
 import {
   Dialog,
   DialogContent,
@@ -25,8 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   useConcerts,
   useCreateConcert,
@@ -42,301 +44,16 @@ import {
 import { Tour } from "@/types/tours";
 import { Concert, Context } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import {
-  Calendar,
-  Clock,
-  Link as LinkIcon,
-  MapPin,
-  Music,
-  Music2,
-  Pencil,
-  Plus,
-  Trash2,
-  Users,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { Music2, Plus, Users } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-
-// --- Utility Components ---
-
-const LoadingSkeleton = () => (
-  <div className="space-y-8">
-    <div className="space-y-4">
-      <div className="bg-muted h-6 w-32 animate-pulse rounded" />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            className="bg-muted/40 h-[180px] w-full animate-pulse rounded-2xl border"
-          />
-        ))}
-      </div>
-    </div>
-    <div className="space-y-4">
-      <div className="bg-muted h-6 w-32 animate-pulse rounded" />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="bg-muted/40 h-[240px] w-full animate-pulse rounded-2xl border"
-          />
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-const EmptyState = ({
-  onAddConcert,
-  onAddTour,
-}: {
-  onAddConcert: () => void;
-  onAddTour: () => void;
-}) => (
-  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
-    <div className="bg-primary/5 ring-primary/5 flex h-20 w-20 items-center justify-center rounded-full ring-8">
-      <Music className="text-primary/40 h-10 w-10" />
-    </div>
-    <div className="space-y-2">
-      <h2 className="text-xl font-semibold tracking-tight">
-        Programmation vide
-      </h2>
-      <p className="text-muted-foreground max-w-sm text-sm">
-        Aucun concert ni tournée n'est prévu pour le moment.
-      </p>
-    </div>
-    <div className="flex flex-col gap-3 sm:flex-row">
-      <Button variant="outline" onClick={onAddTour}>
-        <Users className="mr-2 h-4 w-4" />
-        Créer une tournée
-      </Button>
-      <Button onClick={onAddConcert}>
-        <Plus className="mr-2 h-4 w-4" />
-        Ajouter un concert
-      </Button>
-    </div>
-  </div>
-);
-
-// --- Sub-Components ---
-
-const TourCard = ({
-  tour,
-  onEdit,
-  onDelete,
-  onManageConcerts,
-}: {
-  tour: Tour;
-  onEdit: (t: Tour) => void;
-  onDelete: (id: string) => void;
-  onManageConcerts: (t: Tour) => void;
-}) => {
-  const isOrchestra = tour.context === "orchestre_et_choeur";
-
-  return (
-    <Card className="bg-card/50 hover:border-primary/50 group relative flex flex-col justify-between overflow-hidden rounded-2xl border shadow-sm transition-all hover:shadow-md">
-      <div className="bg-primary/5 group-hover:bg-primary/10 translate-y--8 absolute top-0 right-0 h-24 w-24 translate-x-8 rounded-full blur-2xl transition-all" />
-
-      <div className="p-5">
-        <div className="mb-4 flex items-start justify-between">
-          <div className="space-y-1">
-            <h3 className="line-clamp-1 text-lg font-bold tracking-tight">
-              {tour.name}
-            </h3>
-            <Badge
-              variant="outline"
-              className={
-                isOrchestra
-                  ? "border-purple-500/30 bg-purple-500/10 text-purple-600"
-                  : "border-blue-500/30 bg-blue-500/10 text-blue-600"
-              }
-            >
-              {isOrchestra ? "Orchestre & Chœur" : "Chœur seul"}
-            </Badge>
-          </div>
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground h-8 w-8"
-              onClick={() => onEdit(tour)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8"
-              onClick={() => onDelete(tour.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <p className="text-muted-foreground line-clamp-2 min-h-[2.5rem] text-sm">
-          {tour.description || "Aucune description..."}
-        </p>
-
-        <div className="text-muted-foreground mt-4 flex items-center gap-4 text-xs font-medium">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>
-              {tour.start_date
-                ? format(new Date(tour.start_date), "dd MMM", { locale: fr })
-                : "?"}{" "}
-              -{" "}
-              {tour.end_date
-                ? format(new Date(tour.end_date), "dd MMM yyyy", { locale: fr })
-                : "?"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Music2 className="h-3.5 w-3.5" />
-            <span>{tour.concert_count || 0} concerts</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-muted/30 border-t p-3">
-        <Button
-          variant="secondary"
-          className="bg-background hover:bg-background/80 w-full justify-between"
-          size="sm"
-          onClick={() => onManageConcerts(tour)}
-        >
-          <span className="flex items-center gap-2">
-            <Plus className="h-3.5 w-3.5" /> Gérer les concerts
-          </span>
-          <Users className="h-3.5 w-3.5 opacity-50" />
-        </Button>
-      </div>
-    </Card>
-  );
-};
-
-const ConcertCard = ({
-  concert,
-  tourName,
-  onEdit,
-  onDelete,
-}: {
-  concert: Concert;
-  tourName?: string;
-  onEdit: (c: Concert) => void;
-  onDelete: (id: string) => void;
-}) => {
-  const dateObj = new Date(concert.date);
-
-  return (
-    <Card className="bg-card hover:border-primary/50 group relative flex overflow-hidden rounded-2xl border shadow-sm transition-all hover:shadow-md">
-      {/* Date Tile (Left Side) */}
-      <div className="bg-muted/20 hidden flex-col items-center justify-center border-r px-5 py-4 text-center sm:flex">
-        <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-          {format(dateObj, "MMM", { locale: fr })}
-        </span>
-        <span className="text-foreground text-3xl leading-none font-black">
-          {format(dateObj, "dd")}
-        </span>
-        <span className="text-muted-foreground/80 text-xs font-medium">
-          {format(dateObj, "yyyy")}
-        </span>
-      </div>
-
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            {/* Poster thumbnail (if any) */}
-            {concert.affiche ? (
-              <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border shadow-sm">
-                <ConcertPoster
-                  src={concert.affiche}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="bg-primary/10 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md">
-                <Music2 className="h-6 w-6" />
-              </div>
-            )}
-
-            <div>
-              <h3 className="line-clamp-1 leading-tight font-bold tracking-tight">
-                {concert.name || "Concert sans titre"}
-              </h3>
-              <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                {tourName && (
-                  <Badge
-                    variant="secondary"
-                    className="text-muted-foreground h-5 px-1.5 font-normal"
-                  >
-                    {tourName}
-                  </Badge>
-                )}
-                <div className="text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {concert.time.slice(0, 5).replace(":", "h")}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions Menu */}
-          <div className="flex flex-shrink-0 flex-col gap-1 sm:flex-row">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
-              onClick={() => onEdit(concert)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8"
-              onClick={() => onDelete(concert.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <Separator className="my-3" />
-
-        <div className="text-muted-foreground grid gap-2 text-sm sm:grid-cols-2">
-          <div className="flex items-center gap-2">
-            <MapPin className="text-primary/60 h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{concert.place}</span>
-          </div>
-          {concert.related_link && (
-            <div className="flex items-center gap-2">
-              <LinkIcon className="text-primary/60 h-4 w-4 flex-shrink-0" />
-              <a
-                href={concert.related_link}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-primary truncate hover:underline"
-              >
-                Lien billeterie/info
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// --- Main Page Component ---
 
 export default function ProchainsConcerts() {
   // Queries
-  const { data: concerts = [], isLoading: loadingConcerts } = useConcerts();
-  const { data: tours = [], isLoading: loadingTours } = useTours();
-  const loading = loadingConcerts || loadingTours;
+  const concertsQuery = useConcerts();
+  const toursQuery = useTours();
+  const concerts = concertsQuery.data ?? [];
+  const tours = toursQuery.data ?? [];
 
   // Mutations
   const createConcert = useCreateConcert();
@@ -598,102 +315,136 @@ export default function ProchainsConcerts() {
 
   return (
     <PageShell
-      fullHeight
       theme="public"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
       title="Prochains concerts"
       description="Gérez la programmation, les dates et les tournées."
       headerAction={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button
             variant="outline"
-            className="hidden sm:flex"
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => setCreateTourOpen(true)}
           >
-            <Users className="mr-2 h-4 w-4" />
+            <Users className="h-4 w-4" aria-hidden />
             Nouvelle tournée
           </Button>
           <Button
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => setCreateConcertOpen(true)}
-            className="shadow-md transition-all hover:shadow-lg"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Nouveau Concert</span>
-            <span className="sm:hidden">Ajouter</span>
+            <Plus className="h-4 w-4" aria-hidden />
+            Nouveau concert
           </Button>
         </div>
       }
     >
-      <ScrollArea className="h-full w-full pr-4">
-        {loading ? (
-          <LoadingSkeleton />
-        ) : upcomingConcerts.length === 0 && upcomingTours.length === 0 ? (
-          <EmptyState
-            onAddConcert={() => setCreateConcertOpen(true)}
-            onAddTour={() => setCreateTourOpen(true)}
-          />
-        ) : (
-          <div className="space-y-10 pb-12">
-            {/* TOURS SECTION */}
-            {upcomingTours.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 px-1">
-                  <Users className="text-primary h-5 w-5" />
-                  <h2 className="text-lg font-semibold tracking-tight">
-                    Tournées en cours
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {upcomingTours.map((tour) => (
-                    <TourCard
-                      key={tour.id}
-                      tour={tour}
-                      onEdit={setEditTour}
-                      onDelete={(id) =>
-                        setDeleteDialog({
-                          type: "tour",
-                          id,
-                          name: tour.name,
-                        })
-                      }
-                      onManageConcerts={setManageTour}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* CONCERTS SECTION */}
-            {upcomingConcerts.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 px-1">
-                  <Music2 className="text-primary h-5 w-5" />
-                  <h2 className="text-lg font-semibold tracking-tight">
-                    Concerts à venir
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-                  {upcomingConcerts.map((concert) => (
-                    <ConcertCard
-                      key={concert.id}
-                      concert={concert}
-                      tourName={
-                        concert.tour_id
-                          ? tours.find((t) => t.id === concert.tour_id)?.name
-                          : undefined
-                      }
-                      onEdit={setEditConcert}
-                      onDelete={(id) =>
-                        setDeleteDialog({ type: "concert", id })
-                      }
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+      <div className="space-y-8">
+        {/* TOURS SECTION */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Users className="text-primary h-5 w-5" aria-hidden />
+            <h2 className="text-lg font-semibold tracking-tight">
+              Tournées en cours
+            </h2>
           </div>
-        )}
-      </ScrollArea>
+          <DataState
+            isLoading={toursQuery.isLoading}
+            isError={toursQuery.isError}
+            isEmpty={upcomingTours.length === 0}
+            onRetry={() => toursQuery.refetch()}
+            errorDescription="Les tournées n'ont pas pu être chargées."
+            skeleton={
+              <CardGridSkeleton cards={2} label="Chargement des tournées…" />
+            }
+            empty={
+              <EmptyState
+                icon={Users}
+                title="Aucune tournée à venir"
+                description="Une tournée regroupe plusieurs concerts sous un même nom."
+                className="py-8"
+                action={
+                  <Button
+                    variant="outline"
+                    className="min-h-11"
+                    onClick={() => setCreateTourOpen(true)}
+                  >
+                    <Users className="h-4 w-4" aria-hidden />
+                    Créer une tournée
+                  </Button>
+                }
+              />
+            }
+          >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {upcomingTours.map((tour) => (
+                <TourCard
+                  key={tour.id}
+                  tour={tour}
+                  onEdit={setEditTour}
+                  onDelete={(id) =>
+                    setDeleteDialog({ type: "tour", id, name: tour.name })
+                  }
+                  onManageConcerts={setManageTour}
+                />
+              ))}
+            </div>
+          </DataState>
+        </section>
+
+        {/* CONCERTS SECTION */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Music2 className="text-primary h-5 w-5" aria-hidden />
+            <h2 className="text-lg font-semibold tracking-tight">
+              Concerts à venir
+            </h2>
+          </div>
+          <DataState
+            isLoading={concertsQuery.isLoading}
+            isError={concertsQuery.isError}
+            isEmpty={upcomingConcerts.length === 0}
+            onRetry={() => concertsQuery.refetch()}
+            errorDescription="Les concerts n'ont pas pu être chargés."
+            skeleton={
+              <CardGridSkeleton cards={3} label="Chargement des concerts…" />
+            }
+            empty={
+              <EmptyState
+                icon={Music2}
+                title="Aucun concert à venir"
+                description="Aucune date n'est programmée pour le moment."
+                className="py-8"
+                action={
+                  <Button
+                    className="min-h-11"
+                    onClick={() => setCreateConcertOpen(true)}
+                  >
+                    <Plus className="h-4 w-4" aria-hidden />
+                    Ajouter un concert
+                  </Button>
+                }
+              />
+            }
+          >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {upcomingConcerts.map((concert) => (
+                <ConcertCard
+                  key={concert.id}
+                  concert={concert}
+                  tourName={
+                    concert.tour_id
+                      ? tours.find((t) => t.id === concert.tour_id)?.name
+                      : undefined
+                  }
+                  onEdit={setEditConcert}
+                  onDelete={(id) => setDeleteDialog({ type: "concert", id })}
+                />
+              ))}
+            </div>
+          </DataState>
+        </section>
+      </div>
 
       {/* --- DIALOGS --- */}
 
@@ -708,16 +459,16 @@ export default function ProchainsConcerts() {
             <AlertDialogDescription>
               Êtes-vous sûr de vouloir supprimer{" "}
               {deleteDialog?.type === "tour" ? "la tournée" : "le concert"}
-              {deleteDialog?.name ? ` "${deleteDialog.name}"` : ""} ?
+              {deleteDialog?.name ? ` « ${deleteDialog.name} »` : ""} ?
               <br />
               Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 min-h-11 text-white"
             >
               Supprimer
             </AlertDialogAction>
@@ -752,6 +503,9 @@ export default function ProchainsConcerts() {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Modifier le concert</DialogTitle>
+            <DialogDescription>
+              Mettez à jour les informations de ce concert.
+            </DialogDescription>
           </DialogHeader>
           {editConcert && (
             <ConcertForm
@@ -792,6 +546,9 @@ export default function ProchainsConcerts() {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Modifier la tournée</DialogTitle>
+            <DialogDescription>
+              Mettez à jour les informations de cette tournée.
+            </DialogDescription>
           </DialogHeader>
           {editTour && (
             <TourForm
@@ -814,111 +571,5 @@ export default function ProchainsConcerts() {
         onConfirm={handleUpdateTourConcerts}
       />
     </PageShell>
-  );
-}
-
-// --- Helper Dialog for Concert Selection ---
-
-function ConcertSelectionDialog({
-  isOpen,
-  onClose,
-  tour,
-  concerts,
-  onConfirm,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  tour: Tour | null;
-  concerts: Concert[];
-  onConfirm: (ids: string[]) => void;
-}) {
-  // Local state for checkboxes
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  // Reset selection when modal opens
-  useEffect(() => {
-    if (isOpen && tour) {
-      const alreadyInTour = concerts
-        .filter((c) => c.tour_id === tour.id)
-        .map((c) => c.id);
-      setSelectedIds(alreadyInTour);
-    }
-  }, [isOpen, tour, concerts]);
-
-  // Filter available:
-  // Show concerts that are:
-  // 1. Assigned to THIS tour
-  // 2. OR Not assigned to ANY tour
-  const availableConcerts = concerts.filter(
-    (c) => c.tour_id === tour?.id || !c.tour_id,
-  );
-
-  const handleToggle = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Gérer les concerts</DialogTitle>
-          <DialogDescription>
-            Ajoutez ou retirez des concerts pour la tournée "{tour?.name}".
-          </DialogDescription>
-        </DialogHeader>
-
-        <ScrollArea className="-mr-4 flex-1 pr-4">
-          <div className="space-y-2 p-1">
-            {availableConcerts.length === 0 ? (
-              <div className="text-muted-foreground py-8 text-center text-sm">
-                Aucun concert disponible.
-              </div>
-            ) : (
-              availableConcerts.map((concert) => {
-                const isSelected = selectedIds.includes(concert.id);
-                return (
-                  <div
-                    key={concert.id}
-                    onClick={() => handleToggle(concert.id)}
-                    className={`flex cursor-pointer items-start space-x-3 rounded-lg border p-3 transition-colors ${
-                      isSelected
-                        ? "bg-primary/5 border-primary/50"
-                        : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <Checkbox checked={isSelected} className="mt-1" />
-                    <div className="space-y-1">
-                      <p className="text-sm leading-none font-medium">
-                        {concert.name || "Concert sans titre"}
-                      </p>
-                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                        <span>
-                          {format(new Date(concert.date), "dd MMM yyyy", {
-                            locale: fr,
-                          })}
-                        </span>
-                        <span>•</span>
-                        <span>{concert.place}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </ScrollArea>
-
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button onClick={() => onConfirm(selectedIds)}>
-            Enregistrer ({selectedIds.length})
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }

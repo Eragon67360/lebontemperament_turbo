@@ -1,6 +1,7 @@
 "use client";
 
 import { LinkButton } from "@/components/LinkButton";
+import { CONTACT_EMAIL } from "@/lib/contact";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -114,7 +115,7 @@ export default function CreateProfileForm() {
         <LinkButton
           variant="outline"
           className="mt-2"
-          href="mailto:thomas-moser@orange.fr?subject=Nouveau lien d'invitation - Le Bon Tempérament&body=Bonjour, mon lien d'invitation n'est plus valide. Pourriez-vous m'en envoyer un nouveau ? Merci !"
+          href={`mailto:${CONTACT_EMAIL}?subject=Nouveau lien d'invitation - Le Bon Tempérament&body=Bonjour, mon lien d'invitation n'est plus valide. Pourriez-vous m'en envoyer un nouveau ? Merci !`}
         >
           <span className="mr-2">
             <CiMail className="text-muted" />

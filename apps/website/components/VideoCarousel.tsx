@@ -1,3 +1,6 @@
+"use client";
+
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { BiDownArrow, BiUpArrow } from "react-icons/bi";
@@ -18,6 +21,8 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
   const [[page, direction], setPage] = useState([0, 0]);
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
   const [isPortrait, setIsPortrait] = useState(true);
+  // Under reduced motion the videos wait for the user to press play.
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -72,18 +77,24 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
   useEffect(() => {
     const currentVideo = videoRefs.current[page];
     if (currentVideo) {
-      currentVideo.play();
       currentVideo.muted = isMuted;
+      if (!prefersReducedMotion) {
+        currentVideo.play().catch(() => {
+          /* autoplay blocked: the native controls remain available */
+        });
+      }
     }
-  }, [page, isMuted]);
+  }, [page, isMuted, prefersReducedMotion]);
 
   const Controls = () => (
     <div
       className={`flex ${isPortrait ? "mt-4 flex-row justify-center gap-4" : "flex-col gap-4"}`}
     >
       <button
+        type="button"
         onClick={() => paginate(-1)}
         disabled={page === 0}
+        aria-label="Vidéo précédente"
         className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 md:h-12 md:w-12"
       >
         <BiUpArrow className="h-5 w-5 text-gray-700 transition-colors group-hover:text-gray-900 md:h-6 md:w-6" />
@@ -94,12 +105,17 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
         )}
       </button>
 
-      <div className="flex items-center text-sm font-medium text-gray-600">
+      <div
+        className="flex items-center text-sm font-medium text-gray-600"
+        aria-live="polite"
+      >
         {page + 1}/{videos.length}
       </div>
 
       <button
+        type="button"
         onClick={() => paginate(1)}
+        aria-label={page === videos.length - 1 ? "Terminer" : "Vidéo suivante"}
         className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#1a878d] to-[#126266] shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
       >
         <BiDownArrow className="h-5 w-5 text-white md:h-6 md:w-6" />
@@ -109,7 +125,10 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
       </button>
 
       <button
+        type="button"
         onClick={toggleMute}
+        aria-label={isMuted ? "Activer le son" : "Couper le son"}
+        aria-pressed={!isMuted}
         className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl md:h-12 md:w-12"
       >
         {isMuted ? (
@@ -156,7 +175,8 @@ export const VideoCarousel = ({ videos, onComplete }: VideoCarouselProps) => {
               }}
               src={videos[page]?.url}
               className="h-full w-full rounded-xl object-cover shadow-lg md:rounded-2xl"
-              autoPlay
+              autoPlay={!prefersReducedMotion}
+              controls={prefersReducedMotion}
               loop
               playsInline
               muted={isMuted}

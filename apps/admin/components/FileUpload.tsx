@@ -72,7 +72,14 @@ export function FileUpload({
 
   const acceptedFiles: Record<string, string[]> =
     mode === "image"
-      ? { "image/*": [".jpeg", ".jpg", ".png", ".gif", ".svg", ".webp"] }
+      ? // Same types as the API accepts (no SVG: it can carry scripts).
+        {
+          "image/jpeg": [".jpeg", ".jpg"],
+          "image/png": [".png"],
+          "image/gif": [".gif"],
+          "image/webp": [".webp"],
+          "image/avif": [".avif"],
+        }
       : { "application/pdf": [".pdf"] };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

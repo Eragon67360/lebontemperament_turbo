@@ -3,7 +3,7 @@
 import FloatingAnniversaryButton from "@/components/anniversary/FloatingAnniversaryButton";
 import { BubbleContainer } from "@/components/BubbleContainer";
 import ConditionalVercelAnalytics from "@/components/cookies/ConditionalVercelAnalytics";
-import { FooterClientWrapper } from "@/components/FooterClientWrapper";
+import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import { usePathname } from "next/navigation";
 
@@ -17,6 +17,10 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Landmarks at the top level: navigation and footer are siblings of <main>,
+  // not children. The outer column keeps the former <main> layout (min-h-dvh,
+  // centred) so nothing moves; <main> is itself a flex column so the pages
+  // stay flex items exactly as before.
   return (
     <>
       <a
@@ -25,17 +29,16 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       >
         Aller au contenu principal
       </a>
-      <main
-        id="main-content"
-        className="flex min-h-dvh flex-col justify-center"
-      >
+      <div className="flex min-h-dvh flex-col justify-center">
         <Navigation />
-        {children}
+        <main id="main-content" className="flex flex-col">
+          {children}
+        </main>
         <BubbleContainer />
         <FloatingAnniversaryButton />
         <ConditionalVercelAnalytics />
-        <FooterClientWrapper />
-      </main>
+        <Footer />
+      </div>
     </>
   );
 }

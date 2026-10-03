@@ -25,6 +25,7 @@ class ComingSoonScreen extends StatelessWidget {
         backgroundColor: theme.colorScheme.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Retour',
           onPressed: () {
             HapticFeedback.lightImpact();
             context.pop();

@@ -5,15 +5,19 @@ import { PhotoDialog } from "@/components/anniversary/PhotoDialog";
 import { PhotoItem } from "@/components/anniversary/PhotoItem";
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
 import { useDeletePhoto, usePhotos } from "@/hooks/useAnniversaryPhotos";
 import { AnniversaryPhoto } from "@/types/anniversary";
-import { Plus } from "lucide-react";
+import { Images, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function PhotosPage() {
-  const { data: photos, isLoading } = usePhotos();
+  const { data: photos = [], isLoading, isError, refetch } = usePhotos();
   const deletePhoto = useDeletePhoto();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -53,64 +57,65 @@ export default function PhotosPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageShell
-        title="Collection Photos"
-        description="Gérer la galerie de photos des 40 ans"
-        theme="anniversary"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-      >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </PageShell>
-    );
-  }
-
-  const maxOrder =
-    photos?.reduce((max, photo) => Math.max(max, photo.display_order), 0) || 0;
+  const maxOrder = photos.reduce(
+    (max, photo) => Math.max(max, photo.display_order),
+    0,
+  );
 
   return (
     <PageShell
-      title="Collection Photos"
+      title="Collection photos"
       description="Gérer la galerie de photos des 40 ans"
       theme="anniversary"
-      fullHeight={true}
-      className="flex h-full flex-col px-4 py-8 sm:px-6 lg:px-8"
-    >
-      <div className="mb-6 flex flex-shrink-0 items-center justify-between">
-        <div className="text-muted-foreground text-sm">
-          {photos?.length || 0} photo(s)
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+      className="py-4 sm:py-6"
+      headerAction={
+        <Button
+          className="min-h-11 w-full sm:w-auto"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
           Ajouter une photo
         </Button>
-      </div>
+      }
+    >
+      {photos.length > 0 && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          {photos.length} photo{photos.length > 1 ? "s" : ""}
+        </p>
+      )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {photos && photos.length > 0 ? (
-          <div className="space-y-4 pb-4">
-            {photos.map((photo) => (
-              <PhotoItem
-                key={photo.id}
-                photo={photo}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="border-border bg-muted/50 rounded-lg border border-dashed p-12 text-center">
-            <p className="text-muted-foreground">
-              Aucune photo. Cliquez sur "Ajouter une photo" pour commencer.
-            </p>
-          </div>
-        )}
-      </div>
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={photos.length === 0}
+        onRetry={() => refetch()}
+        errorDescription="Les photos n'ont pas pu être chargées."
+        skeleton={<CardGridSkeleton cards={6} label="Chargement des photos…" />}
+        empty={
+          <EmptyState
+            icon={Images}
+            title="Aucune photo"
+            description="Ajoutez les photos de concerts, de répétitions et de tournées à afficher dans la galerie des 40 ans."
+            action={
+              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter une photo
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {photos.map((photo) => (
+            <PhotoItem
+              key={photo.id}
+              photo={photo}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Create/Edit Dialog */}
       <PhotoDialog

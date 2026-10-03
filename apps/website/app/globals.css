@@ -67,6 +67,30 @@
   --primary-900: #082123;
 }
 
+/* High contrast accessibility. Kept outside @layer base: the brand tokens
+   above are unlayered, and unlayered declarations always beat layered ones.
+   `more` is the value browsers implement (`high` never matched), and the
+   brand tokens themselves are overridden because the utilities read
+   `--primary` / `--accent` / `--muted`, not `--color-*`. */
+@media (prefers-contrast: more) {
+  :root {
+    --primary: #000000;
+    --accent: #000000;
+    --muted: #000000;
+    --color-primary: #000000;
+    --color-border: #000000;
+  }
+
+  .dark {
+    --primary: #ffffff;
+    --accent: #ffffff;
+    --accent-foreground: #000000;
+    --muted: #ffffff;
+    --color-primary: #ffffff;
+    --color-border: #ffffff;
+  }
+}
+
 @theme inline {
   --color-primary: var(--primary);
   --color-primary-50: var(--primary-50);
@@ -142,14 +166,6 @@
      inline script in AnniversaryLanding. */
   html.intro-skip .intro-root {
     display: none;
-  }
-
-  /* High contrast accessibility */
-  @media (prefers-contrast: high) {
-    :root {
-      --color-primary: #000000;
-      --color-border: #000000;
-    }
   }
 
   /* --- Custom Scrollbar Styling --- */

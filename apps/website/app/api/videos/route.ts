@@ -14,7 +14,8 @@ export async function GET() {
       .order("display_order", { ascending: true });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Error fetching videos:", error);
+      return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
     }
 
     return NextResponse.json((videos || []) as Video[]); // view-model: youtube_links nullability handled by UI defaults

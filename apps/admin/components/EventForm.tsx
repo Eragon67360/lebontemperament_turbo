@@ -60,29 +60,32 @@ export function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="title">Titre</Label>
         <Input
           id="title"
           name="title"
+          className="min-h-11"
           required
           defaultValue={initialData?.title || ""}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <Label>Date de début</Label>
+        <div className="space-y-2">
+          <Label htmlFor="date_from">Date de début</Label>
           <Popover modal>
             <PopoverTrigger asChild>
               <Button
+                id="date_from"
+                type="button"
                 variant={"outline"}
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "min-h-11 w-full justify-start text-left font-normal",
                   !dateFrom && "text-muted-foreground",
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="h-4 w-4" aria-hidden />
                 {dateFrom ? (
                   format(dateFrom, "PPP", { locale: fr })
                 ) : (
@@ -102,18 +105,20 @@ export function EventForm({
           </Popover>
         </div>
 
-        <div>
-          <Label>Date de fin (optionnel)</Label>
+        <div className="space-y-2">
+          <Label htmlFor="date_to">Date de fin (optionnel)</Label>
           <Popover modal>
             <PopoverTrigger asChild>
               <Button
+                id="date_to"
+                type="button"
                 variant={"outline"}
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "min-h-11 w-full justify-start text-left font-normal",
                   !dateTo && "text-muted-foreground",
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="h-4 w-4" aria-hidden />
                 {dateTo ? (
                   format(dateTo, "PPP", { locale: fr })
                 ) : (
@@ -135,39 +140,42 @@ export function EventForm({
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="time">Heure</Label>
         <Input
           id="time"
           name="time"
           type="time"
+          className="min-h-11"
           required
           defaultValue={initialData?.time.slice(0, 5) || ""}
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="location">Lieu</Label>
         <Input
           id="location"
           name="location"
+          className="min-h-11"
           required
           defaultValue={initialData?.location || ""}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="responsible_name">Responsable</Label>
           <Input
             id="responsible_name"
             name="responsible_name"
+            className="min-h-11"
             required
             defaultValue={initialData?.responsible_name || ""}
           />
         </div>
 
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="responsible_email">
             Email du responsable (optionnel)
           </Label>
@@ -175,19 +183,20 @@ export function EventForm({
             id="responsible_email"
             name="responsible_email"
             type="email"
+            className="min-h-11"
             defaultValue={initialData?.responsible_email || ""}
           />
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="event_type">Type d&apos;événement</Label>
         <Select
           name="event_type"
           required
           defaultValue={initialData?.event_type || "autre"}
         >
-          <SelectTrigger>
+          <SelectTrigger id="event_type" className="min-h-11">
             <SelectValue placeholder="Sélectionner un type" />
           </SelectTrigger>
           <SelectContent>
@@ -199,13 +208,16 @@ export function EventForm({
           </SelectContent>
         </Select>
       </div>
-      <div>
-        <Label htmlFor="description">
-          Lien de l&apos;évènement (optionnel)
-        </Label>
-        <Input id="link" name="link" defaultValue={initialData?.link || ""} />
+      <div className="space-y-2">
+        <Label htmlFor="link">Lien de l&apos;évènement (optionnel)</Label>
+        <Input
+          id="link"
+          name="link"
+          className="min-h-11"
+          defaultValue={initialData?.link || ""}
+        />
       </div>
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="description">Description (optionnel)</Label>
         <Textarea
           id="description"
@@ -233,9 +245,15 @@ export function EventForm({
         </p>
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Chargement..." : submitLabel}
-      </Button>
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+        <Button
+          type="submit"
+          className="min-h-11 w-full sm:w-auto"
+          disabled={loading}
+        >
+          {loading ? "Chargement..." : submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }

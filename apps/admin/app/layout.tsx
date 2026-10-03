@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <Analytics />
       <body className={cn(inter.className, "overflow-y-hidden")}>
         <Toaster position="top-right" richColors />

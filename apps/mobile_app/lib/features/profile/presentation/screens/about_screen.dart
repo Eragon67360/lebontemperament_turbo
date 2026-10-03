@@ -55,6 +55,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
             surfaceTintColor: theme.colorScheme.surface,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              tooltip: 'Retour',
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(
@@ -183,9 +184,15 @@ class _AboutHeader extends StatelessWidget {
               ? GestureDetector(
                   onTap: onVersionTap,
                   behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: versionText,
+                  child: ConstrainedBox(
+                    // 48 dp target (the developer-mode easter egg).
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: versionText,
+                      ),
+                    ),
                   ),
                 )
               : versionText,
@@ -437,40 +444,39 @@ class _InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-      child: InkWell(
-        onTap: () => _showFullValue(context),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            children: [
-              Icon(icon, color: theme.colorScheme.primary, size: 22),
-              const SizedBox(width: 16),
-              Text(
-                label,
+    // The ripple/target now covers the whole row (same visual size); the
+    // inner InkWell used to be 30 dp tall.
+    return InkWell(
+      onTap: () => _showFullValue(context),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 20.0),
+        child: Row(
+          children: [
+            Icon(icon, color: theme.colorScheme.primary, size: 22),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
                 style: GoogleFonts.poppins(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: GoogleFonts.poppins(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -501,7 +507,9 @@ class _Footer extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              // Full onSurfaceVariant: at 70 % alpha this 12 pt line was
+              // 3.9:1 on the light surface, below 4.5:1.
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],

@@ -1,6 +1,9 @@
+import { CONTACT_EMAIL } from "@/lib/contact";
+import { createMailer } from "@/lib/mail";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 import { createClient } from "@/utils/supabase/server";
+import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 
 // Email template for user confirmation
 const userConfirmationEmailTemplate = (name: string) => `
@@ -70,7 +73,7 @@ const userConfirmationEmailTemplate = (name: string) => `
             
             <h1>Merci pour votre témoignage ! 🎉</h1>
             
-            <p>Bonjour ${name},</p>
+            <p>Bonjour ${escapeHtml(name)},</p>
             
             <p>Nous avons bien reçu votre témoignage pour les 40 ans du Bon Tempérament !</p>
             
@@ -182,15 +185,15 @@ const adminNotificationEmailTemplate = (
             <h1>Nouveau témoignage reçu ! 📝</h1>
             
             <div class="info-box">
-                <p><strong>Nom :</strong> ${name}</p>
-                <p><strong>Email :</strong> ${email}</p>
-                ${year ? `<p><strong>Année :</strong> ${year}</p>` : ""}
+                <p><strong>Nom :</strong> ${escapeHtml(name)}</p>
+                <p><strong>Email :</strong> ${escapeHtml(email)}</p>
+                ${year ? `<p><strong>Année :</strong> ${escapeHtml(year)}</p>` : ""}
                 <p><strong>Date de soumission :</strong> ${new Date().toLocaleString("fr-FR")}</p>
             </div>
             
             <h2 style="color: #18858b; font-size: 18px; margin-top: 30px;">Témoignage :</h2>
             <div class="message-box">
-                <p>${message.replace(/\n/g, "<br>")}</p>
+                <p>${escapeHtmlWithBreaks(message)}</p>
             </div>
             
             <p style="color: #666666; font-size: 14px; margin-top: 30px; text-align: center;">
@@ -224,10 +227,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-
-    if (!secretKey) {
-      console.error("RECAPTCHA_SECRET_KEY not found in environment variables");
+    const recaptcha = await verifyRecaptcha(String(captchaValue));
+    if (recaptcha === "not-configured") {
       return NextResponse.json(
         {
           success: false,
@@ -236,27 +237,11 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
-
-    // Verify reCAPTCHA with Google
-    const recaptchaResponse = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaValue}`,
-      {
-        method: "POST",
-      },
-    );
-
-    const recaptchaResult = await recaptchaResponse.json();
-
-    if (!recaptchaResult.success) {
-      console.error(
-        "reCAPTCHA verification failed:",
-        recaptchaResult["error-codes"],
-      );
+    if (recaptcha === "failed") {
       return NextResponse.json(
         {
           success: false,
           message: "Échec de la vérification reCAPTCHA",
-          errorCodes: recaptchaResult["error-codes"],
         },
         { status: 400 },
       );
@@ -304,11 +289,10 @@ export async function POST(request: Request) {
     }
 
     // Send emails using nodemailer
-    const username = process.env.NEXT_PUBLIC_BURNER_USERNAME;
-    const password = process.env.NEXT_PUBLIC_BURNER_PASSWORD;
-    const adminEmail = process.env.ADMIN_EMAIL || "lebontemperament@gmail.com";
+    const mailer = createMailer();
+    const adminEmail = process.env.ADMIN_EMAIL || CONTACT_EMAIL;
 
-    if (!username || !password) {
+    if (!mailer) {
       console.error("Email service not configured");
       // Still return success if email fails, as the memory was saved
       return NextResponse.json({
@@ -319,32 +303,17 @@ export async function POST(request: Request) {
     }
 
     try {
-      const transporter = nodemailer.createTransport({
-        service: "Gmail",
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        tls: {
-          ciphers: "SSLv3",
-          rejectUnauthorized: false,
-        },
-        auth: {
-          user: username,
-          pass: password,
-        },
-      });
-
       // Send confirmation email to user
-      await transporter.sendMail({
-        from: username,
+      await mailer.transporter.sendMail({
+        from: mailer.from,
         to: email.trim().toLowerCase(),
         subject: "Merci pour votre témoignage - 40 ans du Bon Tempérament",
         html: userConfirmationEmailTemplate(name.trim()),
       });
 
       // Send notification email to admin
-      await transporter.sendMail({
-        from: username,
+      await mailer.transporter.sendMail({
+        from: mailer.from,
         to: adminEmail,
         subject: `Nouveau témoignage reçu de ${name.trim()} - 40 ans`,
         html: adminNotificationEmailTemplate(

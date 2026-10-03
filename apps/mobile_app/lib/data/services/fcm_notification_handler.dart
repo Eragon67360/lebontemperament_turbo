@@ -31,9 +31,15 @@ class FcmNotificationHandler {
         options: DefaultFirebaseOptions.currentPlatform);
     _logger.i(
         '[FCM Background] messageId=${message.messageId}, data=${message.data}');
-    // When server sends "notification" block, system shows it; we only need to handle data-only or show fallback.
-    final title = message.notification?.title ?? message.data['title'] ?? 'Notification';
-    final body = message.notification?.body ?? message.data['body'] ?? '';
+    // A message with a "notification" block is displayed by the system while
+    // the app is in the background: showing it again here produced duplicates.
+    // Only data-only messages need a local notification.
+    if (message.notification != null) {
+      _logger.i('[FCM Background] notification message, system shows it');
+      return;
+    }
+    final title = message.data['title'] ?? 'Notification';
+    final body = message.data['body'] ?? '';
     final type = message.data['type'] ?? '';
     final id = message.data['id'] ?? '';
     final payload = type.isNotEmpty && id.isNotEmpty ? '${type}_$id' : '${message.messageId ?? ''}';

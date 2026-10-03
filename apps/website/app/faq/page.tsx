@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "FAQ - Questions Fréquentes | Le Bon Tempérament",
+  title: "FAQ - Questions fréquentes",
   description:
     "FAQ Le Bon Tempérament : réponses aux questions sur nos concerts, comment rejoindre l'ensemble, répétitions, tarifs et informations pratiques à Saverne.",
   keywords:
@@ -127,12 +127,14 @@ export default function FAQPage() {
       <JsonLd data={breadcrumbJsonLd([{ name: "FAQ", path: "/faq" }])} />
       <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
         <div className="mb-8">
-          <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
-            Questions
+          <h1>
+            <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+              Questions
+            </span>
+            <span className="text-title text-foreground block leading-none font-bold">
+              Fréquentes
+            </span>
           </h1>
-          <h2 className="text-title text-foreground leading-none font-bold">
-            Fréquentes
-          </h2>
           <hr className="border-separator mt-2 md:mt-4 lg:mt-8" />
           <p className="text-foreground mt-8 text-base md:text-lg">
             Trouvez ci-dessous les réponses aux questions les plus fréquemment
@@ -156,12 +158,12 @@ export default function FAQPage() {
               itemScope
               itemType="https://schema.org/Question"
             >
-              <h3
+              <h2
                 className="text-foreground mb-3 text-xl font-semibold"
                 itemProp="name"
               >
                 {faq.question}
-              </h3>
+              </h2>
               <div
                 className="text-muted text-base leading-relaxed"
                 itemScope
@@ -194,9 +196,9 @@ export default function FAQPage() {
         </div>
 
         <div className="bg-primary/10 mt-12 rounded-lg p-8 text-center">
-          <h3 className="text-foreground mb-4 text-xl font-semibold">
+          <h2 className="text-foreground mb-4 text-xl font-semibold">
             Vous avez d&apos;autres questions?
-          </h3>
+          </h2>
           <p className="text-muted mb-6">
             N&apos;hésitez pas à nous contacter, nous serons ravis de vous
             répondre!

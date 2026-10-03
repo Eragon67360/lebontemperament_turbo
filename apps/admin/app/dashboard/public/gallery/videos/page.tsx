@@ -15,6 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -22,7 +27,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { VideoForm } from "@/components/VideoForm";
 import { YoutubeIframe } from "@/components/YoutubeIframe";
 import { Video, VideoFormData } from "@repo/domain/types/videos";
@@ -32,38 +36,6 @@ import { fr } from "date-fns/locale";
 import { Film, MapPin, Mic2, Pencil, Plus, Trash2, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-// --- Utility Components ---
-
-const LoadingSkeleton = () => (
-  <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div
-        key={i}
-        className="bg-muted/40 h-[320px] w-full animate-pulse rounded-2xl border"
-      />
-    ))}
-  </div>
-);
-
-const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
-  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
-    <div className="bg-primary/5 ring-primary/5 flex h-20 w-20 items-center justify-center rounded-full ring-8">
-      <Film className="text-primary/40 h-10 w-10" />
-    </div>
-    <div className="space-y-2">
-      <h2 className="text-xl font-semibold tracking-tight">Vidéothèque vide</h2>
-      <p className="text-muted-foreground max-w-sm text-sm">
-        Aucune vidéo n'est disponible pour le moment. Ajoutez des liens YouTube
-        pour enrichir votre galerie.
-      </p>
-    </div>
-    <Button onClick={onAdd} className="px-8">
-      <Plus className="mr-2 h-4 w-4" />
-      Ajouter une vidéo
-    </Button>
-  </div>
-);
 
 // --- Sub-Component: Video Card ---
 
@@ -80,22 +52,23 @@ const VideoCard = ({
   const dateObj = new Date(video.performance_date);
 
   return (
-    <Card className="group bg-card hover:border-primary/50 flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-all hover:shadow-md">
+    <Card className="bg-card hover:border-primary/50 flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md motion-reduce:transition-none">
       {/* Video Area */}
       <div className="relative aspect-video w-full bg-black">
         {videoId ? (
           <YoutubeIframe videoId={videoId} title={video.title} />
         ) : (
           <div className="text-muted-foreground flex h-full w-full items-center justify-center">
-            <Film className="h-10 w-10 opacity-20" />
+            <Film className="h-10 w-10 opacity-20" aria-hidden />
+            <span className="sr-only">Lien YouTube invalide</span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex gap-4">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <div className="flex gap-3 sm:gap-4">
           {/* Date Tile */}
-          <div className="bg-muted/30 hidden flex-col items-center justify-center rounded-xl px-3 py-2 text-center shadow-sm sm:flex">
+          <div className="bg-muted/30 hidden shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 text-center shadow-sm sm:flex">
             <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
               {format(dateObj, "MMM", { locale: fr })}
             </span>
@@ -107,16 +80,20 @@ const VideoCard = ({
             </span>
           </div>
 
-          <div className="flex-1 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="line-clamp-2 text-lg leading-tight font-bold tracking-tight">
-                {video.title}
-              </h3>
-            </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <h2 className="line-clamp-2 text-base leading-tight font-bold tracking-tight sm:text-lg">
+              {video.title}
+            </h2>
+            <p className="text-muted-foreground text-xs sm:hidden">
+              {format(dateObj, "d MMMM yyyy", { locale: fr })}
+            </p>
             {video.composer && (
-              <Badge variant="secondary" className="font-normal">
-                <User className="mr-1 h-3 w-3 opacity-50" />
-                {video.composer}
+              <Badge variant="secondary" className="max-w-full font-normal">
+                <User
+                  className="mr-1 h-3 w-3 shrink-0 opacity-50"
+                  aria-hidden
+                />
+                <span className="truncate">{video.composer}</span>
               </Badge>
             )}
           </div>
@@ -124,13 +101,16 @@ const VideoCard = ({
 
         <div className="text-muted-foreground mt-4 space-y-2 text-sm">
           <div className="flex items-center gap-2">
-            <MapPin className="text-primary/60 h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{video.venue}</span>
+            <MapPin className="text-primary/60 h-4 w-4 shrink-0" aria-hidden />
+            <span className="min-w-0 truncate">{video.venue}</span>
           </div>
           {video.soloists && video.soloists.length > 0 && (
             <div className="flex items-start gap-2">
-              <Mic2 className="text-primary/60 mt-0.5 h-4 w-4 flex-shrink-0" />
-              <span className="line-clamp-1 italic">
+              <Mic2
+                className="text-primary/60 mt-0.5 h-4 w-4 shrink-0"
+                aria-hidden
+              />
+              <span className="line-clamp-1 min-w-0 italic">
                 {video.soloists.join(", ")}
               </span>
             </div>
@@ -141,19 +121,21 @@ const VideoCard = ({
         <div className="mt-5 flex items-center justify-end gap-1 border-t pt-3">
           <Button
             variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:bg-primary/10 hover:text-primary h-8 w-8"
+            size="icon"
+            className="text-muted-foreground hover:bg-primary/10 hover:text-primary size-11"
             onClick={() => onEdit(video)}
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Modifier « {video.title} »</span>
           </Button>
           <Button
             variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8"
+            size="icon"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-11"
             onClick={() => onDelete(video.id)}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Supprimer « {video.title} »</span>
           </Button>
         </div>
       </div>
@@ -167,6 +149,7 @@ export default function VideosPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   // Dialog States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -175,14 +158,16 @@ export default function VideosPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const fetchVideos = async () => {
+    setLoading(true);
+    setError(false);
     try {
       const response = await fetch("/api/videos");
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
       setVideos(data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Impossible de charger les vidéos");
+    } catch (err) {
+      console.error(err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -266,16 +251,15 @@ export default function VideosPage() {
 
   return (
     <PageShell
-      fullHeight
       theme="public"
       title="Vidéos"
       description="Gérez votre vidéothèque YouTube et les performances passées."
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
       headerAction={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="shadow-md transition-all hover:shadow-lg">
-              <Plus className="mr-2 h-4 w-4" />
+            <Button className="min-h-11 w-full sm:w-auto">
+              <Plus className="h-4 w-4" aria-hidden />
               Ajouter une vidéo
             </Button>
           </DialogTrigger>
@@ -291,27 +275,44 @@ export default function VideosPage() {
         </Dialog>
       }
     >
-      <ScrollArea className="h-full w-full pr-4">
-        {loading ? (
-          <LoadingSkeleton />
-        ) : videos.length === 0 ? (
-          <EmptyState onAdd={() => setOpen(true)} />
-        ) : (
-          <div className="grid gap-6 pb-12 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-            {videos.map((video) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                onEdit={(v) => {
-                  setEditingVideo(v);
-                  setEditDialogOpen(true);
-                }}
-                onDelete={handleDeleteClick}
-              />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+      <DataState
+        isLoading={loading}
+        isError={error}
+        isEmpty={videos.length === 0}
+        onRetry={fetchVideos}
+        errorDescription="Les vidéos n'ont pas pu être chargées."
+        skeleton={<CardGridSkeleton cards={6} label="Chargement des vidéos…" />}
+        empty={
+          <EmptyState
+            icon={Film}
+            title="Aucune vidéo"
+            description="Votre vidéothèque est vide. Ajoutez des liens YouTube pour enrichir votre galerie."
+            action={
+              <Button
+                onClick={() => setOpen(true)}
+                className="min-h-11 w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter une vidéo
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {videos.map((video) => (
+            <VideoCard
+              key={video.id}
+              video={video}
+              onEdit={(v) => {
+                setEditingVideo(v);
+                setEditDialogOpen(true);
+              }}
+              onDelete={handleDeleteClick}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Delete Alert */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -324,10 +325,10 @@ export default function VideosPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90 text-white"
+              className="bg-destructive hover:bg-destructive/90 min-h-11 text-white"
             >
               Supprimer
             </AlertDialogAction>

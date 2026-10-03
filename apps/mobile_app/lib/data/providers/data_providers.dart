@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import '../../core/utils/date_utils.dart' as app_date_utils;
 import '../models/ca_minute.dart';
+import '../models/drive_folder.dart';
 import '../models/event.dart';
 import '../models/concert.dart';
 import '../models/member.dart';
@@ -13,6 +14,7 @@ import '../services/ca_service.dart';
 import '../services/events_service.dart';
 import '../services/members_service.dart';
 import '../services/concerts_service.dart';
+import '../services/drive_folders_service.dart';
 import '../services/drive_service.dart';
 import '../services/rehearsals_service.dart';
 import '../services/storage_service.dart';
@@ -55,6 +57,18 @@ final caServiceProvider = Provider<CaService>((ref) {
 
 final driveServiceProvider = Provider<DriveService>((ref) {
   return DriveService(logger: Logger());
+});
+
+final driveFoldersServiceProvider = Provider<DriveFoldersService>((ref) {
+  return DriveFoldersService(logger: Logger());
+});
+
+/// The Partitions tabs and the Drive root, from `drive_folders` (with the
+/// `.env` fallback). Never fails: the service falls back instead.
+final driveFolderCatalogProvider = FutureProvider<DriveFolderCatalog>((
+  ref,
+) async {
+  return ref.watch(driveFoldersServiceProvider).getCatalog();
 });
 
 // CA minutes provider

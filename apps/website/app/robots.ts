@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Never block /_next/ — crawlers need the JS/CSS bundles to render.
-      disallow: ["/membres/*", "/api/*", "/download", "/auth"],
+      disallow: ["/membres/*", "/api/*", "/download", "/auth", "/track"],
     },
     sitemap: `${WEBSITE_URL}/sitemap.xml`,
   };

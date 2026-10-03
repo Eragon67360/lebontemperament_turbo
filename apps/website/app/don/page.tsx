@@ -4,7 +4,7 @@ import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Faire un don - Le Bon Tempérament",
+  title: "Faire un don à l'association",
   description:
     "Soutenez Le Bon Tempérament par un don. Votre don ouvre droit à une réduction d'impôt (Article 200 CGI). Reçu fiscal envoyé par email.",
   keywords:

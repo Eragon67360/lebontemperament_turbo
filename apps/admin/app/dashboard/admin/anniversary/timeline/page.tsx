@@ -5,18 +5,27 @@ import { TimelineEventDialog } from "@/components/anniversary/TimelineEventDialo
 import { TimelineEventItem } from "@/components/anniversary/TimelineEventItem";
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import {
   useDeleteTimelineEvent,
   useTimelineEvents,
 } from "@/hooks/useAnniversaryTimeline";
 import { AnniversaryTimelineEvent } from "@/types/anniversary";
-import { Plus } from "lucide-react";
+import { Clock, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function TimelinePage() {
-  const { data: events, isLoading } = useTimelineEvents();
+  const {
+    data: events = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useTimelineEvents();
   const deleteEvent = useDeleteTimelineEvent();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -55,65 +64,67 @@ export default function TimelinePage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageShell
-        title="Chronologie - 40 Ans d'Histoire"
-        description="Gérer les événements marquants de la chronologie"
-        theme="anniversary"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-      >
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-      </PageShell>
-    );
-  }
-
-  const maxOrder =
-    events?.reduce((max, event) => Math.max(max, event.display_order), 0) || 0;
+  const maxOrder = events.reduce(
+    (max, event) => Math.max(max, event.display_order),
+    0,
+  );
 
   return (
     <PageShell
-      title="Chronologie - 40 Ans d'Histoire"
+      title="Chronologie - 40 ans d'histoire"
       description="Gérer les événements marquants de la chronologie"
       theme="anniversary"
-      fullHeight={true}
-      className="flex h-full flex-col px-4 py-8 sm:px-6 lg:px-8"
-    >
-      <div className="mb-6 flex flex-shrink-0 items-center justify-between">
-        <div className="text-muted-foreground text-sm">
-          {events?.length || 0} événement(s)
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+      className="py-4 sm:py-6"
+      headerAction={
+        <Button
+          className="min-h-11 w-full sm:w-auto"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
           Ajouter un événement
         </Button>
-      </div>
+      }
+    >
+      {!isLoading && !isError && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          {events.length} événement{events.length > 1 ? "s" : ""}
+        </p>
+      )}
 
-      <div className="flex max-h-full min-h-0 flex-1 flex-col overflow-y-auto">
-        {events && events.length > 0 ? (
-          <div className="space-y-4 pb-4">
-            {events.map((event) => (
-              <TimelineEventItem
-                key={event.id}
-                event={event}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="border-border bg-muted/50 rounded-lg border border-dashed p-12 text-center">
-            <p className="text-muted-foreground">
-              Aucun événement. Cliquez sur "Ajouter un événement" pour
-              commencer.
-            </p>
-          </div>
-        )}
-      </div>
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={events.length === 0}
+        onRetry={() => refetch()}
+        errorDescription="La chronologie n'a pas pu être chargée."
+        skeleton={
+          <ListSkeleton rows={4} label="Chargement de la chronologie…" />
+        }
+        empty={
+          <EmptyState
+            icon={Clock}
+            title="Aucun événement"
+            description="Retracez les moments marquants des 40 ans en ajoutant un premier événement."
+            action={
+              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter un événement
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="space-y-4">
+          {events.map((event) => (
+            <TimelineEventItem
+              key={event.id}
+              event={event}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Create/Edit Dialog */}
       <TimelineEventDialog
@@ -129,7 +140,7 @@ export default function TimelinePage() {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDelete}
         title="Supprimer cet événement ?"
-        description={`Êtes-vous sûr de vouloir supprimer l'événement "${selectedEvent?.title}" (${selectedEvent?.year}) ? Cette action est irréversible.`}
+        description={`Êtes-vous sûr de vouloir supprimer l'événement « ${selectedEvent?.title} » (${selectedEvent?.year}) ? Cette action est irréversible.`}
         isLoading={deleteEvent.isPending}
       />
     </PageShell>

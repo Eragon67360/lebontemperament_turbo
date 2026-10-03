@@ -1,7 +1,7 @@
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { JsonLd } from "@/components/JsonLd";
 import MemberCard from "@/components/MemberCard";
-import { breadcrumbJsonLd, webPageJsonLd } from "@/utils/seo";
+import { breadcrumbJsonLd, organizationRef, webPageJsonLd } from "@/utils/seo";
 import { RoundedSize } from "@/utils/types";
 import type { Metadata } from "next";
 import { keyword } from "../layout";
@@ -38,11 +38,7 @@ const personSchemas = [
     jobTitle: "Cheffe de chœur et fondatrice",
     description:
       "Fondatrice et cheffe principale de Le Bon Tempérament, ensemble vocal et instrumental de Saverne, qu'elle dirige depuis 1987.",
-    worksFor: {
-      "@type": "Organization",
-      name: "Le Bon Tempérament",
-      url: process.env.NEXT_PUBLIC_BASE_URL,
-    },
+    worksFor: organizationRef(),
     knowsAbout: ["chant choral", "direction de chœur", "musique classique"],
   },
   {
@@ -52,11 +48,7 @@ const personSchemas = [
     jobTitle: "Cheffe d'orchestre",
     description:
       "Cheffe de l'orchestre symphonique de Le Bon Tempérament, créé en 2023.",
-    worksFor: {
-      "@type": "Organization",
-      name: "Le Bon Tempérament",
-      url: process.env.NEXT_PUBLIC_BASE_URL,
-    },
+    worksFor: organizationRef(),
     knowsAbout: ["direction d'orchestre", "musique symphonique"],
   },
 ];
@@ -81,12 +73,14 @@ const Decouvrir = () => {
         <JsonLd key={schema.name} data={schema} />
       ))}
       <div className="px-8 py-4 md:py-8 lg:py-16">
-        <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
-          Nous
+        <h1>
+          <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+            Nous
+          </span>
+          <span className="text-title text-foreground block leading-none font-bold">
+            Découvrir
+          </span>
         </h1>
-        <h2 className="text-title text-foreground leading-none font-bold">
-          Découvrir
-        </h2>
         <hr className="border-separator mt-2 md:mt-4 lg:mt-8" />
         <p className="text-foreground mt-8 max-w-3xl text-base md:text-lg">
           Le Bon Tempérament est un ensemble vocal et instrumental fondé en 1987

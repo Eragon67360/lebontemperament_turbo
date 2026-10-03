@@ -1,11 +1,11 @@
 import CDsViewer from "@/components/cds/CDsViewer";
 import { JsonLd } from "@/components/JsonLd";
 import cds from "@/public/json/cds.json";
-import { breadcrumbJsonLd } from "@/utils/seo";
+import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "CDs | Le Bon Tempérament",
+  title: "CDs - Enregistrements de nos concerts",
   description:
     "Découvrez nos CDs de musique classique et baroque. Enregistrements de qualité de l'ensemble Le Bon Tempérament, incluant 'Roi Arthur' et 'Camino Latino'. Achetez en ligne nos productions musicales.",
   keywords:
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
       "Découvrez nos CDs de musique classique et baroque. Enregistrements de qualité de l'ensemble Le Bon Tempérament.",
     images: [
       {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/cds-og.png",
+        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
         width: 1200,
         height: 630,
         alt: "CDs Le Bon Tempérament - Musique classique et baroque",
@@ -41,11 +41,7 @@ function generateStructuredData() {
     description: cd.description,
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/autres`,
     image: `https://res.cloudinary.com/dlt2j3dld/image/upload/v1/${cd.image}`,
-    byArtist: {
-      "@type": "MusicGroup",
-      name: "Le Bon Tempérament",
-      description: "Ensemble vocal et instrumental",
-    },
+    byArtist: organizationRef("MusicGroup"),
     recordLabel: {
       "@type": "Organization",
       name: cd.label,
@@ -91,12 +87,14 @@ const page = () => {
       <div className="container mx-auto flex w-full flex-col pb-8">
         <div className="py-16">
           <div>
-            <h1 className="text-title text-primary/50 dark:text-primary leading-none font-light">
-              Concerts
+            <h1>
+              <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+                Concerts
+              </span>
+              <span className="text-title block leading-none font-bold text-[#333]">
+                CDs
+              </span>
             </h1>
-            <h2 className="text-title leading-none font-bold text-[#333]">
-              CDs
-            </h2>
             <hr className="mt-8" />
           </div>
         </div>

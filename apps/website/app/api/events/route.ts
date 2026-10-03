@@ -13,7 +13,8 @@ export async function GET() {
     .gte("date_to", new Date().toISOString().split("T")[0]);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error fetching events:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   return NextResponse.json((data || []) as Event[]); // view-model: events table row shape matches deliberate Event type

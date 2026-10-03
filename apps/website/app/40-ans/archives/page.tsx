@@ -1,9 +1,12 @@
-import { getArchives } from "@/lib/anniversary";
+import { getArchives, isAnniversaryFeatureEnabled } from "@/lib/anniversary";
+import { checkAdminAuth } from "@/utils/auth";
+import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import ArchivesPageClient from "./ArchivesPageClient";
 
 export const metadata: Metadata = {
-  title: "Archives - 40 ans du Bon Tempérament | Le Bon Tempérament",
+  title: "Archives des 40 ans",
   description:
     "Explorez les archives historiques du Bon Tempérament : rapports d'Assemblée Générale, documents officiels, programmes de concerts et bien plus encore.",
   keywords:
@@ -26,7 +29,21 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 export default async function ArchivesPage() {
+  // Same gate as /40-ans: public only while the anniversary flag is on,
+  // admins may preview; everyone else gets a real 404.
+  const supabase = await createClient();
+  const isEnabled = await isAnniversaryFeatureEnabled(supabase);
+
+  if (!isEnabled) {
+    const { isAdmin } = await checkAdminAuth();
+    if (!isAdmin) {
+      notFound();
+    }
+  }
+
   const archives = await getArchives();
 
-  return <ArchivesPageClient archives={archives} />;
+  return (
+    <ArchivesPageClient archives={archives} showAnniversaryLink={isEnabled} />
+  );
 }

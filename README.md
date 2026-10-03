@@ -4,7 +4,7 @@ Turborepo monorepo for Le Bon Tempérament's digital ecosystem: a public website
 
 ## Requirements
 
-- **Node.js ≥ 24**, **npm 11** (workspaces: `apps/website`, `apps/admin`, `packages/*`)
+- **Node.js ≥ 24**, **npm 11** (workspaces: `apps/website`, `apps/admin`, `apps/e2e`, `packages/*`)
 - **Flutter ≥ 3.9** (for the mobile app only)
 
 ## Apps
@@ -15,7 +15,7 @@ Homepage, concerts, discover/gallery/contact pages, and a private members area (
 
 - **Next.js 16** (App Router, Turbopack dev) · **React 19** · **TypeScript 7** · **Tailwind CSS v4**
 - UI: HeroUI 3, motion, GSAP, lucide-react
-- Services: Supabase, Stripe (donations), Cloudinary (media), Google APIs (Calendar / Drive / Groups), nodemailer, reCAPTCHA
+- Services: Supabase, Stripe (CD catalogue only, being removed; donations go through a HelloAsso campaign), Cloudinary (media), Google APIs (Calendar / Drive / Groups), nodemailer, reCAPTCHA
 - Feature libs: FullCalendar, Mapbox GL + Google Maps, react-pdf, yet-another-react-lightbox, react-photo-album, react-h5-audio-player
 
 ### `apps/admin` — CMS dashboard (admin.lebontemperament.com)
@@ -43,7 +43,7 @@ Authentication, rehearsal/event calendar, file access, push notifications, offli
 
 ## Backend (Supabase)
 
-- **Migrations** in `supabase/migrations` — members/profiles, anniversary CMS + realtime, feature flags, donations (donors, receipts), delivery tracking (deliveries, recipients, routes, ETA), rehearsal calendar sync.
+- **Migrations** in `supabase/migrations` — members/profiles, anniversary CMS + realtime, feature flags, Stripe-era donations (donors, receipts), delivery tracking (deliveries, recipients, routes, ETA), rehearsal calendar sync.
 - **Edge functions** in `supabase/functions`:
   - `sync-rehearsals-from-calendar` — Google Calendar → rehearsals sync (cron)
   - `send-push-notification` — FCM push on new events
@@ -53,7 +53,7 @@ Authentication, rehearsal/event calendar, file access, push notifications, offli
 
 Core: `profiles`, `groups`, `concerts`, `events`, `rehearsals`, `projects`, `programs`, `files`/`folders`, `cas`, `tours`, `activities`, `notifications`, `youtube_links`
 Anniversary CMS: `anniversary_*` (hero, stats, timeline, memories, photos, videos, …)
-Other: `bug_reports`/`bug_messages`, `feature_flags`, `donations`/`donors`, `deliveries`/`delivery_recipients`, `rehearsal_sync_logs`
+Other: `bug_reports`/`bug_messages`, `feature_flags`, `donations`/`donors` (Stripe-era records), `deliveries`/`delivery_recipients`, `rehearsal_sync_logs`
 
 ## Scripts
 
@@ -73,7 +73,7 @@ npm run test:rehearsal-sync  # test the calendar sync function (see scripts/READ
 
 1. `npm install`
 2. Create env files:
-   - `apps/website/.env.local` — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_BASE_URL`, Google API keys, Stripe, Cloudinary (see `turbo.json` build env for the full list)
+   - `apps/website/.env.local` — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_BASE_URL`, Google API keys, Stripe (CD catalogue), Cloudinary (see `turbo.json` build env for the full list)
    - `apps/admin/.env.local` — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `apps/mobile_app/.env` — `SUPABASE_URL`, `SUPABASE_ANON_KEY`
 3. `npm run dev`
@@ -84,6 +84,7 @@ npm run test:rehearsal-sync  # test the calendar sync function (see scripts/READ
 ├── apps
 │   ├── website/        # Public Next.js site
 │   ├── admin/          # Admin Next.js dashboard
+│   ├── e2e/            # Playwright suite (runs against deployed URLs)
 │   └── mobile_app/     # Flutter app (not a turbo workspace)
 ├── packages
 │   ├── domain/         # @repo/domain — shared types & utils
@@ -98,7 +99,7 @@ npm run test:rehearsal-sync  # test the calendar sync function (see scripts/READ
 
 ## Deployment
 
-Website and admin are deployed on **Vercel** — see [DEPLOYMENT.md](DEPLOYMENT.md) for the required per-project configuration. The mobile app ships via App Store Connect / Google Play Console.
+Website and admin are deployed on **Vercel** — see [DEPLOYMENT.md](DEPLOYMENT.md) for the Vercel project configuration. The mobile app ships via App Store Connect / Google Play Console.
 
 ## Contributing
 

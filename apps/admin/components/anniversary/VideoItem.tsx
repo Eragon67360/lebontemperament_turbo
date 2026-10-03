@@ -16,12 +16,7 @@ interface VideoItemProps {
 
 export function VideoItem({ video, onEdit, onDelete }: VideoItemProps) {
   return (
-    <Card
-      className={cn(
-        "overflow-hidden transition-all hover:shadow-md",
-        !video.is_visible && "opacity-60",
-      )}
-    >
+    <Card className={cn("overflow-hidden", !video.is_visible && "opacity-60")}>
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
           {/* Thumbnail */}
@@ -30,22 +25,26 @@ export function VideoItem({ video, onEdit, onDelete }: VideoItemProps) {
               src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_400,h_300,g_auto/${video.thumbnail_url}`}
               alt={video.title}
               fill
+              sizes="(max-width: 640px) 100vw, 192px"
               className="object-cover"
             />
             {video.video_url && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                 <div className="rounded-full bg-white/90 p-3">
-                  <Link2 className="text-primary h-5 w-5" />
+                  <Link2 className="text-primary h-5 w-5" aria-hidden />
+                  <span className="sr-only">Vidéo liée</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex flex-1 flex-col justify-between p-4">
+          <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
             <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-base font-semibold">{video.title}</h3>
+                <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold">
+                  {video.title}
+                </h2>
                 <Badge
                   variant={video.is_visible ? "default" : "secondary"}
                   className="shrink-0"
@@ -93,18 +92,23 @@ export function VideoItem({ video, onEdit, onDelete }: VideoItemProps) {
             </div>
 
             {/* Actions */}
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => onEdit(video)}>
-                <Edit className="mr-1.5 h-3.5 w-3.5" />
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-h-11"
+                onClick={() => onEdit(video)}
+              >
+                <Edit className="h-4 w-4" aria-hidden />
                 Modifier
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onDelete(video)}
-                className="text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:bg-destructive/10 min-h-11"
               >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" aria-hidden />
                 Supprimer
               </Button>
             </div>

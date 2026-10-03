@@ -62,14 +62,14 @@ export function UserCard({
   return (
     <Card
       className={cn(
-        "group bg-card hover:border-primary/50 relative flex flex-col overflow-hidden rounded-xl border transition-all duration-300 hover:scale-[1.01] hover:shadow-md",
+        "group bg-card hover:border-primary/50 relative flex min-w-0 flex-col overflow-hidden rounded-xl border transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md",
         user.isMissingInExcel && "border-orange-200 bg-orange-50/30",
       )}
     >
       {/* Alert Strip if Missing in Excel */}
       {user.isMissingInExcel && (
         <div className="flex w-full items-center justify-center gap-2 bg-orange-100 py-1.5 text-xs font-medium text-orange-700">
-          <AlertTriangle className="h-3 w-3" />
+          <AlertTriangle aria-hidden className="h-3 w-3" />
           <span>Non trouvé dans Excel</span>
         </div>
       )}
@@ -79,7 +79,7 @@ export function UserCard({
           <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
             {/* Avatar with Status Badge */}
             <div className="relative">
-              <Avatar className="border-background h-14 w-14 border-2 shadow-sm transition-transform group-hover:scale-105">
+              <Avatar className="border-background h-14 w-14 border-2 shadow-sm transition-transform duration-150 ease-out group-hover:scale-105">
                 <AvatarImage src={user.avatar} className="object-cover" />
                 <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
                   {user.display_name?.[0]?.toUpperCase() ||
@@ -96,10 +96,16 @@ export function UserCard({
                       )}
                     >
                       {isPending ? (
-                        <Clock className="h-3 w-3 text-white" />
+                        <Clock aria-hidden className="h-3 w-3 text-white" />
                       ) : (
-                        <CheckCircle2 className="h-3 w-3 text-white" />
+                        <CheckCircle2
+                          aria-hidden
+                          className="h-3 w-3 text-white"
+                        />
                       )}
+                      <span className="sr-only">
+                        Statut : {user.invite_status || "inconnu"}
+                      </span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -136,7 +142,7 @@ export function UserCard({
                 {user.email}
               </p>
               <div className="text-muted-foreground/80 flex items-center gap-1.5 pt-1 text-xs">
-                <Calendar className="h-3 w-3" />
+                <Calendar aria-hidden className="h-3 w-3 shrink-0" />
                 <span>
                   Inscrit le{" "}
                   {format(new Date(user.created_at), "dd MMM yyyy", {
@@ -155,9 +161,12 @@ export function UserCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:bg-muted h-8 w-8"
+                    className="text-muted-foreground hover:bg-muted size-11 sm:size-8"
                   >
-                    <MoreVertical className="h-4 w-4" />
+                    <MoreVertical aria-hidden />
+                    <span className="sr-only">
+                      Actions pour {user.display_name || user.email}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" collisionPadding={16}>
@@ -170,12 +179,12 @@ export function UserCard({
                       })
                     }
                   >
-                    <Pencil className="mr-2 h-4 w-4" />
+                    <Pencil aria-hidden className="mr-2 h-4 w-4" />
                     Modifier le nom
                   </DropdownMenuItem>
                   {onProfilePicture && (
                     <DropdownMenuItem onClick={() => onProfilePicture(user)}>
-                      <ImageIcon className="mr-2 h-4 w-4" />
+                      <ImageIcon aria-hidden className="mr-2 h-4 w-4" />
                       Photo de profil
                     </DropdownMenuItem>
                   )}
@@ -183,7 +192,7 @@ export function UserCard({
                     className="text-destructive focus:text-destructive"
                     onClick={() => onDelete(user)}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 aria-hidden className="mr-2 h-4 w-4" />
                     Supprimer
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -195,7 +204,7 @@ export function UserCard({
         {/* Footer: Role Management */}
         <div className="mt-4 flex items-center justify-between border-t pt-3">
           <div className="flex items-center gap-2">
-            <Shield className="text-muted-foreground h-3.5 w-3.5" />
+            <Shield aria-hidden className="text-muted-foreground h-3.5 w-3.5" />
             <span className="text-muted-foreground text-xs font-medium">
               Rôle
             </span>
@@ -222,7 +231,10 @@ export function UserCard({
                 onRoleChange(user.id, value)
               }
             >
-              <SelectTrigger className="bg-secondary/50 hover:bg-secondary h-7 w-[100px] border-none px-2 text-xs font-medium">
+              <SelectTrigger
+                aria-label={`Rôle de ${user.display_name || user.email}`}
+                className="bg-secondary/50 hover:bg-secondary min-h-11 w-[110px] border-none px-2 text-xs font-medium sm:h-7 sm:min-h-0 sm:w-[100px]"
+              >
                 <SelectValue>{getRoleLabel(user.role)}</SelectValue>
               </SelectTrigger>
               <SelectContent collisionPadding={16}>

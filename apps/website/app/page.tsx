@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 const Home = () => {
   return (
     <>
-      <HomeContent />;
+      <HomeContent />
     </>
   );
 };

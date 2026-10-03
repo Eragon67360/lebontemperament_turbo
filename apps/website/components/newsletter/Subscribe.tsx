@@ -1,4 +1,5 @@
 "use client";
+import { NEWSLETTER_HONEYPOT_FIELD } from "@repo/domain/utils/newsletter";
 import React, { useState } from "react";
 import { FiLoader } from "react-icons/fi";
 import { toast } from "sonner";
@@ -7,6 +8,8 @@ const Subscribe = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
+  // Honeypot: people never see this field, so it stays empty for them.
+  const [website, setWebsite] = useState("");
 
   const message_success =
     "Merci d'avoir souscrit à la Newsletter du Bon Tempérament !";
@@ -58,29 +61,17 @@ const Subscribe = () => {
     setIsLoading(true);
 
     try {
-      // First check if email is already in the group
-      const checkResponse = await fetch(
-        `/api/check-group-member?email=${encodeURIComponent(trimmedEmail)}`,
-      );
-      const checkData = await checkResponse.json();
-
-      if (checkData.isMember) {
-        toast.info("Vous êtes déjà abonné(e) à notre newsletter !", {
-          description:
-            "Cette adresse email est déjà dans notre liste de diffusion.",
-        });
-        setEmail(""); // Clear the input
-        setIsLoading(false);
-        return;
-      }
-
-      // If not a member, proceed with subscription
+      // The server answers the same way whether or not the address is
+      // already subscribed (and skips the emails if it is).
       const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: trimmedEmail }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          [NEWSLETTER_HONEYPOT_FIELD]: website,
+        }),
       });
 
       const data = await response.json();
@@ -89,19 +80,8 @@ const Subscribe = () => {
         toast.success(message_success, { description: description_success });
         setEmail(""); // Clear the input on success
       } else {
-        // Handle specific error for already member (backup check)
-        if (data.error === "already_member") {
-          toast.info("Vous êtes déjà abonné(e) à notre newsletter !", {
-            description:
-              "Cette adresse email est déjà dans notre liste de diffusion.",
-          });
-          setEmail(""); // Clear the input
-        } else {
-          console.error("Failed to subscribe:", data.error);
-          toast.error(
-            "Une erreur s'est produite, veuillez réessayer plus tard!",
-          );
-        }
+        console.error("Failed to subscribe:", data.error);
+        toast.error("Une erreur s'est produite, veuillez réessayer plus tard!");
       }
     } catch (error) {
       console.error("Failed to subscribe:", error);
@@ -113,6 +93,22 @@ const Subscribe = () => {
 
   return (
     <div className="mt-8">
+      {/* Honeypot, off-screen and hidden from assistive technologies */}
+      <div
+        aria-hidden="true"
+        className="absolute -left-[10000px] h-px w-px overflow-hidden"
+      >
+        <label htmlFor="newsletter-website">Site web</label>
+        <input
+          id="newsletter-website"
+          type="text"
+          name={NEWSLETTER_HONEYPOT_FIELD}
+          tabIndex={-1}
+          autoComplete="off"
+          value={website}
+          onChange={(event) => setWebsite(event.target.value)}
+        />
+      </div>
       <div
         className={`flex overflow-hidden rounded-lg border bg-white shadow-sm transition-colors dark:bg-gray-800 ${
           emailError

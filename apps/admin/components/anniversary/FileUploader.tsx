@@ -69,7 +69,10 @@ export function FileUploader({
         onChange(result.url, fileSize); // result.url is the public_id
         toast.success("Fichier uploadé avec succès");
       } catch (error) {
-        toast.error("Erreur lors de l'upload du fichier");
+        // The API says why it refused (type, size, folder).
+        toast.error("Erreur lors de l'upload du fichier", {
+          description: error instanceof Error ? error.message : undefined,
+        });
         console.error("Upload error:", error);
       }
     },

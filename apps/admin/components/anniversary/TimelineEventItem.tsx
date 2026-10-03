@@ -46,13 +46,13 @@ export function TimelineEventItem({
   return (
     <Card
       className={cn(
-        "transition-all hover:shadow-md",
+        "transition-shadow duration-150 ease-out hover:shadow-md motion-reduce:transition-none",
         !event.is_visible && "opacity-60",
       )}
     >
-      <CardContent className="flex items-start gap-4 p-4">
+      <CardContent className="flex flex-wrap items-start gap-4 p-4">
         {/* Year Badge & Icon */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex shrink-0 flex-col items-center gap-2">
           <div className="bg-primary/10 rounded-lg px-3 py-1.5">
             <span className="text-primary text-sm font-bold">{event.year}</span>
           </div>
@@ -62,9 +62,11 @@ export function TimelineEventItem({
         </div>
 
         {/* Content */}
-        <div className="min-w-0 flex-1 space-y-1">
+        <div className="min-w-0 flex-1 basis-48 space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-base font-semibold">{event.title}</h3>
+            <h2 className="min-w-0 text-base font-semibold break-words">
+              {event.title}
+            </h2>
             <Badge
               variant={event.is_visible ? "default" : "secondary"}
               className="shrink-0"
@@ -93,17 +95,24 @@ export function TimelineEventItem({
         </div>
 
         {/* Actions */}
-        <div className="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" onClick={() => onEdit(event)}>
-            <Edit className="h-4 w-4" />
+        <div className="ml-auto flex shrink-0 gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-11"
+            onClick={() => onEdit(event)}
+          >
+            <Edit aria-hidden />
+            <span className="sr-only">Modifier « {event.title} »</span>
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => onDelete(event)}
-            className="text-destructive hover:bg-destructive/10"
+            className="text-destructive hover:bg-destructive/10 size-11"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 aria-hidden />
+            <span className="sr-only">Supprimer « {event.title} »</span>
           </Button>
         </div>
       </CardContent>

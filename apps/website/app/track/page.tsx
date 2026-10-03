@@ -32,6 +32,20 @@ function isExpired(expiresAt: string): boolean {
   return new Date(expiresAt) < new Date();
 }
 
+/** How often the page refreshes the driver's position while a round is live. */
+const POLL_INTERVAL_MS = 10_000;
+
+type TrackingState =
+  | { kind: "ok"; delivery: Delivery; recipient: DeliveryRecipient }
+  | { kind: "invalid" | "not-found" | "expired" | "error" };
+
+const TRACKING_ERRORS: Record<Exclude<TrackingState["kind"], "ok">, string> = {
+  invalid: "URL invalide ou informations manquantes.",
+  "not-found": "Livraison introuvable, expirée ou lien invalide.",
+  expired: "Ce lien de suivi a expiré.",
+  error: "Une erreur est survenue lors du chargement des données.",
+};
+
 /**
  * Core component for handling the tracking logic based on a URL token.
  */
@@ -59,108 +73,80 @@ function TrackByTokenContent() {
     setEtaForCurrentRecipient(new Date(Date.now() + durationSeconds * 1000));
   }, []);
 
-  // Effect to fetch initial data based on the token from the URL
-  useEffect(() => {
-    async function resolveToken() {
-      setIsLoading(true);
-      setError(null);
-
-      if (!token) {
-        setError("URL invalide ou informations manquantes.");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // 1. Find the recipient by their unique public token
-        const { data: recipientData, error: recipientError } = await supabase
-          .from("delivery_recipients")
-          .select("*")
-          .eq("public_token", token)
-          .single();
-
-        if (recipientError || !recipientData) {
-          setError("Livraison introuvable, expirée ou lien invalide.");
-          setIsLoading(false);
-          return;
-        }
-
-        // 2. Fetch the associated delivery
-        const { data: deliveryData, error: deliveryError } = await supabase
-          .from("deliveries")
-          .select("*")
-          .eq("id", recipientData.delivery_id)
-          .single();
-
-        if (deliveryError || !deliveryData) {
-          setError("Livraison introuvable ou expirée.");
-          setIsLoading(false);
-          return;
-        }
-
-        // 3. Check if the tracking link has expired
-        if (isExpired(deliveryData.expires_at)) {
-          setError("Ce lien de suivi a expiré.");
-          setIsLoading(false);
-          return;
-        }
-
-        // 4. Set state with the fetched data
-        setRecipient(recipientData as DeliveryRecipient);
-        setDelivery(deliveryData as Delivery);
-      } catch (err) {
-        console.error("Error resolving token:", err);
-        setError("Une erreur est survenue lors du chargement des données.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    resolveToken();
+  // Fetch the round through the token-checked function: it returns only what
+  // this page shows, for this recipient's own link, while the round is live.
+  const fetchTracking = useCallback(async (): Promise<TrackingState> => {
+    if (!token) return { kind: "invalid" };
+    const { data, error: rpcError } = await supabase.rpc(
+      "get_tracking_by_recipient_token",
+      { token },
+    );
+    if (rpcError) return { kind: "error" };
+    if (!data) return { kind: "not-found" };
+    const tracking = data as unknown as {
+      delivery: Delivery;
+      recipient: DeliveryRecipient;
+    };
+    if (isExpired(tracking.delivery.expires_at)) return { kind: "expired" };
+    return { kind: "ok", ...tracking };
   }, [token, supabase]);
 
-  // Effect to subscribe to real-time updates from Supabase
+  // Initial load
   useEffect(() => {
-    if (!delivery || !recipient) return;
-
-    const channel = supabase.channel(`delivery-tracking:${delivery.id}`);
-
-    // Listen for updates to the main delivery record
-    channel
-      .on<Delivery>(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "deliveries",
-          filter: `id=eq.${delivery.id}`,
-        },
-        (payload) => setDelivery(payload.new),
-      )
-      // Listen for updates to this specific recipient
-      .on<DeliveryRecipient>(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "delivery_recipients",
-          filter: `id=eq.${recipient.id}`,
-        },
-        (payload) => setRecipient(payload.new),
-      )
-      .subscribe((status) => {
-        if (status === "CHANNEL_ERROR") {
-          setError(
-            "La connexion au suivi en direct a été perdue. Veuillez réactualiser la page.",
-          );
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    fetchTracking()
+      .then((state) => {
+        if (cancelled) return;
+        if (state.kind === "ok") {
+          setDelivery(state.delivery);
+          setRecipient(state.recipient);
+        } else {
+          setError(TRACKING_ERRORS[state.kind]);
         }
+      })
+      .catch((err) => {
+        console.error("Error resolving token:", err);
+        if (!cancelled) setError(TRACKING_ERRORS.error);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
-
-    // Cleanup subscription on component unmount
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
     };
-  }, [delivery, recipient, supabase]);
+  }, [fetchTracking]);
+
+  // Live updates: poll while the page is visible (the tables aren't readable
+  // by visitors, so realtime subscriptions can't be used here).
+  const isLive = !!delivery && !!recipient && !recipient.delivered_at && !error;
+  useEffect(() => {
+    if (!isLive) return;
+    let cancelled = false;
+    const refresh = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const state = await fetchTracking();
+        if (cancelled) return;
+        if (state.kind === "ok") {
+          setDelivery(state.delivery);
+          setRecipient(state.recipient);
+        } else if (state.kind !== "error") {
+          setError(TRACKING_ERRORS[state.kind]);
+        }
+      } catch {
+        // Transient network error: keep the last known state, retry next tick.
+      }
+    };
+    const interval = window.setInterval(refresh, POLL_INTERVAL_MS);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [isLive, fetchTracking]);
 
   // Auto-refresh when connection is restored (e.g. after CHANNEL_ERROR)
   useEffect(() => {

@@ -61,16 +61,20 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SITE_URL=https://www.lebontemperament.com
 
-# Optional: Drive folder IDs for Partitions (fallback to defaults if omitted)
-DRIVE_FOLDER_MAIN=1oQGEse5USfg9KhM7dZv7_w6olmk_slaU
-DRIVE_FOLDER_ADULTES=19vwE3JOMqUGSHGKEQxKuttAhvD0gu3cd
-DRIVE_FOLDER_JEUNES=18ZukzBIhWotJ9UxpUTdodGBSY1wf0Q81
-DRIVE_FOLDER_ENFANTS=1Jcn6pSKBHpOvFXp5j0h6kKcwOBrAIkId
-DRIVE_FOLDER_ORCHESTRE=1t72TgfhowS2WqYDFYLkasqopdUI_FEem
-DRIVE_FOLDER_CAHIER_30_ANS=1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB
+# Fallback only: the Partitions tabs and the Drive link are read from the
+# `drive_folders` table (editable from the admin); these IDs are used when
+# that read fails. Leave them unset to use the compiled-in defaults.
+DRIVE_FOLDER_MAIN=
+DRIVE_FOLDER_ADULTES=
+DRIVE_FOLDER_JEUNES=
+DRIVE_FOLDER_ENFANTS=
+DRIVE_FOLDER_ORCHESTRE=
+DRIVE_FOLDER_CAHIER_30_ANS=
 ```
 
-For CI (GitHub Actions), add these as repository secrets to override defaults when folders change.
+The Drive explorer and the file viewers call the website's `/api/drive/*` with the member's Supabase access token (`Authorization: Bearer`), the same way the support form calls `/api/contact/mobile`.
+
+Push notifications follow the session: the device subscribes to the `all_users` topic when a member is signed in and unsubscribes, deletes its FCM token and clears the local cache on sign-out (`lib/data/services/session_notifications.dart`). Reminders use inexact Android alarms (no exact-alarm permission), and app data is excluded from Android backups and device transfers.
 
 ## Architecture
 

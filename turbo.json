@@ -22,48 +22,31 @@
         "NEXT_PUBLIC_BASE_URL",
         "NEXT_PUBLIC_GOOGLE_CALENDAR_API_KEY",
         "NEXT_PUBLIC_GOOGLE_CALENDAR_ID",
-        "NEXT_PUBLIC_GDRIVE_ADULTES_FOLDER",
-        "NEXT_PUBLIC_GDRIVE_JEUNES_FOLDER",
-        "NEXT_PUBLIC_GDRIVE_ENFANTS_FOLDER",
-        "NEXT_PUBLIC_GDRIVE_ORCHESTRE_FOLDER",
+        "SMTP_USER",
+        "SMTP_PASSWORD",
         "NEXT_PUBLIC_BURNER_USERNAME",
         "NEXT_PUBLIC_BURNER_PASSWORD",
-        "STRIPE_SECRET_KEY",
-        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-        "STRIPE_ENDPOINT_SECRET",
         "CLOUDINARY_URL",
         "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME",
         "CLOUDINARY_CLOUD_NAME",
         "CLOUDINARY_API_KEY",
         "CLOUDINARY_API_SECRET",
-        "NEXT_PUBLIC_ADMIN_PASSWORD",
         "ANALYZE",
         "NEXT_PUBLIC_SITE_URL",
         "RECAPTCHA_SECRET_KEY",
         "GOOGLE_APPS_SCRIPT_URL",
-        "ADMIN_EMAIL"
+        "ADMIN_EMAIL",
+        "INDEXNOW_SUBMIT_SECRET"
       ],
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        ".env*"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"]
     },
     "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
+      "dependsOn": ["^lint"]
     },
     "check-types": {
-      "dependsOn": [
-        "^check-types"
-      ]
+      "dependsOn": ["^check-types"]
     },
     "dev": {
       "cache": false,

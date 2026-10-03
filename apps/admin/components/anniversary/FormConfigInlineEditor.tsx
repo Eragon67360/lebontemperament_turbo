@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/data-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -15,7 +17,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function FormConfigInlineEditor() {
-  const { data: config, isLoading } = useFormConfig();
+  const { data: config, isLoading, isError, refetch } = useFormConfig();
   const updateConfig = useUpdateFormConfig();
 
   const [formData, setFormData] = useState({
@@ -61,8 +63,26 @@ export function FormConfigInlineEditor() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <CardContent className="space-y-6 py-6" role="status" aria-busy>
+          <span className="sr-only">Chargement de la configuration…</span>
+          <Skeleton className="h-10 w-full" aria-hidden />
+          <Skeleton className="h-10 w-full" aria-hidden />
+          <Skeleton className="h-24 w-full" aria-hidden />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Same reason as the Hero editor: a failed load must not hand the user an
+  // empty form whose "Enregistrer" would blank the live configuration.
+  if (isError || !config) {
+    return (
+      <Card>
+        <CardContent className="py-6">
+          <ErrorState
+            description="La configuration du formulaire n'a pas pu être chargée. Rien n'est modifiable tant qu'elle n'est pas récupérée."
+            onRetry={() => refetch()}
+          />
         </CardContent>
       </Card>
     );
@@ -114,7 +134,7 @@ export function FormConfigInlineEditor() {
             <h3 className="text-sm font-semibold">Labels des champs</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name_label">Label "Nom"</Label>
+                <Label htmlFor="name_label">Label «&nbsp;Nom&nbsp;»</Label>
                 <Input
                   id="name_label"
                   value={formData.name_label}
@@ -127,7 +147,7 @@ export function FormConfigInlineEditor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email_label">Label "Email"</Label>
+                <Label htmlFor="email_label">Label «&nbsp;Email&nbsp;»</Label>
                 <Input
                   id="email_label"
                   value={formData.email_label}
@@ -140,7 +160,9 @@ export function FormConfigInlineEditor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message_label">Label "Message"</Label>
+                <Label htmlFor="message_label">
+                  Label «&nbsp;Message&nbsp;»
+                </Label>
                 <Input
                   id="message_label"
                   value={formData.message_label}
@@ -153,7 +175,7 @@ export function FormConfigInlineEditor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="year_label">Label "Année"</Label>
+                <Label htmlFor="year_label">Label «&nbsp;Année&nbsp;»</Label>
                 <Input
                   id="year_label"
                   value={formData.year_label}
@@ -202,7 +224,7 @@ export function FormConfigInlineEditor() {
           </div>
 
           {/* Enable Form */}
-          <div className="border-border bg-muted/50 flex items-center justify-between rounded-lg border p-4">
+          <div className="border-border bg-muted/50 flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="is_enabled" className="text-base">
                 Formulaire actif
@@ -225,7 +247,7 @@ export function FormConfigInlineEditor() {
             <Button
               type="submit"
               disabled={updateConfig.isPending}
-              className="min-w-[120px]"
+              className="min-h-11 w-full sm:w-auto sm:min-w-[120px]"
             >
               {updateConfig.isPending ? (
                 <>

@@ -12,15 +12,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
 import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
 import { SyncUsersDialog } from "@/components/users/SyncUsersDialog";
 import { UserCard } from "@/components/users/UserCard";
-import { UserEmptyState } from "@/components/users/UserEmptyState";
 import { UserHeader } from "@/components/users/UserHeader";
 import { UserSearch } from "@/components/users/UserSearch";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -35,21 +37,9 @@ import {
 import { SortConfig, User } from "@/types/user";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, RefreshCw, UserPlus, Users } from "lucide-react";
+import { Plus, RefreshCw, UserPlus, Users2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
-// --- Internal Loading Component ---
-const UserGridSkeleton = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div
-        key={i}
-        className="bg-muted/40 h-55 w-full animate-pulse rounded-2xl border"
-      />
-    ))}
-  </div>
-);
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
@@ -96,7 +86,8 @@ export default function UsersPage() {
   const {
     data: users = [],
     isLoading,
-    error,
+    isError,
+    refetch,
   } = useUsers({
     search: debouncedSearch,
   });
@@ -236,7 +227,9 @@ export default function UsersPage() {
       await deleteUser.mutateAsync(user.id);
       toast.success("Utilisateur supprimé");
     } catch (error) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("Erreur lors de la suppression", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     } finally {
       setUserToDelete(null);
     }
@@ -255,7 +248,10 @@ export default function UsersPage() {
       await updateRole.mutateAsync({ userId, role: newRole });
       toast.success("Rôle mis à jour");
     } catch (error) {
-      toast.error("Erreur lors de la modification du rôle");
+      // Shows the API's reason, e.g. a refused superadmin or self change.
+      toast.error("Erreur lors de la modification du rôle", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
@@ -275,57 +271,62 @@ export default function UsersPage() {
     }
   };
 
+  const pendingSyncCount = syncData
+    ? syncData.missingInDatabase.length + syncData.missingInExcel.length
+    : 0;
+
   return (
     <PageShell
-      fullHeight
       theme="admin"
       className="px-2 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8"
       title="Gestion des utilisateurs"
       description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
       headerAction={
         <div className="flex flex-wrap gap-2">
-          {/* Sync Button */}
           <Button
             variant="outline"
-            className="h-9 gap-2 shadow-sm"
+            className="min-h-11 sm:h-9 sm:min-h-0"
             onClick={() => setIsSyncOpen(true)}
+            aria-label={
+              pendingSyncCount > 0
+                ? `Synchroniser (${pendingSyncCount} écarts détectés)`
+                : "Synchroniser"
+            }
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw aria-hidden />
             <span className="hidden sm:inline">Synchroniser</span>
-            {syncData &&
-              (syncData.missingInDatabase.length > 0 ||
-                syncData.missingInExcel.length > 0) && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
-                  {syncData.missingInDatabase.length +
-                    syncData.missingInExcel.length}
-                </span>
-              )}
+            {pendingSyncCount > 0 && (
+              <span
+                aria-hidden
+                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white"
+              >
+                {pendingSyncCount}
+              </span>
+            )}
           </Button>
 
-          {/* Invite Button */}
-          <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="h-9 gap-2 shadow-sm">
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Inviter</span>
-              </Button>
-            </DialogTrigger>
-          </Dialog>
+          <Button
+            variant="outline"
+            className="min-h-11 sm:h-9 sm:min-h-0"
+            onClick={() => setIsInviteOpen(true)}
+            aria-label="Inviter des utilisateurs"
+          >
+            <UserPlus aria-hidden />
+            <span className="hidden sm:inline">Inviter</span>
+          </Button>
 
-          {/* Add User Button */}
-          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-            <DialogTrigger asChild>
-              <Button className="h-9 gap-2 shadow-md transition-all hover:shadow-lg">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Nouvel utilisateur</span>
-                <span className="sm:hidden">Ajouter</span>
-              </Button>
-            </DialogTrigger>
-          </Dialog>
+          <Button
+            className="min-h-11 sm:h-9 sm:min-h-0"
+            onClick={() => setIsAddUserOpen(true)}
+          >
+            <Plus aria-hidden />
+            <span className="hidden sm:inline">Nouvel utilisateur</span>
+            <span className="sm:hidden">Ajouter</span>
+          </Button>
         </div>
       }
     >
-      <div className="mb-4 space-y-4 sm:mb-6 sm:space-y-6">
+      <div className="space-y-4">
         <UserHeader
           pendingInvites={inviteCounts.pending}
           approvedInvites={inviteCounts.approved}
@@ -337,34 +338,58 @@ export default function UsersPage() {
           sortConfig={sortConfig}
           setSortConfig={setSortConfig}
         />
-      </div>
 
-      <ScrollArea className="h-full w-full pr-2 sm:pr-4">
-        {isLoading ? (
-          <UserGridSkeleton />
-        ) : error ? (
-          <div className="text-destructive flex h-40 flex-col items-center justify-center space-y-2">
-            <Users className="h-8 w-8" />
-            <p>Erreur lors du chargement des utilisateurs</p>
-          </div>
-        ) : users.length === 0 ? (
-          <UserEmptyState setIsAddUserOpen={setIsAddUserOpen} />
-        ) : (
-          <div className="grid grid-cols-1 gap-3 px-0.5 pt-1 pb-8 sm:gap-4 sm:pt-2 sm:pb-12 md:grid-cols-2 xl:grid-cols-3">
-            {sortedUsers.map((user) => (
-              <UserCard
-                key={user.id}
-                user={user}
-                currentUser={currentUser}
-                onEdit={setEditingUser}
-                onDelete={setUserToDelete}
-                onRoleChange={handleRoleChange}
-                onProfilePicture={setProfilePictureUser}
+        <section>
+          <h2 className="sr-only">Liste des utilisateurs</h2>
+          <DataState
+            isLoading={isLoading}
+            isError={isError}
+            isEmpty={users.length === 0}
+            onRetry={() => refetch()}
+            errorDescription="Les utilisateurs n'ont pas pu être chargés. Vérifiez votre connexion, puis réessayez."
+            skeleton={
+              <CardGridSkeleton
+                cards={6}
+                label="Chargement des utilisateurs…"
               />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+            }
+            empty={
+              <EmptyState
+                icon={Users2}
+                title={debouncedSearch ? "Aucun résultat" : "Aucun utilisateur"}
+                description={
+                  debouncedSearch
+                    ? `Aucun utilisateur ne correspond à « ${debouncedSearch} ».`
+                    : "Commencez par ajouter votre premier utilisateur pour gérer les accès."
+                }
+                action={
+                  <Button
+                    className="min-h-11"
+                    onClick={() => setIsAddUserOpen(true)}
+                  >
+                    <Plus aria-hidden />
+                    Ajouter un utilisateur
+                  </Button>
+                }
+              />
+            }
+          >
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {sortedUsers.map((user) => (
+                <UserCard
+                  key={user.id}
+                  user={user}
+                  currentUser={currentUser}
+                  onEdit={setEditingUser}
+                  onDelete={setUserToDelete}
+                  onRoleChange={handleRoleChange}
+                  onProfilePicture={setProfilePictureUser}
+                />
+              ))}
+            </div>
+          </DataState>
+        </section>
+      </div>
 
       {/* --- Dialogs --- */}
       <AddUserDialog

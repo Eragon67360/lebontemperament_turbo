@@ -4,6 +4,14 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
 
@@ -61,6 +69,14 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("id");
   if (!projectId) {
@@ -93,6 +109,14 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("id");
   if (!projectId) {

@@ -1,11 +1,21 @@
 // app/api/rehearsals/route.ts
-import { createAdminClient } from "@/utils/supabase/admin";
+import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   try {
-    const supabase = createAdminClient();
+    // Session client: rehearsals are readable under RLS (the members' app
+    // reads them the same way), so the service role isn't needed here.
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("rehearsals")
@@ -26,6 +36,14 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
     const json = await request.json();

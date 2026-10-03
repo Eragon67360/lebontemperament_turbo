@@ -89,6 +89,7 @@ class _ToastOverlayState extends State<_ToastOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Positioned(
       top: MediaQuery.of(context).padding.top + 20,
       left: 20,
@@ -99,34 +100,46 @@ class _ToastOverlayState extends State<_ToastOverlay>
           opacity: _fadeAnimation,
           child: Material(
             color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: _getBackgroundColor(),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.withOpacity(Colors.black, 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(_getIcon(), color: _getIconColor(), size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      widget.message,
-                      style: TextStyle(
-                        color: _getTextColor(context),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+            child: Semantics(
+              liveRegion: true,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: _getBackgroundColor(scheme),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.withOpacity(Colors.black, 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    ExcludeSemantics(
+                      child: Icon(
+                        _getIcon(),
+                        color: _getForegroundColor(scheme),
+                        size: 20,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.message,
+                        style: TextStyle(
+                          color: _getForegroundColor(scheme),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -135,42 +148,38 @@ class _ToastOverlayState extends State<_ToastOverlay>
     );
   }
 
-  Color _getBackgroundColor() {
+  // Pastel feedback backgrounds with the matching dark text step from
+  // AppTheme (≥ 4.5:1 measured). The old toasts drew white (onPrimary /
+  // onError) on these pastels: about 1.1:1, unreadable.
+  Color _getBackgroundColor(ColorScheme scheme) {
     switch (widget.type) {
       case ToastType.success:
-        return Colors.green.shade50;
+        return AppTheme.successBackground;
       case ToastType.error:
-        return Colors.red.shade50;
+        return AppTheme.errorBackground;
       case ToastType.warning:
-        return Colors.orange.shade50;
+        return AppTheme.warningBackground;
       case ToastType.info:
-        return AppTheme.withOpacity(AppTheme.primaryColor, 0.1);
+        // Opaque teal tint on the theme surface (the 10 % alpha version let
+        // the page show through, with white text on top).
+        return Color.alphaBlend(
+          scheme.primary.withValues(alpha: 0.12),
+          scheme.surface,
+        );
     }
   }
 
-  Color _getIconColor() {
+  Color _getForegroundColor(ColorScheme scheme) {
     switch (widget.type) {
       case ToastType.success:
-        return Colors.green.shade600;
+        return AppTheme.successText;
       case ToastType.error:
-        return Colors.red.shade600;
+        return AppTheme.errorText;
       case ToastType.warning:
-        return Colors.orange.shade600;
+        return AppTheme.warningText;
       case ToastType.info:
-        return AppTheme.primaryColor;
-    }
-  }
-
-  Color _getTextColor(BuildContext context) {
-    switch (widget.type) {
-      case ToastType.success:
-        return Theme.of(context).colorScheme.onPrimary;
-      case ToastType.error:
-        return Theme.of(context).colorScheme.onError;
-      case ToastType.warning:
-        return Theme.of(context).colorScheme.onSurface;
-      case ToastType.info:
-        return Theme.of(context).colorScheme.onPrimary;
+        // Light: #00696E on the tinted surface, 5.3:1; dark: #80D4DA, > 9:1.
+        return scheme.primary;
     }
   }
 

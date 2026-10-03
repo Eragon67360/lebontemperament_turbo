@@ -5,6 +5,14 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const authCheck = await checkAuthorization();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { error: authCheck.error },
+      { status: authCheck.status },
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const programId = searchParams.get("programId");
   const groupId = searchParams.get("groupId");

@@ -4,7 +4,7 @@ import Head from "next/head";
 export const metadata: Metadata = {
   title: "Impressum",
   description:
-    "En apprendre plus sur la politique de confidentialité du site du Bon Tempérament",
+    "Mentions légales du site du Bon Tempérament : association éditrice, responsable de la publication, hébergement et crédits.",
   keywords:
     "Le Bon Tempérament,  Ensemble vocal et instrumental Alsace,  Concerts de musique classique,  Tournées musicales annuelles,  Répétitions musicales conviviales,  Communauté musicale engagée,  Passion pour la musique,  Histoire musicale depuis 1987",
   openGraph: {
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-        width: 800,
-        height: 600,
+        width: 1200,
+        height: 630,
         alt: "Le Bon Tempérament",
       },
     ],

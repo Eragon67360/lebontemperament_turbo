@@ -1,13 +1,14 @@
 import ConcertPageClient from "@/components/ConcertPageClient";
 import { JsonLd } from "@/components/JsonLd";
 import { ConcertProject } from "@/types/projects";
-import { breadcrumbJsonLd } from "@/utils/seo";
+import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import type { Project } from "@repo/domain/types/projects";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { IoIosArrowRoundBack } from "react-icons/io";
 
 export async function generateStaticParams() {
@@ -27,6 +28,17 @@ export async function generateStaticParams() {
   }
 }
 
+async function fetchProject(slug: string): Promise<Project | null> {
+  // Use admin client for metadata generation (no cookies needed)
+  const supabase = createAdminClient();
+  const { data: dbProject } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+  return (dbProject as Project | null) ?? null;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -34,64 +46,47 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
+  let dbProject: Project | null = null;
   try {
-    // Use admin client for metadata generation (no cookies needed)
-    const supabase = createAdminClient();
-    const { data: dbProject } = await supabase
-      .from("projects")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
-    if (!dbProject) {
-      return {
-        title: "Histoire de concert non trouvée",
-        description: "Cette histoire de concert n'a pas pu être trouvée.",
-        alternates: {
-          canonical: `/concerts/404`,
-        },
-      };
-    }
-
-    const project = transformProjectForFrontend(dbProject as Project);
-
-    return {
-      title: `${project.name} ${project.subName || ""}`,
-      description: `${project?.explanation || ""}`,
-      keywords:
-        "Le Bon Tempérament,  Ensemble vocal et instrumental Alsace,  Concerts de musique classique,  Tournées musicales annuelles,  Répétitions musicales conviviales,  Communauté musicale engagée,  Passion pour la musique,  Histoire musicale depuis 1987",
-      openGraph: {
-        type: "website",
-        locale: "fr_FR",
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
-        siteName: "Le Bon Tempérament",
-        title: `${project.name} ${project.subName || ""} - Le Bon Tempérament`,
-        description: `${project?.explanation || ""}`,
-        images: [
-          {
-            url: project.banniere?.url
-              ? `https://res.cloudinary.com/dlt2j3dld/image/upload/${project.banniere.url}`
-              : "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-            width: 1200,
-            height: 630,
-            alt: `${project.name} ${project.subName || ""} - Le Bon Tempérament`,
-          },
-        ],
-      },
-      alternates: {
-        canonical: `/concerts/${slug}`,
-      },
-    };
+    dbProject = await fetchProject(slug);
   } catch (error) {
     console.error("Error generating metadata:", error);
-    return {
-      title: "Histoire de concert non trouvée",
-      description: "Cette histoire de concert n'a pas pu être trouvée.",
-      alternates: {
-        canonical: `/concerts/404`,
-      },
-    };
+    return { title: "Histoire de concert" };
   }
+
+  // Unknown slug: a real 404 (Next adds noindex), never a soft 404 page.
+  if (!dbProject) notFound();
+
+  const project = transformProjectForFrontend(dbProject);
+  const fullName = `${project.name} ${project.subName || ""}`.trim();
+
+  return {
+    title: fullName,
+    description: `${project?.explanation || ""}`,
+    keywords:
+      "Le Bon Tempérament,  Ensemble vocal et instrumental Alsace,  Concerts de musique classique,  Tournées musicales annuelles,  Répétitions musicales conviviales,  Communauté musicale engagée,  Passion pour la musique,  Histoire musicale depuis 1987",
+    openGraph: {
+      type: "website",
+      locale: "fr_FR",
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts/${slug}`,
+      siteName: "Le Bon Tempérament",
+      title: `${fullName} - Le Bon Tempérament`,
+      description: `${project?.explanation || ""}`,
+      images: [
+        {
+          url: project.banniere?.url
+            ? `https://res.cloudinary.com/dlt2j3dld/image/upload/${project.banniere.url}`
+            : "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
+          width: 1200,
+          height: 630,
+          alt: `${fullName} - Le Bon Tempérament`,
+        },
+      ],
+    },
+    alternates: {
+      canonical: `/concerts/${slug}`,
+    },
+  };
 }
 
 // Rich project records are editorial concert stories, not agenda occurrences.
@@ -106,19 +101,10 @@ function generateArticleSchema(project: ConcertProject, slug: string) {
       project.explanation ||
       `${project.name} ${project.subName} - Concert par Le Bon Tempérament`,
     url: articleUrl,
-    author: {
-      "@type": project.author ? "Person" : "Organization",
-      name: project.author?.name || "Le Bon Tempérament",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Le Bon Tempérament",
-      url: process.env.NEXT_PUBLIC_BASE_URL,
-      logo: {
-        "@type": "ImageObject",
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
-      },
-    },
+    author: project.author
+      ? { "@type": "Person", name: project.author.name }
+      : organizationRef(),
+    publisher: organizationRef(),
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": articleUrl,
@@ -201,38 +187,26 @@ export default async function ConcertPage({
 }) {
   const { slug } = await params;
 
+  let dbProject: Project | null = null;
   try {
     const supabase = await createClient();
-
-    // Fetch the specific project
-    const { data: dbProject } = await supabase
+    const { data } = await supabase
       .from("projects")
       .select("*")
       .eq("slug", slug)
       .single();
+    dbProject = (data as Project | null) ?? null;
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    return <ConcertLoadError />;
+  }
 
-    if (!dbProject) {
-      return (
-        <div className="dark:bg-background flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
-          <h1 className="text-foreground text-4xl font-bold">
-            Histoire de concert non trouvée
-          </h1>
-          <p className="text-muted mt-4 text-lg">
-            Désolé, l&apos;histoire que vous recherchez n&apos;existe pas ou
-            n&apos;est plus disponible.
-          </p>
-          <Link
-            href="/concerts"
-            className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
-          >
-            <IoIosArrowRoundBack className="text-xl" />
-            Retour à l&apos;agenda
-          </Link>
-        </div>
-      );
-    }
+  // Unknown slug: real 404 status and the site's not-found page.
+  if (!dbProject) notFound();
 
-    const project = transformProjectForFrontend(dbProject as Project);
+  try {
+    const supabase = await createClient();
+    const project = transformProjectForFrontend(dbProject);
 
     // Fetch all projects for related projects
     const { data: allDbProjects } = await supabase
@@ -270,20 +244,24 @@ export default async function ConcertPage({
     );
   } catch (error) {
     console.error("Error fetching project:", error);
-    return (
-      <div className="dark:bg-background flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
-        <h1 className="text-foreground text-4xl font-bold">Erreur</h1>
-        <p className="text-muted mt-4 text-lg">
-          Une erreur est survenue lors du chargement de cette histoire.
-        </p>
-        <Link
-          href="/concerts"
-          className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
-        >
-          <IoIosArrowRoundBack className="text-xl" />
-          Retour à l&apos;agenda
-        </Link>
-      </div>
-    );
+    return <ConcertLoadError />;
   }
+}
+
+function ConcertLoadError() {
+  return (
+    <div className="dark:bg-background flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
+      <h1 className="text-foreground text-4xl font-bold">Erreur</h1>
+      <p className="text-muted mt-4 text-lg">
+        Une erreur est survenue lors du chargement de cette histoire.
+      </p>
+      <Link
+        href="/concerts"
+        className="bg-primary hover:bg-primary/90 mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
+      >
+        <IoIosArrowRoundBack className="text-xl" />
+        Retour à l&apos;agenda
+      </Link>
+    </div>
+  );
 }

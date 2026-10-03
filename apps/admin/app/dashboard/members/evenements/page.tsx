@@ -15,6 +15,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  CardGridSkeleton,
+  DataState,
+  EmptyState,
+} from "@/components/ui/data-state";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -22,7 +27,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Event } from "@repo/domain/types/events";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -48,43 +52,16 @@ import {
   useUpdateEvent,
 } from "@/hooks/useEvents";
 
-// --- Utility Components & Helpers ---
-
-const LoadingSkeleton = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div
-        key={i}
-        className="bg-muted/40 h-[240px] w-full animate-pulse rounded-2xl border"
-      />
-    ))}
-  </div>
-);
-
-const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
-  <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-6 text-center">
-    <div className="bg-primary/5 ring-primary/5 flex h-20 w-20 items-center justify-center rounded-full ring-8">
-      <Calendar className="text-primary/40 h-10 w-10" />
-    </div>
-    <div className="space-y-2">
-      <h2 className="text-xl font-semibold tracking-tight">Agenda vide</h2>
-      <p className="text-muted-foreground max-w-sm text-sm">
-        Aucun événement n'est prévu pour le moment. Commencez par en créer un
-        nouveau.
-      </p>
-    </div>
-    <Button onClick={onAdd} className="px-8">
-      <Plus className="mr-2 h-4 w-4" />
-      Créer un événement
-    </Button>
-  </div>
-);
-
 // --- Main Component ---
 
 export default function Evenements() {
   // Queries
-  const { data: events = [], isLoading: loadingEvents } = useEvents();
+  const {
+    data: events = [],
+    isLoading: loadingEvents,
+    isError: eventsFailed,
+    refetch: refetchEvents,
+  } = useEvents();
 
   // Mutations
   const createEvent = useCreateEvent();
@@ -195,27 +172,26 @@ export default function Evenements() {
 
   return (
     <PageShell
-      fullHeight
       theme="members"
-      className="px-4 py-8 sm:px-6 lg:px-8"
+      className="py-4 sm:py-6"
       title="Gestion des événements"
       description="Gérez vos événements et leur programmation."
       headerAction={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="px-6 shadow-md transition-all hover:shadow-lg">
-              <Plus className="mr-2 h-4 w-4" />
+            <Button className="min-h-11 w-full sm:w-auto">
+              <Plus className="h-4 w-4" aria-hidden />
               Ajouter un événement
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] md:max-w-[600px]">
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle className="text-xl">
                 Ajouter un événement
               </DialogTitle>
               <DialogDescription>
                 Remplissez les détails ci-dessous pour créer un nouvel événement
-                dans l'agenda.
+                dans l&apos;agenda.
               </DialogDescription>
             </DialogHeader>
             <EventForm
@@ -228,27 +204,43 @@ export default function Evenements() {
         </Dialog>
       }
     >
-      <ScrollArea className="h-full w-full py-2 pr-4">
-        {loadingEvents ? (
-          <LoadingSkeleton />
-        ) : upcomingEvents.length === 0 ? (
-          <EmptyState onAdd={() => setOpen(true)} />
-        ) : (
-          <div className="grid grid-cols-1 gap-4 px-1 pt-2 pb-12 md:grid-cols-2 xl:grid-cols-3">
-            {upcomingEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onEdit={(e) => {
-                  setEditingEvent(e);
-                  setEditDialogOpen(true);
-                }}
-                onDelete={handleDeleteClick}
-              />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+      <DataState
+        isLoading={loadingEvents}
+        isError={eventsFailed}
+        isEmpty={upcomingEvents.length === 0}
+        onRetry={() => refetchEvents()}
+        errorDescription="Les événements n'ont pas pu être chargés."
+        skeleton={
+          <CardGridSkeleton cards={6} label="Chargement des événements…" />
+        }
+        empty={
+          <EmptyState
+            icon={Calendar}
+            title="Agenda vide"
+            description="Aucun événement n'est prévu pour le moment. Commencez par en créer un nouveau."
+            action={
+              <Button className="min-h-11" onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Créer un événement
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {upcomingEvents.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              onEdit={(e) => {
+                setEditingEvent(e);
+                setEditDialogOpen(true);
+              }}
+              onDelete={handleDeleteClick}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Delete Alert */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -256,15 +248,15 @@ export default function Evenements() {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer cet événement ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. L'événement sera retiré de l'agenda
-              et visible par personne.
+              Cette action est irréversible. L&apos;événement sera retiré de
+              l&apos;agenda et visible par personne.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90 text-white"
+              className="bg-destructive hover:bg-destructive/90 min-h-11 text-white"
             >
               Confirmer la suppression
             </AlertDialogAction>
@@ -276,7 +268,7 @@ export default function Evenements() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Modifier l'événement</DialogTitle>
+            <DialogTitle>Modifier l&apos;événement</DialogTitle>
             <DialogDescription>
               Mettez à jour les informations ci-dessous.
             </DialogDescription>
@@ -314,20 +306,20 @@ function EventCard({
     : null;
 
   return (
-    <Card className="group bg-card text-card-foreground hover:border-primary/50 dark:bg-card/90 relative flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:scale-[1.01] hover:shadow-lg">
+    <Card className="group bg-card text-card-foreground hover:border-primary/50 dark:bg-card/90 relative flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md motion-reduce:transition-none">
       {/* Type Badge & Visibility */}
       <div className="absolute top-3 right-3 flex gap-2">
         <div
-          className={`focus:ring-ring inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
             event.is_public
-              ? "bg-primary text-primary-foreground hover:bg-primary/80 border-transparent"
-              : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border-transparent"
+              ? "bg-primary text-primary-foreground border-transparent"
+              : "bg-secondary text-secondary-foreground border-transparent"
           }`}
         >
           {event.is_public ? (
-            <Globe className="mr-1 h-3 w-3" />
+            <Globe className="mr-1 h-3 w-3" aria-hidden />
           ) : (
-            <Lock className="mr-1 h-3 w-3" />
+            <Lock className="mr-1 h-3 w-3" aria-hidden />
           )}
           {event.is_public ? "Public" : "Privé"}
         </div>
@@ -336,7 +328,7 @@ function EventCard({
       <div className="flex h-full flex-col p-5">
         <div className="flex items-start gap-4">
           {/* Date Tile */}
-          <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-300">
+          <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 shadow-sm transition-colors duration-150 ease-out motion-reduce:transition-none">
             <span className="text-xs font-bold tracking-wider uppercase">
               {monthName}
             </span>
@@ -345,42 +337,44 @@ function EventCard({
             </span>
           </div>
 
-          <div className="space-y-1 pt-1 pr-14">
-            <h3 className="line-clamp-2 text-lg leading-tight font-bold tracking-tight">
+          <div className="min-w-0 flex-1 space-y-1 pt-1 pr-14">
+            <h2 className="line-clamp-2 text-lg leading-tight font-bold tracking-tight">
               {event.title}
-            </h3>
-            <div className="border-input bg-background text-muted-foreground inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium shadow-sm">
-              {event.event_type}
+            </h2>
+            <div className="border-input bg-background text-muted-foreground inline-flex max-w-full items-center rounded-md border px-2 py-0.5 text-xs font-medium shadow-sm">
+              <span className="truncate">{event.event_type}</span>
             </div>
           </div>
         </div>
 
         <div className="text-muted-foreground mt-5 space-y-3 text-sm">
           {isMultiDay && (
-            <div className="text-primary/80 flex items-center gap-2 font-medium">
-              <Calendar className="h-4 w-4 shrink-0" />
-              <span>Jusqu'au {dateToFormatted}</span>
+            <div className="text-primary/80 flex min-w-0 items-center gap-2 font-medium">
+              <Calendar className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="truncate">Jusqu&apos;au {dateToFormatted}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 shrink-0" />
-            <span>{event.time.slice(0, 5).replace(":", "h")}</span>
+          <div className="flex min-w-0 items-center gap-2">
+            <Clock className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">
+              {event.time.slice(0, 5).replace(":", "h")}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 shrink-0" />
+          <div className="flex min-w-0 items-center gap-2">
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden />
             <span className="truncate">{event.location}</span>
           </div>
 
-          <div className="flex items-start gap-2">
-            <User className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-foreground/80 font-medium">
+          <div className="flex min-w-0 items-start gap-2">
+            <User className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <div className="flex min-w-0 flex-col">
+              <span className="text-foreground/80 truncate font-medium">
                 {event.responsible_name}
               </span>
               {event.responsible_email && (
-                <span className="text-xs opacity-70">
+                <span className="truncate text-xs opacity-70">
                   {event.responsible_email}
                 </span>
               )}
@@ -392,46 +386,46 @@ function EventCard({
         <div className="flex-1 py-4">
           {event.description && (
             <p className="text-muted-foreground/80 line-clamp-2 text-sm italic">
-              "{event.description}"
+              « {event.description} »
             </p>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-auto flex items-center justify-between border-t pt-4">
+        <div className="mt-auto flex items-center justify-between gap-2 border-t pt-4">
           {event.link ? (
             <Button
               variant="link"
-              size="sm"
-              className="text-primary h-auto p-0"
+              className="text-primary min-h-11 min-w-0 px-0"
               asChild
             >
               <a href={event.link} target="_blank" rel="noreferrer">
-                Voir plus <ExternalLink className="ml-1 h-3 w-3" />
+                <span className="truncate">Voir plus</span>
+                <ExternalLink className="h-3 w-3" aria-hidden />
               </a>
             </Button>
           ) : (
             <span /> /* Spacer */
           )}
 
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => onEdit(event)}
-              className="hover:bg-primary/10 hover:text-primary h-8 w-8 rounded-full p-0"
+              className="hover:bg-primary/10 hover:text-primary size-11 rounded-full"
             >
-              <Pencil className="h-4 w-4" />
-              <span className="sr-only">Modifier</span>
+              <Pencil className="h-4 w-4" aria-hidden />
+              <span className="sr-only">Modifier « {event.title} »</span>
             </Button>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => onDelete(event.id)}
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8 rounded-full p-0"
+              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-11 rounded-full"
             >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Supprimer</span>
+              <Trash2 className="h-4 w-4" aria-hidden />
+              <span className="sr-only">Supprimer « {event.title} »</span>
             </Button>
           </div>
         </div>

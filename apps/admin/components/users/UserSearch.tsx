@@ -34,14 +34,18 @@ export function UserSearch({
   };
 
   return (
-    <div className="mb-2 flex flex-col gap-2 sm:flex-row md:mb-4 md:gap-3">
-      <div className="relative flex-1">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+    <div className="flex flex-col gap-2 sm:flex-row md:gap-3">
+      <div className="relative min-w-0 flex-1">
+        <Search
+          aria-hidden
+          className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+        />
         <Input
+          aria-label="Rechercher un utilisateur"
           placeholder="Rechercher un utilisateur..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-9 pl-9"
+          className="min-h-11 pl-9 sm:h-9 sm:min-h-0"
         />
       </div>
 
@@ -50,18 +54,18 @@ export function UserSearch({
           <Button
             variant="outline"
             size="sm"
-            className="h-9 w-full justify-start sm:w-[180px]"
+            className="min-h-11 w-full justify-start sm:h-9 sm:min-h-0 sm:w-[180px]"
           >
-            <ArrowUpDown className="mr-2 h-3.5 w-3.5" />
+            <ArrowUpDown aria-hidden />
             <span className="truncate">
-              {getSortLabel(sortConfig.sortBy)}
+              Tri : {getSortLabel(sortConfig.sortBy)}
               {sortConfig.sortOrder === "asc" ? " ↑" : " ↓"}
             </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[200px]">
           <DropdownMenuItem onClick={() => toggleSort("invite_status")}>
-            <Clock className="mr-2 h-4 w-4" />
+            <Clock aria-hidden className="mr-2 h-4 w-4" />
             Statut
             {sortConfig.sortBy === "invite_status" && (
               <span className="ml-auto">
@@ -70,7 +74,7 @@ export function UserSearch({
             )}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => toggleSort("email")}>
-            <Mail className="mr-2 h-4 w-4" />
+            <Mail aria-hidden className="mr-2 h-4 w-4" />
             Email
             {sortConfig.sortBy === "email" && (
               <span className="ml-auto">
@@ -79,7 +83,7 @@ export function UserSearch({
             )}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => toggleSort("display_name")}>
-            <User className="mr-2 h-4 w-4" />
+            <User aria-hidden className="mr-2 h-4 w-4" />
             Nom d&apos;affichage
             {sortConfig.sortBy === "display_name" && (
               <span className="ml-auto">
@@ -88,7 +92,7 @@ export function UserSearch({
             )}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => toggleSort("created_at")}>
-            <Calendar className="mr-2 h-4 w-4" />
+            <Calendar aria-hidden className="mr-2 h-4 w-4" />
             Date de création
             {sortConfig.sortBy === "created_at" && (
               <span className="ml-auto">

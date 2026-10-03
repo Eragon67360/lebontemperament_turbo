@@ -41,6 +41,7 @@ export function ConcertForm({
   loading,
   initialData,
   submitLabel,
+  onClose,
 }: ConcertFormProps) {
   const [date, setDate] = useState<Date>();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -58,37 +59,41 @@ export function ConcertForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="concertName">Nom du concert (optionnel)</Label>
         <Input
           id="concertName"
           name="concertName"
           type="text"
+          className="min-h-11"
           defaultValue={initialData?.name || ""}
         />
       </div>
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="place">Lieu</Label>
         <Input
           id="place"
           name="place"
           required
+          className="min-h-11"
           defaultValue={initialData?.place || ""}
         />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <Label>Date</Label>
+        <div className="space-y-2">
+          <Label htmlFor="concert-date">Date</Label>
           <Popover modal>
             <PopoverTrigger asChild>
               <Button
-                variant={"outline"}
+                id="concert-date"
+                type="button"
+                variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "min-h-11 w-full justify-start text-left font-normal",
                   !date && "text-muted-foreground",
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="h-4 w-4" aria-hidden />
                 {date ? (
                   format(date, "PPP", { locale: fr })
                 ) : (
@@ -107,21 +112,22 @@ export function ConcertForm({
             </PopoverContent>
           </Popover>
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="time">Heure</Label>
           <Input
             id="time"
             name="time"
             type="time"
             required
+            className="min-h-11"
             defaultValue={initialData?.time.slice(0, 5) || ""}
           />
         </div>
       </div>
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="context">Contexte</Label>
         <Select name="context" required defaultValue={initialData?.context}>
-          <SelectTrigger>
+          <SelectTrigger id="context" className="min-h-11">
             <SelectValue placeholder="Sélectionner un contexte" />
           </SelectTrigger>
           <SelectContent>
@@ -134,17 +140,18 @@ export function ConcertForm({
           </SelectContent>
         </Select>
       </div>
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="additional_informations">
           Informations supplémentaires
         </Label>
         <Textarea
           id="additional_informations"
           name="additional_informations"
+          rows={3}
           defaultValue={initialData?.additional_informations || ""}
         />
       </div>
-      <div>
+      <div className="space-y-2">
         <Label>Affiche (optionnel)</Label>
         <FileUpload
           onFileSelect={(file) => setSelectedFile(file)}
@@ -154,18 +161,31 @@ export function ConcertForm({
           mode="image"
         />
       </div>
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="related_link">Lien connexe (optionnel)</Label>
         <Input
           id="related_link"
           name="related_link"
           type="text"
+          className="min-h-11"
           defaultValue={initialData?.related_link || ""}
         />
       </div>
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Chargement..." : submitLabel}
-      </Button>
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+        {onClose && (
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            onClick={onClose}
+          >
+            Annuler
+          </Button>
+        )}
+        <Button type="submit" className="min-h-11" disabled={loading}>
+          {loading ? "Chargement..." : submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }

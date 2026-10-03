@@ -1,7 +1,6 @@
 // app/api/membres/route.ts
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { createClient } from "@/utils/supabase/server";
 import { User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
@@ -15,7 +14,8 @@ export async function GET() {
   }
 
   try {
-    const supabase = await createClient();
+    // Acts as the caller (cookie session or the app's bearer token).
+    const supabase = authCheck.supabase;
     const supabaseAdmin = createAdminClient();
 
     // Fetch all profiles - all authenticated users can read profiles

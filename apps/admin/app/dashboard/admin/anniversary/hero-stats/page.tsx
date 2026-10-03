@@ -5,17 +5,27 @@ import { HeroStatDialog } from "@/components/anniversary/HeroStatDialog";
 import { HeroStatItem } from "@/components/anniversary/HeroStatItem";
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import {
   useAnniversaryHeroStats,
   useDeleteHeroStat,
 } from "@/hooks/useAnniversaryHeroStats";
 import type { AnniversaryHeroStat } from "@/types/anniversary";
+import { BarChart3, Plus } from "lucide-react";
 import { useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { toast } from "sonner";
 
 export default function HeroStatsPage() {
-  const { data: stats, isLoading } = useAnniversaryHeroStats();
+  const {
+    data: stats = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useAnniversaryHeroStats();
   const deleteStat = useDeleteHeroStat();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -23,6 +33,11 @@ export default function HeroStatsPage() {
   const [selectedStat, setSelectedStat] = useState<
     AnniversaryHeroStat | undefined
   >(undefined);
+
+  const openCreateDialog = () => {
+    setSelectedStat(undefined);
+    setDialogOpen(true);
+  };
 
   const handleEdit = (stat: AnniversaryHeroStat) => {
     setSelectedStat(stat);
@@ -39,84 +54,79 @@ export default function HeroStatsPage() {
 
     try {
       await deleteStat.mutateAsync(selectedStat.id);
+      toast.success("Statistique supprimée");
       setDeleteDialogOpen(false);
       setSelectedStat(undefined);
     } catch (error) {
+      // A failed delete used to only reach the console: the dialog closed and
+      // the row stayed, which reads as "it worked, then came back".
+      toast.error("La suppression a échoué");
       console.error("Error deleting hero stat:", error);
     }
   };
 
-  const maxOrder =
-    stats?.reduce((max, stat) => Math.max(max, stat.display_order), 0) || 0;
+  const maxOrder = stats.reduce(
+    (max, stat) => Math.max(max, stat.display_order),
+    0,
+  );
 
   return (
     <PageShell
-      title="Statistiques Héro"
+      title="Statistiques héro"
       description="Gérez les cartes de statistiques affichées dans la section héro de la page anniversaire"
       theme="anniversary"
-      className="flex h-full flex-col px-4 py-8 sm:px-6 lg:px-8"
-      fullHeight={true}
-    >
-      {/* Header with Add Button */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          {!isLoading && stats && (
-            <p className="text-muted-foreground text-sm">
-              {stats.length} statistique{stats.length !== 1 ? "s" : ""}{" "}
-              {stats.length !== 1 ? "configurées" : "configurée"}
-            </p>
-          )}
-        </div>
+      className="py-4 sm:py-6"
+      headerAction={
         <Button
-          onClick={() => {
-            setSelectedStat(undefined);
-            setDialogOpen(true);
-          }}
-          className="gap-2"
+          className="min-h-11 w-full sm:w-auto"
+          onClick={openCreateDialog}
         >
-          <FaPlus /> Ajouter
+          <Plus className="h-4 w-4" aria-hidden />
+          Ajouter une statistique
         </Button>
-      </div>
+      }
+    >
+      {!isLoading && !isError && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          {stats.length} statistique{stats.length > 1 ? "s" : ""} configurée
+          {stats.length > 1 ? "s" : ""}
+        </p>
+      )}
 
-      {/* Content */}
-      <div className="min-h-0 flex-1 overflow-y-auto pb-4">
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-32 w-full" />
-            ))}
-          </div>
-        ) : !stats || stats.length === 0 ? (
-          <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed">
-            <div className="text-center">
-              <p className="text-muted-foreground">
-                Aucune statistique configurée
-              </p>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setSelectedStat(undefined);
-                  setDialogOpen(true);
-                }}
-                className="mt-2"
-              >
-                Ajouter la première statistique
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={stats.length === 0}
+        onRetry={() => refetch()}
+        errorDescription="Les statistiques n'ont pas pu être chargées."
+        skeleton={
+          <ListSkeleton rows={4} label="Chargement des statistiques…" />
+        }
+        empty={
+          <EmptyState
+            icon={BarChart3}
+            title="Aucune statistique"
+            description="Mettez en avant quelques chiffres clés dans la section héro de la page anniversaire."
+            action={
+              <Button className="min-h-11" onClick={openCreateDialog}>
+                <Plus className="h-4 w-4" aria-hidden />
+                Ajouter une statistique
               </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {stats.map((stat) => (
-              <HeroStatItem
-                key={stat.id}
-                stat={stat}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+            }
+          />
+        }
+      >
+        <div className="space-y-4">
+          {stats.map((stat) => (
+            <HeroStatItem
+              key={stat.id}
+              stat={stat}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </DataState>
 
       {/* Dialogs */}
       <HeroStatDialog
@@ -133,7 +143,7 @@ export default function HeroStatsPage() {
         title="Supprimer cette statistique ?"
         description={
           selectedStat
-            ? `Êtes-vous sûr de vouloir supprimer la statistique "${selectedStat.number} ${selectedStat.label}" ? Cette action est irréversible.`
+            ? `Êtes-vous sûr de vouloir supprimer la statistique « ${selectedStat.number} ${selectedStat.label} » ? Cette action est irréversible.`
             : ""
         }
         isLoading={deleteStat.isPending}
