@@ -50,7 +50,7 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
     <section
       id="timeline"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
       <motion.div
         style={{ y }}
@@ -64,16 +64,16 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
           transition={{ duration: 0.6 }}
           className="mb-12 text-center md:mb-16"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
+          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Notre Parcours : 40 Ans
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
             Découvrez les moments clés qui ont marqué notre histoire.
           </p>
         </motion.div>
 
         <div className="relative">
-          <div className="absolute top-0 left-4 h-full w-0.5 -translate-x-1/2 bg-slate-200 md:left-1/2 dark:bg-slate-800">
+          <div className="bg-separator absolute top-0 left-4 h-full w-0.5 -translate-x-1/2 md:left-1/2">
             <motion.div
               style={{ height: lineHeight }}
               className="bg-primary w-full"
@@ -95,7 +95,7 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true, amount: 0.5 }}
                     transition={{ duration: 0.5 }}
-                    className="border-primary absolute top-0 left-4 z-10 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border bg-slate-50 md:left-1/2 md:h-12 md:w-12 dark:bg-slate-900"
+                    className="border-primary bg-background absolute top-0 left-4 z-10 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border md:left-1/2 md:h-12 md:w-12"
                   >
                     <IconComponent className="text-md text-primary md:text-xl" />
                   </motion.div>
@@ -114,14 +114,14 @@ const AnniversaryTimeline = ({ events }: AnniversaryTimelineProps) => {
                         : "md:mr-auto md:pr-14 md:text-right"
                     }`}
                   >
-                    <div className="rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md transition-shadow duration-300 hover:shadow-lg sm:p-6 md:text-left dark:border-slate-800/50 dark:bg-slate-900/30">
-                      <p className="text-primary mb-2 text-sm font-semibold">
+                    <div className="border-separator bg-surface-secondary/30 rounded-xl border p-4 backdrop-blur-md transition-shadow duration-300 hover:shadow-lg sm:p-6 md:text-left">
+                      <p className="text-primary-600 dark:text-primary-500 mb-2 text-sm font-semibold">
                         {event.year}
                       </p>
-                      <h3 className="mb-3 text-lg font-medium text-slate-900 sm:text-xl dark:text-white">
+                      <h3 className="text-foreground mb-3 text-lg font-medium sm:text-xl">
                         {event.title}
                       </h3>
-                      <p className="text-sm leading-relaxed font-light text-slate-500 dark:text-slate-400">
+                      <p className="text-muted text-sm leading-relaxed font-light">
                         {event.description}
                       </p>
                     </div>

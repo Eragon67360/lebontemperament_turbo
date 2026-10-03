@@ -15,7 +15,7 @@ const ArchivesSection = () => {
     <section
       id="archives"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
       <div className="absolute inset-0 z-0">
         <div className="bg-primary/5 absolute top-1/4 right-0 h-112 w-md rounded-full blur-[100px]" />
@@ -31,10 +31,10 @@ const ArchivesSection = () => {
           <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
             <FaArchive className="text-3xl sm:text-4xl" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
+          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Archives
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
             Explorez nos archives historiques : rapports d'Assemblée Générale,
             documents officiels, programmes de concerts et bien plus encore.
           </p>

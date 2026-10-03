@@ -103,7 +103,7 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
 
       {/* Progress Bar & Timestamps */}
       <div className="flex grow items-center gap-3">
-        <span className="text-xs font-light text-slate-400 dark:text-slate-500">
+        <span className="text-muted text-xs font-light">
           {formatTime(currentTime)}
         </span>
         <input
@@ -113,9 +113,9 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
           value={currentTime}
           onChange={handleProgressChange}
           aria-label="Progression de la lecture"
-          className="accent-primary h-1 w-full grow cursor-pointer appearance-none rounded-full bg-slate-200 dark:bg-slate-700"
+          className="accent-primary bg-surface-tertiary h-1 w-full grow cursor-pointer appearance-none rounded-full"
         />
-        <span className="text-xs font-light text-slate-400 dark:text-slate-500">
+        <span className="text-muted text-xs font-light">
           {formatTime(duration)}
         </span>
       </div>
@@ -124,7 +124,7 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
       <div className="flex items-center gap-2">
         <button
           onClick={toggleMute}
-          className="hover:text-primary focus-visible:outline-primary shrink-0 cursor-pointer rounded-full p-1 text-slate-500 transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90 dark:text-slate-400"
+          className="hover:text-primary focus-visible:outline-primary text-muted shrink-0 cursor-pointer rounded-full p-1 transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90"
           aria-label={
             isMuted || volume === 0 ? "Réactiver le son" : "Couper le son"
           }
@@ -139,7 +139,7 @@ export const CustomAudioPlayer = ({ src }: CustomAudioPlayerProps) => {
           value={isMuted ? 0 : volume}
           onChange={handleVolumeChange}
           aria-label="Volume"
-          className="accent-primary hidden h-1 w-20 cursor-pointer appearance-none rounded-full bg-slate-200 sm:block dark:bg-slate-700"
+          className="accent-primary bg-surface-tertiary hidden h-1 w-20 cursor-pointer appearance-none rounded-full sm:block"
         />
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { FormConfig, Memory } from "@/types/anniversary";
+import { Input, Label, TextArea, TextField } from "@heroui/react";
 import { FILL_TIME_FIELD, HONEYPOT_FIELD } from "@repo/domain/utils/formAbuse";
 import { motion, useInView } from "motion/react";
 import Link from "next/link";
@@ -72,17 +73,15 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+  const handleFieldChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <section
       id="memories"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
       <div className="absolute inset-0 z-0">
         <div className="bg-primary/5 absolute top-1/3 left-1/3 h-125 w-125 rounded-full blur-[100px]" />
@@ -98,10 +97,10 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
           <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
             <FaHeart className="text-3xl sm:text-4xl" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
+          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             {config.section_title}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
             {config.section_description}
           </p>
         </motion.div>
@@ -114,27 +113,25 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="relative flex flex-col rounded-xl border border-slate-200/80 bg-white/30 p-6 backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/30"
+                className="border-separator bg-surface-secondary/30 relative flex flex-col rounded-xl border p-6 backdrop-blur-md"
               >
-                <div className="absolute top-6 right-6 z-0 text-slate-200 dark:text-slate-700">
+                <div className="text-foreground/10 absolute top-6 right-6 z-0">
                   <FaQuoteLeft className="text-4xl" />
                 </div>
                 <div className="relative z-10 flex grow flex-col">
-                  <p className="grow leading-relaxed font-light text-slate-500 italic dark:text-slate-400">
+                  <p className="text-muted grow leading-relaxed font-light italic">
                     “{memory.message}”
                   </p>
-                  <div className="mt-6 flex items-center gap-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+                  <div className="border-separator mt-6 flex items-center gap-4 border-t pt-4">
                     <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                       <FaUser />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-white">
+                      <p className="text-foreground font-medium">
                         {memory.name}
                       </p>
                       {memory.year && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500">
-                          {memory.year}
-                        </p>
+                        <p className="text-muted text-xs">{memory.year}</p>
                       )}
                     </div>
                   </div>
@@ -149,75 +146,55 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="mx-auto max-w-2xl rounded-xl border border-slate-200/80 bg-white/30 p-6 backdrop-blur-md sm:p-8 dark:border-slate-800/50 dark:bg-slate-900/30"
+            className="border-separator bg-surface-secondary/30 mx-auto max-w-2xl rounded-xl border p-6 backdrop-blur-md sm:p-8"
           >
-            <h3 className="mb-6 text-center text-2xl font-medium text-slate-900 dark:text-white">
+            <h3 className="text-foreground mb-6 text-center text-2xl font-medium">
               Partagez Votre Témoignage
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="name" className="sr-only">
-                    {config.name_label}
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    placeholder={config.name_label}
-                    className="focus:border-primary focus:ring-primary w-full rounded-md border border-slate-300 bg-white/50 px-4 py-2 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="sr-only">
-                    {config.email_label}
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    required
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    placeholder={config.email_label}
-                    className="focus:border-primary focus:ring-primary w-full rounded-md border border-slate-300 bg-white/50 px-4 py-2 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500"
-                  />
-                </div>
+                <TextField
+                  name="name"
+                  isRequired
+                  isDisabled={isSubmitting}
+                  value={formData.name}
+                  onChange={(value) => handleFieldChange("name", value)}
+                >
+                  <Label>{config.name_label}</Label>
+                  <Input type="text" autoComplete="name" />
+                </TextField>
+                <TextField
+                  name="email"
+                  type="email"
+                  isRequired
+                  isDisabled={isSubmitting}
+                  value={formData.email}
+                  onChange={(value) => handleFieldChange("email", value)}
+                >
+                  <Label>{config.email_label}</Label>
+                  <Input autoComplete="email" />
+                </TextField>
               </div>
-              <div>
-                <label htmlFor="year" className="sr-only">
-                  {config.year_label}
-                </label>
-                <input
-                  type="number"
-                  id="year"
-                  min="1984"
-                  max={new Date().getFullYear()}
-                  value={formData.year}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  placeholder={config.year_label}
-                  className="focus:border-primary focus:ring-primary w-full rounded-md border border-slate-300 bg-white/50 px-4 py-2 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="sr-only">
-                  {config.message_label}
-                </label>
-                <textarea
-                  id="message"
-                  required
-                  rows={5}
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  placeholder={config.message_label}
-                  className="focus:border-primary focus:ring-primary w-full rounded-md border border-slate-300 bg-white/50 px-4 py-2 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500"
-                />
-              </div>
+              <TextField
+                name="year"
+                type="number"
+                isDisabled={isSubmitting}
+                value={formData.year}
+                onChange={(value) => handleFieldChange("year", value)}
+              >
+                <Label>{config.year_label}</Label>
+                <Input min={1984} max={new Date().getFullYear()} />
+              </TextField>
+              <TextField
+                name="message"
+                isRequired
+                isDisabled={isSubmitting}
+                value={formData.message}
+                onChange={(value) => handleFieldChange("message", value)}
+              >
+                <Label>{config.message_label}</Label>
+                <TextArea rows={5} />
+              </TextField>
               {/* Honeypot, off-screen and hidden from assistive technologies */}
               <div
                 aria-hidden="true"
@@ -245,14 +222,14 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 </AnniversaryCTA>
               </div>
 
-              <p className="pt-2 text-center text-xs font-light text-slate-500 dark:text-slate-400">
+              <p className="text-muted pt-2 text-center text-xs font-light">
                 Les témoignages sont modérés avant publication. Votre nom et
                 votre témoignage peuvent être publiés sur cette page ; votre
                 adresse e-mail n’est jamais publiée et est effacée après la
                 modération. En savoir plus dans notre{" "}
                 <Link
                   href="/politique-de-confidentialite"
-                  className="text-primary underline hover:no-underline"
+                  className="text-primary-600 dark:text-primary-500 underline hover:no-underline"
                 >
                   politique de confidentialité
                 </Link>
