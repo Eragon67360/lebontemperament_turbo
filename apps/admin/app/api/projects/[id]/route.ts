@@ -1,6 +1,10 @@
 // app/api/projects/[id]/route.ts
 import { cloudinary } from "@/lib/cloudinary";
 import { checkAuthorization } from "@/utils/auth";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -67,6 +71,7 @@ export async function PUT(
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.stories);
     return NextResponse.json(data);
   } catch (error) {
     console.error(error);
@@ -125,6 +130,7 @@ export async function DELETE(
 
     if (error) throw error;
 
+    revalidateWebsiteAfterResponse(REVALIDATE.stories);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

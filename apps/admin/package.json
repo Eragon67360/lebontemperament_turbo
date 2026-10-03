@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "check-types": "tsc --noEmit",
-    "test": "tsx utils/access.test.ts && tsx utils/uploads.test.ts"
+    "test": "tsx utils/access.test.ts && tsx utils/uploads.test.ts && tsx utils/revalidateWebsite.test.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

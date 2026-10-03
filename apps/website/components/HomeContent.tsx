@@ -3,21 +3,39 @@
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
-import CDPochettePhotos from "@/components/CDPochettePhotos";
 import CloudinaryImage from "@/components/CloudinaryImage";
-import ConcertPhotos from "@/components/ConcertPhotos";
-import ContactForm from "@/components/ContactForm";
 import { LinkButton } from "@/components/LinkButton";
 import ProjectViewer from "@/components/ProjectViewer";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import type { ConcertProject } from "@/types/projects";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
-import { Button, Modal } from "@heroui/react";
+import { Button } from "@heroui/react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { IoIosArrowRoundForward, IoIosInformationCircle } from "react-icons/io";
 
-const HomeContent = () => {
+// Below-the-fold islands, fetched when their section comes near the viewport
+// (photo albums, the reCAPTCHA contact form) or when first opened (modal):
+// none of them is needed to paint the hero.
+const ConcertPhotos = dynamic(() => import("@/components/ConcertPhotos"));
+const CDPochettePhotos = dynamic(() => import("@/components/CDPochettePhotos"));
+const ContactForm = dynamic(() => import("@/components/ContactForm"));
+const CalendarInfoModal = dynamic(
+  () => import("@/components/home/CalendarInfoModal"),
+);
+
+// Mount a lazy section this far before it scrolls into view.
+const NEAR_VIEW_MARGIN = "0px 0px 1000px 0px";
+
+type HomeContentProps = {
+  /** Latest concert stories, loaded by the page on the server. */
+  stories?: ConcertProject[];
+};
+
+const HomeContent = ({ stories }: HomeContentProps) => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
   // Must render identically on server and client: measure in the effect below.
@@ -54,6 +72,23 @@ const HomeContent = () => {
   const cdsInView = useInView(cdsRef, { once: true, amount: 0.3 });
   const contactInView = useInView(contactRef, { once: true, amount: 0.3 });
 
+  // Lazy islands mount ahead of their reveal animation.
+  const concertsNear = useInView(concertsRef, {
+    once: true,
+    margin: NEAR_VIEW_MARGIN,
+  });
+  const cdsNear = useInView(cdsRef, { once: true, margin: NEAR_VIEW_MARGIN });
+  const contactNear = useInView(contactRef, {
+    once: true,
+    margin: NEAR_VIEW_MARGIN,
+  });
+  // The modal's code is only fetched once the information button is pressed.
+  const [calendarModalLoaded, setCalendarModalLoaded] = useState(false);
+  const openInfoModal = () => {
+    setCalendarModalLoaded(true);
+    setIsInfoModalOpen(true);
+  };
+
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
@@ -74,10 +109,23 @@ const HomeContent = () => {
       <div className="relative flex min-h-screen w-full flex-col items-center overflow-x-hidden">
         {/* Hero Section */}
         <motion.section
-          className="fixed top-0 left-0 z-0 flex h-full w-full justify-center bg-[url('/img/entre_terre_et_ciel.jpg')] bg-cover bg-fixed bg-center"
+          className="fixed top-0 left-0 z-0 flex h-full w-full justify-center"
           aria-labelledby="hero-title"
           style={{ opacity }}
         >
+          {/* Former CSS background (bg-cover bg-center bg-fixed on a fixed,
+              viewport-sized section): the same framing as object-cover, now
+              resized and converted by the image optimizer and preloaded. */}
+          <Image
+            src="/img/entre_terre_et_ciel.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            quality={75}
+            className="object-cover object-center"
+            aria-hidden
+          />
           <div
             aria-hidden
             className="absolute inset-0 z-10 h-full bg-black/90"
@@ -162,7 +210,7 @@ const HomeContent = () => {
                     variant="ghost"
                     className="rounded-full text-white/80 hover:bg-white/10 hover:text-white"
                     aria-label="En savoir plus sur le calendrier musical"
-                    onPress={() => setIsInfoModalOpen(true)}
+                    onPress={openInfoModal}
                   >
                     <IoIosInformationCircle className="h-5 w-5 lg:h-6 lg:w-6" />
                   </Button>
@@ -304,7 +352,7 @@ const HomeContent = () => {
               }
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <ProjectViewer />
+              <ProjectViewer initialStories={stories} />
             </motion.div>
             <motion.div
               className="mt-4 flex justify-center"
@@ -654,7 +702,7 @@ const HomeContent = () => {
               }
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <ConcertPhotos />
+              {concertsNear && <ConcertPhotos />}
 
               <div className="mt-7.5 flex justify-end">
                 <LinkButton
@@ -707,7 +755,7 @@ const HomeContent = () => {
               animate={cdsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <CDPochettePhotos />
+              {cdsNear && <CDPochettePhotos />}
 
               <div className="mt-7.5 flex justify-end">
                 <LinkButton
@@ -730,6 +778,10 @@ const HomeContent = () => {
           {/* Contact Section */}
           <motion.div
             ref={contactRef}
+            // The wrapper answers the hero's "#contact" link until the form
+            // (which carries the id) has mounted; the placeholder keeps the
+            // page about as tall as the form so the footer does not jump.
+            id={contactNear ? undefined : "contact"}
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
               contactInView
@@ -741,88 +793,25 @@ const HomeContent = () => {
               ease: "easeOut",
             }}
           >
-            <ContactForm />
+            {contactNear ? (
+              <ContactForm />
+            ) : (
+              <div
+                aria-hidden
+                className="mx-auto min-h-[48rem] w-full max-w-[1440px] px-8 py-16 lg:px-24"
+              />
+            )}
           </motion.div>
         </div>
       </div>
 
       {/* Calendar Info Modal */}
-      <Modal>
-        <Modal.Backdrop
+      {calendarModalLoaded && (
+        <CalendarInfoModal
           isOpen={isInfoModalOpen}
           onOpenChange={setIsInfoModalOpen}
-        >
-          <Modal.Container size="lg" scroll="inside">
-            <Modal.Dialog>
-              <Modal.CloseTrigger />
-              <Modal.Header>
-                <Modal.Heading className="text-2xl font-bold">
-                  🎄 Calendrier Musical 2025
-                </Modal.Heading>
-                <p className="text-muted text-sm font-normal">
-                  Une reconnaissance pour Le Bon Tempérament
-                </p>
-              </Modal.Header>
-              <Modal.Body>
-                <div className="space-y-4 text-sm leading-relaxed">
-                  <p>
-                    <strong>Cadence</strong> est un{" "}
-                    <a
-                      href="https://cadence-musique.fr/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary font-medium hover:underline"
-                    >
-                      pôle musical régional
-                    </a>{" "}
-                    qui œuvre pour le développement et la structuration des
-                    pratiques musicales en amateur par le soutien et
-                    l&apos;initiative de projets, la formation,
-                    l&apos;accompagnement et la mise en réseau des acteurs.
-                  </p>
-                  <p>
-                    Le Bon Tempérament a la joie d&apos;être mis à
-                    l&apos;honneur dans le{" "}
-                    <strong>Calendrier Musical 2025 de Cadence</strong>, en
-                    étant l&apos;ensemble amateur du jour pour le{" "}
-                    <strong>24 décembre</strong>.
-                  </p>
-                  <p className="text-primary font-medium">
-                    Cette reconnaissance couronne en beauté notre saison
-                    2024/2025 et témoigne de la qualité et de l&apos;engagement
-                    de notre ensemble vocal et instrumental.
-                  </p>
-                  <p className="text-muted text-xs italic">
-                    Cadence est soutenu par la Direction régionale des affaires
-                    culturelles du Grand Est, la Région Grand Est et la
-                    Collectivité européenne d&apos;Alsace.
-                  </p>
-                </div>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button
-                  variant="ghost"
-                  onPress={() => setIsInfoModalOpen(false)}
-                  aria-label="Fermer"
-                >
-                  Fermer
-                </Button>
-                <LinkButton
-                  onClick={() => setIsInfoModalOpen(false)}
-                  aria-label="Ouvrir le calendrier musical"
-                  variant="primary"
-                  href="https://view.genially.com/6915ed221c1347062848697b/presentation-calendrier-musical-2025-cadence"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Ouvrir le calendrier
-                  <IoIosArrowRoundForward className="ml-2" />
-                </LinkButton>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+        />
+      )}
     </>
   );
 };

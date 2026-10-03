@@ -2,12 +2,15 @@
 
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { LinkButton } from "@/components/LinkButton";
+import type {
+  PublicConcert as Concert,
+  PublicRehearsal as Rehearsal,
+  PublicTour as Tour,
+} from "@/lib/publicConcerts";
 import { ConcertProject } from "@/types/projects";
 import { RoundedSize } from "@/utils/types";
 import { Button, Modal, Tooltip } from "@heroui/react";
-import { Concert, Tour } from "@repo/domain/types/concerts";
 import { Event } from "@repo/domain/types/events";
-import { Rehearsal } from "@repo/domain/types/rehearsals";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
