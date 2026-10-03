@@ -40,7 +40,7 @@ jobs:
     steps:
       - name: Decide whether to run
         id: decide
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -68,7 +68,7 @@ jobs:
             core.setOutput('ref', sha);
       - name: Wait for all Vercel deployments of this commit
         if: steps.decide.outputs.run == 'true' && github.event_name == 'deployment_status'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -180,7 +180,7 @@ jobs:
       # failure() here only sees the merge steps above, so it never fired.
       - name: Open or update failure issue
         if: always() && needs.test.result == 'failure' && github.event_name != 'workflow_dispatch'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -200,7 +200,7 @@ jobs:
             }
       - name: Close failure issue when green
         if: always() && needs.test.result == 'success' && github.event_name != 'workflow_dispatch'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { owner, repo } = context.repo;
