@@ -1,9 +1,9 @@
 // app/api/drive-sync/route.ts
 //
 // The admin's door to the sync-drive-index edge function. Any admin may run
-// it (owner decision, #433): the route checks the session, then calls the
-// function server-side with the internal secret, which never reaches the
-// browser.
+// it (owner decision, #433): the route checks the session, then forwards the
+// caller's access token to the function, which verifies it again through
+// Supabase Auth. The admin app never holds the functions' internal secret.
 import { checkAuthorization } from "@/utils/auth";
 import { parseSyncMode } from "@/utils/driveSync";
 import { createClient } from "@/utils/supabase/server";
@@ -69,17 +69,24 @@ export async function POST(request: Request) {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const secret = process.env.INTERNAL_FUNCTION_SECRET;
-    if (!supabaseUrl || !anonKey || !secret) {
-      console.error(
-        "POST /api/drive-sync: INTERNAL_FUNCTION_SECRET or Supabase env missing",
-      );
+    if (!supabaseUrl || !anonKey) {
+      console.error("POST /api/drive-sync: Supabase env missing");
       return NextResponse.json(
-        {
-          error:
-            "La synchronisation Drive n'est pas configurée sur ce déploiement (INTERNAL_FUNCTION_SECRET).",
-        },
+        { error: "La synchronisation Drive n'est pas configurée." },
         { status: 500 },
+      );
+    }
+
+    // Only to forward the token: the function re-verifies it with Auth.
+    const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Session expirée, reconnectez-vous." },
+        { status: 401 },
       );
     }
 
@@ -89,10 +96,10 @@ export async function POST(request: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${anonKey}`,
-          "x-internal-secret": secret,
+          Authorization: `Bearer ${accessToken}`,
+          apikey: anonKey,
         },
-        body: JSON.stringify({ mode, triggeredBy: auth.user.id }),
+        body: JSON.stringify({ mode }),
         signal: AbortSignal.timeout(FUNCTION_TIMEOUT_MS),
       });
     } catch (error) {
@@ -120,14 +127,14 @@ export async function POST(request: Request) {
     }
 
     if (!response.ok) {
-      // 401 means the admin's secret and the function's differ: say so
-      // without echoing anything.
       const error =
         response.status === 401
-          ? "Le secret interne de l'admin ne correspond pas à celui de la fonction."
-          : typeof payload.error === "string"
-            ? payload.error
-            : "La synchronisation a échoué.";
+          ? "Session refusée par la fonction de synchronisation : reconnectez-vous."
+          : response.status === 403
+            ? "Seuls les administrateurs peuvent lancer la synchronisation."
+            : typeof payload.error === "string"
+              ? payload.error
+              : "La synchronisation a échoué.";
       return NextResponse.json(
         { ...payload, ok: false, error },
         { status: response.status === 400 ? 400 : 502 },

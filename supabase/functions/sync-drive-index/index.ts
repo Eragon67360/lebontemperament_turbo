@@ -6,13 +6,14 @@
 // - `{ "mode": "apply" }` upserts the walk and soft-deletes what disappeared,
 //   in one transaction (`drive_index_apply`), then returns the same payload.
 //
-// Callers: the nightly pg_cron job and the admin's POST /api/drive-sync, both
-// with the internal secret. `triggeredBy` (the admin's profile id) marks an
-// admin run; without it the run is logged as the cron's.
+// Callers: the nightly pg_cron job (internal secret) and the admin's
+// POST /api/drive-sync, which forwards the signed-in admin's session; the
+// function verifies it through Supabase Auth and logs the run as that
+// admin's. The admin app never holds the internal secret.
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { requireInternalSecret } from "../_shared/caller-auth.ts";
+import { requireInternalSecretOrAdmin } from "../_shared/caller-auth.ts";
 import {
   createDriveReader,
   getDriveAccessToken,
@@ -33,8 +34,6 @@ type SyncMode = "dry_run" | "apply";
 type Trigger = "cron" | "admin";
 type Supabase = ReturnType<typeof createClient<Database>>;
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EXISTING_PAGE = 1000;
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -61,24 +60,14 @@ function requireEnv(name: string): string {
   return value;
 }
 
-interface RequestBody {
-  mode: SyncMode;
-  triggeredBy: string | null;
-}
-
-async function parseBody(req: Request): Promise<RequestBody> {
+/** Body: `{ mode }`. Who triggered the run comes from the caller check, never from the body. */
+async function parseMode(req: Request): Promise<SyncMode> {
   const raw = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const mode = raw.mode;
   if (mode !== "dry_run" && mode !== "apply") {
     throw new Error('mode must be "dry_run" or "apply".');
   }
-  const triggeredBy = raw.triggeredBy;
-  if (triggeredBy !== undefined && triggeredBy !== null) {
-    if (typeof triggeredBy !== "string" || !UUID_RE.test(triggeredBy)) {
-      throw new Error("triggeredBy must be a uuid.");
-    }
-  }
-  return { mode, triggeredBy: (triggeredBy as string | undefined) ?? null };
+  return mode;
 }
 
 async function loadRoots(supabase: Supabase): Promise<RootFolder[]> {
@@ -139,17 +128,31 @@ async function closeRun(
 }
 
 serve(async (req) => {
-  // Only the cron job and the admin's server route know the internal secret.
-  const refused = requireInternalSecret(req);
-  if (refused) return refused;
+  let supabase: Supabase;
+  try {
+    supabase = createClient<Database>(
+      requireEnv("SUPABASE_URL"),
+      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    );
+  } catch (error) {
+    log("fatal", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return jsonResponse({ ok: false, error: "Server misconfigured" }, 500);
+  }
+
+  // The cron job (internal secret) or a signed-in admin (session verified
+  // through Supabase Auth); anyone else is refused before anything runs.
+  const caller = await requireInternalSecretOrAdmin(req, supabase);
+  if (caller instanceof Response) return caller;
 
   if (req.method !== "POST") {
     return jsonResponse({ ok: false, error: "Method Not Allowed" }, 405);
   }
 
-  let body: RequestBody;
+  let mode: SyncMode;
   try {
-    body = await parseBody(req);
+    mode = await parseMode(req);
   } catch (error) {
     return jsonResponse(
       {
@@ -160,18 +163,13 @@ serve(async (req) => {
     );
   }
 
-  const { mode, triggeredBy } = body;
-  const trigger: Trigger = triggeredBy ? "admin" : "cron";
+  const trigger: Trigger = caller.kind === "admin" ? "admin" : "cron";
+  const triggeredBy = caller.kind === "admin" ? caller.userId : null;
   log("request_received", { mode, trigger });
 
-  let supabase: Supabase | null = null;
   let runId: string | null = null;
 
   try {
-    supabase = createClient<Database>(
-      requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
-    );
     const serviceAccountJson = requireEnv("GOOGLE_SERVICE_ACCOUNT_JSON");
 
     runId = await openRun(supabase, mode, trigger, triggeredBy);
@@ -227,7 +225,7 @@ serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     log("fatal", { mode, run_id: runId, message });
-    if (supabase && runId) {
+    if (runId) {
       await closeRun(supabase, runId, { status: "error", error: message });
     }
     return jsonResponse(

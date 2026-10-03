@@ -8,6 +8,9 @@
 //   function secret `INTERNAL_FUNCTION_SECRET`.
 // - Functions invoked by the driver from the app send the member's session;
 //   only superadmins run delivery rounds (same rule as the delivery tables' RLS).
+// - sync-drive-index accepts either the internal secret (cron) or a signed-in
+//   admin's session (the admin's /api/drive-sync forwards it), so the admin
+//   app never holds the internal secret.
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 function deny(status: number, error: string, headers: HeadersInit) {
@@ -48,14 +51,15 @@ export function requireInternalSecret(
 }
 
 /**
- * Requires a signed-in superadmin (the delivery driver).
- * Returns the refusal to send back, or the caller's user id.
+ * Resolves the bearer token to a signed-in user and their profile role, by
+ * asking Supabase Auth (never by decoding the JWT locally).
+ * Returns the refusal to send back, or the user id and role.
  */
-export async function requireSuperadmin(
+async function requireSignedInRole(
   req: Request,
   supabaseAdmin: SupabaseClient,
-  headers: HeadersInit = {},
-): Promise<Response | { userId: string }> {
+  headers: HeadersInit,
+): Promise<Response | { userId: string; role: string | null }> {
   const authorization = req.headers.get("Authorization") ?? "";
   const token = authorization.startsWith("Bearer ")
     ? authorization.slice("Bearer ".length)
@@ -70,7 +74,49 @@ export async function requireSuperadmin(
     .select("role")
     .eq("id", data.user.id)
     .single();
-  if (profile?.role !== "superadmin") return deny(403, "Forbidden", headers);
 
-  return { userId: data.user.id };
+  return { userId: data.user.id, role: profile?.role ?? null };
+}
+
+/**
+ * Requires a signed-in superadmin (the delivery driver).
+ * Returns the refusal to send back, or the caller's user id.
+ */
+export async function requireSuperadmin(
+  req: Request,
+  supabaseAdmin: SupabaseClient,
+  headers: HeadersInit = {},
+): Promise<Response | { userId: string }> {
+  const caller = await requireSignedInRole(req, supabaseAdmin, headers);
+  if (caller instanceof Response) return caller;
+  if (caller.role !== "superadmin") return deny(403, "Forbidden", headers);
+  return { userId: caller.userId };
+}
+
+export type InternalOrAdminCaller =
+  { kind: "internal" } | { kind: "admin"; userId: string };
+
+/**
+ * Accepts either the internal secret (pg_cron) or a signed-in admin or
+ * superadmin (the admin app forwarding the user's session).
+ * When `x-internal-secret` is sent it must match: a wrong secret is refused
+ * even with a valid admin session, so a leaked wrong value can't fall back.
+ * Returns the refusal to send back, or who the caller is.
+ */
+export async function requireInternalSecretOrAdmin(
+  req: Request,
+  supabaseAdmin: SupabaseClient,
+  headers: HeadersInit = {},
+): Promise<Response | InternalOrAdminCaller> {
+  if (req.headers.has("x-internal-secret")) {
+    const refused = requireInternalSecret(req, headers);
+    return refused ?? { kind: "internal" };
+  }
+
+  const caller = await requireSignedInRole(req, supabaseAdmin, headers);
+  if (caller instanceof Response) return caller;
+  if (caller.role !== "admin" && caller.role !== "superadmin") {
+    return deny(403, "Forbidden", headers);
+  }
+  return { kind: "admin", userId: caller.userId };
 }

@@ -15,18 +15,17 @@ Rules that keep the index safe:
 - Caps: 8 levels of folders, 5,000 nodes per run. Exceeding one fails the run (`status = 'error'`) instead of recording a partial tree.
 - Shortcuts are recorded as files with their own mime type and never followed. A folder that is itself a configured root is never entered from another root (`racine` contains the others), so each node belongs to the most specific root.
 
-Callers must send the internal secret (`x-internal-secret`, see `_shared/caller-auth.ts`): the nightly `pg_cron` job (03:30 Europe/Paris) and the admin's `POST /api/drive-sync` (any admin, from « Espace de travail » → « Synchroniser depuis Drive »).
+Callers (`requireInternalSecretOrAdmin` in `_shared/caller-auth.ts`): the nightly `pg_cron` job (03:30 Europe/Paris) sends the internal secret (`x-internal-secret`); the admin's `POST /api/drive-sync` (any admin, from « Espace de travail » → « Synchroniser depuis Drive ») forwards the signed-in admin's access token as `Authorization: Bearer`, which the function verifies through Supabase Auth and whose profile must be `admin` or `superadmin`. The admin app never holds the internal secret. The function keeps the gateway's default `verify_jwt` (no entry in `supabase/config.toml`): both the cron's anon-key bearer and a user's session are valid Supabase JWTs, and the real check happens inside the function.
 
 ## Owner setup (in this order)
 
 1. **Google Cloud**: on the project that owns the calendar sync's service account, enable the **Google Drive API** (APIs & Services → Library → Google Drive API → Enable). The function uses the read-only scope `https://www.googleapis.com/auth/drive.readonly`; no new key is needed.
 2. **Share the Drive roots**: in Google Drive, share each of the six root folders (the ones listed in the admin's « Dossiers Drive » section) with the service account's `client_email` (the `client_email` field of the JSON in `GOOGLE_SERVICE_ACCOUNT_JSON`) as **Lecteur** (Viewer), without notification. Sharing `racine` alone is enough when the other five are inside it, but sharing all six is harmless.
-3. **Function secrets** (Supabase Dashboard → Edge Functions → Secrets): `GOOGLE_SERVICE_ACCOUNT_JSON` and `INTERNAL_FUNCTION_SECRET` already exist for the other functions; nothing to add. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided by Supabase.
+3. **Function secrets** (Supabase Dashboard → Edge Functions → Secrets): `GOOGLE_SERVICE_ACCOUNT_JSON` and `INTERNAL_FUNCTION_SECRET` already exist for the other functions; nothing to add. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided by Supabase. The admin's Vercel project needs no new variable.
 4. **Apply the migration** `supabase/migrations/20261003120000_drive_index.sql` (`supabase db push`, or the SQL editor). It needs the Vault secrets `project_url`, `anon_key` and `internal_function_secret`, which the ETA cron and the push trigger already use. It creates the two tables, their RLS policies, `drive_index_apply()` and the cron job.
 5. **Regenerate the types**: `npm run db:types` and commit if `packages/domain/src/database.types.ts` differs (the PR ships a hand-written copy of the generated shape).
 6. **Deploy the function**: `supabase functions deploy sync-drive-index`.
-7. **Admin env var**: add `INTERNAL_FUNCTION_SECRET` (same value as the function secret) to the Vercel project `lebontemperament-admin`, all targets, then redeploy. Without it the admin button answers « La synchronisation Drive n'est pas configurée ».
-8. **First run**: in the admin, « Vérifier les changements ». Every root should be readable; a root listed under « Dossiers illisibles » is not shared with the service account yet. Then « Appliquer ces changements ».
+7. **First run**: in the admin, « Vérifier les changements ». Every root should be readable; a root listed under « Dossiers illisibles » is not shared with the service account yet. Then « Appliquer ces changements ».
 
 ## Manual dry run
 
@@ -43,7 +42,7 @@ curl -X POST "$SUPABASE_URL/functions/v1/sync-drive-index" \
 The pure parts (walk planner, path builder, diff, run-diff cap) live in `plan.ts` with no Deno globals. Run the tests with:
 
 ```bash
-npx -y deno test --node-modules-dir=none supabase/functions/sync-drive-index/
+npx -y deno test --node-modules-dir=none --allow-env=INTERNAL_FUNCTION_SECRET supabase/functions/_shared/ supabase/functions/sync-drive-index/
 npx -y deno check --node-modules-dir=none supabase/functions/sync-drive-index/index.ts
 ```
 
