@@ -1,7 +1,14 @@
 // app/api/rehearsals/route.ts
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
+import type { TablesInsert } from "@repo/domain/database.types";
 import { NextResponse } from "next/server";
+
+/** The fields a client may send for a rehearsal (bulk insert). */
+type RehearsalInput = Pick<
+  TablesInsert<"rehearsals">,
+  "name" | "place" | "date" | "start_time" | "end_time" | "group_type"
+>;
 
 export async function GET() {
   const authCheck = await checkAuthorization();
@@ -53,7 +60,7 @@ export async function POST(request: Request) {
 
     if (isBulk) {
       // Bulk insert
-      const rehearsals = json.map((item: any) => ({
+      const rehearsals = json.map((item: RehearsalInput) => ({
         name: item.name,
         place: item.place,
         date: item.date,

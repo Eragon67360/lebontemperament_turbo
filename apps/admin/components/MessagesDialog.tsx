@@ -17,6 +17,7 @@ import {
 } from "@/hooks/useBugMessages";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useMyBugReports } from "@/hooks/useMyBugReports";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle,
@@ -26,7 +27,7 @@ import {
   MessageCircle,
   Send,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 interface MessagesDialogProps {
@@ -63,11 +64,11 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
   };
 
   // Reset mobile view when dialog is closed
-  useEffect(() => {
+  useResetOnChange([open], () => {
     if (!open) {
       setShowMobileChat(false);
     }
-  }, [open]);
+  });
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedReportId) {

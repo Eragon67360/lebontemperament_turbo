@@ -230,7 +230,7 @@ export default function VideosPage() {
             <DialogHeader>
               <DialogTitle>Ajouter une vidéo</DialogTitle>
               <DialogDescription>
-                Copiez l'URL ou l'ID de la vidéo YouTube.
+                Copiez l&apos;URL ou l&apos;ID de la vidéo YouTube.
               </DialogDescription>
             </DialogHeader>
             <VideoForm onSubmit={handleCreate} />

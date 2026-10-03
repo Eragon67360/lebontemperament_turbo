@@ -188,7 +188,7 @@ export function FileUploader({
                     Glissez un fichier ou cliquez pour parcourir
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    PDF, DOC, DOCX jusqu'à 50MB
+                    PDF, DOC, DOCX jusqu&apos;à 50MB
                   </p>
                 </div>
               </>

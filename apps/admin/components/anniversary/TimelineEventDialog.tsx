@@ -18,10 +18,43 @@ import {
   useCreateTimelineEvent,
   useUpdateTimelineEvent,
 } from "@/hooks/useAnniversaryTimeline";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { AnniversaryTimelineEvent, IconName } from "@/types/anniversary";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+
+type TimelineEventFormData = {
+  year: number;
+  title: string;
+  description: string;
+  icon_name: IconName;
+  display_order: number;
+  is_visible: boolean;
+};
+
+/** The form as it opens: the event being edited, or a blank one. */
+const buildFormData = (
+  event: AnniversaryTimelineEvent | undefined,
+  maxOrder: number,
+): TimelineEventFormData =>
+  event
+    ? {
+        year: event.year,
+        title: event.title,
+        description: event.description,
+        icon_name: event.icon_name as IconName,
+        display_order: event.display_order,
+        is_visible: event.is_visible ?? true,
+      }
+    : {
+        year: new Date().getFullYear(),
+        title: "",
+        description: "",
+        icon_name: "FaMusic",
+        display_order: maxOrder + 1,
+        is_visible: true,
+      };
 
 interface TimelineEventDialogProps {
   open: boolean;
@@ -39,36 +72,14 @@ export function TimelineEventDialog({
   const createEvent = useCreateTimelineEvent();
   const updateEvent = useUpdateTimelineEvent();
 
-  const [formData, setFormData] = useState({
-    year: new Date().getFullYear(),
-    title: "",
-    description: "",
-    icon_name: "FaMusic" as IconName,
-    display_order: maxOrder + 1,
-    is_visible: true,
-  });
+  const [formData, setFormData] = useState(() =>
+    buildFormData(event, maxOrder),
+  );
 
-  useEffect(() => {
-    if (event) {
-      setFormData({
-        year: event.year,
-        title: event.title,
-        description: event.description,
-        icon_name: event.icon_name as IconName,
-        display_order: event.display_order,
-        is_visible: event.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        year: new Date().getFullYear(),
-        title: "",
-        description: "",
-        icon_name: "FaMusic",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-  }, [event, maxOrder, open]);
+  // Re-seed the form each time the dialog opens or the event changes.
+  useResetOnChange([event, maxOrder, open], () =>
+    setFormData(buildFormData(event, maxOrder)),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +181,7 @@ export function TimelineEventDialog({
 
           {/* Display Order */}
           <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
+            <Label htmlFor="display_order">Ordre d&apos;affichage</Label>
             <Input
               id="display_order"
               type="number"

@@ -150,8 +150,6 @@ export function useUpdateUserDisplayName() {
 
 // SYNC users with Excel
 export function useSyncUsers() {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: ["users-sync"],
     queryFn: async () => {

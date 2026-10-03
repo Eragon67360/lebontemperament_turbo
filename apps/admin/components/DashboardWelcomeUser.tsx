@@ -24,7 +24,7 @@ export function DashboardWelcomeHeader() {
           </motion.span>
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Voici ce qu'il se passe sur votre espace d'administration.
+          Voici ce qu&apos;il se passe sur votre espace d&apos;administration.
         </p>
       </div>
 
@@ -57,7 +57,7 @@ export function DashboardWelcomeHeader() {
                 </motion.span>
               </h1>
               <p className="text-[10px] font-medium tracking-wider text-gray-500 uppercase opacity-80">
-                Espace d'administration
+                Espace d&apos;administration
               </p>
             </div>
           </div>

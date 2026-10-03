@@ -10,11 +10,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Menu } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 /**
  * Mobile chrome: a top bar that owns the nav trigger, so the menu button no
@@ -31,7 +32,7 @@ export function MobileSidebar({
   const pathname = usePathname();
 
   // A route change means the destination was reached: get the sheet out of the way.
-  useEffect(() => setOpen(false), [pathname]);
+  useResetOnChange([pathname], () => setOpen(false));
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 px-1 md:hidden">

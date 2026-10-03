@@ -258,7 +258,7 @@ export default function UsersPage() {
       });
       toast.success("Nom d'affichage mis à jour");
       setEditingUser(null);
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la mise à jour");
     }
   };
