@@ -248,8 +248,8 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
               <p className="pt-2 text-center text-xs font-light text-slate-500 dark:text-slate-400">
                 Les témoignages sont modérés avant publication. Votre nom et
                 votre témoignage peuvent être publiés sur cette page ; votre
-                adresse e-mail reste privée et sert à vous prévenir. En savoir
-                plus dans notre{" "}
+                adresse e-mail n’est jamais publiée et est effacée après la
+                modération. En savoir plus dans notre{" "}
                 <Link
                   href="/politique-de-confidentialite"
                   className="text-primary underline hover:no-underline"

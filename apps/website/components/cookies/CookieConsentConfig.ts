@@ -71,7 +71,7 @@ const getConfig = () => {
             acceptNecessaryBtn: "Tout refuser",
             showPreferencesBtn: "Gérer les préférences",
             footer: `
-                          <a href="/impressum" target="_blank" rel="noopener">Impressum</a>
+                          <a href="/mentions-legales" target="_blank" rel="noopener">Mentions légales</a>
                           <a href="/politique-de-confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>
                       `,
           },
