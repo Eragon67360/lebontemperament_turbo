@@ -21,7 +21,7 @@ export type JobLink = { label: string; href: string };
 
 const ANNIVERSARY = RouteNames.DASHBOARD.ADMIN.ANNIVERSARY;
 
-/** One or two entry points per job; labels are the nav's. */
+/** The job's entry points (one to three); labels are the nav's. */
 export function jobLinks(id: JobId, isSuperAdmin: boolean): JobLink[] {
   switch (id) {
     case "campaign":
@@ -49,6 +49,10 @@ export function jobLinks(id: JobId, isSuperAdmin: boolean): JobLink[] {
         {
           label: "Répétitions",
           href: RouteNames.DASHBOARD.MEMBERS.REPETITIONS,
+        },
+        {
+          label: "Événements",
+          href: RouteNames.DASHBOARD.MEMBERS.EVENEMENTS,
         },
       ];
     case "members":

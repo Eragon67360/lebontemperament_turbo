@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { firstNameOf, formatTodayFr } from "../DashboardWelcomeUser";
+import { describeLeft } from "./CampaignSection";
 import { JobCard } from "./JobCard";
 import { TaskRows } from "./TaskRows";
 import { UpcomingRows } from "./UpcomingRows";
@@ -126,6 +127,42 @@ assert.equal(formatTodayFr(now), "Samedi 3 octobre 2026");
   assert.equal((html.match(/<a /g) ?? []).length, 2);
   // No filled button in a job card: the primary belongs to « À faire ».
   assert.doesNotMatch(html, /bg-primary-strong/);
+}
+
+// --- Campaign card: « tout est prêt » only when it is ---
+{
+  const base = {
+    ready: 10,
+    total: 10,
+    pendingMemories: 0,
+    sectionsToComplete: 0,
+    sectionLabels: [] as string[],
+  };
+  assert.equal(describeLeft(base), "Toutes les sections sont prêtes.");
+  assert.equal(
+    describeLeft({
+      ...base,
+      ready: 8,
+      sectionsToComplete: 2,
+      sectionLabels: ["Chronologie", "Souvenirs audio"],
+    }),
+    "À compléter : Chronologie, Souvenirs audio.",
+  );
+  // Only moderation left: the sections are not "all ready", and it is said.
+  assert.equal(
+    describeLeft({ ...base, ready: 9, pendingMemories: 3 }),
+    "3 témoignages attendent votre avis.",
+  );
+  assert.equal(
+    describeLeft({
+      ...base,
+      ready: 8,
+      sectionsToComplete: 1,
+      sectionLabels: ["Photos"],
+      pendingMemories: 1,
+    }),
+    "À compléter : Photos. 1 témoignage attend votre avis.",
+  );
 }
 
 console.log("components/home/home.test.ts: ok");

@@ -14,13 +14,29 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { useAnniversaryReadiness } from "@/hooks/useAnniversaryReadiness";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import { plural } from "@/utils/driveSync";
-import { summarizeReadiness } from "@/utils/home/tasks";
+import { summarizeReadiness, type ReadinessSummary } from "@/utils/home/tasks";
 import RouteNames from "@/utils/routes";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 /** The feature flag that publishes the 40 ans page (same key as the overview). */
 export const ANNIVERSARY_FLAG = "anniversary_40_years";
+
+/** What is left, in one sentence or two; « tout est prêt » only when it is. */
+export function describeLeft(summary: ReadinessSummary): string {
+  const parts: string[] = [];
+  if (summary.ready === summary.total) {
+    parts.push("Toutes les sections sont prêtes.");
+  } else if (summary.sectionsToComplete > 0) {
+    parts.push(`À compléter : ${summary.sectionLabels.join(", ")}.`);
+  }
+  if (summary.pendingMemories > 0) {
+    parts.push(
+      `${plural(summary.pendingMemories, "témoignage attend", "témoignages attendent")} votre avis.`,
+    );
+  }
+  return parts.join(" ");
+}
 
 /**
  * The campaign's state at a glance: published or hidden, N sections ready
@@ -95,11 +111,7 @@ export function CampaignSection({ className }: { className?: string }) {
                   className="mt-2"
                 />
                 <p className="text-detail text-muted-foreground mt-3">
-                  {summary.sectionsToComplete > 0
-                    ? `À compléter : ${summary.sectionLabels.join(", ")}.`
-                    : "Toutes les sections sont prêtes."}
-                  {summary.pendingMemories > 0 &&
-                    ` ${plural(summary.pendingMemories, "témoignage attend", "témoignages attendent")} votre avis.`}
+                  {describeLeft(summary)}
                 </p>
               </div>
             )}

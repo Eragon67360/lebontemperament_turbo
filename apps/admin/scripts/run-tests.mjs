@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Runs every *.test.ts / *.test.tsx under utils/, lib/, components/ and app/
-// with tsx, one after the other, and stops at the first failure. Replaces the
+// with tsx, one after the other, then lists what failed and exits non-zero
+// if anything did. Replaces the
 // hand-maintained `tsx a.test.ts && tsx b.test.ts && …` chain that every
 // branch used to edit (#473). `--list` prints the files and exits.
 //
@@ -47,6 +48,7 @@ if (files.length === 0) {
 
 const tsx = fileURLToPath(import.meta.resolve("tsx/cli"));
 const started = Date.now();
+const failed = [];
 
 for (const file of files) {
   console.log(`▶ ${file}`);
@@ -59,11 +61,22 @@ for (const file of files) {
     },
   );
   if (result.status !== 0) {
-    console.error(`✖ ${file} failed (exit code ${result.status ?? "signal"})`);
-    process.exit(result.status ?? 1);
+    const reason =
+      result.status === null
+        ? `signal ${result.signal}`
+        : `exit code ${result.status}`;
+    console.error(`✖ ${file} failed (${reason})`);
+    failed.push({ file, reason });
   }
 }
 
-console.log(
-  `✔ ${files.length} test files passed in ${((Date.now() - started) / 1000).toFixed(1)} s`,
-);
+const seconds = ((Date.now() - started) / 1000).toFixed(1);
+if (failed.length > 0) {
+  console.error(
+    `\n✖ ${failed.length} of ${files.length} test files failed in ${seconds} s:`,
+  );
+  for (const { file, reason } of failed)
+    console.error(`  - ${file} (${reason})`);
+  process.exit(1);
+}
+console.log(`✔ ${files.length} test files passed in ${seconds} s`);

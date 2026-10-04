@@ -3,11 +3,11 @@ import { JOB_IDS, jobLinks, jobStatusLines } from "./jobs";
 
 const now = new Date(2026, 9, 3, 10, 0, 0);
 
-// --- Links: one or two per job, Signalements only for a superadmin ---
+// --- Links: one to three per job, Signalements only for a superadmin ---
 {
   for (const id of JOB_IDS) {
     const links = jobLinks(id, false);
-    assert.ok(links.length >= 1 && links.length <= 2, id);
+    assert.ok(links.length >= 1 && links.length <= 3, id);
     for (const link of links) {
       assert.ok(link.href.startsWith("/dashboard/"), link.label);
     }
@@ -19,6 +19,11 @@ const now = new Date(2026, 9, 3, 10, 0, 0);
   assert.deepEqual(
     jobLinks("association", true).map((link) => link.label),
     ["Comptes rendus du CA", "Signalements"],
+  );
+  // The season always offers its three pages, Événements included.
+  assert.deepEqual(
+    jobLinks("season", false).map((link) => link.label),
+    ["Partitions et documents", "Répétitions", "Événements"],
   );
   assert.equal(
     jobLinks("campaign", false)[0]!.href,

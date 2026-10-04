@@ -38,7 +38,13 @@ export function JobsSection({ className }: { className?: string }) {
   const concerts = useConcerts();
   const rehearsals = useRehearsals();
   const runs = useDriveSyncRuns();
-  const users = useUsers();
+  // The admin's list is read for one status line: no refetch on every focus
+  // (it pages through auth users server-side); the users page keeps its own
+  // key and behaviour.
+  const users = useUsers(undefined, {
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
   const unreadReports = useUnreadBugReports();
 
   const sections = useMemo(
