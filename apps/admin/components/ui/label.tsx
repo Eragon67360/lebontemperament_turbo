@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+  "text-[15px] leading-[22px] font-medium text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
 );
 
 const Label = React.forwardRef<
@@ -23,4 +23,25 @@ const Label = React.forwardRef<
 ));
 Label.displayName = LabelPrimitive.Root.displayName;
 
-export { Label };
+/** « * » after a required field's label, announced as « (obligatoire) ». */
+function RequiredMark() {
+  return (
+    <>
+      <span aria-hidden className="ml-0.5 font-semibold text-danger-foreground">
+        *
+      </span>
+      <span className="sr-only"> (obligatoire)</span>
+    </>
+  );
+}
+
+/** « (facultatif) » after an optional field's label. */
+function OptionalMark() {
+  return (
+    <span className="ml-1.5 text-sm font-normal text-muted-foreground">
+      (facultatif)
+    </span>
+  );
+}
+
+export { Label, OptionalMark, RequiredMark };
