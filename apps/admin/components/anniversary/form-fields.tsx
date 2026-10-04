@@ -70,7 +70,7 @@ export function TextField<T extends FieldValues>({
   inputMode,
   maxLength,
 }: Common<T> & {
-  type?: "text" | "url" | "time";
+  type?: "text" | "url" | "time" | "email";
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   maxLength?: number;
 }) {

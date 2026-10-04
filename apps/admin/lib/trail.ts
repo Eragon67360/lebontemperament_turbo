@@ -15,8 +15,19 @@ type TrailInput = {
   sections: NavSection[];
   /** The `[programId]` segment of /dashboard/members/travail/<programId>/…, when present. */
   programId?: string;
-  /** Its name once loaded; a placeholder is shown meanwhile. */
+  /**
+   * Its name once loaded; `undefined` while it loads (a placeholder is shown),
+   * `null` once the source has answered and does not know it (« Programme
+   * introuvable », like the page).
+   */
   programName?: string | null;
+  /**
+   * The group segment when it is a Drive folder ID (Drive programmes), to be
+   * swapped for the folder's name, with the same undefined / null convention.
+   * Old Storage groups are slugs: leave this unset and the slug is humanised.
+   */
+  groupId?: string;
+  groupName?: string | null;
 };
 
 /** The `[programId]` segment of a travail route, used to swap the id for the programme name. */
@@ -26,6 +37,13 @@ export function programIdFromPathname(pathname: string): string | undefined {
     segments[1] === "members" &&
     segments[2] === "travail"
     ? segments[3]
+    : undefined;
+}
+
+/** The `[groupSlug]` segment of /dashboard/members/travail/<programId>/<groupSlug>, when present. */
+export function groupSegmentFromPathname(pathname: string): string | undefined {
+  return programIdFromPathname(pathname)
+    ? pathname.split("/").filter(Boolean)[4]
     : undefined;
 }
 
@@ -42,6 +60,8 @@ export function buildTrail({
   sections,
   programId,
   programName,
+  groupId,
+  groupName,
 }: TrailInput): TrailItem[] {
   const activeHref = activeNavHref(sections, pathname);
   const section = navSectionForHref(sections, activeHref);
@@ -75,14 +95,22 @@ export function buildTrail({
     const label =
       navLabel ??
       (segment === programId
-        ? (programName ?? "Programme…")
-        : humanize(segment));
+        ? dynamicLabel(programName, "Programme")
+        : groupId && segment === groupId
+          ? dynamicLabel(groupName, "Groupe")
+          : humanize(segment));
     // Every surviving intermediate crumb has a page behind it, including the
     // programme id, so only the page you are on is a non-link.
     crumbs.push(isLast ? { label } : { label, href });
   });
 
   return [...head, ...crumbs];
+}
+
+/** « Programme… » while the name loads, « Programme introuvable » once it is known to be missing. */
+function dynamicLabel(name: string | null | undefined, what: string) {
+  if (name === undefined) return `${what}…`;
+  return name ?? `${what} introuvable`;
 }
 
 function humanize(segment: string) {

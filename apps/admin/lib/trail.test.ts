@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { buildNavSections } from "./navigation";
-import { buildTrail, programIdFromPathname } from "./trail";
+import {
+  buildTrail,
+  groupSegmentFromPathname,
+  programIdFromPathname,
+} from "./trail";
 
 const sections = buildNavSections({ isSuperAdmin: true });
 const trail = (pathname: string, extra?: Parameters<typeof buildTrail>[0]) =>
@@ -73,6 +77,49 @@ assert.equal(
   })[2]?.label,
   "Programme…",
 );
+
+// Drive programmes: the group segment is a Drive folder ID, swapped for its name.
+{
+  const drivePath =
+    "/dashboard/members/travail/19vwE3JOMqUGSHGKEQxKuttAhvD0gu3cd/1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB";
+  assert.equal(
+    groupSegmentFromPathname(drivePath),
+    "1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB",
+  );
+  assert.equal(
+    groupSegmentFromPathname("/dashboard/members/travail"),
+    undefined,
+  );
+  assert.equal(
+    groupSegmentFromPathname("/dashboard/admin/users/x/y"),
+    undefined,
+  );
+  const input = {
+    pathname: drivePath,
+    sections,
+    programId: "19vwE3JOMqUGSHGKEQxKuttAhvD0gu3cd",
+    programName: "Requiem 2027",
+    groupId: "1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB",
+  };
+  assert.deepEqual(trail(drivePath, { ...input, groupName: "Sopranes" }), [
+    { label: "Saison des membres" },
+    { label: "Partitions et documents", href: "/dashboard/members/travail" },
+    {
+      label: "Requiem 2027",
+      href: "/dashboard/members/travail/19vwE3JOMqUGSHGKEQxKuttAhvD0gu3cd",
+    },
+    { label: "Sopranes" },
+  ]);
+  assert.equal(trail(drivePath, input)[3]?.label, "Groupe…");
+  // The index has loaded and does not know the id: say so, like the page.
+  const missing = trail(drivePath, {
+    ...input,
+    programName: null,
+    groupName: null,
+  });
+  assert.equal(missing[2]?.label, "Programme introuvable");
+  assert.equal(missing[3]?.label, "Groupe introuvable");
+}
 
 // A page outside the tree (the design-system lab) still says where it is.
 assert.deepEqual(trail("/dashboard/design-system"), [

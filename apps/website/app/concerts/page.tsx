@@ -13,6 +13,7 @@ import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createPublicClient } from "@/utils/supabase/public";
 import { Event } from "@repo/domain/types/events";
 import type { Project } from "@repo/domain/types/projects";
+import { parisToday } from "@repo/domain/utils/parisDay";
 import { transformProjectForFrontend } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 
@@ -110,7 +111,7 @@ const EMPTY_PAGE_DATA: PageData = {
 
 async function getPageData(): Promise<PageData> {
   const supabase = createPublicClient();
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const today = parisToday(); // YYYY-MM-DD, the Paris day (#490)
 
   try {
     // Fetch all required data in parallel for optimal performance

@@ -26,6 +26,7 @@ const ADMIN_GET_ROUTES = [
   "/api/bug-messages",
   "/api/cas",
   "/api/drive-folders",
+  "/api/drive-index",
   "/api/drive-sync",
   "/api/events",
   "/api/feature-flags",

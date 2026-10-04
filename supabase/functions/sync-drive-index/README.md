@@ -17,7 +17,7 @@ Rules that keep the index safe:
 - **A cron apply never mass-removes**: if a root's removals exceed 20 % of its live nodes or 50 nodes, that root is left untouched, the other roots are applied, and the run is recorded as an error (« Trop de retraits pour une synchronisation automatique : vérifiez dans l'admin »). An admin apply, confirmed in the UI, has no such cap.
 - Shortcuts are recorded as files with their own mime type and never followed. A folder that is itself a configured root is never entered from another root (`racine` contains the others), so each node belongs to the most specific root.
 
-Callers (`requireInternalSecretOrAdmin` in `_shared/caller-auth.ts`): the nightly `pg_cron` job (03:30 Europe/Paris) sends the internal secret (`x-internal-secret`); the admin's `POST /api/drive-sync` (any admin, from « Espace de travail » → « Synchroniser depuis Drive ») forwards the signed-in admin's access token as `Authorization: Bearer`, which the function verifies through Supabase Auth and whose profile must be `admin` or `superadmin`. The admin app never holds the internal secret. The function keeps the gateway's default `verify_jwt` (no entry in `supabase/config.toml`): both the cron's anon-key bearer and a user's session are valid Supabase JWTs, and the real check happens inside the function.
+Callers (`requireInternalSecretOrAdmin` in `_shared/caller-auth.ts`): the nightly `pg_cron` job (03:30 Europe/Paris) sends the internal secret (`x-internal-secret`); the admin's `POST /api/drive-sync` (any admin, from « Partitions et documents » → « Synchroniser depuis Drive ») forwards the signed-in admin's access token as `Authorization: Bearer`, which the function verifies through Supabase Auth and whose profile must be `admin` or `superadmin`. The admin app never holds the internal secret. The function keeps the gateway's default `verify_jwt` (no entry in `supabase/config.toml`): both the cron's anon-key bearer and a user's session are valid Supabase JWTs, and the real check happens inside the function.
 
 ## Owner setup (in this order)
 
@@ -27,7 +27,7 @@ Callers (`requireInternalSecretOrAdmin` in `_shared/caller-auth.ts`): the nightl
 4. **Apply the migration** `supabase/migrations/20261003120000_drive_index.sql` (`supabase db push`, or the SQL editor). It refuses to apply unless the Vault secrets `project_url`, `anon_key` and `internal_function_secret` exist (the ETA cron and the push trigger already use them): without them the cron job would call the function with empty headers and get 401 every night. It creates the two tables, their RLS policies, `drive_index_apply()` (service_role only) and the cron job.
 5. **Regenerate the types**: `npm run db:types` and commit if `packages/domain/src/database.types.ts` differs (the PR ships a hand-written copy of the generated shape).
 6. **Deploy the function**: `supabase functions deploy sync-drive-index`.
-7. **First run**: in the admin, « Vérifier les changements ». Every root should be readable; a root listed under « Dossiers illisibles » is not shared with the service account yet. Then « Appliquer ces changements ».
+7. **First run**: in the admin (« Partitions et documents »), « Synchroniser depuis Drive ». Every root should be readable; a root listed under « Dossiers illisibles » is not shared with the service account yet. Then « Appliquer ces changements ».
 
 ## Manual dry run
 
