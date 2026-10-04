@@ -1,3 +1,4 @@
+import { DRIVE_INDEX_KEY } from "@/hooks/useDriveIndex";
 import type {
   DriveSyncMode,
   DriveSyncResult,
@@ -19,7 +20,10 @@ export function useDriveSyncRuns() {
   });
 }
 
-/** Runs a dry run or an apply; either way the runs list is refreshed. */
+/**
+ * Runs a dry run or an apply; either way the runs list is refreshed, and the
+ * index itself after an apply.
+ */
 export function useRunDriveSync() {
   const queryClient = useQueryClient();
 
@@ -41,8 +45,11 @@ export function useRunDriveSync() {
       }
       return body;
     },
-    onSettled: () => {
+    onSettled: (_data, _error, mode) => {
       queryClient.invalidateQueries({ queryKey: DRIVE_SYNC_RUNS_KEY });
+      if (mode === "apply") {
+        queryClient.invalidateQueries({ queryKey: DRIVE_INDEX_KEY });
+      }
     },
   });
 }

@@ -1,4 +1,5 @@
 import { PageShell } from "@/components/layouts/PageShell";
+import { DriveProgramView } from "@/components/travail/DriveIndexViews";
 import {
   Card,
   CardDescription,
@@ -7,19 +8,35 @@ import {
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/data-state";
 import type { WorkGroup } from "@/types/work";
+import { isLegacyProgramId } from "@/utils/drive/tree";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/server";
+import { isDriveId } from "@repo/domain/utils/driveScope";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+/**
+ * `[programId]` is a Drive folder ID (a programme of the Drive index) or, for
+ * the old Storage explorer, a `programs` row's UUID: the URL shape stays the
+ * same and the segment's shape picks the screen (`isLegacyProgramId`).
+ */
 export default async function WorkProgramPage({
   params,
 }: {
   params: Promise<{ programId: string }>;
 }) {
-  const supabase = await createClient();
   const { programId } = await params;
+  if (!isLegacyProgramId(programId)) {
+    if (!isDriveId(programId)) notFound();
+    return <DriveProgramView programId={programId} />;
+  }
+  return <LegacyProgramPage programId={programId} />;
+}
+
+/** The old « Espace de travail » (Storage): a programme's groups. */
+async function LegacyProgramPage({ programId }: { programId: string }) {
+  const supabase = await createClient();
 
   const [{ data: program }, { data: groups, error: groupsError }] =
     await Promise.all([
@@ -37,7 +54,7 @@ export default async function WorkProgramPage({
     <PageShell
       theme="members"
       title={program.name}
-      description="Choisissez un groupe pour accéder à ses documents."
+      description="Anciens fichiers (stockage), jamais visibles des membres : choisissez un groupe."
     >
       {groups?.length ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
