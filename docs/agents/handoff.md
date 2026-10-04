@@ -70,7 +70,7 @@ This is for the next session, Claude or human. It picks up where the October 202
 
 ## Next steps, in order
 
-1. **Wave 3 (#480):** when its branch is pushed, open the PR, get an independent review, run the logged-in e2e on its preview, merge, release (2.0.124, which also ships #481). Check that the « Passés » tab really lists past concerts.
+1. **Wave 3, PR #483 (#480):** get an independent review, run the logged-in e2e on its preview (`scripts/agent/README.md`), fix the findings, merge, then release 2.0.124 (which also ships #481). In production all 13 concerts and both tours are past, so « Passés » must list them and « À venir » shows its empty state.
 2. **Wave 4, « Saison des membres »:** répétitions and événements with « À venir / Passés » tabs; **Partitions et documents** reading the Drive index (F3 part 2):
    - the admin view of programmes → groups → documents;
    - the website and app reading `drive_index_nodes` instead of the live Drive API (app update);
