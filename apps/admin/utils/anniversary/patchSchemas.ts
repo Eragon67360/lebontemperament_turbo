@@ -14,7 +14,7 @@
 import { ARCHIVE_TYPES } from "@/types/anniversary";
 import { z } from "zod";
 
-const id = z.uuid();
+const id = z.guid();
 const text = z.string();
 const flag = z.boolean();
 const order = z.number().int().nonnegative();
