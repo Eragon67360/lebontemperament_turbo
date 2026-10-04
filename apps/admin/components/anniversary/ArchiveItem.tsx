@@ -1,132 +1,73 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { AnniversaryArchive } from "@/types/anniversary";
 import {
-  Calendar,
-  Edit,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  FileText,
-  Trash2,
-} from "lucide-react";
+  ContentRow,
+  Fact,
+  IconTile,
+} from "@/components/anniversary/ContentRow";
+import { Button } from "@/components/ui/button";
+import type { AnniversaryArchive } from "@/types/anniversary";
+import { archiveTypeLabel } from "@/utils/anniversary/labels";
+import { cloudinaryUrl } from "@/utils/anniversary/media";
+import { Calendar, ExternalLink, FileText } from "lucide-react";
 
-const typeLabels: Record<string, string> = {
-  "assemblée-générale": "Assemblée Générale",
-  "rapport-annuel": "Rapport Annuel",
-  "rapport-financier": "Rapport Financier",
-  gazette: "Gazette",
-  programme: "Programme",
-  "document-historique": "Document Historique",
-};
-
-interface ArchiveItemProps {
+export function ArchiveItem({
+  archive,
+  busy,
+  onEdit,
+  onToggleVisibility,
+  onDelete,
+}: {
   archive: AnniversaryArchive;
-  onEdit: (archive: AnniversaryArchive) => void;
-  onDelete: (archive: AnniversaryArchive) => void;
-}
-
-export function ArchiveItem({ archive, onEdit, onDelete }: ArchiveItemProps) {
+  busy: boolean;
+  onEdit: () => void;
+  onToggleVisibility: () => void;
+  onDelete: () => void;
+}) {
+  // The stored value is the Cloudinary public_id (or, for older rows, a full
+  // URL): the link used to use it as a relative path and led nowhere.
+  const href = cloudinaryUrl(
+    archive.file_url,
+    "raw",
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  );
   return (
-    <Card
-      className={cn("overflow-hidden", !archive.is_visible && "opacity-60")}
-    >
-      <CardContent className="p-0">
-        <div className="flex flex-col sm:flex-row">
-          {/* Icon Preview */}
-          <div className="bg-muted flex aspect-video w-full shrink-0 items-center justify-center sm:w-48">
-            <FileText className="text-muted-foreground h-12 w-12" aria-hidden />
-          </div>
-
-          {/* Content */}
-          <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
-            <div className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold">
-                  {archive.title}
-                </h2>
-                <Badge
-                  variant={archive.is_visible ? "default" : "secondary"}
-                  className="shrink-0"
-                >
-                  {archive.is_visible ? (
-                    <>
-                      <Eye className="mr-1 h-3 w-3" />
-                      Visible
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="mr-1 h-3 w-3" />
-                      Masqué
-                    </>
-                  )}
-                </Badge>
-              </div>
-
-              <p className="text-muted-foreground line-clamp-2 text-sm">
-                {archive.description}
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <Calendar className="h-3 w-3" />
-                  {archive.year}
-                </span>
-                <Badge variant="outline" className="text-xs">
-                  {typeLabels[archive.type] || archive.type}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {archive.theme}
-                </Badge>
-                <span className="text-muted-foreground text-xs">
-                  {archive.file_size}
-                </span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {/* The uploaded file had no way to be opened from here, so there
-                  was no way to check what an archive entry actually points at. */}
-              {archive.file_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-h-11"
-                  asChild
-                >
-                  <a href={archive.file_url} target="_blank" rel="noreferrer">
-                    <ExternalLink className="h-4 w-4" aria-hidden />
-                    Voir le document
-                  </a>
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="min-h-11"
-                onClick={() => onEdit(archive)}
-              >
-                <Edit className="h-4 w-4" aria-hidden />
-                Modifier
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDelete(archive)}
-                className="text-destructive hover:bg-destructive/10 min-h-11"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden />
-                Supprimer
-              </Button>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <ContentRow
+      name={archive.title}
+      title={archive.title}
+      leading={
+        <IconTile>
+          <FileText className="size-6" aria-hidden />
+        </IconTile>
+      }
+      description={archive.description}
+      meta={
+        <>
+          <Fact icon={Calendar}>{archive.year}</Fact>
+          <Fact>{archiveTypeLabel(archive.type)}</Fact>
+          <Fact>{archive.theme}</Fact>
+          {archive.file_size && <Fact>{archive.file_size}</Fact>}
+        </>
+      }
+      visible={archive.is_visible}
+      extraActions={
+        href && (
+          <Button variant="outline" size="sm" asChild>
+            <a href={href} target="_blank" rel="noreferrer">
+              <ExternalLink aria-hidden />
+              Voir le document
+              <span className="sr-only">
+                {" "}
+                « {archive.title} » (nouvel onglet)
+              </span>
+            </a>
+          </Button>
+        )
+      }
+      busy={busy}
+      onEdit={onEdit}
+      onToggleVisibility={onToggleVisibility}
+      onDelete={onDelete}
+    />
   );
 }

@@ -62,6 +62,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ErrorSummary } from "@/components/ui/error-summary";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label, OptionalMark, RequiredMark } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -400,6 +401,7 @@ export function DesignSystemLab() {
           <Row label="Ouvrir">
             <DialogDemo />
             <DestructiveDialogDemo label="Boîte de confirmation" />
+            <FormDialogDemo />
             <SheetDemo />
             <DropdownDemo />
             <TooltipProvider>
@@ -1127,6 +1129,49 @@ function DialogDemo() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** A form in a dialog: closing it with a changed field asks first. */
+function FormDialogDemo() {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Formulaire en dialogue
+      </Button>
+      <FormDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setValue("");
+        }}
+        title="Ajouter un chiffre clé"
+        description="Modifiez le champ, puis fermez : la boîte demande avant d’abandonner."
+        formId="lab-form-dialog"
+        isDirty={value !== ""}
+        submitLabel="Ajouter"
+      >
+        <form
+          id="lab-form-dialog"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setOpen(false);
+            setValue("");
+          }}
+          className="grid gap-1.5"
+        >
+          <Label htmlFor="lab-form-dialog-number">Chiffre</Label>
+          <Input
+            id="lab-form-dialog-number"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            placeholder="40"
+          />
+        </form>
+      </FormDialog>
+    </>
   );
 }
 
