@@ -23,6 +23,15 @@ import {
   slugify,
   type ProjectFormValues,
 } from "@/utils/formSchemas";
+import {
+  firstTabWithError,
+  STORY_FIELD_LABELS as LABELS,
+  STORY_TAB_OF as TAB_OF,
+  tabOfFieldId,
+  uploadProgressLabel,
+  type StoryFieldName as FieldName,
+  type StoryTabId as TabId,
+} from "@/utils/projects/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Project } from "@repo/domain/types/projects";
 import { format } from "date-fns";
@@ -30,88 +39,6 @@ import { useEffect, useState } from "react";
 import { useForm, type FieldErrors } from "react-hook-form";
 
 const FORM_ID = "story-form";
-
-type TabId = "general" | "content" | "media";
-
-/** Field labels and ids (the error summary's order), and the tab each sits on. */
-const LABELS = {
-  name: { label: "Nom", id: "story-name" },
-  sub_name: { label: "Sous-titre", id: "story-sub-name" },
-  slug: { label: "Adresse de la page", id: "story-slug" },
-  date: { label: "Date du concert", id: "story-date" },
-  author_name: { label: "Auteur de la fiche", id: "story-author" },
-  explanation: { label: "Introduction", id: "story-explanation" },
-  text1: { label: "Premier texte", id: "story-text1" },
-  text2: { label: "Second texte", id: "story-text2" },
-  banniere_photographer_name: {
-    label: "Photographe de la bannière",
-    id: "story-banniere-photographer",
-  },
-  banniere_photographer_url: {
-    label: "Site du photographe de la bannière",
-    id: "story-banniere-photographer-url",
-  },
-  image2_photographer_name: {
-    label: "Photographe de la deuxième image",
-    id: "story-image2-photographer",
-  },
-  image2_photographer_url: {
-    label: "Site du photographe de la deuxième image",
-    id: "story-image2-photographer-url",
-  },
-  image3_photographer_name: {
-    label: "Photographe de la troisième image",
-    id: "story-image3-photographer",
-  },
-  image3_photographer_url: {
-    label: "Site du photographe de la troisième image",
-    id: "story-image3-photographer-url",
-  },
-} as const;
-
-type FieldName = keyof typeof LABELS;
-
-const TAB_OF: Record<FieldName, TabId> = {
-  name: "general",
-  sub_name: "general",
-  slug: "general",
-  date: "general",
-  author_name: "general",
-  explanation: "content",
-  text1: "content",
-  text2: "content",
-  banniere_photographer_name: "media",
-  banniere_photographer_url: "media",
-  image2_photographer_name: "media",
-  image2_photographer_url: "media",
-  image3_photographer_name: "media",
-  image3_photographer_url: "media",
-};
-
-/** The tab a field id belongs to (for the error summary's links). */
-export function tabOfFieldId(fieldId: string): TabId | undefined {
-  const entry = (Object.keys(LABELS) as FieldName[]).find(
-    (name) => LABELS[name].id === fieldId,
-  );
-  return entry ? TAB_OF[entry] : undefined;
-}
-
-/** The tab holding the first field in error, in the form's order. */
-export function firstTabWithError(
-  errors: FieldErrors<ProjectFormValues>,
-): TabId | undefined {
-  const first = (Object.keys(LABELS) as FieldName[]).find(
-    (name) => errors[name],
-  );
-  return first ? TAB_OF[first] : undefined;
-}
-
-/** « Envoi de l'image 2 sur 4… » while the chosen files go up. */
-export function uploadProgressLabel(index: number, total: number): string {
-  return total > 1
-    ? `Envoi de l'image ${index} sur ${total}…`
-    : "Envoi de l'image…";
-}
 
 const IMAGE_FIELDS = ["image", "banniere", "image2", "image3"] as const;
 type ImageField = (typeof IMAGE_FIELDS)[number];

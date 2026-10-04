@@ -17,14 +17,9 @@ import {
   galleryVideoFormSchema,
   type GalleryVideoFormValues,
 } from "@/utils/formSchemas";
-import {
-  parseSoloists,
-  parseYouTubeInput,
-  youtubeWatchUrl,
-} from "@/utils/videos/youtube";
+import { toVideoFormData } from "@/utils/videos/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Video, VideoFormData } from "@repo/domain/types/videos";
-import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -49,19 +44,6 @@ const defaults = (video?: Video | null): GalleryVideoFormValues => ({
   venue: video?.venue ?? "",
   soloists: video?.soloists?.join(", ") ?? "",
 });
-
-/** The row to store: the link normalised, the soloists split. */
-export function toVideoFormData(values: GalleryVideoFormValues): VideoFormData {
-  const id = parseYouTubeInput(values.youtube_url);
-  return {
-    title: values.title.trim(),
-    composer: values.composer.trim(),
-    youtube_url: id ? youtubeWatchUrl(id) : values.youtube_url.trim(),
-    performance_date: format(values.performance_date, "yyyy-MM-dd"),
-    venue: values.venue.trim(),
-    soloists: parseSoloists(values.soloists),
-  };
-}
 
 export interface VideoDialogProps {
   open: boolean;
