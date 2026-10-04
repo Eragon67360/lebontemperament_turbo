@@ -131,7 +131,7 @@ export function FileUpload({
             <p className="text-xs">
               {mode === "pdf"
                 ? "PDF (max. 5MB)"
-                : "PNG, JPG, GIF, SVG ou WEBP (max. 5MB)"}
+                : "JPG, PNG, GIF, WebP ou AVIF, 5 Mo maximum"}
             </p>
           </div>
         </div>
@@ -147,10 +147,17 @@ export function FileUpload({
           />
           <button
             onClick={handleClear}
-            className="absolute top-2 right-2 z-10 rounded-full bg-black/50 p-1 transition-colors hover:bg-black/70"
+            className="absolute top-2 right-2 z-10 grid size-10 place-items-center rounded-full bg-black/50 transition-colors hover:bg-black/70"
             type="button"
+            // Clearing the stored image only opens the picker: saving
+            // without a new file keeps it.
+            aria-label={
+              preview === currentImageUrl
+                ? "Remplacer l'image"
+                : "Retirer l'image"
+            }
           >
-            <X className="h-4 w-4 text-white" />
+            <X className="h-4 w-4 text-white" aria-hidden />
           </button>
         </div>
       ) : pdfFile ? (
@@ -164,10 +171,11 @@ export function FileUpload({
             </div>
             <button
               onClick={handleClear}
-              className="rounded-full bg-black/50 p-1 transition-colors hover:bg-black/70"
+              className="grid size-10 place-items-center rounded-full bg-black/50 transition-colors hover:bg-black/70"
               type="button"
+              aria-label="Retirer le fichier"
             >
-              <X className="h-4 w-4 text-white" />
+              <X className="h-4 w-4 text-white" aria-hidden />
             </button>
           </div>
         </div>

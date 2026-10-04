@@ -1,7 +1,8 @@
 // Zod schemas of the admin forms that show inline errors (react-hook-form +
 // components/ui/form.tsx). They mirror the forms' existing requirements: what
 // was a native `required` attribute (or a NOT NULL column the API passes
-// through) is now an explicit rule with a French message. No new rules.
+// through) is now an explicit rule with a French message. One new rule: a
+// ticket link (`related_link`) must be a full URL, since the website links to it.
 import { z } from "zod";
 
 export const CONTEXTS = [
@@ -28,14 +29,24 @@ const requiredTime = (message: string) =>
 /** Optional email: empty is fine, anything else must be an email. */
 const optionalEmail = z.union([z.literal(""), z.email("Email invalide")]);
 
+/** Optional link: empty, or a full address the site can open. */
+const optionalLink = z.union([
+  z.literal(""),
+  z.url({
+    error: "Le lien doit être une adresse complète, commençant par https://",
+  }),
+]);
+
 export const concertFormSchema = z.object({
   concertName: z.string(),
   place: requiredString("Le lieu est requis"),
   date: z.date({ error: "La date est requise" }),
   time: requiredTime("L'heure est requise"),
-  context: z.enum(CONTEXTS, { error: "Le contexte est requis" }),
+  context: z.enum(CONTEXTS, { error: "Le type de concert est requis" }),
+  /** "" for « Aucune »; the id of the tour otherwise. */
+  tour_id: z.string(),
   additional_informations: z.string(),
-  related_link: z.string(),
+  related_link: optionalLink,
 });
 export type ConcertFormValues = z.output<typeof concertFormSchema>;
 
@@ -85,6 +96,58 @@ export const invitationEntrySchema = z.object({
   email: z.email("Format d'email invalide"),
   displayName: requiredString("Le nom complet est requis"),
 });
+
+// --- Concerts et site public (Phase 4 wave 3, #480) ---
+
+import { parseYouTubeInput } from "./videos/youtube";
+
+/** The gallery video form: a YouTube URL or bare id, normalised on submit. */
+export const galleryVideoFormSchema = z.object({
+  title: requiredString("Le titre est requis"),
+  composer: requiredString("Le compositeur est requis"),
+  youtube_url: requiredString("Le lien YouTube est requis").refine(
+    (value) => parseYouTubeInput(value) !== null,
+    "Collez l'adresse de la vidéo YouTube (ou son identifiant de 11 caractères)",
+  ),
+  performance_date: z.date({ error: "La date est requise" }),
+  venue: requiredString("Le lieu est requis"),
+  soloists: z.string(),
+});
+export type GalleryVideoFormValues = z.output<typeof galleryVideoFormSchema>;
+
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** "Concert de Noël 2024" → "concert-de-noel-2024" */
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
+/** A concert story (the website's `/concerts/[slug]` page). */
+export const projectFormSchema = z.object({
+  name: requiredString("Le nom est requis"),
+  sub_name: z.string(),
+  slug: requiredString("L'adresse de la page est requise").regex(
+    SLUG_PATTERN,
+    "Lettres minuscules, chiffres et tirets seulement, par exemple concert-de-noel-2024",
+  ),
+  date: z.date({ error: "La date est requise" }),
+  author_name: z.string(),
+  explanation: z.string(),
+  text1: z.string(),
+  text2: z.string(),
+  banniere_photographer_name: z.string(),
+  banniere_photographer_url: optionalLink,
+  image2_photographer_name: z.string(),
+  image2_photographer_url: optionalLink,
+  image3_photographer_name: z.string(),
+  image3_photographer_url: optionalLink,
+});
+export type ProjectFormValues = z.output<typeof projectFormSchema>;
 
 /** The first error message of a failed parse, in the schema's field order. */
 export function firstIssueMessage(error: z.ZodError): string {

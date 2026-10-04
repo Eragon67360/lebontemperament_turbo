@@ -1,90 +1,82 @@
 "use client";
 
 import { PageShell } from "@/components/layouts/PageShell";
+import { PROJECTS_HREF } from "@/components/projects/ProjectRow";
 import { Button } from "@/components/ui/button";
+import { DataState, EmptyState } from "@/components/ui/data-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useProject } from "@/hooks/useProjects";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-export default function ProjectPreviewPage() {
+/**
+ * The public page of a story, framed. It opens in a new tab from the
+ * list, so « Retour aux histoires » is a link that works here and the
+ * intro says the tab can simply be closed.
+ */
+export default function StoryPreviewPage() {
   const { slug } = useParams<{ slug: string }>();
-  // A failed load leaves `project` undefined, which shows the not-found screen
-  // like the former fetch did.
-  const { data: project, isPending } = useProject(slug);
+  const { data: project, isPending, isError, refetch } = useProject(slug);
 
-  if (isPending) {
-    return (
-      <PageShell
-        theme="public"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-        title="Chargement..."
-      >
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="space-y-4 text-center">
-            <Loader2 className="text-primary/50 mx-auto h-12 w-12 animate-spin" />
-            <p className="text-muted-foreground text-sm">
-              Chargement de la prévisualisation...
-            </p>
-          </div>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (!project) {
-    return (
-      <PageShell
-        theme="public"
-        className="px-4 py-8 sm:px-6 lg:px-8"
-        title="Projet non trouvé"
-      >
-        <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6">
-          <div className="space-y-4 text-center">
-            <h2 className="text-xl font-medium">Projet non trouvé</h2>
-            <p className="text-muted-foreground max-w-sm text-sm">
-              Le projet avec le slug &quot;{slug}&quot; n&apos;a pas pu être
-              trouvé dans la base de données.
-            </p>
-          </div>
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/public/concerts/projets">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux projets
-            </Link>
-          </Button>
-        </div>
-      </PageShell>
-    );
-  }
-
-  // Use iframe to show the actual website preview
   const previewUrl = `${process.env.NEXT_PUBLIC_WEBSITE_URL || "http://localhost:3002"}/concerts/${slug}`;
 
   return (
     <PageShell
       fullHeight
-      theme="public"
-      className="flex flex-col overflow-hidden px-0 py-0"
-      title={`Prévisualisation: ${project.name} ${project.sub_name || ""}`}
-      description="Aperçu du projet tel qu'il apparaîtra sur le site public"
+      className="flex flex-col px-0 py-4 sm:py-6"
+      title={
+        project
+          ? `Aperçu de « ${project.name}${project.sub_name ? ` ${project.sub_name}` : ""} »`
+          : "Aperçu d'une histoire"
+      }
+      description="La page telle que le site public la montre en ce moment. Cet aperçu s'est ouvert dans un nouvel onglet : fermez-le pour revenir à la liste, ou utilisez le bouton."
       headerAction={
         <Button variant="outline" asChild>
-          <Link href="/dashboard/public/concerts/projets">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour aux projets
+          <Link href={PROJECTS_HREF}>
+            <ArrowLeft aria-hidden />
+            Retour aux histoires
           </Link>
         </Button>
       }
     >
-      <div className="relative flex-1 overflow-hidden">
-        <iframe
-          src={previewUrl}
-          className="absolute inset-0 h-full w-full border-0"
-          title={`Prévisualisation: ${project.name}`}
-          allow="fullscreen"
-        />
-      </div>
+      <DataState
+        isLoading={isPending}
+        isError={isError}
+        isEmpty={!project}
+        onRetry={() => refetch()}
+        errorDescription="L'histoire n'a pas pu être chargée : le serveur n'a pas répondu."
+        skeleton={
+          <div role="status" aria-busy className="flex-1">
+            <span className="sr-only">Chargement de l&apos;aperçu…</span>
+            <Skeleton className="h-full min-h-[60vh] w-full rounded-lg" />
+          </div>
+        }
+        empty={
+          <EmptyState
+            icon={BookOpen}
+            title="Cette histoire n'existe pas"
+            description={`Aucune histoire n'a l'adresse « ${slug} ». Elle a peut-être été supprimée, ou son adresse a changé.`}
+            action={
+              <Button variant="outline" asChild>
+                <Link href={PROJECTS_HREF}>
+                  <ArrowLeft aria-hidden />
+                  Retour aux histoires
+                </Link>
+              </Button>
+            }
+          />
+        }
+      >
+        <div className="border-border relative min-h-[60vh] flex-1 overflow-hidden rounded-lg border">
+          <iframe
+            src={previewUrl}
+            className="absolute inset-0 h-full w-full border-0"
+            title={`Aperçu de « ${project?.name ?? slug} » sur le site public`}
+            allow="fullscreen"
+          />
+        </div>
+      </DataState>
     </PageShell>
   );
 }

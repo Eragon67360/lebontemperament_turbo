@@ -1,3 +1,8 @@
+import {
+  heroPatchSchema,
+  parsePatchBody,
+  readJson,
+} from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -42,7 +47,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const body = await request.json();
+    // Only the fields of the hero editor; the singleton's id, timestamps and
+    // anything else are refused (#471).
+    const parsed = parsePatchBody(heroPatchSchema, await readJson(request));
+    if (!parsed.ok) {
+      return NextResponse.json(
+        { error: parsed.error },
+        { status: parsed.status },
+      );
+    }
+    const body = parsed.data;
 
     const supabase = await createClient();
 
