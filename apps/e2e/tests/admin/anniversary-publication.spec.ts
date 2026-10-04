@@ -35,8 +35,14 @@ test("publishing the 40 ans page asks for a check and can be cancelled", async (
   ).toBeVisible();
 
   // Whatever the current state, the opposite action opens the dialog.
-  const publish = page.getByRole("button", { name: "Publier la page" });
-  const hide = page.getByRole("button", { name: "Masquer la page" });
+  const publish = page.getByRole("button", {
+    name: "Publier la page",
+    exact: true,
+  });
+  const hide = page.getByRole("button", {
+    name: "Masquer la page",
+    exact: true,
+  });
   await expect(publish.or(hide)).toBeVisible();
   const published = await hide.isVisible();
   await (published ? hide : publish).click();
@@ -87,7 +93,8 @@ test("a campaign dialog shows inline errors, sends nothing and guards unsaved ch
 
   await dialog.getByRole("button", { name: "Ajouter", exact: true }).click();
   await expect(dialog.getByRole("alert")).toContainText("champs à corriger");
-  await expect(dialog.getByText("L'année est requise")).toBeVisible();
+  // Shown twice on purpose: under the field and in the error summary.
+  await expect(dialog.getByText("L'année est requise")).toHaveCount(2);
   await expect(dialog.locator("#event-title")).toHaveAttribute(
     "aria-invalid",
     "true",
