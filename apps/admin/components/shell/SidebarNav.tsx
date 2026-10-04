@@ -37,10 +37,13 @@ const currentClassName =
 export function SidebarNav({
   sections,
   onNavigate,
+  label = "Navigation principale",
 }: {
   sections: NavSection[];
   /** Called after a link is chosen, so the mobile drawer can close. */
   onNavigate?: () => void;
+  /** Landmark name; only the real shell is the « Navigation principale ». */
+  label?: string;
 }) {
   const pathname = usePathname();
   const activeHref = activeNavHref(sections, pathname);
@@ -51,7 +54,7 @@ export function SidebarNav({
   useResetOnChange([activeSectionId], () => setOpenSectionId(activeSectionId));
 
   return (
-    <nav aria-label="Navigation principale">
+    <nav aria-label={label}>
       <ul className="flex flex-col gap-1">
         {sections.map((section) => {
           const Icon = section.icon;
@@ -84,7 +87,6 @@ export function SidebarNav({
                   href={section.href}
                   onClick={onNavigate}
                   aria-current={isCurrent ? "page" : undefined}
-                  title={section.description}
                   className={cn(
                     sectionRowClassName,
                     isCurrent && currentClassName,
@@ -107,7 +109,6 @@ export function SidebarNav({
               >
                 <CollapsibleTrigger
                   className={cn(sectionRowClassName, "group")}
-                  title={section.description}
                 >
                   {rowContent}
                   <ChevronDown
@@ -176,7 +177,7 @@ function NavEntry({
       onClick={onNavigate}
       aria-current={isCurrent ? "page" : undefined}
       className={cn(
-        "flex min-h-10 items-center gap-2 rounded-sm px-3 py-1.5 text-[15px] leading-[22px]",
+        "flex min-h-10 items-center gap-2 rounded-sm px-3 py-1.5 text-[15px] leading-[22px] pointer-coarse:min-h-11",
         "transition-colors motion-reduce:transition-none",
         isCurrent
           ? cn(currentClassName, "font-medium")

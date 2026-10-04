@@ -764,6 +764,7 @@ export function DesignSystemLab() {
           <div className="flex flex-wrap items-start gap-6">
             <Card className="bg-sidebar w-[280px] max-w-full p-3">
               <SidebarNav
+                label="Aperçu de la navigation"
                 sections={buildNavSections({
                   isSuperAdmin: true,
                   unreadBugReports: 1,

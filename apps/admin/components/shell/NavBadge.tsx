@@ -6,7 +6,8 @@ export function CountBadge({
   size = "md",
   className,
   srLabel = "non lus",
-}: {
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement> & {
   count: number;
   /** `sm` sits on an avatar corner. */
   size?: "sm" | "md";
@@ -18,6 +19,7 @@ export function CountBadge({
 
   return (
     <span
+      {...props}
       className={cn(
         "bg-primary-strong text-primary-foreground inline-flex shrink-0 items-center justify-center rounded-full font-semibold tabular-nums",
         size === "sm"
