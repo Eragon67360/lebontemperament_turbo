@@ -16,7 +16,6 @@ import { Form } from "@/components/ui/form";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Label, OptionalMark } from "@/components/ui/label";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
-import type { Tour } from "@/types/tours";
 import { CONTEXT_LABELS, parseIsoDate } from "@/utils/concerts/schedule";
 import {
   concertFormSchema,
@@ -48,6 +47,8 @@ const LABELS = {
 
 const NO_TOUR = "none";
 
+export type TourOption = { id: string; name: string; past?: boolean };
+
 const TYPE_OPTIONS = CONTEXTS.map((value) => ({
   value,
   label: CONTEXT_LABELS[value]!,
@@ -71,8 +72,8 @@ export interface ConcertDialogProps {
   onOpenChange: (open: boolean) => void;
   /** The concert being edited; none for a creation. */
   concert?: Concert | null;
-  /** The tours a concert can belong to (the « À venir » ones). */
-  tours: readonly Tour[];
+  /** The tours a concert can belong to, upcoming first; past ones say so. */
+  tours: readonly TourOption[];
   /** Saves (uploads the poster, then writes); throws when it fails. */
   onSubmit: (values: ConcertFormValues, poster: File | null) => Promise<void>;
   isPending: boolean;
@@ -123,7 +124,10 @@ export function ConcertDialog({
   const tourOptions = useMemo(
     () => [
       { value: NO_TOUR, label: "Aucune" },
-      ...tours.map((tour) => ({ value: tour.id, label: tour.name })),
+      ...tours.map((tour) => ({
+        value: tour.id,
+        label: tour.past ? `${tour.name} (passée)` : tour.name,
+      })),
     ],
     [tours],
   );
@@ -255,7 +259,7 @@ export function ConcertDialog({
                   label={LABELS.tour_id.label}
                   required={false}
                   options={tourOptions}
-                  hint="Rattache le concert à une tournée à venir."
+                  hint="Rattache le concert à une tournée existante."
                 />
               </div>
             </fieldset>

@@ -96,6 +96,15 @@ export default function ConcertsAndToursPage() {
     () => new Map((toursQuery.data ?? []).map((t) => [t.id, t.name])),
     [toursQuery.data],
   );
+  // Every tour is selectable in the concert form (a past concert may belong
+  // to a past tour); upcoming ones first, past ones labelled.
+  const tourOptions = useMemo(
+    () => [
+      ...tours.upcoming.map((t) => ({ id: t.id, name: t.name })),
+      ...tours.past.map((t) => ({ id: t.id, name: t.name, past: true })),
+    ],
+    [tours],
+  );
 
   // --- Concerts ---
 
@@ -428,7 +437,7 @@ export default function ConcertsAndToursPage() {
           setConcertDialog((current) => ({ ...current, open }))
         }
         concert={concertDialog.concert}
-        tours={tours.upcoming}
+        tours={tourOptions}
         onSubmit={saveConcert}
         isPending={saving}
       />
