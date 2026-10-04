@@ -21,7 +21,16 @@ interface UseUsersOptions {
   search?: string;
 }
 
-export function useUsers(options?: UseUsersOptions) {
+/** Query behaviour a caller may tune without changing the cache key. */
+interface UseUsersQueryOptions {
+  staleTime?: number;
+  refetchOnWindowFocus?: boolean;
+}
+
+export function useUsers(
+  options?: UseUsersOptions,
+  query?: UseUsersQueryOptions,
+) {
   const params = new URLSearchParams();
   if (options?.sortBy) params.append("sortBy", options.sortBy);
   if (options?.sortOrder) params.append("sortOrder", options.sortOrder);
@@ -38,6 +47,7 @@ export function useUsers(options?: UseUsersOptions) {
       const data = await response.json();
       return data as User[];
     },
+    ...query,
   });
 }
 
