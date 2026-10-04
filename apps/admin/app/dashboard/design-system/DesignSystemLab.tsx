@@ -3,6 +3,8 @@
 import { useDensity } from "@/components/DensityProvider";
 import { PageHeader } from "@/components/layouts/PageHeader";
 import { PageShell } from "@/components/layouts/PageShell";
+import { AttentionDot, CountBadge } from "@/components/shell/NavBadge";
+import { SidebarNav } from "@/components/shell/SidebarNav";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -102,6 +104,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DENSITIES, type Density } from "@/lib/density";
+import { buildNavSections } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import {
   Info,
@@ -751,6 +754,32 @@ export function DesignSystemLab() {
               }
             />
           </Card>
+        </Section>
+
+        <Section
+          id="navigation"
+          title="Navigation"
+          intro="La barre latérale du shell : six sections avec leur phrase, une seule ouverte à la fois, l’entrée courante marquée, les compteurs."
+        >
+          <div className="flex flex-wrap items-start gap-6">
+            <Card className="bg-sidebar w-[280px] max-w-full p-3">
+              <SidebarNav
+                label="Aperçu de la navigation"
+                sections={buildNavSections({
+                  isSuperAdmin: true,
+                  unreadBugReports: 1,
+                })}
+              />
+            </Card>
+            <Row label="Compteurs">
+              <div className="flex items-center gap-4">
+                <CountBadge count={2} />
+                <CountBadge count={120} />
+                <CountBadge count={3} size="sm" />
+                <AttentionDot />
+              </div>
+            </Row>
+          </div>
         </Section>
 
         <Section
