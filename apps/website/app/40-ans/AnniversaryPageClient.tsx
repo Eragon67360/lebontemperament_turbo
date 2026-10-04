@@ -1,13 +1,15 @@
 "use client";
 
-import AnniversaryLanding from "@/components/anniversary/AnniversaryLanding";
-import AnniversaryNavigation from "@/components/anniversary/AnniversaryNavigation";
-import AnniversaryTimeline from "@/components/anniversary/AnniversaryTimeline";
 import ArchivesSection from "@/components/anniversary/ArchivesSection";
 import AudioMemories from "@/components/anniversary/AudioMemories";
 import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
 import PreviewBanner from "@/components/anniversary/PreviewBanner";
+import ScoreFine from "@/components/anniversary/score/ScoreFine";
+import ScoreHero from "@/components/anniversary/score/ScoreHero";
+import ScoreMovements from "@/components/anniversary/score/ScoreMovements";
+import ScoreTimeline from "@/components/anniversary/score/ScoreTimeline";
+import ScoreVoices from "@/components/anniversary/score/ScoreVoices";
 import VideoGallery from "@/components/anniversary/VideoGallery";
 import {
   ANNIVERSARY_AUDIO_MEMORY_COLUMNS,
@@ -31,9 +33,8 @@ export default function AnniversaryPageClient({
   isPreview = false,
 }: AnniversaryPageClientProps) {
   const [data, setData] = useState<AnniversaryPageData>(initialData);
-  const [isIntroActive, setIsIntroActive] = useState(
-    initialData.hero.enable_intro_animation ?? true,
-  );
+  // « Écrivez cette mesure » on the score prefills the memory form's year.
+  const [memoryYear, setMemoryYear] = useState<number | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -343,14 +344,16 @@ export default function AnniversaryPageClient({
 
   return (
     <div className="bg-background min-h-screen">
-      <PreviewBanner isPreview={isPreview} hideDuringIntro={isIntroActive} />
-      <AnniversaryLanding
-        hero={data.hero}
-        stats={data.heroStats}
-        onIntroStateChange={setIsIntroActive}
+      <PreviewBanner isPreview={isPreview} />
+      <ScoreHero hero={data.hero} stats={data.heroStats} />
+      <ScoreTimeline
+        events={data.timelineEvents}
+        memories={data.featuredMemories}
+        photos={data.photos}
+        onWriteMemory={data.formConfig.is_enabled ? setMemoryYear : undefined}
       />
-      <AnniversaryNavigation cards={data.navigationCards} />
-      <AnniversaryTimeline events={data.timelineEvents} />
+      <ScoreVoices />
+      <ScoreMovements cards={data.navigationCards} />
       <VideoGallery videos={data.videos} />
       <AudioMemories audioMemories={data.audioMemories} />
       <PhotoCollection photos={data.photos} />
@@ -358,7 +361,9 @@ export default function AnniversaryPageClient({
       <MemorySharing
         config={data.formConfig}
         featuredMemories={data.featuredMemories}
+        prefillYear={memoryYear}
       />
+      <ScoreFine />
     </div>
   );
 }
