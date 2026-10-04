@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 
 // P1 — sidebar orientation. Guards the longest-prefix matching in
 // apps/admin/lib/navigation.ts: a nested route must light up the nav entry it
-// belongs to (exact-href matching highlights nothing on these deeper routes).
+// belongs to (exact-href matching highlights nothing on these deeper routes),
+// and its section must be the one open in the sidebar.
 test("a nested route marks its closest sidebar entry as current", async ({
   page,
 }) => {
@@ -11,7 +12,23 @@ test("a nested route marks its closest sidebar entry as current", async ({
 
   const nav = page.getByRole("navigation", { name: "Navigation principale" });
   await expect(nav.locator("[aria-current='page']")).toHaveText(
-    "Prochains concerts",
+    "Concerts et tournées",
+  );
+  await expect(
+    nav.getByRole("button", { name: /Concerts et site public/ }),
+  ).toHaveAttribute("aria-expanded", "true");
+});
+
+// P1 — « Vous êtes ici » is worded like the sidebar, section first.
+test("the header trail names the section and the page", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/dashboard/admin/anniversary/hero");
+
+  const trail = page.getByRole("navigation", { name: "Vous êtes ici" });
+  await expect(trail).toContainText("Campagne 40 ans");
+  await expect(trail).toContainText("Contenu");
+  await expect(trail.locator("[aria-current='page']")).toHaveText(
+    "En-tête de la page",
   );
 });
 
@@ -23,21 +40,25 @@ test("no sidebar entry leads to a missing page", async ({ page }) => {
   await page.goto("/dashboard");
 
   const nav = page.getByRole("navigation", { name: "Navigation principale" });
-  // Expand the collapsed campaign section so its entries are checked too.
+  const hrefs = new Set<string>();
+  const collect = async () => {
+    for (const href of await nav
+      .getByRole("link")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")))) {
+      if (href?.startsWith("/dashboard")) hrefs.add(href);
+    }
+  };
+
+  // One section is open at a time: open each in turn and collect its links.
+  await collect();
   for (const trigger of await nav.getByRole("button").all()) {
     if ((await trigger.getAttribute("data-state")) === "closed") {
       await trigger.click();
+      await expect(trigger).toHaveAttribute("aria-expanded", "true");
     }
+    await collect();
   }
-
-  const hrefs = await nav
-    .getByRole("link")
-    .evaluateAll((links) =>
-      links
-        .map((link) => link.getAttribute("href"))
-        .filter((href): href is string => !!href?.startsWith("/dashboard")),
-    );
-  expect(hrefs.length).toBeGreaterThan(5);
+  expect(hrefs.size).toBeGreaterThan(5);
 
   for (const href of hrefs) {
     const response = await page.request.get(href);
@@ -45,4 +66,22 @@ test("no sidebar entry leads to a missing page", async ({ page }) => {
       400,
     );
   }
+});
+
+// P1 — on a phone the sidebar is a drawer that closes once a page is chosen.
+test("the mobile drawer opens the navigation and closes on navigation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/dashboard");
+
+  await page.getByRole("button", { name: "Ouvrir la navigation" }).click();
+  const drawer = page.getByRole("dialog", { name: "Navigation principale" });
+  await expect(drawer).toBeVisible();
+
+  await drawer.getByRole("button", { name: /Membres et accès/ }).click();
+  await drawer.getByRole("link", { name: "Membres" }).click();
+
+  await expect(page).toHaveURL(/\/dashboard\/admin\/users$/);
+  await expect(drawer).toBeHidden();
 });

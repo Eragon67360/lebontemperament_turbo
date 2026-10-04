@@ -65,7 +65,7 @@ export default function ProjectPreviewPage() {
     <PageShell
       fullHeight
       theme="public"
-      className="flex h-screen flex-col overflow-hidden px-0 py-0"
+      className="flex flex-col overflow-hidden px-0 py-0"
       title={`Prévisualisation: ${project.name} ${project.sub_name || ""}`}
       description="Aperçu du projet tel qu'il apparaîtra sur le site public"
       headerAction={

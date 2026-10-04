@@ -19,7 +19,7 @@ const BreadcrumbList = React.forwardRef<
   <ol
     ref={ref}
     className={cn(
-      "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5",
+      "flex flex-wrap items-center gap-1.5 text-detail break-words text-muted-foreground sm:gap-2",
       className,
     )}
     {...props}
@@ -50,7 +50,10 @@ const BreadcrumbLink = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      className={cn("hover:text-foreground transition-colors", className)}
+      className={cn(
+        "rounded-sm transition-colors underline-offset-[3px] hover:text-foreground hover:underline motion-reduce:transition-none",
+        className,
+      )}
       {...props}
     />
   );
@@ -66,7 +69,7 @@ const BreadcrumbPage = React.forwardRef<
     role="link"
     aria-disabled="true"
     aria-current="page"
-    className={cn("text-foreground font-normal", className)}
+    className={cn("font-medium text-foreground", className)}
     {...props}
   />
 ));
@@ -80,7 +83,7 @@ const BreadcrumbSeparator = ({
   <li
     role="presentation"
     aria-hidden="true"
-    className={cn("[&>svg]:h-3.5 [&>svg]:w-3.5", className)}
+    className={cn("text-foreground-faint [&>svg]:size-4", className)}
     {...props}
   >
     {children ?? <ChevronRight />}
@@ -99,7 +102,7 @@ const BreadcrumbEllipsis = ({
     {...props}
   >
     <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More</span>
+    <span className="sr-only">Autres pages</span>
   </span>
 );
 BreadcrumbEllipsis.displayName = "BreadcrumbElipssis";
