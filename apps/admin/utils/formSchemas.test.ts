@@ -6,7 +6,10 @@ import {
   editUserFormSchema,
   eventFormSchema,
   firstIssueMessage,
+  galleryVideoFormSchema,
   invitationEntrySchema,
+  projectFormSchema,
+  slugify,
   tourFormSchema,
 } from "./formSchemas";
 
@@ -48,6 +51,7 @@ const concert = {
   date: new Date("2026-12-24"),
   time: "20:30",
   context: "choeur",
+  tour_id: "",
   additional_informations: "",
   related_link: "",
 };
@@ -55,7 +59,7 @@ assertRequired(concertFormSchema, concert, {
   place: "Le lieu est requis",
   date: "La date est requise",
   time: "L'heure est requise",
-  context: "Le contexte est requis",
+  context: "Le type de concert est requis",
 });
 assert.equal(
   errorsOf(concertFormSchema, { ...concert, time: "8h30" }).time,
@@ -63,13 +67,97 @@ assert.equal(
 );
 assert.equal(
   errorsOf(concertFormSchema, { ...concert, context: "fanfare" }).context,
-  "Le contexte est requis",
+  "Le type de concert est requis",
+);
+// The ticket link must be an address the site can open; empty stays allowed.
+assert.match(
+  errorsOf(concertFormSchema, {
+    ...concert,
+    related_link: "billetterie.example.org",
+  }).related_link ?? "",
+  /https:\/\//,
+);
+assert.equal(
+  concertFormSchema.safeParse({
+    ...concert,
+    related_link: "https://billetterie.example.org/concert",
+    tour_id: "00000000-0000-0000-0000-000000000000",
+  }).success,
+  true,
 );
 {
   const parsed = concertFormSchema.parse(concert);
   assert.equal(parsed.concertName, ""); // optional fields pass through as-is
   assert.equal(parsed.context, "choeur");
 }
+
+// --- Gallery videos (#480): a URL or a bare id, nothing else ---
+const galleryVideo = {
+  title: "Requiem",
+  composer: "Fauré",
+  youtube_url: "https://youtu.be/dQw4w9WgXcQ",
+  performance_date: new Date("2025-06-01"),
+  venue: "Église Saint-Test",
+  soloists: "",
+};
+assertRequired(galleryVideoFormSchema, galleryVideo, {
+  title: "Le titre est requis",
+  composer: "Le compositeur est requis",
+  youtube_url: "Le lien YouTube est requis",
+  performance_date: "La date est requise",
+  venue: "Le lieu est requis",
+});
+assert.equal(
+  galleryVideoFormSchema.safeParse({
+    ...galleryVideo,
+    youtube_url: "dQw4w9WgXcQ",
+  }).success,
+  true,
+  "a bare id is accepted, as the hint says",
+);
+assert.match(
+  errorsOf(galleryVideoFormSchema, {
+    ...galleryVideo,
+    youtube_url: "https://vimeo.com/1234",
+  }).youtube_url ?? "",
+  /YouTube/,
+);
+
+// --- Concert stories (#480) ---
+assert.equal(slugify("Concert de Noël 2024 !"), "concert-de-noel-2024");
+const story = {
+  name: "Concert de Noël",
+  sub_name: "",
+  slug: "concert-de-noel-2024",
+  date: new Date("2024-12-15"),
+  author_name: "",
+  explanation: "",
+  text1: "",
+  text2: "",
+  banniere_photographer_name: "",
+  banniere_photographer_url: "",
+  image2_photographer_name: "",
+  image2_photographer_url: "",
+  image3_photographer_name: "",
+  image3_photographer_url: "",
+};
+assertRequired(projectFormSchema, story, {
+  name: "Le nom est requis",
+  slug: "L'adresse de la page est requise",
+  date: "La date est requise",
+});
+assert.match(
+  errorsOf(projectFormSchema, { ...story, slug: "Concert de Noël" }).slug ?? "",
+  /minuscules/,
+);
+assert.match(
+  errorsOf(projectFormSchema, {
+    ...story,
+    banniere_photographer_url: "photographe.example.org",
+  }).banniere_photographer_url ?? "",
+  /https:\/\//,
+);
+assert.equal(projectFormSchema.safeParse(story).success, true);
 
 // --- Events ---
 const event = {
