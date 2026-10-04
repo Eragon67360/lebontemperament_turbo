@@ -24,23 +24,24 @@ import {
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
 import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
-import { SyncUsersDialog } from "@/components/users/SyncUsersDialog";
 import { UserCard } from "@/components/users/UserCard";
 import { UserHeader } from "@/components/users/UserHeader";
 import { UserSearch } from "@/components/users/UserSearch";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { ROSTER_REVIEW_KEY, useRosterReview } from "@/hooks/useRosterSync";
 import {
   useCreateUser,
   useDeleteUser,
-  useSyncUsers,
   useUpdateUserDisplayName,
   useUpdateUserRole,
   useUsers,
 } from "@/hooks/useUsers";
 import { SortConfig, User } from "@/types/user";
+import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, RefreshCw, UserPlus, Users2 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -51,10 +52,6 @@ export default function UsersPage() {
   // UI State
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [isSyncOpen, setIsSyncOpen] = useState(false);
-  const [pendingInvitations, setPendingInvitations] = useState<
-    Array<{ email: string; displayName: string }>
-  >([]);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<{
     id: string;
@@ -90,21 +87,20 @@ export default function UsersPage() {
   });
   const { data: currentUserData } = useCurrentUser();
   const currentUser = currentUserData?.id || null;
-  const { data: syncData } = useSyncUsers();
+  // The reviewed diff with the member roster (also feeds the sync page).
+  const { data: rosterReview } = useRosterReview();
 
-  // Mark users that are missing in Excel
+  // Mark the accounts the roster no longer lists
   const usersWithSyncStatus = useMemo(() => {
-    if (!syncData) return users;
-    const typedSyncData = syncData as {
-      missingInExcel: Array<{ id: string }>;
-    };
+    if (!rosterReview) return users;
+    const absent = new Set(
+      rosterReview.groups.absents.map((member) => member.profileId),
+    );
     return users.map((user) => ({
       ...user,
-      isMissingInExcel: typedSyncData.missingInExcel.some(
-        (m) => m.id === user.id,
-      ),
+      isMissingInExcel: absent.has(user.id),
     }));
-  }, [users, syncData]);
+  }, [users, rosterReview]);
 
   // Mutations
   const createUser = useCreateUser();
@@ -263,8 +259,12 @@ export default function UsersPage() {
     }
   };
 
-  const pendingSyncCount = syncData
-    ? syncData.missingInDatabase.length + syncData.missingInExcel.length
+  // Everything the sync page has to show, except unchanged accounts.
+  const pendingSyncCount = rosterReview
+    ? rosterReview.groups.nouveaux.length +
+      rosterReview.groups.modifies.length +
+      rosterReview.groups.absents.length +
+      rosterReview.groups.aRegler.length
     : 0;
 
   return (
@@ -276,25 +276,29 @@ export default function UsersPage() {
       headerAction={
         <div className="flex flex-wrap gap-2">
           <Button
+            asChild
             variant="outline"
             className="min-h-11 sm:h-9 sm:min-h-0"
-            onClick={() => setIsSyncOpen(true)}
-            aria-label={
-              pendingSyncCount > 0
-                ? `Synchroniser (${pendingSyncCount} écarts détectés)`
-                : "Synchroniser"
-            }
           >
-            <RefreshCw aria-hidden />
-            <span className="hidden sm:inline">Synchroniser</span>
-            {pendingSyncCount > 0 && (
-              <span
-                aria-hidden
-                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white"
-              >
-                {pendingSyncCount}
-              </span>
-            )}
+            <Link
+              href={RouteNames.DASHBOARD.ADMIN.USERS_SYNC}
+              aria-label={
+                pendingSyncCount > 0
+                  ? `Synchroniser (${pendingSyncCount} écarts détectés)`
+                  : "Synchroniser"
+              }
+            >
+              <RefreshCw aria-hidden />
+              <span className="hidden sm:inline">Synchroniser</span>
+              {pendingSyncCount > 0 && (
+                <span
+                  aria-hidden
+                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white"
+                >
+                  {pendingSyncCount}
+                </span>
+              )}
+            </Link>
           </Button>
 
           <Button
@@ -390,27 +394,12 @@ export default function UsersPage() {
         onSubmit={handleAddUser}
         isProcessing={createUser.isPending}
       />
-      <SyncUsersDialog
-        isOpen={isSyncOpen}
-        onOpenChange={setIsSyncOpen}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["users"] });
-          queryClient.invalidateQueries({ queryKey: ["users-sync"] });
-        }}
-        onPrepareInvitations={(invitations) => {
-          setPendingInvitations(invitations);
-          setIsSyncOpen(false);
-          setIsInviteOpen(true);
-        }}
-      />
       <InviteUserDialog
         isOpen={isInviteOpen}
-        onOpenChange={(open) => {
-          setIsInviteOpen(open);
-          if (!open) setPendingInvitations([]);
-        }}
-        onSuccess={() => setPendingInvitations([])}
-        initialInvitations={pendingInvitations}
+        onOpenChange={setIsInviteOpen}
+        onSuccess={() =>
+          queryClient.invalidateQueries({ queryKey: ROSTER_REVIEW_KEY })
+        }
       />
       <EditUserDialog
         editingUser={editingUser}
