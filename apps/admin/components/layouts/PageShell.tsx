@@ -23,8 +23,7 @@ interface PageShellProps {
 
 /**
  * Page frame: title, one-sentence description and the page's actions through
- * `PageHeader`, then the content. The breadcrumb is still rendered by the
- * dashboard shell above the page (Phase 3 moves it into the header).
+ * `PageHeader`, then the content. « Vous êtes ici » is the shell header's job.
  */
 export function PageShell({
   children,

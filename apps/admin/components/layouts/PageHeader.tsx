@@ -30,9 +30,10 @@ export interface PageHeaderProps {
 
 /**
  * Where am I, what is this, what next: trail, title, one-sentence intro and
- * the page's actions. Direction B puts this at the top of every screen; the
- * dashboard shell still renders its own breadcrumb until Phase 3, so pages
- * leave `trail` empty for now.
+ * the page's actions. Direction B puts this at the top of every screen. The
+ * shell's header already shows « Vous êtes ici » for every route
+ * (`components/shell/AppHeader.tsx`, from the nav labels), so pages leave
+ * `trail` empty unless they need a deeper, page-specific one.
  */
 export function PageHeader({
   trail,
