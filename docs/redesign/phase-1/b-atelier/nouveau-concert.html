@@ -529,7 +529,12 @@
     $('pv-title').textContent = $('titre').value || 'Titre du concert';
     $('pv-date').textContent = fmtDate($('date').value, $('heure').value);
     var lieu = $('lieu').value.trim(), ville = $('ville').value.trim();
-    $('pv-place').innerHTML = (lieu ? lieu : '<span class="text-danger font-medium">Lieu manquant</span>') + (ville ? ' · ' + ville : '');
+    // Built from text nodes: typed values are never parsed as HTML.
+    var place = $('pv-place');
+    place.textContent = '';
+    if (lieu) { place.append(lieu); }
+    else { var missing = document.createElement('span'); missing.className = 'text-danger font-medium'; missing.textContent = 'Lieu manquant'; place.append(missing); }
+    if (ville) { place.append(' · ' + ville); }
     $('pv-info').textContent = $('infos').value;
     $('pv-book').style.display = /^https:\/\//.test($('billetterie').value.trim()) ? '' : 'none';
   }
