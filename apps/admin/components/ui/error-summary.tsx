@@ -14,11 +14,29 @@ export type ErrorSummaryItem = {
 };
 
 export interface ErrorSummaryProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "title" | "onSelect"> {
   title?: React.ReactNode;
   errors: ErrorSummaryItem[];
   /** Move keyboard focus to the summary when it appears or its errors change (default true). */
   autoFocus?: boolean;
+  /**
+   * Called before a link focuses its field, with the field's id: a form
+   * split in tabs reveals the right tab here (the focus follows once the
+   * field is in the document).
+   */
+  onSelect?: (fieldId: string) => void;
+}
+
+/** Focuses a field once it is rendered (after a tab switch, for instance). */
+function focusField(fieldId: string) {
+  const attempt = () => {
+    const field = document.getElementById(fieldId);
+    if (!field) return false;
+    field.focus();
+    field.scrollIntoView({ block: "center" });
+    return true;
+  };
+  if (!attempt()) requestAnimationFrame(() => attempt());
 }
 
 /**
@@ -27,7 +45,10 @@ export interface ErrorSummaryProps
  * Renders nothing when there are no errors.
  */
 export const ErrorSummary = React.forwardRef<HTMLDivElement, ErrorSummaryProps>(
-  ({ title, errors, autoFocus = true, className, ...props }, forwardedRef) => {
+  (
+    { title, errors, autoFocus = true, onSelect, className, ...props },
+    forwardedRef,
+  ) => {
     const innerRef = React.useRef<HTMLDivElement>(null);
     React.useImperativeHandle(forwardedRef, () => innerRef.current!);
 
@@ -70,11 +91,9 @@ export const ErrorSummary = React.forwardRef<HTMLDivElement, ErrorSummaryProps>(
                   href={`#${error.fieldId}`}
                   className="rounded-sm font-medium text-danger-foreground underline underline-offset-[3px]"
                   onClick={(event) => {
-                    const field = document.getElementById(error.fieldId);
-                    if (!field) return;
                     event.preventDefault();
-                    field.focus();
-                    field.scrollIntoView({ block: "center" });
+                    onSelect?.(error.fieldId);
+                    focusField(error.fieldId);
                   }}
                 >
                   {error.label}

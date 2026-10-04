@@ -112,4 +112,42 @@ assert.deepEqual(
   ["b", "a"],
 );
 
+// --- descending (the stories: the website shows the highest order first) ---
+{
+  const stories = [item("old", 1), item("mid", 2), item("new", 3)];
+  assert.deepEqual(
+    sortByOrder(stories, true).map((i) => i.id),
+    ["new", "mid", "old"],
+  );
+  // Moving « old » up one row puts it second on the website: 2, « mid » 1.
+  assert.deepEqual(planMove(stories, "old", "up", true).updates, [
+    { id: "old", display_order: 2 },
+    { id: "mid", display_order: 1 },
+  ]);
+  // Dragging « old » to the top gives it the highest number.
+  const dragged = planDrag(stories, "old", "new", true);
+  assert.deepEqual(
+    dragged.ordered.map((i) => i.id),
+    ["old", "new", "mid"],
+  );
+  assert.deepEqual(dragged.updates, [
+    { id: "old", display_order: 3 },
+    { id: "new", display_order: 2 },
+    { id: "mid", display_order: 1 },
+  ]);
+  assert.deepEqual(planMove(stories, "new", "up", true).updates, []);
+  assert.deepEqual(renumber(sortByOrder(stories, true), true), []);
+  // A new story (max + 1) lands at the top.
+  assert.equal(
+    sortByOrder([...stories, item("added", nextOrder(stories))], true)[0]!.id,
+    "added",
+  );
+  assert.deepEqual(
+    applyUpdates(stories, [{ id: "old", display_order: 4 }], true).map(
+      (i) => i.id,
+    ),
+    ["old", "new", "mid"],
+  );
+}
+
 console.log("reorder.test.ts: ok");

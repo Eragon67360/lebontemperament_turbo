@@ -17,11 +17,14 @@ export function FormFeedback<T extends FieldValues>({
   labels,
   submitCount,
   saveError,
+  onSelect,
 }: {
   errors: FieldErrors<T>;
   labels: FieldLabels<Extract<keyof T, string>>;
   submitCount: number;
   saveError?: string | null;
+  /** Reveals the part of the form holding the field (a tab) before it is focused. */
+  onSelect?: (fieldId: string) => void;
 }) {
   const items: ErrorSummaryItem[] =
     submitCount > 0
@@ -34,7 +37,7 @@ export function FormFeedback<T extends FieldValues>({
       : [];
   return (
     <>
-      <ErrorSummary errors={items} />
+      <ErrorSummary errors={items} onSelect={onSelect} />
       {saveError && (
         <Callout tone="danger" title="L'enregistrement a échoué" role="alert">
           <p>{saveError}</p>

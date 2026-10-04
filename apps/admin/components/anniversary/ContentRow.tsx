@@ -36,6 +36,8 @@ export interface ContentRowProps {
   meta?: React.ReactNode;
   /** Shown as « Visible » / « Masqué ». */
   visible: boolean | null | undefined;
+  /** False for lists without a visibility state (concert stories, gallery videos). */
+  showStatus?: boolean;
   /** Extra badges beside the status. */
   badges?: React.ReactNode;
   /** Content under the text, e.g. an audio player. */
@@ -66,6 +68,7 @@ export function ContentRow({
   description,
   meta,
   visible,
+  showStatus = true,
   badges,
   children,
   onEdit,
@@ -160,9 +163,11 @@ export function ContentRow({
             >
               {title}
             </h2>
-            <StatusBadge tone={isVisible ? "success" : "neutral"}>
-              {isVisible ? "Visible" : "Masqué"}
-            </StatusBadge>
+            {showStatus && (
+              <StatusBadge tone={isVisible ? "success" : "neutral"}>
+                {isVisible ? "Visible" : "Masqué"}
+              </StatusBadge>
+            )}
             {badges}
           </div>
           {description && (

@@ -6,6 +6,8 @@ import {
   type AssetKind,
 } from "@/components/anniversary/AssetUploader";
 import { IconPicker } from "@/components/anniversary/IconPicker";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   FormControl,
   FormDescription,
@@ -18,6 +20,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label, OptionalMark, RequiredMark } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,7 +33,11 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import type { IconName } from "@/types/anniversary";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";
 import type { Control, FieldPath, FieldValues } from "react-hook-form";
 
@@ -59,7 +70,7 @@ export function TextField<T extends FieldValues>({
   inputMode,
   maxLength,
 }: Common<T> & {
-  type?: "text" | "url";
+  type?: "text" | "url" | "time";
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   maxLength?: number;
 }) {
@@ -370,6 +381,78 @@ function AssetUploaderControl({
         error ? `${formDescriptionId} ${formMessageId}` : formDescriptionId
       }
       aria-invalid={!!error}
+    />
+  );
+}
+
+/**
+ * A date picked in a calendar (react-day-picker in French). The trigger is
+ * a button carrying the field's id, so the error summary and the label
+ * reach it like an input.
+ */
+export function DateField<T extends FieldValues>({
+  control,
+  name,
+  id,
+  label,
+  required,
+  hint,
+  placeholder = "Choisir une date",
+  disabled,
+  disabledDays,
+}: Common<T> & { disabledDays?: (date: Date) => boolean }) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => {
+        const value: unknown = field.value;
+        const selected = value instanceof Date ? value : undefined;
+        return (
+          <FormItem>
+            <FormLabel htmlFor={id}>
+              {label}
+              <Mark required={required} />
+            </FormLabel>
+            <Popover modal>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    id={id}
+                    ref={field.ref}
+                    type="button"
+                    variant="outline"
+                    disabled={disabled}
+                    className={cn(
+                      "w-full justify-start font-normal",
+                      !field.value && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon aria-hidden />
+                    {selected ? (
+                      format(selected, "EEEE d MMMM yyyy", { locale: fr })
+                    ) : (
+                      <span>{placeholder}</span>
+                    )}
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selected}
+                  onSelect={field.onChange}
+                  disabled={disabledDays}
+                  autoFocus
+                  locale={fr}
+                />
+              </PopoverContent>
+            </Popover>
+            {hint && <FormDescription>{hint}</FormDescription>}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }

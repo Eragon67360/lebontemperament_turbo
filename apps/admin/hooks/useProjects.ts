@@ -1,5 +1,8 @@
+import type { OrderWriter } from "@/hooks/useReorder";
 import { Project } from "@repo/domain/types/projects";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+export const PROJECTS_QUERY_KEY = ["projects"] as const;
 
 async function fetchProjects(): Promise<Project[]> {
   const response = await fetch("/api/projects");
@@ -22,18 +25,6 @@ export function useProject(slug: string | undefined) {
     queryFn: fetchProjects,
     select: (projects) => projects.find((p) => p.slug === slug) ?? null,
     enabled: !!slug,
-  });
-}
-
-// display_order to give a new project: one past the current maximum
-export function useNextProjectDisplayOrder() {
-  return useQuery({
-    queryKey: ["projects"],
-    queryFn: fetchProjects,
-    select: (projects) =>
-      projects.length > 0
-        ? Math.max(...projects.map((p) => p.display_order ?? 0)) + 1
-        : 0,
   });
 }
 
@@ -110,43 +101,47 @@ export function useDeleteProject() {
   });
 }
 
-// Reorder projects mutation: takes the list in its new order, shows it at
-// once and writes each display_order; a failure restores the previous order.
-export function useReorderProjects() {
+/**
+ * Writes one story's `display_order` through the existing
+ * `PUT /api/projects/[id]`, for the generic reorder hook (one request per
+ * changed row; partial failures are named by the hook).
+ */
+export const writeProjectOrder: OrderWriter = async ({ id, display_order }) => {
+  const response = await fetch(`/api/projects/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ display_order }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+};
+
+export type MigrationResult = {
+  message: string;
+  migrated: number;
+  skipped: number;
+  errors?: string[];
+};
+
+// One-off import of the former projects.json (existing slugs are skipped)
+export function useMigrateProjects() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (ordered: Project[]) => {
-      await Promise.all(
-        ordered.map(async (project, index) => {
-          const response = await fetch(`/api/projects/${project.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ display_order: index }),
-          });
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to reorder projects");
-          }
-        }),
-      );
-    },
-    onMutate: async (ordered) => {
-      await queryClient.cancelQueries({ queryKey: ["projects"] });
-      const previous = queryClient.getQueryData<Project[]>(["projects"]);
-      queryClient.setQueryData<Project[]>(
-        ["projects"],
-        ordered.map((project, index) => ({ ...project, display_order: index })),
-      );
-      return { previous };
-    },
-    onError: (_error, _ordered, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["projects"], context.previous);
+    mutationFn: async () => {
+      const response = await fetch("/api/projects/migrate", { method: "POST" });
+      const data = (await response.json()) as MigrationResult & {
+        error?: string;
+        details?: string;
+      };
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.details || "Le serveur n'a pas répondu.",
+        );
       }
+      return data;
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     },
   });
 }
