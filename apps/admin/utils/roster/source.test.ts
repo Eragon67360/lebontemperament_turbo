@@ -342,14 +342,16 @@ async function main() {
   assert.equal(calls.length, 0);
 
   // No error, in any form, names the sheet, the token, or the key.
+  const GOOGLE_URL_PATTERN = /sheets\.googleapis\.com|docs\.google\.com/;
   assert.ok(thrown.length >= 14);
   for (const error of thrown) {
     for (const text of [error.message, error.userMessage, String(error)]) {
       assert.ok(!text.includes(SHEET_ID), `no sheet id in: ${text}`);
       assert.ok(!text.includes(TOKEN), `no token in: ${text}`);
       assert.ok(!text.includes("PRIVATE KEY"), `no key in: ${text}`);
-      assert.ok(!text.includes(SHEETS_PREFIX), `no sheet URL in: ${text}`);
-      assert.ok(!text.includes("docs.google.com"), `no sheet URL in: ${text}`);
+      // A pattern rather than substring checks on URLs: same assertion, and
+      // CodeQL doesn't mistake it for URL sanitization.
+      assert.ok(!GOOGLE_URL_PATTERN.test(text), `no sheet URL in: ${text}`);
     }
   }
 
