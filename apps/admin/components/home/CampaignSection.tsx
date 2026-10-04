@@ -107,13 +107,14 @@ export function CampaignSection({ className }: { className?: string }) {
           {flag.isError && (
             <p className="text-detail text-muted-foreground">
               L’état de publication n’a pas pu être lu.{" "}
-              <button
-                type="button"
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0"
                 onClick={() => flag.refetch()}
-                className="text-primary-text min-h-6 font-medium underline-offset-[3px] hover:underline"
               >
                 Réessayer
-              </button>
+              </Button>
             </p>
           )}
           <Button variant="outline" asChild className="w-full sm:w-auto">

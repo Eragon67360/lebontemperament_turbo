@@ -58,6 +58,23 @@ export function DashboardWelcomeHeader() {
         )
       }
       intro="Voici ce qui vous attend."
+      help={
+        <>
+          <p>
+            <strong>À faire</strong> rassemble ce qui attend une décision de
+            votre part, du plus pressant au moins pressant. Quand la liste est
+            vide, tout est à jour.
+          </p>
+          <p>
+            <strong>Que voulez-vous faire ?</strong> reprend les espaces du menu
+            de gauche, avec ce qui vous y attend.
+          </p>
+          <p>
+            Rien n’est modifié depuis cette page : chaque bouton ouvre l’écran
+            concerné, où vous décidez.
+          </p>
+        </>
+      }
       actions={
         today && (
           <p className="text-detail text-muted-foreground lg:pt-2.5">

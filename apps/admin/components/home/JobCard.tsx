@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { JobId, JobLink, StatusLine } from "@/utils/home/jobs";
 import {
   ArrowRight,
@@ -35,7 +36,10 @@ export function JobCard({
   return (
     <article
       aria-labelledby={headingId}
-      className={`bg-card border-border flex flex-col gap-3 rounded-lg border p-4 shadow-sm sm:p-5 ${className ?? ""}`}
+      className={cn(
+        "bg-card border-border flex flex-col gap-3 rounded-lg border p-4 shadow-sm sm:p-5",
+        className,
+      )}
     >
       <div className="flex items-center gap-3">
         <span
