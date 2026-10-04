@@ -33,7 +33,6 @@ const HEADER_ALIASES: Record<RosterField, string[]> = {
     "Nom et prénom",
     "Prénom NOM",
     "Nom complet",
-    "Nom",
   ],
   email: [
     "Adresse mail",
@@ -55,6 +54,10 @@ const HEADER_ALIASES: Record<RosterField, string[]> = {
   mobilePhone: ["Portable", "Mobile", "Téléphone portable", "Tél. portable"],
   voice: ["Voix", "Pupitre"],
 };
+
+// A surname column and a first-name column, combined as « Prénom NOM ».
+const SURNAME_ALIASES = ["Nom", "Nom de famille", "Nom de naissance"];
+const FIRST_NAME_ALIASES = ["Prénom", "Prénoms"];
 
 export function stripDiacritics(value: string): string {
   return value.normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -81,6 +84,9 @@ const ALIAS_KEYS: ReadonlyArray<[RosterField, Set<string>]> = ROSTER_FIELDS.map(
     ] as [RosterField, Set<string>],
 );
 
+const SURNAME_KEYS = new Set(SURNAME_ALIASES.map(normalizeHeader));
+const FIRST_NAME_KEYS = new Set(FIRST_NAME_ALIASES.map(normalizeHeader));
+
 export interface HeaderMapping {
   /** Raw header of the sheet for each recognised field. */
   columns: Partial<Record<RosterField, string>>;
@@ -88,11 +94,17 @@ export interface HeaderMapping {
   missing: RosterField[];
   /** Optional fields with no column. */
   absent: RosterField[];
+  /** Set when the name comes from two columns instead of « NOM Prénom ». */
+  nameParts?: { surname: string; firstName: string };
+  /** A « Nom » column without « Prénom » and without « NOM Prénom ». */
+  surnameOnly: boolean;
 }
 
 /** Matches the sheet's headers to the known fields; the first match wins. */
 export function mapHeaders(rawHeaders: readonly string[]): HeaderMapping {
   const columns: Partial<Record<RosterField, string>> = {};
+  let surname: string | undefined;
+  let firstName: string | undefined;
   for (const raw of rawHeaders) {
     const key = normalizeHeader(raw);
     if (!key) continue;
@@ -100,14 +112,31 @@ export function mapHeaders(rawHeaders: readonly string[]): HeaderMapping {
       ([field, aliases]) => columns[field] === undefined && aliases.has(key),
     );
     if (match) columns[match[0]] = raw;
+    else if (surname === undefined && SURNAME_KEYS.has(key)) surname = raw;
+    else if (firstName === undefined && FIRST_NAME_KEYS.has(key)) {
+      firstName = raw;
+    }
   }
-  const missing = REQUIRED_ROSTER_FIELDS.filter(
-    (f) => columns[f] === undefined,
+  const nameParts =
+    columns.name === undefined &&
+    surname !== undefined &&
+    firstName !== undefined
+      ? { surname, firstName }
+      : undefined;
+  const hasName = columns.name !== undefined || nameParts !== undefined;
+  const missing = REQUIRED_ROSTER_FIELDS.filter((f) =>
+    f === "name" ? !hasName : columns[f] === undefined,
   );
   const absent = ROSTER_FIELDS.filter(
     (f) => !REQUIRED_ROSTER_FIELDS.includes(f) && columns[f] === undefined,
   );
-  return { columns, missing, absent };
+  return {
+    columns,
+    missing,
+    absent,
+    nameParts,
+    surnameOnly: !hasName && surname !== undefined,
+  };
 }
 
 export function normalizeEmail(value: string | null | undefined): string {
@@ -121,28 +150,48 @@ export function isValidEmail(email: string): boolean {
   return EMAIL_PATTERN.test(email);
 }
 
-/** Digits only, international prefixes for France folded to the leading 0. */
-export function phoneKey(value: string | null | undefined): string {
-  const text = normalizeText(value);
-  if (!text) return "";
-  let digits = text.replace(/[^\d+]/g, "");
-  if (digits.startsWith("+33")) digits = `0${digits.slice(3)}`;
-  else if (digits.startsWith("0033")) digits = `0${digits.slice(4)}`;
-  return digits.replace(/\D/g, "");
+// Several numbers in one cell: « 06… / 06… », « , », « ; », « ou ».
+const PHONE_LIST_SPLIT = /\s*(?:[,;/]|\bou\b)\s*/i;
+// +33 or 0033, optionally followed by the « (0) » people write after it.
+const FRENCH_PREFIX = /^(?:\+33|0033)\s*(?:\(0\)\s*)?/;
+
+function phoneParts(text: string): string[] {
+  return text.split(PHONE_LIST_SPLIT).map(normalizeText).filter(Boolean);
+}
+
+function singlePhoneKey(text: string): string {
+  if (FRENCH_PREFIX.test(text)) {
+    return `0${text.replace(FRENCH_PREFIX, "").replace(/\D/g, "")}`;
+  }
+  if (text.startsWith("+")) return `+${text.replace(/\D/g, "")}`;
+  return text.replace(/\D/g, "");
 }
 
 /**
- * Display format: « 06 12 34 56 78 » for a ten-digit number. Other inputs
- * keep their digits (or the text as written when there are none), so the
- * admin sees what the sheet says.
+ * Comparison key. A French number becomes its ten digits (+33, 0033 and a
+ * « (0) » after them folded to the leading 0); a foreign number keeps its
+ * « + »; a cell holding several numbers is compared as written (single
+ * spaces), never as concatenated digits.
+ */
+export function phoneKey(value: string | null | undefined): string {
+  const text = normalizeText(value);
+  if (!text) return "";
+  if (phoneParts(text).length > 1) return text;
+  return singlePhoneKey(text);
+}
+
+/**
+ * Display format: « 06 12 34 56 78 » for a ten-digit French number. Anything
+ * else (a foreign number with its « + », several numbers, an odd length, no
+ * digit) is shown as written, trimmed to single spaces.
  */
 export function normalizePhone(value: string | null | undefined): string {
   const text = normalizeText(value);
   if (!text) return "";
-  const digits = phoneKey(text);
-  if (!digits) return text;
-  if (digits.length === 10) return digits.replace(/(\d{2})(?=\d)/g, "$1 ");
-  return digits;
+  if (phoneParts(text).length > 1) return text;
+  const key = singlePhoneKey(text);
+  if (/^0\d{9}$/.test(key)) return key.replace(/(\d{2})(?=\d)/g, "$1 ");
+  return text;
 }
 
 const LETTER = /\p{L}/u;

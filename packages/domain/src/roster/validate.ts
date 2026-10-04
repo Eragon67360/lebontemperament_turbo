@@ -63,9 +63,18 @@ export function parseRoster(
   const rawHeaders = Array.from(
     new Set(rawRows.flatMap((row) => Object.keys(row))),
   );
-  const { columns, missing, absent } = mapHeaders(rawHeaders);
+  const { columns, missing, absent, nameParts, surnameOnly } =
+    mapHeaders(rawHeaders);
 
   for (const field of missing) {
+    if (field === "name" && surnameOnly) {
+      errors.push({
+        code: "missing_header",
+        message:
+          "Colonne « Prénom » introuvable : le tableau a une colonne « Nom » seule. Attendu : une colonne « NOM Prénom » (nom et prénom dans la même cellule), ou deux colonnes « Nom » et « Prénom ». Renommez l'en-tête dans le tableau, puis relisez-le.",
+      });
+      continue;
+    }
     errors.push({
       code: "missing_header",
       message: `Colonne ${quote(FIELD_LABELS[field])} introuvable. Colonnes lues : ${
@@ -89,10 +98,22 @@ export function parseRoster(
     return header === undefined ? "" : normalizeText(row[header]);
   };
 
+  // « NOM Prénom » in one cell, or « Nom » + « Prénom » combined as « Prénom NOM ».
+  const nameOf = (raw: Record<string, string>): string => {
+    if (nameParts) {
+      const first = normalizeText(raw[nameParts.firstName]);
+      const last = normalizeText(raw[nameParts.surname]).toLocaleUpperCase(
+        "fr",
+      );
+      return [first, last].filter(Boolean).join(" ");
+    }
+    return normalizeName(cell(raw, "name"));
+  };
+
   const rows: RosterRow[] = [];
   let skipped = 0;
   rawRows.forEach((raw, index) => {
-    const name = normalizeName(cell(raw, "name"));
+    const name = nameOf(raw);
     const email = normalizeEmail(cell(raw, "email"));
     if (!name && !email) {
       skipped++;

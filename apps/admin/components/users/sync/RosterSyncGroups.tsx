@@ -34,6 +34,10 @@ interface SelectableGroupProps<T> {
   selected: ReadonlySet<string>;
   onChange: (next: Set<string>) => void;
   disabled?: boolean;
+  /** Most rows that may be selected at once; the rest stay unchecked. */
+  max?: number;
+  /** Shown when the group holds more rows than `max`. */
+  maxNote?: string;
   renderItem: (item: T) => ReactNode;
 }
 
@@ -47,10 +51,15 @@ function SelectableGroup<T>({
   selected,
   onChange,
   disabled,
+  max,
+  maxNote,
   renderItem,
 }: SelectableGroupProps<T>) {
-  const all = items.length > 0 && items.every((i) => selected.has(keyOf(i)));
-  const some = items.some((i) => selected.has(keyOf(i)));
+  const limit = max === undefined ? items.length : Math.min(max, items.length);
+  const selectedCount = items.filter((i) => selected.has(keyOf(i))).length;
+  const all = limit > 0 && selectedCount >= limit;
+  const some = selectedCount > 0;
+  const atCap = max !== undefined && selectedCount >= max;
 
   return (
     <section aria-labelledby={id} className="space-y-2">
@@ -65,7 +74,11 @@ function SelectableGroup<T>({
               checked={all ? true : some ? "indeterminate" : false}
               disabled={disabled}
               onCheckedChange={(value) =>
-                onChange(value === true ? new Set(items.map(keyOf)) : new Set())
+                onChange(
+                  value === true
+                    ? new Set(items.slice(0, limit).map(keyOf))
+                    : new Set(),
+                )
               }
             />
             Tout sélectionner
@@ -73,6 +86,11 @@ function SelectableGroup<T>({
         )}
       </div>
       <p className="text-muted-foreground text-sm">{description}</p>
+      {max !== undefined && items.length > max && maxNote && (
+        <p className="text-sm font-medium" role="note">
+          {maxNote}
+        </p>
+      )}
       {items.length === 0 ? (
         <p className="text-muted-foreground rounded-md border border-dashed px-3 py-3 text-sm">
           {emptyText}
@@ -88,7 +106,7 @@ function SelectableGroup<T>({
                   <Checkbox
                     className="mt-1"
                     checked={checked}
-                    disabled={disabled}
+                    disabled={disabled || (!checked && atCap)}
                     onCheckedChange={(value) => {
                       const next = new Set(selected);
                       if (value === true) next.add(key);
@@ -114,6 +132,8 @@ interface NewMembersProps {
   selected: ReadonlySet<string>;
   onChange: (next: Set<string>) => void;
   disabled?: boolean;
+  max?: number;
+  maxNote?: string;
 }
 
 export function NewMembersGroup(props: NewMembersProps) {

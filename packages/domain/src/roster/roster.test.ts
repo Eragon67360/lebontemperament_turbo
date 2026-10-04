@@ -74,7 +74,7 @@ assert.equal(normalizeHeader("Adresse e-mail"), "adresse e mail");
   assert.equal(mapping.columns.homePhone, "Tél. domicile");
 }
 {
-  const mapping = mapHeaders(["Nom", "Adresse postale", "Voix"]);
+  const mapping = mapHeaders(["Nom complet", "Adresse postale", "Voix"]);
   assert.deepEqual(mapping.missing, ["email"]);
   assert.deepEqual(mapping.absent, ["homePhone", "mobilePhone"]);
 }
@@ -82,6 +82,27 @@ assert.equal(normalizeHeader("Adresse e-mail"), "adresse e mail");
   // The first matching header wins; a second candidate is left alone.
   const mapping = mapHeaders(["Mail", "Email"]);
   assert.equal(mapping.columns.email, "Mail");
+}
+{
+  // Separate « Nom » and « Prénom » columns stand in for « NOM Prénom ».
+  const mapping = mapHeaders(["Nom", "Prénom", "Adresse mail"]);
+  assert.deepEqual(mapping.missing, []);
+  assert.deepEqual(mapping.nameParts, { surname: "Nom", firstName: "Prénom" });
+  assert.equal(mapping.surnameOnly, false);
+  assert.equal(mapping.columns.name, undefined);
+}
+{
+  // « Nom » alone is not a name column.
+  const mapping = mapHeaders(["Nom", "Adresse mail"]);
+  assert.deepEqual(mapping.missing, ["name"]);
+  assert.equal(mapping.surnameOnly, true);
+  assert.equal(mapping.nameParts, undefined);
+}
+{
+  // The combined column wins over the pair when both exist.
+  const mapping = mapHeaders(["NOM Prénom", "Prénom", "Adresse mail"]);
+  assert.equal(mapping.columns.name, "NOM Prénom");
+  assert.equal(mapping.nameParts, undefined);
 }
 
 // --- Values ------------------------------------------------------------------
@@ -126,10 +147,46 @@ assert.equal(normalizePhone("+33 6 12 34 56 78"), "06 12 34 56 78");
 assert.equal(normalizePhone("+33612345678"), "06 12 34 56 78");
 assert.equal(normalizePhone("0033612345678"), "06 12 34 56 78");
 assert.equal(normalizePhone("03.88.12.34.56"), "03 88 12 34 56");
+assert.equal(normalizePhone("+33 (0)6 12 34 56 78"), "06 12 34 56 78");
+assert.equal(normalizePhone("0033 (0)6 12 34 56 78"), "06 12 34 56 78");
+assert.equal(normalizePhone("+33(0)612345678"), "06 12 34 56 78");
 assert.equal(
-  normalizePhone("+41 22 123 45 67"),
-  "41221234567",
-  "other country: digits kept",
+  normalizePhone("+41  79 123 45 67"),
+  "+41 79 123 45 67",
+  "foreign number: kept as written, single spaces",
+);
+assert.equal(phoneKey("+41 79 123 45 67"), "+41791234567");
+assert.notEqual(phoneKey("+41 79 123 45 67"), phoneKey("041 79 123 45 67"));
+assert.equal(
+  normalizePhone("0612345678 / 0698765432"),
+  "0612345678 / 0698765432",
+  "two numbers: kept as written",
+);
+assert.equal(
+  normalizePhone("06 12 34 56 78, 06 98 76 54 32"),
+  "06 12 34 56 78, 06 98 76 54 32",
+);
+assert.equal(
+  normalizePhone("0612345678 ; 0698765432"),
+  "0612345678 ; 0698765432",
+);
+assert.equal(
+  normalizePhone("0612345678 ou  0698765432"),
+  "0612345678 ou 0698765432",
+);
+assert.equal(
+  phoneKey("0612345678 / 0698765432"),
+  "0612345678 / 0698765432",
+  "two numbers compare as written, never as concatenated digits",
+);
+assert.notEqual(
+  phoneKey("0612345678 / 0698765432"),
+  phoneKey("06123456780698765432"),
+);
+assert.equal(
+  normalizePhone("06 12 34 56"),
+  "06 12 34 56",
+  "odd length: as written",
 );
 assert.equal(normalizePhone("n/a"), "n/a", "no digit: text kept for the admin");
 assert.equal(normalizePhone(""), "");
@@ -178,6 +235,37 @@ assert.equal(joinVoices(["Jeune", "Soprane"]), "Jeune & Soprane");
   assert.match(parsed.errors[0]!.message, /« Adresse mail » introuvable/);
   assert.match(parsed.errors[0]!.message, /« NOM Prénom », « Voix »/);
   assert.equal(parsed.rows.length, 0, "nothing is compared on a bad roster");
+}
+{
+  // « Nom » + « Prénom » are combined as « Prénom NOM ».
+  const parsed = parseRoster(
+    [
+      {
+        Nom: "de la Fontaine",
+        Prénom: "Jean",
+        "Adresse mail": "j@example.com",
+      },
+      { Nom: "DUPONT", Prénom: "", "Adresse mail": "d@example.com" },
+    ],
+    { activeProfilesCount: 0 },
+  );
+  assert.deepEqual(parsed.errors, []);
+  assert.equal(parsed.rows[0]!.name, "Jean DE LA FONTAINE");
+  assert.equal(parsed.rows[1]!.name, "DUPONT");
+}
+{
+  // « Nom » without « Prénom »: blocking, and it says what is expected.
+  const parsed = parseRoster(
+    [{ Nom: "DUPONT Marie", "Adresse mail": "m@example.com" }],
+    { activeProfilesCount: 0 },
+  );
+  assert.deepEqual(codes(parsed.errors), ["missing_header"]);
+  assert.match(parsed.errors[0]!.message, /« Prénom » introuvable/);
+  assert.match(
+    parsed.errors[0]!.message,
+    /« NOM Prénom ».*ou deux colonnes « Nom » et « Prénom »/,
+  );
+  assert.equal(parsed.rows.length, 0);
 }
 {
   // A truncated download: 3 rows for 20 accounts.

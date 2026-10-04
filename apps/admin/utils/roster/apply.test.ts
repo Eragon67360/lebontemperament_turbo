@@ -97,7 +97,7 @@ const makeDeps = (
     buildReview: async () => review,
     updateProfile: async (profileId, patch) => {
       calls.updates.push({ profileId, patch: patch as Record<string, string> });
-      return null;
+      return { ok: true };
     },
     sendInvitations: async (entries) => {
       calls.invited.push(...entries.map((e) => e.email));
@@ -175,14 +175,51 @@ assert.equal(
     update: [{ profileId: "p-jean", fields: ["voice", "display_name"] }],
   });
 }
-assert.equal(
-  parseApplyRequest({
+{
+  // Two entries for one profile: the first one wins.
+  const parsed = parseApplyRequest({
     fingerprint: FINGERPRINT,
-    invite: Array.from({ length: 501 }, (_, i) => `r${i}`),
-  }).ok,
-  false,
-  "capped",
-);
+    update: [
+      { profileId: "p-jean", fields: ["voice"] },
+      { profileId: "p-jean", fields: ["address"] },
+    ],
+  });
+  assert.ok(parsed.ok);
+  assert.deepEqual(parsed.request.update, [
+    { profileId: "p-jean", fields: ["voice"] },
+  ]);
+}
+{
+  // Invitations are capped at 100 per apply, with a French message.
+  const tooMany = parseApplyRequest({
+    fingerprint: FINGERPRINT,
+    invite: Array.from({ length: 101 }, (_, i) => `r${i}`),
+  });
+  assert.deepEqual(tooMany, {
+    ok: false,
+    error: "Au plus 100 invitations par envoi : appliquez, puis recommencez.",
+  });
+  assert.ok(
+    parseApplyRequest({
+      fingerprint: FINGERPRINT,
+      invite: Array.from({ length: 100 }, (_, i) => `r${i}`),
+    }).ok,
+    "100 is accepted",
+  );
+  // Updates are capped at 500.
+  const update = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      profileId: `p${i}`,
+      fields: ["voice"],
+    }));
+  assert.ok(
+    parseApplyRequest({ fingerprint: FINGERPRINT, update: update(500) }).ok,
+  );
+  assert.deepEqual(
+    parseApplyRequest({ fingerprint: FINGERPRINT, update: update(501) }),
+    { ok: false, error: "Au plus 500 mises à jour par application." },
+  );
+}
 
 // --- Fingerprint check -----------------------------------------------------------
 
@@ -283,8 +320,8 @@ assert.equal(
   const { deps, calls } = makeDeps(built(), {
     updateProfile: async (profileId) =>
       profileId === "p-jean"
-        ? "La base de données a refusé la mise à jour."
-        : null,
+        ? { ok: false, reason: "La base de données a refusé la mise à jour." }
+        : { ok: true },
   });
   const outcome = await applyRosterSync(
     {
@@ -310,6 +347,38 @@ assert.equal(
     { profileId: "p-marie", fields: ["address"] },
   ]);
   assert.deepEqual(calls.invited, [], "no invitation requested, none sent");
+}
+
+{
+  // A warning from the writer (auth metadata not updated) is reported on a done item.
+  const { deps } = makeDeps(built(), {
+    updateProfile: async () => ({
+      ok: true,
+      warning:
+        "Fiche mise à jour, mais le nom affiché à la connexion n'a pas pu l'être.",
+    }),
+  });
+  const outcome = await applyRosterSync(
+    {
+      fingerprint: FINGERPRINT,
+      invite: [],
+      update: [{ profileId: "p-jean", fields: ["display_name"] }],
+    },
+    deps,
+  );
+  assert.equal(outcome.status, 200);
+  if (outcome.status !== 200) throw new Error("unreachable");
+  assert.equal(outcome.body.results[0]?.status, "done");
+  assert.match(
+    outcome.body.results[0]?.warning ?? "",
+    /nom affiché à la connexion/,
+  );
+  assert.deepEqual(outcome.body.summary, {
+    done: 1,
+    failed: 0,
+    invited: 0,
+    updated: 1,
+  });
 }
 
 assert.equal(

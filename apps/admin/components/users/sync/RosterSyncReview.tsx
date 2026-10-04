@@ -21,7 +21,7 @@ import {
   type ApplyResponse,
 } from "@/hooks/useRosterSync";
 import { cn } from "@/lib/utils";
-import type { ApplyRequest } from "@/utils/roster/apply";
+import { MAX_APPLY_INVITES, type ApplyRequest } from "@/utils/roster/apply";
 import RouteNames from "@/utils/routes";
 import type { RosterReview } from "@repo/domain/roster/types";
 import {
@@ -82,6 +82,16 @@ export function RosterSyncReview() {
   const select = (next: Partial<Pick<Selection, "invites" | "updates">>) => {
     if (!fingerprint) return;
     setSelection({ fingerprint, invites, updates, ...next });
+  };
+  // At most 100 invitations per apply (the server refuses more): keep the
+  // first ones in the group's order.
+  const selectInvites = (next: Set<string>) => {
+    if (!data) return;
+    const capped = data.groups.nouveaux
+      .map((member) => member.rowId)
+      .filter((rowId) => next.has(rowId))
+      .slice(0, MAX_APPLY_INVITES);
+    select({ invites: new Set(capped) });
   };
 
   const hasErrors = (data?.validation.errors.length ?? 0) > 0;
@@ -194,8 +204,10 @@ export function RosterSyncReview() {
                 <NewMembersGroup
                   items={data.groups.nouveaux}
                   selected={invites}
-                  onChange={(next) => select({ invites: next })}
+                  onChange={selectInvites}
                   disabled={busy}
+                  max={MAX_APPLY_INVITES}
+                  maxNote={`${MAX_APPLY_INVITES} invitations maximum par envoi : appliquez, puis recommencez.`}
                 />
                 <ChangedMembersGroup
                   items={data.groups.modifies}
@@ -406,6 +418,11 @@ function ApplyOutcome({
               {result.status === "done" && result.fields && (
                 <span className="text-muted-foreground block text-xs">
                   Champs : {result.fields.join(", ")}
+                </span>
+              )}
+              {result.warning && (
+                <span className="block text-xs">
+                  Attention : {result.warning}
                 </span>
               )}
               {result.reason && (

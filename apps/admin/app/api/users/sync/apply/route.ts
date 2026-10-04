@@ -13,10 +13,14 @@ import { fetchRosterRows, RosterSourceError } from "@/utils/roster/source";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
 
-// Invitations go out in throttled batches: 100 members take over 10 s.
-export const maxDuration = 60;
+// Invitations go out in throttled batches (10 per second, at most 100 per
+// apply) after the profile updates and the roster re-read. 300 s is Vercel's
+// default limit on Fluid compute; anything shorter would cut a large apply.
+export const maxDuration = 300;
 
 const UPDATE_FAILED = "La base de données a refusé la mise à jour.";
+const METADATA_NOT_UPDATED =
+  "Fiche mise à jour, mais le nom affiché à la connexion n'a pas pu l'être.";
 
 export async function POST(request: Request) {
   try {
@@ -50,7 +54,7 @@ export async function POST(request: Request) {
             `Roster sync: profile ${profileId} update failed:`,
             error,
           );
-          return UPDATE_FAILED;
+          return { ok: false, reason: UPDATE_FAILED };
         }
         // The name also lives in the auth metadata (as PATCH /api/users/display-name does).
         if (patch.display_name !== undefined) {
@@ -63,9 +67,10 @@ export async function POST(request: Request) {
               `Roster sync: auth metadata of ${profileId} not updated:`,
               metadataError,
             );
+            return { ok: true, warning: METADATA_NOT_UPDATED };
           }
         }
-        return null;
+        return { ok: true };
       },
 
       sendInvitations: (entries) =>

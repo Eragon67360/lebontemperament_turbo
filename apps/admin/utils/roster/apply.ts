@@ -13,7 +13,9 @@ import {
   type RosterOwnedField,
 } from "@repo/domain/roster/types";
 
-export const MAX_APPLY_ITEMS = 500;
+/** Invitations go out at 10 per second: 100 keep an apply well within the route's time limit. */
+export const MAX_APPLY_INVITES = 100;
+export const MAX_APPLY_UPDATES = 500;
 
 export interface ApplyUpdate {
   profileId: string;
@@ -35,6 +37,8 @@ export interface ApplyItemResult {
   status: "done" | "failed";
   /** French, when `failed`. */
   reason?: string;
+  /** French, when `done` with a caveat the admin should know. */
+  warning?: string;
   /** The fields written, when an update was done. */
   fields?: RosterOwnedField[];
 }
@@ -50,17 +54,20 @@ export type ApplyOutcome =
   | { status: 200; body: { results: ApplyItemResult[]; summary: ApplySummary } }
   | { status: 400 | 409; body: { error: string } };
 
+export type UpdateProfileResult =
+  { ok: true; warning?: string } | { ok: false; reason: string };
+
 export const ROSTER_CHANGED_MESSAGE =
   "Le tableau des membres a changé depuis la vérification. Relisez-le, puis choisissez à nouveau ce qu'il faut appliquer.";
 
 export interface ApplyDeps {
   /** Re-reads the roster and the profiles. */
   buildReview: () => Promise<BuiltReview>;
-  /** Writes the patch; resolves with a French reason on failure, null when done. */
+  /** Writes the patch; a French `reason` on failure, an optional `warning` when done. */
   updateProfile: (
     profileId: string,
     patch: Partial<Record<RosterOwnedField, string>>,
-  ) => Promise<string | null>;
+  ) => Promise<UpdateProfileResult>;
   /** The shared, throttled invitation sender. */
   sendInvitations: (
     entries: InvitationEntry[],
@@ -105,7 +112,8 @@ export function parseApplyRequest(
   if (!Array.isArray(update)) {
     return { ok: false, error: "La liste des mises à jour est invalide." };
   }
-  const updates: ApplyUpdate[] = [];
+  // One entry per profile: the first one wins.
+  const updatesById = new Map<string, ApplyUpdate>();
   for (const item of update) {
     if (!item || typeof item !== "object") {
       return { ok: false, error: "La liste des mises à jour est invalide." };
@@ -120,24 +128,33 @@ export function parseApplyRequest(
     ) {
       return { ok: false, error: "La liste des mises à jour est invalide." };
     }
-    updates.push({ profileId, fields: Array.from(new Set(fields)) });
+    if (!updatesById.has(profileId)) {
+      updatesById.set(profileId, {
+        profileId,
+        fields: Array.from(new Set(fields)),
+      });
+    }
   }
-  if (invite.length === 0 && updates.length === 0) {
+  const updates = Array.from(updatesById.values());
+  const invites = Array.from(new Set(invite));
+  if (invites.length === 0 && updates.length === 0) {
     return { ok: false, error: "Rien à appliquer." };
   }
-  if (invite.length + updates.length > MAX_APPLY_ITEMS) {
+  if (invites.length > MAX_APPLY_INVITES) {
     return {
       ok: false,
-      error: `Au plus ${MAX_APPLY_ITEMS} éléments par application.`,
+      error: `Au plus ${MAX_APPLY_INVITES} invitations par envoi : appliquez, puis recommencez.`,
+    };
+  }
+  if (updates.length > MAX_APPLY_UPDATES) {
+    return {
+      ok: false,
+      error: `Au plus ${MAX_APPLY_UPDATES} mises à jour par application.`,
     };
   }
   return {
     ok: true,
-    request: {
-      fingerprint,
-      invite: Array.from(new Set(invite)),
-      update: updates,
-    },
+    request: { fingerprint, invite: invites, update: updates },
   };
 }
 
@@ -214,14 +231,14 @@ export async function applyRosterSync(
       });
       continue;
     }
-    const failure = await deps.updateProfile(profileId, patch);
-    if (failure) {
+    const result = await deps.updateProfile(profileId, patch);
+    if (!result.ok) {
       record({
         kind: "update",
         id: profileId,
         label,
         status: "failed",
-        reason: failure,
+        reason: result.reason,
       });
       continue;
     }
@@ -232,6 +249,7 @@ export async function applyRosterSync(
       label,
       status: "done",
       fields: written,
+      ...(result.warning ? { warning: result.warning } : {}),
     });
   }
 
