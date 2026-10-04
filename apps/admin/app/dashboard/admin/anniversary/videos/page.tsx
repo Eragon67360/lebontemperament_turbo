@@ -1,89 +1,51 @@
 "use client";
 
+import { CampaignList } from "@/components/anniversary/CampaignList";
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { AddButton } from "@/components/anniversary/ListPageHeaderAction";
+import {
+  countLine,
+  useListActions,
+} from "@/components/anniversary/useListActions";
 import { VideoDialog } from "@/components/anniversary/VideoDialog";
 import { VideoItem } from "@/components/anniversary/VideoItem";
 import { PageShell } from "@/components/layouts/PageShell";
-import { Button } from "@/components/ui/button";
 import {
   DataState,
   EmptyState,
   ListSkeleton,
 } from "@/components/ui/data-state";
-import { useDeleteVideo, useVideos } from "@/hooks/useAnniversaryVideos";
-import { AnniversaryVideo } from "@/types/anniversary";
-import { Plus, Video } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import {
+  useDeleteVideo,
+  useUpdateVideo,
+  useVideos,
+} from "@/hooks/useAnniversaryVideos";
+import type { AnniversaryVideo } from "@/types/anniversary";
+import { nextOrder } from "@/utils/anniversary/reorder";
+import { Video } from "lucide-react";
+
+const nameOf = (video: AnniversaryVideo) => video.title;
 
 export default function VideosPage() {
   const { data: videos = [], isLoading, isError, refetch } = useVideos();
-  const deleteVideo = useDeleteVideo();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<AnniversaryVideo | null>(
-    null,
-  );
-
-  const handleEdit = (video: AnniversaryVideo) => {
-    setSelectedVideo(video);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (video: AnniversaryVideo) => {
-    setSelectedVideo(video);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedVideo) return;
-
-    try {
-      await deleteVideo.mutateAsync(selectedVideo.id);
-      toast.success("Vidéo supprimée avec succès");
-      setDeleteDialogOpen(false);
-      setSelectedVideo(null);
-    } catch (error) {
-      toast.error("Erreur lors de la suppression");
-      console.error("Delete error:", error);
-    }
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) {
-      setSelectedVideo(null);
-    }
-  };
-
-  const maxOrder = videos.reduce(
-    (max, video) => Math.max(max, video.display_order),
-    0,
-  );
+  const update = useUpdateVideo();
+  const remove = useDeleteVideo();
+  const list = useListActions<AnniversaryVideo>({
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    nameOf,
+    feminine: true,
+  });
 
   return (
     <PageShell
-      title="Galerie vidéo"
-      description="Gérer les vidéos de concerts, témoignages et documentaires"
-      theme="anniversary"
       className="py-4 sm:py-6"
+      title="Vidéos"
+      description="Les vidéos de concerts, témoignages et documentaires de la galerie des 40 ans."
       headerAction={
-        <Button
-          className="min-h-11 w-full sm:w-auto"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Ajouter une vidéo
-        </Button>
+        <AddButton label="Ajouter une vidéo" onClick={list.openCreate} />
       }
     >
-      {videos.length > 0 && (
-        <p className="text-muted-foreground mb-4 text-sm">
-          {videos.length} vidéo{videos.length > 1 ? "s" : ""}
-        </p>
-      )}
-
       <DataState
         isLoading={isLoading}
         isError={isError}
@@ -95,44 +57,48 @@ export default function VideosPage() {
           <EmptyState
             icon={Video}
             title="Aucune vidéo"
-            description="Ajoutez les vidéos de concerts, témoignages et documentaires à afficher dans la galerie des 40 ans."
+            description="Une vidéo, c'est une vignette et un lien YouTube. Les visiteurs la regardent sans quitter la page."
             action={
-              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden />
-                Ajouter une vidéo
-              </Button>
+              <AddButton label="Ajouter une vidéo" onClick={list.openCreate} />
             }
           />
         }
       >
-        <div className="space-y-4">
-          {videos.map((video) => (
+        <p className="text-note text-muted-foreground mb-3">
+          {countLine(videos, "vidéo", "vidéos")}
+        </p>
+        <CampaignList
+          items={videos}
+          endpoint="/api/anniversary/videos"
+          queryKey={["anniversary", "videos"]}
+          nameOf={nameOf}
+          renderItem={(video, reorder) => (
             <VideoItem
-              key={video.id}
               video={video}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              reorder={reorder}
+              busy={list.busyId === video.id}
+              onEdit={() => list.openEdit(video)}
+              onToggleVisibility={() => list.toggleVisibility(video)}
+              onDelete={() => list.askDelete(video)}
             />
-          ))}
-        </div>
+          )}
+        />
       </DataState>
 
-      {/* Create/Edit Dialog */}
       <VideoDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        video={selectedVideo || undefined}
-        maxOrder={maxOrder}
+        open={list.dialogOpen}
+        onOpenChange={list.onDialogOpenChange}
+        video={list.editing}
+        nextOrder={nextOrder(videos)}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        title="Supprimer cette vidéo ?"
-        description={`Êtes-vous sûr de vouloir supprimer la vidéo "${selectedVideo?.title}" ? Cette action est irréversible.`}
-        isLoading={deleteVideo.isPending}
+        open={list.deleting !== null}
+        onOpenChange={list.cancelDelete}
+        onConfirm={list.confirmDelete}
+        title={`Supprimer « ${list.deleting?.title ?? ""} » ?`}
+        description="La vidéo disparaît de la galerie et sa miniature est effacée. Cette action ne peut pas être annulée."
+        isLoading={list.isDeleting}
       />
     </PageShell>
   );

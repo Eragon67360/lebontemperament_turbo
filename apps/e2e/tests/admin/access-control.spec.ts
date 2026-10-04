@@ -20,6 +20,7 @@ const ADMIN_GET_ROUTES = [
   "/api/anniversary/memories",
   "/api/anniversary/navigation",
   "/api/anniversary/photos",
+  "/api/anniversary/readiness",
   "/api/anniversary/timeline",
   "/api/anniversary/videos",
   "/api/bug-messages",
