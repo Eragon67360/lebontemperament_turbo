@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { excerpt } from "@/utils/concerts/schedule";
 import {
   eventPeriodLabel,
   eventTypeLabel,
+  excerpt,
   formatTimeFr,
   parseIsoDate,
 } from "@/utils/season/schedule";

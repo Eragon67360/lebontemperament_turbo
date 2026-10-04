@@ -219,7 +219,7 @@ export function EventDialog({
                 name="responsible_email"
                 id={LABELS.responsible_email.id}
                 label={LABELS.responsible_email.label}
-                inputMode="email"
+                type="email"
                 placeholder="prenom@exemple.fr"
               />
             </div>

@@ -43,7 +43,7 @@ const LABELS = {
   end_time: { label: "Fin", id: "rehearsal-end" },
   repeat: { label: "Répéter la séance", id: "rehearsal-repeat" },
   repeat_interval: {
-    label: "Toutes les (semaines)",
+    label: "Fréquence (en semaines)",
     id: "rehearsal-repeat-interval",
   },
   repeat_until: { label: "Jusqu'au", id: "rehearsal-repeat-until" },
@@ -265,20 +265,20 @@ export function RehearsalDialog({
                       hint="Dernier jour possible pour une séance."
                     />
                   </div>
-                  {plannedCount !== null && (
-                    <p
-                      className="text-detail text-muted-foreground"
-                      aria-live="polite"
-                    >
-                      {plannedCount === 0
+                  <p
+                    className="text-detail text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    {plannedCount === null
+                      ? null
+                      : plannedCount === 0
                         ? "Aucune séance ne sera créée avec ces dates."
                         : `${rehearsalCountLabel(plannedCount)} ${
                             plannedCount > 1 ? "seront créées" : "sera créée"
                           }, à partir du ${formatLongDateFr(
                             format(date as Date, "yyyy-MM-dd"),
                           ).toLocaleLowerCase("fr-FR")}.`}
-                    </p>
-                  )}
+                  </p>
                 </div>
               )}
             </fieldset>

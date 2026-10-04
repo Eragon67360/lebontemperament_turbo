@@ -42,7 +42,9 @@ export default function EvenementsPage() {
     open: false,
     event: null,
   });
+  // The item stays set while the dialog closes, so its text never empties.
   const [deleting, setDeleting] = useState<Event | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Today is read when the data changes, so a page left open overnight
@@ -73,7 +75,7 @@ export default function EvenementsPage() {
     try {
       await deleteEvent.mutateAsync(deleting.id);
       toast.success(`« ${deleting.title} » supprimé`);
-      setDeleting(null);
+      setConfirmOpen(false);
     } catch (error) {
       toast.error("La suppression a échoué", {
         description: error instanceof Error ? error.message : undefined,
@@ -117,7 +119,7 @@ export default function EvenementsPage() {
               description={
                 past
                   ? "Les événements dont le dernier jour est passé apparaîtront ici, prêts à être corrigés si besoin."
-                  : "L'agenda des membres est vide : un séjour, une vente, une sortie… tout ce qui n'est ni une répétition ni un concert."
+                  : "Aucun événement n'est prévu : un séjour, une vente, une sortie… tout ce qui n'est ni une répétition ni un concert."
               }
               className="py-6"
               action={
@@ -137,7 +139,10 @@ export default function EvenementsPage() {
                 <EventRow
                   event={event}
                   onEdit={() => setDialog({ open: true, event })}
-                  onDelete={() => setDeleting(event)}
+                  onDelete={() => {
+                    setDeleting(event);
+                    setConfirmOpen(true);
+                  }}
                 />
               </li>
             ))}
@@ -181,9 +186,9 @@ export default function EvenementsPage() {
       />
 
       <DeleteConfirmDialog
-        open={deleting !== null}
+        open={confirmOpen}
         onOpenChange={(open) => {
-          if (!open && !isDeleting) setDeleting(null);
+          if (!open && !isDeleting) setConfirmOpen(false);
         }}
         onConfirm={confirmDelete}
         title={`Supprimer « ${deleting?.title ?? ""} » ?`}

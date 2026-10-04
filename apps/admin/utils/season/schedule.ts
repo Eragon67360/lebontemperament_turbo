@@ -9,9 +9,14 @@ import type { EventFormValues, RehearsalFormValues } from "@/utils/formSchemas";
 import type { CreateEventDTO, UpdateEventDTO } from "@repo/domain/types/events";
 import { addWeeks, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { formatTimeFr, parseIsoDate, todayIso } from "../concerts/schedule";
+import {
+  excerpt,
+  formatTimeFr,
+  parseIsoDate,
+  todayIso,
+} from "../concerts/schedule";
 
-export { formatTimeFr, parseIsoDate, todayIso };
+export { excerpt, formatTimeFr, parseIsoDate, todayIso };
 
 /** The slice of a rehearsal row the split needs (fixtures stay small). */
 export type RehearsalLike = {

@@ -127,7 +127,7 @@ const noop = () => {};
   );
   assert.match(html, />Membres</);
   assert.match(html, /Samedi 5 décembre 2026/);
-  assert.match(html, /Vente/);
+  assert.match(html, />Vente</);
   assert.doesNotMatch(html, /Ouvrir le lien/);
   assert.doesNotMatch(html, /\(\)/, "no empty parentheses without an e-mail");
 }

@@ -56,7 +56,9 @@ export default function RepetitionsPage() {
     open: boolean;
     rehearsal: Rehearsal | null;
   }>({ open: false, rehearsal: null });
+  // The item stays set while the dialog closes, so its text never empties.
   const [deleting, setDeleting] = useState<Rehearsal | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Today is read when the data changes, so a page left open overnight
@@ -92,7 +94,7 @@ export default function RepetitionsPage() {
     try {
       await deleteRehearsal.mutateAsync(deleting.id);
       toast.success(`« ${deleting.name} » supprimée`);
-      setDeleting(null);
+      setConfirmOpen(false);
     } catch (error) {
       toast.error("La suppression a échoué", {
         description: error instanceof Error ? error.message : undefined,
@@ -169,7 +171,10 @@ export default function RepetitionsPage() {
                 <RehearsalRow
                   rehearsal={rehearsal}
                   onEdit={() => setDialog({ open: true, rehearsal })}
-                  onDelete={() => setDeleting(rehearsal)}
+                  onDelete={() => {
+                    setDeleting(rehearsal);
+                    setConfirmOpen(true);
+                  }}
                 />
               </li>
             ))}
@@ -234,9 +239,9 @@ export default function RepetitionsPage() {
       />
 
       <DeleteConfirmDialog
-        open={deleting !== null}
+        open={confirmOpen}
         onOpenChange={(open) => {
-          if (!open && !isDeleting) setDeleting(null);
+          if (!open && !isDeleting) setConfirmOpen(false);
         }}
         onConfirm={confirmDelete}
         title={`Supprimer « ${deleting?.name ?? ""} » ?`}
