@@ -2,6 +2,7 @@
 import { EVENT_COLUMNS } from "@/lib/publicConcerts";
 import { createClient } from "@/utils/supabase/server";
 import { Event } from "@repo/domain/types/events";
+import { parisToday } from "@repo/domain/utils/parisDay";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
     .from("events")
     .select(EVENT_COLUMNS)
     .order("date_from", { ascending: true })
-    .gte("date_to", new Date().toISOString().split("T")[0]);
+    .gte("date_to", parisToday());
 
   if (error) {
     console.error("Error fetching events:", error);
