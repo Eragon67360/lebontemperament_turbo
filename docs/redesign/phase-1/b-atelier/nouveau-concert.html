@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nouveau concert · Administration · Le Bon Tempérament</title>
+<script>(function(){var p=new URLSearchParams(location.search);if(p.get('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');if(p.get('density')==='compact')document.documentElement.setAttribute('data-density','compact');})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+@theme inline {
+  --font-sans: var(--font-sans);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-border: var(--accent-soft-border);
+  --color-on-accent: var(--on-accent);
+  --color-focus: var(--focus);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-strong: var(--danger-strong);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --text-title: var(--fs-title);     --text-title--line-height: var(--lh-title);     --text-title--font-weight: 600;
+  --text-section: var(--fs-section); --text-section--line-height: var(--lh-section); --text-section--font-weight: 600;
+  --text-body: var(--fs-body);       --text-body--line-height: var(--lh-body);
+  --text-detail: var(--fs-detail);   --text-detail--line-height: var(--lh-detail);
+  --text-note: var(--fs-note);       --text-note--line-height: var(--lh-note);
+}
+@layer base {
+  html { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--text); font-size: var(--fs-body); line-height: var(--lh-body); }
+  h1 { font-size: var(--fs-title); line-height: var(--lh-title); font-weight: 600; letter-spacing: -0.01em; }
+  @media (max-width: 1023px) { h1 { font-size: 24px; line-height: 32px; } }
+  h2 { font-size: var(--fs-section); line-height: var(--lh-section); font-weight: 600; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+  * { transition-duration: var(--motion); transition-timing-function: var(--ease); }
+  button, [role="button"], a, summary { cursor: pointer; }
+  ::selection { background: var(--accent-soft-border); }
+}
+@layer components {
+  .skip-link { position: absolute; left: 16px; top: -64px; z-index: 100; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); }
+  .skip-link:focus { top: 12px; }
+
+  /* Sidebar */
+  .nav-item { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--radius-md); color: var(--text); min-height: 44px; transition: background var(--motion) var(--ease); }
+  .nav-item:hover { background: var(--sunken); }
+  .nav-item.is-open { color: var(--text); }
+  .nav-item.is-current { background: var(--accent-soft); color: var(--accent-text); box-shadow: inset 3px 0 0 var(--accent); }
+  .nav-item.is-current .nav-desc { color: var(--accent-text); opacity: .85; }
+  .nav-item[aria-expanded="true"] .nav-chevron { transform: rotate(180deg); }
+  .nav-children { margin: 2px 0 6px 0; padding-left: 32px; display: flex; flex-direction: column; gap: 2px; }
+  .nav-sub { display: flex; align-items: center; min-height: 40px; padding: 6px 12px; border-radius: var(--radius-sm); color: var(--text-muted); font-size: 15px; line-height: 22px; }
+  .nav-sub:hover { background: var(--sunken); color: var(--text); }
+  .nav-sub.is-current { background: var(--accent-soft); color: var(--accent-text); font-weight: 500; box-shadow: inset 3px 0 0 var(--accent); }
+
+  .crumb-link { color: var(--text-muted); }
+  .crumb-link:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--control-h); padding: 0 16px; border-radius: var(--radius-md); font-size: 15px; line-height: 20px; font-weight: 500; white-space: nowrap; border: 1px solid transparent; transition: background var(--motion) var(--ease), border-color var(--motion) var(--ease), color var(--motion) var(--ease); }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+  .btn-primary { background: var(--accent-strong); color: var(--on-accent); }
+  .btn-primary:hover:not(:disabled) { background: #105155; }
+  .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+  .btn-secondary:hover:not(:disabled) { background: var(--sunken); }
+  .btn-ghost { background: transparent; color: var(--accent-text); }
+  .btn-ghost:hover:not(:disabled) { background: var(--accent-soft); }
+  .btn-quiet { background: transparent; color: var(--text-muted); }
+  .btn-quiet:hover:not(:disabled) { background: var(--sunken); color: var(--text); }
+  .btn-danger { background: var(--danger-strong); color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #951d14; }
+  .btn-danger-outline { background: var(--surface); color: var(--danger); border-color: var(--danger); }
+  .btn-danger-outline:hover:not(:disabled) { background: var(--danger-soft); }
+  .btn-sm { min-height: 40px; padding: 0 12px; font-size: 14px; }
+  .btn-icon { width: var(--control-h); padding: 0; }
+  @media (pointer: coarse) { .btn-sm { min-height: 44px; } }
+
+  /* Chips */
+  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; font-size: var(--fs-note); line-height: var(--lh-note); font-weight: 500; background: var(--sunken); color: var(--text); white-space: nowrap; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex: none; }
+  .chip-success { background: var(--success-soft); color: var(--success); }
+  .chip-warning { background: var(--warning-soft); color: var(--warning); }
+  .chip-danger { background: var(--danger-soft); color: var(--danger); }
+  .chip-info { background: var(--info-soft); color: var(--info); }
+  .chip-accent { background: var(--accent-soft); color: var(--accent-text); }
+  .chip-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--text-muted); }
+  .count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1; background: var(--accent-strong); color: #fff; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 24px 0; }
+  .card-body { padding: 20px 24px 24px; }
+  @media (max-width: 1023px) { .card-head { padding: 16px 16px 0; } .card-body { padding: 16px; } }
+
+  /* Help disclosure */
+  .help { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+  .help > summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 14px; font-size: 15px; font-weight: 500; color: var(--accent-text); border-radius: var(--radius-md); }
+  .help > summary::-webkit-details-marker { display: none; }
+  .help > summary:hover { background: var(--sunken); }
+  .help[open] > summary { border-bottom: 1px solid var(--border); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .help .help-body { padding: 14px 16px 16px; font-size: 15px; line-height: 24px; color: var(--text); }
+  .help .help-body p + p, .help .help-body ol + p { margin-top: 8px; }
+  .help .help-body ol { list-style: decimal; padding-left: 22px; display: grid; gap: 4px; }
+  .help kbd { font: 500 12px/1 var(--font-sans); padding: 3px 6px; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 6px; background: var(--surface); color: var(--text); }
+
+  /* Fields */
+  .field { display: grid; gap: 6px; align-content: start; }
+  .label { font-size: 15px; line-height: 22px; font-weight: 500; color: var(--text); }
+  .label .req { color: var(--danger); font-weight: 600; margin-left: 2px; }
+  .label .opt { color: var(--text-muted); font-weight: 400; margin-left: 6px; font-size: 14px; }
+  .hint { font-size: var(--fs-detail); line-height: var(--lh-detail); color: var(--text-muted); }
+  .input { width: 100%; min-height: var(--control-h); padding: 0 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); color: var(--text); font-size: 16px; line-height: 24px; }
+  .input::placeholder { color: var(--text-faint); }
+  .input:hover { border-color: var(--text-faint); }
+  .input:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--focus); }
+  textarea.input { padding: 10px 14px; min-height: 112px; resize: vertical; }
+  .input[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+  .error { display: flex; align-items: flex-start; gap: 6px; font-size: var(--fs-detail); line-height: var(--lh-detail); color: var(--danger); font-weight: 500; }
+  .select-wrap { position: relative; }
+  .select-wrap .input { appearance: none; padding-right: 40px; }
+  .select-wrap > svg { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); }
+  .checkbox { appearance: none; width: 20px; height: 20px; border: 1.5px solid var(--border-strong); border-radius: 5px; background: var(--surface); display: inline-grid; place-content: center; flex: none; cursor: pointer; }
+  .checkbox:checked { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .checkbox:checked::after { content: ""; width: 10px; height: 6px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+  .checkbox:indeterminate { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .checkbox:indeterminate::after { content: ""; width: 10px; height: 2px; background: #fff; }
+  .check-target { display: inline-grid; place-items: center; width: 44px; height: 44px; margin: -12px; }
+
+  /* Stepper */
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+  .step-n { width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; font-size: 14px; font-weight: 600; flex: none; background: var(--sunken); color: var(--text-muted); }
+  .step.is-active { border-color: var(--accent-soft-border); background: var(--accent-soft); }
+  .step.is-active .step-n { background: var(--accent-strong); color: #fff; }
+  .step.is-done .step-n { background: var(--success-soft); color: var(--success); }
+  @media (max-width: 767px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Menu */
+  .menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 272px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 6px; z-index: 60; }
+  .menu-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 15px; color: var(--text); text-align: left; }
+  .menu-item:hover { background: var(--sunken); }
+  .menu-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+  .menu-label { padding: 8px 12px 4px; font-size: var(--fs-note); color: var(--text-muted); }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 2px; gap: 2px; background: var(--surface); }
+  .seg button { min-height: 32px; padding: 0 10px; border-radius: 4px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); }
+
+  /* Dialog */
+  dialog.dlg { position: fixed; inset: 0; margin: auto; max-height: calc(100dvh - 32px); overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--raised); color: var(--text); padding: 0; width: min(560px, calc(100vw - 32px)); box-shadow: var(--shadow-lg); }
+  dialog.dlg::backdrop { background: rgba(10, 16, 16, .55); }
+  dialog.dlg .dlg-body { padding: 24px 24px 8px; }
+  dialog.dlg .dlg-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; padding: 16px 24px 24px; }
+  @media (max-width: 639px) { dialog.dlg .dlg-actions { flex-direction: column-reverse; } dialog.dlg .dlg-actions .btn { width: 100%; } }
+
+  /* Progress */
+  .progress { height: 8px; border-radius: 999px; background: var(--sunken); overflow: hidden; }
+  .progress > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
+  /* Avatar */
+  .avatar { display: inline-grid; place-items: center; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-weight: 600; flex: none; }
+
+  /* Sticky action bars */
+  .action-bar { position: sticky; bottom: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--border); margin: 0 calc(-1 * var(--space-page)); padding: 12px var(--space-page); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  @media (max-width: 1023px) { :root { --space-page: 16px; } }
+  .reduced-motion-note { display: none; }
+}
+
+@layer components {
+  .fieldset { display: grid; gap: 20px; padding: 24px; border-top: 1px solid var(--border); }
+  .fieldset:first-of-type { border-top: 0; }
+  .fieldset > legend { float: left; width: 100%; margin-bottom: 4px; }
+  @media (max-width: 1023px) { .fieldset { padding: 16px; } }
+  .summary { border: 1px solid var(--danger); background: var(--danger-soft); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; gap: 12px; }
+  .summary ul { display: grid; gap: 4px; margin-top: 6px; }
+  .summary a { color: var(--danger); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+  .preview-card { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--surface); }
+  .poster { aspect-ratio: 3 / 4; background: repeating-linear-gradient(135deg, var(--sunken) 0 10px, var(--surface) 10px 20px); display: grid; place-items: center; color: var(--text-muted); font-size: var(--fs-detail); text-align: center; padding: 16px; }
+  .upload { border: 1.5px dashed var(--border-strong); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; background: var(--surface); }
+  .upload:hover { border-color: var(--accent); background: var(--accent-soft); }
+}
+</style>
+</head>
+<body class="min-h-dvh bg-bg text-text">
+<a href="#main" class="skip-link">Aller au contenu</a>
+<div class="flex min-h-dvh">
+  <div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden lg:hidden" aria-hidden="true"></div>
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 lg:h-dvh lg:self-start flex flex-col bg-surface border-r border-border transition-transform" aria-label="Navigation principale">
+    <div class="flex items-center gap-3 px-4 h-16 border-b border-border shrink-0">
+      <span class="avatar size-9 bg-accent-strong! text-on-accent! text-[13px] tracking-wide" aria-hidden="true">LBT</span>
+      <div class="min-w-0 leading-tight">
+        <div class="font-semibold text-[15px] truncate">Le Bon Tempérament</div>
+        <div class="text-note text-muted">Administration</div>
+      </div>
+      <button type="button" id="close-nav" class="btn btn-quiet btn-icon ml-auto lg:hidden" aria-label="Fermer la navigation"><i data-lucide="x" class="size-5" aria-hidden="true"></i></button>
+    </div>
+    <nav class="flex-1 overflow-y-auto px-3 py-4">
+      <ul class="flex flex-col gap-1"><li>
+      <a href="accueil.html" 
+        class="nav-item  " data-nav="accueil" title="Ce qui vous attend cette semaine">
+        <i data-lucide="house" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Accueil</span>
+          <span class="nav-desc block text-note text-muted truncate">Ce qui vous attend cette semaine</span>
+        </span>
+        
+      </a></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-campagne"
+        class="nav-item  " data-nav="campagne" title="Préparer et publier la page des 40 ans">
+        <i data-lucide="cake" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Campagne 40 ans</span>
+          <span class="nav-desc block text-note text-muted truncate">Préparer et publier la page des 40 ans</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-campagne" class="nav-children hidden"><li><a href="#" class="nav-sub " >Vue d'ensemble et publication</a></li><li><a href="#" class="nav-sub " >Contenu de la page</a></li><li><a href="#" class="nav-sub " >Témoignages</a></li></ul></li><li>
+      <button type="button" aria-expanded="true" aria-controls="nav-concerts"
+        class="nav-item is-open " data-nav="concerts" title="Ce que le public voit sur le site">
+        <i data-lucide="music-2" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Concerts et site public</span>
+          <span class="nav-desc block text-note text-muted truncate">Ce que le public voit sur le site</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-concerts" class="nav-children "><li><a href="nouveau-concert.html" class="nav-sub is-current" aria-current="page">Concerts et tournées</a></li><li><a href="#" class="nav-sub " >Histoires de concerts</a></li><li><a href="#" class="nav-sub " >Vidéos</a></li></ul></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-saison"
+        class="nav-item  " data-nav="saison" title="Partitions, répétitions et événements">
+        <i data-lucide="calendar-days" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Saison des membres</span>
+          <span class="nav-desc block text-note text-muted truncate">Partitions, répétitions et événements</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-saison" class="nav-children hidden"><li><a href="#" class="nav-sub " >Partitions et documents</a></li><li><a href="#" class="nav-sub " >Répétitions</a></li><li><a href="#" class="nav-sub " >Événements</a></li></ul></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-membres"
+        class="nav-item  " data-nav="membres" title="Qui fait partie de l'association">
+        <i data-lucide="users" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Membres et accès</span>
+          <span class="nav-desc block text-note text-muted truncate">Qui fait partie de l'association</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-membres" class="nav-children hidden"><li><a href="membres.html" class="nav-sub " >Membres</a></li><li><a href="#" class="nav-sub " >Liste de diffusion</a></li></ul></li><li>
+      <button type="button" aria-expanded="false" aria-controls="nav-association"
+        class="nav-item  " data-nav="association" title="Comptes rendus du conseil d'administration">
+        <i data-lucide="landmark" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6 truncate">Association</span>
+          <span class="nav-desc block text-note text-muted truncate">Comptes rendus du conseil d'administration</span>
+        </span>
+        <i data-lucide="chevron-down" class="size-4 shrink-0 mt-1 text-faint nav-chevron" aria-hidden="true"></i>
+      </button><ul id="nav-association" class="nav-children hidden"><li><a href="#" class="nav-sub " >Comptes rendus du CA</a></li></ul></li></ul>
+    </nav>
+    <div class="shrink-0 border-t border-border p-3">
+      <a href="#" class="nav-item">
+        <i data-lucide="external-link" class="size-5 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span class="min-w-0 flex-1">
+          <span class="block text-body font-medium leading-6">Voir le site public</span>
+          <span class="nav-desc block text-note text-muted">lebontemperament.com, dans un nouvel onglet</span>
+        </span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <header class="sticky top-0 z-30 h-16 flex items-center gap-2 lg:gap-4 px-4 lg:px-8 border-b border-border bg-bg/85 backdrop-blur">
+      <button type="button" id="open-nav" class="btn btn-quiet btn-icon lg:hidden -ml-2" aria-label="Ouvrir la navigation" aria-controls="sidebar" aria-expanded="false"><i data-lucide="menu" class="size-6" aria-hidden="true"></i></button>
+      <nav aria-label="Vous êtes ici" class="min-w-0 flex items-center gap-2 text-detail">
+        <span class="text-muted shrink-0 max-sm:hidden">Vous êtes ici :</span>
+        <ol class="flex items-center gap-1.5 min-w-0"><li class="flex items-center gap-1.5 min-w-0 max-lg:hidden"><a href="#" class="crumb-link truncate">Concerts et site public</a><i data-lucide="chevron-right" class="size-4 shrink-0 text-faint" aria-hidden="true"></i></li><li class="flex items-center gap-1.5 min-w-0 "><a href="#" class="crumb-link truncate">Concerts et tournées</a><i data-lucide="chevron-right" class="size-4 shrink-0 text-faint" aria-hidden="true"></i></li><li class="flex items-center gap-1.5 min-w-0 "><span aria-current="page" class="font-medium text-text truncate">Nouveau concert</span></li></ol>
+      </nav>
+      <div class="ml-auto flex items-center gap-1 lg:gap-2">
+        <a href="#" class="btn btn-quiet btn-sm max-lg:hidden" title="Signaler un problème"><i data-lucide="life-buoy" class="size-5" aria-hidden="true"></i>Aide</a>
+        <div class="relative">
+          <button type="button" id="account-btn" class="btn btn-quiet pl-1.5 pr-2 gap-2" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu">
+            <span class="relative">
+              <span class="avatar size-9 text-[13px]" aria-hidden="true">CM</span>
+              <span class="absolute -top-1 -right-1 count min-w-[18px] h-[18px] px-1 text-[11px]" aria-hidden="true">2</span>
+            </span>
+            <span class="max-lg:hidden text-[15px] font-medium">Camille Martin</span>
+            <span class="sr-only">Compte de Camille Martin, 2 messages non lus</span>
+            <i data-lucide="chevron-down" class="size-4 text-muted max-lg:hidden" aria-hidden="true"></i>
+          </button>
+          <div id="account-menu" role="menu" class="menu hidden" aria-labelledby="account-btn">
+            <div class="px-3 pt-2 pb-3">
+              <div class="font-medium">Camille Martin</div>
+              <div class="text-detail text-muted">Administratrice · camille.martin@example.org</div>
+            </div>
+            <div class="menu-sep"></div>
+            <a href="#" role="menuitem" class="menu-item"><i data-lucide="mail" class="size-5 text-muted" aria-hidden="true"></i><span class="flex-1">Messages</span><span class="count">2</span></a>
+            <a href="#" role="menuitem" class="menu-item"><i data-lucide="life-buoy" class="size-5 text-muted" aria-hidden="true"></i>Signaler un problème</a>
+            <div class="menu-sep"></div>
+            <div class="menu-label">Apparence</div>
+            <div class="menu-item" role="none">
+              <i data-lucide="sun-moon" class="size-5 text-muted" aria-hidden="true"></i><span class="flex-1">Thème</span>
+              <div class="seg" role="group" aria-label="Thème">
+                <button type="button" role="menuitemradio" data-theme-set="light" aria-pressed="true">Clair</button>
+                <button type="button" role="menuitemradio" data-theme-set="dark" aria-pressed="false">Sombre</button>
+              </div>
+            </div>
+            <div class="menu-item" role="none">
+              <i data-lucide="rows-3" class="size-5 text-muted" aria-hidden="true"></i><span class="flex-1">Listes</span>
+              <div class="seg" role="group" aria-label="Densité des listes">
+                <button type="button" role="menuitemradio" data-density-set="comfortable" aria-pressed="true">Aérées</button>
+                <button type="button" role="menuitemradio" data-density-set="compact" aria-pressed="false">Compactes</button>
+              </div>
+            </div>
+            <div class="menu-sep"></div>
+            <a href="#" role="menuitem" class="menu-item"><i data-lucide="log-out" class="size-5 text-muted" aria-hidden="true"></i>Se déconnecter</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="flex-1 w-full max-w-[1120px] px-4 py-6 lg:px-8 lg:py-8" style="--space-page: 16px" tabindex="-1">
+
+<div class="flex flex-col gap-2 mb-6 max-w-[64ch]">
+  <h1>Nouveau concert</h1>
+  <p class="text-muted">Dès que vous l'enregistrez, le concert apparaît sur le site public dans « Prochains concerts ». Vous pourrez le modifier jusqu'au jour J.</p>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] items-start">
+  <form class="min-w-0" novalidate aria-labelledby="form-h" id="concert-form">
+    <h2 id="form-h" class="sr-only">Détails du concert</h2>
+
+    <div class="summary mb-6" role="alert" tabindex="-1" id="error-summary">
+      <i data-lucide="circle-alert" class="size-6 text-danger shrink-0 mt-0.5" aria-hidden="true"></i>
+      <div>
+        <p class="font-semibold text-danger">3 champs à corriger avant de créer le concert</p>
+        <ul class="text-[15px]">
+          <li><a href="#date">Date</a> — la date est passée.</li>
+          <li><a href="#lieu">Lieu</a> — indiquez le nom de la salle ou de l'église.</li>
+          <li><a href="#billetterie">Lien de billetterie</a> — le lien doit commencer par https://.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <fieldset class="fieldset">
+        <legend class="text-section">Le concert</legend>
+        <p class="text-detail text-muted -mt-3">Les champs marqués <span class="text-danger font-semibold">*</span> sont obligatoires.</p>
+
+        <div class="field">
+          <label for="titre" class="label">Titre<span class="req" aria-hidden="true">*</span><span class="sr-only"> (obligatoire)</span></label>
+          <input id="titre" class="input" value="Entre terre et ciel" required aria-describedby="titre-hint">
+          <p id="titre-hint" class="hint">Tel qu'il s'affichera sur le site, par exemple « Concert de Noël ».</p>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div class="field">
+            <label for="date" class="label">Date<span class="req" aria-hidden="true">*</span><span class="sr-only"> (obligatoire)</span></label>
+            <div class="relative"><input id="date" class="input pr-11" value="15/09/2026" data-iso="2026-09-15" required inputmode="numeric" placeholder="JJ/MM/AAAA" aria-invalid="true" aria-describedby="date-err date-hint"><i data-lucide="calendar" class="size-5 text-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true"></i></div>
+            <p id="date-err" class="error"><i data-lucide="circle-alert" class="size-4 mt-0.5 shrink-0" aria-hidden="true"></i>La date est passée : un concert à venir doit avoir une date future.</p>
+            <p id="date-hint" class="hint">Nous sommes le 3 octobre 2026.</p>
+          </div>
+          <div class="field">
+            <label for="heure" class="label">Heure<span class="req" aria-hidden="true">*</span><span class="sr-only"> (obligatoire)</span></label>
+            <div class="relative"><input id="heure" class="input pr-11" value="20:30" required inputmode="numeric" placeholder="HH:MM" aria-describedby="heure-hint"><i data-lucide="clock" class="size-5 text-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true"></i></div>
+            <p id="heure-hint" class="hint">Sur 24 heures, par exemple 20:30.</p>
+          </div>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div class="field">
+            <label for="lieu" class="label">Lieu<span class="req" aria-hidden="true">*</span><span class="sr-only"> (obligatoire)</span></label>
+            <input id="lieu" class="input" placeholder="Église Saint-Paul" required aria-invalid="true" aria-describedby="lieu-err lieu-hint">
+            <p id="lieu-err" class="error"><i data-lucide="circle-alert" class="size-4 mt-0.5 shrink-0" aria-hidden="true"></i>Indiquez le lieu : le nom de la salle ou de l'église.</p>
+            <p id="lieu-hint" class="hint">Le public le lira sous le titre, avec la ville.</p>
+          </div>
+          <div class="field">
+            <label for="ville" class="label">Ville<span class="req" aria-hidden="true">*</span><span class="sr-only"> (obligatoire)</span></label>
+            <input id="ville" class="input" value="Strasbourg" required>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend class="text-section">Organisation</legend>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div class="field">
+            <label for="tournee" class="label">Tournée<span class="opt">(facultatif)</span></label>
+            <div class="select-wrap"><select id="tournee" class="input" aria-describedby="tournee-hint"><option selected>Aucune</option><option>Tournée d'automne 2026</option></select><i data-lucide="chevron-down" class="size-4" aria-hidden="true"></i></div>
+            <p id="tournee-hint" class="hint">Rattache le concert à une tournée existante.</p>
+          </div>
+          <div class="field">
+            <label for="type" class="label">Type de concert</label>
+            <div class="select-wrap"><select id="type" class="input" aria-describedby="type-hint"><option selected>Concert</option><option>Concert participatif</option><option>Audition</option><option>Autre</option></select><i data-lucide="chevron-down" class="size-4" aria-hidden="true"></i></div>
+            <p id="type-hint" class="hint">« Participatif » invite le public à chanter avec le chœur.</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend class="text-section">Pour le public</legend>
+        <div class="field">
+          <span class="label" id="affiche-l">Affiche<span class="opt">(facultatif)</span></span>
+          <label for="affiche" class="upload" aria-describedby="affiche-hint">
+            <i data-lucide="image-plus" class="size-6 text-accent" aria-hidden="true"></i>
+            <span class="font-medium text-[15px]">Choisir une image</span>
+            <span class="hint">ou déposez-la ici</span>
+            <input id="affiche" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" aria-labelledby="affiche-l">
+          </label>
+          <p id="affiche-hint" class="hint">JPG, PNG ou WebP, 10 Mo maximum. Format portrait conseillé.</p>
+        </div>
+        <div class="field">
+          <label for="billetterie" class="label">Lien de billetterie<span class="opt">(facultatif)</span></label>
+          <input id="billetterie" type="url" class="input" value="billetterie.example.org/concert" aria-invalid="true" aria-describedby="billet-err billet-hint" inputmode="url">
+          <p id="billet-err" class="error"><i data-lucide="circle-alert" class="size-4 mt-0.5 shrink-0" aria-hidden="true"></i>Le lien doit commencer par https://</p>
+          <p id="billet-hint" class="hint">Affiche un bouton « Réserver » sur le site.</p>
+        </div>
+        <div class="field">
+          <label for="infos" class="label">Informations complémentaires<span class="opt">(facultatif)</span></label>
+          <textarea id="infos" class="input" aria-describedby="infos-hint">Entrée libre, plateau au profit de l'association.</textarea>
+          <p id="infos-hint" class="hint">Tarifs, entrée libre, programme… Quelques lignes suffisent.</p>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="action-bar mt-6">
+      <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+        <a href="#" class="btn btn-quiet self-start sm:self-auto">Annuler et revenir aux concerts</a>
+        <div class="flex items-center gap-3 sm:justify-end">
+          <p class="text-note text-muted max-sm:hidden">Rien n'est publié avant ce bouton.</p>
+          <button type="submit" class="btn btn-primary max-sm:w-full">Créer le concert</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <aside class="xl:sticky xl:top-24 min-w-0 max-xl:order-first" aria-labelledby="preview-h">
+    <details class="help xl:hidden mb-6" id="preview-mobile">
+      <summary><i data-lucide="eye" class="size-5" aria-hidden="true"></i>Voir l'aperçu sur le site public</summary>
+      <div class="help-body" id="preview-slot-mobile"></div>
+    </details>
+    <div class="card max-xl:hidden" id="preview-desktop">
+      <div class="card-head">
+        <div>
+          <h2 id="preview-h" class="text-[17px]! leading-6!">Aperçu sur le site public</h2>
+          <p class="text-detail text-muted mt-1">Se met à jour pendant que vous écrivez.</p>
+        </div>
+      </div>
+      <div class="card-body" id="preview-slot">
+        <div class="preview-card" id="preview">
+          <div class="poster" id="pv-poster">Pas d'affiche<br>pour le moment</div>
+          <div class="p-4">
+            <p class="text-note font-semibold uppercase tracking-wide text-accent-text" id="pv-date">Mardi 15 septembre 2026 · 20 h 30</p>
+            <p class="text-[17px] font-semibold mt-1 leading-6" id="pv-title">Entre terre et ciel</p>
+            <p class="text-detail text-muted mt-1" id="pv-place"><span class="text-danger font-medium">Lieu manquant</span> · Strasbourg</p>
+            <p class="text-detail mt-2" id="pv-info">Entrée libre, plateau au profit de l'association.</p>
+            <span class="inline-flex mt-3 btn btn-primary btn-sm pointer-events-none" id="pv-book" aria-hidden="true">Réserver</span>
+          </div>
+        </div>
+        <p class="text-note text-muted mt-3">Le bouton « Réserver » n'apparaît que si le lien de billetterie est valide.</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+    </main>
+  </div>
+</div>
+<script>
+(function(){
+  var html = document.documentElement;
+  function syncSeg(){
+    var t = html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    document.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.themeSet === t)); });
+    var d = html.getAttribute('data-density') === 'compact' ? 'compact' : 'comfortable';
+    document.querySelectorAll('[data-density-set]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.densitySet === d)); });
+  }
+  function setParam(k, v){ var u = new URL(location.href); if (v) u.searchParams.set(k, v); else u.searchParams.delete(k); history.replaceState(null, '', u); }
+  document.querySelectorAll('[data-theme-set]').forEach(function(b){ b.addEventListener('click', function(){ if (b.dataset.themeSet === 'dark') { html.setAttribute('data-theme','dark'); setParam('theme','dark'); } else { html.removeAttribute('data-theme'); setParam('theme', null); } syncSeg(); }); });
+  document.querySelectorAll('[data-density-set]').forEach(function(b){ b.addEventListener('click', function(){ if (b.dataset.densitySet === 'compact') { html.setAttribute('data-density','compact'); setParam('density','compact'); } else { html.removeAttribute('data-density'); setParam('density', null); } syncSeg(); }); });
+  syncSeg();
+
+  // Account menu
+  var btn = document.getElementById('account-btn'), menu = document.getElementById('account-menu');
+  function closeMenu(){ menu.classList.add('hidden'); btn.setAttribute('aria-expanded','false'); }
+  btn.addEventListener('click', function(){ var open = menu.classList.toggle('hidden') === false; btn.setAttribute('aria-expanded', String(open)); if (open) { var f = menu.querySelector('[role="menuitem"]'); f && f.focus(); } });
+  document.addEventListener('click', function(e){ if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeMenu(); closeNav(); } });
+
+  // Mobile navigation drawer
+  var sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), openBtn = document.getElementById('open-nav');
+  function openNav(){ sb.classList.remove('-translate-x-full'); bd.classList.remove('hidden'); openBtn.setAttribute('aria-expanded','true'); var f = sb.querySelector('a, button'); f && f.focus(); }
+  function closeNav(){ sb.classList.add('-translate-x-full'); bd.classList.add('hidden'); openBtn.setAttribute('aria-expanded','false'); }
+  openBtn.addEventListener('click', openNav);
+  document.getElementById('close-nav').addEventListener('click', function(){ closeNav(); openBtn.focus(); });
+  bd.addEventListener('click', closeNav);
+
+  // Sidebar accordion
+  document.querySelectorAll('.nav-item[aria-expanded]').forEach(function(b){
+    b.addEventListener('click', function(){ var open = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', String(!open)); b.classList.toggle('is-open', !open); document.getElementById(b.getAttribute('aria-controls')).classList.toggle('hidden', open); });
+  });
+
+  lucide.createIcons();
+  
+  // Live preview (title, date, place, infos). Keeps the error state honest: no fake success.
+  var $ = function(id){ return document.getElementById(id); };
+  var jours = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'], mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+  function fmtDate(v, h){ var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v.trim()); if (!m) return 'Date à préciser'; var d = new Date(m[3] + '-' + m[2] + '-' + m[1] + 'T00:00:00'); if (isNaN(d)) return 'Date à préciser'; var t = h ? h.replace(':', ' h ') : ''; return cap(jours[d.getDay()]) + ' ' + d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear() + (t ? ' · ' + t : ''); }
+  function update(){
+    $('pv-title').textContent = $('titre').value || 'Titre du concert';
+    $('pv-date').textContent = fmtDate($('date').value, $('heure').value);
+    var lieu = $('lieu').value.trim(), ville = $('ville').value.trim();
+    $('pv-place').innerHTML = (lieu ? lieu : '<span class="text-danger font-medium">Lieu manquant</span>') + (ville ? ' · ' + ville : '');
+    $('pv-info').textContent = $('infos').value;
+    $('pv-book').style.display = /^https:\/\//.test($('billetterie').value.trim()) ? '' : 'none';
+  }
+  ['titre','date','heure','lieu','ville','infos','billetterie'].forEach(function(id){ $(id).addEventListener('input', update); });
+  update();
+  // On narrow screens the same preview moves into the disclosure.
+  function placePreview(){ var pv = $('preview'); var wide = window.matchMedia('(min-width: 1280px)').matches; (wide ? $('preview-slot') : $('preview-slot-mobile')).prepend(pv); }
+  placePreview(); window.addEventListener('resize', placePreview);
+  $('concert-form').addEventListener('submit', function(e){ e.preventDefault(); $('error-summary').focus(); });
+  
+})();
+</script>
+</body>
+</html>

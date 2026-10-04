@@ -1,0 +1,183 @@
+/* Direction A — « Console ». Design tokens, light default, dark under [data-theme="dark"].
+   One accent (brand teal #1A878D), neutral zinc surfaces, hairline borders.
+   Every colour pair used for text was checked for WCAG AA (≥ 4.5:1 at the size it is used). */
+
+:root {
+  /* Surfaces */
+  --bg: #fafafa; /* page and sidebar */
+  --surface: #ffffff; /* cards, tables, inputs */
+  --raised: #ffffff; /* menus, dialogs, palette, floating bars (with --shadow-raised) */
+  --sunken: #f4f4f5; /* table header, kbd, muted wells */
+  --overlay: rgba(24, 24, 27, 0.4);
+
+  /* Borders (hairlines) */
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8; /* inputs, hover rows */
+
+  /* Text */
+  --text: #18181b;
+  --text-muted: #52525b; /* secondary text, table headers (7.7:1) */
+  --text-faint: #6e6e78; /* hints, kbd, timestamps (≥ 4.5:1 on bg/surface/sunken) */
+  --text-on-accent: #ffffff;
+
+  /* Accent: the brand teal, used sparingly */
+  --accent: #1a878d; /* icons, large text, selection outline, focus ring */
+  --accent-text: #156c71; /* small teal text (6.15:1 on white) */
+  --accent-strong: #156c71; /* filled primary button (white text 6.15:1) */
+  --accent-strong-hover: #105155;
+  --accent-soft: color-mix(
+    in oklab,
+    #1a878d 10%,
+    #ffffff
+  ); /* selected rows, active nav */
+  --accent-soft-strong: color-mix(in oklab, #1a878d 18%, #ffffff);
+  --focus: #1a878d;
+
+  /* Semantic colours: only for meaning (status, validation), never decoration */
+  --success: #15803d;
+  --success-text: #166534;
+  --success-soft: #dcfce7;
+  --warning: #a16207;
+  --warning-text: #854d0e;
+  --warning-soft: #fef3c7;
+  --danger: #b91c1c;
+  --danger-text: #991b1b;
+  --danger-soft: #fee2e2;
+  --danger-strong: #b91c1c;
+  --danger-strong-hover: #991b1b;
+  --info: #1d4ed8;
+  --info-text: #1e40af;
+  --info-soft: #dbeafe;
+
+  /* Elevation */
+  --shadow-raised:
+    0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-bar: 0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.12);
+
+  /* Type: Inter, five steps */
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --text-2xs: 11px;
+  --leading-2xs: 16px; /* group labels (uppercase, 500, +0.04em), kbd */
+  --text-xs: 12px;
+  --leading-xs: 16px; /* meta, badges, hints, breadcrumb */
+  --text-sm: 13px;
+  --leading-sm: 20px; /* data, table cells, nav, body (default) */
+  --text-md: 14px;
+  --leading-md: 20px; /* form labels, dialog body, emphasised rows */
+  --text-lg: 18px;
+  --leading-lg: 24px; /* page title (one per page), inbox counts */
+
+  /* Spacing: 4 px grid (Tailwind --spacing stays 0.25rem) */
+  --row-h: 36px; /* compact table / list row on desktop */
+  --row-h-touch: 44px; /* on touch / narrow screens */
+  --topbar-h: 44px;
+  --sidebar-w: 232px;
+  --sidebar-rail-w: 52px;
+  --panel-w: 384px;
+
+  /* Radius: one scale */
+  --radius-sm: 4px; /* kbd, checkboxes, chips */
+  --radius-md: 6px; /* buttons, inputs, nav items */
+  --radius-lg: 8px; /* cards, dialogs, panels */
+  --radius-xl: 12px; /* palette */
+
+  /* Motion: functional only */
+  --dur-fast: 120ms;
+  --dur: 160ms;
+  --dur-slow: 200ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0e0f11;
+  --surface: #151618;
+  --raised: #1b1c1f;
+  --sunken: #121315;
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --border: #26282c;
+  --border-strong: #35383d;
+
+  --text: #ededef;
+  --text-muted: #a1a1aa;
+  --text-faint: #86868e;
+  --text-on-accent: #ffffff;
+
+  --accent: #26a5ad; /* the website's dark-scale 500 */
+  --accent-text: #26a5ad; /* 6.1:1 on --surface */
+  --accent-strong: #156c71; /* same filled teal, white text 6.15:1 */
+  --accent-strong-hover: #187a80;
+  --accent-soft: color-mix(in oklab, #26a5ad 14%, #151618);
+  --accent-soft-strong: color-mix(in oklab, #26a5ad 24%, #151618);
+  --focus: #26a5ad;
+
+  --success: #4ade80;
+  --success-text: #4ade80;
+  --success-soft: color-mix(in oklab, #4ade80 14%, #151618);
+  --warning: #fbbf24;
+  --warning-text: #fbbf24;
+  --warning-soft: color-mix(in oklab, #fbbf24 14%, #151618);
+  --danger: #f87171;
+  --danger-text: #f87171;
+  --danger-soft: color-mix(in oklab, #f87171 14%, #151618);
+  --danger-strong: #dc2626;
+  --danger-strong-hover: #b91c1c;
+  --info: #60a5fa;
+  --info-text: #60a5fa;
+  --info-soft: color-mix(in oklab, #60a5fa 14%, #151618);
+
+  --shadow-raised: 0 0 0 1px var(--border), 0 12px 32px rgba(0, 0, 0, 0.55);
+  --shadow-bar: 0 0 0 1px var(--border-strong), 0 16px 40px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+/* Base: the few global rules the tokens imply */
+html {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  font-feature-settings: "cv11", "ss03";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keyboard-first: one visible focus ring everywhere */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+[aria-invalid="true"]:focus-visible {
+  outline-color: var(--danger);
+}
+
+/* Functional motion only; none when the user asks for none */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Touch targets grow on narrow screens */
+@media (max-width: 767px) {
+  :root {
+    --row-h: var(--row-h-touch);
+    --topbar-h: 52px;
+  }
+}
