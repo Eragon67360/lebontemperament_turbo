@@ -49,7 +49,7 @@ export default defineConfig({
       testDir: "./tests/admin",
       use: {
         baseURL:
-          process.env.ADMIN_URL ?? "https://admin-dev.lebontemperament.com",
+          process.env.ADMIN_URL || "https://admin-dev.lebontemperament.com",
         storageState: ".auth/admin.json",
         extraHTTPHeaders: bypassHeaders,
       },
