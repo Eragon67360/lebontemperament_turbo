@@ -1,5 +1,6 @@
 import { PageShell } from "@/components/layouts/PageShell";
 import { DriveFoldersSection } from "@/components/travail/DriveFoldersSection";
+import { DriveSyncSection } from "@/components/travail/DriveSyncSection";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -72,6 +73,7 @@ export default async function TravailPage() {
       )}
 
       <DriveFoldersSection />
+      <DriveSyncSection />
     </PageShell>
   );
 }

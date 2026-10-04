@@ -1,4 +1,4 @@
-// Run: deno test --node-modules-dir=none supabase/functions/_shared/
+// Run: npx -y deno test --node-modules-dir=none --allow-env=INTERNAL_FUNCTION_SECRET supabase/functions/_shared/
 import {
   assert,
   assertEquals,
@@ -6,6 +6,7 @@ import {
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   requireInternalSecret,
+  requireInternalSecretOrAdmin,
   requireSuperadmin,
   safeEqual,
 } from "./caller-auth.ts";
@@ -96,3 +97,75 @@ Deno.test("superadmin: only a signed-in superadmin passes", async () => {
   assertEquals(await status({ Authorization: "Bearer token-admin" }), 403);
   assertEquals(await status({ Authorization: "Bearer token-super" }), 200);
 });
+
+Deno.test(
+  "internal secret or admin: cron secret, admin session, or nothing else",
+  async () => {
+    Deno.env.set("INTERNAL_FUNCTION_SECRET", SECRET);
+    const admin = fakeAdmin({
+      "token-super": { id: "u1", role: "superadmin" },
+      "token-admin": { id: "u2", role: "admin" },
+      "token-member": { id: "u3", role: "user" },
+    });
+    const call = async (headers: Record<string, string>) => {
+      const result = await requireInternalSecretOrAdmin(
+        request(headers),
+        admin,
+      );
+      return result instanceof Response ? result.status : result;
+    };
+
+    // The cron: secret only (it also sends the anon key as bearer).
+    assertEquals(await call({ "x-internal-secret": SECRET }), {
+      kind: "internal",
+    });
+    assertEquals(
+      await call({
+        "x-internal-secret": SECRET,
+        Authorization: "Bearer public-anon-key",
+      }),
+      { kind: "internal" },
+    );
+    // The admin app: the user's session, verified through Auth.
+    assertEquals(await call({ Authorization: "Bearer token-admin" }), {
+      kind: "admin",
+      userId: "u2",
+    });
+    assertEquals(await call({ Authorization: "Bearer token-super" }), {
+      kind: "admin",
+      userId: "u1",
+    });
+    // Refusals.
+    assertEquals(await call({}), 401);
+    assertEquals(await call({ Authorization: "Bearer public-anon-key" }), 401);
+    assertEquals(await call({ Authorization: "Bearer token-member" }), 403);
+    assertEquals(await call({ "x-internal-secret": "nope" }), 401);
+    // A wrong secret never falls back to the session.
+    assertEquals(
+      await call({
+        "x-internal-secret": "nope",
+        Authorization: "Bearer token-admin",
+      }),
+      401,
+    );
+  },
+);
+
+Deno.test(
+  "internal secret or admin: fails closed when the secret isn't configured",
+  async () => {
+    Deno.env.delete("INTERNAL_FUNCTION_SECRET");
+    const admin = fakeAdmin({ "token-admin": { id: "u2", role: "admin" } });
+    const result = await requireInternalSecretOrAdmin(
+      request({ "x-internal-secret": "anything" }),
+      admin,
+    );
+    assertEquals(result instanceof Response ? result.status : 200, 500);
+    // The session path still works without the secret configured.
+    const viaSession = await requireInternalSecretOrAdmin(
+      request({ Authorization: "Bearer token-admin" }),
+      admin,
+    );
+    assertEquals(viaSession, { kind: "admin", userId: "u2" });
+  },
+);
