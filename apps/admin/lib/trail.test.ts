@@ -111,6 +111,14 @@ assert.equal(
     { label: "Sopranes" },
   ]);
   assert.equal(trail(drivePath, input)[3]?.label, "Groupe…");
+  // The index has loaded and does not know the id: say so, like the page.
+  const missing = trail(drivePath, {
+    ...input,
+    programName: null,
+    groupName: null,
+  });
+  assert.equal(missing[2]?.label, "Programme introuvable");
+  assert.equal(missing[3]?.label, "Groupe introuvable");
 }
 
 // A page outside the tree (the design-system lab) still says where it is.

@@ -17,6 +17,10 @@ import { NextResponse } from "next/server";
 const PAGE_SIZE = 1000;
 const MAX_PAGES = 6;
 const APPLIES_SHOWN = 5;
+// Only what syncStatus() reads: when a run started and finished, what it was
+// and how it ended. No trigger, no error text (the run history has its own
+// route for those).
+const SYNC_RUN_COLUMNS = "started_at, finished_at, mode, status";
 
 export async function GET() {
   try {
@@ -49,22 +53,33 @@ export async function GET() {
       truncated = page === MAX_PAGES - 1;
     }
 
-    const [roots, applies] = await Promise.all([
+    // The last applies decide the tone; the last successful apply, queried on
+    // its own, keeps « Dernière mise à jour réussie » visible however many
+    // applies failed since.
+    const [roots, applies, lastSuccess] = await Promise.all([
       supabase
         .from("drive_folders")
         .select("slug, label, display_order")
         .order("display_order"),
       supabase
         .from("drive_sync_runs")
-        .select("started_at, finished_at, mode, trigger, status, error")
+        .select(SYNC_RUN_COLUMNS)
         .eq("mode", "apply")
         .order("started_at", { ascending: false })
         .limit(APPLIES_SHOWN),
+      supabase
+        .from("drive_sync_runs")
+        .select(SYNC_RUN_COLUMNS)
+        .eq("mode", "apply")
+        .eq("status", "success")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
-    if (roots.error || applies.error) {
+    if (roots.error || applies.error || lastSuccess.error) {
       console.error(
         "Error fetching Drive roots or sync runs:",
-        roots.error ?? applies.error,
+        roots.error ?? applies.error ?? lastSuccess.error,
       );
       return NextResponse.json(
         { error: "Failed to fetch the Drive index" },
@@ -77,6 +92,7 @@ export async function GET() {
       truncated,
       roots: roots.data,
       applies: applies.data,
+      lastSuccess: lastSuccess.data,
     });
   } catch (error) {
     console.error("Error in GET /api/drive-index:", error);

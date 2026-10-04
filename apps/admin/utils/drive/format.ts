@@ -110,13 +110,21 @@ export function driveItemUrl(node: Pick<DriveIndexNode, "drive_id" | "kind">) {
 const plural = (n: number, one: string, many: string) =>
   `${n} ${n > 1 ? many : one}`;
 
-/** « 3 dossiers · 24 documents »; « Vide » when there is nothing below. */
-export function describeFolderContents(stats: {
-  folders: number;
-  documents: number;
-}): string {
+/**
+ * « 3 dossiers · 24 documents »; « Vide » when there is nothing below. A
+ * root lists its folders as programmes: « 3 programmes · 2 documents ».
+ */
+export function describeFolderContents(
+  stats: { folders: number; documents: number },
+  folderNoun: { one: string; many: string } = {
+    one: "dossier",
+    many: "dossiers",
+  },
+): string {
   const parts = [
-    stats.folders > 0 ? plural(stats.folders, "dossier", "dossiers") : null,
+    stats.folders > 0
+      ? plural(stats.folders, folderNoun.one, folderNoun.many)
+      : null,
     stats.documents > 0
       ? plural(stats.documents, "document", "documents")
       : null,
@@ -128,9 +136,7 @@ export interface SyncRunLike {
   started_at: string;
   finished_at: string | null;
   mode: string;
-  trigger: string;
   status: string;
-  error: string | null;
 }
 
 export type SyncTone = "success" | "warning" | "danger" | "info";
@@ -146,13 +152,19 @@ export interface SyncStatus {
 /**
  * What the page says about the index, from the runs (any order): when it was
  * last updated (the last apply that finished), and whether the latest apply
- * failed. Dry runs never change the index, so they don't count.
+ * failed. Dry runs never change the index, so they don't count. `lastSuccess`
+ * is the last successful apply when the caller knows it (the route reads it
+ * separately, so the date survives any number of failed applies since); else
+ * it is looked for among `runs`.
  */
-export function syncStatus(runs: readonly SyncRunLike[]): SyncStatus {
+export function syncStatus(
+  runs: readonly SyncRunLike[],
+  lastSuccess: SyncRunLike | null = null,
+): SyncStatus {
   const applies = runs
     .filter((run) => run.mode === "apply")
     .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at));
-  const lastSuccess = applies.find((run) => run.status === "success");
+  lastSuccess ??= applies.find((run) => run.status === "success") ?? null;
   const latest = applies[0];
   const appliedAt = lastSuccess?.finished_at ?? lastSuccess?.started_at ?? null;
 

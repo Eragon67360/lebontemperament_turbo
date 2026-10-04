@@ -70,6 +70,13 @@ assert.equal(
   describeFolderContents({ folders: 0, documents: 24 }),
   "24 documents",
 );
+assert.equal(
+  describeFolderContents(
+    { folders: 3, documents: 2 },
+    { one: "programme", many: "programmes" },
+  ),
+  "3 programmes · 2 documents",
+);
 
 // --- Sync status: only applies count; the latest decides the tone ---
 {
@@ -82,9 +89,7 @@ assert.equal(
     started_at,
     finished_at,
     mode,
-    trigger: "cron",
     status,
-    error: null,
   });
 
   assert.deepEqual(syncStatus([]), {
@@ -118,6 +123,19 @@ assert.equal(
     syncStatus([run("2026-10-03T01:30:00Z", "apply", "running", null)]).tone,
     "warning",
   );
+
+  // The route reads the last successful apply on its own: the date stays even
+  // when every apply in the window failed.
+  const window = ["03", "04", "05", "06", "07"].map((day) =>
+    run(`2026-10-${day}T01:30:00Z`, "apply", "error"),
+  );
+  assert.equal(syncStatus(window).appliedAt, null);
+  const kept = syncStatus(
+    window,
+    run("2026-09-28T01:30:00Z", "apply", "success", "2026-09-28T01:31:00Z"),
+  );
+  assert.equal(kept.tone, "danger");
+  assert.equal(kept.appliedAt, "2026-09-28T01:31:00Z");
 }
 
 console.log("utils/drive/format.test.ts: ok");

@@ -36,6 +36,8 @@ export function useShellTrail(): TrailItem[] {
     const nodes = driveIndex.data?.nodes;
     if (!nodes || !programId)
       return { programName: undefined, groupName: undefined };
+    // null once the index has loaded without the id: the crumb then reads
+    // « Programme introuvable », like the page.
     const nameOf = (id?: string) =>
       id
         ? (nodes.find((node) => node.drive_id === id)?.name ?? null)

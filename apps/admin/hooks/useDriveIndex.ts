@@ -11,6 +11,8 @@ export interface DriveIndexResponse {
   roots: DriveRootFolder[];
   /** The last applies (the runs that write the index), newest first. */
   applies: SyncRunLike[];
+  /** The last apply that succeeded, however old; null if none ever did. */
+  lastSuccess: SyncRunLike | null;
 }
 
 /**

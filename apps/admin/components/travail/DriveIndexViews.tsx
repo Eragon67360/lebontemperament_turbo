@@ -13,7 +13,11 @@ import {
 } from "@/components/ui/data-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDriveIndex } from "@/hooks/useDriveIndex";
-import { driveItemUrl, syncStatus } from "@/utils/drive/format";
+import {
+  describeFolderContents,
+  driveItemUrl,
+  syncStatus,
+} from "@/utils/drive/format";
 import {
   buildDriveTree,
   childrenOf,
@@ -73,9 +77,16 @@ export function DriveIndexOverview() {
       <DriveSyncSection
         status={
           query.data ? (
-            <DriveSyncStatusLine status={syncStatus(query.data.applies)} />
+            <DriveSyncStatusLine
+              status={syncStatus(query.data.applies, query.data.lastSuccess)}
+            />
           ) : query.isLoading ? (
             <Skeleton className="h-7 w-72 max-w-full" />
+          ) : query.isError ? (
+            // Not role="alert": the programmes' ErrorState below already is.
+            <p className="text-detail text-danger-foreground">
+              L&apos;état de l&apos;index n&apos;a pas pu être lu.
+            </p>
           ) : null
         }
       />
@@ -134,10 +145,17 @@ export function DriveIndexOverview() {
                     >
                       {section.label}
                     </h3>
-                    <p className="text-note text-muted-foreground">
-                      {section.programmes.length} programme
-                      {section.programmes.length > 1 ? "s" : ""}
-                    </p>
+                    {!empty && (
+                      <p className="text-note text-muted-foreground">
+                        {describeFolderContents(
+                          {
+                            folders: section.programmes.length,
+                            documents: section.documents.length,
+                          },
+                          { one: "programme", many: "programmes" },
+                        )}
+                      </p>
+                    )}
                   </div>
                   {empty ? (
                     <p className="text-detail text-muted-foreground">

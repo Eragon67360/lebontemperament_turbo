@@ -61,7 +61,13 @@ export function DriveSyncStatusLine({ status }: { status: SyncStatus }) {
 
 function OpenInDrive({ node }: { node: DriveIndexNode }) {
   return (
-    <Button variant="ghost" size="sm" asChild className="shrink-0">
+    // Above a folder row's stretched link, so it stays its own target.
+    <Button
+      variant="ghost"
+      size="sm"
+      asChild
+      className="relative z-10 shrink-0"
+    >
       <a href={driveItemUrl(node)} target="_blank" rel="noopener noreferrer">
         <ExternalLink aria-hidden />
         <span>
@@ -74,9 +80,10 @@ function OpenInDrive({ node }: { node: DriveIndexNode }) {
 }
 
 /**
- * A programme or a group: its name links to the next level; the facts say
- * what is inside. « Ouvrir dans Drive » works for whoever the folder is
- * shared with.
+ * A programme or a group: its name links to the next level and the link is
+ * stretched over the whole row (a 44 px target on touch); the facts say what
+ * is inside. « Ouvrir dans Drive » works for whoever the folder is shared
+ * with.
  */
 export function FolderRow({
   node,
@@ -89,7 +96,7 @@ export function FolderRow({
 }) {
   const modified = formatModifiedDate(stats.lastModified);
   return (
-    <li className="flex min-h-(--row-h) flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+    <li className="relative flex min-h-(--row-h) flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div
           className="bg-primary-soft text-primary-text grid size-10 shrink-0 place-items-center rounded-md"
@@ -100,7 +107,7 @@ export function FolderRow({
         <div className="min-w-0">
           <Link
             href={href}
-            className="text-foreground hover:text-primary-text inline-flex min-h-6 items-center gap-1 font-medium break-words underline-offset-4 hover:underline"
+            className="text-foreground hover:text-primary-text inline-flex min-h-6 items-center gap-1 font-medium break-words underline-offset-4 after:absolute after:inset-0 hover:underline"
           >
             {node.name}
             <ChevronRight className="size-4 shrink-0" aria-hidden />
@@ -145,12 +152,11 @@ function DocumentIcon({ node }: { node: DriveIndexNode }) {
 
 /** A document: name, then type · size · modified date, and « Ouvrir dans Drive ». */
 export function DocumentRow({ node }: { node: DriveIndexNode }) {
+  const modified = formatModifiedDate(node.modified_time);
   const facts = [
     fileTypeLabel(node.mime_type, node.name),
     formatFileSize(node.size),
-    formatModifiedDate(node.modified_time)
-      ? `modifié le ${formatModifiedDate(node.modified_time)}`
-      : null,
+    modified ? `modifié le ${modified}` : null,
   ].filter((fact): fact is string => !!fact);
 
   return (

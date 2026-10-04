@@ -68,9 +68,33 @@ test("« Partitions et documents » lists the Drive programmes", async ({
     await expect(
       main.getByRole("heading", { level: 1, name, exact: true }),
     ).toBeVisible({ timeout: 30_000 });
-    await expect(
-      main.getByRole("region", { name: "Groupes", exact: true }),
-    ).toBeVisible();
+    const groups = main.getByRole("region", { name: "Groupes", exact: true });
+    await expect(groups).toBeVisible();
+
+    // When the programme has a group, its page lists the documents folder by
+    // folder (a labelled list), or says there are none yet.
+    const groupLinks = groups.locator('a[href^="/dashboard/members/travail/"]');
+    if ((await groupLinks.count()) > 0) {
+      const firstGroup = groupLinks.first();
+      const groupName = (await firstGroup.innerText()).trim();
+      await firstGroup.click();
+      await expect(
+        main.getByRole("heading", { level: 1, name: groupName, exact: true }),
+      ).toBeVisible({ timeout: 30_000 });
+      await expect(
+        main
+          .getByRole("list")
+          .or(
+            main.getByRole("heading", {
+              level: 2,
+              name: "Aucun document",
+              exact: true,
+            }),
+          )
+          .first(),
+      ).toBeVisible();
+      await page.goBack();
+    }
     await page.goBack();
   }
 
