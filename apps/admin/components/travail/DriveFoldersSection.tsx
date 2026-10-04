@@ -139,8 +139,10 @@ export function DriveFoldersSection() {
                           </span>
                         </a>
                       </Button>
+                      {/* Outlined: « Synchroniser depuis Drive » is the page's one primary. */}
                       <Button
                         type="button"
+                        variant="outline"
                         className="min-h-11 flex-1 sm:flex-none"
                         onClick={() => handleSave(folder)}
                         disabled={isSaving || isUnchanged || !value.trim()}

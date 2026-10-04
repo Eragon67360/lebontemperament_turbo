@@ -13,13 +13,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { ErrorState, ListSkeleton } from "@/components/ui/data-state";
 import {
   Table,
@@ -43,22 +36,52 @@ import {
   type DriveSyncDiffGroup,
   type DriveSyncResult,
 } from "@/utils/driveSync";
-import { AlertTriangle, Check, Loader2, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronRight,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 const GROUP_LIMIT = 50;
 
-export function DriveSyncSection() {
+type DriveSyncState = {
+  runSync: ReturnType<typeof useRunDriveSync>;
+  preview: DriveSyncResult | null;
+  applied: DriveSyncResult | null;
+  confirmOpen: boolean;
+  setConfirmOpen: (open: boolean) => void;
+  check: () => Promise<void>;
+  apply: () => Promise<void>;
+};
+
+const DriveSyncContext = createContext<DriveSyncState | null>(null);
+
+function useDriveSyncState(): DriveSyncState {
+  const state = useContext(DriveSyncContext);
+  if (!state) {
+    throw new Error(
+      "DriveSyncButton and DriveSyncSection need DriveSyncProvider",
+    );
+  }
+  return state;
+}
+
+/**
+ * Holds the review-then-apply state so the page header's primary button
+ * (« Synchroniser depuis Drive », the dry run) and the section below it
+ * (the diff, « Appliquer ces changements », the runs) share one flow.
+ */
+export function DriveSyncProvider({ children }: { children: ReactNode }) {
   const runSync = useRunDriveSync();
   const [preview, setPreview] = useState<DriveSyncResult | null>(null);
   const [applied, setApplied] = useState<DriveSyncResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const isChecking = runSync.isPending && runSync.variables === "dry_run";
-  const isApplying = runSync.isPending && runSync.variables === "apply";
-
-  const handleCheck = async () => {
+  const check = async () => {
     setApplied(null);
     try {
       const result = await runSync.mutateAsync("dry_run");
@@ -71,7 +94,7 @@ export function DriveSyncSection() {
     }
   };
 
-  const handleApply = async () => {
+  const apply = async () => {
     setConfirmOpen(false);
     try {
       const result = await runSync.mutateAsync("apply");
@@ -88,88 +111,157 @@ export function DriveSyncSection() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Synchroniser depuis Drive</CardTitle>
-        <CardDescription>
-          Compare les dossiers Drive ci-dessus avec l&apos;index du site. Rien
-          n&apos;est modifié tant que vous n&apos;appliquez pas les changements.
-          Une synchronisation automatique a lieu chaque nuit vers 3 h 30.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex flex-col gap-2 sm:flex-row">
+    <DriveSyncContext.Provider
+      value={{
+        runSync,
+        preview,
+        applied,
+        confirmOpen,
+        setConfirmOpen,
+        check,
+        apply,
+      }}
+    >
+      {children}
+    </DriveSyncContext.Provider>
+  );
+}
+
+/** True while a reviewed diff waits to be applied: « Appliquer » is then the primary. */
+const awaitingApply = (preview: DriveSyncResult | null) =>
+  !!preview && hasChanges(preview.counts);
+
+/**
+ * The page's primary action: a dry run that lists what changed in Drive.
+ * Once changes wait to be applied, it steps back to an outlined « Vérifier
+ * à nouveau » so « Appliquer ces changements » is the one filled button.
+ */
+export function DriveSyncButton() {
+  const { runSync, preview, check } = useDriveSyncState();
+  const isChecking = runSync.isPending && runSync.variables === "dry_run";
+  const secondary = awaitingApply(preview);
+
+  return (
+    <Button
+      type="button"
+      variant={secondary ? "outline" : "default"}
+      onClick={check}
+      disabled={runSync.isPending}
+      aria-busy={isChecking || undefined}
+    >
+      {isChecking ? (
+        <Loader2 className="animate-spin" aria-hidden />
+      ) : (
+        <RefreshCw aria-hidden />
+      )}
+      {preview ? "Vérifier à nouveau" : "Synchroniser depuis Drive"}
+    </Button>
+  );
+}
+
+/**
+ * The sync's state and review: when the index was last updated, the diff of
+ * the last check with « Appliquer ces changements », and the recent runs.
+ */
+export function DriveSyncSection({
+  status,
+}: {
+  /** The index's freshness line, from GET /api/drive-index (the page owns that query). */
+  status?: ReactNode;
+}) {
+  const { runSync, preview, applied, confirmOpen, setConfirmOpen, apply } =
+    useDriveSyncState();
+
+  const isChecking = runSync.isPending && runSync.variables === "dry_run";
+  const isApplying = runSync.isPending && runSync.variables === "apply";
+
+  return (
+    <section
+      aria-labelledby="drive-sync-heading"
+      className="border-border bg-card space-y-5 rounded-lg border p-4 shadow-sm sm:p-6"
+    >
+      <div className="space-y-1">
+        <h2
+          id="drive-sync-heading"
+          className="text-[17px] leading-6 font-semibold"
+        >
+          Synchronisation avec Drive
+        </h2>
+        <p className="text-detail text-muted-foreground">
+          « Synchroniser depuis Drive » montre d&apos;abord ce qui a changé ;
+          rien n&apos;est modifié tant que vous n&apos;appliquez pas. Une
+          synchronisation automatique a lieu chaque nuit vers 3 h 30.
+        </p>
+      </div>
+
+      {status}
+
+      {isChecking && (
+        <ListSkeleton rows={3} label="Lecture des dossiers Drive…" />
+      )}
+
+      {preview && !isChecking && <DiffView result={preview} />}
+
+      {awaitingApply(preview) && (
+        <div>
           <Button
             type="button"
-            variant="outline"
-            className="min-h-11"
-            onClick={handleCheck}
-            disabled={runSync.isPending}
-          >
-            {isChecking ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            ) : (
-              <RefreshCw className="h-4 w-4" aria-hidden />
-            )}
-            Vérifier les changements
-          </Button>
-          <Button
-            type="button"
-            className="min-h-11"
             onClick={() => setConfirmOpen(true)}
-            disabled={
-              runSync.isPending || !preview || !hasChanges(preview.counts)
-            }
+            disabled={runSync.isPending}
+            aria-busy={isApplying || undefined}
           >
             {isApplying ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              <Loader2 className="animate-spin" aria-hidden />
             ) : (
-              <Check className="h-4 w-4" aria-hidden />
+              <Check aria-hidden />
             )}
             Appliquer ces changements
           </Button>
         </div>
+      )}
 
-        {isChecking && (
-          <ListSkeleton rows={3} label="Lecture des dossiers Drive…" />
-        )}
+      {applied && (
+        <Alert>
+          <Check className="h-4 w-4" aria-hidden />
+          <AlertTitle>Changements appliqués</AlertTitle>
+          <AlertDescription>
+            {describeCounts(applied.counts)}
+            {applied.diff.unreadable_roots.length > 0 &&
+              ` — ${applied.diff.unreadable_roots.length} dossier(s) illisible(s) laissé(s) tel(s) quel(s).`}
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {preview && !isChecking && <DiffView result={preview} />}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Appliquer les changements ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {preview
+                ? `L'index du site sera mis à jour : ${describeCounts(preview.counts)}. Les éléments retirés restent en mémoire et reviennent s'ils réapparaissent dans Drive. Les dossiers Drive eux-mêmes ne sont jamais modifiés. Le Drive est relu au moment d'appliquer : si quelque chose a changé depuis la vérification, le résultat l'indiquera.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={apply}>Appliquer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-        {applied && (
-          <Alert>
-            <Check className="h-4 w-4" aria-hidden />
-            <AlertTitle>Changements appliqués</AlertTitle>
-            <AlertDescription>
-              {describeCounts(applied.counts)}
-              {applied.diff.unreadable_roots.length > 0 &&
-                ` — ${applied.diff.unreadable_roots.length} dossier(s) illisible(s) laissé(s) tel(s) quel(s).`}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Appliquer les changements ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                {preview
-                  ? `L'index du site sera mis à jour : ${describeCounts(preview.counts)}. Les éléments retirés restent en mémoire et reviennent s'ils réapparaissent dans Drive. Les dossiers Drive eux-mêmes ne sont jamais modifiés. Le Drive est relu au moment d'appliquer : si quelque chose a changé depuis la vérification, le résultat l'indiquera.`
-                  : ""}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleApply}>
-                Appliquer
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        <RecentRuns />
-      </CardContent>
-    </Card>
+      <details className="group">
+        <summary className="text-primary-text hover:bg-accent -mx-2 flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 rounded-md px-2 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
+          <ChevronRight
+            className="size-4 transition-transform group-open:rotate-90 motion-reduce:transition-none"
+            aria-hidden
+          />
+          Historique des synchronisations
+        </summary>
+        <div className="pt-3">
+          <RecentRuns />
+        </div>
+      </details>
+    </section>
   );
 }
 
@@ -294,7 +386,7 @@ function RecentRuns() {
 
   return (
     <section aria-labelledby="drive-sync-runs" className="space-y-2">
-      <h3 id="drive-sync-runs" className="text-sm font-medium">
+      <h3 id="drive-sync-runs" className="sr-only">
         Dernières synchronisations
       </h3>
       {isError ? (
