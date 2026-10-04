@@ -1,4 +1,9 @@
 import { cloudinary } from "@/lib/cloudinary";
+import {
+  archivePatchSchema,
+  parsePatchBody,
+  readJson,
+} from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -113,30 +118,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const body = await request.json();
-    const { id, ...updates } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    // Only the columns the dialog and the visibility toggle send; the schema
+    // also keeps `type` to the known archive types (#471).
+    const parsed = parsePatchBody(archivePatchSchema, await readJson(request));
+    if (!parsed.ok) {
+      return NextResponse.json(
+        { error: parsed.error },
+        { status: parsed.status },
+      );
     }
-
-    // Validate archive type if provided
-    if (updates.type) {
-      const validTypes = [
-        "assemblée-générale",
-        "rapport-annuel",
-        "rapport-financier",
-        "gazette",
-        "programme",
-        "document-historique",
-      ];
-      if (!validTypes.includes(updates.type)) {
-        return NextResponse.json(
-          { error: "Invalid archive type" },
-          { status: 400 },
-        );
-      }
-    }
+    const { id, ...updates } = parsed.data;
 
     const supabase = await createClient();
     const { data, error } = await supabase
