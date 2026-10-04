@@ -1,0 +1,125 @@
+/* Direction B — « Atelier guidé » — design tokens
+   Light is the default; dark lives under [data-theme="dark"].
+   One accent (brand teal), neutral surfaces, semantic colours only for meaning. */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #f4f6f6; /* page background */
+  --surface: #ffffff; /* cards, table, inputs, sidebar */
+  --raised: #ffffff; /* menus, dialogs (with --shadow-lg) */
+  --sunken: #eef2f2; /* table header, muted blocks */
+  --border: #dfe5e5;
+  --border-strong: #c2cccc; /* input borders, secondary buttons */
+
+  /* Text */
+  --text: #16201f; /* 16.3:1 on white */
+  --text-muted: #5d6b6a; /* 5.6:1 on white, 5.1:1 on --bg */
+  --text-faint: #8a9695; /* icons / decorative only */
+
+  /* Accent: the brand teal */
+  --accent: #1a878d; /* large text, icons, borders, progress */
+  --accent-strong: #156c71; /* filled buttons: white text 6.15:1 */
+  --accent-text: #156c71; /* small teal text 6.15:1 */
+  --accent-soft: #e4f2f2; /* selected rows, active nav */
+  --accent-soft-border: #b3dadc;
+  --on-accent: #ffffff;
+  --focus: #1a878d;
+
+  /* Semantic */
+  --success: #1f7a4d;
+  --success-soft: #e3f4ea;
+  --warning: #935600;
+  --warning-soft: #fff1dc;
+  --danger: #b4261b;
+  --danger-soft: #fde9e7;
+  --danger-strong: #b4261b; /* filled destructive buttons: white 6.5:1 */
+  --info: #2457a6;
+  --info-soft: #e7eefb;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(22, 32, 31, 0.06);
+  --shadow-md:
+    0 4px 12px rgba(22, 32, 31, 0.08), 0 1px 2px rgba(22, 32, 31, 0.06);
+  --shadow-lg:
+    0 16px 40px rgba(22, 32, 31, 0.16), 0 2px 6px rgba(22, 32, 31, 0.08);
+
+  /* Shape (one scale: control / container / overlay) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Type: Inter, 5 steps */
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --fs-title: 28px;
+  --lh-title: 36px; /* h1 (24/32 under 1024 px) */
+  --fs-section: 20px;
+  --lh-section: 28px; /* h2, card headings */
+  --fs-body: 16px;
+  --lh-body: 26px; /* body, inputs, cells, nav */
+  --fs-detail: 14px;
+  --lh-detail: 20px; /* helper text, chips, meta */
+  --fs-note: 13px;
+  --lh-note: 18px; /* sidebar descriptions, counters */
+
+  /* Density: comfortable by default; [data-density="compact"] tightens lists */
+  --row-h: 56px;
+  --control-h: 44px;
+  --space-page: 32px;
+
+  /* Motion: functional only */
+  --motion: 160ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0f1516;
+  --surface: #171f20;
+  --raised: #1f2a2b;
+  --sunken: #121a1b;
+  --border: #293535;
+  --border-strong: #3b4949;
+
+  --text: #e9eeee; /* 15.5:1 on --surface */
+  --text-muted: #a3b2b1; /* 7.6:1 on --surface */
+  --text-faint: #6f7f7e;
+
+  --accent: #26a5ad; /* the website's dark-scale teal */
+  --accent-strong: #156c71; /* same filled step in both themes */
+  --accent-text: #3fb8bf; /* 7.0:1 on --surface */
+  --accent-soft: rgba(38, 165, 173, 0.14);
+  --accent-soft-border: rgba(38, 165, 173, 0.38);
+  --on-accent: #ffffff;
+  --focus: #3fb8bf;
+
+  --success: #5fcf8f;
+  --success-soft: rgba(95, 207, 143, 0.14);
+  --warning: #f2b85c;
+  --warning-soft: rgba(242, 184, 92, 0.14);
+  --danger: #ff8278;
+  --danger-soft: rgba(255, 130, 120, 0.14);
+  --danger-strong: #b4261b;
+  --info: #86b4f5;
+  --info-soft: rgba(134, 180, 245, 0.14);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+[data-density="compact"] {
+  --row-h: 44px;
+  --control-h: 40px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0ms;
+  }
+}

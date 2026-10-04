@@ -902,6 +902,107 @@ export type Database = {
         };
         Relationships: [];
       };
+      drive_index_nodes: {
+        Row: {
+          depth: number;
+          drive_id: string;
+          first_seen_at: string;
+          id: string;
+          kind: string;
+          md5_checksum: string | null;
+          mime_type: string | null;
+          modified_time: string | null;
+          name: string;
+          parent_drive_id: string | null;
+          path: string;
+          removed_at: string | null;
+          root_slug: string;
+          size: number | null;
+          synced_at: string;
+        };
+        Insert: {
+          depth: number;
+          drive_id: string;
+          first_seen_at?: string;
+          id?: string;
+          kind: string;
+          md5_checksum?: string | null;
+          mime_type?: string | null;
+          modified_time?: string | null;
+          name: string;
+          parent_drive_id?: string | null;
+          path: string;
+          removed_at?: string | null;
+          root_slug: string;
+          size?: number | null;
+          synced_at?: string;
+        };
+        Update: {
+          depth?: number;
+          drive_id?: string;
+          first_seen_at?: string;
+          id?: string;
+          kind?: string;
+          md5_checksum?: string | null;
+          mime_type?: string | null;
+          modified_time?: string | null;
+          name?: string;
+          parent_drive_id?: string | null;
+          path?: string;
+          removed_at?: string | null;
+          root_slug?: string;
+          size?: number | null;
+          synced_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "drive_index_nodes_root_slug_fkey";
+            columns: ["root_slug"];
+            isOneToOne: false;
+            referencedRelation: "drive_folders";
+            referencedColumns: ["slug"];
+          },
+        ];
+      };
+      drive_sync_runs: {
+        Row: {
+          counts: Json;
+          diff: Json;
+          error: string | null;
+          finished_at: string | null;
+          id: string;
+          mode: string;
+          started_at: string;
+          status: string;
+          trigger: string;
+          triggered_by: string | null;
+        };
+        Insert: {
+          counts?: Json;
+          diff?: Json;
+          error?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          mode: string;
+          started_at?: string;
+          status?: string;
+          trigger: string;
+          triggered_by?: string | null;
+        };
+        Update: {
+          counts?: Json;
+          diff?: Json;
+          error?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          mode?: string;
+          started_at?: string;
+          status?: string;
+          trigger?: string;
+          triggered_by?: string | null;
+        };
+        Relationships: [];
+      };
       events: {
         Row: {
           created_at: string | null;
@@ -1509,6 +1610,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      drive_index_apply: {
+        Args: {
+          p_counts: Json;
+          p_diff: Json;
+          p_error?: string;
+          p_nodes: Json;
+          p_remove_ids: string[];
+          p_run_id: string;
+          p_status?: string;
+        };
+        Returns: Json;
+      };
       get_delivery_by_token: {
         Args: { token: string };
         Returns: {
