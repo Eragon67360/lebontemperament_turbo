@@ -39,11 +39,14 @@ export function useReorder<T extends Orderable>({
   write,
   queryKey,
   nameOf,
+  descending = false,
 }: {
   items: readonly T[];
   write: OrderWriter;
   queryKey: QueryKey;
   nameOf: (item: T) => string;
+  /** The website shows this list highest order first (see utils/anniversary/reorder.ts). */
+  descending?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [isPending, setPending] = useState(false);
@@ -53,7 +56,7 @@ export function useReorder<T extends Orderable>({
       if (updates.length === 0) return;
       setPending(true);
       queryClient.setQueryData<T[]>(queryKey, (current) =>
-        applyUpdates(current ?? items, updates),
+        applyUpdates(current ?? items, updates, descending),
       );
       const results = await Promise.allSettled(updates.map(write));
       const failed = results
@@ -71,19 +74,19 @@ export function useReorder<T extends Orderable>({
       await queryClient.invalidateQueries({ queryKey });
       setPending(false);
     },
-    [items, nameOf, queryClient, queryKey, write],
+    [descending, items, nameOf, queryClient, queryKey, write],
   );
 
   const move = useCallback(
     (id: string, direction: Direction) =>
-      save(planMove(items, id, direction).updates),
-    [items, save],
+      save(planMove(items, id, direction, descending).updates),
+    [descending, items, save],
   );
 
   const drag = useCallback(
     (activeId: string, overId: string) =>
-      save(planDrag(items, activeId, overId).updates),
-    [items, save],
+      save(planDrag(items, activeId, overId, descending).updates),
+    [descending, items, save],
   );
 
   return { move, drag, isPending };

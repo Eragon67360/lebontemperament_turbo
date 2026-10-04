@@ -34,14 +34,20 @@ export function CampaignList<T extends Orderable>({
   nameOf,
   renderItem,
   className = "space-y-3",
+  descending = false,
 }: {
   items: readonly T[];
+  /** Highest order first, as the website shows the concert stories. */
+  descending?: boolean;
   queryKey: QueryKey;
   nameOf: (item: T) => string;
   renderItem: (item: T, reorder: ReorderControls) => React.ReactNode;
   className?: string;
 } & ListWriter) {
-  const ordered = React.useMemo(() => sortByOrder(items), [items]);
+  const ordered = React.useMemo(
+    () => sortByOrder(items, descending),
+    [items, descending],
+  );
   const writer = React.useMemo(
     () => write ?? patchOrderWriter(endpoint!),
     [write, endpoint],
@@ -51,6 +57,7 @@ export function CampaignList<T extends Orderable>({
     write: writer,
     queryKey,
     nameOf,
+    descending,
   });
 
   return (

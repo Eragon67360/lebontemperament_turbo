@@ -109,6 +109,11 @@ export function ProjectDialog({
     null,
   );
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Images already sent during this opening: a retry after a failed upload
+  // or save reuses them instead of sending the same file again.
+  const [uploaded] = useState(
+    () => new Map<ImageField, { file: File; path: string }>(),
+  );
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -119,6 +124,7 @@ export function ProjectDialog({
   useResetOnChange([open], () => {
     setSaveError(null);
     setFiles({});
+    uploaded.clear();
     setTab("general");
   });
   useEffect(() => {
@@ -139,12 +145,20 @@ export function ProjectDialog({
     try {
       const chosen = IMAGE_FIELDS.filter((field) => files[field]);
       const paths: Partial<Record<ImageField, string>> = {};
-      for (const [i, field] of chosen.entries()) {
-        setUpload({ index: i + 1, total: chosen.length });
-        paths[field] = await uploadToCloudinary(
-          files[field]!,
+      const toSend = chosen.filter(
+        (field) => uploaded.get(field)?.file !== files[field],
+      );
+      for (const [i, field] of toSend.entries()) {
+        setUpload({ index: i + 1, total: toSend.length });
+        const file = files[field]!;
+        const path = await uploadToCloudinary(
+          file,
           `Site/concerts/${values.slug}`,
         );
+        uploaded.set(field, { file, path });
+      }
+      for (const field of chosen) {
+        paths[field] = uploaded.get(field)!.path;
       }
       setUpload(null);
       const data: Partial<Project> = {
@@ -248,7 +262,7 @@ export function ProjectDialog({
             type="url"
             inputMode="url"
             placeholder="https://"
-            hint="Le crédit devient un lien."
+            hint="Le crédit n'apparaît sur le site qu'avec le nom et le site."
           />
         </div>
       )}

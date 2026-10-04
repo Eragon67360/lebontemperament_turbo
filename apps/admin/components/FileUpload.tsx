@@ -149,7 +149,13 @@ export function FileUpload({
             onClick={handleClear}
             className="absolute top-2 right-2 z-10 grid size-10 place-items-center rounded-full bg-black/50 transition-colors hover:bg-black/70"
             type="button"
-            aria-label="Retirer l'image"
+            // Clearing the stored image only opens the picker: saving
+            // without a new file keeps it.
+            aria-label={
+              preview === currentImageUrl
+                ? "Remplacer l'image"
+                : "Retirer l'image"
+            }
           >
             <X className="h-4 w-4 text-white" aria-hidden />
           </button>

@@ -94,7 +94,7 @@ export default function StoriesPage() {
     <PageShell
       className="py-4 sm:py-6"
       title="Histoires de concerts"
-      description="Les pages des concerts passés sur le site public : un récit, des images et leurs crédits, dans l'ordre où vous les rangez ici."
+      description="Les pages des concerts passés sur le site public : un récit, des images et leurs crédits, dans l'ordre où vous les rangez ici. Une nouvelle histoire arrive en tête."
       headerAction={
         <>
           <DropdownMenu>
@@ -152,6 +152,7 @@ export default function StoriesPage() {
           {projects.length} histoire{projects.length > 1 ? "s" : ""}
         </p>
         <CampaignList
+          descending
           items={ordered}
           write={writeProjectOrder}
           queryKey={PROJECTS_QUERY_KEY}

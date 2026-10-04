@@ -113,9 +113,9 @@ export function MigrationResultCallout({
     >
       <p>
         {result.migrated} histoire{result.migrated > 1 ? "s" : ""} importée
-        {result.migrated > 1 ? "s" : ""}, {result.skipped} déjà présente
-        {result.skipped > 1 ? "s" : ""} (ignorée{result.skipped > 1 ? "s" : ""}
-        ).
+        {result.migrated > 1 ? "s" : ""}, {result.skipped} non importée
+        {result.skipped > 1 ? "s" : ""}
+        {failed ? " (déjà présentes ou en erreur)" : " (déjà présentes)"}.
       </p>
       {failed && (
         <ul className="list-disc pl-5">
