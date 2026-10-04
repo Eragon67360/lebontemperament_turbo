@@ -1,5 +1,6 @@
 // app/api/invite-users/route.ts
 import { checkAuthorization } from "@/utils/auth";
+import { inviteRedirectUrl, sendInvitations } from "@/utils/invitations";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -15,19 +16,6 @@ const invitationSchema = z.object({
   redirectTo: z.string().url().optional(),
 });
 
-function chunkArray<T>(array: T[], size: number): T[][] {
-  return Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>
-    array.slice(i * size, i * size + size),
-  );
-}
-
-interface InvitationResult {
-  email: string;
-  displayName: string;
-  success: boolean;
-  error?: string;
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Inviting creates accounts: admins and superadmins only.
@@ -38,13 +26,7 @@ export async function POST(request: NextRequest) {
     const user = auth.user;
 
     const body = await request.json();
-    const BATCH_SIZE = 10; // Process 10 emails at a time
-    const DELAY_BETWEEN_BATCHES = 1000; // 1 second delay between batches
-
-    const redirectTo =
-      process.env.VERCEL_ENV === "production"
-        ? "https://www.lebontemperament.com/auth/create-profile"
-        : "https://dev.lebontemperament.com/auth/create-profile"; //replace with dev.lebontemperament.com
+    const redirectTo = inviteRedirectUrl();
 
     const validationResult = invitationSchema.safeParse({
       emails: body.emails.map(
@@ -67,80 +49,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const adminAuthClient = createAdminClient();
-    const emailBatches = chunkArray(validationResult.data.emails, BATCH_SIZE);
-    let allResults: InvitationResult[] = [];
-    const totalInvitations = validationResult.data.emails.length;
-    let processedCount = 0;
-
-    for (const batch of emailBatches) {
-      const batchResults = await Promise.all(
-        batch.map(async ({ email, displayName }) => {
-          try {
-            const { error } =
-              await adminAuthClient.auth.admin.inviteUserByEmail(email, {
-                data: {
-                  invited_by: validationResult.data.invitedBy,
-                  display_name: displayName,
-                },
-                redirectTo: validationResult.data.redirectTo,
-              });
-            processedCount++;
-            if (error) {
-              return {
-                email,
-                displayName,
-                success: false,
-                error: error.message,
-                progress: {
-                  current: processedCount,
-                  total: totalInvitations,
-                  percentage: Math.round(
-                    (processedCount / totalInvitations) * 100,
-                  ),
-                },
-              };
-            }
-
-            return {
-              email,
-              displayName,
-              success: true,
-              progress: {
-                current: processedCount,
-                total: totalInvitations,
-                percentage: Math.round(
-                  (processedCount / totalInvitations) * 100,
-                ),
-              },
-            };
-          } catch (error) {
-            processedCount++;
-            return {
-              email,
-              displayName,
-              success: false,
-              error: error instanceof Error ? error.message : "Erreur inconnue",
-              progress: {
-                current: processedCount,
-                total: totalInvitations,
-                percentage: Math.round(
-                  (processedCount / totalInvitations) * 100,
-                ),
-              },
-            };
-          }
-        }),
-      );
-
-      allResults = [...allResults, ...batchResults];
-
-      if (emailBatches.indexOf(batch) < emailBatches.length - 1) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, DELAY_BETWEEN_BATCHES),
-        );
-      }
-    }
+    // Same sender as the roster sync: batches of 10, a pause between them.
+    const allResults = await sendInvitations(
+      createAdminClient(),
+      validationResult.data.emails,
+      {
+        invitedBy: validationResult.data.invitedBy,
+        redirectTo: validationResult.data.redirectTo ?? redirectTo,
+      },
+    );
 
     const successfulInvitations = allResults.filter((result) => result.success);
     const failedInvitations = allResults.filter((result) => !result.success);
