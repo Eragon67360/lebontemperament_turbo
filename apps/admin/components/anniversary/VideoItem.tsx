@@ -1,120 +1,84 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import {
+  ContentRow,
+  Fact,
+  type ReorderControls,
+} from "@/components/anniversary/ContentRow";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { AnniversaryVideo } from "@/types/anniversary";
-import { Calendar, Edit, Eye, EyeOff, Link2, Tag, Trash2 } from "lucide-react";
+import type { AnniversaryVideo } from "@/types/anniversary";
+import { cloudinaryUrl } from "@/utils/anniversary/media";
+import { Calendar, ExternalLink, Tag } from "lucide-react";
 import Image from "next/image";
 
-interface VideoItemProps {
+export function VideoItem({
+  video,
+  reorder,
+  busy,
+  onEdit,
+  onToggleVisibility,
+  onDelete,
+}: {
   video: AnniversaryVideo;
-  onEdit: (video: AnniversaryVideo) => void;
-  onDelete: (video: AnniversaryVideo) => void;
-}
-
-export function VideoItem({ video, onEdit, onDelete }: VideoItemProps) {
+  reorder: ReorderControls;
+  busy: boolean;
+  onEdit: () => void;
+  onToggleVisibility: () => void;
+  onDelete: () => void;
+}) {
+  const thumbnail = cloudinaryUrl(
+    video.thumbnail_url,
+    "image",
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    "c_fill,w_400,h_225,g_auto",
+  );
   return (
-    <Card className={cn("overflow-hidden", !video.is_visible && "opacity-60")}>
-      <CardContent className="p-0">
-        <div className="flex flex-col sm:flex-row">
-          {/* Thumbnail */}
-          <div className="relative aspect-video w-full shrink-0 sm:w-48">
+    <ContentRow
+      name={video.title}
+      title={video.title}
+      leading={
+        <div className="bg-muted relative aspect-video w-full overflow-hidden rounded-md sm:w-40">
+          {thumbnail && (
             <Image
-              src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_400,h_300,g_auto/${video.thumbnail_url}`}
-              alt={video.title}
+              src={thumbnail}
+              alt=""
               fill
-              sizes="(max-width: 640px) 100vw, 192px"
+              sizes="(max-width: 640px) 100vw, 160px"
               className="object-cover"
             />
-            {video.video_url && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                <div className="rounded-full bg-white/90 p-3">
-                  <Link2 className="text-primary h-5 w-5" aria-hidden />
-                  <span className="sr-only">Vidéo liée</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
-            <div className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold">
-                  {video.title}
-                </h2>
-                <Badge
-                  variant={video.is_visible ? "default" : "secondary"}
-                  className="shrink-0"
-                >
-                  {video.is_visible ? (
-                    <>
-                      <Eye className="mr-1 h-3 w-3" />
-                      Visible
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="mr-1 h-3 w-3" />
-                      Masqué
-                    </>
-                  )}
-                </Badge>
-              </div>
-
-              <p className="text-muted-foreground line-clamp-2 text-sm">
-                {video.description}
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                {video.year && (
-                  <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                    <Calendar className="h-3 w-3" />
-                    {video.year}
-                  </span>
-                )}
-                <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <Tag className="h-3 w-3" />
-                  {video.category}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  Ordre: {video.display_order}
-                </span>
-              </div>
-
-              {video.video_url && (
-                <p className="text-muted-foreground truncate text-xs">
-                  <Link2 className="mr-1 inline h-3 w-3" />
-                  {video.video_url}
-                </p>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="min-h-11"
-                onClick={() => onEdit(video)}
-              >
-                <Edit className="h-4 w-4" aria-hidden />
-                Modifier
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDelete(video)}
-                className="text-destructive hover:bg-destructive/10 min-h-11"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden />
-                Supprimer
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      }
+      description={video.description}
+      meta={
+        <>
+          {video.year && <Fact icon={Calendar}>{video.year}</Fact>}
+          <Fact icon={Tag}>{video.category}</Fact>
+          {!video.video_url && (
+            <Fact>Sans lien : la vignette ne s&apos;ouvre pas</Fact>
+          )}
+        </>
+      }
+      visible={video.is_visible}
+      extraActions={
+        video.video_url && (
+          <Button variant="outline" size="sm" asChild>
+            <a href={video.video_url} target="_blank" rel="noreferrer">
+              <ExternalLink aria-hidden />
+              Voir la vidéo
+              <span className="sr-only">
+                {" "}
+                « {video.title} » (nouvel onglet)
+              </span>
+            </a>
+          </Button>
+        )
+      }
+      reorder={reorder}
+      busy={busy}
+      onEdit={onEdit}
+      onToggleVisibility={onToggleVisibility}
+      onDelete={onDelete}
+    />
   );
 }

@@ -1,84 +1,63 @@
 "use client";
 
-import { FileUploader } from "@/components/anniversary/FileUploader";
-import { Button } from "@/components/ui/button";
+import { formatFileSize } from "@/components/anniversary/AssetUploader";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  AssetField,
+  SelectField,
+  SwitchField,
+  TextareaField,
+  TextField,
+  YearField,
+} from "@/components/anniversary/form-fields";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+  FormFeedback,
+  saveErrorMessage,
+} from "@/components/anniversary/FormFeedback";
+import { Form } from "@/components/ui/form";
+import { FormDialog } from "@/components/ui/form-dialog";
 import {
   useCreateArchive,
   useUpdateArchive,
 } from "@/hooks/useAnniversaryArchives";
-import {
-  AnniversaryArchive,
-  ARCHIVE_THEMES,
-  ARCHIVE_TYPES,
-} from "@/types/anniversary";
-
 import { useResetOnChange } from "@/hooks/useResetOnChange";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import type { AnniversaryArchive } from "@/types/anniversary";
+import {
+  ARCHIVE_THEME_OPTIONS,
+  ARCHIVE_TYPE_OPTIONS,
+} from "@/utils/anniversary/labels";
+import {
+  archiveFormSchema,
+  type ArchiveFormInput,
+  type ArchiveFormValues,
+} from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-type ArchiveFormData = {
-  title: string;
-  description: string;
-  year: number;
-  type: (typeof ARCHIVE_TYPES)[number];
-  theme: string;
-  file_url: string;
-  file_size: string;
-  is_visible: boolean;
+const FORM_ID = "archive-form";
+
+const LABELS = {
+  file_url: { label: "Document", id: "archive-file" },
+  title: { label: "Titre", id: "archive-title" },
+  description: { label: "Description", id: "archive-description" },
+  year: { label: "Année", id: "archive-year" },
+  type: { label: "Type de document", id: "archive-type" },
+  theme: { label: "Thème", id: "archive-theme" },
+  file_size: { label: "Taille", id: "archive-size" },
+  is_visible: { label: "Visible sur le site", id: "archive-visible" },
 };
 
-/** The form as it opens: the archive being edited, or a blank one. */
-const buildFormData = (archive?: AnniversaryArchive): ArchiveFormData =>
-  archive
-    ? {
-        title: archive.title,
-        description: archive.description,
-        year: archive.year,
-        type: archive.type as (typeof ARCHIVE_TYPES)[number],
-        theme: archive.theme,
-        file_url: archive.file_url,
-        file_size: archive.file_size,
-        is_visible: archive.is_visible ?? true,
-      }
-    : {
-        title: "",
-        description: "",
-        year: new Date().getFullYear(),
-        type: "assemblée-générale",
-        theme: "Gouvernance",
-        file_url: "",
-        file_size: "",
-        is_visible: true,
-      };
-
-const typeLabels: Record<string, string> = {
-  "assemblée-générale": "Assemblée Générale",
-  "rapport-annuel": "Rapport Annuel",
-  "rapport-financier": "Rapport Financier",
-  gazette: "Gazette",
-  programme: "Programme",
-  "document-historique": "Document Historique",
-};
+const defaults = (archive?: AnniversaryArchive): ArchiveFormInput => ({
+  title: archive?.title ?? "",
+  description: archive?.description ?? "",
+  year: archive?.year ? String(archive.year) : "",
+  type: (archive?.type as ArchiveFormValues["type"]) ?? "assemblée-générale",
+  theme: archive?.theme ?? "Gouvernance",
+  file_url: archive?.file_url ?? "",
+  file_size: archive?.file_size ?? "",
+  is_visible: archive?.is_visible ?? true,
+});
 
 interface ArchiveDialogProps {
   open: boolean;
@@ -91,223 +70,126 @@ export function ArchiveDialog({
   onOpenChange,
   archive,
 }: ArchiveDialogProps) {
-  const createArchive = useCreateArchive();
-  const updateArchive = useUpdateArchive();
+  const create = useCreateArchive();
+  const update = useUpdateArchive();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState(() => buildFormData(archive));
+  const form = useForm<ArchiveFormInput, unknown, ArchiveFormValues>({
+    resolver: zodResolver(archiveFormSchema),
+    defaultValues: defaults(archive),
+    shouldFocusError: false,
+  });
 
-  // Re-seed the form each time the dialog opens or the archive changes.
-  useResetOnChange([archive, open], () => setFormData(buildFormData(archive)));
+  // A fresh open starts clean: the fields from the item, no stale error.
+  useResetOnChange([open], () => setSaveError(null));
+  useEffect(() => {
+    if (open) form.reset(defaults(archive));
+  }, [open, archive, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.file_url) {
-      toast.error("Veuillez uploader un fichier");
-      return;
-    }
-
+  const onSubmit = async (values: ArchiveFormValues) => {
+    setSaveError(null);
     try {
       if (archive) {
-        await updateArchive.mutateAsync({
-          id: archive.id,
-          ...formData,
-        });
-        toast.success("Archive mise à jour avec succès");
+        await update.mutateAsync({ id: archive.id, ...values });
+        toast.success(`« ${values.title} » enregistrée`);
       } else {
-        await createArchive.mutateAsync(formData);
-        toast.success("Archive créée avec succès");
+        await create.mutateAsync(values);
+        toast.success(`« ${values.title} » ajoutée aux archives`);
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(
-        archive
-          ? "Erreur lors de la mise à jour"
-          : "Erreur lors de la création",
-      );
-      console.error("Error:", error);
+      const message = saveErrorMessage(error);
+      setSaveError(message);
+      toast.error("L'enregistrement a échoué", { description: message });
     }
   };
 
-  const isLoading = createArchive.isPending || updateArchive.isPending;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-150">
-        <DialogHeader>
-          <DialogTitle>
-            {archive ? "Modifier l'archive" : "Nouvelle archive"}
-          </DialogTitle>
-          <DialogDescription>
-            {archive
-              ? "Modifiez les informations de l'archive"
-              : "Ajoutez un nouveau document aux archives"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">
-              Titre <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              placeholder="Assemblée Générale 2023"
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={archive ? `Modifier « ${archive.title} »` : "Ajouter une archive"}
+      description="Un document à consulter sur la page des 40 ans : compte rendu, gazette, programme…"
+      formId={FORM_ID}
+      isDirty={form.formState.isDirty}
+      isPending={create.isPending || update.isPending}
+      submitLabel={archive ? "Enregistrer" : "Ajouter"}
+    >
+      <Form {...form}>
+        <form
+          id={FORM_ID}
+          onSubmit={form.handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-5"
+        >
+          <FormFeedback
+            errors={form.formState.errors}
+            labels={LABELS}
+            submitCount={form.formState.submitCount}
+            saveError={saveError}
+          />
+          <AssetField
+            control={form.control}
+            name="file_url"
+            id={LABELS.file_url.id}
+            label={LABELS.file_url.label}
+            kind="document"
+            folder="Site/anniversary/archives"
+            onFile={(file) =>
+              form.setValue("file_size", formatFileSize(file.size), {
+                shouldDirty: true,
+              })
+            }
+          />
+          <TextField
+            control={form.control}
+            name="title"
+            id={LABELS.title.id}
+            label={LABELS.title.label}
+            required
+            placeholder="Assemblée générale 2023"
+          />
+          <TextareaField
+            control={form.control}
+            name="description"
+            id={LABELS.description.id}
+            label={LABELS.description.label}
+            required
+            placeholder="Compte rendu complet de l'assemblée générale annuelle…"
+          />
+          <div className="grid gap-5 sm:grid-cols-[8rem_1fr]">
+            <YearField
+              control={form.control}
+              name="year"
+              id={LABELS.year.id}
+              label={LABELS.year.label}
               required
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">
-              Description <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Rapport complet de l'Assemblée Générale annuelle..."
-              rows={3}
-              required
-            />
-          </div>
-
-          {/* Year */}
-          <div className="space-y-2">
-            <Label htmlFor="year">
-              Année <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="year"
-              type="number"
-              min="1984"
-              max="2100"
-              value={formData.year}
-              onChange={(e) =>
-                setFormData({ ...formData, year: parseInt(e.target.value) })
-              }
               placeholder="2023"
-              required
+            />
+            <SelectField
+              control={form.control}
+              name="type"
+              id={LABELS.type.id}
+              label={LABELS.type.label}
+              options={ARCHIVE_TYPE_OPTIONS}
             />
           </div>
-
-          {/* Type */}
-          <div className="space-y-2">
-            <Label htmlFor="type">
-              Type <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value) =>
-                setFormData({
-                  ...formData,
-                  type: value as (typeof ARCHIVE_TYPES)[number],
-                })
-              }
-            >
-              <SelectTrigger id="type">
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-              <SelectContent>
-                {ARCHIVE_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {typeLabels[type]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Theme */}
-          <div className="space-y-2">
-            <Label htmlFor="theme">
-              Thème <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={formData.theme}
-              onValueChange={(value) =>
-                setFormData({ ...formData, theme: value })
-              }
-            >
-              <SelectTrigger id="theme">
-                <SelectValue placeholder="Sélectionner un thème" />
-              </SelectTrigger>
-              <SelectContent>
-                {ARCHIVE_THEMES.map((theme) => (
-                  <SelectItem key={theme} value={theme}>
-                    {theme}
-                  </SelectItem>
-                ))}
-                <SelectItem value="Autre">Autre</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* File Upload */}
-          <div className="space-y-2">
-            <FileUploader
-              value={formData.file_url}
-              onChange={(url, fileSize) => {
-                setFormData({
-                  ...formData,
-                  file_url: url,
-                  file_size: fileSize,
-                });
-              }}
-              onRemove={() => {
-                setFormData({
-                  ...formData,
-                  file_url: "",
-                  file_size: "",
-                });
-              }}
-              label="Document"
-              folder="Site/anniversary/archives"
-            />
-          </div>
-
-          {/* Visibility */}
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_visible" className="text-base">
-                Visible sur le site
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Afficher cette archive sur la page publique
-              </p>
-            </div>
-            <Switch
-              id="is_visible"
-              checked={formData.is_visible}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, is_visible: checked })
-              }
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {archive ? "Enregistrer" : "Créer"}
-            </Button>
-          </DialogFooter>
+          <SelectField
+            control={form.control}
+            name="theme"
+            id={LABELS.theme.id}
+            label={LABELS.theme.label}
+            options={ARCHIVE_THEME_OPTIONS}
+          />
+          <SwitchField
+            control={form.control}
+            name="is_visible"
+            id={LABELS.is_visible.id}
+            label={LABELS.is_visible.label}
+            hint="Masquée, l'archive reste ici sans apparaître sur la page."
+          />
         </form>
-      </DialogContent>
-    </Dialog>
+      </Form>
+    </FormDialog>
   );
 }

@@ -1,296 +1,197 @@
 "use client";
 
-import { AudioUploader } from "@/components/anniversary/AudioUploader";
-import { Button } from "@/components/ui/button";
+import { readAudioDuration } from "@/components/anniversary/AssetUploader";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+  AssetField,
+  SwitchField,
+  TextareaField,
+  TextField,
+  YearField,
+} from "@/components/anniversary/form-fields";
+import {
+  FormFeedback,
+  saveErrorMessage,
+} from "@/components/anniversary/FormFeedback";
+import { Form } from "@/components/ui/form";
+import { FormDialog } from "@/components/ui/form-dialog";
 import {
   useCreateAudioMemory,
   useUpdateAudioMemory,
 } from "@/hooks/useAnniversaryAudio";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
-import { AnniversaryAudioMemory } from "@/types/anniversary";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import type { AnniversaryAudioMemory } from "@/types/anniversary";
+import {
+  audioMemoryFormSchema,
+  type AudioMemoryFormInput,
+  type AudioMemoryFormValues,
+} from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-type AudioMemoryFormData = {
-  title: string;
-  description: string;
-  speaker_name: string;
-  year: number | null;
-  duration: string;
-  audio_url: string;
-  display_order: number;
-  is_visible: boolean;
+const FORM_ID = "audio-memory-form";
+
+const LABELS = {
+  audio_url: { label: "Fichier audio", id: "audio-file" },
+  title: { label: "Titre", id: "audio-title" },
+  description: { label: "Description", id: "audio-description" },
+  speaker_name: { label: "Qui parle", id: "audio-speaker" },
+  year: { label: "Année", id: "audio-year" },
+  duration: { label: "Durée", id: "audio-duration" },
+  is_visible: { label: "Visible sur le site", id: "audio-visible" },
 };
 
-/** The form as it opens: the memory being edited, or a blank one. */
-const buildFormData = (
-  audio: AnniversaryAudioMemory | undefined,
-  maxOrder: number,
-): AudioMemoryFormData =>
-  audio
-    ? {
-        title: audio.title,
-        description: audio.description,
-        speaker_name: audio.speaker_name || "",
-        year: audio.year,
-        duration: audio.duration,
-        audio_url: audio.audio_url,
-        display_order: audio.display_order,
-        is_visible: audio.is_visible ?? true,
-      }
-    : {
-        title: "",
-        description: "",
-        speaker_name: "",
-        year: null,
-        duration: "",
-        audio_url: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      };
+const defaults = (audio?: AnniversaryAudioMemory): AudioMemoryFormInput => ({
+  audio_url: audio?.audio_url ?? "",
+  title: audio?.title ?? "",
+  description: audio?.description ?? "",
+  speaker_name: audio?.speaker_name ?? "",
+  year: audio?.year ? String(audio.year) : "",
+  duration: audio?.duration ?? "",
+  is_visible: audio?.is_visible ?? true,
+});
 
 interface AudioMemoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   audio?: AnniversaryAudioMemory;
-  maxOrder: number;
+  nextOrder: number;
 }
 
 export function AudioMemoryDialog({
   open,
   onOpenChange,
   audio,
-  maxOrder,
+  nextOrder,
 }: AudioMemoryDialogProps) {
-  const createAudio = useCreateAudioMemory();
-  const updateAudio = useUpdateAudioMemory();
+  const create = useCreateAudioMemory();
+  const update = useUpdateAudioMemory();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState(() =>
-    buildFormData(audio, maxOrder),
-  );
+  const form = useForm<AudioMemoryFormInput, unknown, AudioMemoryFormValues>({
+    resolver: zodResolver(audioMemoryFormSchema),
+    defaultValues: defaults(audio),
+    shouldFocusError: false,
+  });
 
-  // Re-seed the form each time the dialog opens or the memory changes.
-  useResetOnChange([audio, maxOrder, open], () =>
-    setFormData(buildFormData(audio, maxOrder)),
-  );
+  // A fresh open starts clean: the fields from the item, no stale error.
+  useResetOnChange([open], () => setSaveError(null));
+  useEffect(() => {
+    if (open) form.reset(defaults(audio));
+  }, [open, audio, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.audio_url) {
-      toast.error("Veuillez uploader un fichier audio");
-      return;
-    }
-
-    try {
-      const dataToSubmit = {
-        ...formData,
-        speaker_name: formData.speaker_name || null,
-      };
-
-      if (audio) {
-        await updateAudio.mutateAsync({
-          id: audio.id,
-          ...dataToSubmit,
-        });
-        toast.success("Mémoire audio mise à jour avec succès");
-      } else {
-        await createAudio.mutateAsync(dataToSubmit);
-        toast.success("Mémoire audio ajoutée avec succès");
-      }
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(
-        audio ? "Erreur lors de la mise à jour" : "Erreur lors de l'ajout",
-      );
-      console.error("Error:", error);
+  // The duration comes from the file itself; the field stays editable.
+  const fillDuration = async (file: File) => {
+    const duration = await readAudioDuration(file);
+    if (duration && !form.getValues("duration")) {
+      form.setValue("duration", duration, { shouldDirty: true });
     }
   };
 
-  const isLoading = createAudio.isPending || updateAudio.isPending;
+  const onSubmit = async (values: AudioMemoryFormValues) => {
+    setSaveError(null);
+    const data = { ...values, speaker_name: values.speaker_name || null };
+    try {
+      if (audio) {
+        await update.mutateAsync({ id: audio.id, ...data });
+        toast.success(`« ${values.title} » enregistré`);
+      } else {
+        await create.mutateAsync({ ...data, display_order: nextOrder });
+        toast.success(`« ${values.title} » ajouté`);
+      }
+      onOpenChange(false);
+    } catch (error) {
+      const message = saveErrorMessage(error);
+      setSaveError(message);
+      toast.error("L'enregistrement a échoué", { description: message });
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
-            {audio ? "Modifier la mémoire audio" : "Nouvelle mémoire audio"}
-          </DialogTitle>
-          <DialogDescription>
-            {audio
-              ? "Modifiez les informations de la mémoire audio"
-              : "Ajoutez un nouveau témoignage ou extrait audio"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Audio Upload */}
-          <AudioUploader
-            value={formData.audio_url}
-            onChange={(url) => setFormData({ ...formData, audio_url: url })}
-            onRemove={() => setFormData({ ...formData, audio_url: "" })}
-            label="Fichier audio"
-            folder="Site/anniversary/audio"
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        audio ? `Modifier « ${audio.title} »` : "Ajouter un souvenir audio"
+      }
+      description="Un témoignage ou un extrait sonore à écouter sur la page des 40 ans."
+      formId={FORM_ID}
+      isDirty={form.formState.isDirty}
+      isPending={create.isPending || update.isPending}
+      submitLabel={audio ? "Enregistrer" : "Ajouter"}
+    >
+      <Form {...form}>
+        <form
+          id={FORM_ID}
+          onSubmit={form.handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-5"
+        >
+          <FormFeedback
+            errors={form.formState.errors}
+            labels={LABELS}
+            submitCount={form.formState.submitCount}
+            saveError={saveError}
           />
-
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">
-              Titre <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              placeholder="Simone se souvient : Novembre 1984"
-              required
+          <AssetField
+            control={form.control}
+            name="audio_url"
+            id={LABELS.audio_url.id}
+            label={LABELS.audio_url.label}
+            kind="audio"
+            folder="Site/anniversary/audio"
+            onFile={fillDuration}
+          />
+          <TextField
+            control={form.control}
+            name="title"
+            id={LABELS.title.id}
+            label={LABELS.title.label}
+            required
+            placeholder="Simone se souvient : novembre 1984"
+          />
+          <TextareaField
+            control={form.control}
+            name="description"
+            id={LABELS.description.id}
+            label={LABELS.description.label}
+            required
+            placeholder="Simone raconte avec émotion…"
+          />
+          <div className="grid gap-5 sm:grid-cols-2">
+            <TextField
+              control={form.control}
+              name="speaker_name"
+              id={LABELS.speaker_name.id}
+              label={LABELS.speaker_name.label}
+              placeholder="Simone, fondatrice"
+            />
+            <YearField
+              control={form.control}
+              name="year"
+              id={LABELS.year.id}
+              label={LABELS.year.label}
             />
           </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">
-              Description <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Simone Duclos raconte avec émotion..."
-              rows={4}
-              required
-            />
-          </div>
-
-          {/* Speaker Name & Year */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="speaker_name">Intervenant</Label>
-              <Input
-                id="speaker_name"
-                value={formData.speaker_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, speaker_name: e.target.value })
-                }
-                placeholder="Simone Duclos, Fondatrice"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="year">Année</Label>
-              <Input
-                id="year"
-                type="number"
-                min="1984"
-                max="2100"
-                value={formData.year || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    year: e.target.value ? parseInt(e.target.value) : null,
-                  })
-                }
-                placeholder="2024"
-              />
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div className="space-y-2">
-            <Label htmlFor="duration">
-              Durée <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="duration"
-              value={formData.duration}
-              onChange={(e) =>
-                setFormData({ ...formData, duration: e.target.value })
-              }
-              placeholder="5:32"
-              pattern="[0-9]+:[0-9]{2}"
-              required
-            />
-            <p className="text-muted-foreground text-xs">
-              Format: MM:SS (ex: 5:32)
-            </p>
-          </div>
-
-          {/* Display Order */}
-          <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d&apos;affichage</Label>
-            <Input
-              id="display_order"
-              type="number"
-              min="1"
-              value={formData.display_order}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  display_order: parseInt(e.target.value),
-                })
-              }
-              required
-            />
-          </div>
-
-          {/* Visibility Toggle */}
-          <div className="border-border bg-muted/50 flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_visible" className="text-base">
-                Visible
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Afficher cette mémoire audio sur le site
-              </p>
-            </div>
-            <Switch
-              id="is_visible"
-              checked={formData.is_visible}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, is_visible: checked })
-              }
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {audio ? "Mise à jour..." : "Ajout..."}
-                </>
-              ) : (
-                <>{audio ? "Mettre à jour" : "Ajouter"}</>
-              )}
-            </Button>
-          </DialogFooter>
+          <TextField
+            control={form.control}
+            name="duration"
+            id={LABELS.duration.id}
+            label={LABELS.duration.label}
+            required
+            placeholder="5:32"
+            hint="Minutes:secondes, remplie automatiquement à l'envoi du fichier."
+          />
+          <SwitchField
+            control={form.control}
+            name="is_visible"
+            id={LABELS.is_visible.id}
+            label={LABELS.is_visible.label}
+            hint="Masqué, le souvenir reste ici sans apparaître sur la page."
+          />
         </form>
-      </DialogContent>
-    </Dialog>
+      </Form>
+    </FormDialog>
   );
 }

@@ -3,81 +3,47 @@
 import { ArchiveDialog } from "@/components/anniversary/ArchiveDialog";
 import { ArchiveItem } from "@/components/anniversary/ArchiveItem";
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { AddButton } from "@/components/anniversary/ListPageHeaderAction";
+import {
+  countLine,
+  useListActions,
+} from "@/components/anniversary/useListActions";
 import { PageShell } from "@/components/layouts/PageShell";
-import { Button } from "@/components/ui/button";
 import {
   DataState,
   EmptyState,
   ListSkeleton,
 } from "@/components/ui/data-state";
-import { useArchives, useDeleteArchive } from "@/hooks/useAnniversaryArchives";
-import { AnniversaryArchive } from "@/types/anniversary";
-import { FileText, Plus } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import {
+  useArchives,
+  useDeleteArchive,
+  useUpdateArchive,
+} from "@/hooks/useAnniversaryArchives";
+import type { AnniversaryArchive } from "@/types/anniversary";
+import { FileText } from "lucide-react";
+
+const nameOf = (archive: AnniversaryArchive) => archive.title;
 
 export default function ArchivesPage() {
   const { data: archives = [], isLoading, isError, refetch } = useArchives();
-  const deleteArchive = useDeleteArchive();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedArchive, setSelectedArchive] =
-    useState<AnniversaryArchive | null>(null);
-
-  const handleEdit = (archive: AnniversaryArchive) => {
-    setSelectedArchive(archive);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (archive: AnniversaryArchive) => {
-    setSelectedArchive(archive);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedArchive) return;
-
-    try {
-      await deleteArchive.mutateAsync(selectedArchive.id);
-      toast.success("Archive supprimée avec succès");
-      setDeleteDialogOpen(false);
-      setSelectedArchive(null);
-    } catch (error) {
-      toast.error("Erreur lors de la suppression");
-      console.error("Delete error:", error);
-    }
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) {
-      setSelectedArchive(null);
-    }
-  };
+  const update = useUpdateArchive();
+  const remove = useDeleteArchive();
+  const list = useListActions<AnniversaryArchive>({
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    nameOf,
+    feminine: true,
+  });
 
   return (
     <PageShell
-      title="Archives publiques"
-      description="Gérer les documents d'archives (rapports AG, rapports annuels, gazettes, programmes, etc.)"
-      theme="anniversary"
       className="py-4 sm:py-6"
+      title="Archives"
+      description="Les documents à consulter sur la page des 40 ans, classés de l'année la plus récente à la plus ancienne."
       headerAction={
-        <Button
-          className="min-h-11 w-full sm:w-auto"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Ajouter une archive
-        </Button>
+        <AddButton label="Ajouter une archive" onClick={list.openCreate} />
       }
     >
-      {archives.length > 0 && (
-        <p className="text-muted-foreground mb-4 text-sm">
-          {archives.length} archive{archives.length > 1 ? "s" : ""}
-        </p>
-      )}
-
       <DataState
         isLoading={isLoading}
         isError={isError}
@@ -89,43 +55,47 @@ export default function ArchivesPage() {
           <EmptyState
             icon={FileText}
             title="Aucune archive"
-            description="Ajoutez les rapports d'assemblée générale, gazettes et programmes à rendre publics."
+            description="Comptes rendus d'assemblée générale, gazettes, programmes : un PDF ou un document Word par archive."
             action={
-              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden />
-                Ajouter une archive
-              </Button>
+              <AddButton
+                label="Ajouter une archive"
+                onClick={list.openCreate}
+              />
             }
           />
         }
       >
-        <div className="space-y-4">
+        <p className="text-note text-muted-foreground mb-3">
+          {countLine(archives, "archive", "archives")}
+        </p>
+        <ul className="space-y-3">
           {archives.map((archive) => (
-            <ArchiveItem
-              key={archive.id}
-              archive={archive}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+            <li key={archive.id} className="list-none">
+              <ArchiveItem
+                archive={archive}
+                busy={list.busyId === archive.id}
+                onEdit={() => list.openEdit(archive)}
+                onToggleVisibility={() => list.toggleVisibility(archive)}
+                onDelete={() => list.askDelete(archive)}
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       </DataState>
 
-      {/* Create/Edit Dialog */}
       <ArchiveDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        archive={selectedArchive || undefined}
+        open={list.dialogOpen}
+        onOpenChange={list.onDialogOpenChange}
+        archive={list.editing}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        title="Supprimer cette archive ?"
-        description={`Êtes-vous sûr de vouloir supprimer l'archive "${selectedArchive?.title}" ? Cette action est irréversible.`}
-        isLoading={deleteArchive.isPending}
+        open={list.deleting !== null}
+        onOpenChange={list.cancelDelete}
+        onConfirm={list.confirmDelete}
+        title={`Supprimer « ${list.deleting?.title ?? ""} » ?`}
+        description="L'archive disparaît de la page et son document est effacé. Cette action ne peut pas être annulée."
+        isLoading={list.isDeleting}
       />
     </PageShell>
   );
