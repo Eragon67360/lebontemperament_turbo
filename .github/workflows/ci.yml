@@ -21,9 +21,9 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
   NEXT_TELEMETRY_DISABLED: 1
   # The Next.js builds evaluate a few modules at build time that insist on these
-  # variables existing (website: app/layout.tsx, Stripe routes, Cloudinary;
-  # admin: the Excel sync routes). Obvious placeholders satisfy the existence
-  # checks; no real value is needed to compile, and no network call succeeds.
+  # variables existing (website: app/layout.tsx, Stripe routes, Cloudinary).
+  # Obvious placeholders satisfy the existence checks; no real value is needed
+  # to compile, and no network call succeeds.
   NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
   NEXT_PUBLIC_BASE_URL: https://www.example.com
@@ -33,7 +33,6 @@ env:
   GOOGLE_CLIENT_ID: ci-placeholder
   GOOGLE_CLIENT_SECRET: ci-placeholder
   STRIPE_SECRET_KEY: ci-placeholder
-  NEXT_EXCEL_CSV_URL: https://www.example.com/placeholder.csv
 
 jobs:
   changes:
