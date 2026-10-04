@@ -5,11 +5,12 @@ import { MessagesDialog } from "@/components/MessagesDialog";
 import { PageTransition } from "@/components/PageTransition";
 import { AppHeader } from "@/components/shell/AppHeader";
 import { AppSidebar } from "@/components/shell/AppSidebar";
+import { ShellDialogsProvider } from "@/components/shell/ShellDialogs";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useMyBugReports } from "@/hooks/useMyBugReports";
 import { useUnreadBugReports } from "@/hooks/useUnreadBugReports";
 import { buildNavSections } from "@/lib/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -38,6 +39,15 @@ export function DashboardShell({ children }: DashboardShellProps) {
     unreadBugReports,
     isSuperAdmin: profile?.role === "superadmin",
   });
+
+  // Pages (the home's « Lire » task) open the dialogs through this context.
+  const dialogs = useMemo(
+    () => ({
+      openMessages: () => setMessagesDialogOpen(true),
+      openBugReport: () => setBugReportDialogOpen(true),
+    }),
+    [],
+  );
 
   return (
     <>
@@ -68,7 +78,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
             className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
           >
             <div className="mx-auto flex min-h-0 w-full max-w-[1120px] flex-1 flex-col px-4 lg:px-8">
-              <PageTransition>{children}</PageTransition>
+              <ShellDialogsProvider value={dialogs}>
+                <PageTransition>{children}</PageTransition>
+              </ShellDialogsProvider>
             </div>
           </main>
         </div>

@@ -1,33 +1,72 @@
 "use client";
 
 import { PageHeader } from "@/components/layouts/PageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { motion } from "motion/react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useSyncExternalStore } from "react";
 
-/** « Bonjour, prénom » and what the home shows, as the page's header. */
+/** « Camille » from « Camille Martin »; empty when there is no name. */
+export function firstNameOf(displayName: string | null | undefined): string {
+  if (!displayName) return "";
+  return displayName.trim().split(/\s+/)[0] ?? "";
+}
+
+/** « Vendredi 3 octobre 2026 ». */
+export function formatTodayFr(date: Date): string {
+  const text = format(date, "EEEE d MMMM yyyy", { locale: fr });
+  return text.charAt(0).toLocaleUpperCase("fr-FR") + text.slice(1);
+}
+
+const subscribe = () => () => {};
+// Today's date only on the client: the server has no idea of the admin's day,
+// and a date rendered there would mismatch at hydration.
+function useToday(): Date | null {
+  const key = useSyncExternalStore(
+    subscribe,
+    () => new Date().toDateString(),
+    () => null,
+  );
+  return key ? new Date(key) : null;
+}
+
+/** « Bonjour Camille », today's date and the one sentence the home starts with. */
 export function DashboardWelcomeHeader() {
-  const { data: user } = useCurrentUser();
+  const { data: user, isLoading } = useCurrentUser();
+  const today = useToday();
 
-  const displayName =
-    user?.user_metadata.display_name || user?.user_metadata.name;
+  const name = firstNameOf(
+    user?.user_metadata?.display_name || user?.user_metadata?.name,
+  );
 
   return (
     <PageHeader
-      className="shrink-0 pt-4 sm:pt-6"
       title={
-        <>
-          Bonjour,{" "}
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="text-primary-text"
-          >
-            {displayName}
-          </motion.span>
-        </>
+        isLoading ? (
+          <>
+            Bonjour{" "}
+            <Skeleton
+              className="inline-block h-7 w-36 align-middle"
+              aria-hidden
+            />
+          </>
+        ) : name ? (
+          `Bonjour ${name}`
+        ) : (
+          "Bonjour"
+        )
       }
-      intro="Voici ce qu’il se passe sur votre espace d’administration."
+      intro="Voici ce qui vous attend."
+      actions={
+        today && (
+          <p className="text-detail text-muted-foreground lg:pt-2.5">
+            <time dateTime={format(today, "yyyy-MM-dd")}>
+              {formatTodayFr(today)}
+            </time>
+          </p>
+        )
+      }
     />
   );
 }
