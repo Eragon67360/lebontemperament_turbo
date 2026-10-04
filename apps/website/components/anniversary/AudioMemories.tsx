@@ -2,10 +2,11 @@
 
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { AudioMemory } from "@/types/anniversary";
-import { motion, useInView, useScroll, useTransform } from "motion/react";
+import { motion, useInView } from "motion/react";
 import { useRef } from "react";
-import { FaHeadphones } from "react-icons/fa";
 import { CustomAudioPlayer } from "./CustomAudioPlayer";
+import ScoreHeading from "./score/ScoreHeading";
+import { SECTION_MARKS } from "./score/sections";
 
 interface AudioMemoriesProps {
   audioMemories: AudioMemory[];
@@ -16,39 +17,19 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const shouldReduceMotion = useReducedMotion();
 
-  const { scrollY } = useScroll();
-  const yRaw = useTransform(scrollY, [0, 1000], [30, -30]);
-  const y = shouldReduceMotion ? 0 : yRaw;
-
   return (
     <section
       id="audio"
       ref={sectionRef}
       className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
-      <motion.div
-        style={{ y }}
-        className="bg-primary/5 absolute right-1/4 bottom-1/4 h-125 w-125 rounded-full blur-[100px]"
-      />
-
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
-            <FaHeadphones className="text-3xl sm:text-4xl" />
-          </div>
-          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Mémoires Audio
-          </h2>
-          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
-            Écoutez les voix et les sons qui ont marqué 40 ans d&apos;histoire
-            du Bon Tempérament.
-          </p>
-        </motion.div>
+        <ScoreHeading
+          kicker={SECTION_MARKS.audio!}
+          title="Mémoires audio"
+          intro="Écoutez les voix et les sons qui ont marqué 40 ans d’histoire du Bon Tempérament."
+          className="mb-12"
+        />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
           {audioMemories.map((memory, index) => (

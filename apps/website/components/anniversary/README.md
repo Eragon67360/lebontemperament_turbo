@@ -6,50 +6,19 @@ Cette page de célébration des 40 ans du Bon Tempérament est une expérience i
 
 ## Structure des Composants
 
-### 1. `AnniversaryLanding.tsx`
+La page suit la direction A « Mesure 40 » choisie par le propriétaire (octobre 2026) : la page est une partition. Police d'affichage Fraunces (`--font-score`, chargée par `app/40-ans/page.tsx` pour cette page seulement), Roboto pour le texte, le teal du site comme seul accent.
 
-**Rôle**: Animation d'entrée spectaculaire et hero section
+### 1. `score/ScoreHero.tsx`
 
-**Fonctionnalités**:
+Ouverture : une portée de cinq lignes se trace, une mesure 4/0 (`hero_number`) s'installe, une note par décennie (1987, 1997, 2007, 2017) tombe sur la portée et 2027 reçoit le point d'orgue. Titre (`hero_subtitle`), texte (`description`), bouton (`cta_text` → `cta_target_section`) et statistiques du CMS. Statique si `enable_intro_animation` est désactivé ou si le visiteur préfère réduire les animations.
 
-- Animation GSAP avec système de particules
-- Révélation animée du nombre "40"
-- Statistiques animées (40 ans, 200+ concerts, etc.)
-- Option de skip pour les utilisateurs pressés
-- Responsive et accessible
+### 2. `score/ScoreTimeline.tsx` (`#timeline`)
 
-**Technologies**:
+« La partition des 40 ans » : 40 mesures (1987 à 2026), dix par ligne, puis 2027 en point d'orgue. Les événements de la frise et les souvenirs mis en avant (avec une année) sont les notes ; une année vide est un silence qui invite à écrire un souvenir (l'année est reportée dans le formulaire). Les mesures forment un groupe radio (flèches, Début, Fin) ; « Jouer la partition » les parcourt. Une photo de la galerie de la même année s'affiche à côté. Logique pure et testée : `lib/anniversaryScore.ts`. Les années hors 1987–2027 sont ramenées à la première mesure ou au point d'orgue.
 
-- GSAP pour les animations complexes
-- Motion (Framer Motion) pour les transitions
-- Particules animées en CSS/GSAP
+### 3. `score/ScoreVoices.tsx`, `score/ScoreMovements.tsx` (`#anniversary-navigation`), `score/ScoreFine.tsx`
 
-### 2. `AnniversaryNavigation.tsx`
-
-**Rôle**: Hub de navigation vers les différentes sections
-
-**Fonctionnalités**:
-
-- 5 cartes de navigation interactives
-- Scroll smooth vers les sections
-- Animations au hover
-- Design avec gradients colorés
-
-### 3. `AnniversaryTimeline.tsx`
-
-**Rôle**: Timeline interactive des 40 ans d'histoire
-
-**Fonctionnalités**:
-
-- Timeline verticale avec ligne animée
-- Événements clés avec icônes et descriptions
-- Animation au scroll
-- Layout alterné (gauche/droite)
-
-**Contenu**:
-
-- 7 événements majeurs (1984-2024)
-- Placeholder data à remplacer par le contenu réel
+« Tutti » : les chœurs, l'orchestre et leurs chefs, avec la citation de Simone Duclos. « Le programme » : les cartes de navigation du CMS, marquées par le tempo de leur section (`score/sections.ts` : Prélude, I · Allegro, II · Andante, III · Scherzo, IV · Adagio, Coda). « Fine » clôt la page. Les sections média gardent leur contenu, avec l'en-tête commun `score/ScoreHeading.tsx`.
 
 ### 4. `VideoGallery.tsx`
 

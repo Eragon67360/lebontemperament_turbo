@@ -1,22 +1,31 @@
 "use client";
 
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { SCORE_FIRST_YEAR } from "@/lib/anniversaryScore";
 import type { FormConfig, Memory } from "@/types/anniversary";
 import { Input, Label, TextArea, TextField } from "@heroui/react";
 import { FILL_TIME_FIELD, HONEYPOT_FIELD } from "@repo/domain/utils/formAbuse";
 import { motion, useInView } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { FaHeart, FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
+import { FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
 import { toast } from "sonner";
 import AnniversaryCTA from "./AnniversaryCTA";
+import ScoreHeading from "./score/ScoreHeading";
+import { SECTION_MARKS } from "./score/sections";
 
 interface MemorySharingProps {
   config: FormConfig;
   featuredMemories: Memory[];
+  /** A year chosen on the score (« Écrivez cette mesure »), to prefill. */
+  prefillYear?: number | null;
 }
 
-const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
+const MemorySharing = ({
+  config,
+  featuredMemories,
+  prefillYear = null,
+}: MemorySharingProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const shouldReduceMotion = useReducedMotion();
@@ -27,6 +36,16 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
     year: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // A measure picked on the score fills the year (state adjusted while
+  // rendering, the React way to follow a prop without an effect).
+  const [lastPrefill, setLastPrefill] = useState(prefillYear);
+  if (prefillYear !== lastPrefill) {
+    setLastPrefill(prefillYear);
+    if (prefillYear !== null) {
+      setFormData((prev) => ({ ...prev, year: String(prefillYear) }));
+    }
+  }
 
   // Spam checks without a third party: a field people never see, and the
   // time they needed to fill the form (measured from the first render).
@@ -83,27 +102,13 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
       ref={sectionRef}
       className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
     >
-      <div className="absolute inset-0 z-0">
-        <div className="bg-primary/5 absolute top-1/3 left-1/3 h-125 w-125 rounded-full blur-[100px]" />
-      </div>
-
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
-            <FaHeart className="text-3xl sm:text-4xl" />
-          </div>
-          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            {config.section_title}
-          </h2>
-          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
-            {config.section_description}
-          </p>
-        </motion.div>
+        <ScoreHeading
+          kicker={SECTION_MARKS.memories!}
+          title={config.section_title}
+          intro={config.section_description}
+          className="mb-12"
+        />
 
         {featuredMemories.length > 0 && (
           <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
@@ -183,7 +188,7 @@ const MemorySharing = ({ config, featuredMemories }: MemorySharingProps) => {
                 onChange={(value) => handleFieldChange("year", value)}
               >
                 <Label>{config.year_label}</Label>
-                <Input min={1984} max={new Date().getFullYear()} />
+                <Input min={SCORE_FIRST_YEAR} max={new Date().getFullYear()} />
               </TextField>
               <TextField
                 name="message"

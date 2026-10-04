@@ -4,8 +4,19 @@ import { getPublicFeatureFlags } from "@/lib/featureFlags";
 import { checkAdminAuth } from "@/utils/auth";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
+import { Fraunces } from "next/font/google";
 import { notFound } from "next/navigation";
 import AnniversaryPageClient from "./AnniversaryPageClient";
+
+// The score's display face (direction A, « Mesure 40 »), for this page only:
+// the site keeps Roboto everywhere else.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  display: "swap",
+  variable: "--font-score",
+});
 
 export const metadata: Metadata = {
   title: "40 ans de l'ensemble",
@@ -80,7 +91,9 @@ export default async function AnniversaryPage() {
           { name: "40 ans du Bon Tempérament", path: "/40-ans" },
         ])}
       />
-      <AnniversaryPageClient data={data} isPreview={isPreview} />
+      <div className={fraunces.variable}>
+        <AnniversaryPageClient data={data} isPreview={isPreview} />
+      </div>
     </>
   );
 }
