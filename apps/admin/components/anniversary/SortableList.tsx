@@ -7,7 +7,9 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  type Announcements,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -43,6 +45,22 @@ export function SortableList({
     }),
   );
 
+  // Spoken in French by screen readers while dragging (dnd-kit defaults are English).
+  const position = (id: UniqueIdentifier) => ids.indexOf(String(id)) + 1;
+  const announcements: Announcements = {
+    onDragStart: ({ active }) =>
+      `Élément ${position(active.id)} sur ${ids.length} saisi.`,
+    onDragOver: ({ over }) =>
+      over
+        ? `Position ${position(over.id)} sur ${ids.length}.`
+        : "Hors de la liste.",
+    onDragEnd: ({ over }) =>
+      over
+        ? `Déposé en position ${position(over.id)} sur ${ids.length}.`
+        : "Déposé hors de la liste : ordre inchangé.",
+    onDragCancel: () => "Déplacement annulé : ordre inchangé.",
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -51,6 +69,13 @@ export function SortableList({
 
   return (
     <DndContext
+      accessibility={{
+        announcements,
+        screenReaderInstructions: {
+          draggable:
+            "Pour déplacer un élément, appuyez sur Espace ou Entrée, utilisez les flèches haut et bas, puis Espace ou Entrée pour le déposer, ou Échap pour annuler.",
+        },
+      }}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}

@@ -10,7 +10,8 @@ test("publishing the 40 ans page asks for a check and can be cancelled", async (
   page,
 }) => {
   const writes: string[] = [];
-  await page.route("**/*", (route) => {
+  // Only the admin API: a Supabase token refresh must not be caught here.
+  await page.route("**/api/**", (route) => {
     const request = route.request();
     if (request.method() === "GET" || request.method() === "HEAD") {
       return route.continue();
@@ -26,7 +27,12 @@ test("publishing the 40 ans page asks for a check and can be cancelled", async (
 
   // The checklist has one row per section, computed by the readiness route.
   await expect(page.getByText(/sections? prêtes? sur 10/)).toBeVisible();
-  await expect(page.getByText("Chronologie", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("main")
+      .getByRole("listitem")
+      .filter({ hasText: "Chronologie" }),
+  ).toBeVisible();
 
   // Whatever the current state, the opposite action opens the dialog.
   const publish = page.getByRole("button", { name: "Publier la page" });
@@ -61,7 +67,8 @@ test("a campaign dialog shows inline errors, sends nothing and guards unsaved ch
   page,
 }) => {
   const writes: string[] = [];
-  await page.route("**/*", (route) => {
+  // Only the admin API: a Supabase token refresh must not be caught here.
+  await page.route("**/api/**", (route) => {
     const request = route.request();
     if (request.method() === "GET" || request.method() === "HEAD") {
       return route.continue();
