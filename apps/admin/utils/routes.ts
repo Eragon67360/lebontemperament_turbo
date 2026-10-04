@@ -9,6 +9,7 @@ const RouteNames = {
     ADMIN: {
       BUG_REPORTS: "/dashboard/admin/bug-reports",
       USERS: "/dashboard/admin/users",
+      USERS_SYNC: "/dashboard/admin/users/sync",
       CA: "/dashboard/admin/ca",
       GOOGLE_GROUPS: "/dashboard/admin/google-groups",
       ANNIVERSARY: {

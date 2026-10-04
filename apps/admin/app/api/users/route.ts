@@ -7,7 +7,7 @@ import {
 } from "@/utils/access";
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { User } from "@supabase/supabase-js";
+import { inviteStatusOf, listAllAuthUsers } from "@/utils/users/authUsers";
 import { NextResponse } from "next/server";
 
 const roleLabel = (role: UserRole) =>
@@ -42,41 +42,10 @@ export async function GET(request: Request) {
     // Always sort by created_at desc by default
     query = query.order("created_at", { ascending: false });
 
-    // Function to get all auth users with pagination
-    const getAllAuthUsers = async () => {
-      let allUsers: User[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const {
-          data: { users },
-          error,
-        } = await supabaseAdmin.auth.admin.listUsers({
-          page: page,
-          perPage: 50, // default is 50
-        });
-
-        if (error) {
-          console.error("Error fetching users page ${page}:", error);
-          throw error;
-        }
-
-        if (!users || users.length === 0) {
-          hasMore = false;
-        } else {
-          allUsers = [...allUsers, ...users];
-          page++;
-        }
-      }
-
-      return allUsers;
-    };
-
     const [{ data: profiles, error: profilesError }, authUsersResult] =
       await Promise.all([
         query,
-        getAllAuthUsers().catch((error) => {
+        listAllAuthUsers(supabaseAdmin).catch((error) => {
           console.error("Error fetching auth users:", error);
           throw error;
         }),
@@ -91,16 +60,7 @@ export async function GET(request: Request) {
     const enrichedUsers = profiles?.map((profile) => {
       const authUser = authUsers.find((au) => au.id === profile.id);
 
-      let invite_status: "en attente" | "approuvé" = "en attente";
-
-      if (authUser) {
-        if (
-          (authUser.invited_at && authUser.confirmed_at) ||
-          authUser.email_confirmed_at
-        ) {
-          invite_status = "approuvé";
-        }
-      }
+      const invite_status = inviteStatusOf(authUser);
 
       // Get avatar: prioritize profile_picture_url over Google avatar
       const googleAvatar = authUser?.user_metadata?.avatar_url;
