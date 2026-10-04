@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucie Bernard · Administration · Le Bon Tempérament</title>
+<script>(function(){var q=new URLSearchParams(location.search).get("theme");var s=null;try{s=localStorage.getItem("lbt-theme")}catch(e){}var t=q||s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --font-sans: var(--font-sans);
+  --text-title: 28px;
+  --text-title--line-height: 34px;
+  --text-title--letter-spacing: -0.02em;
+  --text-heading: 18px;
+  --text-heading--line-height: 26px;
+  --text-heading--letter-spacing: -0.01em;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-small: 13px;
+  --text-small--line-height: 18px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+}
+</style>
+<style>
+@layer components {
+/* ---------- Buttons (shadcn Button variants, token-driven) ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 14px;border-radius:var(--radius-md);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap;border:1px solid transparent;cursor:pointer;transition:background-color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);text-decoration:none;color:var(--text);background:transparent}
+.btn svg{width:16px;height:16px;flex:none}
+.btn-primary{background:var(--accent-strong);color:var(--on-accent)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg);border-color:var(--border-strong)}
+.btn-secondary:hover{background:var(--surface)}
+.btn-ghost:hover{background:var(--surface)}
+.btn-danger{background:var(--danger-solid);color:#fff}
+.btn-danger:hover{background:var(--danger-hover)}
+.btn-danger-outline{border-color:var(--danger);color:var(--danger);background:var(--bg)}
+.btn-danger-outline:hover{background:var(--danger-soft)}
+.btn-sm{height:32px;padding:0 10px;font-size:13px}
+.btn-icon{width:40px;padding:0}
+.btn-icon.btn-sm{width:32px}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+@media (max-width:767px){.btn{min-height:44px}.btn-sm{min-height:40px}.btn-icon{min-width:44px}}
+
+/* ---------- Tabs (section switcher and sub-pages) ---------- */
+.tab{position:relative;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 12px;font-size:14px;color:var(--text-muted);white-space:nowrap;text-decoration:none;border-radius:var(--radius-sm);transition:color var(--dur-fast) var(--ease)}
+.tab:hover{color:var(--text)}
+.tab[aria-current="page"]{color:var(--text);font-weight:500}
+.tab[aria-current="page"]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+.tabs-sub .tab{height:40px;font-size:14px}
+.tab:focus-visible{outline-offset:-2px}
+
+/* ---------- Inputs ---------- */
+.input{display:block;width:100%;height:40px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--radius-md);background:var(--bg);color:var(--text);font:inherit;font-size:14px;transition:border-color var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease)}
+.input::placeholder{color:var(--text-subtle)}
+.input:hover{border-color:var(--text-subtle)}
+.input:focus{border-color:var(--accent)}
+.input[aria-invalid="true"],.input[aria-invalid="true"]:focus{border-color:var(--danger)}
+textarea.input{height:auto;min-height:96px;padding:10px 12px;resize:vertical;line-height:20px}
+select.input{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 10px center}
+.input-search{padding-left:36px}
+@media (max-width:767px){.input{font-size:16px;min-height:44px}}
+input[type="checkbox"].check{appearance:none;width:18px;height:18px;flex:none;border:1.5px solid var(--border-strong);border-radius:4px;background:var(--bg);display:inline-grid;place-items:center;cursor:pointer;transition:background-color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease)}
+input[type="checkbox"].check:hover{border-color:var(--text-subtle)}
+input[type="checkbox"].check:checked{background:var(--accent-strong);border-color:var(--accent-strong)}
+input[type="checkbox"].check:checked::after{content:"";width:10px;height:6px;border:2px solid #fff;border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+input[type="checkbox"].check:indeterminate{background:var(--accent-strong);border-color:var(--accent-strong)}
+input[type="checkbox"].check:indeterminate::after{content:"";width:10px;height:2px;background:#fff}
+input[type="radio"].radio{appearance:none;width:18px;height:18px;flex:none;border:1.5px solid var(--border-strong);border-radius:50%;background:var(--bg);display:inline-grid;place-items:center;cursor:pointer}
+input[type="radio"].radio:checked{border-color:var(--accent-strong);border-width:6px}
+.field-label{display:block;font-size:14px;font-weight:500;line-height:20px;margin-bottom:6px}
+.field-hint{font-size:13px;line-height:18px;color:var(--text-muted);margin-top:6px}
+.field-error{display:flex;gap:6px;align-items:flex-start;font-size:13px;line-height:18px;color:var(--danger);margin-top:6px}
+.field-error svg{width:14px;height:14px;flex:none;margin-top:2px}
+.optional{font-weight:400;color:var(--text-muted)}
+
+/* ---------- Status dot, chips ---------- */
+.status{display:inline-flex;align-items:center;gap:7px;font-size:13px;line-height:18px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--text-subtle)}
+.dot-success{background:var(--success)}.dot-warning{background:var(--warning)}.dot-danger{background:var(--danger)}.dot-info{background:var(--info)}.dot-accent{background:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;border:1px solid var(--border);background:var(--surface);font-size:12px;line-height:16px;font-weight:500;color:var(--text-muted);white-space:nowrap}
+.chip svg{width:12px;height:12px}
+.chip-accent{background:var(--accent-soft);border-color:transparent;color:var(--accent-text)}
+.chip-warning{background:var(--warning-soft);border-color:transparent;color:var(--warning)}
+.chip-success{background:var(--success-soft);border-color:transparent;color:var(--success)}
+.chip-info{background:var(--info-soft);border-color:transparent;color:var(--info)}
+.count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;line-height:1}
+.count-on-primary{background:rgb(255 255 255 / .22);color:#fff}
+.count-accent{background:var(--accent-soft);color:var(--accent-text)}
+.count-muted{background:var(--surface);color:var(--text-muted);border:1px solid var(--border)}
+
+/* ---------- Avatars ---------- */
+.avatar{display:inline-grid;place-items:center;flex:none;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-weight:600;font-size:12px;letter-spacing:.01em}
+
+/* ---------- List rows ---------- */
+.rows{border-top:1px solid var(--border)}
+.row{display:grid;align-items:center;gap:0;min-height:56px;border-bottom:1px solid var(--border);transition:background-color var(--dur-fast) var(--ease)}
+.row:hover{background:var(--surface)}
+.row[aria-selected="true"]{background:var(--accent-soft)}
+.row-link{color:inherit;text-decoration:none;display:contents}
+.row .cell{padding:10px 12px;min-width:0}
+.primary-text{font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.secondary-text{font-size:13px;line-height:18px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-head{display:grid;align-items:center;font-size:12px;line-height:16px;font-weight:500;color:var(--text-muted)}
+.row-head .cell{padding:8px 12px}
+
+/* ---------- Menus, sheets, dialogs ---------- */
+.menu{position:absolute;z-index:40;min-width:224px;padding:6px;background:var(--raised);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-raised);transform-origin:top right;animation:pop var(--dur-fast) var(--ease)}
+.menu[hidden]{display:none}
+.menu-item{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 10px;border-radius:var(--radius-sm);font-size:14px;color:var(--text);text-align:left;background:none;border:0;cursor:pointer;text-decoration:none}
+.menu-item:hover,.menu-item:focus-visible{background:var(--surface);outline:none}
+.menu-item svg{width:16px;height:16px;color:var(--text-muted);flex:none}
+.menu-item.danger{color:var(--danger)}.menu-item.danger svg{color:var(--danger)}
+.menu-sep{height:1px;background:var(--border);margin:6px -6px}
+@keyframes pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.overlay{position:fixed;inset:0;z-index:50;background:var(--overlay);animation:fade var(--dur-base) var(--ease)}
+.overlay[hidden]{display:none}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{position:fixed;top:0;right:0;bottom:0;z-index:51;width:min(600px,100vw);background:var(--raised);border-left:1px solid var(--border);box-shadow:var(--shadow-raised);display:flex;flex-direction:column;animation:slide var(--dur-slow) var(--ease)}
+.sheet[hidden]{display:none}
+@keyframes slide{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+.sheet-head{display:flex;align-items:flex-start;gap:12px;padding:20px 24px 16px;border-bottom:1px solid var(--border)}
+.sheet-body{flex:1;overflow-y:auto;padding:20px 24px 24px}
+.sheet-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 24px;border-top:1px solid var(--border);background:var(--raised)}
+@media (max-width:767px){.sheet{width:100vw;border-left:0}.sheet-head{padding:12px 16px}.sheet-body{padding:16px}.sheet-foot{padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom))}.sheet-foot .btn{flex:1}}
+.sheet-bottom{position:fixed;left:0;right:0;bottom:0;z-index:51;max-height:88vh;overflow-y:auto;background:var(--raised);border-top:1px solid var(--border);border-radius:16px 16px 0 0;box-shadow:var(--shadow-raised);animation:rise var(--dur-slow) var(--ease)}
+.sheet-bottom[hidden]{display:none}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.dialog{position:fixed;z-index:60;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,calc(100vw - 32px));background:var(--raised);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-raised);animation:pop var(--dur-base) var(--ease)}
+.dialog[hidden]{display:none}
+.dialog-body{padding:24px 24px 8px}
+.dialog-foot{display:flex;justify-content:flex-end;gap:8px;padding:16px 24px 20px}
+@media (max-width:767px){.dialog-foot{flex-direction:column-reverse}.dialog-foot .btn{width:100%}}
+
+/* ---------- Callouts ---------- */
+.callout{display:flex;gap:12px;padding:14px 16px;border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface)}
+.callout svg{width:18px;height:18px;flex:none;margin-top:1px}
+.callout-warning{background:var(--warning-soft);border-color:transparent}.callout-warning>svg{color:var(--warning)}
+.callout-danger{background:var(--danger-soft);border-color:transparent}.callout-danger>svg{color:var(--danger)}
+.callout-info{background:var(--info-soft);border-color:transparent}.callout-info>svg{color:var(--info)}
+
+/* ---------- Misc ---------- */
+.link{color:var(--accent-text);text-decoration:none;font-weight:500}
+.link:hover{text-decoration:underline}
+.quiet-link{color:var(--text-muted);text-decoration:none}.quiet-link:hover{color:var(--text);text-decoration:underline}
+.tnum{font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.scroll-x{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.scroll-x::-webkit-scrollbar{display:none}
+.progress{height:6px;border-radius:3px;background:var(--border);overflow:hidden}
+.progress>span{display:block;height:100%;background:var(--accent);border-radius:3px}
+.dl{display:grid;grid-template-columns:1fr;gap:0}
+.dl>div{display:grid;grid-template-columns:1fr;gap:4px;padding:12px 0;border-bottom:1px solid var(--border)}
+@media (min-width:640px){.dl>div{grid-template-columns:200px minmax(0,1fr);gap:16px;padding:12px 0}}
+.dl dt{font-size:13px;line-height:18px;color:var(--text-muted);padding-top:1px}
+.dl dd{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.kbd{display:inline-block;padding:0 5px;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;font-size:11px;line-height:16px;font-family:inherit;color:var(--text-muted);background:var(--surface)}
+
+.pressed{background:var(--surface);border-color:var(--border-strong)}
+}
+
+</style>
+</head>
+<body class="min-h-dvh">
+
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-raised focus:px-3 focus:py-2 focus:rounded-md focus:shadow">Aller au contenu</a>
+<header class="sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur supports-[backdrop-filter]:bg-bg/85">
+  <div class="mx-auto flex max-w-[1200px] flex-wrap items-center px-4 md:px-6">
+    <a href="accueil.html" class="mr-1 flex h-14 items-center gap-2.5 rounded-md pr-2" aria-label="Le Bon Tempérament — Accueil">
+      <span class="grid h-7 w-7 place-items-center rounded-md bg-accent-strong text-on-accent"><i data-lucide="music-2" class="h-4 w-4"></i></span>
+      <span class="hidden text-body font-semibold tracking-tight md:inline">Le Bon Tempérament</span>
+    </a>
+    <button type="button" id="sectionBtn" class="btn btn-ghost -ml-1 h-11 gap-1.5 px-2 font-medium md:hidden" aria-haspopup="dialog" aria-controls="sectionSheet" aria-expanded="false">
+      <span class="truncate">Membres et accès</span><i data-lucide="chevron-down" class="h-4 w-4 text-muted"></i>
+    </button>
+    <nav aria-label="Sections" class="scroll-x order-last -mb-px hidden basis-full md:flex xl:order-none xl:ml-4 xl:basis-auto">
+      <a class="tab" href="accueil.html" >Accueil</a><a class="tab" href="#" >Campagne 40 ans</a><a class="tab" href="nouveau-concert.html" >Concerts et site public</a><a class="tab" href="#" >Saison des membres</a><a class="tab" href="membres.html" aria-current="page">Membres et accès</a><a class="tab" href="#" >Association</a>
+    </nav>
+    <div class="relative ml-auto flex items-center">
+      <button type="button" id="accountBtn" class="flex h-11 items-center gap-2 rounded-md px-1.5 hover:bg-surface" aria-haspopup="menu" aria-controls="accountMenu" aria-expanded="false" aria-label="Compte : Camille Martin, 2 messages non lus">
+        <span class="relative"><span class="avatar h-8 w-8">CM</span><span class="absolute -right-1.5 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent-strong px-1 text-[10px] font-semibold leading-none text-on-accent ring-2 ring-bg">2</span></span>
+        <i data-lucide="chevron-down" class="hidden h-4 w-4 text-muted sm:block"></i>
+      </button>
+      <div id="accountMenu" class="menu right-0 top-full mt-1 w-64" role="menu" hidden>
+        <div class="px-2.5 pb-2 pt-1.5">
+          <div class="text-body font-medium">Camille Martin</div>
+          <div class="text-small text-muted">Administratrice · camille.martin@example.org</div>
+        </div>
+        <div class="menu-sep"></div>
+        <a class="menu-item" role="menuitem" href="#"><i data-lucide="message-square"></i>Messages<span class="count count-accent ml-auto">2</span></a>
+        <a class="menu-item" role="menuitem" href="#"><i data-lucide="life-buoy"></i>Signaler un problème</a>
+        <div class="menu-sep"></div>
+        <button type="button" class="menu-item" role="menuitemcheckbox" id="themeToggle" aria-checked="false"><i data-lucide="moon"></i><span>Thème sombre</span><span class="ml-auto flex h-5 w-9 items-center rounded-full bg-border-strong p-0.5 transition-colors" data-switch><span class="h-4 w-4 rounded-full bg-raised shadow transition-transform"></span></span></button>
+        <div class="menu-sep"></div>
+        <a class="menu-item" role="menuitem" href="#"><i data-lucide="log-out"></i>Se déconnecter</a>
+      </div>
+    </div>
+  </div>
+</header>
+<div id="sectionOverlay" class="overlay" hidden></div>
+<div id="sectionSheet" class="sheet-bottom" role="dialog" aria-modal="true" aria-labelledby="sectionSheetTitle" hidden>
+  <div class="flex items-center justify-between px-4 pt-4 pb-2">
+    <h2 id="sectionSheetTitle" class="text-heading font-semibold">Aller à</h2>
+    <button type="button" class="btn btn-ghost btn-icon" data-close="sectionSheet" aria-label="Fermer"><i data-lucide="x"></i></button>
+  </div>
+  <div class="px-2 pb-6"><div>
+      <a href="accueil.html" class="menu-item" style="min-height:48px;font-weight:500" ><i data-lucide="house"></i>Accueil</a></div><div>
+      <a href="#" class="menu-item" style="min-height:48px;font-weight:500" ><i data-lucide="sparkles"></i>Campagne 40 ans</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Vue d'ensemble et publication</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Contenu</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Témoignages</a></div><div>
+      <a href="nouveau-concert.html" class="menu-item" style="min-height:48px;font-weight:500" ><i data-lucide="ticket"></i>Concerts et site public</a><a href="nouveau-concert.html" class="menu-item" style="padding-left:46px;min-height:44px">Concerts et tournées</a><a href="nouveau-concert.html" class="menu-item" style="padding-left:46px;min-height:44px">Histoires de concerts</a><a href="nouveau-concert.html" class="menu-item" style="padding-left:46px;min-height:44px">Vidéos</a></div><div>
+      <a href="#" class="menu-item" style="min-height:48px;font-weight:500" ><i data-lucide="music-2"></i>Saison des membres</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Partitions et documents</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Répétitions</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Événements</a></div><div>
+      <a href="membres.html" class="menu-item" style="min-height:48px;font-weight:500;color:var(--accent-text)" aria-current="page"><i data-lucide="users"></i>Membres et accès<i data-lucide="check" style="margin-left:auto;color:var(--accent-text)"></i></a><a href="membres.html" class="menu-item" style="padding-left:46px;min-height:44px;font-weight:500;color:var(--accent-text)">Membres</a><a href="membres.html" class="menu-item" style="padding-left:46px;min-height:44px">Liste de diffusion</a></div><div>
+      <a href="#" class="menu-item" style="min-height:48px;font-weight:500" ><i data-lucide="landmark"></i>Association</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Comptes rendus du CA</a><a href="#" class="menu-item" style="padding-left:46px;min-height:44px">Signalements</a></div></div>
+</div>
+<main id="main" class="mx-auto max-w-[960px] px-4 pb-24 md:px-6">
+<div class="pt-7 md:pt-10">
+  <a href="membres.html" class="quiet-link inline-flex items-center gap-1 text-small font-medium"><i data-lucide="arrow-left" class="h-3.5 w-3.5"></i>Membres</a>
+  <div class="mt-3 flex items-start gap-4">
+    <span class="avatar h-12 w-12 text-[15px] md:h-14 md:w-14">LB</span>
+    <div class="min-w-0 flex-1">
+      <h1 class="text-[24px] font-semibold leading-[30px] tracking-[-0.02em] md:text-title md:leading-[34px]">Lucie Bernard</h1>
+      <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <span class="chip">Soprane</span><span class="chip">Jeune</span>
+        <span class="status"><i class="dot dot-success"></i>Actif</span>
+        <span class="text-small text-muted">· Membre · dernière connexion il y a 3 jours</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending roster difference: the one thing to do on this page -->
+<div class="callout callout-warning mt-8" role="status">
+  <i data-lucide="arrow-left-right"></i>
+  <div class="min-w-0 flex-1">
+    <p class="text-body font-medium">1 différence avec la liste des membres</p>
+    <p class="mt-0.5 text-small text-muted">Voix : la liste indique <strong class="font-medium text-text">Alto</strong>, le compte indique <strong class="font-medium text-text">Soprane</strong>. Rien n'est modifié tant que vous ne l'appliquez pas.</p>
+    <div class="mt-3 flex flex-wrap gap-2"><button type="button" class="btn btn-primary btn-sm">Appliquer « Alto »</button><a href="#" class="btn btn-ghost btn-sm">Voir les 4 changements</a></div>
+  </div>
+</div>
+
+<section class="mt-10" aria-labelledby="coord-h">
+  <h2 id="coord-h" class="text-heading font-semibold">Coordonnées</h2>
+  <p class="mt-1 text-small text-muted">Les champs marqués <span class="chip chip-accent align-middle"><i data-lucide="refresh-cw"></i>Liste des membres</span> sont mis à jour depuis la liste à chaque synchronisation ; ils ne se modifient pas ici.</p>
+  <dl class="dl mt-4">
+    <div><dt>E-mail du compte</dt><dd><a href="mailto:lucie.bernard@example.org" class="link">lucie.bernard@example.org</a></dd></div>
+    <div><dt>Portable</dt><dd>06 00 00 00 00 <span class="chip" title="La membre le modifie depuis son profil">Modifiable par la membre</span></dd></div>
+    <div><dt>Adresse</dt><dd>12 rue des Fleurs, 67000 Strasbourg <span class="chip chip-accent"><i data-lucide="refresh-cw"></i>Liste des membres</span></dd></div>
+    <div><dt>Domicile</dt><dd>03 00 00 00 00 <span class="chip chip-accent"><i data-lucide="refresh-cw"></i>Liste des membres</span></dd></div>
+    <div><dt>Voix</dt><dd>Soprane · Jeune <span class="chip chip-accent"><i data-lucide="refresh-cw"></i>Liste des membres</span><span class="chip chip-warning"><i data-lucide="arrow-left-right"></i>Liste : Alto</span></dd></div>
+  </dl>
+</section>
+
+<section class="mt-10" aria-labelledby="hist-h">
+  <h2 id="hist-h" class="text-heading font-semibold">Historique</h2>
+  <ol class="mt-4 list-none space-y-0 p-0">
+    <li class="relative flex gap-4 pb-5 pl-1 before:absolute before:left-[7px] before:top-5 before:h-full before:w-px before:bg-border"><span class="mt-1.5 h-2 w-2 flex-none rounded-full bg-border-strong ring-4 ring-bg"></span><div><p class="text-body">Voix mise à jour par la synchronisation : « Soprane 1 » → « Soprane »</p><p class="text-small text-muted">2 septembre 2026</p></div></li>
+    <li class="relative flex gap-4 pb-5 pl-1 before:absolute before:left-[7px] before:top-5 before:h-full before:w-px before:bg-border"><span class="mt-1.5 h-2 w-2 flex-none rounded-full bg-border-strong ring-4 ring-bg"></span><div><p class="text-body">Compte créé : invitation acceptée</p><p class="text-small text-muted">13 janvier 2026</p></div></li>
+    <li class="relative flex gap-4 pl-1"><span class="mt-1.5 h-2 w-2 flex-none rounded-full bg-border-strong ring-4 ring-bg"></span><div><p class="text-body">Invitée par Nadia Benali</p><p class="text-small text-muted">12 janvier 2026</p></div></li>
+  </ol>
+</section>
+
+<section class="mt-10" aria-labelledby="acces-h">
+  <h2 id="acces-h" class="text-heading font-semibold">Accès au compte</h2>
+  <div class="mt-4 divide-y divide-border rounded-lg border border-border">
+    <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div><p class="text-body font-medium">Rôle : Membre</p><p class="text-small text-muted">Accède à l'espace membres du site et à l'application.</p></div>
+      <button type="button" class="btn btn-secondary shrink-0" aria-haspopup="dialog" aria-controls="roleDialog" aria-expanded="false">Changer le rôle</button>
+    </div>
+    <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div><p class="text-body font-medium">Compte actif</p><p class="text-small text-muted">Désactiver masque Lucie de l'annuaire et retire son accès à l'espace membres. Réversible : elle revient si elle réapparaît dans la liste.</p></div>
+      <button type="button" class="btn btn-danger-outline shrink-0" id="deactivateBtn" aria-haspopup="dialog" aria-controls="confirmDialog" aria-expanded="false"><i data-lucide="user-x"></i>Désactiver le compte</button>
+    </div>
+    <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div><p class="text-body font-medium">Suppression définitive</p><p class="text-small text-muted">Irréversible, pour une demande d'effacement. Réservée aux super-administrateurs.</p></div>
+      <button type="button" class="btn btn-ghost shrink-0 text-danger" aria-haspopup="dialog" aria-controls="deleteDialog" aria-expanded="false"><i data-lucide="trash-2"></i>Supprimer définitivement</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<div id="dialogOverlay" class="overlay" hidden></div>
+
+<!-- Role -->
+<div id="roleDialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="roleTitle" data-overlay="dialogOverlay" hidden>
+  <div class="dialog-body">
+    <h2 id="roleTitle" class="text-heading font-semibold">Changer le rôle de Lucie Bernard</h2>
+    <fieldset class="mt-4 space-y-2">
+      <legend class="sr-only">Rôle</legend>
+      <label class="flex cursor-pointer gap-3 rounded-lg border border-border p-3 has-[:checked]:border-accent has-[:checked]:bg-accent-soft"><input type="radio" name="role" class="radio mt-0.5" checked><span><span class="block text-body font-medium">Membre</span><span class="block text-small text-muted">Accède à l'espace membres du site et à l'application.</span></span></label>
+      <label class="flex cursor-pointer gap-3 rounded-lg border border-border p-3 has-[:checked]:border-accent has-[:checked]:bg-accent-soft"><input type="radio" name="role" class="radio mt-0.5"><span><span class="block text-body font-medium">Administratrice</span><span class="block text-small text-muted">En plus : accède à cette administration (concerts et site public, campagne 40 ans, documents, membres, comptes rendus). Peut inviter, synchroniser et désactiver des membres. Ne peut pas supprimer définitivement un compte.</span></span></label>
+    </fieldset>
+  </div>
+  <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close="roleDialog">Annuler</button><button type="button" class="btn btn-primary" data-close="roleDialog">Enregistrer le rôle</button></div>
+</div>
+
+<!-- Deactivate (deep link: #confirm) -->
+<div id="confirmDialog" class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc" data-overlay="dialogOverlay" data-hash="confirm" hidden>
+  <div class="dialog-body">
+    <div class="flex gap-3">
+      <span class="grid h-9 w-9 flex-none place-items-center rounded-full bg-danger-soft text-danger"><i data-lucide="user-x" class="h-4 w-4"></i></span>
+      <div class="min-w-0">
+        <h2 id="confirmTitle" class="text-heading font-semibold">Désactiver le compte de Lucie Bernard ?</h2>
+        <div id="confirmDesc" class="mt-2 space-y-2 text-body text-muted">
+          <p>Dès maintenant, Lucie :</p>
+          <ul class="list-disc space-y-1 pl-5">
+            <li>n'apparaît plus dans l'annuaire des membres, sur le site et dans l'application ;</li>
+            <li>perd l'accès à l'espace membres et à l'application.</li>
+          </ul>
+          <p>Ses informations et son historique sont conservés. Vous pourrez la réactiver depuis cette fiche, et elle est réactivée automatiquement si elle réapparaît dans la liste des membres.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close="confirmDialog" autofocus>Annuler</button><button type="button" class="btn btn-danger" data-close="confirmDialog"><i data-lucide="user-x"></i>Désactiver le compte</button></div>
+</div>
+
+<!-- Delete (superadmin, irreversible, typed confirmation) -->
+<div id="deleteDialog" class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle" aria-describedby="deleteDesc" data-overlay="dialogOverlay" hidden>
+  <div class="dialog-body">
+    <div class="flex gap-3">
+      <span class="grid h-9 w-9 flex-none place-items-center rounded-full bg-danger-soft text-danger"><i data-lucide="trash-2" class="h-4 w-4"></i></span>
+      <div class="min-w-0 flex-1">
+        <h2 id="deleteTitle" class="text-heading font-semibold">Supprimer définitivement Lucie Bernard ?</h2>
+        <p id="deleteDesc" class="mt-2 text-body text-muted">Son compte, ses coordonnées, sa photo et son historique sont effacés pour de bon. Elle ne peut plus se connecter ; une nouvelle invitation créerait un compte vide. À réserver aux demandes d'effacement : pour un départ, désactivez plutôt le compte.</p>
+        <label for="deleteConfirm" class="field-label mt-4">Pour confirmer, écrivez <span class="select-all font-semibold">Lucie Bernard</span></label>
+        <input id="deleteConfirm" class="input" autocomplete="off" spellcheck="false" placeholder="Lucie Bernard">
+      </div>
+    </div>
+  </div>
+  <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close="deleteDialog">Annuler</button><button type="button" class="btn btn-danger" id="deleteBtn" disabled data-close="deleteDialog"><i data-lucide="trash-2"></i>Supprimer définitivement</button></div>
+</div>
+
+<script>
+(function(){
+  // Theme toggle (account menu) — persists; ?theme=dark in the URL wins on load.
+  var root=document.documentElement, t=document.getElementById('themeToggle');
+  function sync(){var d=root.getAttribute('data-theme')==='dark';t.setAttribute('aria-checked',d);var s=t.querySelector('[data-switch]');s.style.background=d?'var(--accent-strong)':'var(--border-strong)';s.firstElementChild.style.transform=d?'translateX(16px)':'none';t.querySelector('span').textContent=d?'Thème sombre : activé':'Thème sombre';}
+  t.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);try{localStorage.setItem('lbt-theme',d)}catch(e){}sync();});
+  sync();
+
+  // Generic menus: [aria-controls] buttons toggling .menu; close on Escape / outside click; arrow keys move.
+  function wireMenu(btnId){var b=document.getElementById(btnId);if(!b)return;var m=document.getElementById(b.getAttribute('aria-controls'));
+    function open(){m.hidden=false;b.setAttribute('aria-expanded','true');var f=m.querySelector('input.check')||m.querySelector('.menu-item');f&&f.focus();}
+    function close(){m.hidden=true;b.setAttribute('aria-expanded','false');}
+    b.addEventListener('click',function(e){e.stopPropagation();m.hidden?open():close();});
+    m.addEventListener('keydown',function(e){var items=[].slice.call(m.querySelectorAll('.menu-item:not([hidden])'));var i=items.indexOf(document.activeElement);
+      if(e.key==='Escape'){close();b.focus();}else if(e.key==='ArrowDown'){e.preventDefault();(items[i+1]||items[0]).focus();}else if(e.key==='ArrowUp'){e.preventDefault();(items[i-1]||items[items.length-1]).focus();}});
+    document.addEventListener('click',function(e){if(!m.hidden&&!m.contains(e.target))close();});
+  }
+  document.querySelectorAll('[aria-haspopup="menu"][aria-controls]').forEach(function(b){wireMenu(b.id)});
+
+  // Overlays (sheets, dialogs): open with data-open="id", close with data-close="id", Escape, or overlay click. Focus is trapped.
+  var stack=[];
+  window.openLayer=function(id){var l=document.getElementById(id);if(!l||!l.hidden)return;var ov=document.getElementById(l.dataset.overlay||'sectionOverlay');ov.hidden=false;l.hidden=false;l.dataset.returnFocus=document.activeElement&&document.activeElement.id||'';stack.push(l);var f=l.querySelector('[autofocus],input:not([type=hidden]),button,a,textarea,select');f&&f.focus();document.body.style.overflow='hidden';var b=document.querySelector('[aria-controls="'+id+'"]');b&&b.setAttribute('aria-expanded','true');};
+  window.closeLayer=function(id){var l=document.getElementById(id);if(!l||l.hidden)return;l.hidden=true;stack=stack.filter(function(x){return x!==l});var ov=document.getElementById(l.dataset.overlay||'sectionOverlay');if(!stack.some(function(x){return (x.dataset.overlay||'sectionOverlay')===ov.id}))ov.hidden=true;if(!stack.length)document.body.style.overflow='';var b=document.querySelector('[aria-controls="'+id+'"]');b&&b.setAttribute('aria-expanded','false');var r=l.dataset.returnFocus&&document.getElementById(l.dataset.returnFocus);r&&r.focus();if(location.hash==='#'+l.dataset.hash)history.replaceState(null,'',location.pathname+location.search);};
+  document.addEventListener('click',function(e){var o=e.target.closest('[data-open]');if(o){e.preventDefault();openLayer(o.dataset.open);return;}var c=e.target.closest('[data-close]');if(c){closeLayer(c.dataset.close);return;}if(e.target.classList.contains('overlay')&&stack.length){var top=stack[stack.length-1];if(top.dataset.guard&&!confirmGuard(top))return;closeLayer(top.id);}});
+  document.addEventListener('keydown',function(e){if(!stack.length)return;var top=stack[stack.length-1];
+    if(e.key==='Escape'){if(top.dataset.guard&&!confirmGuard(top))return;closeLayer(top.id);}
+    if(e.key==='Tab'){var f=[].slice.call(top.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select,textarea,[tabindex]:not([tabindex="-1"])')).filter(function(x){return x.offsetParent!==null});if(!f.length)return;if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f[f.length-1].focus();}else if(!e.shiftKey&&document.activeElement===f[f.length-1]){e.preventDefault();f[0].focus();}}});
+  function confirmGuard(l){var g=document.getElementById(l.dataset.guard);if(!g)return true;openLayer(g.id);return false;}
+  document.querySelectorAll('[aria-haspopup="dialog"][aria-controls]').forEach(function(b){if(b.dataset.open)return;b.addEventListener('click',function(){openLayer(b.getAttribute('aria-controls'))})});
+  // Deep-linkable layers (e.g. #confirm)
+  document.querySelectorAll('[data-hash]').forEach(function(l){if(location.hash==='#'+l.dataset.hash)openLayer(l.id)});
+  
+  var inp=document.getElementById('deleteConfirm'),btn=document.getElementById('deleteBtn');
+  inp.addEventListener('input',function(){btn.disabled=inp.value.trim().toLowerCase()!=='lucie bernard'});
+  window.addEventListener('hashchange',function(){if(location.hash==='#confirm')openLayer('confirmDialog')});
+
+  lucide.createIcons();
+})();
+</script>
+</body>
+</html>

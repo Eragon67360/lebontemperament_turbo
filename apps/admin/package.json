@@ -1,6 +1,6 @@
 {
   "name": "admin",
-  "version": "2.0.118",
+  "version": "2.0.119",
   "type": "module",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "tsx utils/access.test.ts && tsx lib/density.test.ts && tsx lib/navigation.test.ts && tsx lib/trail.test.ts && tsx utils/uploads.test.ts && tsx utils/revalidateWebsite.test.ts && tsx utils/formSchemas.test.ts && tsx utils/roster/source.test.ts"
+    "test": "tsx utils/access.test.ts && tsx lib/density.test.ts && tsx lib/navigation.test.ts && tsx lib/trail.test.ts && tsx utils/uploads.test.ts && tsx utils/revalidateWebsite.test.ts && tsx utils/formSchemas.test.ts && tsx utils/roster/source.test.ts && tsx utils/driveSync.test.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
