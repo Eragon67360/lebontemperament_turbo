@@ -4,11 +4,11 @@ This is for the next session, Claude or human. It picks up where the October 202
 
 ## Where things stand
 
-|                       |                                                                                                                  |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Production (`main`)   | **2.0.123** (`ceb3b62`), verified: e2e on staging, smoke tests, no runtime errors                                |
-| `dev` ahead of `main` | #481 (campaign PATCH whitelist, #471), merged and not yet released                                               |
-| In progress           | **Phase 4 wave 3**, « Concerts et site public » + F4 (#480), branch `redesign/phase-4-wave3-concerts`, see below |
+|                       |                                                                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Production (`main`)   | **2.0.123** (`ceb3b62`), verified: e2e on staging, smoke tests, no runtime errors                                             |
+| `dev` ahead of `main` | #481 (campaign PATCH whitelist, #471) and this handoff (#482), merged and not yet released                                    |
+| Waiting for review    | **Phase 4 wave 3** (#480): **PR #483**, built and up to date with dev; not yet reviewed, e2e-tested on its preview, or merged |
 
 ### Released on 2026-10-03 and 2026-10-04
 
