@@ -16,7 +16,11 @@ import { Form } from "@/components/ui/form";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Label, OptionalMark } from "@/components/ui/label";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
-import { CONTEXT_LABELS, parseIsoDate } from "@/utils/concerts/schedule";
+import {
+  concertTitle,
+  CONTEXT_LABELS,
+  parseIsoDate,
+} from "@/utils/concerts/schedule";
 import {
   concertFormSchema,
   CONTEXTS,
@@ -167,9 +171,7 @@ export function ConcertDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={
-        concert
-          ? `Modifier « ${concert.name || concert.place} »`
-          : "Ajouter un concert"
+        concert ? `Modifier « ${concertTitle(concert)} »` : "Ajouter un concert"
       }
       description={
         concert

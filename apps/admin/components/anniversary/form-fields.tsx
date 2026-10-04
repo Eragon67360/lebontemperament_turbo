@@ -423,7 +423,6 @@ export function DateField<T extends FieldValues>({
                     type="button"
                     variant="outline"
                     disabled={disabled}
-                    aria-required={required || undefined}
                     className={cn(
                       "w-full justify-start font-normal",
                       !field.value && "text-muted-foreground",

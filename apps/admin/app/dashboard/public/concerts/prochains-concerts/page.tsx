@@ -160,10 +160,10 @@ export default function ConcertsAndToursPage() {
         context: values.context,
         start_date: values.start_date
           ? format(values.start_date, "yyyy-MM-dd")
-          : undefined,
+          : null,
         end_date: values.end_date
           ? format(values.end_date, "yyyy-MM-dd")
-          : undefined,
+          : null,
         tour_poster,
       };
       if (editing) {
@@ -203,9 +203,16 @@ export default function ConcertsAndToursPage() {
 
   // --- « Gérer les concerts »: one PATCH per concert, partial failures named ---
 
+  const manageConcerts =
+    manageTour && tours.past.some((t) => t.id === manageTour.id)
+      ? concerts.past
+      : concerts.upcoming;
+
   const updateTourConcerts = async (concertIds: string[]) => {
     if (!manageTour) return;
-    const all = concertsQuery.data ?? [];
+    // Only the concerts the dialog listed: a tour still « À venir » keeps
+    // the concerts it has already played, which the dialog doesn't show.
+    const all = manageConcerts;
     const toRemove = all.filter(
       (c) => c.tour_id === manageTour.id && !concertIds.includes(c.id),
     );
@@ -395,7 +402,7 @@ export default function ConcertsAndToursPage() {
     deleting?.type === "tour"
       ? `${
           deleting.item.concert_count
-            ? `Ses ${concertCountLabel(deleting.item.concert_count)} restent programmés, sans tournée. `
+            ? `Ses ${concertCountLabel(deleting.item.concert_count)} restent sur le site, sans tournée. `
             : "Elle ne contient aucun concert. "
         }La tournée disparaît du site public. Cette action ne peut pas être annulée.`
       : "Le concert disparaît du site public et son affiche est effacée. Cette action ne peut pas être annulée.";
@@ -467,11 +474,7 @@ export default function ConcertsAndToursPage() {
         isOpen={manageTour !== null}
         onClose={() => setManageTour(null)}
         tour={manageTour}
-        concerts={
-          manageTour && tours.past.some((t) => t.id === manageTour.id)
-            ? concerts.past
-            : concerts.upcoming
-        }
+        concerts={manageConcerts}
         onConfirm={updateTourConcerts}
         isPending={updateConcert.isPending}
       />

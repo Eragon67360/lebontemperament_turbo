@@ -1,7 +1,8 @@
 // Zod schemas of the admin forms that show inline errors (react-hook-form +
 // components/ui/form.tsx). They mirror the forms' existing requirements: what
 // was a native `required` attribute (or a NOT NULL column the API passes
-// through) is now an explicit rule with a French message. No new rules.
+// through) is now an explicit rule with a French message. One new rule: a
+// ticket link (`related_link`) must be a full URL, since the website links to it.
 import { z } from "zod";
 
 export const CONTEXTS = [
