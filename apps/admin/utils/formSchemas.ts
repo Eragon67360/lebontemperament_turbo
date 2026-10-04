@@ -3,6 +3,7 @@
 // was a native `required` attribute (or a NOT NULL column the API passes
 // through) is now an explicit rule with a French message. One new rule: a
 // ticket link (`related_link`) must be a full URL, since the website links to it.
+import { GROUP_TYPES, type GroupType } from "@repo/domain/types/rehearsals";
 import { z } from "zod";
 
 export const CONTEXTS = [
@@ -66,6 +67,80 @@ export const eventFormSchema = z.object({
   is_public: z.boolean(),
 });
 export type EventFormValues = z.output<typeof eventFormSchema>;
+
+// --- Saison des membres (Phase 4 wave 4, #433) ---
+
+const minutesOf = (time: string) => {
+  const [h = "0", m = "0"] = time.split(":");
+  return Number(h) * 60 + Number(m);
+};
+const dayStart = (date: Date) => new Date(date).setHours(0, 0, 0, 0);
+
+/** "" | "2" | 2 → number: the weekly interval, typed as text. */
+const weeksInput = z.preprocess(
+  (value) =>
+    value === "" || value === null || value === undefined
+      ? undefined
+      : typeof value === "string"
+        ? Number(value.trim())
+        : value,
+  z
+    .number({ error: "Indiquez un nombre de semaines" })
+    .int("Indiquez un nombre entier de semaines")
+    .min(1, "Au moins une semaine")
+    .max(52, "52 semaines au plus"),
+) as unknown as z.ZodType<number, string | number | null | undefined>;
+
+/**
+ * A rehearsal: what the previous form required natively, plus two checks it
+ * made as a toast or not at all: the end comes after the start, and a
+ * repeated séance needs an end date on or after its first day.
+ */
+export const rehearsalFormSchema = z
+  .object({
+    name: requiredString("L'intitulé est requis"),
+    group_type: z.enum(GROUP_TYPES as [GroupType, ...GroupType[]], {
+      error: "Le groupe est requis",
+    }),
+    date: z.date({ error: "La date est requise" }),
+    place: requiredString("Le lieu est requis"),
+    start_time: requiredTime("L'heure de début est requise"),
+    end_time: requiredTime("L'heure de fin est requise"),
+    /** Creation only: one séance every `repeat_interval` weeks until `repeat_until`. */
+    repeat: z.boolean(),
+    repeat_interval: weeksInput,
+    repeat_until: z.date().optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (
+      TIME_PATTERN.test(values.start_time) &&
+      TIME_PATTERN.test(values.end_time) &&
+      minutesOf(values.end_time) <= minutesOf(values.start_time)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["end_time"],
+        message: "La fin doit être après le début",
+      });
+    }
+    if (!values.repeat) return;
+    if (!values.repeat_until) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["repeat_until"],
+        message: "Indiquez jusqu'à quand répéter la séance",
+      });
+    } else if (dayStart(values.repeat_until) < dayStart(values.date)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["repeat_until"],
+        message:
+          "La date de fin doit être le jour de la première séance ou après",
+      });
+    }
+  });
+export type RehearsalFormInput = z.input<typeof rehearsalFormSchema>;
+export type RehearsalFormValues = z.output<typeof rehearsalFormSchema>;
 
 export const tourFormSchema = z.object({
   tourName: requiredString("Le nom de la tournée est requis"),
