@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/members_filter_provider.dart';
+import '../../../../core/utils/text_scale.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -100,9 +101,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       'Erreur: $e',
-                      style: AppFonts.sans(
-                        color: theme.colorScheme.error,
-                      ),
+                      style: AppFonts.sans(color: theme.colorScheme.error),
                     ),
                   ),
                 ),
@@ -235,8 +234,9 @@ class _MembersAppBar extends StatelessWidget {
       backgroundColor: theme.colorScheme.surface,
       surfaceTintColor: theme.colorScheme.surface,
       pinned: true,
-      expandedHeight: 100,
+      expandedHeight: headerHeight(context, 100, text: 40),
       flexibleSpace: FlexibleSpaceBar(
+        expandedTitleScale: expandedTitleScale(context),
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         centerTitle: false,
         title: Text(
@@ -331,7 +331,10 @@ class _VoiceFilterDropdown extends StatelessWidget {
     final theme = Theme.of(context);
 
     return DropdownButtonFormField<String>(
-      value: selected.isEmpty || !voiceWords.contains(selected) ? '' : selected,
+      isExpanded: true,
+      initialValue: selected.isEmpty || !voiceWords.contains(selected)
+          ? ''
+          : selected,
       decoration: InputDecoration(
         hintText: 'Toutes les voix',
         prefixIcon: const Icon(Icons.music_note_outlined),
@@ -546,10 +549,7 @@ class _MemberCard extends StatelessWidget {
                   Clipboard.setData(ClipboardData(text: member.address!));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        'Adresse copiée',
-                        style: AppFonts.sans(),
-                      ),
+                      content: Text('Adresse copiée', style: AppFonts.sans()),
                       behavior: SnackBarBehavior.floating,
                       duration: const Duration(seconds: 2),
                     ),

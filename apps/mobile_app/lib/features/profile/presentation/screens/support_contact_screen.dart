@@ -181,7 +181,10 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _selectedSubject,
+                        initialValue: _selectedSubject,
+                        // Wraps the label instead of overflowing when the
+                        // system text size is large.
+                        isExpanded: true,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),

@@ -17,6 +17,7 @@ import 'package:lebontemperament/data/providers/data_providers.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/concert_anniversaire_section.dart';
+import '../../../../core/utils/text_scale.dart';
 
 class ConcertsEventsScreen extends ConsumerStatefulWidget {
   const ConcertsEventsScreen({super.key});
@@ -225,8 +226,9 @@ class _ConcertsEventsAppBar extends StatelessWidget {
       surfaceTintColor: theme.colorScheme.surface,
       pinned: true,
       floating: true,
-      expandedHeight: 120.0,
+      expandedHeight: headerHeight(context, 120, text: 80),
       flexibleSpace: FlexibleSpaceBar(
+        expandedTitleScale: expandedTitleScale(context),
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         centerTitle: false,
         title: Text(
@@ -535,7 +537,7 @@ class _ConcertCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         fontSize: 17,
                       ),
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
@@ -920,7 +922,7 @@ class _InfoRow extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),

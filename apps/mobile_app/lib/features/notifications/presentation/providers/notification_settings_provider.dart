@@ -43,6 +43,11 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     await _saveSettings();
   }
 
+  Future<void> setEnabled(bool value) async {
+    state = state.copyWith(enabled: value);
+    await _saveSettings();
+  }
+
   Future<void> toggleConcertsEnabled() async {
     state = state.copyWith(concertsEnabled: !state.concertsEnabled);
     await _saveSettings();

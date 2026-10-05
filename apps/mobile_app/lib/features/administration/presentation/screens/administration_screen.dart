@@ -177,15 +177,21 @@ class _TabBar extends StatelessWidget {
                         horizontal: 4,
                       ),
                       child: ExcludeSemantics(
-                        child: Text(
-                          tabs[i],
-                          textAlign: TextAlign.center,
-                          style: AppFonts.sans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
+                        // Shrinks a long label at large text sizes rather
+                        // than breaking it in the middle of the word.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            tabs[i],
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                            style: AppFonts.sans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),
@@ -407,10 +413,7 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
         ),
         error: (e, _) => Text(
           'Erreur: $e',
-          style: AppFonts.sans(
-            color: theme.colorScheme.error,
-            fontSize: 14,
-          ),
+          style: AppFonts.sans(color: theme.colorScheme.error, fontSize: 14),
         ),
       ),
     );
@@ -502,10 +505,7 @@ class _ExpandablePdfArchiveSectionState
                 TextButton.icon(
                   onPressed: () => setState(() => _showAll = false),
                   icon: const Icon(Icons.expand_less, size: 18),
-                  label: Text(
-                    'Réduire',
-                    style: AppFonts.sans(fontSize: 14),
-                  ),
+                  label: Text('Réduire', style: AppFonts.sans(fontSize: 14)),
                 ),
               ],
             ],

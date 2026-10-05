@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../data/models/event.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../core/utils/text_scale.dart';
 
 // IMPORTANT: This screen expects a provider that can fetch a single event by its ID.
 // Make sure you have a provider like this defined in your `data_providers.dart` file:
@@ -46,7 +47,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             SliverAppBar(
               pinned: true,
               stretch: true,
-              expandedHeight: 250.0,
+              expandedHeight: headerHeight(context, 250, text: 110),
               backgroundColor: theme.colorScheme.surface,
               surfaceTintColor: theme.colorScheme.surface,
               leading: IconButton(

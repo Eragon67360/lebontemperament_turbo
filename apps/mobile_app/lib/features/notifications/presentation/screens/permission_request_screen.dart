@@ -43,8 +43,11 @@ class _PermissionRequestScreenState
 
       if (mounted) {
         if (granted) {
-          // Enable notifications by default
-          await ref.read(notificationSettingsProvider.notifier).toggleEnabled();
+          // Reminders are on by default; a toggle here would switch them
+          // off for every member who says yes.
+          await ref
+              .read(notificationSettingsProvider.notifier)
+              .setEnabled(true);
         }
         _navigateToLogin();
       }
@@ -79,121 +82,132 @@ class _PermissionRequestScreenState
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Icon
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: AppTheme.getSubtleBackgroundColor(context),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Icon(
-                  Icons.notifications_active,
-                  size: 60,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+        // Scrolls on small phones and with a large system text size, so the
+        // buttons below stay reachable.
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight - 48,
               ),
-              const SizedBox(height: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Icon
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: AppTheme.getSubtleBackgroundColor(context),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Icon(
+                      Icons.notifications_active,
+                      size: 60,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
 
-              // Title
-              Text(
-                'Restez informé !',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  // Title
+                  Text(
+                    'Restez informé !',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
 
-              // Description
-              Text(
-                'Activez les notifications pour ne manquer aucun concert ou répétition. Nous vous enverrons des rappels personnalisables.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  // Description
+                  Text(
+                    'Activez les notifications pour ne manquer aucun concert ou répétition. Nous vous enverrons des rappels personnalisables.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-
-              // Features list
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.getSubtleBackgroundColor(context),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    _buildFeatureItem(
-                      icon: Icons.music_note,
-                      title: 'Concerts',
-                      description: 'Rappels pour tous vos concerts',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFeatureItem(
-                      icon: Icons.repeat,
-                      title: 'Répétitions',
-                      description: 'Rappels pour vos répétitions',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFeatureItem(
-                      icon: Icons.schedule,
-                      title: 'Rappels personnalisables',
-                      description: '15 min, 1h, 1 jour avant...',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Buttons
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _requestPermissions,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    textAlign: TextAlign.center,
                   ),
-                  child: _isLoading
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
-                        )
-                      : const Text(
-                          'Activer les notifications',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  const SizedBox(height: 32),
+
+                  // Features list
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.getSubtleBackgroundColor(context),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildFeatureItem(
+                          icon: Icons.music_note,
+                          title: 'Concerts',
+                          description: 'Rappels pour tous vos concerts',
                         ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextButton(
-                onPressed: _isLoading ? null : _skipPermissions,
-                child: Text(
-                  'Passer pour l\'instant',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        const SizedBox(height: 16),
+                        _buildFeatureItem(
+                          icon: Icons.repeat,
+                          title: 'Répétitions',
+                          description: 'Rappels pour vos répétitions',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFeatureItem(
+                          icon: Icons.schedule,
+                          title: 'Rappels personnalisables',
+                          description: '15 min, 1h, 1 jour avant...',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 32),
+
+                  // Buttons
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _requestPermissions,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary,
+                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Activer les notifications',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextButton(
+                    onPressed: _isLoading ? null : _skipPermissions,
+                    child: Text(
+                      'Passer pour l\'instant',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -227,16 +241,16 @@ class _PermissionRequestScreenState
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 description,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../data/models/concert.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../core/utils/text_scale.dart';
 
 class ConcertDetailScreen extends ConsumerStatefulWidget {
   final String concertId;
@@ -43,7 +44,7 @@ class _ConcertDetailScreenState extends ConsumerState<ConcertDetailScreen> {
               SliverAppBar(
                 pinned: true,
                 stretch: true,
-                expandedHeight: 250.0,
+                expandedHeight: headerHeight(context, 250, text: 110),
                 backgroundColor: theme.colorScheme.surface,
                 surfaceTintColor: theme.colorScheme.surface,
                 leading: IconButton(

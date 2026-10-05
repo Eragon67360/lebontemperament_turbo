@@ -13,6 +13,7 @@ import '../../../notifications/presentation/screens/notification_settings_screen
 import 'about_screen.dart';
 import 'support_contact_screen.dart';
 import 'theme_settings_screen.dart';
+import '../../../../core/utils/text_scale.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -253,7 +254,7 @@ class _ProfileAppBar extends ConsumerWidget {
       backgroundColor: theme.colorScheme.surface,
       surfaceTintColor: theme.colorScheme.surface,
       pinned: true,
-      expandedHeight: 220.0,
+      expandedHeight: headerHeight(context, 220, text: 110),
       actions: [
         IconButton(
           icon: const Icon(Icons.logout_outlined),
@@ -264,6 +265,7 @@ class _ProfileAppBar extends ConsumerWidget {
         const SizedBox(width: 8),
       ],
       flexibleSpace: FlexibleSpaceBar(
+        expandedTitleScale: expandedTitleScale(context),
         centerTitle: false,
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         title: Text(
@@ -288,7 +290,11 @@ class _ProfileHeader extends ConsumerWidget {
     if (parts.length >= 2) {
       return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
     }
-    return parts.first.substring(0, 2).toUpperCase();
+    // A one-letter name has no second letter to take.
+    final first = parts.first;
+    return first
+        .substring(0, first.length < 2 ? first.length : 2)
+        .toUpperCase();
   }
 
   @override
