@@ -1,0 +1,8 @@
+Nouveau look, plus lisible :
+• Textes plus grands et mieux contrastés, thème sombre par défaut (le thème clair reste au choix dans Profil).
+• L’accueil montre d’abord votre prochaine répétition, avec un bouton Itinéraire.
+• Lecteur audio intégré aux partitions.
+Plus fiable au quotidien :
+• Partitions et enregistrements s’ouvrent et se téléchargent, même gros.
+• Une session expirée se renouvelle toute seule.
+• Toucher un rappel ouvre le bon concert.

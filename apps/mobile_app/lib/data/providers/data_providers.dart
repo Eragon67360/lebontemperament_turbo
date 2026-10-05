@@ -221,12 +221,13 @@ final upcomingRehearsalsProvider = FutureProvider<ListResult<Rehearsal>>((
 
 // --- NEW: Providers specifically for the Home Screen ---
 
-/// Provides the next 2 upcoming rehearsals for the home screen UI.
+/// Provides the next 4 upcoming rehearsals for the home screen UI (the hero
+/// card and the « À suivre » row).
 /// Handles loading/error states gracefully by returning an empty list.
 final homeUpcomingRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
   final asyncRehearsals = ref.watch(upcomingRehearsalsProvider);
   return asyncRehearsals.when(
-    data: (rehearsals) => rehearsals.items.take(2).toList(),
+    data: (rehearsals) => rehearsals.items.take(4).toList(),
     loading: () => [],
     error: (_, __) => [],
   );

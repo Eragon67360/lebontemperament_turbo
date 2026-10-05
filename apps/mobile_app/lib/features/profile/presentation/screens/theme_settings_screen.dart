@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/theme/theme_provider.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 
@@ -65,7 +65,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             ),
             title: Text(
               'Apparence',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
@@ -157,7 +157,7 @@ class _ThemeOptionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
@@ -166,7 +166,7 @@ class _ThemeOptionCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 13,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -211,7 +211,7 @@ class _PreviewCard extends StatelessWidget {
         children: [
           Text(
             'Aperçu',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.primary,
@@ -237,7 +237,7 @@ class _PreviewCard extends StatelessWidget {
                     children: [
                       Text(
                         'Exemple de carte',
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: theme.colorScheme.onSurface,
@@ -246,7 +246,7 @@ class _PreviewCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         'Ceci est un aperçu des couleurs et du style de votre thème actuel.',
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           fontSize: 13,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

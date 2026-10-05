@@ -2,7 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/data/constants/anniversary_tracks.dart';
 
 /// Section displaying the Concert Anniversaire (20 ans du BT) album with audio player.
@@ -70,7 +70,7 @@ class _ConcertAnniversaireSectionState
         children: [
           Text(
             'Archives',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 13,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -78,7 +78,7 @@ class _ConcertAnniversaireSectionState
           const SizedBox(height: 4),
           Text(
             'Concert Anniversaire',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 22,
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.onSurface,
@@ -87,7 +87,7 @@ class _ConcertAnniversaireSectionState
           const SizedBox(height: 8),
           Text(
             'Enregistrement du concert anniversaire pour les 20 ans du Bon Tempérament',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 14,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -129,7 +129,7 @@ class _ConcertAnniversaireSectionState
                   children: [
                     Text(
                       'Les 20 ans du BT (Live)',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
@@ -138,7 +138,7 @@ class _ConcertAnniversaireSectionState
                     const SizedBox(height: 4),
                     Text(
                       'Le Bon Tempérament',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 14,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -192,7 +192,7 @@ class _ConcertAnniversaireSectionState
                             children: [
                               Text(
                                 track.displayName,
-                                style: GoogleFonts.poppins(
+                                style: AppFonts.sans(
                                   fontSize: 14,
                                   fontWeight: isPlaying
                                       ? FontWeight.w600
@@ -205,7 +205,7 @@ class _ConcertAnniversaireSectionState
                               const SizedBox(height: 2),
                               Text(
                                 'Le Bon Tempérament',
-                                style: GoogleFonts.poppins(
+                                style: AppFonts.sans(
                                   fontSize: 12,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -215,7 +215,7 @@ class _ConcertAnniversaireSectionState
                         ),
                         Text(
                           track.duration,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 12,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),

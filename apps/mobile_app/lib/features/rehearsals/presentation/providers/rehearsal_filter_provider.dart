@@ -39,10 +39,19 @@ final filteredRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
         return upcoming;
       }
       return upcoming
-          .where((rehearsal) => rehearsal.groupType == selectedFilter)
+          .where((r) => rehearsalConcerns(r.groupType, selectedFilter))
           .toList();
     },
     loading: () => [],
     error: (_, __) => [],
   );
 });
+
+/// Whether a rehearsal for [group] concerns members who filtered on
+/// [filter]: « Tous » concerns everyone, and the full choir concerns the men
+/// and the women too.
+bool rehearsalConcerns(GroupType group, GroupType filter) {
+  if (group == filter || group == GroupType.tous) return true;
+  return group == GroupType.choeurComplet &&
+      (filter == GroupType.hommes || filter == GroupType.femmes);
+}

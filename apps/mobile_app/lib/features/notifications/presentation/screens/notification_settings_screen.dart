@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 
@@ -58,7 +58,7 @@ class _NotificationSettingsScreenState
             ),
             title: Text(
               'Notifications',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
@@ -212,7 +212,7 @@ class _MainToggleCard extends StatelessWidget {
               children: [
                 Text(
                   'Activer les notifications',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
@@ -223,7 +223,7 @@ class _MainToggleCard extends StatelessWidget {
                   isEnabled
                       ? 'Vous recevrez des rappels'
                       : 'Vous ne recevrez aucun rappel',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -251,7 +251,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.primary,
@@ -330,7 +330,7 @@ class _SettingsSwitchTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
@@ -339,7 +339,7 @@ class _SettingsSwitchTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 13,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -383,7 +383,7 @@ class _SettingsCheckboxTile extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 15,
                   color: theme.colorScheme.onSurface,
                 ),

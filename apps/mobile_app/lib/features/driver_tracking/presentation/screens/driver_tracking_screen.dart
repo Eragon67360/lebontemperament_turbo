@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geocoding/geocoding.dart' show locationFromAddress;
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
@@ -275,7 +276,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
             ),
             title: Text(
               'Suivi livraison',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
@@ -333,7 +334,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                                   horizontal: 12,
                                   vertical: 8,
                                 ),
-                                textStyle: GoogleFonts.poppins(
+                                textStyle: AppFonts.sans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -427,7 +428,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.primary,
@@ -482,7 +483,7 @@ class _TrackingStatusHero extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             state.isTracking ? 'Suivi Actif' : 'Suivi Arrêté',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: state.isTracking
@@ -496,7 +497,7 @@ class _TrackingStatusHero extends StatelessWidget {
                 ? 'Votre position est partagée en temps réel.'
                 : 'Démarrez la livraison pour partager votre position.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 14,
               color:
                   (state.isTracking
@@ -568,7 +569,7 @@ class _ActionButtons extends ConsumerWidget {
           label: const Text('Démarrer la livraison'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: GoogleFonts.poppins(
+            textStyle: AppFonts.sans(
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -589,7 +590,7 @@ class _ActionButtons extends ConsumerWidget {
                   : Theme.of(context).colorScheme.error,
             ),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: GoogleFonts.poppins(
+            textStyle: AppFonts.sans(
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -635,7 +636,7 @@ class _RecipientsCard extends ConsumerWidget {
               child: Text(
                 'Ajoutez des destinataires pour afficher leurs horaires de livraison prévus.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 14,
                 ),
@@ -676,7 +677,7 @@ class _RecipientsCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Ajouter un destinataire',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.primary,
                     ),
@@ -737,7 +738,7 @@ class _RecipientTile extends ConsumerWidget {
           Expanded(
             child: Text(
               recipient.label,
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: AppFonts.sans(fontWeight: FontWeight.w600),
             ),
           ),
           Container(
@@ -752,7 +753,7 @@ class _RecipientTile extends ConsumerWidget {
             ),
             child: Text(
               statusLabel,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -762,7 +763,7 @@ class _RecipientTile extends ConsumerWidget {
       ),
       subtitle: Text(
         subtitle,
-        style: GoogleFonts.poppins(
+        style: AppFonts.sans(
           color: theme.colorScheme.onSurfaceVariant,
           fontSize: 13,
         ),
@@ -818,11 +819,11 @@ class _LiveUpdatesCard extends ConsumerWidget {
             leading: const Icon(Icons.schedule_outlined),
             title: Text(
               'Créneau de livraison prévu',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: AppFonts.sans(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
               scheduledStr,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
@@ -835,7 +836,7 @@ class _LiveUpdatesCard extends ConsumerWidget {
           SwitchListTile(
             title: Text(
               'Signaler un retard',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: AppFonts.sans(fontWeight: FontWeight.w600),
             ),
             value: delivery.isDelayed,
             onChanged: (value) => ref
@@ -876,7 +877,7 @@ class _LiveUpdatesCard extends ConsumerWidget {
               children: [
                 Text(
                   'Signaler un problème',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  style: AppFonts.sans(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 12),
                 Wrap(
@@ -956,7 +957,7 @@ class _SessionDetailsCard extends StatelessWidget {
         children: [
           Text(
             'Lien de partage client',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            style: AppFonts.sans(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           SelectableText(
@@ -992,7 +993,7 @@ class _SessionDetailsCard extends StatelessWidget {
           const Divider(height: 32),
           Text(
             'Expire le ${DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(delivery.expiresAt)}',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 12,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -1240,7 +1241,7 @@ class _ErrorBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 error,
-                style: GoogleFonts.poppins(color: Colors.white),
+                style: AppFonts.sans(color: Colors.white),
               ),
             ),
           ],
@@ -1291,7 +1292,7 @@ class _UnauthorizedState extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Accès non autorisé',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
@@ -1301,7 +1302,7 @@ class _UnauthorizedState extends StatelessWidget {
             Text(
               'Cette fonctionnalité est réservée aux administrateurs de l\'application.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 14,
                 color: theme.colorScheme.onSurfaceVariant,
               ),

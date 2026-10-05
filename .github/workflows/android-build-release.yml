@@ -112,6 +112,19 @@ jobs:
         working-directory: apps/mobile_app
         run: flutter build appbundle --release
 
+      # Release notes: the « Nouveautés » text written on the release PR in
+      # fastlane/metadata (one file per store language), in the layout the
+      # upload action expects (whatsnew-<locale>).
+      - name: Prepare release notes
+        working-directory: apps/mobile_app/android/fastlane/metadata/android
+        run: |
+          mkdir -p "$RUNNER_TEMP/whatsnew"
+          for notes in */changelogs/default.txt; do
+            locale="${notes%%/*}"
+            cp "$notes" "$RUNNER_TEMP/whatsnew/whatsnew-$locale"
+          done
+          ls "$RUNNER_TEMP/whatsnew"
+
       # --- STEP 2: Upload to Google Play IMMEDIATELY ---
       # We do this BEFORE generating the APK. If this fails, the pipeline stops.
       - name: Upload to Google Play
@@ -124,6 +137,7 @@ jobs:
           mappingFile: apps/mobile_app/build/app/outputs/mapping/release/mapping.txt
           track: internal
           status: draft
+          whatsNewDirectory: ${{ runner.temp }}/whatsnew
 
       # --- STEP 3: Generate APK from AAB (Optimization) ---
       # We skip 'flutter build apk' to save time, and instead convert the AAB.

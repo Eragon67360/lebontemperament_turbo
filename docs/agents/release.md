@@ -3,7 +3,8 @@
 `main` is production. A release is one PR `dev` → `main`, merged only with the owner's explicit go. What a merge does:
 
 - **Website and admin**: Vercel deploys `www.lebontemperament.com` and `admin.lebontemperament.com` (projects `lebontemperament`, `lebontemperament-admin`, built from the repository root with `turbo build --filter=website` / `--filter=admin`, see [DEPLOYMENT.md](../../DEPLOYMENT.md)).
-- **Android**: `.github/workflows/android-build-release.yml` runs on pushes to `main` that touch `apps/mobile_app/**` (a `pubspec.yaml`-only change doesn't trigger it): builds a signed app bundle with production secrets and uploads it to Google Play's **internal** track as a **draft**. Promoting it to testers or production is a manual step in the Play Console (owner).
+- **Android**: `.github/workflows/android-build-release.yml` runs on pushes to `main` that touch `apps/mobile_app/**` (a `pubspec.yaml`-only change doesn't trigger it): builds a signed app bundle with production secrets and uploads it to Google Play's **internal** track as a **draft**, with the « Nouveautés » text from `apps/mobile_app/android/fastlane/metadata/android/<locale>/changelogs/default.txt`. Promoting it to production is the **Play Store** workflow's `promote` task (or the Play Console), run only after the owner's go.
+- **Play Store listing** (texts, screenshots): never on merge. The **Play Store** workflow (`.github/workflows/play-store.yml`, fastlane supply) publishes `apps/mobile_app/android/fastlane/metadata` when run by hand; its writing tasks wait for the owner's approval on the `play-store` environment. See [the fastlane README](../../apps/mobile_app/android/fastlane/README.md).
 - **iOS**: manual (Xcode / App Store Connect), owner.
 - **Supabase**: nothing. Migrations and edge functions are deployed separately ([below](#supabase)).
 
@@ -21,7 +22,7 @@ There is one database, used by production, staging, previews and local developme
 
 1. Make sure `dev` contains exactly what should ship: `git log --oneline origin/main..origin/dev`.
 2. Confirm the gates on the `dev` head: lint, check-types, builds, domain tests, `flutter analyze` / `flutter test` if the app changed, the latest e2e run on staging green (Actions → "E2E Daily (staging)").
-3. Bump versions in a small PR into `dev` (`dev` requires pull requests): on a `chore/release-<version>` branch run `npm run release:bump` (patch; `npm run bump-version -- minor` or `major` for bigger ones), commit `version.json`, both apps' `package.json` and `apps/mobile_app/pubspec.yaml`, open the PR and merge it once CI is green. If the app version changed and Flutter is installed, run `flutter pub get --no-example` in `apps/mobile_app` and commit `pubspec.lock` if it changed (the old hook did it). The script does not touch `package-lock.json`.
+3. Bump versions in a small PR into `dev` (`dev` requires pull requests): on a `chore/release-<version>` branch run `npm run release:bump` (patch; `npm run bump-version -- minor` or `major` for bigger ones), commit `version.json`, both apps' `package.json` and `apps/mobile_app/pubspec.yaml`, open the PR and merge it once CI is green. If the app version changed and Flutter is installed, run `flutter pub get --no-example` in `apps/mobile_app` and commit `pubspec.lock` if it changed (the old hook did it). The script does not touch `package-lock.json`. If the app changed, rewrite the release notes in `apps/mobile_app/android/fastlane/metadata/android/fr-FR/changelogs/default.txt` in the same PR: what members will notice, in French, at most 500 characters (a test checks the length); they go to Google Play with the build.
 4. Open the release PR with a body the owner can approve from his phone:
    - a table of what ships (PR, one line, issue numbers);
    - what visitors, members, admins and app users will notice;
@@ -38,7 +39,7 @@ There is one database, used by production, staging, previews and local developme
    - members area and admin: the login pages answer; protected pages redirect when signed out;
    - API routes the app calls answer with the expected shape (no writes).
 3. **Check runtime errors** for the new deployments in the first minutes (Vercel logs).
-4. If the Android workflow ran, confirm it succeeded and tell the owner the draft is waiting in the Play Console.
+4. If the Android workflow ran, confirm it succeeded and tell the owner the draft is waiting on the internal track. Promotion to production: on his go, run the **Play Store** workflow with `promote`, the build number and, for a staged rollout, a share (`0.2`); first with `validate_only` to let Google check it. He approves the run on the `play-store` environment.
 5. Walk the owner through his post-release steps, verifying each (API read, `curl`) as he completes it.
 6. Comment on the tracking issue: what shipped, what was verified, what's left. Close issues whose `Closes #n` didn't fire.
 

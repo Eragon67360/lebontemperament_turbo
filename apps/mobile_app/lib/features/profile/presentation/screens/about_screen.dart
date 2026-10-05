@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:lebontemperament/core/config/app_router.dart';
@@ -58,7 +58,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
             ),
             title: Text(
               'À propos',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w700,
               ),
@@ -123,7 +123,7 @@ class _AboutHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final versionText = Text(
       'Version ${packageInfo.version} (build ${packageInfo.buildNumber})',
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 14,
         color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
       ),
@@ -162,7 +162,7 @@ class _AboutHeader extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'Le Bon Tempérament',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -172,7 +172,7 @@ class _AboutHeader extends StatelessWidget {
           Text(
             'Ensemble vocal et instrumental à Saverne depuis 1987',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 15,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -238,7 +238,7 @@ class _DeveloperModeButton extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Mode développeur',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
@@ -273,7 +273,7 @@ class _AssociationSection extends StatelessWidget {
         children: [
           Text(
             'Notre association',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.primary,
@@ -301,7 +301,7 @@ class _AssociationSection extends StatelessWidget {
                   'par le mélange des générations, la diversité des parcours des '
                   'chanteurs et des instrumentistes, et l\'esprit de convivialité '
                   'qui l\'anime.',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     height: 1.5,
                     color: theme.colorScheme.onSurface,
@@ -314,7 +314,7 @@ class _AssociationSection extends StatelessWidget {
                   'couvre une large période, de la Renaissance à nos jours, '
                   'avec des œuvres sacrées et profanes ainsi que des pièces '
                   'populaires et folkloriques.',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     height: 1.5,
                     color: theme.colorScheme.onSurface,
@@ -327,7 +327,7 @@ class _AssociationSection extends StatelessWidget {
                   'Depuis 2023, un orchestre symphonique dirigé par Charlotte '
                   'Lienhard se produit seul ou avec la chorale lors des concerts '
                   'de l\'année.',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     height: 1.5,
                     color: theme.colorScheme.onSurface,
@@ -356,7 +356,7 @@ class _AppInfoCard extends StatelessWidget {
         children: [
           Text(
             'Cette application',
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.primary,
@@ -421,7 +421,7 @@ class _InfoTile extends StatelessWidget {
         title: Text(label),
         content: SelectableText(
           value,
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: theme.colorScheme.onSurface,
             fontSize: 14,
           ),
@@ -455,7 +455,7 @@ class _InfoTile extends StatelessWidget {
             const SizedBox(width: 16),
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
@@ -467,7 +467,7 @@ class _InfoTile extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
@@ -494,7 +494,7 @@ class _Footer extends StatelessWidget {
           Text(
             'Développé avec ❤️ par Thomas Moser',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 13,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -503,7 +503,7 @@ class _Footer extends StatelessWidget {
           Text(
             '© ${DateTime.now().year} Le Bon Tempérament. Tous droits réservés.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 12,
               // Full onSurfaceVariant: at 70 % alpha this 12 pt line was
               // 3.9:1 on the light surface, below 4.5:1.

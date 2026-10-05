@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
@@ -20,7 +20,7 @@ double _measureLabelWidth(String label) {
   final painter = TextPainter(
     text: TextSpan(
       text: label,
-      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
+      style: AppFonts.sans(fontSize: 13, fontWeight: FontWeight.w500),
     ),
     maxLines: 1,
     textDirection: ui.TextDirection.ltr,
@@ -79,7 +79,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
         ),
         title: Text(
           'Administration',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             fontWeight: FontWeight.w600,
             color: theme.colorScheme.onSurface,
           ),
@@ -180,7 +180,7 @@ class _TabBar extends StatelessWidget {
                         child: Text(
                           tabs[i],
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: isSelected
@@ -336,7 +336,7 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
           if (minutes.isEmpty) {
             return Text(
               'Aucun compte-rendu disponible',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
@@ -381,7 +381,7 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
                       icon: const Icon(Icons.expand_more, size: 18),
                       label: Text(
                         'Afficher les $remaining autres',
-                        style: GoogleFonts.poppins(fontSize: 14),
+                        style: AppFonts.sans(fontSize: 14),
                       ),
                     ),
                   ],
@@ -392,7 +392,7 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
                       icon: const Icon(Icons.expand_less, size: 18),
                       label: Text(
                         'Réduire',
-                        style: GoogleFonts.poppins(fontSize: 14),
+                        style: AppFonts.sans(fontSize: 14),
                       ),
                     ),
                   ],
@@ -407,7 +407,7 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
         ),
         error: (e, _) => Text(
           'Erreur: $e',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: theme.colorScheme.error,
             fontSize: 14,
           ),
@@ -493,7 +493,7 @@ class _ExpandablePdfArchiveSectionState
                   icon: const Icon(Icons.expand_more, size: 18),
                   label: Text(
                     'Afficher les $remaining autres',
-                    style: GoogleFonts.poppins(fontSize: 14),
+                    style: AppFonts.sans(fontSize: 14),
                   ),
                 ),
               ],
@@ -504,7 +504,7 @@ class _ExpandablePdfArchiveSectionState
                   icon: const Icon(Icons.expand_less, size: 18),
                   label: Text(
                     'Réduire',
-                    style: GoogleFonts.poppins(fontSize: 14),
+                    style: AppFonts.sans(fontSize: 14),
                   ),
                 ),
               ],
@@ -565,7 +565,7 @@ class _ArchiveSection extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
@@ -573,7 +573,7 @@ class _ArchiveSection extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 13,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -613,7 +613,7 @@ class _ArchiveSection extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 'Voir toutes les archives',
-                                style: GoogleFonts.poppins(
+                                style: AppFonts.sans(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                   color: theme.colorScheme.primary,
@@ -676,7 +676,7 @@ class _PdfChip extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 13,
                     color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.w500,
@@ -813,7 +813,7 @@ class _ReglementCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: theme.colorScheme.onSurface,
@@ -821,7 +821,7 @@ class _ReglementCard extends StatelessWidget {
                         ),
                         Text(
                           subtitle,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 13,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -868,7 +868,7 @@ class _ReglementExtract extends StatelessWidget {
           children: [
             Text(
               title,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
@@ -877,7 +877,7 @@ class _ReglementExtract extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               text,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 13,
                 fontStyle: FontStyle.italic,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -952,7 +952,7 @@ class _LogicielsTab extends StatelessWidget {
                       const SizedBox(width: 10),
                       Text(
                         cat.title,
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: theme.colorScheme.onSurface,
@@ -1000,7 +1000,7 @@ class _LogicielsTab extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       'Trucs et astuces',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
@@ -1011,7 +1011,7 @@ class _LogicielsTab extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Windows Media Player permet de modifier la vitesse de lecture d\'un enregistrement sans modifier la tessiture...',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -1065,7 +1065,7 @@ class _SoftwareChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Text(
             name,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: theme.colorScheme.onSurface,

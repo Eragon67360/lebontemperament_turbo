@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 
 import '../providers/auth_provider.dart';
 
@@ -78,7 +78,7 @@ class _LoginHeader extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           'Bienvenue',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             fontSize: 32,
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.onSurface,
@@ -87,7 +87,7 @@ class _LoginHeader extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Connectez-vous pour continuer',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             fontSize: 16,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -246,7 +246,7 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
             onPressed: isLoading ? null : _handleLogin,
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: GoogleFonts.poppins(
+              textStyle: AppFonts.sans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),

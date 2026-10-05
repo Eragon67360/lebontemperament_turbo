@@ -6,13 +6,17 @@ enum AppThemeMode { system, light, dark }
 class ThemeNotifier extends StateNotifier<AppThemeMode> {
   static const String _themeKey = 'theme_mode';
 
-  ThemeNotifier() : super(AppThemeMode.system) {
+  /// Dark « Coulisses » is the app's look; members who picked another mode
+  /// keep it.
+  static const AppThemeMode defaultMode = AppThemeMode.dark;
+
+  ThemeNotifier() : super(defaultMode) {
     _loadTheme();
   }
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final themeIndex = prefs.getInt(_themeKey) ?? 0;
+    final themeIndex = prefs.getInt(_themeKey) ?? defaultMode.index;
     state = AppThemeMode.values[themeIndex];
   }
 

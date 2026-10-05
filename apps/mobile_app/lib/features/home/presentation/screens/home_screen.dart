@@ -1,15 +1,14 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/core/widgets/notice_banner.dart';
+import 'package:lebontemperament/core/widgets/stage.dart';
 import 'package:lebontemperament/data/models/concert.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
 import 'package:lebontemperament/data/providers/connectivity_provider.dart';
@@ -21,47 +20,42 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
 
-/// Text scale factor (1.0 at the default size), capped at 2× for layout math.
-double _textScale(BuildContext context) =>
-    MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 2.0);
-
+/// Home (« Coulisses »): the next rehearsal first and large, then the next
+/// concert, the rest of the week and the members' shortcuts.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              20.0,
-              60.0,
-              20.0,
-              kFloatingNavBarBottomPadding,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const _WelcomeHeader(),
-                const SizedBox(height: 32),
-                const _NoticesSection(),
-                const _UpcomingEventsSection(),
-                const SizedBox(height: 32),
-                const _SectionHeader(
-                  title: 'Espace Membres',
-                  icon: Icons.grid_view_rounded,
-                ),
-                const SizedBox(height: 16),
-                const _MembresGrid(),
-                const SizedBox(height: 32),
-                const _InfoCard(),
-                const SizedBox(height: 24),
-                const _BetaNoticeCard(),
-              ]),
+          SliverSafeArea(
+            bottom: false,
+            sliver: SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                kScreenHorizontalPadding,
+                16,
+                kScreenHorizontalPadding,
+                kFloatingNavBarBottomPadding,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate(const [
+                  _WelcomeHeader(),
+                  SizedBox(height: 24),
+                  _NoticesSection(),
+                  _UpcomingSection(),
+                  SizedBox(height: 32),
+                  StageSectionHeader(title: 'Espace membres'),
+                  SizedBox(height: 12),
+                  _MembresGrid(),
+                  SizedBox(height: 32),
+                  _InfoCard(),
+                  SizedBox(height: 16),
+                  _BetaNoticeCard(),
+                ]),
+              ),
             ),
           ),
         ],
@@ -70,7 +64,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// MARK: - UI Components
+// MARK: - Header
 
 class _WelcomeHeader extends ConsumerWidget {
   const _WelcomeHeader();
@@ -79,167 +73,77 @@ class _WelcomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final displayName = ref.watch(displayNameProvider);
     final photoUrl = ref.watch(profilePictureUrlProvider);
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final greeting = DateTime.now().hour < 18 ? 'Bonjour' : 'Bonsoir';
+    final firstName = displayName.trim().split(RegExp(r'\s+')).first;
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
-    // Dynamic greeting based on time of day
-    final now = DateTime.now();
-    final hour = now.hour;
-    String greetingTime = hour < 18 ? 'Bonjour' : 'Bonsoir';
-
-    return FadeInUp(
-      delay: 100,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                    width: 2,
-                  ),
-                ),
-                child: Semantics(
-                  label: 'Photo de profil',
-                  image: true,
-                  child: ExcludeSemantics(
-                    child: ClipOval(
-                      child: photoUrl != null && photoUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: photoUrl,
-                              width: 48,
-                              height: 48,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => _buildInitialsAvatar(
-                                theme,
-                                displayName.isNotEmpty
-                                    ? displayName[0].toUpperCase()
-                                    : '?',
-                              ),
-                              errorWidget: (_, __, ___) =>
-                                  _buildInitialsAvatar(
-                                    theme,
-                                    displayName.isNotEmpty
-                                        ? displayName[0].toUpperCase()
-                                        : '?',
-                                  ),
-                            )
-                          : _buildInitialsAvatar(
-                              theme,
-                              displayName.isNotEmpty
-                                  ? displayName[0].toUpperCase()
-                                  : '?',
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$greetingTime,',
-                      style: GoogleFonts.poppins(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      displayName,
-                      style: GoogleFonts.poppins(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        height: 1.1,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Widget _buildInitialsAvatar(ThemeData theme, String initial) {
-    return Container(
+    Widget initials() => Container(
       width: 48,
       height: 48,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        shape: BoxShape.circle,
-      ),
+      color: scheme.surfaceContainer,
       alignment: Alignment.center,
       child: Text(
         initial,
-        style: GoogleFonts.poppins(
-          color: theme.colorScheme.onPrimaryContainer,
+        style: AppFonts.display(
           fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface,
         ),
       ),
     );
-  }
-}
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final IconData? icon;
-  final VoidCallback? onMoreTap;
-
-  const _SectionHeader({required this.title, this.icon, this.onMoreTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return FadeInUp(
-      delay: 200,
+      delay: 100,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                  letterSpacing: -0.5,
-                ),
+          const TuningForkMark(size: 30),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              firstName.isEmpty ? greeting : '$greeting, $firstName',
+              style: AppFonts.display(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+                height: 1.15,
               ),
-            ],
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          if (onMoreTap != null)
-            InkWell(
-              onTap: onMoreTap,
-              borderRadius: BorderRadius.circular(20),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  'Voir tout',
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.primary,
+          const SizedBox(width: 12),
+          Semantics(
+            button: true,
+            label: 'Mon profil',
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                ref.read(mainNavigationProvider.notifier).setTab(3);
+              },
+              child: ExcludeSemantics(
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.outlineVariant),
+                  ),
+                  child: ClipOval(
+                    child: photoUrl != null && photoUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: photoUrl,
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            placeholder: (_, _) => initials(),
+                            errorWidget: (_, _, _) => initials(),
+                          )
+                        : initials(),
                   ),
                 ),
               ),
             ),
+          ),
         ],
       ),
     );
@@ -290,97 +194,66 @@ class _NoticesSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final notice in notices) ...[notice, const SizedBox(height: 12)],
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 }
 
-// MARK: - Event Section (Redesigned)
+// MARK: - Upcoming
 
-class _UpcomingEventsSection extends ConsumerWidget {
-  const _UpcomingEventsSection();
+class _UpcomingSection extends ConsumerWidget {
+  const _UpcomingSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navigationNotifier = ref.read(mainNavigationProvider.notifier);
+    final navigation = ref.read(mainNavigationProvider.notifier);
     final isSuperadmin = ref.watch(isSuperadminProvider).value ?? false;
-
-    final nextRehearsals = ref.watch(homeUpcomingRehearsalsProvider);
-    final nextConcerts = ref.watch(homeUpcomingConcertsProvider);
-    // Horizontal lists need a fixed height; it grows with the text size so
-    // the cards never clip at 1.3× or 2×.
-    final scale = _textScale(context);
+    final rehearsals = ref.watch(homeUpcomingRehearsalsProvider);
+    final concerts = ref.watch(homeUpcomingConcertsProvider);
 
     return FadeInUp(
       delay: 300,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. REHEARSALS
-          const _SectionHeader(
-            title: 'Prochaines répétitions',
-            icon: Icons.music_note_rounded,
-          ),
-          const SizedBox(height: 12),
-          if (nextRehearsals.isNotEmpty)
-            SizedBox(
-              height: 165 * scale,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                clipBehavior: Clip.none, // Allow shadows to paint outside
-                itemCount: nextRehearsals.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  return _RehearsalTicketCard(
-                    rehearsal: nextRehearsals[index],
-                    onTap: () => navigationNotifier.setTab(2),
-                  );
-                },
-              ),
+          if (rehearsals.isNotEmpty)
+            _NextRehearsalHero(
+              rehearsal: rehearsals.first,
+              onOpenCalendar: () => navigation.setTab(2),
             )
           else
-            _EmptyStateCard(
+            const _EmptyStateCard(
               message: 'Aucune répétition programmée',
               icon: Icons.event_busy_rounded,
             ),
-
-          const SizedBox(height: 24),
-
-          // 2. CONCERTS
-          const _SectionHeader(
-            title: 'Concerts & Événements',
-            icon: Icons.celebration_rounded,
-          ),
-          const SizedBox(height: 12),
-          if (nextConcerts.isNotEmpty)
-            SizedBox(
-              height: 155 * scale,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                clipBehavior: Clip.none,
-                itemCount: nextConcerts.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  return _ConcertTicketCard(
-                    concert: nextConcerts[index],
-                    onTap: () => navigationNotifier.setTab(1),
-                  );
-                },
-              ),
+          const SizedBox(height: 16),
+          if (concerts.isNotEmpty)
+            _NextConcertCard(
+              concert: concerts.first,
+              onTap: () => navigation.setTab(1),
             )
           else
-            _EmptyStateCard(
+            const _EmptyStateCard(
               message: 'Aucun concert à venir',
               icon: Icons.piano_off_rounded,
             ),
-
-          // 3. ADMIN SPECIAL
+          if (rehearsals.length > 1) ...[
+            const SizedBox(height: 28),
+            StageSectionHeader(
+              title: 'À suivre',
+              actionLabel: 'Tout voir',
+              onAction: () => navigation.setTab(2),
+            ),
+            const SizedBox(height: 8),
+            for (final r in rehearsals.skip(1)) ...[
+              _RehearsalRow(rehearsal: r, onTap: () => navigation.setTab(2)),
+              const SizedBox(height: 10),
+            ],
+          ],
           if (isSuperadmin) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
             _AdminActionCard(
               icon: Icons.local_shipping_outlined,
               title: 'Mode Livraison',
@@ -394,342 +267,336 @@ class _UpcomingEventsSection extends ConsumerWidget {
   }
 }
 
-class _RehearsalTicketCard extends StatelessWidget {
-  final Rehearsal rehearsal;
-  final VoidCallback onTap;
+/// The next rehearsal, large: « Demain », the date and time, the group, the
+/// place, and a way to get there.
+class _NextRehearsalHero extends StatelessWidget {
+  const _NextRehearsalHero({
+    required this.rehearsal,
+    required this.onOpenCalendar,
+  });
 
-  const _RehearsalTicketCard({required this.rehearsal, required this.onTap});
+  final Rehearsal rehearsal;
+  final VoidCallback onOpenCalendar;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // Assuming rehearsal.date is a String based on your snippet
-    final dateObj = DateTime.parse(rehearsal.date!);
+    final scheme = Theme.of(context).colorScheme;
+    final date = DateTime.tryParse(rehearsal.date ?? '');
+    final days = date == null ? null : daysUntil(date);
+    final startHour = int.tryParse((rehearsal.startTime ?? '').split(':')[0]);
+    final evening = startHour != null && startHour >= 17;
+    final big = date == null
+        ? '—'
+        : (days! > 30
+              ? '${date.day} ${monthShort(date)}'
+              : countdownLabel(date, evening: evening));
+    final when = [
+      if (date != null) longDate(date),
+      frenchTimeRange(rehearsal.startTime, rehearsal.endTime),
+    ].where((s) => s.isNotEmpty).join(' · ');
+    final place = rehearsal.place;
 
-    return SizedBox(
-      width: 260,
-      child: Card(
-        elevation: 0,
-        clipBehavior:
-            Clip.antiAlias, // Ensures the child inkwell doesn't overflow
-        color: theme.colorScheme.surfaceContainer,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- TOP SECTION (Date & Title) ---
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DateBadge(date: dateObj, color: theme.colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'Répétition',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            formatDate(rehearsal.date!),
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+    final card = Semantics(
+      container: true,
+      label:
+          'Prochaine répétition, $big, $when, ${groupLabel(rehearsal.groupType)}'
+          '${place != null ? ', $place' : ''}',
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: scheme.outlineVariant),
+          gradient: RadialGradient(
+            center: const Alignment(0.8, -0.9),
+            radius: 1.3,
+            colors: [
+              Color.alphaBlend(
+                scheme.primary.withValues(alpha: 0.16),
+                scheme.surfaceContainer,
               ),
-
-              const Spacer(), // <--- This pushes the bottom row down
-              // --- BOTTOM SECTION (Footer style) ---
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHigh.withValues(
-                    alpha: 0.3,
-                  ),
-                  border: Border(
-                    top: BorderSide(
-                      color: theme.colorScheme.outlineVariant.withValues(
-                        alpha: 0.2,
-                      ),
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Time
-                    Icon(
-                      Icons.schedule_rounded,
-                      size: 14,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      formatTime(rehearsal.startTime),
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-
-                    // Separator dot
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        '•',
-                        style: TextStyle(color: theme.colorScheme.outline),
-                      ),
-                    ),
-
-                    // Location
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.place_outlined,
-                            size: 14,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              rehearsal.place ?? "Lieu non défini",
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              scheme.surfaceContainer,
             ],
           ),
         ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -70,
+              top: -70,
+              child: ResonanceRings(
+                color: scheme.primary.withValues(alpha: 0.32),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+              child: ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const StageEyebrow('Prochaine répétition'),
+                    const SizedBox(height: 10),
+                    Text(
+                      big,
+                      style: AppFonts.display(
+                        fontSize: 56,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
+                        height: 1,
+                        letterSpacing: -1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      when,
+                      style: AppFonts.sans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        GroupMark(
+                          color: groupColor(context, rehearsal.groupType),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            groupLabel(rehearsal.groupType),
+                            style: AppFonts.display(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (place != null && place.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.place_outlined,
+                            size: 20,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              place,
+                              style: AppFonts.sans(
+                                fontSize: 15,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+
+    // The two buttons sit under the card, outside its spoken summary.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        card,
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            if (place != null && place.isNotEmpty)
+              FilledButton.icon(
+                onPressed: () => _openMaps(context, place),
+                icon: const Icon(Icons.directions_outlined),
+                label: const Text('Itinéraire'),
+              ),
+            OutlinedButton.icon(
+              onPressed: onOpenCalendar,
+              icon: const Icon(Icons.calendar_month_outlined),
+              label: const Text('Calendrier'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-class _ConcertTicketCard extends StatelessWidget {
+Future<void> _openMaps(BuildContext context, String place) async {
+  HapticFeedback.lightImpact();
+  final uri = Uri.https('www.google.com', '/maps/search/', {
+    'api': '1',
+    'query': place,
+  });
+  try {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible d\'ouvrir la carte.')),
+      );
+    }
+  }
+}
+
+class _NextConcertCard extends StatelessWidget {
+  const _NextConcertCard({required this.concert, required this.onTap});
+
   final Concert concert;
   final VoidCallback onTap;
 
-  const _ConcertTicketCard({required this.concert, required this.onTap});
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final date = DateTime.tryParse(concert.date);
+    final name = concert.name ?? 'Concert';
+    final meta = [
+      if (date != null) longDate(date),
+      frenchTime(concert.time),
+      concert.place,
+    ].where((s) => s.isNotEmpty).join(' · ');
 
-    return SizedBox(
-      width: 280,
-      child: Card(
-        elevation: 0,
-        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: theme.colorScheme.secondary.withValues(alpha: 0.2),
-          ),
-        ),
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+    return StageCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(14),
+      semanticLabel:
+          'Concert${date != null ? ' ${relativeDays(date)}' : ''}, $name, $meta',
+      child: Row(
+        children: [
+          if (date != null) StageDateTile(date: date),
+          const SizedBox(width: 14),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DateBadge(
-                      date: DateTime.parse(concert.date),
-                      color: theme.colorScheme.secondary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            concert.name ?? 'Concert',
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.onSecondaryContainer,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                StageEyebrow(
+                  date != null ? 'Concert · ${relativeDays(date)}' : 'Concert',
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+                const SizedBox(height: 4),
+                Text(
+                  name,
+                  style: AppFonts.display(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                    height: 1.15,
                   ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 14,
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        formatTime(concert.time),
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Icon(
-                        Icons.place,
-                        size: 14,
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          concert.place,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  meta,
+                  style: AppFonts.sans(
+                    fontSize: 14,
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
-        ),
+          const SizedBox(width: 6),
+          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+        ],
       ),
     );
   }
 }
 
-class _DateBadge extends StatelessWidget {
-  final DateTime date;
-  final Color color;
+/// One line per later rehearsal: day, group colour, group, time and place.
+class _RehearsalRow extends StatelessWidget {
+  const _RehearsalRow({required this.rehearsal, required this.onTap});
 
-  const _DateBadge({required this.date, required this.color});
+  final Rehearsal rehearsal;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    // Helper to get short month name
-    final months = [
-      'Jan',
-      'Fév',
-      'Mar',
-      'Avr',
-      'Mai',
-      'Juin',
-      'Juil',
-      'Août',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Déc',
-    ];
+    final scheme = Theme.of(context).colorScheme;
+    final date = DateTime.tryParse(rehearsal.date ?? '');
+    final time = frenchTimeRange(rehearsal.startTime, rehearsal.endTime);
+    final place = rehearsal.place ?? 'Lieu non défini';
 
-    // 48×48 at the default text size; grows with large text instead of
-    // clipping the day number.
-    return Container(
-      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+    return StageCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      semanticLabel: [
+        if (date != null) longDate(date),
+        groupLabel(rehearsal.groupType),
+        time,
+        place,
+      ].where((s) => s.isNotEmpty).join(', '),
+      child: Row(
         children: [
-          Text(
-            date.day.toString(),
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-              height: 1.0,
+          SizedBox(
+            width: 52,
+            child: Column(
+              children: [
+                Text(
+                  date != null ? '${date.day}' : '—',
+                  style: AppFonts.display(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onSurface,
+                    height: 1,
+                  ),
+                ),
+                if (date != null)
+                  Text(
+                    weekdayShort(date),
+                    style: AppFonts.sans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
             ),
           ),
-          Text(
-            months[date.month - 1],
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: color,
-              height: 1.2,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    GroupMark(
+                      color: groupColor(context, rehearsal.groupType),
+                      width: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        groupLabel(rehearsal.groupType),
+                        style: AppFonts.sans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  [time, place].where((s) => s.isNotEmpty).join(' · '),
+                  style: AppFonts.sans(
+                    fontSize: 14,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -746,27 +613,17 @@ class _EmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
+    final scheme = Theme.of(context).colorScheme;
+    return StageCard(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.05),
-        ),
-      ),
       child: Column(
         children: [
-          Icon(icon, size: 32, color: theme.colorScheme.outline),
+          Icon(icon, size: 32, color: scheme.onSurfaceVariant),
           const SizedBox(height: 8),
           Text(
             message,
-            style: GoogleFonts.poppins(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 13,
-            ),
+            textAlign: TextAlign.center,
+            style: AppFonts.sans(color: scheme.onSurfaceVariant, fontSize: 15),
           ),
         ],
       ),
@@ -789,162 +646,118 @@ class _AdminActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.tertiaryContainer,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.shadow.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    final scheme = Theme.of(context).colorScheme;
+    return StageCard(
+      onTap: onTap,
+      color: scheme.tertiaryContainer,
+      semanticLabel: '$title, $subtitle',
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: scheme.onTertiaryContainer,
+              shape: BoxShape.circle,
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onTertiaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: theme.colorScheme.tertiaryContainer,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      color: theme.colorScheme.onTertiaryContainer,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
+            child: Icon(icon, color: scheme.tertiaryContainer, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppFonts.sans(
+                    color: scheme.onTertiaryContainer,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
                   ),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.poppins(
-                      color: theme.colorScheme.onTertiaryContainer.withValues(
-                        alpha: 0.8,
-                      ),
-                      fontSize: 12,
-                    ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppFonts.sans(
+                    color: scheme.onTertiaryContainer,
+                    fontSize: 14,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Icon(
-              Icons.arrow_forward_rounded,
-              color: theme.colorScheme.onTertiaryContainer,
-              size: 18,
-            ),
-          ],
-        ),
+          ),
+          Icon(Icons.arrow_forward_rounded, color: scheme.onTertiaryContainer),
+        ],
       ),
     );
   }
 }
 
-// MARK: - Membres Grid (Bento Style)
+// MARK: - Espace membres
 
 class _MembresGrid extends ConsumerWidget {
   const _MembresGrid();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navigationNotifier = ref.read(mainNavigationProvider.notifier);
+    final navigation = ref.read(mainNavigationProvider.notifier);
+
+    Future<void> openDrive() async {
+      // The root folder is configured in `drive_folders`; the `.env` value is
+      // only the fallback.
+      final catalog = await ref.read(driveFolderCatalogProvider.future);
+      final uri = Uri.parse(catalog.rootUrl ?? AppConfig.driveFolderMain);
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Erreur lien Drive')));
+        }
+      }
+    }
+
+    final tiles = <_Tile>[
+      _Tile(
+        Icons.library_music_outlined,
+        'Partitions',
+        () => context.push('/partitions'),
+      ),
+      _Tile(
+        Icons.calendar_month_outlined,
+        'Calendrier',
+        () => navigation.setTab(2),
+      ),
+      _Tile(Icons.group_outlined, 'Membres', () => context.push('/members')),
+      _Tile(
+        Icons.description_outlined,
+        'Administration',
+        () => context.push('/administration'),
+      ),
+      _Tile(Icons.folder_open_outlined, 'Drive', openDrive),
+    ];
 
     return FadeInUp(
       delay: 350,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final crossAxisCount = constraints.maxWidth > 500 ? 3 : 2;
-          // Cells get taller with large text so a wrapped title still fits.
-          final scale = _textScale(context);
-          return GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.3 / scale,
+          // Two columns on phones; a single one when large text would make
+          // the labels wrap badly.
+          final scale = MediaQuery.textScalerOf(context).scale(1.0);
+          final columns = constraints.maxWidth > 560
+              ? 3
+              : (scale >= 1.6 ? 1 : 2);
+          const gap = 10.0;
+          final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
             children: [
-              _MembresBentoCard(
-                icon: Icons.library_music_rounded,
-                title: 'Partitions',
-                colorIndex: 0,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  context.push('/partitions');
-                },
-              ),
-              _MembresBentoCard(
-                icon: Icons.calendar_month_rounded,
-                title: 'Calendrier',
-                colorIndex: 1,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  navigationNotifier.setTab(2);
-                },
-              ),
-              _MembresBentoCard(
-                icon: Icons.group_rounded,
-                title: 'Membres',
-                colorIndex: 2,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  context.push('/members');
-                },
-              ),
-              _MembresBentoCard(
-                icon: Icons.description_rounded,
-                title: 'Administration',
-                colorIndex: 3,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  context.push('/administration');
-                },
-              ),
-              _MembresBentoCard(
-                icon: Icons.folder_copy_rounded,
-                title: 'Drive',
-                colorIndex: 4,
-                onTap: () async {
-                  HapticFeedback.lightImpact();
-                  // The root folder is configured in `drive_folders`; the
-                  // `.env` value is only the fallback.
-                  final catalog = await ref.read(
-                    driveFolderCatalogProvider.future,
-                  );
-                  final uri = Uri.parse(
-                    catalog.rootUrl ?? AppConfig.driveFolderMain,
-                  );
-                  try {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  } catch (_) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Erreur lien Drive')),
-                      );
-                    }
-                  }
-                },
-              ),
+              for (final t in tiles)
+                SizedBox(
+                  width: width,
+                  child: _MembresTile(tile: t),
+                ),
             ],
           );
         },
@@ -953,95 +766,49 @@ class _MembresGrid extends ConsumerWidget {
   }
 }
 
-class _MembresBentoCard extends StatelessWidget {
+class _Tile {
+  const _Tile(this.icon, this.title, this.onTap);
   final IconData icon;
   final String title;
-  final int colorIndex;
   final VoidCallback onTap;
+}
 
-  const _MembresBentoCard({
-    required this.icon,
-    required this.title,
-    required this.colorIndex,
-    required this.onTap,
-  });
+class _MembresTile extends StatelessWidget {
+  const _MembresTile({required this.tile});
+  final _Tile tile;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // Generate subtle variations for the bento cards
-    final colors = [
-      theme.colorScheme.primaryContainer,
-      theme.colorScheme.secondaryContainer,
-      theme.colorScheme.tertiaryContainer,
-      theme.colorScheme.surfaceContainerHigh,
-    ];
-
-    final onColors = [
-      theme.colorScheme.onPrimaryContainer,
-      theme.colorScheme.onSecondaryContainer,
-      theme.colorScheme.onTertiaryContainer,
-      theme.colorScheme.onSurface,
-    ];
-
-    final bgColor = colors[colorIndex % colors.length];
-    final fgColor = onColors[colorIndex % onColors.length];
-
-    return Semantics(
-      button: true,
-      label: title,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: ExcludeSemantics(
-          child: Container(
+    final scheme = Theme.of(context).colorScheme;
+    return StageCard(
+      onTap: tile.onTap,
+      semanticLabel: tile.title,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: bgColor.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.1),
-              ),
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.shadow.withValues(
-                          alpha: 0.05,
-                        ),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(icon, size: 28, color: fgColor),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            child: Icon(tile.icon, color: scheme.primary, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              tile.title,
+              style: AppFonts.sans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -1054,23 +821,12 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
 
     return FadeInUp(
       delay: 400,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-        ),
+      child: StageCard(
+        padding: const EdgeInsets.all(20),
         child: Row(
           children: [
             Expanded(
@@ -1079,34 +835,26 @@ class _InfoCard extends StatelessWidget {
                 children: [
                   Text(
                     'Le Bon Tempérament',
-                    style: GoogleFonts.playfairDisplay(
-                      // More elegant font for the name
+                    style: AppFonts.display(
                       fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                      color: theme.colorScheme.onSurface,
+                      fontSize: 20,
+                      color: scheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
-                    'Ensemble vocal et instrumental. \nSaverne, depuis 1987.',
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      height: 1.5,
-                      color: theme.colorScheme.onSurfaceVariant,
+                    'Ensemble vocal et instrumental.\nSaverne, depuis 1987.',
+                    style: AppFonts.sans(
+                      fontSize: 14,
+                      height: 1.45,
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(Icons.music_note, color: theme.colorScheme.primary),
-            ),
+            const SizedBox(width: 12),
+            const TuningForkMark(size: 40),
           ],
         ),
       ),
@@ -1119,63 +867,39 @@ class _BetaNoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
 
-    // The whole card is the target (the old 50×30 "Contacter" button was
-    // below the 48 dp minimum); "Contacter" stays as the visual affordance.
+    // The whole card is the target; « Contacter » stays as the visual cue.
     return FadeInUp(
       delay: 500,
-      child: Semantics(
-        button: true,
-        label: 'Version bêta : signaler un bug, contacter par e-mail',
-        child: Material(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: () => _launchEmail(context),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                ),
-              ),
-              child: ExcludeSemantics(
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.science,
-                      size: 16,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Version Bêta - Signaler un bug',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Contacter',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
+      child: StageCard(
+        onTap: () => _launchEmail(context),
+        semanticLabel: 'Version bêta : signaler un bug, contacter par e-mail',
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(Icons.science_outlined, size: 20, color: scheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Version bêta : signaler un bug',
+                style: AppFonts.sans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Text(
+              'Contacter',
+              style: AppFonts.sans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: scheme.primary,
+              ),
+            ),
+          ],
         ),
       ),
     );

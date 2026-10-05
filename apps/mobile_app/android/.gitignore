@@ -16,3 +16,11 @@ app/build/
 key.properties
 **/*.keystore
 **/*.jks
+
+# fastlane (Play Store uploads): local gems and reports, never a key file
+/.bundle/
+/vendor/
+fastlane/report.xml
+fastlane/README.md.tmp
+*.json.key
+play-store-key*.json

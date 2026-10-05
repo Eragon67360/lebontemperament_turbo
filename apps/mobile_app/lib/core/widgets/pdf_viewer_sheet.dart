@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:pdfx/pdfx.dart';
 
 /// A bottom sheet that displays a PDF from a URL using pdfx.
@@ -18,6 +18,11 @@ class PdfViewerSheet extends StatefulWidget {
   /// website's Drive proxy, which refuses anonymous requests).
   final Map<String, String>? headers;
 
+  /// Optional: fetches the PDF bytes instead of a plain GET on [url] (the
+  /// Drive proxy goes through `DriveService`, which refreshes an expired
+  /// session and words its errors in French).
+  final Future<List<int>> Function()? load;
+
   const PdfViewerSheet({
     super.key,
     required this.url,
@@ -25,6 +30,7 @@ class PdfViewerSheet extends StatefulWidget {
     required this.onClose,
     this.onOpenInBrowser,
     this.headers,
+    this.load,
   });
 
   @override
@@ -35,6 +41,7 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
   PdfControllerPinch? _controller;
   String? _error;
   bool _loading = true;
+  final _cancelToken = CancelToken();
 
   @override
   void initState() {
@@ -44,14 +51,28 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
 
   Future<void> _loadPdf() async {
     try {
-      final response = await Dio().get(
-        widget.url,
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: widget.headers,
-        ),
-      );
-      final doc = await PdfDocument.openData(response.data);
+      final List<int> bytes;
+      if (widget.load != null) {
+        bytes = await widget.load!();
+      } else {
+        final response =
+            await Dio(
+              BaseOptions(
+                connectTimeout: const Duration(seconds: 15),
+                receiveTimeout: const Duration(seconds: 30),
+              ),
+            ).get<List<int>>(
+              widget.url,
+              cancelToken: _cancelToken,
+              options: Options(
+                responseType: ResponseType.bytes,
+                headers: widget.headers,
+              ),
+            );
+        bytes = response.data ?? const [];
+      }
+      if (!mounted) return;
+      final doc = await PdfDocument.openData(Uint8List.fromList(bytes));
       if (!mounted) return;
       setState(() {
         _controller = PdfControllerPinch(
@@ -65,14 +86,30 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
       debugPrint('PDF load error: $e\n$st');
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = _messageFor(e);
         _loading = false;
       });
     }
   }
 
+  /// What the member reads when the PDF can't be shown: a service message
+  /// when the loader worded one, never Dio's or pdfx's English internals.
+  static String _messageFor(Object e) {
+    if (e is DioException) {
+      return e.response == null
+          ? 'Connexion impossible. Vérifiez votre réseau.'
+          : 'Le document n\'a pas pu être chargé (erreur ${e.response!.statusCode}).';
+    }
+    if (e is PlatformException || e is FormatException) {
+      return 'Ce fichier n\'est pas un PDF lisible.';
+    }
+    final text = e.toString();
+    return text.isEmpty ? 'Le document n\'a pas pu être chargé.' : text;
+  }
+
   @override
   void dispose() {
+    _cancelToken.cancel();
     _controller?.dispose();
     super.dispose();
   }
@@ -103,7 +140,7 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
                 Expanded(
                   child: Text(
                     widget.fileName,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
@@ -145,7 +182,7 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
                         const SizedBox(height: 16),
                         Text(
                           'Chargement du PDF…',
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 14,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -154,59 +191,57 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
                     ),
                   )
                 : _error != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.error_outline_rounded,
-                                size: 48,
-                                color: theme.colorScheme.error,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Impossible de charger le PDF',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _error!,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: theme.colorScheme.error,
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (widget.onOpenInBrowser != null) ...[
-                                const SizedBox(height: 16),
-                                TextButton.icon(
-                                  onPressed: () async {
-                                    HapticFeedback.lightImpact();
-                                    await widget.onOpenInBrowser!(widget.url);
-                                    if (context.mounted) widget.onClose();
-                                  },
-                                  icon: const Icon(
-                                      Icons.open_in_browser_outlined),
-                                  label:
-                                      const Text('Ouvrir dans le navigateur'),
-                                ),
-                              ],
-                            ],
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 48,
+                            color: theme.colorScheme.error,
                           ),
-                        ),
-                      )
-                    : PdfViewPinch(
-                        controller: _controller!,
-                        scrollDirection: Axis.vertical,
+                          const SizedBox(height: 16),
+                          Text(
+                            'Impossible de charger le PDF',
+                            textAlign: TextAlign.center,
+                            style: AppFonts.sans(
+                              fontSize: 14,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _error!,
+                            textAlign: TextAlign.center,
+                            style: AppFonts.sans(
+                              fontSize: 12,
+                              color: theme.colorScheme.error,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (widget.onOpenInBrowser != null) ...[
+                            const SizedBox(height: 16),
+                            TextButton.icon(
+                              onPressed: () async {
+                                HapticFeedback.lightImpact();
+                                await widget.onOpenInBrowser!(widget.url);
+                                if (context.mounted) widget.onClose();
+                              },
+                              icon: const Icon(Icons.open_in_browser_outlined),
+                              label: const Text('Ouvrir dans le navigateur'),
+                            ),
+                          ],
+                        ],
                       ),
+                    ),
+                  )
+                : PdfViewPinch(
+                    controller: _controller!,
+                    scrollDirection: Axis.vertical,
+                  ),
           ),
         ],
       ),
