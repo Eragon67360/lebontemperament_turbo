@@ -5,13 +5,13 @@ reaches the store through fastlane ([supply](https://docs.fastlane.tools/actions
 Claude edits these files in pull requests; nothing reaches the store without
 the owner's go.
 
-| What                       | Where                                                                               | How it reaches Google Play                         |
-| -------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------- |
-| App bundle                 | built by `.github/workflows/android-build-release.yml` on `main`                    | automatically, internal track, released to testers |
-| Release notes (Nouveautés) | `metadata/android/fr-FR/changelogs/default.txt` (≤ 500 characters)                  | with the bundle above                              |
-| Title, short and full text | `metadata/android/fr-FR/title.txt`, `short_description.txt`, `full_description.txt` | **Play Store** workflow, `publish-listing`         |
-| Phone screenshots          | `metadata/android/fr-FR/images/phoneScreenshots/*.png` (1080 × 1920)                | **Play Store** workflow, `publish-listing`         |
-| Promotion to production    | the build number (versionCode)                                                      | **Play Store** workflow, `promote`                 |
+| What                                     | Where                                                                               | How it reaches Google Play                         |
+| ---------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------- |
+| App bundle                               | built by `.github/workflows/android-build-release.yml` on `main`                    | automatically, internal track, released to testers |
+| Release notes (Nouveautés)               | `metadata/android/fr-FR/changelogs/default.txt` (≤ 500 characters)                  | with the bundle above                              |
+| Title, short and full text               | `metadata/android/fr-FR/title.txt`, `short_description.txt`, `full_description.txt` | **Play Store** workflow, `publish-listing`         |
+| Phone screenshots                        | `metadata/android/fr-FR/images/phoneScreenshots/*.png` (1080 × 1920)                | **Play Store** workflow, `publish-listing`         |
+| Promotion (closed testing or production) | the build number (versionCode)                                                      | **Play Store** workflow, `promote`                 |
 
 A test (`test/store/store_listing_test.dart`) checks Google's length limits on
 every pull request.
@@ -28,9 +28,12 @@ Actions → **Play Store** → Run workflow, then pick a task:
 - `publish-listing`: publishes the texts and screenshots. Images whose content
   didn't change are not sent again. Files absent here (icon, feature
   graphic) stay as they are on Google Play.
-- `promote`: moves a build from the internal track to production. Give the
-  build number, and a share for a staged rollout (`0.2` = 20 %; empty =
-  everyone). Tick `validate_only` to let Google check it first.
+- `promote`: moves a build from the internal track to `alpha` (Closed
+  testing, the default) or `production`. The app has no production access
+  yet (Google requires a closed test first), so Closed testing is the
+  highest track for now. Give the build number and, for production only, a
+  share for a staged rollout (`0.2` = 20 %; empty = everyone). Tick
+  `validate_only` to let Google check it first.
 
 `publish-listing` and `promote` run in the `play-store` GitHub environment and
 wait for the owner's approval there.

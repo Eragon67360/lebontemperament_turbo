@@ -6,7 +6,7 @@ name: Play Store
 # - download-listing  reads the live listing into an artifact (read-only)
 # - validate-listing  checks the repository's listing with Google (no change)
 # - publish-listing   publishes texts, icon, feature graphic and screenshots
-# - promote           moves an internal-track build to production
+# - promote           moves an internal-track build to closed testing or production
 #
 # publish-listing and promote change the public store: they run in the
 # `play-store` environment, which waits for the owner's approval.
@@ -23,12 +23,20 @@ on:
           - validate-listing
           - publish-listing
           - promote
+      track:
+        description: "promote: where to (alpha = Closed testing; production needs Google's production access)"
+        required: false
+        type: choice
+        default: alpha
+        options:
+          - alpha
+          - production
       version_code:
         description: "promote: the build number (versionCode) to promote, e.g. 144"
         required: false
         type: string
       rollout:
-        description: "promote: share of users, 0.1 = 10 %; empty = everyone"
+        description: "promote to production: share of users, 0.1 = 10 %; empty = everyone"
         required: false
         type: string
       validate_only:
@@ -99,6 +107,7 @@ jobs:
       LC_ALL: C.UTF-8
       FASTLANE_SKIP_UPDATE_CHECK: "1"
       FASTLANE_OPT_OUT_USAGE: "1"
+      TRACK: ${{ inputs.track }}
       VERSION_CODE: ${{ inputs.version_code }}
       ROLLOUT: ${{ inputs.rollout }}
       VALIDATE_ONLY: ${{ inputs.validate_only }}
@@ -113,10 +122,11 @@ jobs:
       - name: Publish the listing
         if: inputs.task == 'publish-listing'
         run: bundle exec fastlane android publish_listing
-      - name: Promote to production
+      - name: Promote
         if: inputs.task == 'promote'
         run: |
           case "$VERSION_CODE" in ''|*[!0-9]*) echo "version_code must be a number" >&2; exit 1;; esac
+          case "$TRACK" in alpha|production) ;; *) echo "track must be alpha or production" >&2; exit 1;; esac
           case "$ROLLOUT" in ''|0.[0-9]*|1|1.0) ;; *) echo "rollout must be between 0 and 1" >&2; exit 1;; esac
           bundle exec fastlane android promote \
-            version_code:"$VERSION_CODE" rollout:"$ROLLOUT" validate_only:"$VALIDATE_ONLY"
+            track:"$TRACK" version_code:"$VERSION_CODE" rollout:"$ROLLOUT" validate_only:"$VALIDATE_ONLY"
