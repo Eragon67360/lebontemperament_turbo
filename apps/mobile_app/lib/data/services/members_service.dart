@@ -27,8 +27,11 @@ class MembersService {
 
       for (final row in list) {
         if (row is! Map<String, dynamic>) continue;
-        final email = row['email']?.toString().trim();
-        if (email == null || email.isEmpty) continue;
+        // Keep everyone with a name, like the website's directory; the
+        // screen hides the email line when there is none.
+        final email = row['email']?.toString().trim() ?? '';
+        final name = row['display_name']?.toString().trim() ?? '';
+        if (email.isEmpty && name.isEmpty) continue;
 
         // Check for Google avatar from current auth user (same user only)
         String? photoUrl = row['profile_picture_url']?.toString();
@@ -43,8 +46,7 @@ class MembersService {
         }
 
         members.add(Member(
-          displayName:
-              (row['display_name'] ?? email.split('@').first).toString().trim(),
+          displayName: name.isNotEmpty ? name : email.split('@').first,
           email: email,
           address: row['address']?.toString().trim(),
           homePhone: row['home_phone']?.toString().trim(),

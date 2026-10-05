@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/list_result.dart';
 import '../models/rehearsal.dart';
 import 'storage_service.dart';
+import '../../core/utils/parse_rows.dart';
 
 class RehearsalsService {
   final StorageService _storageService;
@@ -30,9 +31,11 @@ class RehearsalsService {
   Future<ListResult<Rehearsal>> getRehearsals() async {
     try {
       final response = await _fetchRows();
-      final rehearsals = response
-          .map<Rehearsal>((json) => Rehearsal.fromJson(json))
-          .toList();
+      final rehearsals = parseRows(
+        response,
+        Rehearsal.fromJson,
+        onSkip: (e, row) => _logger.w('Skipped rehearsal ${row['id']}: $e'),
+      );
 
       await _storageService.saveRehearsals(rehearsals);
       _logger.i('Saved ${rehearsals.length} rehearsals to local storage');

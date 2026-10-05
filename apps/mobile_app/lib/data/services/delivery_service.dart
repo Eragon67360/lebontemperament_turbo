@@ -52,7 +52,7 @@ class DeliveryService {
           if (isExpired) {
             final expiresAt = DateTime.now().add(const Duration(hours: 24));
             await _client.from('deliveries').update({
-              'expires_at': expiresAt.toIso8601String(),
+              'expires_at': expiresAt.toUtc().toIso8601String(),
             }).eq('id', delivery.id);
             final refreshed = await getDelivery(delivery.id);
             _logger.i(
@@ -73,7 +73,7 @@ class DeliveryService {
           .insert({
             'driver_id': userId,
             'public_token': publicToken,
-            'expires_at': expiresAt.toIso8601String(),
+            'expires_at': expiresAt.toUtc().toIso8601String(),
             'is_tracking_active': false,
           })
           .select()
@@ -156,7 +156,7 @@ class DeliveryService {
           .from('deliveries')
           .update({
             'public_token': publicToken,
-            'expires_at': expiresAt.toIso8601String(),
+            'expires_at': expiresAt.toUtc().toIso8601String(),
           })
           .eq('id', deliveryId)
           .select()
