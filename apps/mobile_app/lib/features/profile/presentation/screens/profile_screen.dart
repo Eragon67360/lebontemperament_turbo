@@ -30,14 +30,16 @@ class ProfileScreen extends ConsumerWidget {
           // --- Dynamic Profile Header ---
           _ProfileAppBar(
             onLogout: () async {
+              final confirmed = await _confirmLogout(context);
+              if (confirmed != true || !context.mounted) return;
               try {
                 await ref.read(authControllerProvider.notifier).signOut();
-              } catch (e) {
+              } catch (_) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text(
-                        'Erreur lors de la déconnexion: ${e.toString()}',
+                        'Impossible de vous déconnecter. Réessayez.',
                       ),
                     ),
                   );
@@ -168,7 +170,7 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 32),
                   const FadeInUp(
                     delay: 600,
-                    child: _SectionTitle(title: 'Zone de Danger'),
+                    child: _SectionTitle(title: 'Zone de danger'),
                   ),
                   const SizedBox(height: 12),
                   FadeInUp(
@@ -200,6 +202,31 @@ class ProfileScreen extends ConsumerWidget {
 
 const String _kSupportEmail = 'contactlebontemperament@gmail.com';
 
+/// One tap on the header icon used to log out at once: a slip of the thumb
+/// cost the member their session.
+Future<bool?> _confirmLogout(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Se déconnecter ?'),
+      content: const Text(
+        'Vous devrez saisir à nouveau votre e-mail et votre mot de passe '
+        'pour revenir.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Se déconnecter'),
+        ),
+      ],
+    ),
+  );
+}
+
 Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
   final contactSupport = await showDialog<bool>(
     context: context,
@@ -229,8 +256,22 @@ Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
         subject: 'Demande de suppression de compte',
       ),
     );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    // No canLaunchUrl: on Android 11+ it says no even when a mail app is
+    // installed. launchUrl answers false when there is none.
+    var opened = false;
+    try {
+      opened = await launchUrl(uri);
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Aucune application e-mail trouvée : écrivez à $_kSupportEmail',
+          ),
+        ),
+      );
     }
   }
 }

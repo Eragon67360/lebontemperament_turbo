@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../data/services/auth_service.dart';
 import '../providers/auth_provider.dart';
+
+/// Loose on purpose: Supabase validates the address, the field only catches
+/// a typo (no « @ », no domain). Long TLDs and « + » tags are valid.
+bool isValidEmail(String value) =>
+    RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$').hasMatch(value.trim());
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
@@ -140,9 +147,31 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
     } catch (e) {
       if (mounted) {
         _showErrorSnackBar(
-          'Erreur de connexion: Email ou mot de passe incorrect.',
+          e is SignInException
+              ? e.message
+              : 'Connexion impossible. Réessayez dans quelques instants.',
         );
       }
+    }
+  }
+
+  /// Opens the website's reset page in the browser: the e-mail it sends
+  /// brings the member back to that same browser, where the flow completes
+  /// (see [forgotPasswordUri]).
+  Future<void> _openForgotPassword() async {
+    FocusScope.of(context).unfocus();
+    final uri = forgotPasswordUri();
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened && mounted) {
+      _showErrorSnackBar(
+        'Impossible d\'ouvrir le navigateur. Rendez-vous sur '
+        '${uri.host}${uri.path} pour réinitialiser votre mot de passe.',
+      );
     }
   }
 
@@ -184,14 +213,16 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             decoration: customInputDecoration.copyWith(
-              labelText: 'Email',
+              labelText: 'E-mail',
               prefixIcon: const Icon(Icons.email_outlined),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty)
-                return 'Veuillez entrer votre email';
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value))
-                return 'Veuillez entrer un email valide';
+              if (value == null || value.isEmpty) {
+                return 'Veuillez entrer votre e-mail';
+              }
+              if (!isValidEmail(value)) {
+                return 'Veuillez entrer un e-mail valide';
+              }
               return null;
             },
           ),
@@ -233,9 +264,7 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {
-                /* TODO: Navigate to forgot password screen */
-              },
+              onPressed: isLoading ? null : _openForgotPassword,
               child: const Text('Mot de passe oublié ?'),
             ),
           ),

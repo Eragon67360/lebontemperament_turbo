@@ -98,6 +98,12 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
         </intent>
+        <!-- Mail apps, for the support and bug-report links (Android 11+
+             hides them from launchUrl without this). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="mailto" />
+        </intent>
         <!-- If you want to launch a maps app -->
         <intent>
             <action android:name="android.intent.action.VIEW" />

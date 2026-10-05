@@ -122,12 +122,16 @@ List<Override> offlineOverrides({
   FeatureFlagsService? flagsService,
   bool online = true,
   String displayName = 'Membre Test',
-  List<Rehearsal> homeRehearsals = const [kTestRehearsal],
-  List<Concert> homeConcerts = const [kTestConcert],
+  AsyncValue<List<Rehearsal>> homeRehearsals = const AsyncData([
+    kTestRehearsal,
+  ]),
+  AsyncValue<List<Concert>> homeConcerts = const AsyncData([kTestConcert]),
   DriveService? drive,
   DriveFolderCatalog? catalog,
 }) => [
   authStateProvider.overrideWith((ref) => const Stream<AuthState>.empty()),
+  // The real provider falls back to the Supabase client, absent here.
+  currentUserProvider.overrideWithValue(null),
   userProfileProvider.overrideWith((ref) async => null),
   isSuperadminProvider.overrideWith((ref) async => superadmin),
   displayNameProvider.overrideWithValue(displayName),
@@ -170,6 +174,10 @@ Future<void> pumpScreen(
   ListResult<Event> events = const ListResult.fresh([kTestEvent]),
   FeatureFlagsService? flagsService,
   bool online = true,
+  AsyncValue<List<Rehearsal>> homeRehearsals = const AsyncData([
+    kTestRehearsal,
+  ]),
+  AsyncValue<List<Concert>> homeConcerts = const AsyncData([kTestConcert]),
   List<Override> overrides = const [],
 }) async {
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -187,6 +195,8 @@ Future<void> pumpScreen(
           events: events,
           flagsService: flagsService,
           online: online,
+          homeRehearsals: homeRehearsals,
+          homeConcerts: homeConcerts,
         ),
         ...overrides,
       ],

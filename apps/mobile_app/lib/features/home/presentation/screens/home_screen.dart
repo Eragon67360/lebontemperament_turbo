@@ -210,35 +210,50 @@ class _UpcomingSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.read(mainNavigationProvider.notifier);
     final isSuperadmin = ref.watch(isSuperadminProvider).value ?? false;
-    final rehearsals = ref.watch(homeUpcomingRehearsalsProvider);
-    final concerts = ref.watch(homeUpcomingConcertsProvider);
+    final rehearsalsAsync = ref.watch(homeUpcomingRehearsalsProvider);
+    final concertsAsync = ref.watch(homeUpcomingConcertsProvider);
+    final rehearsals = rehearsalsAsync.value ?? const <Rehearsal>[];
 
     return FadeInUp(
       delay: 300,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (rehearsals.isNotEmpty)
-            _NextRehearsalHero(
-              rehearsal: rehearsals.first,
-              onOpenCalendar: () => navigation.setTab(2),
-            )
-          else
-            const _EmptyStateCard(
+          // Loading and errors have their own cards: an empty list means the
+          // server said so, not that the app has not asked yet.
+          switch (rehearsalsAsync) {
+            AsyncData(value: final items) when items.isNotEmpty =>
+              _NextRehearsalHero(
+                rehearsal: items.first,
+                onOpenCalendar: () => navigation.setTab(2),
+              ),
+            AsyncData() => const _EmptyStateCard(
               message: 'Aucune répétition programmée',
               icon: Icons.event_busy_rounded,
             ),
+            AsyncError() => _ErrorStateCard(
+              message: 'Impossible de charger les répétitions.',
+              onRetry: () => ref.invalidate(realtimeRehearsalsProvider),
+            ),
+            _ => const _LoadingCard(label: 'Chargement des répétitions…'),
+          },
           const SizedBox(height: 16),
-          if (concerts.isNotEmpty)
-            _NextConcertCard(
-              concert: concerts.first,
-              onTap: () => navigation.setTab(1),
-            )
-          else
-            const _EmptyStateCard(
+          switch (concertsAsync) {
+            AsyncData(value: final items) when items.isNotEmpty =>
+              _NextConcertCard(
+                concert: items.first,
+                onTap: () => navigation.setTab(1),
+              ),
+            AsyncData() => const _EmptyStateCard(
               message: 'Aucun concert à venir',
               icon: Icons.piano_off_rounded,
             ),
+            AsyncError() => _ErrorStateCard(
+              message: 'Impossible de charger les concerts.',
+              onRetry: () => ref.invalidate(realtimeConcertsProvider),
+            ),
+            _ => const _LoadingCard(label: 'Chargement des concerts…'),
+          },
           if (rehearsals.length > 1) ...[
             const SizedBox(height: 28),
             StageSectionHeader(
@@ -256,7 +271,7 @@ class _UpcomingSection extends ConsumerWidget {
             const SizedBox(height: 18),
             _AdminActionCard(
               icon: Icons.local_shipping_outlined,
-              title: 'Mode Livraison',
+              title: 'Mode livraison',
               subtitle: 'Suivi de position en temps réel',
               onTap: () => context.push('/driver-tracking'),
             ),
@@ -631,6 +646,74 @@ class _EmptyStateCard extends StatelessWidget {
   }
 }
 
+/// While the list is on its way (first start, or after « Réessayer »).
+class _LoadingCard extends StatelessWidget {
+  final String label;
+
+  const _LoadingCard({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return StageCard(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      semanticLabel: label,
+      child: Column(
+        children: [
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: scheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppFonts.sans(color: scheme.onSurfaceVariant, fontSize: 15),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The server failed and nothing is cached: say so, with a way to try again.
+class _ErrorStateCard extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorStateCard({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return StageCard(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off_outlined, size: 32, color: scheme.error),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppFonts.sans(color: scheme.onSurface, fontSize: 15),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.tonalIcon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Réessayer'),
+            style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _AdminActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -710,9 +793,9 @@ class _MembresGrid extends ConsumerWidget {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } catch (_) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Erreur lien Drive')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Impossible d\'ouvrir le Drive.')),
+          );
         }
       }
     }
@@ -906,16 +989,31 @@ class _BetaNoticeCard extends StatelessWidget {
   }
 
   Future<void> _launchEmail(BuildContext context) async {
-    final subject = Uri.encodeComponent('Feedback App - Le Bon Tempérament');
-    final uri = Uri.parse('mailto:$kSupportEmail?subject=$subject');
+    final uri = Uri(
+      scheme: 'mailto',
+      path: kSupportEmail,
+      query: Uri(
+        queryParameters: {
+          'subject': 'Retour sur l\'application – Le Bon Tempérament',
+        },
+      ).query,
+    );
+    // launchUrl answers false when no mail app is installed (and throws on
+    // some devices): both end in the same hint.
+    var opened = false;
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impossible d\'ouvrir l\'email.')),
-        );
-      }
+      opened = false;
+    }
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Aucune application e-mail trouvée : écrivez à $kSupportEmail',
+          ),
+        ),
+      );
     }
   }
 }

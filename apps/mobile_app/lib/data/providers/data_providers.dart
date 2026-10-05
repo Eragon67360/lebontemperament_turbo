@@ -136,7 +136,9 @@ final realtimeEventsProvider = FutureProvider<ListResult<Event>>((ref) async {
   return await eventsService.getEvents();
 });
 
-final realtimeConcertsProvider = FutureProvider<ListResult<Concert>>((ref) async {
+final realtimeConcertsProvider = FutureProvider<ListResult<Concert>>((
+  ref,
+) async {
   // Ensure storage is initialized
   await ref.watch(storageInitializationProvider.future);
 
@@ -149,7 +151,9 @@ final realtimeConcertsProvider = FutureProvider<ListResult<Concert>>((ref) async
   return await concertsService.getConcerts();
 });
 
-final realtimeRehearsalsProvider = FutureProvider<ListResult<Rehearsal>>((ref) async {
+final realtimeRehearsalsProvider = FutureProvider<ListResult<Rehearsal>>((
+  ref,
+) async {
   // Ensure storage is initialized
   await ref.watch(storageInitializationProvider.future);
 
@@ -192,14 +196,17 @@ final upcomingRehearsalsProvider = FutureProvider<ListResult<Rehearsal>>((
   ref,
 ) async {
   final rehearsals = await ref.watch(realtimeRehearsalsProvider.future);
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
 
   return rehearsals.map((items) {
+    // By end time: tonight's rehearsal leaves the list once it is over,
+    // instead of staying « Ce soir » until midnight.
     final upcoming = items.where((r) {
-      if (r.date == null) return false;
-      final rehearsalDate = DateTime.tryParse(r.date!);
-      return rehearsalDate != null && !rehearsalDate.isBefore(today);
+      if (r.date == null || DateTime.tryParse(r.date!) == null) return false;
+      return app_date_utils.isRehearsalUpcoming(
+        date: r.date,
+        startTime: r.startTime,
+        endTime: r.endTime,
+      );
     }).toList();
 
     // Sort by date, then by start time to ensure correct order
@@ -221,39 +228,51 @@ final upcomingRehearsalsProvider = FutureProvider<ListResult<Rehearsal>>((
 
 // --- NEW: Providers specifically for the Home Screen ---
 
-/// Provides the next 4 upcoming rehearsals for the home screen UI (the hero
-/// card and the « À suivre » row).
-/// Handles loading/error states gracefully by returning an empty list.
-final homeUpcomingRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
-  final asyncRehearsals = ref.watch(upcomingRehearsalsProvider);
-  return asyncRehearsals.when(
-    data: (rehearsals) => rehearsals.items.take(4).toList(),
-    loading: () => [],
-    error: (_, __) => [],
+/// A home list as the screen shows it: loading, the rows (fresh or cached),
+/// or an error when the server failed and nothing is cached. Before, loading
+/// and errors both came out as an empty list, which the home screen showed
+/// as « Aucune répétition programmée ».
+AsyncValue<List<T>> _homeList<T>(
+  AsyncValue<ListResult<T>> source,
+  List<T> Function(List<T> items) pick,
+) {
+  return source.when(
+    data: (result) => result.isUnavailable
+        ? AsyncValue.error(
+            result.error ?? Exception('unavailable'),
+            StackTrace.current,
+          )
+        : AsyncValue.data(pick(result.items)),
+    loading: () => const AsyncValue.loading(),
+    error: (error, stack) => AsyncValue.error(error, stack),
+  );
+}
+
+/// The next 4 upcoming rehearsals for the home screen UI (the hero card and
+/// the « À suivre » row).
+final homeUpcomingRehearsalsProvider = Provider<AsyncValue<List<Rehearsal>>>((
+  ref,
+) {
+  return _homeList(
+    ref.watch(upcomingRehearsalsProvider),
+    (items) => items.take(4).toList(),
   );
 });
 
-/// Provides the next 2 upcoming concerts for the home screen UI.
-/// Handles loading/error states gracefully by returning an empty list.
-final homeUpcomingConcertsProvider = Provider<List<Concert>>((ref) {
-  final asyncConcerts = ref.watch(upcomingConcertsProvider);
-  // We need to sort the concerts here since your original provider doesn't.
-  return asyncConcerts.when(
-    data: (concerts) {
-      // Create a mutable copy to sort
-      final sortedConcerts = List<Concert>.from(concerts.items);
-      sortedConcerts.sort((a, b) {
-        final dateA = DateTime.parse(a.date);
-        final dateB = DateTime.parse(b.date);
-        final dateComparison = dateA.compareTo(dateB);
-        if (dateComparison != 0) return dateComparison;
-        return a.time.compareTo(b.time);
-      });
-      return sortedConcerts.take(2).toList();
-    },
-    loading: () => [],
-    error: (_, __) => [],
-  );
+/// The next 2 upcoming concerts for the home screen UI.
+final homeUpcomingConcertsProvider = Provider<AsyncValue<List<Concert>>>((ref) {
+  // Sorted here: the upcoming provider keeps the server order.
+  return _homeList(ref.watch(upcomingConcertsProvider), (items) {
+    final sortedConcerts = List<Concert>.from(items);
+    sortedConcerts.sort((a, b) {
+      final dateA = DateTime.parse(a.date);
+      final dateB = DateTime.parse(b.date);
+      final dateComparison = dateA.compareTo(dateB);
+      if (dateComparison != 0) return dateComparison;
+      return a.time.compareTo(b.time);
+    });
+    return sortedConcerts.take(2).toList();
+  });
 });
 
 /// True when either home list is showing cached rows because the server

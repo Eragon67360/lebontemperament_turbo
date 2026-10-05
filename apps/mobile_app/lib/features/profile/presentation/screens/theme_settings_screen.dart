@@ -255,11 +255,19 @@ class _PreviewCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                FloatingActionButton(
-                  onPressed: () {},
-                  elevation: 1.0,
-                  mini: true,
-                  child: const Icon(Icons.add),
+                // Decoration only: a sample of the accent colour, not a
+                // button (nothing to tap, nothing for the screen reader).
+                ExcludeSemantics(
+                  child: IgnorePointer(
+                    child: FloatingActionButton(
+                      onPressed: null,
+                      elevation: 1.0,
+                      mini: true,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      foregroundColor: theme.colorScheme.onPrimaryContainer,
+                      child: const Icon(Icons.add),
+                    ),
+                  ),
                 ),
               ],
             ),

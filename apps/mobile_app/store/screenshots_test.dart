@@ -401,8 +401,8 @@ void main() {
               displayName: 'Camille',
               drive: _DemoDriveService(),
               catalog: _catalog,
-              homeRehearsals: _rehearsals,
-              homeConcerts: _concerts,
+              homeRehearsals: AsyncData(_rehearsals),
+              homeConcerts: AsyncData(_concerts),
             ),
             realtimeConcertsProvider.overrideWith((ref) async => concerts),
             concertProvider.overrideWith(

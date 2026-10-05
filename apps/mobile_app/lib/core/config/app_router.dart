@@ -147,8 +147,7 @@ class AppRouter {
           path: rehearsals,
           name: 'rehearsals',
           builder: (context, state) => Consumer(
-            builder: (context, ref, _) =>
-                const MainScreen(initialTabIndex: 2),
+            builder: (context, ref, _) => const MainScreen(initialTabIndex: 2),
           ),
         ),
 
@@ -157,7 +156,8 @@ class AppRouter {
           path: driverTracking,
           name: 'driverTracking',
           builder: (context, state) => Consumer(
-              builder: (context, ref, _) => const DriverTrackingScreen()),
+            builder: (context, ref, _) => const DriverTrackingScreen(),
+          ),
           // --- NESTED ROUTE FOR RECIPIENT DETAILS ---
           routes: [
             GoRoute(
@@ -180,8 +180,9 @@ class AppRouter {
                   // <-- Add check for onEdit
                   final delivery = extra['delivery'] as Delivery;
                   final recipient = extra['recipient'] as DeliveryRecipient;
-                  final onEdit = extra['onEdit'] as Future<void>
-                      Function(); // <-- Extract onEdit
+                  final onEdit =
+                      extra['onEdit']
+                          as Future<void> Function(); // <-- Extract onEdit
                   return RecipientDetailsScreen(
                     delivery: delivery,
                     recipient: recipient,
@@ -191,7 +192,7 @@ class AppRouter {
                 return Scaffold(
                   appBar: AppBar(),
                   body: const Center(
-                    child: Text('Erreur: Données du destinataire manquantes.'),
+                    child: Text('Erreur : données du destinataire manquantes.'),
                   ),
                 );
               },
@@ -210,16 +211,14 @@ class AppRouter {
         GoRoute(
           path: '/partitions',
           name: 'partitions',
-          builder: (context, state) => Consumer(
-            builder: (context, ref, _) => const PartitionsScreen(),
-          ),
+          builder: (context, state) =>
+              Consumer(builder: (context, ref, _) => const PartitionsScreen()),
         ),
         GoRoute(
           path: '/members',
           name: 'members',
-          builder: (context, state) => Consumer(
-            builder: (context, ref, _) => const MembersScreen(),
-          ),
+          builder: (context, state) =>
+              Consumer(builder: (context, ref, _) => const MembersScreen()),
         ),
         GoRoute(
           path: '/administration',

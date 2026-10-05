@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,42 @@ import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/constants/support_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// What the member reads when the form could not be sent. The API answers
+/// in French (`message`), so that text is kept; everything else (Dio's
+/// English, a stack of exceptions) becomes a plain sentence.
+String supportErrorMessage(Object error) {
+  const generic = 'Une erreur est survenue. Réessayez dans quelques instants.';
+  if (error is! DioException) return generic;
+  final data = error.response?.data;
+  if (data is Map && data['message'] is String) {
+    return data['message'] as String;
+  }
+  switch (error.type) {
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
+    case DioExceptionType.connectionError:
+      return 'Pas de connexion. Vérifiez votre réseau et réessayez.';
+    case DioExceptionType.badResponse:
+      final status = error.response?.statusCode ?? 0;
+      if (status == 401 || status == 403) {
+        return 'Session expirée. Veuillez vous reconnecter.';
+      }
+      if (status == 429) {
+        return 'Trop de demandes envoyées. Réessayez dans quelques minutes.';
+      }
+      return generic;
+    case DioExceptionType.cancel:
+      return 'Envoi annulé.';
+    case DioExceptionType.badCertificate:
+    case DioExceptionType.unknown:
+      return error.error is SocketException
+          ? 'Pas de connexion. Vérifiez votre réseau et réessayez.'
+          : generic;
+  }
+}
 
 class SupportContactScreen extends ConsumerStatefulWidget {
   const SupportContactScreen({super.key});
@@ -101,25 +139,12 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
           ).showSnackBar(SnackBar(content: Text(errorMsg)));
         }
       }
-    } on DioException catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        String errorMsg = 'Une erreur est survenue.';
-        if (e.response?.data is Map && e.response?.data['message'] != null) {
-          errorMsg = e.response!.data['message'] as String;
-        } else if (e.message != null) {
-          errorMsg = e.message!;
-        }
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMsg)));
-      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: ${e.toString()}')));
+        ).showSnackBar(SnackBar(content: Text(supportErrorMessage(e))));
       }
     }
   }
