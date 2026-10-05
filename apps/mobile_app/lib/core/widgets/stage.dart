@@ -131,6 +131,7 @@ class StageCard extends StatelessWidget {
     super.key,
     required this.child,
     this.onTap,
+    this.onLongPress,
     this.selected = false,
     this.padding = const EdgeInsets.all(16),
     this.color,
@@ -139,6 +140,9 @@ class StageCard extends StatelessWidget {
 
   final Widget child;
   final VoidCallback? onTap;
+
+  /// A secondary action (e.g. showing a name the card had to truncate).
+  final VoidCallback? onLongPress;
 
   /// Highlights the card with the accent border (the next rehearsal).
   final bool selected;
@@ -157,13 +161,16 @@ class StageCard extends StatelessWidget {
       ),
     );
     Widget content = Padding(padding: padding, child: child);
-    if (onTap != null) {
+    if (onTap != null || onLongPress != null) {
       content = InkWell(
         customBorder: shape,
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap!();
-        },
+        onTap: onTap == null
+            ? null
+            : () {
+                HapticFeedback.lightImpact();
+                onTap!();
+              },
+        onLongPress: onLongPress,
         child: content,
       );
     }
@@ -177,6 +184,7 @@ class StageCard extends StatelessWidget {
     return Semantics(
       button: onTap != null,
       label: semanticLabel,
+      onLongPress: onLongPress,
       child: ExcludeSemantics(child: card),
     );
   }

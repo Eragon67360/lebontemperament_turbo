@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,29 +81,43 @@ class FakeDriveService extends DriveService {
   FakeDriveService() : super(accessToken: () => 'test-token');
 
   @override
-  Future<List<DriveFile>> getFolderContents(String folderId) async => const [
-    DriveFile(
-      id: 'file-test-folder',
-      name: 'Sous-dossier de test',
-      type: 'folder',
-      mimeType: 'application/vnd.google-apps.folder',
-    ),
-    DriveFile(
-      id: 'file-test-pdf',
-      name: 'Partition de test.pdf',
-      type: 'file',
-      mimeType: 'application/pdf',
-    ),
-    DriveFile(
-      id: 'file-test-mp3',
-      name: 'Enregistrement de test.mp3',
-      type: 'file',
-      mimeType: 'audio/mpeg',
-    ),
-  ];
+  Future<DriveListing> getFolderContents(String folderId) async =>
+      const DriveListing(
+        items: [
+          DriveFile(
+            id: 'file-test-folder',
+            name: 'Sous-dossier de test',
+            type: 'folder',
+            mimeType: 'application/vnd.google-apps.folder',
+          ),
+          DriveFile(
+            id: 'file-test-pdf',
+            name: 'Partition de test.pdf',
+            type: 'file',
+            mimeType: 'application/pdf',
+          ),
+          DriveFile(
+            id: 'file-test-mp3',
+            name: 'Enregistrement de test.mp3',
+            type: 'file',
+            mimeType: 'audio/mpeg',
+          ),
+        ],
+      );
 
   @override
-  Future<List<int>> downloadFile(String fileId) async => const [0];
+  Future<DriveDownload> downloadToFile(
+    String fileId, {
+    required String savePath,
+    bool attachment = false,
+    DriveProgress? onProgress,
+    CancelToken? cancelToken,
+  }) async {
+    final file = File(savePath);
+    await file.writeAsBytes(const [0], flush: true);
+    onProgress?.call(1, 1);
+    return DriveDownload(file: file, contentType: 'application/octet-stream');
+  }
 }
 
 /// A flags service answering from memory (the default: no flag set).
@@ -121,6 +138,7 @@ List<Override> offlineOverrides({
   ListResult<Event> events = const ListResult.fresh([kTestEvent]),
   FeatureFlagsService? flagsService,
   bool online = true,
+  Stream<bool>? onlineStream,
   String displayName = 'Membre Test',
   AsyncValue<List<Rehearsal>> homeRehearsals = const AsyncData([
     kTestRehearsal,
@@ -145,7 +163,7 @@ List<Override> offlineOverrides({
   featureFlagsServiceProvider.overrideWithValue(
     flagsService ?? fakeFlagsService(),
   ),
-  isOnlineProvider.overrideWith((ref) => Stream.value(online)),
+  isOnlineProvider.overrideWith((ref) => onlineStream ?? Stream.value(online)),
   caMinutesProvider.overrideWith((ref) async => const []),
   driveFolderCatalogProvider.overrideWith(
     (ref) async => catalog ?? kTestCatalog,
@@ -178,6 +196,8 @@ Future<void> pumpScreen(
     kTestRehearsal,
   ]),
   AsyncValue<List<Concert>> homeConcerts = const AsyncData([kTestConcert]),
+  Stream<bool>? onlineStream,
+  DriveService? drive,
   List<Override> overrides = const [],
 }) async {
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -197,6 +217,8 @@ Future<void> pumpScreen(
           online: online,
           homeRehearsals: homeRehearsals,
           homeConcerts: homeConcerts,
+          onlineStream: onlineStream,
+          drive: drive,
         ),
         ...overrides,
       ],

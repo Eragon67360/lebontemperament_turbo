@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
 import 'package:lebontemperament/core/widgets/stage.dart';
 import 'package:lebontemperament/data/models/drive_file.dart';
 import 'package:lebontemperament/data/models/drive_folder.dart';
+import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:lebontemperament/data/services/drive_service.dart';
 import 'package:share_plus/share_plus.dart';
@@ -23,6 +25,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 /// Widest the explorer grows on a tablet: the rows stay readable.
 const double _kMaxContentWidth = 720;
 
+/// How far the ±10 s buttons and the slider semantics move.
+const Duration _kSeekStep = Duration(seconds: 10);
+
 /// « 3:40 » (or « 1:02:05 » past an hour).
 String _formatDuration(Duration d) {
   final h = d.inHours;
@@ -30,6 +35,14 @@ String _formatDuration(Duration d) {
   final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
   return h > 0 ? '$h:${m.toString().padLeft(2, '0')}:$s' : '$m:$s';
 }
+
+/// « 42 % » for a 0..1 fraction, or null while the size is unknown.
+String? _percent(double? fraction) =>
+    fraction == null ? null : '${(fraction * 100).floor()} %';
+
+/// Whole percents only: a rebuild per network chunk would be wasteful.
+bool _samePercent(double? a, double? b) =>
+    a != null && b != null && (a * 100).floor() == (b * 100).floor();
 
 class PartitionsScreen extends ConsumerStatefulWidget {
   const PartitionsScreen({super.key});
@@ -48,8 +61,15 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   bool _initialLoadDone = false;
   List<DriveFile> _folders = [];
   List<DriveFile> _files = [];
+
+  /// The website could not list the whole folder (too many items).
+  bool _truncated = false;
   String? _error;
   String? _downloadingFileId;
+
+  /// 0..1 for the row being downloaded, null while the size is unknown.
+  double? _downloadProgress;
+  CancelToken? _downloadCancelToken;
 
   // Audio: the proxy needs the member's token, which the audio player can't
   // send, so the file is downloaded first (authenticated) and played from a
@@ -59,6 +79,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   DriveFile? _audioFile;
   PlayerState _audioState = PlayerState.stopped;
   bool _audioLoading = false;
+
+  /// 0..1 while the track downloads, null while the size is unknown.
+  double? _audioProgress;
+  CancelToken? _audioCancelToken;
   String? _audioError;
   File? _audioTempFile;
   String? _audioTempFileId;
@@ -82,6 +106,9 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
 
   @override
   void dispose() {
+    // Leaving the screen stops the transfers, not just the sound.
+    _audioCancelToken?.cancel();
+    _downloadCancelToken?.cancel();
     for (final sub in _audioSubscriptions) {
       sub.cancel();
     }
@@ -108,7 +135,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
 
     try {
       final driveService = ref.read(driveServiceProvider);
-      final items = await driveService.getFolderContents(folderId);
+      final listing = await driveService.getFolderContents(folderId);
+      final items = listing.items;
 
       final folders = items.where((e) => e.isFolder).toList()
         ..sort(compareDriveNames);
@@ -119,6 +147,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         setState(() {
           _folders = folders;
           _files = files;
+          _truncated = listing.truncated;
           _loading = false;
         });
       }
@@ -231,8 +260,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     _audioTempFileId = null;
   }
 
-  /// The temporary copy of [file], downloaded once per track; null when the
-  /// member switched to another track meanwhile.
+  /// The temporary copy of [file], streamed once per track; null when the
+  /// member switched to another track (or closed the player) meanwhile.
   Future<File?> _ensureAudioDownloaded(DriveFile file) async {
     final existing = _audioTempFile;
     if (existing != null &&
@@ -240,11 +269,34 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         await existing.exists()) {
       return existing;
     }
-    final bytes = await ref.read(driveServiceProvider).downloadFile(file.id!);
     final dir = await Directory.systemTemp.createTemp('lbt_audio_');
     final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
-    final temp = File('${dir.path}/$safeName');
-    await temp.writeAsBytes(bytes, flush: true);
+    final token = CancelToken();
+    _audioCancelToken?.cancel();
+    _audioCancelToken = token;
+    final File temp;
+    try {
+      final download = await ref
+          .read(driveServiceProvider)
+          .downloadToFile(
+            file.id!,
+            savePath: '${dir.path}/$safeName',
+            cancelToken: token,
+            onProgress: (received, total) {
+              if (!mounted || total <= 0 || _audioFile?.id != file.id) return;
+              final progress = (received / total).clamp(0.0, 1.0);
+              if (_samePercent(progress, _audioProgress)) return;
+              setState(() => _audioProgress = progress);
+            },
+          );
+      temp = download.file;
+    } on DriveDownloadCancelled {
+      dir.delete(recursive: true).ignore();
+      return null;
+    } catch (_) {
+      dir.delete(recursive: true).ignore();
+      rethrow;
+    }
     if (!mounted || _audioFile?.id != file.id) {
       dir.delete(recursive: true).ignore();
       return null;
@@ -276,6 +328,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         }
       }
     } else {
+      _audioCancelToken?.cancel();
       setState(() {
         _audioFile = file;
         _audioState = PlayerState.stopped;
@@ -292,6 +345,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     setState(() {
       _audioError = null;
       _audioLoading = true;
+      _audioProgress = null;
     });
     try {
       final temp = await _ensureAudioDownloaded(file);
@@ -314,12 +368,33 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     }
   }
 
+  /// Moves the current track to [position] (clamped to the track).
+  Future<void> _onSeek(Duration position) async {
+    final player = _player;
+    if (player == null || _audioLoading || _audioDuration <= Duration.zero) {
+      return;
+    }
+    final target = position < Duration.zero
+        ? Duration.zero
+        : position > _audioDuration
+        ? _audioDuration
+        : position;
+    setState(() => _audioPosition = target);
+    try {
+      await player.seek(target);
+    } catch (_) {
+      // The next position event puts the waveform back where the track is.
+    }
+  }
+
   Future<void> _closePlayer() async {
     HapticFeedback.lightImpact();
+    _audioCancelToken?.cancel();
     setState(() {
       _audioFile = null;
       _audioState = PlayerState.stopped;
       _audioLoading = false;
+      _audioProgress = null;
       _audioError = null;
       _audioPosition = Duration.zero;
       _audioDuration = Duration.zero;
@@ -344,18 +419,17 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       builder: (ctx) => PdfViewerSheet(
         url: url,
         fileName: file.name,
-        load: () => driveService.downloadFile(file.id!),
+        load: (path, onProgress, cancelToken) => driveService.downloadToFile(
+          file.id!,
+          savePath: path,
+          onProgress: onProgress,
+          cancelToken: cancelToken,
+        ),
         onClose: () => Navigator.of(ctx).pop(),
-        onOpenInBrowser: (u) async {
-          // The browser has no app session: open the file on Drive instead
-          // of the members-only proxy.
-          final uri = Uri.parse(
-            'https://drive.google.com/file/d/${file.id}/view',
-          );
-          try {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          } catch (_) {}
-        },
+        // No « ouvrir dans le navigateur »: the files aren't public on
+        // Drive, so the browser would ask for a Google account. Saving or
+        // sharing the PDF is what members actually need.
+        onDownload: () => _onFileDownload(file),
       ),
     );
   }
@@ -367,17 +441,39 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     final fileId = file.id;
     if (fileId == null || _downloadingFileId != null) return;
     HapticFeedback.lightImpact();
-    setState(() => _downloadingFileId = fileId);
+    final token = CancelToken();
+    _downloadCancelToken = token;
+    setState(() {
+      _downloadingFileId = fileId;
+      _downloadProgress = null;
+    });
 
     Directory? tempDir;
     try {
+      tempDir = await Directory.systemTemp.createTemp('lbt_download_');
+      // Streamed under a provisional name; the proxy's name (accents, a
+      // Google Doc's « .pdf ») is only known once the headers arrive.
       final download = await ref
           .read(driveServiceProvider)
-          .downloadAttachment(fileId);
+          .downloadToFile(
+            fileId,
+            savePath: '${tempDir.path}/${_safeFileName(file.name)}',
+            attachment: true,
+            cancelToken: token,
+            onProgress: (received, total) {
+              if (!mounted || total <= 0 || _downloadingFileId != fileId) {
+                return;
+              }
+              final progress = (received / total).clamp(0.0, 1.0);
+              if (_samePercent(progress, _downloadProgress)) return;
+              setState(() => _downloadProgress = progress);
+            },
+          );
       final name = _safeFileName(download.fileName ?? file.name);
-      tempDir = await Directory.systemTemp.createTemp('lbt_download_');
-      final tempFile = File('${tempDir.path}/$name');
-      await tempFile.writeAsBytes(download.bytes, flush: true);
+      var tempFile = download.file;
+      if (tempFile.path != '${tempDir.path}/$name') {
+        tempFile = await tempFile.rename('${tempDir.path}/$name');
+      }
       if (!mounted) return;
 
       // iPad presents the sheet as a popover and needs an anchor.
@@ -390,6 +486,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         subject: name,
         sharePositionOrigin: origin,
       );
+    } on DriveDownloadCancelled {
+      // The member (or a closing screen) stopped it: nothing to say.
     } on DriveServiceException catch (e) {
       _showMessage(e.message);
     } catch (_) {
@@ -397,8 +495,20 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     } finally {
       // The share sheet has copied or handed off the file by now.
       tempDir?.delete(recursive: true).ignore();
-      if (mounted) setState(() => _downloadingFileId = null);
+      if (identical(_downloadCancelToken, token)) _downloadCancelToken = null;
+      if (mounted && _downloadingFileId == fileId) {
+        setState(() {
+          _downloadingFileId = null;
+          _downloadProgress = null;
+        });
+      }
     }
+  }
+
+  /// Stops the row download in progress (its button while it runs).
+  void _cancelDownload() {
+    HapticFeedback.lightImpact();
+    _downloadCancelToken?.cancel();
   }
 
   /// A file name the device file system accepts; accents are kept.
@@ -423,6 +533,16 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     final s = Theme.of(context).colorScheme;
     final catalog = ref.watch(driveFolderCatalogProvider);
     _ensureInitialLoad(catalog);
+    // Back online after a failed load: fetch the folder again rather than
+    // leaving « Réessayer » to the member.
+    ref.listen<AsyncValue<bool>>(isOnlineProvider, (previous, next) {
+      if (next.value != true || previous?.value != false) return;
+      if (catalog.hasError && !catalog.hasValue) {
+        ref.invalidate(driveFolderCatalogProvider);
+      } else if (_error != null && !_loading) {
+        _loadFolder(_currentFolderId);
+      }
+    });
 
     // System back (gesture or button) goes up one folder before it leaves
     // the screen, like the « Dossier parent » button.
@@ -504,7 +624,9 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Erreur: $e'),
+                      content: const Text(
+                        'La déconnexion a échoué. Réessayez dans un instant.',
+                      ),
                       backgroundColor: s.error,
                     ),
                   );
@@ -566,10 +688,12 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                     fileName: audio.name,
                     playing: _audioPlaying,
                     loading: _audioLoading,
+                    progress: _audioProgress,
                     error: _audioError,
                     position: _audioPosition,
                     duration: _audioDuration,
                     onToggle: () => _onAudioToggle(audio),
+                    onSeek: _onSeek,
                     onClose: _closePlayer,
                   ),
                 ),
@@ -732,7 +856,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     // A pushed route: no floating nav bar to clear.
     if (_audioFile == null) return 24;
     final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
-    final player = 150 + 70 * (scale - 1) + (_audioError != null ? 40 : 0);
+    // Two title lines and the seek row.
+    final player = 180 + 90 * (scale - 1) + (_audioError != null ? 40 : 0);
     return player + 24;
   }
 
@@ -759,6 +884,15 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
             ),
           ),
         for (final file in _files) _RowGap(child: _buildFileRow(file)),
+        if (_truncated)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+            child: Text(
+              'Ce dossier contient plus de fichiers que l\'application ne '
+              'peut en afficher : ouvrez le Drive pour tout voir.',
+              style: AppFonts.sans(fontSize: 14, color: s.onSurfaceVariant),
+            ),
+          ),
         const SizedBox(height: 12),
         _buildDriveLink(s, catalog),
       ],
@@ -769,14 +903,21 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     final isAudio = _isAudioFile(file);
     final isPdf = !isAudio && _isPdfFile(file);
     final isCurrent = isAudio && _audioFile?.id == file.id;
+    final downloading = _downloadingFileId == file.id;
     String? status;
-    if (isCurrent) {
+    if (downloading) {
+      final percent = _percent(_downloadProgress);
+      status = percent == null
+          ? 'Téléchargement…'
+          : 'Téléchargement · $percent';
+    } else if (isCurrent) {
+      final percent = _percent(_audioProgress);
       status = _audioLoading
-          ? 'Chargement…'
+          ? (percent == null ? 'Chargement…' : 'Chargement · $percent')
           : _audioPlaying
           ? 'En lecture'
           : 'En pause';
-      if (_audioDuration > Duration.zero) {
+      if (!_audioLoading && _audioDuration > Duration.zero) {
         status += ' · ${_formatDuration(_audioDuration)}';
       }
     }
@@ -790,8 +931,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       current: isCurrent,
       playing: isCurrent && (_audioPlaying || _audioLoading),
       status: status,
-      downloading: _downloadingFileId == file.id,
+      downloading: downloading,
+      downloadProgress: downloading ? _downloadProgress : null,
       onDownload: () => _onFileDownload(file),
+      onCancelDownload: _cancelDownload,
       onPlay: isAudio ? () => _onAudioToggle(file) : null,
       onView: isPdf ? () => _showPdfViewer(context, file) : null,
     );
@@ -1002,6 +1145,30 @@ class _KindTile extends StatelessWidget {
   }
 }
 
+/// The whole name of a row, for the ones three lines can't hold: a long
+/// press on the row opens it (the row's tap already does something else).
+void _showFullName(BuildContext context, String name) {
+  HapticFeedback.mediumImpact();
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: SelectableText(
+        name,
+        style: AppFonts.sans(
+          fontSize: 16,
+          color: Theme.of(ctx).colorScheme.onSurface,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Fermer'),
+        ),
+      ],
+    ),
+  );
+}
+
 /// Name and meta line of a row.
 class _RowText extends StatelessWidget {
   const _RowText({required this.name, required this.meta, this.metaColor});
@@ -1018,7 +1185,7 @@ class _RowText extends StatelessWidget {
       children: [
         Text(
           name,
-          maxLines: 2,
+          maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: AppFonts.sans(
             fontSize: 15,
@@ -1052,6 +1219,7 @@ class _FolderRow extends StatelessWidget {
     return StageCard(
       semanticLabel: 'Dossier ${folder.name}',
       onTap: onTap,
+      onLongPress: () => _showFullName(context, folder.name),
       padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
       child: Row(
         children: [
@@ -1076,17 +1244,22 @@ class _FileRow extends StatelessWidget {
     required this.file,
     required this.kind,
     required this.onDownload,
+    this.onCancelDownload,
     this.onPlay,
     this.onView,
     this.current = false,
     this.playing = false,
     this.status,
     this.downloading = false,
+    this.downloadProgress,
   });
 
   final DriveFile file;
   final _FileKind kind;
   final VoidCallback onDownload;
+
+  /// Stops the download in progress (the download button while it runs).
+  final VoidCallback? onCancelDownload;
   final VoidCallback? onPlay;
   final VoidCallback? onView;
 
@@ -1101,6 +1274,9 @@ class _FileRow extends StatelessWidget {
 
   /// True while this file is being fetched for the share sheet.
   final bool downloading;
+
+  /// 0..1 while [downloading] and the size is known.
+  final double? downloadProgress;
 
   String get _meta {
     if (status != null) return status!;
@@ -1129,6 +1305,7 @@ class _FileRow extends StatelessWidget {
     return StageCard(
       selected: current,
       onTap: onPlay ?? onView ?? (downloading ? null : onDownload),
+      onLongPress: () => _showFullName(context, file.name),
       padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
       child: Row(
         children: [
@@ -1164,19 +1341,30 @@ class _FileRow extends StatelessWidget {
             ),
           // Icons rather than a « Télécharger » text button, which overflowed
           // the row at 2× text size.
+          // While it runs, the ring fills with the transfer and the button
+          // cancels it (the percentage is in the meta line).
           if (downloading)
             IconButton(
-              onPressed: null,
+              onPressed: onCancelDownload,
               icon: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: s.primary,
-                  semanticsLabel: 'Téléchargement de ${file.name}',
+                width: 24,
+                height: 24,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: downloadProgress,
+                      strokeWidth: 2.5,
+                      color: s.primary,
+                      backgroundColor: s.outlineVariant,
+                      semanticsLabel: 'Téléchargement de ${file.name}',
+                      semanticsValue: _percent(downloadProgress),
+                    ),
+                    Icon(Icons.close_rounded, size: 14, color: s.primary),
+                  ],
                 ),
               ),
-              tooltip: 'Téléchargement de ${file.name}',
+              tooltip: 'Annuler le téléchargement de ${file.name}',
             )
           else
             IconButton(
@@ -1197,20 +1385,26 @@ class _NowPlayingCard extends StatelessWidget {
     required this.fileName,
     required this.playing,
     required this.loading,
+    required this.progress,
     required this.error,
     required this.position,
     required this.duration,
     required this.onToggle,
+    required this.onSeek,
     required this.onClose,
   });
 
   final String fileName;
   final bool playing;
   final bool loading;
+
+  /// Download progress (0..1) while [loading], when the size is known.
+  final double? progress;
   final String? error;
   final Duration position;
   final Duration duration;
   final VoidCallback onToggle;
+  final ValueChanged<Duration> onSeek;
   final VoidCallback onClose;
 
   @override
@@ -1223,11 +1417,13 @@ class _NowPlayingCard extends StatelessWidget {
       fontSize: 13,
       color: s.onSurfaceVariant,
     ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+    final percent = _percent(progress);
     final eyebrow = loading
-        ? 'Chargement'
+        ? (percent == null ? 'Chargement' : 'Chargement · $percent')
         : playing
         ? 'En lecture'
         : 'En pause';
+    final seekable = !loading && duration > Duration.zero;
 
     return Semantics(
       container: true,
@@ -1257,7 +1453,7 @@ class _NowPlayingCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           fileName,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppFonts.display(
                             fontSize: 17,
@@ -1298,9 +1494,14 @@ class _NowPlayingCard extends StatelessWidget {
                             width: 26,
                             height: 26,
                             child: CircularProgressIndicator(
+                              value: progress,
                               strokeWidth: 2.5,
                               color: s.onPrimary,
+                              backgroundColor: s.onPrimary.withValues(
+                                alpha: 0.3,
+                              ),
                               semanticsLabel: 'Chargement',
+                              semanticsValue: percent,
                             ),
                           )
                         : Icon(
@@ -1319,40 +1520,229 @@ class _NowPlayingCard extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Text(_formatDuration(position), style: timeStyle),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Semantics(
-                      label: duration > Duration.zero
-                          ? 'Lecture à ${(progress * 100).round()} %'
-                          : 'Progression de la lecture',
-                      child: ExcludeSemantics(
-                        child: SizedBox(
-                          height: 32,
-                          child: CustomPaint(
-                            painter: _WaveformPainter(
-                              progress: progress,
-                              played: s.primary,
-                              rest: s.outlineVariant,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // The ±10 s buttons only when the waveform keeps room to
+                  // be tapped (large text widens the time labels).
+                  final timeWidth = _textWidth(
+                    context,
                     duration > Duration.zero
                         ? _formatDuration(duration)
                         : '–:––',
-                    style: timeStyle,
-                  ),
-                ],
+                    timeStyle,
+                  );
+                  final withButtons =
+                      constraints.maxWidth - 2 * timeWidth - 2 * 48 - 40 >= 120;
+                  return Row(
+                    children: [
+                      if (withButtons)
+                        _SeekButton(
+                          icon: Icons.replay_10_rounded,
+                          tooltip: 'Reculer de 10 secondes',
+                          onPressed: seekable
+                              ? () => onSeek(position - _kSeekStep)
+                              : null,
+                        ),
+                      Text(_formatDuration(position), style: timeStyle),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _Waveform(
+                          position: position,
+                          duration: duration,
+                          enabled: seekable,
+                          onSeek: onSeek,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        duration > Duration.zero
+                            ? _formatDuration(duration)
+                            : '–:––',
+                        style: timeStyle,
+                      ),
+                      if (withButtons)
+                        _SeekButton(
+                          icon: Icons.forward_10_rounded,
+                          tooltip: 'Avancer de 10 secondes',
+                          onPressed: seekable
+                              ? () => onSeek(position + _kSeekStep)
+                              : null,
+                        ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  static double _textWidth(BuildContext context, String text, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
+  }
+}
+
+/// A 48 dp « ±10 s » button beside the waveform.
+class _SeekButton extends StatelessWidget {
+  const _SeekButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    return IconButton(
+      onPressed: onPressed == null
+          ? null
+          : () {
+              HapticFeedback.selectionClick();
+              onPressed!();
+            },
+      icon: Icon(icon),
+      color: s.onSurfaceVariant,
+      tooltip: tooltip,
+      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+      padding: EdgeInsets.zero,
+    );
+  }
+}
+
+/// The waveform as a seek bar: a tap or a drag moves the track there, and
+/// to a screen reader it is a slider (« 1:23 sur 4:56 », ±10 s).
+class _Waveform extends StatefulWidget {
+  const _Waveform({
+    required this.position,
+    required this.duration,
+    required this.enabled,
+    required this.onSeek,
+  });
+
+  final Duration position;
+  final Duration duration;
+  final bool enabled;
+  final ValueChanged<Duration> onSeek;
+
+  @override
+  State<_Waveform> createState() => _WaveformState();
+}
+
+class _WaveformState extends State<_Waveform> {
+  /// Where the finger is during a drag, as a 0..1 fraction; the player's
+  /// own position is shown otherwise.
+  double? _dragFraction;
+
+  double get _fraction =>
+      _dragFraction ??
+      (widget.duration > Duration.zero
+          ? (widget.position.inMilliseconds / widget.duration.inMilliseconds)
+                .clamp(0.0, 1.0)
+          : 0.0);
+
+  Duration _at(double fraction) => Duration(
+    milliseconds: (widget.duration.inMilliseconds * fraction.clamp(0.0, 1.0))
+        .round(),
+  );
+
+  void _seekBy(Duration delta) {
+    if (!widget.enabled) return;
+    widget.onSeek(widget.position + delta);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final shown = _at(_fraction);
+    return Semantics(
+      slider: true,
+      enabled: widget.enabled,
+      label: 'Position de lecture',
+      value: widget.duration > Duration.zero
+          ? '${_formatDuration(shown)} sur ${_formatDuration(widget.duration)}'
+          : 'Durée inconnue',
+      increasedValue: widget.enabled
+          ? _formatDuration(
+              shown + _kSeekStep > widget.duration
+                  ? widget.duration
+                  : shown + _kSeekStep,
+            )
+          : null,
+      decreasedValue: widget.enabled
+          ? _formatDuration(
+              shown - _kSeekStep < Duration.zero
+                  ? Duration.zero
+                  : shown - _kSeekStep,
+            )
+          : null,
+      onIncrease: widget.enabled ? () => _seekBy(_kSeekStep) : null,
+      onDecrease: widget.enabled ? () => _seekBy(-_kSeekStep) : null,
+      child: ExcludeSemantics(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            double fractionAt(Offset local) =>
+                width <= 0 ? 0 : (local.dx / width).clamp(0.0, 1.0);
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: widget.enabled
+                  ? (d) {
+                      HapticFeedback.selectionClick();
+                      widget.onSeek(_at(fractionAt(d.localPosition)));
+                    }
+                  : null,
+              onHorizontalDragStart: widget.enabled
+                  ? (d) => setState(
+                      () => _dragFraction = fractionAt(d.localPosition),
+                    )
+                  : null,
+              onHorizontalDragUpdate: widget.enabled
+                  ? (d) => setState(
+                      () => _dragFraction = fractionAt(d.localPosition),
+                    )
+                  : null,
+              onHorizontalDragEnd: widget.enabled
+                  ? (_) {
+                      final fraction = _dragFraction;
+                      setState(() => _dragFraction = null);
+                      if (fraction != null) widget.onSeek(_at(fraction));
+                    }
+                  : null,
+              onHorizontalDragCancel: () =>
+                  setState(() => _dragFraction = null),
+              // 48 dp tall to tap; the bars stay 32 dp in the middle.
+              child: SizedBox(
+                height: 48,
+                child: Center(
+                  child: SizedBox(
+                    height: 32,
+                    width: double.infinity,
+                    child: CustomPaint(
+                      painter: _WaveformPainter(
+                        progress: _fraction,
+                        played: widget.enabled ? s.primary : s.outline,
+                        rest: s.outlineVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -1381,7 +1771,12 @@ class _WaveformPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const gap = 2.0;
-    final n = _heights.length;
+    // Fewer bars when the row is narrow (large text): each stays ≥ 3 px.
+    final n = ((size.width + gap) / (3 + gap)).floor().clamp(
+      0,
+      _heights.length,
+    );
+    if (n == 0) return;
     final barWidth = (size.width - gap * (n - 1)) / n;
     if (barWidth <= 0) return;
     final playedBars = (progress * n).floor();
