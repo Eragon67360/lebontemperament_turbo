@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lebontemperament/data/models/event.dart';
 import 'package:lebontemperament/data/models/list_result.dart';
@@ -23,10 +24,14 @@ void main() {
       events: const ListResult.fresh([_stay]),
     );
     await tester.tap(find.text('Événements'));
-    await tester.pumpAndSettle();
+    // The kept-alive anniversary section's artwork spinner never settles.
+    await tester.pump(const Duration(milliseconds: 600));
     // The card's entrance animation, then the lookup.
     await tester.pump(const Duration(seconds: 2));
     expect(find.text('Du 5 au 15 juillet 2099'), findsOneWidget);
+    // Let the artwork's retry timers run out once the screen is gone.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 30));
   });
 
   testWidgets('a multi-day event shows both dates in its detail', (
