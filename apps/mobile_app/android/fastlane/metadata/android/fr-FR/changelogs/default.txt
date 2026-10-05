@@ -1,8 +1,5 @@
-Nouveau look, plus lisible :
-• Textes plus grands et mieux contrastés, thème sombre par défaut (le thème clair reste au choix dans Profil).
-• L’accueil montre d’abord votre prochaine répétition, avec un bouton Itinéraire.
-• Lecteur audio intégré aux partitions.
-Plus fiable au quotidien :
-• Partitions et enregistrements s’ouvrent et se téléchargent, même gros.
-• Une session expirée se renouvelle toute seule.
-• Toucher un rappel ouvre le bon concert.
+Textes plus confortables :
+• Tailles de texte revues à la baisse, toujours lisibles. Pour agrandir, l’application suit la taille de texte choisie dans les réglages du téléphone.
+• Titres et compte à rebours de l’accueil plus sobres.
+Plus fiable :
+• Les partitions passent toujours par l’adresse officielle du site.
