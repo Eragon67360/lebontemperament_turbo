@@ -20,8 +20,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
 
-/// Home (« Coulisses »): the next rehearsal first and large, then the next
-/// concert, the rest of the week and the members' shortcuts.
+/// Home (« Portée »): the next rehearsal first and large but on the page
+/// ground, the week as a bar of music, then the next concert, the rest of
+/// the season and the members' shortcuts.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -213,6 +214,9 @@ class _UpcomingSection extends ConsumerWidget {
     final rehearsalsAsync = ref.watch(homeUpcomingRehearsalsProvider);
     final concertsAsync = ref.watch(homeUpcomingConcertsProvider);
     final rehearsals = rehearsalsAsync.value ?? const <Rehearsal>[];
+    final weekRehearsals =
+        ref.watch(upcomingRehearsalsProvider).value?.items ??
+        const <Rehearsal>[];
 
     return FadeInUp(
       delay: 300,
@@ -237,7 +241,13 @@ class _UpcomingSection extends ConsumerWidget {
             ),
             _ => const _LoadingCard(label: 'Chargement des répétitions…'),
           },
-          const SizedBox(height: 16),
+          if (rehearsalsAsync is AsyncData) ...[
+            const SizedBox(height: 32),
+            const StageSectionHeader(title: 'Cette semaine'),
+            const SizedBox(height: 8),
+            WeekStaff(rehearsals: weekRehearsals),
+          ],
+          const SizedBox(height: 24),
           switch (concertsAsync) {
             AsyncData(value: final items) when items.isNotEmpty =>
               _NextConcertCard(
@@ -311,109 +321,60 @@ class _NextRehearsalHero extends StatelessWidget {
     ].where((s) => s.isNotEmpty).join(' · ');
     final place = rehearsal.place;
 
+    // No card: the next rehearsal sits on the page ground (« Portée »).
     final card = Semantics(
       container: true,
       label:
           'Prochaine répétition, $big, $when, ${groupLabel(rehearsal.groupType)}'
           '${place != null ? ', $place' : ''}',
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: scheme.outlineVariant),
-          gradient: RadialGradient(
-            center: const Alignment(0.8, -0.9),
-            radius: 1.3,
-            colors: [
-              Color.alphaBlend(
-                scheme.primary.withValues(alpha: 0.16),
-                scheme.surfaceContainer,
-              ),
-              scheme.surfaceContainer,
-            ],
-          ),
-        ),
-        child: Stack(
+      child: ExcludeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned(
-              right: -70,
-              top: -70,
-              child: ResonanceRings(
-                color: scheme.primary.withValues(alpha: 0.32),
+            const StageEyebrow('Prochaine répétition'),
+            const SizedBox(height: 8),
+            Text(
+              big,
+              style: AppFonts.display(
+                fontSize: 44,
+                fontWeight: FontWeight.w400,
+                color: scheme.onSurface,
+                height: 1.05,
+                letterSpacing: -1,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
-              child: ExcludeSemantics(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const StageEyebrow('Prochaine répétition'),
-                    const SizedBox(height: 10),
-                    Text(
-                      big,
-                      style: AppFonts.display(
-                        fontSize: 44,
-                        fontWeight: FontWeight.w800,
-                        color: scheme.onSurface,
-                        height: 1,
-                        letterSpacing: -1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      when,
-                      style: AppFonts.sans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        GroupMark(
-                          color: groupColor(context, rehearsal.groupType),
-                        ),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          child: Text(
-                            groupLabel(rehearsal.groupType),
-                            style: AppFonts.display(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: scheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (place != null && place.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.place_outlined,
-                            size: 20,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              place,
-                              style: AppFonts.sans(
-                                fontSize: 15,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+            const SizedBox(height: 10),
+            Text(
+              when,
+              style: AppFonts.sans(fontSize: 17, color: scheme.onSurface),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  // Centres the dot on the first line at any text size.
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.textScalerOf(context).scale(15) * 0.45,
+                  ),
+                  child: GroupMark(
+                    color: groupColor(context, rehearsal.groupType),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    [
+                      groupLabel(rehearsal.groupType),
+                      if (place != null && place.isNotEmpty) place,
+                    ].join(' · '),
+                    style: AppFonts.sans(
+                      fontSize: 15,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -425,13 +386,13 @@ class _NextRehearsalHero extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         card,
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
             if (place != null && place.isNotEmpty)
-              FilledButton.icon(
+              OutlinedButton.icon(
                 onPressed: () => _openMaps(context, place),
                 icon: const Icon(Icons.directions_outlined),
                 label: const Text('Itinéraire'),
@@ -562,7 +523,7 @@ class _RehearsalRow extends StatelessWidget {
                   date != null ? '${date.day}' : '—',
                   style: AppFonts.display(
                     fontSize: 24,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w400,
                     color: scheme.onSurface,
                     height: 1,
                   ),
@@ -586,17 +547,14 @@ class _RehearsalRow extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    GroupMark(
-                      color: groupColor(context, rehearsal.groupType),
-                      width: 18,
-                    ),
+                    GroupMark(color: groupColor(context, rehearsal.groupType)),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
                         groupLabel(rehearsal.groupType),
                         style: AppFonts.sans(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: scheme.onSurface,
                         ),
                       ),
@@ -869,13 +827,9 @@ class _MembresTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
-          Container(
-            width: 44,
+          SizedBox(
+            width: 32,
             height: 44,
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
-            ),
             child: Icon(tile.icon, color: scheme.primary, size: 24),
           ),
           const SizedBox(width: 12),
@@ -884,7 +838,7 @@ class _MembresTile extends StatelessWidget {
               tile.title,
               style: AppFonts.sans(
                 fontSize: 15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: scheme.onSurface,
               ),
               maxLines: 2,

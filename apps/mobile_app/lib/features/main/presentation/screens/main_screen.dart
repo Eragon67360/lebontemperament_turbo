@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:logger/logger.dart';
-import 'dart:ui'; // Required for ImageFilter.blur
 
 import '../../../../data/providers/connectivity_provider.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -13,20 +13,20 @@ import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../rehearsals/presentation/screens/rehearsals_screen.dart';
 import '../providers/main_navigation_provider.dart';
 import '../../../../features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import '../../../onboarding/data/welcome_prefs.dart';
+import '../../../rehearsals/presentation/providers/rehearsal_filter_provider.dart';
 
 // --- Data moved outside the build method for performance ---
 
 /// One tab of the floating bar. Public so the bar can be tested on its own.
 class NavItemData {
   final IconData outlinedIcon;
-  final IconData filledIcon;
   final String label;
 
   /// Spoken name when the visible label is shortened.
   final String? semanticLabel;
   const NavItemData({
     required this.outlinedIcon,
-    required this.filledIcon,
     required this.label,
     this.semanticLabel,
   });
@@ -40,27 +40,14 @@ const List<Widget> _screens = [
 ];
 
 const List<NavItemData> kMainNavItems = [
-  NavItemData(
-    outlinedIcon: Icons.home_outlined,
-    filledIcon: Icons.home,
-    label: 'Accueil',
-  ),
+  NavItemData(outlinedIcon: Icons.home_outlined, label: 'Accueil'),
   NavItemData(
     outlinedIcon: Icons.event_outlined,
-    filledIcon: Icons.event,
     label: 'Concerts',
     semanticLabel: 'Concerts & Événements',
   ),
-  NavItemData(
-    outlinedIcon: Icons.calendar_month_outlined,
-    filledIcon: Icons.calendar_month,
-    label: 'Calendrier',
-  ),
-  NavItemData(
-    outlinedIcon: Icons.person_outline,
-    filledIcon: Icons.person,
-    label: 'Profil',
-  ),
+  NavItemData(outlinedIcon: Icons.calendar_month_outlined, label: 'Calendrier'),
+  NavItemData(outlinedIcon: Icons.person_outline, label: 'Profil'),
 ];
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -83,6 +70,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.initState();
     // Notification logic kept from original file
     _initializeNotifications();
+    _applyMyGroupAndWelcome();
     // Deep link: open specific tab (e.g. rehearsals = 2)
     if (widget.initialTabIndex != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -91,6 +79,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             .setTab(widget.initialTabIndex!.clamp(0, 3));
       });
     }
+  }
+
+  /// Opens the calendar on the member's ensemble (picked in the welcome
+  /// tour) and shows the tour once, after the first sign-in.
+  Future<void> _applyMyGroupAndWelcome() async {
+    final group = await WelcomePrefs.myGroup();
+    if (!mounted) return;
+    if (group != null && ref.read(rehearsalFilterProvider) == null) {
+      ref.read(rehearsalFilterProvider.notifier).setFilter(group);
+    }
+    final seen = await WelcomePrefs.tourSeen();
+    if (!mounted || seen != false) return;
+    context.push('/welcome');
   }
 
   Future<void> _initializeNotifications() async {
@@ -155,9 +156,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
 // MARK: - Custom Navigation Bar Components
 
-/// The floating bottom bar (« Coulisses »): every tab keeps its label, so
-/// nobody has to guess what an icon means; the current tab sits in an accent
-/// pill.
+/// The bottom bar (« Portée »): docked on the page ground behind a hairline,
+/// no pill. Every tab keeps its label, so nobody has to guess what an icon
+/// means; the current tab is in the accent with a dot under its label.
 class FrostedGlassNavBar extends StatelessWidget {
   final List<NavItemData> items;
   final int currentIndex;
@@ -172,35 +173,29 @@ class FrostedGlassNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
     return Positioned(
-      bottom: 14,
-      left: 12,
-      right: 12,
-      child: SafeArea(
-        top: false,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
-            child: Container(
-              // 70 at the default text size; grows with large text instead
-              // of clipping the labels.
-              constraints: const BoxConstraints(minHeight: 70),
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainer.withValues(
-                  alpha: 0.94,
-                ),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-                borderRadius: BorderRadius.circular(32),
-              ),
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          border: Border(top: BorderSide(color: scheme.outlineVariant)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            // 64 at the default text size; grows with large text instead of
+            // clipping the labels.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
               child: Row(
                 children: List.generate(items.length, (index) {
                   final item = items[index];
                   return _NavBarItem(
-                    outlinedIcon: item.outlinedIcon,
-                    filledIcon: item.filledIcon,
+                    icon: item.outlinedIcon,
                     label: item.label,
                     semanticLabel: item.semanticLabel ?? item.label,
                     isSelected: index == currentIndex,
@@ -217,16 +212,14 @@ class FrostedGlassNavBar extends StatelessWidget {
 }
 
 class _NavBarItem extends StatelessWidget {
-  final IconData outlinedIcon;
-  final IconData filledIcon;
+  final IconData icon;
   final String label;
   final String semanticLabel;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _NavBarItem({
-    required this.outlinedIcon,
-    required this.filledIcon,
+    required this.icon,
     required this.label,
     required this.semanticLabel,
     required this.isSelected,
@@ -236,7 +229,7 @@ class _NavBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final fg = isSelected ? scheme.onPrimary : scheme.onSurfaceVariant;
+    final fg = isSelected ? scheme.primary : scheme.onSurfaceVariant;
 
     return Expanded(
       child: Semantics(
@@ -248,25 +241,15 @@ class _NavBarItem extends StatelessWidget {
             HapticFeedback.lightImpact();
             onTap();
           },
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(16),
           child: ExcludeSemantics(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
-              decoration: BoxDecoration(
-                color: isSelected ? scheme.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(26),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    isSelected ? filledIcon : outlinedIcon,
-                    color: fg,
-                    size: 24,
-                  ),
+                  Icon(icon, color: fg, size: 24),
                   const SizedBox(height: 2),
                   // The labels are single words (« Calendrier »), so a second
                   // line would not help: with large text they shrink to the
@@ -276,15 +259,28 @@ class _NavBarItem extends StatelessWidget {
                     child: Text(
                       label,
                       style: AppFonts.sans(
-                        fontSize: 12,
+                        fontSize: 13,
                         color: fg,
                         fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w600,
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                       maxLines: 1,
                       softWrap: false,
                       textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isSelected ? 1 : 0,
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ],

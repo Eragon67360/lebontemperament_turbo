@@ -16,6 +16,7 @@ import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/connectivity_provider.dart';
 import '../../../../data/providers/data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../onboarding/presentation/widgets/first_time_tip.dart';
 import '../providers/rehearsal_filter_provider.dart';
 
 class RehearsalsScreen extends ConsumerStatefulWidget {
@@ -110,6 +111,16 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
                     .setFilter(groupType),
                 onClearFilter: () =>
                     ref.read(rehearsalFilterProvider.notifier).clearFilter(),
+              ),
+            ),
+
+            const SliverToBoxAdapter(
+              child: FirstTimeTip(
+                id: 'calendar_filter',
+                message:
+                    'Touchez un ensemble pour ne voir que ses répétitions, '
+                    'ou « Tous » pour toute la saison.',
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
               ),
             ),
 
@@ -290,9 +301,7 @@ class _RehearsalsHeader extends StatelessWidget {
             onPressed: onCalendar,
             style: IconButton.styleFrom(
               minimumSize: const Size(48, 48),
-              backgroundColor: s.surfaceContainer,
-              foregroundColor: s.onSurface,
-              shape: CircleBorder(side: BorderSide(color: s.outlineVariant)),
+              foregroundColor: s.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 4),
@@ -354,7 +363,7 @@ class _FilterPills extends StatelessWidget {
               button: true,
               selected: isSelected,
               child: Material(
-                color: isSelected ? s.primary : Colors.transparent,
+                color: Colors.transparent,
                 shape: shape,
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
@@ -381,9 +390,9 @@ class _FilterPills extends StatelessWidget {
                           style: AppFonts.sans(
                             fontSize: 14,
                             fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isSelected ? s.onPrimary : s.onSurface,
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: isSelected ? s.primary : s.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -437,8 +446,8 @@ class _MonthHeader extends StatelessWidget {
   }
 }
 
-/// One rehearsal on the timeline: the rail and its dot on the left, the card
-/// on the right. The rail joins the dots of one month.
+/// One rehearsal (« Portée »): a row on the page ground, separated from the
+/// one above by a hairline, instead of a card on a rail.
 class _TimelineItem extends StatelessWidget {
   final Rehearsal rehearsal;
   final bool isNext;
@@ -452,51 +461,17 @@ class _TimelineItem extends StatelessWidget {
     required this.isLastInMonth,
   });
 
-  static const double _rail = 26;
-  static const double _dot = 12;
-  static const double _dotCenter = 30;
-  static const double _gap = 12;
-
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
-    final lineTop = isFirstInMonth ? _dotCenter : 0.0;
-    return Stack(
-      children: [
-        if (!(isFirstInMonth && isLastInMonth))
-          Positioned(
-            left: (_dot - 2) / 2,
-            top: lineTop,
-            bottom: isLastInMonth ? null : 0,
-            height: isLastInMonth ? _dotCenter - lineTop : null,
-            child: ExcludeSemantics(
-              child: Container(width: 2, color: s.outlineVariant),
-            ),
-          ),
-        Positioned(
-          left: 0,
-          top: _dotCenter - _dot / 2,
-          child: Container(
-            width: _dot,
-            height: _dot,
-            decoration: BoxDecoration(
-              color: isNext ? s.primary : s.surface,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isNext ? s.primary : s.outlineVariant,
-                width: 2,
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(
-            left: _rail,
-            bottom: isLastInMonth ? 0 : _gap,
-          ),
-          child: _RehearsalCard(rehearsal: rehearsal, isNext: isNext),
-        ),
-      ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: s.outlineVariant)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: _RehearsalCard(rehearsal: rehearsal, isNext: isNext),
+      ),
     );
   }
 }
@@ -523,7 +498,7 @@ class _RehearsalCard extends StatelessWidget {
 
     final dateBadge = date == null
         ? null
-        : _DateBadge(date: date, horizontal: stacked);
+        : _DateBadge(date: date, horizontal: stacked, accent: isNext);
     final details = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -542,9 +517,9 @@ class _RehearsalCard extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           title,
-          style: AppFonts.display(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+          style: AppFonts.sans(
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
             color: s.onSurface,
             height: 1.25,
           ),
@@ -563,10 +538,9 @@ class _RehearsalCard extends StatelessWidget {
       ],
     );
 
-    return StageCard(
-      selected: isNext,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      semanticLabel: [
+    return Semantics(
+      container: true,
+      label: [
         group,
         title,
         if (date != null) longDate(date),
@@ -574,27 +548,29 @@ class _RehearsalCard extends StatelessWidget {
         place,
         ?soon,
       ].join(', '),
-      child: stacked
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (dateBadge != null) ...[
-                  dateBadge,
-                  const SizedBox(height: 8),
+      child: ExcludeSemantics(
+        child: stacked
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (dateBadge != null) ...[
+                    dateBadge,
+                    const SizedBox(height: 8),
+                  ],
+                  details,
                 ],
-                details,
-              ],
-            )
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (dateBadge != null) ...[
-                  dateBadge,
-                  const SizedBox(width: 14),
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (dateBadge != null) ...[
+                    dateBadge,
+                    const SizedBox(width: 14),
+                  ],
+                  Expanded(child: details),
                 ],
-                Expanded(child: details),
-              ],
-            ),
+              ),
+      ),
     );
   }
 
@@ -611,7 +587,14 @@ class _RehearsalCard extends StatelessWidget {
 class _DateBadge extends StatelessWidget {
   final DateTime date;
   final bool horizontal;
-  const _DateBadge({required this.date, required this.horizontal});
+
+  /// The next rehearsal's day is in the accent.
+  final bool accent;
+  const _DateBadge({
+    required this.date,
+    required this.horizontal,
+    this.accent = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -619,9 +602,9 @@ class _DateBadge extends StatelessWidget {
     final day = Text(
       '${date.day}',
       style: AppFonts.display(
-        fontSize: 26,
-        fontWeight: FontWeight.w800,
-        color: s.onSurface,
+        fontSize: 28,
+        fontWeight: FontWeight.w400,
+        color: accent ? s.primary : s.onSurface,
         height: 1.05,
       ),
     );
@@ -654,19 +637,13 @@ class _SoonPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
+    // Plain accent text: the day is already highlighted, no filled pill.
+    return Text(
+      label,
+      style: AppFonts.sans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
         color: s.primary,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: AppFonts.sans(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: s.onPrimary,
-        ),
       ),
     );
   }
