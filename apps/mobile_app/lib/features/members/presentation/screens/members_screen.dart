@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/confirm_logout_dialog.dart';
 import 'package:lebontemperament/data/models/member.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,6 +22,32 @@ class MembersScreen extends ConsumerStatefulWidget {
 }
 
 class _MembersScreenState extends ConsumerState<MembersScreen> {
+  /// Reloads the directory and keeps the indicator spinning until it is
+  /// back (an error shows on the screen, not here).
+  Future<void> _onRefresh() async {
+    ref.invalidate(membersProvider);
+    try {
+      await ref.read(membersProvider.future);
+    } catch (_) {}
+  }
+
+  Future<void> _logout() async {
+    if (!await confirmLogout(context)) return;
+    try {
+      await ref.read(authServiceProvider).signOut();
+      if (mounted) context.go('/login');
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(kLogoutFailedMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(membersProvider);
@@ -31,38 +58,20 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(membersProvider);
-        },
+        onRefresh: _onRefresh,
         color: theme.colorScheme.primary,
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            _MembersAppBar(
-              onLogout: () async {
-                try {
-                  await ref.read(authServiceProvider).signOut();
-                  if (mounted) context.go('/login');
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Erreur lors de la déconnexion: $e'),
-                        backgroundColor: theme.colorScheme.error,
-                      ),
-                    );
-                  }
-                }
-              },
-            ),
+            _MembersAppBar(onLogout: _logout),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: membersAsync.when(
                   data: (members) {
                     final voiceWords = _extractVoiceWords(members);
-                    final filtered = _filterMembers(
+                    final filtered = filterMembers(
                       members,
                       searchTerm,
                       selectedVoice,
@@ -98,10 +107,29 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (e, _) => Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'Erreur: $e',
-                      style: AppFonts.sans(color: theme.colorScheme.error),
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.cloud_off_outlined,
+                          size: 64,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Impossible de charger l’annuaire. Vérifiez votre connexion et réessayez.',
+                          textAlign: TextAlign.center,
+                          style: AppFonts.sans(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: _onRefresh,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Réessayer'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -109,9 +137,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
             ),
             membersAsync.when(
               data: (members) {
-                final searchTerm = ref.watch(membersSearchProvider);
-                final selectedVoice = ref.watch(membersVoiceFilterProvider);
-                final filtered = _filterMembers(
+                final filtered = filterMembers(
                   members,
                   searchTerm,
                   selectedVoice,
@@ -195,29 +221,6 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       words.addAll(parts);
     }
     return words.toList()..sort();
-  }
-
-  List<Member> _filterMembers(
-    List<Member> members,
-    String searchTerm,
-    String selectedVoice,
-  ) {
-    return members.where((m) {
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          m.displayName.toLowerCase().contains(searchTerm.toLowerCase()) ||
-          m.email.toLowerCase().contains(searchTerm.toLowerCase()) ||
-          (m.voice ?? '').toLowerCase().contains(searchTerm.toLowerCase()) ||
-          (m.mobilePhone ?? '').contains(searchTerm) ||
-          (m.homePhone ?? '').contains(searchTerm) ||
-          (m.address ?? '').toLowerCase().contains(searchTerm.toLowerCase());
-
-      final matchesVoice =
-          selectedVoice.isEmpty ||
-          (m.voice ?? '').toLowerCase().contains(selectedVoice.toLowerCase());
-
-      return matchesSearch && matchesVoice;
-    }).toList();
   }
 }
 
@@ -487,85 +490,74 @@ class _MemberCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           if (member.email.isNotEmpty)
             _ContactRow(
               icon: Icons.email_outlined,
-              child: GestureDetector(
-                onTap: () => launchUrl(
-                  Uri.parse('mailto:${member.email}'),
-                  mode: LaunchMode.externalApplication,
-                ),
-                child: Text(
-                  member.email,
-                  style: AppFonts.sans(
-                    fontSize: 14,
-                    color: theme.colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
+              text: member.email,
+              semanticsLabel: 'Envoyer un e-mail à ${member.email}',
+              style: AppFonts.sans(
+                fontSize: 14,
+                color: theme.colorScheme.primary,
+                decoration: TextDecoration.underline,
+              ),
+              onTap: () => launchUrl(
+                Uri.parse('mailto:${member.email}'),
+                mode: LaunchMode.externalApplication,
               ),
             ),
           if (member.mobilePhone != null && member.mobilePhone!.isNotEmpty)
             _ContactRow(
               icon: Icons.phone_android_outlined,
-              child: GestureDetector(
-                onTap: () => launchUrl(
-                  Uri.parse('tel:${member.mobilePhone!.replaceAll(' ', '')}'),
-                  mode: LaunchMode.externalApplication,
-                ),
-                child: Text(
-                  member.mobilePhone!,
-                  style: AppFonts.sans(
-                    fontSize: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+              text: member.mobilePhone!,
+              semanticsLabel: 'Appeler le ${member.mobilePhone}',
+              style: AppFonts.sans(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              onTap: () => launchUrl(
+                Uri.parse('tel:${member.mobilePhone!.replaceAll(' ', '')}'),
+                mode: LaunchMode.externalApplication,
               ),
             ),
           if (member.homePhone != null && member.homePhone!.isNotEmpty)
             _ContactRow(
               icon: Icons.phone_outlined,
-              child: GestureDetector(
-                onTap: () => launchUrl(
-                  Uri.parse('tel:${member.homePhone!.replaceAll(' ', '')}'),
-                  mode: LaunchMode.externalApplication,
-                ),
-                child: Text(
-                  member.homePhone!,
-                  style: AppFonts.sans(
-                    fontSize: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+              text: member.homePhone!,
+              semanticsLabel: 'Appeler le ${member.homePhone}',
+              style: AppFonts.sans(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              onTap: () => launchUrl(
+                Uri.parse('tel:${member.homePhone!.replaceAll(' ', '')}'),
+                mode: LaunchMode.externalApplication,
               ),
             ),
           if (member.address != null && member.address!.isNotEmpty)
             _ContactRow(
               icon: Icons.home_outlined,
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  Clipboard.setData(ClipboardData(text: member.address!));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Adresse copiée', style: AppFonts.sans()),
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                child: Text(
-                  member.address!,
-                  style: AppFonts.sans(
-                    fontSize: 13,
-                    color: theme.colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
+              text: member.address!,
+              semanticsLabel: 'Copier l’adresse ${member.address}',
+              isLink: false,
+              style: AppFonts.sans(
+                fontSize: 13,
+                color: theme.colorScheme.primary,
+                decoration: TextDecoration.underline,
               ),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Clipboard.setData(ClipboardData(text: member.address!));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Adresse copiée', style: AppFonts.sans()),
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _ContactActionRow(member: member),
         ],
       ),
@@ -598,25 +590,53 @@ class _MemberCard extends StatelessWidget {
   }
 }
 
+/// A tappable contact line (e-mail, phone, address): a link for screen
+/// readers, at least 48 dp high for fingers.
 class _ContactRow extends StatelessWidget {
   final IconData icon;
-  final Widget child;
+  final String text;
+  final TextStyle style;
+  final String semanticsLabel;
+  final bool isLink;
+  final VoidCallback onTap;
 
-  const _ContactRow({required this.icon, required this.child});
+  const _ContactRow({
+    required this.icon,
+    required this.text,
+    required this.style,
+    required this.semanticsLabel,
+    required this.onTap,
+    this.isLink = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: theme.colorScheme.primary),
-          const SizedBox(width: 10),
-          Expanded(child: child),
-        ],
+    return Semantics(
+      link: isLink,
+      button: !isLink,
+      label: semanticsLabel,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Icon(icon, size: 18, color: theme.colorScheme.primary),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(text, style: style)),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -656,7 +676,7 @@ class _ContactActionRow extends StatelessWidget {
         if (hasEmail)
           _ActionChip(
             icon: Icons.email_outlined,
-            tooltip: 'Envoyer un email',
+            tooltip: 'Envoyer un e-mail',
             onTap: () {
               HapticFeedback.lightImpact();
               launchUrl(
@@ -702,15 +722,19 @@ class _ActionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
-      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          // 48 dp: a comfortable target for every finger.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 52, minHeight: 48),
+            child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+          ),
         ),
       ),
     );

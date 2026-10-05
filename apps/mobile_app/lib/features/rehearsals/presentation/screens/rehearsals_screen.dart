@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
+import 'package:lebontemperament/core/widgets/confirm_logout_dialog.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/core/widgets/notice_banner.dart';
 import 'package:lebontemperament/core/widgets/stage.dart';
@@ -31,9 +32,14 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
     initializeDateFormatting('fr_FR');
   }
 
+  /// Reloads the list and keeps the indicator spinning until it is back
+  /// (an error shows in the list, not here).
   Future<void> _onRefresh() async {
     ref.invalidate(realtimeRehearsalsProvider);
     ref.invalidate(refreshTriggerProvider);
+    try {
+      await ref.read(realtimeRehearsalsProvider.future);
+    } catch (_) {}
   }
 
   Future<void> _openGoogleCalendar() async {
@@ -51,16 +57,16 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
   }
 
   Future<void> _logout() async {
-    final theme = Theme.of(context);
+    if (!await confirmLogout(context)) return;
     try {
       await ref.read(authServiceProvider).signOut();
       if (mounted) context.go('/login');
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de la déconnexion: $e'),
-            backgroundColor: theme.colorScheme.error,
+            content: const Text(kLogoutFailedMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -511,6 +517,51 @@ class _RehearsalCard extends StatelessWidget {
     final timeText = time.isEmpty ? 'Heure non spécifiée' : time;
     final place = rehearsal.place ?? 'Lieu non défini';
     final soon = (isNext && date != null) ? _soonLabel(date) : null;
+    // At large text sizes the day column would leave the title too little
+    // room on a small phone (« Répétitio / n »): the date goes above it.
+    final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.3;
+
+    final dateBadge = date == null
+        ? null
+        : _DateBadge(date: date, horizontal: stacked);
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            StageEyebrow(
+              group,
+              color: groupColor(context, rehearsal.groupType),
+            ),
+            if (soon != null) _SoonPill(label: soon),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          title,
+          style: AppFonts.display(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: s.onSurface,
+            height: 1.25,
+          ),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '$timeText · $place',
+          style: AppFonts.sans(
+            fontSize: 14,
+            color: s.onSurfaceVariant,
+            height: 1.35,
+          ),
+        ),
+      ],
+    );
 
     return StageCard(
       selected: isNext,
@@ -523,78 +574,27 @@ class _RehearsalCard extends StatelessWidget {
         place,
         ?soon,
       ].join(', '),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (date != null) ...[
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 44),
-              child: Column(
-                children: [
-                  Text(
-                    '${date.day}',
-                    style: AppFonts.display(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: s.onSurface,
-                      height: 1.05,
-                    ),
-                  ),
-                  Text(
-                    weekdayShort(date),
-                    style: AppFonts.sans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: s.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-          ],
-          Expanded(
-            child: Column(
+      child: stacked
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    StageEyebrow(
-                      group,
-                      color: groupColor(context, rehearsal.groupType),
-                    ),
-                    if (soon != null) _SoonPill(label: soon),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  title,
-                  style: AppFonts.display(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: s.onSurface,
-                    height: 1.25,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '$timeText · $place',
-                  style: AppFonts.sans(
-                    fontSize: 14,
-                    color: s.onSurfaceVariant,
-                    height: 1.35,
-                  ),
-                ),
+                if (dateBadge != null) ...[
+                  dateBadge,
+                  const SizedBox(height: 8),
+                ],
+                details,
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (dateBadge != null) ...[
+                  dateBadge,
+                  const SizedBox(width: 14),
+                ],
+                Expanded(child: details),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -603,6 +603,47 @@ class _RehearsalCard extends StatelessWidget {
     if (daysUntil(date) <= 1) return countdownLabel(date);
     final rel = relativeDays(date);
     return rel[0].toUpperCase() + rel.substring(1);
+  }
+}
+
+/// The day of the month over its weekday (« 30 / sam. »), or side by side
+/// when the card stacks it above the details.
+class _DateBadge extends StatelessWidget {
+  final DateTime date;
+  final bool horizontal;
+  const _DateBadge({required this.date, required this.horizontal});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final day = Text(
+      '${date.day}',
+      style: AppFonts.display(
+        fontSize: 26,
+        fontWeight: FontWeight.w800,
+        color: s.onSurface,
+        height: 1.05,
+      ),
+    );
+    final weekday = Text(
+      weekdayShort(date),
+      style: AppFonts.sans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: s.onSurfaceVariant,
+      ),
+    );
+    if (horizontal) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [day, const SizedBox(width: 8), weekday],
+      );
+    }
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 44),
+      child: Column(children: [day, weekday]),
+    );
   }
 }
 
