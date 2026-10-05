@@ -75,3 +75,6 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    # Bundled so google_fonts never fetches them from Google's servers at
+    # runtime (offline first launch, no request to Google); SIL OFL 1.1.
+    - assets/google_fonts/
