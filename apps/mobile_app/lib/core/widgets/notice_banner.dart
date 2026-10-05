@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 
 /// How loud a [NoticeBanner] is.
 enum NoticeTone {
@@ -63,7 +63,7 @@ class NoticeBanner extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: foreground,
@@ -73,7 +73,7 @@ class NoticeBanner extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       message!,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 12,
                         color: foreground.withValues(alpha: 0.85),
                       ),

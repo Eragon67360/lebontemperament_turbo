@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:logger/logger.dart';
 import 'dart:ui'; // Required for ImageFilter.blur
 
@@ -264,7 +264,7 @@ class _NavBarItem extends StatelessWidget {
                         ? Text(
                             label,
                             key: ValueKey<String>(label),
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 11,
                               color: color,
                               fontWeight: FontWeight.w600,

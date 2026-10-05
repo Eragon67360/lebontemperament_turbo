@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/data/models/member.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
@@ -100,7 +100,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       'Erreur: $e',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: theme.colorScheme.error,
                       ),
                     ),
@@ -134,7 +134,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                           const SizedBox(height: 16),
                           Text(
                             'Aucun résultat trouvé',
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                               color: theme.colorScheme.onSurface,
@@ -143,7 +143,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                           const SizedBox(height: 8),
                           Text(
                             'Essayez de modifier votre recherche',
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 14,
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -241,7 +241,7 @@ class _MembersAppBar extends StatelessWidget {
         centerTitle: false,
         title: Text(
           'Membres',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w600,
           ),
@@ -310,7 +310,7 @@ class _SearchBarState extends State<_SearchBar> {
           vertical: 14,
         ),
       ),
-      style: GoogleFonts.poppins(fontSize: 15),
+      style: AppFonts.sans(fontSize: 15),
     );
   }
 }
@@ -384,7 +384,7 @@ class _MemberCountLabel extends StatelessWidget {
       ),
       child: Text(
         '$count membre${count != 1 ? 's' : ''}',
-        style: GoogleFonts.poppins(
+        style: AppFonts.sans(
           color: theme.colorScheme.onPrimary,
           fontWeight: FontWeight.w600,
           fontSize: 14,
@@ -450,7 +450,7 @@ class _MemberCard extends StatelessWidget {
                   children: [
                     Text(
                       member.displayName,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
@@ -471,7 +471,7 @@ class _MemberCard extends StatelessWidget {
                         ),
                         child: Text(
                           member.voice!,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: theme.colorScheme.onPrimaryContainer,
@@ -495,7 +495,7 @@ class _MemberCard extends StatelessWidget {
                 ),
                 child: Text(
                   member.email,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     color: theme.colorScheme.primary,
                     decoration: TextDecoration.underline,
@@ -513,7 +513,7 @@ class _MemberCard extends StatelessWidget {
                 ),
                 child: Text(
                   member.mobilePhone!,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -530,7 +530,7 @@ class _MemberCard extends StatelessWidget {
                 ),
                 child: Text(
                   member.homePhone!,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -548,7 +548,7 @@ class _MemberCard extends StatelessWidget {
                     SnackBar(
                       content: Text(
                         'Adresse copiée',
-                        style: GoogleFonts.poppins(),
+                        style: AppFonts.sans(),
                       ),
                       behavior: SnackBarBehavior.floating,
                       duration: const Duration(seconds: 2),
@@ -557,7 +557,7 @@ class _MemberCard extends StatelessWidget {
                 },
                 child: Text(
                   member.address!,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 13,
                     color: theme.colorScheme.primary,
                     decoration: TextDecoration.underline,
@@ -588,7 +588,7 @@ class _MemberCard extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         _getInitials(member.displayName),
-        style: GoogleFonts.poppins(
+        style: AppFonts.sans(
           color: theme.colorScheme.onPrimary,
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -675,7 +675,7 @@ class _ContactActionRow extends StatelessWidget {
               Clipboard.setData(ClipboardData(text: member.address!));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Adresse copiée', style: GoogleFonts.poppins()),
+                  content: Text('Adresse copiée', style: AppFonts.sans()),
                   behavior: SnackBarBehavior.floating,
                   duration: const Duration(seconds: 2),
                 ),

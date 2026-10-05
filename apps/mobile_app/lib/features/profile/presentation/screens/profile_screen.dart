@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -268,7 +268,7 @@ class _ProfileAppBar extends ConsumerWidget {
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         title: Text(
           displayName,
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w600,
           ),
@@ -333,7 +333,7 @@ class _ProfileHeader extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               user?.email ?? '',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 16,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -355,7 +355,7 @@ class _ProfileHeader extends ConsumerWidget {
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: GoogleFonts.poppins(
+        style: AppFonts.sans(
           color: theme.colorScheme.onPrimary,
           fontSize: 28,
           fontWeight: FontWeight.w600,
@@ -373,7 +373,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.primary,
@@ -463,7 +463,7 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: titleColor ?? theme.colorScheme.onSurface,
@@ -472,7 +472,7 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 13,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

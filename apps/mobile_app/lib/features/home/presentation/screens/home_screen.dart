@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
@@ -144,7 +144,7 @@ class _WelcomeHeader extends ConsumerWidget {
                   children: [
                     Text(
                       '$greetingTime,',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -152,7 +152,7 @@ class _WelcomeHeader extends ConsumerWidget {
                     ),
                     Text(
                       displayName,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: theme.colorScheme.onSurface,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -182,7 +182,7 @@ class _WelcomeHeader extends ConsumerWidget {
       alignment: Alignment.center,
       child: Text(
         initial,
-        style: GoogleFonts.poppins(
+        style: AppFonts.sans(
           color: theme.colorScheme.onPrimaryContainer,
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -219,7 +219,7 @@ class _SectionHeader extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: theme.colorScheme.onSurface,
@@ -238,7 +238,7 @@ class _SectionHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Text(
                   'Voir tout',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: theme.colorScheme.primary,
@@ -458,7 +458,7 @@ class _RehearsalTicketCard extends StatelessWidget {
                             ),
                             child: Text(
                               'Répétition',
-                              style: GoogleFonts.poppins(
+                              style: AppFonts.sans(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: theme.colorScheme.primary,
@@ -468,7 +468,7 @@ class _RehearsalTicketCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             formatDate(rehearsal.date!),
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: theme.colorScheme.onSurface,
@@ -515,7 +515,7 @@ class _RehearsalTicketCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       formatTime(rehearsal.startTime),
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: theme.colorScheme.onSurface,
@@ -544,7 +544,7 @@ class _RehearsalTicketCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               rehearsal.place ?? "Lieu non défini",
-                              style: GoogleFonts.poppins(
+                              style: AppFonts.sans(
                                 fontSize: 12,
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -612,7 +612,7 @@ class _ConcertTicketCard extends StatelessWidget {
                         children: [
                           Text(
                             concert.name ?? 'Concert',
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: theme.colorScheme.onSecondaryContainer,
@@ -646,7 +646,7 @@ class _ConcertTicketCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         formatTime(concert.time),
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: theme.colorScheme.onSurface,
@@ -662,7 +662,7 @@ class _ConcertTicketCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           concert.place,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: theme.colorScheme.onSurface,
@@ -722,7 +722,7 @@ class _DateBadge extends StatelessWidget {
         children: [
           Text(
             date.day.toString(),
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: color,
@@ -731,7 +731,7 @@ class _DateBadge extends StatelessWidget {
           ),
           Text(
             months[date.month - 1],
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 10,
               fontWeight: FontWeight.w600,
               color: color,
@@ -769,7 +769,7 @@ class _EmptyStateCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             message,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               color: theme.colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
@@ -836,7 +836,7 @@ class _AdminActionCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: theme.colorScheme.onTertiaryContainer,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
@@ -844,7 +844,7 @@ class _AdminActionCard extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: theme.colorScheme.onTertiaryContainer.withValues(
                         alpha: 0.8,
                       ),
@@ -1034,7 +1034,7 @@ class _MembresBentoCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     title,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -1085,7 +1085,7 @@ class _InfoCard extends StatelessWidget {
                 children: [
                   Text(
                     'Le Bon Tempérament',
-                    style: GoogleFonts.playfairDisplay(
+                    style: AppFonts.display(
                       // More elegant font for the name
                       fontWeight: FontWeight.w700,
                       fontSize: 18,
@@ -1095,7 +1095,7 @@ class _InfoCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Ensemble vocal et instrumental. \nSaverne, depuis 1987.',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 13,
                       height: 1.5,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -1161,7 +1161,7 @@ class _BetaNoticeCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Version Bêta - Signaler un bug',
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: theme.colorScheme.onSurfaceVariant,
@@ -1171,7 +1171,7 @@ class _BetaNoticeCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       'Contacter',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.primary,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
@@ -97,7 +97,7 @@ class _ConcertDetailScreenState extends ConsumerState<ConcertDetailScreen> {
                 Text(
                   'Erreur: Impossible de charger les détails du concert.\n$err',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -190,7 +190,7 @@ class _ConcertDetailHeader extends StatelessWidget {
                   ),
                   child: Text(
                     _getContextText(concert.context),
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -200,7 +200,7 @@ class _ConcertDetailHeader extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   concert.name ?? 'Concert sans titre',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 28,
@@ -259,7 +259,7 @@ class _ConcertDetailHeader extends StatelessWidget {
                   ),
                   child: Text(
                     _getContextText(concert.context),
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: theme.colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -269,7 +269,7 @@ class _ConcertDetailHeader extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   concert.name ?? 'Concert sans titre',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                     fontSize: 28,
@@ -371,7 +371,7 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 13,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -379,7 +379,7 @@ class _InfoRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
@@ -402,7 +402,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.onSurface,
@@ -432,7 +432,7 @@ class _AdditionalInformationsCard extends StatelessWidget {
       ),
       child: Text(
         hasContent ? text! : 'Aucune information complémentaire',
-        style: GoogleFonts.poppins(
+        style: AppFonts.sans(
           color: hasContent
               ? theme.colorScheme.onSurfaceVariant
               : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -467,7 +467,7 @@ class _NotFoundState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Concert non trouvé',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,

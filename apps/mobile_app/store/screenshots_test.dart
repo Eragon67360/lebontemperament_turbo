@@ -246,11 +246,10 @@ Future<void> _loadFonts() async {
     await loader.load();
   }
 
-  // Poppins, Playfair and Fira come from assets/google_fonts (google_fonts
-  // loads them from the asset bundle); the frame's caption uses Poppins too.
-  await family('Poppins', [
-    for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold'])
-      'assets/google_fonts/Poppins-$w.ttf',
+  // The app's fonts come from assets/google_fonts (google_fonts loads them
+  // from the asset bundle); the frame's caption uses the display face too.
+  await family('Caption', [
+    'assets/google_fonts/BricolageGrotesque-ExtraBold.ttf',
   ]);
   await family('Roboto', [
     for (final w in ['Regular', 'Medium', 'Bold', 'Light'])
@@ -287,8 +286,8 @@ class _Frame extends StatelessWidget {
               caption,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w700,
+                fontFamily: 'Caption',
+                fontWeight: FontWeight.w800,
                 fontSize: 27,
                 height: 1.2,
                 color: Colors.white,

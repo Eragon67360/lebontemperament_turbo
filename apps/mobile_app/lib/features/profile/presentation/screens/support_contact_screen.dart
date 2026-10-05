@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
@@ -143,7 +143,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
             ),
             title: Text(
               'Aide & Contact',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
@@ -160,7 +160,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
               delegate: SliverChildListDelegate([
                 Text(
                   'Contactez le support pour toute question ou problème.',
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 14,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -173,7 +173,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                     children: [
                       Text(
                         'Sujet',
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: theme.colorScheme.onSurface,
@@ -193,7 +193,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                         ),
                         hint: Text(
                           'Sélectionnez un sujet',
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -201,7 +201,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                             .map(
                               (s) => DropdownMenuItem(
                                 value: s,
-                                child: Text(s, style: GoogleFonts.poppins()),
+                                child: Text(s, style: AppFonts.sans()),
                               ),
                             )
                             .toList(),
@@ -214,7 +214,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                       const SizedBox(height: 20),
                       Text(
                         'Message',
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: theme.colorScheme.onSurface,
@@ -228,7 +228,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                         enabled: !_isLoading,
                         decoration: InputDecoration(
                           hintText: 'Décrivez votre demande...',
-                          hintStyle: GoogleFonts.poppins(
+                          hintStyle: AppFonts.sans(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                           border: OutlineInputBorder(
@@ -236,7 +236,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                           ),
                           contentPadding: const EdgeInsets.all(16),
                         ),
-                        style: GoogleFonts.poppins(),
+                        style: AppFonts.sans(),
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(2000),
                         ],
@@ -272,7 +272,7 @@ class _SupportContactScreenState extends ConsumerState<SupportContactScreen> {
                               )
                             : Text(
                                 'Envoyer',
-                                style: GoogleFonts.poppins(
+                                style: AppFonts.sans(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),

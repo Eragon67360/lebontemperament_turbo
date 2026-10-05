@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:pdfx/pdfx.dart';
 
 /// A bottom sheet that displays a PDF from a URL using pdfx.
@@ -140,7 +140,7 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
                 Expanded(
                   child: Text(
                     widget.fileName,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
@@ -182,7 +182,7 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
                         const SizedBox(height: 16),
                         Text(
                           'Chargement du PDF…',
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 14,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -206,7 +206,7 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
                           Text(
                             'Impossible de charger le PDF',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 14,
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -215,7 +215,7 @@ class _PdfViewerSheetState extends State<PdfViewerSheet> {
                           Text(
                             _error!,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 12,
                               color: theme.colorScheme.error,
                             ),

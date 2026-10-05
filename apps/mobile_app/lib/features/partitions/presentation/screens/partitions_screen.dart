@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
@@ -341,7 +341,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
           Expanded(
             child: Text(
               'Partitions & Documents',
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontWeight: FontWeight.w600,
                 fontSize: 18,
                 color: theme.colorScheme.onSurface,
@@ -475,7 +475,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
               Expanded(
                 child: Text(
                   activeTab.label,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
@@ -514,7 +514,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                         const SizedBox(width: 8),
                         Text(
                           'Dossier parent',
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: theme.colorScheme.primary,
@@ -556,7 +556,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
             Text(
               _error!,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 14,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -600,7 +600,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
             Text(
               'Les dossiers n\'ont pas pu être chargés.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 14,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -622,7 +622,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       return Center(
         child: Text(
           'Ce dossier est vide',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             fontSize: 14,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -668,7 +668,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   Widget _sectionLabel(ThemeData theme, String label) {
     return Text(
       label,
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 13,
         fontWeight: FontWeight.w500,
         color: theme.colorScheme.onSurfaceVariant,
@@ -730,7 +730,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                 Flexible(
                   child: Text(
                     'Accès direct au Drive',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
@@ -786,7 +786,7 @@ class _FolderTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       folder.name,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: theme.colorScheme.onSurface,
@@ -874,7 +874,7 @@ class _FileTile extends StatelessWidget {
             Expanded(
               child: Text(
                 file.name,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: theme.colorScheme.onSurface,
@@ -1062,7 +1062,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
           const SizedBox(height: 20),
           Text(
             widget.fileName,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               color: theme.colorScheme.onSurface,
@@ -1074,7 +1074,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
             const SizedBox(height: 8),
             Text(
               _error!,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 13,
                 color: theme.colorScheme.error,
               ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
@@ -194,7 +194,7 @@ class _RehearsalsAppBar extends StatelessWidget {
         centerTitle: false,
         title: Text(
           'Répétitions',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w600,
           ),
@@ -326,7 +326,7 @@ class _InlineFilterChips extends StatelessWidget {
                   ),
                   child: Text(
                     label,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 13,
                       fontWeight: isSelected
                           ? FontWeight.w600
@@ -384,7 +384,7 @@ class _CalendrierCompletButton extends StatelessWidget {
                 child: Text(
                   'Voir le calendrier complet',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -446,7 +446,7 @@ class _RehearsalTicketCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         rehearsal.name ?? 'Répétition sans titre',
-                        style: GoogleFonts.poppins(
+                        style: AppFonts.sans(
                           color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -489,7 +489,7 @@ class _RehearsalTicketCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   _formatTimeRange(rehearsal.startTime, rehearsal.endTime),
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: theme.colorScheme.onSurface,
@@ -518,7 +518,7 @@ class _RehearsalTicketCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           rehearsal.place ?? "Lieu non défini",
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 13,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -574,7 +574,7 @@ class _DateBadge extends StatelessWidget {
         children: [
           Text(
             date.day.toString(),
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: color,
@@ -583,7 +583,7 @@ class _DateBadge extends StatelessWidget {
           ),
           Text(
             months[date.month - 1],
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: color,
@@ -632,7 +632,7 @@ class _GroupTypeBadge extends StatelessWidget {
       ),
       child: Text(
         _getGroupTypeText(groupType),
-        style: GoogleFonts.poppins(
+        style: AppFonts.sans(
           color: color,
           fontWeight: FontWeight.w600,
           fontSize: 11,
@@ -692,7 +692,7 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 isFilterActive ? 'Aucun résultat' : 'Aucune répétition',
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
@@ -704,7 +704,7 @@ class _EmptyState extends StatelessWidget {
                     ? 'Aucune répétition ne correspond à votre filtre. Essayez une autre sélection.'
                     : 'Les prochaines répétitions apparaîtront ici dès qu\'elles seront planifiées.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 14,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -742,7 +742,7 @@ class _ErrorState extends StatelessWidget {
                 isOnline
                     ? 'Oups, une erreur est survenue'
                     : 'Vous êtes hors ligne',
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
@@ -754,7 +754,7 @@ class _ErrorState extends StatelessWidget {
                     ? 'Nous n\'avons pas pu charger les répétitions. Vérifiez votre connexion et réessayez.'
                     : 'Aucune répétition n\'est enregistrée sur cet appareil. Reconnectez-vous pour les charger.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 14,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
