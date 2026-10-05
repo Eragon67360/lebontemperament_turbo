@@ -163,7 +163,7 @@ class _AboutHeader extends StatelessWidget {
           Text(
             'Le Bon Tempérament',
             style: AppFonts.sans(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
             ),

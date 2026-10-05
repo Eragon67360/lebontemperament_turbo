@@ -79,7 +79,7 @@ class _LoginHeader extends StatelessWidget {
         Text(
           'Bienvenue',
           style: AppFonts.sans(
-            fontSize: 32,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.onSurface,
           ),

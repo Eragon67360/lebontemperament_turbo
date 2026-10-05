@@ -63,7 +63,7 @@ class ComingSoonScreen extends StatelessWidget {
                   Text(
                     title,
                     style: AppFonts.sans(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
                     ),

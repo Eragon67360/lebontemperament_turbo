@@ -477,7 +477,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppFonts.display(
-                  fontSize: 30,
+                  fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: s.onSurface,
                 ),
@@ -632,7 +632,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.display(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: s.onSurface,
                     ),
