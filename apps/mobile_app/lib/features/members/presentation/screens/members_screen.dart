@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/members_filter_provider.dart';
 import '../../../../core/utils/text_scale.dart';
+import '../../../onboarding/presentation/widgets/first_time_tip.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -95,6 +96,13 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                                       .read(membersVoiceFilterProvider.notifier)
                                       .state =
                                   v,
+                        ),
+                        const FirstTimeTip(
+                          id: 'members_contact',
+                          message:
+                              'Touchez un e-mail pour écrire, un numéro pour '
+                              'appeler, une adresse pour la copier.',
+                          padding: EdgeInsets.only(top: 16),
                         ),
                         const SizedBox(height: 16),
                         _MemberCountLabel(count: filtered.length),

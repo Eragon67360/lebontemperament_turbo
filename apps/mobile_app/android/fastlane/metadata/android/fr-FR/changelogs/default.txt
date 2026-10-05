@@ -1,6 +1,5 @@
-Plus confortable pour tous :
-• Les rappels restent bien activés quand vous acceptez les notifications.
-• Écrans lisibles avec une grande taille de texte.
-• Partitions : téléchargements avec pourcentage, avance et retour de 10 s dans les enregistrements.
-• « Mot de passe oublié ? » fonctionne.
-• Séjours affichés sur toutes leurs dates, recherche de membres sans accents.
+Une appli plus légère et plus musicale :
+• Un style allégé : moins de cadres, des titres plus fins, plus d'air.
+• Votre semaine dessinée comme une portée, une note par répétition.
+• Une visite de bienvenue présente chaque rubrique et ouvre le calendrier sur votre ensemble. À revoir dans Profil.
+• Quelques astuces la première fois, sur le calendrier, les membres et les partitions.

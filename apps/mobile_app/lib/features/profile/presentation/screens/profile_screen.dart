@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
@@ -10,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
+import '../../../onboarding/data/welcome_prefs.dart';
 import 'about_screen.dart';
 import 'support_contact_screen.dart';
 import 'theme_settings_screen.dart';
@@ -101,6 +103,15 @@ class ProfileScreen extends ConsumerWidget {
                               builder: (_) => const ThemeSettingsScreen(),
                             ),
                           ),
+                        ),
+                        _SettingsTile(
+                          icon: Icons.explore_outlined,
+                          title: 'Revoir la visite',
+                          subtitle: 'Chaque partie de l\'application expliquée',
+                          onTap: () async {
+                            await WelcomePrefs.resetTips();
+                            if (context.mounted) context.push('/welcome');
+                          },
                         ),
                         _SettingsTile(
                           icon: Icons.info_outline_rounded,

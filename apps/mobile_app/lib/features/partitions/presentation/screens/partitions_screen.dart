@@ -21,6 +21,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../onboarding/presentation/widgets/first_time_tip.dart';
 
 /// Widest the explorer grows on a tablet: the rows stay readable.
 const double _kMaxContentWidth = 720;
@@ -871,6 +872,15 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
         _listBottomPadding(context),
       ),
       children: [
+        if (_files.any(_isAudioFile))
+          const FirstTimeTip(
+            id: 'partitions_listen',
+            message:
+                'Touchez le bouton lecture d’un enregistrement pour '
+                'l’écouter : le lecteur reste en bas de l’écran pendant que '
+                'vous parcourez les fichiers.',
+            padding: EdgeInsets.only(bottom: 12),
+          ),
         if (empty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
@@ -1111,20 +1121,12 @@ class _KindTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
-    final (Color bg, Color fg, IconData icon) = switch (kind) {
-      _FileKind.pdf => (s.onSurface, s.surface, Icons.description_outlined),
-      _FileKind.audio => (
-        s.primaryContainer,
-        s.primary,
-        Icons.music_note_rounded,
-      ),
-      _FileKind.folder => (
-        s.surfaceContainerHighest,
-        s.onSurface,
-        Icons.folder_rounded,
-      ),
+    // « Portée »: the icon alone in a hairline frame, no filled tile.
+    final (Color fg, IconData icon) = switch (kind) {
+      _FileKind.pdf => (s.onSurface, Icons.description_outlined),
+      _FileKind.audio => (s.primary, Icons.music_note_outlined),
+      _FileKind.folder => (s.onSurface, Icons.folder_outlined),
       _FileKind.other => (
-        s.surfaceContainerHighest,
         s.onSurfaceVariant,
         musescore
             ? Icons.queue_music_rounded
@@ -1136,7 +1138,7 @@ class _KindTile extends StatelessWidget {
         width: 46,
         height: 46,
         decoration: BoxDecoration(
-          color: bg,
+          border: Border.all(color: s.outlineVariant),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(icon, color: fg, size: 24),
@@ -1189,7 +1191,7 @@ class _RowText extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppFonts.sans(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
             color: s.onSurface,
           ),
         ),
