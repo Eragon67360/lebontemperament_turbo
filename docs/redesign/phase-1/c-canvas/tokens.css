@@ -1,0 +1,139 @@
+/* Direction C — « Canevas » · design tokens
+   Light is the default; dark lives under [data-theme="dark"].
+   One accent (the brand teal), neutral surfaces, semantic colours only for meaning. */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #ffffff;
+  --surface: #f6f6f7;
+  --raised: #ffffff;
+  --overlay: rgb(17 17 19 / 0.45);
+
+  /* Lines */
+  --border: #e6e6e9;
+  --border-strong: #cfcfd4;
+
+  /* Text */
+  --text: #111113;
+  --text-muted: #5c5c66;
+  --text-subtle: #71717a;
+  --on-accent: #ffffff;
+
+  /* Accent — brand teal */
+  --accent: #1a878d; /* icons, large text, active indicators */
+  --accent-strong: #156c71; /* filled buttons, small teal text (6.15:1 on white) */
+  --accent-hover: #105155;
+  --accent-text: #156c71;
+  --accent-soft: #e7f3f3;
+  --focus: #1a878d;
+
+  /* Semantic */
+  --success: #166534;
+  --success-soft: #e8f5ec;
+  --warning: #b45309;
+  --warning-soft: #fdf3e3;
+  --danger: #b91c1c;
+  --danger-solid: #b91c1c;
+  --danger-hover: #991b1b;
+  --danger-soft: #fdecec;
+  --info: #1d4ed8;
+  --info-soft: #e8eefc;
+
+  /* Elevation */
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.06), 0 12px 32px rgb(0 0 0 / 0.1);
+  --shadow-bar: 0 2px 6px rgb(0 0 0 / 0.08), 0 16px 40px rgb(0 0 0 / 0.14);
+
+  /* Radius scale */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Type */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-base: 160ms;
+  --dur-slow: 200ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0c0d0e;
+  --surface: #151618;
+  --raised: #1b1c1f;
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --border: #26272b;
+  --border-strong: #3a3b41;
+
+  --text: #f2f2f3;
+  --text-muted: #a3a3ad;
+  --text-subtle: #7e7e88;
+  --on-accent: #ffffff;
+
+  --accent: #26a5ad;
+  --accent-strong: #156c71;
+  --accent-hover: #1a7f85;
+  --accent-text: #26a5ad;
+  --accent-soft: rgb(38 165 173 / 0.14);
+  --focus: #26a5ad;
+
+  --success: #4ade80;
+  --success-soft: rgb(74 222 128 / 0.12);
+  --warning: #fbbf24;
+  --warning-soft: rgb(251 191 36 / 0.12);
+  --danger: #f87171;
+  --danger-solid: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-soft: rgb(248 113 113 / 0.12);
+  --info: #60a5fa;
+  --info-soft: rgb(96 165 250 / 0.12);
+
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 32px rgb(0 0 0 / 0.55);
+  --shadow-bar: 0 2px 6px rgb(0 0 0 / 0.5), 0 16px 40px rgb(0 0 0 / 0.6);
+}
+
+/* Base */
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Keyboard focus: one ring everywhere, only for keyboard users */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* An invalid field keeps its meaning while focused */
+[aria-invalid="true"]:focus-visible {
+  outline-color: var(--danger);
+}
+
+/* Functional motion only, and none when the person asked for none */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

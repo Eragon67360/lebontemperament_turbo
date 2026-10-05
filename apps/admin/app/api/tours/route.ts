@@ -1,5 +1,10 @@
-import { CreateTourDTO, UpdateTourDTO } from "@/types/tours";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
+import { tourCreateSchema, tourPatchSchema } from "@/utils/concerts/apiSchemas";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -45,8 +50,16 @@ export async function POST(request: Request) {
     );
   }
 
+  // Only the columns the tour dialog sends (#489).
+  const parsed = parsePatchBody(tourCreateSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const tour = parsed.data;
   const supabase = await createClient();
-  const tour: CreateTourDTO = await request.json();
 
   try {
     const { data: newTour, error: tourError } = await supabase
@@ -81,6 +94,7 @@ export async function POST(request: Request) {
       console.error("Error logging activity:", activityError);
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json(newTour);
   } catch (error) {
     console.error("Error creating tour:", error);
@@ -100,9 +114,16 @@ export async function PATCH(request: Request) {
     );
   }
 
+  // Only the columns the screen edits (#489): unknown keys are refused.
+  const parsed = parsePatchBody(tourPatchSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id, ...updateData } = parsed.data;
   const supabase = await createClient();
-  const tour: UpdateTourDTO = await request.json();
-  const { id, ...updateData } = tour;
 
   const { data, error } = await supabase
     .from("tours")
@@ -115,6 +136,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidateWebsiteAfterResponse(REVALIDATE.agenda);
   return NextResponse.json(data);
 }
 
@@ -141,6 +163,7 @@ export async function DELETE(request: Request) {
       throw deleteError;
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete operation error:", error);

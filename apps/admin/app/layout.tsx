@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
@@ -18,11 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
-      <Analytics />
+    // next-themes sets the theme class on <html> before hydration.
+    <html lang="fr" suppressHydrationWarning>
       <body className={cn(inter.className, "overflow-y-hidden")}>
-        <Toaster position="top-right" richColors />
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );

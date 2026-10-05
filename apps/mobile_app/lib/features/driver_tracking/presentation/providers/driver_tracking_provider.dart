@@ -542,9 +542,16 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
               enableWakeLock: true,
             ),
           )
-        : const LocationSettings(
+        // iOS only keeps delivering positions to a backgrounded app when the
+        // location manager is told so explicitly; plain LocationSettings
+        // stopped the stream as soon as the screen went off (#360).
+        : AppleSettings(
             accuracy: LocationAccuracy.high,
             distanceFilter: 10,
+            allowBackgroundLocationUpdates: true,
+            showBackgroundLocationIndicator: true,
+            pauseLocationUpdatesAutomatically: false,
+            activityType: ActivityType.automotiveNavigation,
           );
 
     _positionSubscription = Geolocator.getPositionStream(

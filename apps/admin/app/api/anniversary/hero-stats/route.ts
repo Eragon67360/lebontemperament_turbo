@@ -1,3 +1,8 @@
+import {
+  heroStatPatchSchema,
+  parsePatchBody,
+  readJson,
+} from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -80,15 +85,16 @@ export async function PATCH(request: Request) {
   const supabase = await createClient();
 
   try {
-    const body = await request.json();
-    const { id, ...updateData } = body;
-
-    if (!id) {
+    // Only the columns the dialog, the visibility toggle and the reorder
+    // send; anything else is refused (#471).
+    const parsed = parsePatchBody(heroStatPatchSchema, await readJson(request));
+    if (!parsed.ok) {
       return NextResponse.json(
-        { error: "Missing hero stat ID" },
-        { status: 400 },
+        { error: parsed.error },
+        { status: parsed.status },
       );
     }
+    const { id, ...updateData } = parsed.data;
 
     const { data, error } = await supabase
       .from("anniversary_hero_stats")

@@ -8,7 +8,7 @@ interface Activity {
   title: string;
   description: string;
   created_at: string;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   profiles: {
     email: string;
     display_name: string | null;

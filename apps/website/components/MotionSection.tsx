@@ -1,6 +1,6 @@
 "use client";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 
 interface MotionSectionProps {
   children: React.ReactNode;
@@ -34,7 +34,7 @@ const MotionSection: React.FC<MotionSectionProps> = ({
   };
 
   return (
-    <motion.section
+    <m.section
       className={className}
       data-testid={dataTestId}
       variants={variants}
@@ -43,7 +43,7 @@ const MotionSection: React.FC<MotionSectionProps> = ({
       viewport={{ once: true, margin: "-100px" }}
     >
       {children}
-    </motion.section>
+    </m.section>
   );
 };
 

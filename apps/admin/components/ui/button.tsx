@@ -4,27 +4,36 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * One filled teal button per screen (`default`); everything else is outlined
+ * or text. Destructive actions are `destructive-outline` on the page and
+ * `destructive` (filled) only as the confirm button of a dialog. Heights
+ * follow the density variables: 44 px comfortable, 40 px compact.
+ * Focus comes from the global `:focus-visible` ring.
+ */
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md border border-transparent text-[15px] leading-5 font-medium transition-[color,background-color,border-color,box-shadow] motion-reduce:transition-none disabled:pointer-events-none disabled:opacity-55 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30",
+          "bg-primary-strong text-primary-foreground hover:bg-primary-strong-hover",
         destructive:
-          "bg-destructive text-white shadow-sm hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "bg-destructive text-destructive-foreground hover:bg-destructive-hover",
+        "destructive-outline":
+          "border-danger bg-card text-danger-foreground hover:bg-danger-soft",
+        outline: "border-input bg-card text-foreground hover:bg-accent",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent/80 hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground hover:bg-border-strong/40",
+        ghost: "text-foreground hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary-text underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-5 py-2",
-        sm: "h-9 rounded-lg px-3 text-xs",
-        lg: "h-11 rounded-xl px-8",
-        icon: "h-10 w-10",
+        default: "h-(--control-h) px-4",
+        sm: "h-10 px-3 text-sm pointer-coarse:h-11",
+        lg: "h-12 px-6",
+        icon: "size-(--control-h)",
+        "icon-sm": "size-10",
       },
     },
     defaultVariants: {
@@ -36,7 +45,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-  VariantProps<typeof buttonVariants> {
+    VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

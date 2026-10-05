@@ -1,240 +1,162 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+  IconField,
+  SwitchField,
+  TextField,
+} from "@/components/anniversary/form-fields";
+import {
+  FormFeedback,
+  saveErrorMessage,
+} from "@/components/anniversary/FormFeedback";
+import { Form } from "@/components/ui/form";
+import { FormDialog } from "@/components/ui/form-dialog";
 import {
   useCreateHeroStat,
   useUpdateHeroStat,
 } from "@/hooks/useAnniversaryHeroStats";
-import type { AnniversaryHeroStat, IconName } from "@/types/anniversary";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
+import type { AnniversaryHeroStat } from "@/types/anniversary";
+import { DEFAULT_ICON, isIconName } from "@/utils/anniversary/icons";
+import {
+  heroStatFormSchema,
+  type HeroStatFormValues,
+} from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
-import { IconPicker } from "./IconPicker";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+const FORM_ID = "hero-stat-form";
+
+const LABELS = {
+  icon_name: { label: "Icône", id: "stat-icon" },
+  number: { label: "Chiffre", id: "stat-number" },
+  label: { label: "Libellé", id: "stat-label" },
+  is_visible: { label: "Visible sur le site", id: "stat-visible" },
+};
+
+const defaults = (stat?: AnniversaryHeroStat): HeroStatFormValues => ({
+  icon_name: isIconName(stat?.icon_name) ? stat.icon_name : DEFAULT_ICON,
+  number: stat?.number ?? "",
+  label: stat?.label ?? "",
+  is_visible: stat?.is_visible ?? true,
+});
 
 interface HeroStatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   stat?: AnniversaryHeroStat;
-  maxOrder: number;
+  /** The order a new figure takes: after the last one. */
+  nextOrder: number;
 }
 
 export function HeroStatDialog({
   open,
   onOpenChange,
   stat,
-  maxOrder,
+  nextOrder,
 }: HeroStatDialogProps) {
-  const createStat = useCreateHeroStat();
-  const updateStat = useUpdateHeroStat();
+  const create = useCreateHeroStat();
+  const update = useUpdateHeroStat();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<{
-    icon_name: IconName;
-    number: string;
-    label: string;
-    display_order: number;
-    is_visible: boolean;
-  }>({
-    icon_name: "FaMusic",
-    number: "",
-    label: "",
-    display_order: 0,
-    is_visible: true,
+  const form = useForm<HeroStatFormValues>({
+    resolver: zodResolver(heroStatFormSchema),
+    defaultValues: defaults(stat),
+    shouldFocusError: false,
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Populate form when editing or reset when creating
+  // A fresh open starts clean: the fields from the item, no stale error.
+  useResetOnChange([open], () => setSaveError(null));
   useEffect(() => {
-    if (stat) {
-      setFormData({
-        icon_name: stat.icon_name as IconName,
-        number: stat.number,
-        label: stat.label,
-        display_order: stat.display_order,
-        is_visible: stat.is_visible,
-      });
-    } else {
-      setFormData({
-        icon_name: "FaMusic",
-        number: "",
-        label: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-    setErrors({});
-  }, [stat, maxOrder, open]);
+    if (open) form.reset(defaults(stat));
+  }, [open, stat, form]);
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.icon_name) {
-      newErrors.icon_name = "L'icône est requise";
-    }
-    if (!formData.number.trim()) {
-      newErrors.number = "Le nombre est requis";
-    }
-    if (!formData.label.trim()) {
-      newErrors.label = "Le label est requis";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) return;
-
+  const onSubmit = async (values: HeroStatFormValues) => {
+    setSaveError(null);
     try {
       if (stat) {
-        await updateStat.mutateAsync({
-          id: stat.id,
-          ...formData,
-        });
+        await update.mutateAsync({ id: stat.id, ...values });
+        toast.success(`« ${values.number} ${values.label} » enregistré`);
       } else {
-        await createStat.mutateAsync(formData);
+        await create.mutateAsync({ ...values, display_order: nextOrder });
+        toast.success(`« ${values.number} ${values.label} » ajouté`);
       }
       onOpenChange(false);
     } catch (error) {
-      console.error("Error saving hero stat:", error);
+      // The failure used to reach the console only, with the dialog left
+      // open and silent: now it is said here and in a toast.
+      const message = saveErrorMessage(error);
+      setSaveError(message);
+      toast.error("L'enregistrement a échoué", { description: message });
     }
   };
 
-  const isLoading = createStat.isPending || updateStat.isPending;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {stat ? "Modifier" : "Ajouter"} une statistique
-          </DialogTitle>
-          <DialogDescription>
-            {stat
-              ? "Modifiez les informations de la statistique"
-              : "Ajoutez une nouvelle statistique pour la section héro"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Icon Picker */}
-          <div className="space-y-2">
-            <IconPicker
-              value={formData.icon_name as IconName}
-              onChange={(iconName) =>
-                setFormData({ ...formData, icon_name: iconName })
-              }
-              error={errors.icon_name}
-            />
-          </div>
-
-          {/* Number */}
-          <div className="space-y-2">
-            <Label htmlFor="number">
-              Nombre <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="number"
-              value={formData.number}
-              onChange={(e) =>
-                setFormData({ ...formData, number: e.target.value })
-              }
-              placeholder="Ex: 40, 200+, 500+"
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        stat
+          ? `Modifier « ${stat.number} ${stat.label} »`
+          : "Ajouter un chiffre clé"
+      }
+      description="Un chiffre et son libellé, affichés sous l'en-tête de la page des 40 ans."
+      formId={FORM_ID}
+      isDirty={form.formState.isDirty}
+      isPending={create.isPending || update.isPending}
+      submitLabel={stat ? "Enregistrer" : "Ajouter"}
+    >
+      <Form {...form}>
+        <form
+          id={FORM_ID}
+          onSubmit={form.handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-5"
+        >
+          <FormFeedback
+            errors={form.formState.errors}
+            labels={LABELS}
+            submitCount={form.formState.submitCount}
+            saveError={saveError}
+          />
+          <div className="grid gap-5 sm:grid-cols-2">
+            <TextField
+              control={form.control}
+              name="number"
+              id={LABELS.number.id}
+              label={LABELS.number.label}
+              required
+              placeholder="40"
               maxLength={20}
+              hint="Affiché en grand, par exemple « 40 » ou « 200+ »."
             />
-            {errors.number && (
-              <p className="text-destructive text-sm">{errors.number}</p>
-            )}
-            <p className="text-muted-foreground text-xs">
-              Valeur affichée sur la carte (max 20 caractères)
-            </p>
-          </div>
-
-          {/* Label */}
-          <div className="space-y-2">
-            <Label htmlFor="label">
-              Label <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="label"
-              value={formData.label}
-              onChange={(e) =>
-                setFormData({ ...formData, label: e.target.value })
-              }
-              placeholder="Ex: Années, Concerts, Membres, CDs"
+            <TextField
+              control={form.control}
+              name="label"
+              id={LABELS.label.id}
+              label={LABELS.label.label}
+              required
+              placeholder="ans"
               maxLength={100}
-            />
-            {errors.label && (
-              <p className="text-destructive text-sm">{errors.label}</p>
-            )}
-            <p className="text-muted-foreground text-xs">
-              Texte affiché sous le nombre (max 100 caractères)
-            </p>
-          </div>
-
-          {/* Display Order */}
-          <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
-            <Input
-              id="display_order"
-              type="number"
-              value={formData.display_order}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  display_order: parseInt(e.target.value) || 0,
-                })
-              }
-              min={0}
-            />
-            <p className="text-muted-foreground text-xs">
-              Les statistiques sont affichées par ordre croissant
-            </p>
-          </div>
-
-          {/* Visibility */}
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_visible">Visible sur le site</Label>
-              <p className="text-muted-foreground text-sm">
-                Afficher cette statistique sur la page anniversaire
-              </p>
-            </div>
-            <Switch
-              id="is_visible"
-              checked={formData.is_visible}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, is_visible: checked })
-              }
+              hint="Le mot sous le chiffre, par exemple « concerts »."
             />
           </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </DialogFooter>
+          <IconField
+            control={form.control}
+            name="icon_name"
+            id={LABELS.icon_name.id}
+          />
+          <SwitchField
+            control={form.control}
+            name="is_visible"
+            id={LABELS.is_visible.id}
+            label={LABELS.is_visible.label}
+            hint="Masqué, le chiffre reste ici sans apparaître sur la page."
+          />
         </form>
-      </DialogContent>
-    </Dialog>
+      </Form>
+    </FormDialog>
   );
 }

@@ -1,9 +1,59 @@
-import type { AnniversaryPageData, Archive } from "@/types/anniversary";
-import { createClient } from "@/utils/supabase/server";
+import {
+  ANNIVERSARY_ARCHIVE_COLUMNS,
+  ANNIVERSARY_AUDIO_MEMORY_COLUMNS,
+  ANNIVERSARY_FORM_CONFIG_COLUMNS,
+  ANNIVERSARY_HERO_COLUMNS,
+  ANNIVERSARY_HERO_STAT_COLUMNS,
+  ANNIVERSARY_NAVIGATION_CARD_COLUMNS,
+  ANNIVERSARY_PHOTO_COLUMNS,
+  ANNIVERSARY_TIMELINE_EVENT_COLUMNS,
+  ANNIVERSARY_VIDEO_COLUMNS,
+} from "@/lib/anniversaryColumns";
+import {
+  FEATURED_MEMORIES_LIMIT,
+  PUBLIC_MEMORY_SELECT,
+  toPublicMemory,
+} from "@/lib/anniversaryMemories";
+import { pickPosters, type ProgrammePoster } from "@/lib/anniversaryProgramme";
+import type { AnniversaryPageData, Archive, Memory } from "@/types/anniversary";
+import { createAdminClient } from "@/utils/supabase/admin";
+import { createPublicClient } from "@/utils/supabase/public";
 import type { Database } from "@repo/domain/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const ANNIVERSARY_FLAG_KEY = "anniversary_40_years";
+export { ANNIVERSARY_FLAG_KEY } from "@/lib/featureFlags";
+
+/**
+ * The featured memories shown on `/40-ans`, public columns only.
+ *
+ * Row-level security lets visitors insert memories but not read them (only
+ * admins may), so the anon key returns nothing here. The server reads the
+ * approved, featured rows with the service role instead, restricted to the
+ * public columns: the author's email never leaves the database this way.
+ * Server-only: never call this from a client component.
+ */
+export async function getFeaturedMemories(): Promise<Memory[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("anniversary_memories")
+      .select(PUBLIC_MEMORY_SELECT)
+      .eq("is_approved", true)
+      .eq("is_featured", true)
+      .order("created_at", { ascending: false })
+      .limit(FEATURED_MEMORIES_LIMIT);
+
+    if (error) {
+      console.error("Error fetching featured memories:", error);
+      return [];
+    }
+
+    return (data ?? []).map(toPublicMemory);
+  } catch (error) {
+    console.error("Error fetching featured memories:", error);
+    return [];
+  }
+}
 
 /**
  * Server-side read of the `anniversary_40_years` feature flag. Pass the
@@ -17,7 +67,7 @@ export async function isAnniversaryFeatureEnabled(
     const { data, error } = await supabase
       .from("feature_flags")
       .select("is_enabled")
-      .eq("flag_key", ANNIVERSARY_FLAG_KEY)
+      .eq("flag_key", "anniversary_40_years")
       .single();
 
     if (error) {
@@ -33,12 +83,12 @@ export async function isAnniversaryFeatureEnabled(
 }
 
 /**
- * Fetches all anniversary page data from the database
- * Used by Server Components with Next.js caching
+ * Fetches all anniversary page data from the database. Public rows only
+ * (anon key, no cookies), so the pages can be cached with `revalidate`.
  */
 export async function getAnniversaryPageData(): Promise<AnniversaryPageData | null> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     // Fetch all data in parallel for better performance
     const [
@@ -50,64 +100,64 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       audioMemoriesResult,
       photosResult,
       formConfigResult,
-      memoriesResult,
+      featuredMemories,
     ] = await Promise.all([
       // Hero (singleton)
-      supabase.from("anniversary_hero").select("*").single(),
+      supabase
+        .from("anniversary_hero")
+        .select(ANNIVERSARY_HERO_COLUMNS)
+        .single(),
 
       // Hero Stats (visible only, ordered)
       supabase
         .from("anniversary_hero_stats")
-        .select("*")
+        .select(ANNIVERSARY_HERO_STAT_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Navigation Cards (visible only, ordered)
       supabase
         .from("anniversary_navigation_cards")
-        .select("*")
+        .select(ANNIVERSARY_NAVIGATION_CARD_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Timeline Events (visible only, ordered)
       supabase
         .from("anniversary_timeline_events")
-        .select("*")
+        .select(ANNIVERSARY_TIMELINE_EVENT_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Videos (visible only, ordered)
       supabase
         .from("anniversary_videos")
-        .select("*")
+        .select(ANNIVERSARY_VIDEO_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Audio Memories (visible only, ordered)
       supabase
         .from("anniversary_audio_memories")
-        .select("*")
+        .select(ANNIVERSARY_AUDIO_MEMORY_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Photos (visible only, ordered)
       supabase
         .from("anniversary_photos")
-        .select("*")
+        .select(ANNIVERSARY_PHOTO_COLUMNS)
         .eq("is_visible", true)
         .order("display_order", { ascending: true }),
 
       // Form Config (singleton)
-      supabase.from("anniversary_form_config").select("*").single(),
-
-      // Featured Memories (approved + featured only, ordered by creation date)
       supabase
-        .from("anniversary_memories")
-        .select("id, name, email, message, year, is_featured, created_at")
-        .eq("is_approved", true)
-        .eq("is_featured", true)
-        .order("created_at", { ascending: false })
-        .limit(10), // Limit to 10 featured memories
+        .from("anniversary_form_config")
+        .select(ANNIVERSARY_FORM_CONFIG_COLUMNS)
+        .single(),
+
+      // Featured memories: public columns through the service role (see above)
+      getFeaturedMemories(),
     ]);
 
     // Check for critical errors (hero and form config are required)
@@ -143,8 +193,6 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       );
     if (photosResult.error)
       console.error("Error fetching photos:", photosResult.error);
-    if (memoriesResult.error)
-      console.error("Error fetching memories:", memoriesResult.error);
 
     // Construct response with fallbacks for optional data
     return {
@@ -156,8 +204,7 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
       audioMemories: audioMemoriesResult.data || [],
       photos: photosResult.data || [],
       formConfig: formConfigResult.data as AnniversaryPageData["formConfig"], // view-model: CMS enforces non-null form labels
-      featuredMemories: (memoriesResult.data ||
-        []) as AnniversaryPageData["featuredMemories"], // view-model: featured filter guarantees non-null flags
+      featuredMemories,
     };
   } catch (error) {
     console.error("Error fetching anniversary data:", error);
@@ -166,16 +213,15 @@ export async function getAnniversaryPageData(): Promise<AnniversaryPageData | nu
 }
 
 /**
- * Fetches all visible archives from the database
- * Used by Server Components with Next.js caching
+ * Fetches all visible archives from the database (anon key, no cookies).
  */
 export async function getArchives(): Promise<Archive[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const { data, error } = await supabase
       .from("anniversary_archives")
-      .select("*")
+      .select(ANNIVERSARY_ARCHIVE_COLUMNS)
       .eq("is_visible", true)
       .order("year", { ascending: false })
       .order("created_at", { ascending: false });
@@ -200,6 +246,35 @@ export async function getArchives(): Promise<Archive[]> {
     );
   } catch (error) {
     console.error("Error fetching archives:", error);
+    return [];
+  }
+}
+
+/** How many concert posters the archive stack of `/40-ans` fans out. */
+const PROGRAMME_POSTER_COUNT = 5;
+
+/**
+ * Recent concert posters for the archive stack of `/40-ans`: the same public
+ * rows as the agenda (anon key, no cookies), one per programme.
+ */
+export async function getProgrammePosters(): Promise<ProgrammePoster[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("concerts")
+      .select("id, name, date, affiche")
+      .not("affiche", "is", null)
+      .order("date", { ascending: false })
+      .limit(60);
+
+    if (error) {
+      console.error("Error fetching concert posters:", error);
+      return [];
+    }
+
+    return pickPosters(data ?? [], PROGRAMME_POSTER_COUNT);
+  } catch (error) {
+    console.error("Error fetching concert posters:", error);
     return [];
   }
 }

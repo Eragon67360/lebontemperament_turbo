@@ -1,41 +1,53 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/event.dart';
+import '../models/list_result.dart';
 import 'storage_service.dart';
 
 class EventsService {
-  final SupabaseClient _supabase = Supabase.instance.client;
   final StorageService _storageService;
-  final Logger _logger = Logger();
+  final Future<List<Map<String, dynamic>>> Function() _fetchRows;
+  final Logger _logger;
 
-  EventsService({StorageService? storageService})
-    : _storageService = storageService ?? StorageService(logger: Logger());
+  /// [fetchRows] replaces the Supabase query in tests.
+  EventsService({
+    StorageService? storageService,
+    Future<List<Map<String, dynamic>>> Function()? fetchRows,
+    Logger? logger,
+  }) : _storageService = storageService ?? StorageService(logger: Logger()),
+       _fetchRows = fetchRows ?? _fetchFromSupabase,
+       _logger = logger ?? Logger();
 
-  Future<List<Event>> getEvents() async {
+  static SupabaseClient get _supabase => Supabase.instance.client;
+
+  static Future<List<Map<String, dynamic>>> _fetchFromSupabase() {
+    return _supabase
+        .from('events')
+        .select()
+        .order('date_from', ascending: true);
+  }
+
+  /// Every event, fresh from the server or, when it cannot be reached, from
+  /// the local cache (the result says which). Never throws.
+  Future<ListResult<Event>> getEvents() async {
     try {
-      final response = await _supabase
-          .from('events')
-          .select()
-          .order('date_from', ascending: true);
-
+      final response = await _fetchRows();
       final events = response
           .map<Event>((json) => Event.fromJson(json))
           .toList();
 
-      // Save to local storage for caching
       await _storageService.saveEvents(events);
       _logger.i('Saved ${events.length} events to local storage');
 
-      return events;
+      return ListResult.fresh(events);
     } catch (e) {
       _logger.w('Failed to fetch events from server: $e');
-      _logger.i('Attempting to load events from local storage...');
 
-      // Fallback to local storage
       final cachedEvents = _storageService.getEvents();
       _logger.i('Loaded ${cachedEvents.length} events from local storage');
 
-      return cachedEvents;
+      return ListResult.cached(cachedEvents, error: e);
     }
   }
 
@@ -67,40 +79,6 @@ class EventsService {
       _logger.i('Loaded event from local storage: ${cachedEvent?.title}');
 
       return cachedEvent;
-    }
-  }
-
-  Future<List<Event>> getPublicEvents() async {
-    try {
-      final response = await _supabase
-          .from('events')
-          .select()
-          .eq('is_public', true)
-          .order('date_from', ascending: true);
-
-      final events = response
-          .map<Event>((json) => Event.fromJson(json))
-          .toList();
-
-      // Save to local storage for caching
-      await _storageService.saveEvents(events);
-      _logger.i('Saved ${events.length} public events to local storage');
-
-      return events;
-    } catch (e) {
-      _logger.w('Failed to fetch public events from server: $e');
-      _logger.i('Attempting to load public events from local storage...');
-
-      // Fallback to local storage - filter for public events
-      final cachedEvents = _storageService.getEvents();
-      final publicEvents = cachedEvents
-          .where((event) => event.isPublic == true)
-          .toList();
-      _logger.i(
-        'Loaded ${publicEvents.length} public events from local storage',
-      );
-
-      return publicEvents;
     }
   }
 }

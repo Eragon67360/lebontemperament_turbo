@@ -1,77 +1,97 @@
 "use client";
 
+import { AnniversaryIcon } from "@/components/anniversary/AnniversaryIcon";
 import { cn } from "@/lib/utils";
-import { ICON_OPTIONS, IconName } from "@/types/anniversary";
-import {
-  FaCalendarAlt,
-  FaHeadphones,
-  FaHeart,
-  FaHistory,
-  FaImages,
-  FaMusic,
-  FaTrophy,
-  FaUsers,
-  FaVideo,
-} from "react-icons/fa";
-
-const iconMap = {
-  FaMusic: FaMusic,
-  FaTrophy: FaTrophy,
-  FaUsers: FaUsers,
-  FaCalendarAlt: FaCalendarAlt,
-  FaHistory: FaHistory,
-  FaVideo: FaVideo,
-  FaHeadphones: FaHeadphones,
-  FaImages: FaImages,
-  FaHeart: FaHeart,
-};
+import { ICON_OPTIONS, type IconName } from "@/types/anniversary";
+import { ICON_LABELS } from "@/utils/anniversary/icons";
+import { Check } from "lucide-react";
+import * as React from "react";
 
 interface IconPickerProps {
-  value: IconName;
+  id: string;
+  value: IconName | "";
   onChange: (icon: IconName) => void;
-  label?: string;
-  error?: string;
+  /** Id of the label element naming the group. */
+  "aria-labelledby": string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
+  disabled?: boolean;
 }
 
+/**
+ * A radio group of the nine icons with their human names (« Calendrier »,
+ * « Musique »…): arrow keys move, Space selects, one tab stop.
+ */
 export function IconPicker({
+  id,
   value,
   onChange,
-  label = "Icône",
-  error,
+  disabled,
+  ...aria
 }: IconPickerProps) {
-  return (
-    <div className="space-y-2">
-      {label && (
-        <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          {label}
-        </label>
-      )}
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-        {ICON_OPTIONS.map((iconName) => {
-          const IconComponent = iconMap[iconName];
-          const isSelected = value === iconName;
+  const buttons = React.useRef<Map<IconName, HTMLButtonElement>>(new Map());
+  const current = value || ICON_OPTIONS[0];
 
-          return (
-            <button
-              key={iconName}
-              type="button"
-              onClick={() => onChange(iconName)}
-              className={cn(
-                "hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-all",
-                isSelected
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-background",
-              )}
-            >
-              <IconComponent className="h-6 w-6" />
-              <span className="text-[10px] font-medium">
-                {iconName.replace("Fa", "")}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      {error && <p className="text-destructive text-sm">{error}</p>}
+  const focusAndSelect = (index: number) => {
+    const next =
+      ICON_OPTIONS[(index + ICON_OPTIONS.length) % ICON_OPTIONS.length]!;
+    onChange(next);
+    buttons.current.get(next)?.focus();
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent, index: number) => {
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      event.preventDefault();
+      focusAndSelect(index + 1);
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      event.preventDefault();
+      focusAndSelect(index - 1);
+    }
+  };
+
+  return (
+    <div
+      id={id}
+      role="radiogroup"
+      tabIndex={-1}
+      className="grid grid-cols-3 gap-2 rounded-md sm:grid-cols-5"
+      {...aria}
+    >
+      {ICON_OPTIONS.map((iconName, index) => {
+        const selected = value === iconName;
+        return (
+          <button
+            key={iconName}
+            ref={(node) => {
+              if (node) buttons.current.set(iconName, node);
+              else buttons.current.delete(iconName);
+            }}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            tabIndex={current === iconName ? 0 : -1}
+            disabled={disabled}
+            onClick={() => onChange(iconName)}
+            onKeyDown={(event) => onKeyDown(event, index)}
+            className={cn(
+              "text-note bg-card text-foreground hover:bg-accent relative flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2.5 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:transition-none",
+              selected
+                ? "border-primary-soft-border bg-primary-soft text-primary-text hover:bg-primary-soft"
+                : "border-input",
+            )}
+          >
+            {selected && (
+              <Check
+                className="absolute top-1.5 right-1.5 size-3.5"
+                strokeWidth={3}
+                aria-hidden
+              />
+            )}
+            <AnniversaryIcon name={iconName} className="size-5" />
+            <span>{ICON_LABELS[iconName]}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

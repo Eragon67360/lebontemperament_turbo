@@ -29,7 +29,7 @@ const STATIC_ROUTES: StaticRoute[] = [
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/rejoindre", changeFrequency: "monthly", priority: 0.8 },
   { path: "/don", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/impressum", changeFrequency: "yearly", priority: 0.3 },
+  { path: "/mentions-legales", changeFrequency: "yearly", priority: 0.3 },
   {
     path: "/politique-de-confidentialite",
     changeFrequency: "yearly",
@@ -50,14 +50,26 @@ const toEntry = (route: StaticRoute): MetadataRoute.Sitemap[number] => ({
 });
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Use admin client for sitemap generation (no cookies needed)
-  const supabase = createAdminClient();
-
   const staticRoutes = STATIC_ROUTES.map(toEntry);
 
+  // The sitemap is prerendered at build time: when the database isn't
+  // reachable (CI builds use placeholder credentials), serve the static pages
+  // and let revalidation fill in the rest at runtime.
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch (error) {
+    console.error("Sitemap: database client unavailable:", error);
+    return staticRoutes;
+  }
+
   let anniversaryRoutes: MetadataRoute.Sitemap = [];
-  if (await isAnniversaryFeatureEnabled(supabase)) {
-    anniversaryRoutes = ANNIVERSARY_ROUTES.map(toEntry);
+  try {
+    if (await isAnniversaryFeatureEnabled(supabase)) {
+      anniversaryRoutes = ANNIVERSARY_ROUTES.map(toEntry);
+    }
+  } catch (error) {
+    console.error("Sitemap: anniversary flag unavailable:", error);
   }
 
   // Fetch legacy project records used as editorial concert-story pages.

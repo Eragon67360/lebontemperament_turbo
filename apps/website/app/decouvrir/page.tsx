@@ -74,7 +74,7 @@ const Decouvrir = () => {
       ))}
       <div className="px-8 py-4 md:py-8 lg:py-16">
         <h1>
-          <span className="text-title text-primary/50 dark:text-primary block leading-none font-light">
+          <span className="text-title text-primary-400 dark:text-primary block leading-none font-light">
             Nous
           </span>
           <span className="text-title text-foreground block leading-none font-bold">

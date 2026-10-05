@@ -1,16 +1,18 @@
 "use client";
 
+import type { PublicVideo } from "@/lib/publicVideos";
 import { Button } from "@heroui/react";
-import { Video } from "@repo/domain/types/videos";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { IoClose, IoPlay } from "react-icons/io5";
+import VideoFacade from "./VideoFacade";
+import { youTubeEmbedUrl } from "./YouTubeVideo";
 
 const FeaturedVideosBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videos, setVideos] = useState<PublicVideo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -70,7 +72,7 @@ const FeaturedVideosBubble = () => {
     <div className="pointer-events-auto relative flex flex-col items-end">
       <AnimatePresence mode="wait">
         {isOpen ? (
-          <motion.div
+          <m.div
             ref={popoverRef}
             key="content"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -96,15 +98,13 @@ const FeaturedVideosBubble = () => {
             </div>
 
             {/* Video Player */}
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-inner">
-              <iframe
-                src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1`}
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={currentVideo.title}
-              />
-            </div>
+            <VideoFacade
+              key={videoId}
+              embedUrl={youTubeEmbedUrl(videoId)}
+              provider="YouTube"
+              title={currentVideo.title}
+              className="aspect-video w-full rounded-xl shadow-inner"
+            />
 
             {/* Video Info */}
             <div className="mt-4">
@@ -144,11 +144,10 @@ const FeaturedVideosBubble = () => {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.button
+          <m.button
             key="button"
-            layoutId="bubble"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
@@ -157,7 +156,7 @@ const FeaturedVideosBubble = () => {
             type="button"
             onClick={() => setIsOpen(true)}
             aria-label="Vidéos à la une"
-            className="group bg-primary hover:bg-primary/90 relative flex size-10 items-center justify-center rounded-full text-white shadow-lg transition-colors md:size-14"
+            className="group bg-primary-solid hover:bg-primary-solid-hover relative flex size-10 items-center justify-center rounded-full text-white shadow-lg transition-colors md:size-14"
           >
             <span
               aria-hidden="true"
@@ -175,7 +174,7 @@ const FeaturedVideosBubble = () => {
             >
               Vidéos à la une
             </div>
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
     </div>

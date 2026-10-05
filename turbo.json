@@ -19,6 +19,9 @@
         "GOOGLE_REFRESH_TOKEN",
         "GOOGLE_GROUP_EMAIL",
         "GOOGLE_GROUP_ID",
+        "GOOGLE_SERVICE_ACCOUNT_JSON",
+        "ROSTER_SHEET_ID",
+        "ROSTER_SHEET_RANGE",
         "NEXT_PUBLIC_BASE_URL",
         "NEXT_PUBLIC_GOOGLE_CALENDAR_API_KEY",
         "NEXT_PUBLIC_GOOGLE_CALENDAR_ID",
@@ -33,10 +36,10 @@
         "CLOUDINARY_API_SECRET",
         "ANALYZE",
         "NEXT_PUBLIC_SITE_URL",
-        "RECAPTCHA_SECRET_KEY",
         "GOOGLE_APPS_SCRIPT_URL",
         "ADMIN_EMAIL",
-        "INDEXNOW_SUBMIT_SECRET"
+        "INDEXNOW_SUBMIT_SECRET",
+        "REVALIDATE_SECRET"
       ],
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],

@@ -1,353 +1,155 @@
 "use client";
 
+import { CampaignList } from "@/components/anniversary/CampaignList";
+import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
 import { PageShell } from "@/components/layouts/PageShell";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
-  CardGridSkeleton,
   DataState,
   EmptyState,
+  ListSkeleton,
 } from "@/components/ui/data-state";
+import { VideoDialog } from "@/components/videos/VideoDialog";
+import { VideoRow } from "@/components/videos/VideoRow";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { VideoForm } from "@/components/VideoForm";
-import { YoutubeIframe } from "@/components/YoutubeIframe";
-import { Video, VideoFormData } from "@repo/domain/types/videos";
-import { extractYouTubeId } from "@repo/domain/utils/youtube";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Film, MapPin, Mic2, Pencil, Plus, Trash2, User } from "lucide-react";
-import { useEffect, useState } from "react";
+  useCreateVideo,
+  useDeleteVideo,
+  useUpdateVideo,
+  useVideos,
+  VIDEOS_QUERY_KEY,
+} from "@/hooks/useVideos";
+import { nextOrder } from "@/utils/anniversary/reorder";
+import type { Video, VideoFormData } from "@repo/domain/types/videos";
+import { Film, Plus } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-// --- Sub-Component: Video Card ---
+const nameOf = (video: Video) => video.title;
 
-const VideoCard = ({
-  video,
-  onEdit,
-  onDelete,
-}: {
-  video: Video;
-  onEdit: (v: Video) => void;
-  onDelete: (id: string) => void;
-}) => {
-  const videoId = extractYouTubeId(video.youtube_url);
-  const dateObj = new Date(video.performance_date);
+/** The list with every order a number, as the reorder planner expects. */
+function withOrder(videos: readonly Video[]) {
+  return videos.map((video) => ({
+    ...video,
+    display_order: video.display_order ?? 0,
+  }));
+}
 
-  return (
-    <Card className="bg-card hover:border-primary/50 flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md motion-reduce:transition-none">
-      {/* Video Area */}
-      <div className="relative aspect-video w-full bg-black">
-        {videoId ? (
-          <YoutubeIframe videoId={videoId} title={video.title} />
-        ) : (
-          <div className="text-muted-foreground flex h-full w-full items-center justify-center">
-            <Film className="h-10 w-10 opacity-20" aria-hidden />
-            <span className="sr-only">Lien YouTube invalide</span>
-          </div>
-        )}
-      </div>
+export default function GalleryVideosPage() {
+  const { data: videos = [], isPending, isError, refetch } = useVideos();
+  const createVideo = useCreateVideo();
+  const updateVideo = useUpdateVideo();
+  const deleteVideo = useDeleteVideo();
 
-      <div className="flex flex-1 flex-col p-4 sm:p-5">
-        <div className="flex gap-3 sm:gap-4">
-          {/* Date Tile */}
-          <div className="bg-muted/30 hidden shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 text-center shadow-sm sm:flex">
-            <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-              {format(dateObj, "MMM", { locale: fr })}
-            </span>
-            <span className="text-foreground text-2xl leading-none font-black">
-              {format(dateObj, "dd")}
-            </span>
-            <span className="text-muted-foreground/80 text-[10px] font-medium">
-              {format(dateObj, "yyyy")}
-            </span>
-          </div>
+  const [dialog, setDialog] = useState<{ open: boolean; video?: Video }>({
+    open: false,
+  });
+  const [deleting, setDeleting] = useState<Video | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-          <div className="min-w-0 flex-1 space-y-1">
-            <h2 className="line-clamp-2 text-base leading-tight font-bold tracking-tight sm:text-lg">
-              {video.title}
-            </h2>
-            <p className="text-muted-foreground text-xs sm:hidden">
-              {format(dateObj, "d MMMM yyyy", { locale: fr })}
-            </p>
-            {video.composer && (
-              <Badge variant="secondary" className="max-w-full font-normal">
-                <User
-                  className="mr-1 h-3 w-3 shrink-0 opacity-50"
-                  aria-hidden
-                />
-                <span className="truncate">{video.composer}</span>
-              </Badge>
-            )}
-          </div>
-        </div>
+  const ordered = useMemo(() => withOrder(videos), [videos]);
 
-        <div className="text-muted-foreground mt-4 space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <MapPin className="text-primary/60 h-4 w-4 shrink-0" aria-hidden />
-            <span className="min-w-0 truncate">{video.venue}</span>
-          </div>
-          {video.soloists && video.soloists.length > 0 && (
-            <div className="flex items-start gap-2">
-              <Mic2
-                className="text-primary/60 mt-0.5 h-4 w-4 shrink-0"
-                aria-hidden
-              />
-              <span className="line-clamp-1 min-w-0 italic">
-                {video.soloists.join(", ")}
-              </span>
-            </div>
-          )}
-        </div>
+  const save = async (data: VideoFormData) => {
+    if (dialog.video) {
+      await updateVideo.mutateAsync({ id: dialog.video.id, ...data });
+      toast.success(`« ${data.title} » enregistrée`);
+    } else {
+      await createVideo.mutateAsync({
+        ...data,
+        display_order: nextOrder(ordered),
+      });
+      toast.success(`« ${data.title} » ajoutée à la galerie`);
+    }
+  };
 
-        {/* Footer Actions */}
-        <div className="mt-5 flex items-center justify-end gap-1 border-t pt-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:bg-primary/10 hover:text-primary size-11"
-            onClick={() => onEdit(video)}
-          >
-            <Pencil className="h-4 w-4" aria-hidden />
-            <span className="sr-only">Modifier « {video.title} »</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-11"
-            onClick={() => onDelete(video.id)}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden />
-            <span className="sr-only">Supprimer « {video.title} »</span>
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// --- Main Page Component ---
-
-export default function VideosPage() {
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  // Dialog States
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [videoToDelete, setVideoToDelete] = useState<string | null>(null);
-  const [editingVideo, setEditingVideo] = useState<Video | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-
-  const fetchVideos = async () => {
-    setLoading(true);
-    setError(false);
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setIsDeleting(true);
     try {
-      const response = await fetch("/api/videos");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setVideos(data);
-    } catch (err) {
-      console.error(err);
-      setError(true);
+      await deleteVideo.mutateAsync(deleting.id);
+      toast.success(`« ${deleting.title} » supprimée`);
+      setDeleting(null);
+    } catch (error) {
+      toast.error("La suppression a échoué", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     } finally {
-      setLoading(false);
+      setIsDeleting(false);
     }
   };
 
-  useEffect(() => {
-    fetchVideos();
-  }, []);
-
-  const handleCreate = async (formData: VideoFormData) => {
-    try {
-      const response = await fetch("/api/videos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error("Error adding video");
-
-      toast.success("Vidéo ajoutée avec succès");
-      setOpen(false);
-      fetchVideos();
-    } catch (error) {
-      toast.error("Erreur lors de l'ajout de la vidéo");
-      console.error(error);
-    }
-  };
-
-  const handleEdit = async (formData: VideoFormData) => {
-    if (!editingVideo) return;
-
-    try {
-      const response = await fetch("/api/videos", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editingVideo.id,
-          ...formData,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Error updating video");
-
-      toast.success("Vidéo modifiée avec succès");
-      setEditDialogOpen(false);
-      setEditingVideo(null);
-      fetchVideos();
-    } catch (error) {
-      toast.error("Erreur lors de la modification");
-      console.error(error);
-    }
-  };
-
-  const handleDeleteClick = (id: string) => {
-    setVideoToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!videoToDelete) return;
-
-    try {
-      const response = await fetch("/api/videos", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: videoToDelete }),
-      });
-
-      if (!response.ok) throw new Error("Error deleting video");
-
-      toast.success("Vidéo supprimée");
-      fetchVideos();
-    } catch (error) {
-      toast.error("Impossible de supprimer la vidéo");
-      console.error(error);
-    } finally {
-      setDeleteDialogOpen(false);
-      setVideoToDelete(null);
-    }
-  };
+  const openCreate = () => setDialog({ open: true });
 
   return (
     <PageShell
-      theme="public"
-      title="Vidéos"
-      description="Gérez votre vidéothèque YouTube et les performances passées."
       className="py-4 sm:py-6"
+      title="Vidéos"
+      description="Les vidéos YouTube de la galerie du site public, dans l'ordre où elle les montre."
       headerAction={
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="min-h-11 w-full sm:w-auto">
-              <Plus className="h-4 w-4" aria-hidden />
-              Ajouter une vidéo
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Ajouter une vidéo</DialogTitle>
-              <DialogDescription>
-                Copiez l'URL ou l'ID de la vidéo YouTube.
-              </DialogDescription>
-            </DialogHeader>
-            <VideoForm onSubmit={handleCreate} />
-          </DialogContent>
-        </Dialog>
+        <Button onClick={openCreate}>
+          <Plus aria-hidden />
+          Ajouter une vidéo
+        </Button>
       }
     >
       <DataState
-        isLoading={loading}
-        isError={error}
+        isLoading={isPending}
+        isError={isError}
         isEmpty={videos.length === 0}
-        onRetry={fetchVideos}
+        onRetry={() => refetch()}
         errorDescription="Les vidéos n'ont pas pu être chargées."
-        skeleton={<CardGridSkeleton cards={6} label="Chargement des vidéos…" />}
+        skeleton={<ListSkeleton rows={4} label="Chargement des vidéos…" />}
         empty={
           <EmptyState
             icon={Film}
             title="Aucune vidéo"
-            description="Votre vidéothèque est vide. Ajoutez des liens YouTube pour enrichir votre galerie."
+            description="Une vidéo, c'est un lien YouTube, un titre, un compositeur et le concert d'où elle vient. Les visiteurs la regardent sur le site."
             action={
-              <Button
-                onClick={() => setOpen(true)}
-                className="min-h-11 w-full sm:w-auto"
-              >
-                <Plus className="h-4 w-4" aria-hidden />
-                Ajouter une vidéo
+              <Button variant="outline" onClick={openCreate}>
+                <Plus aria-hidden />
+                Ajouter la première vidéo
               </Button>
             }
           />
         }
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {videos.map((video) => (
-            <VideoCard
-              key={video.id}
+        <p className="text-note text-muted-foreground mb-3">
+          {videos.length} vidéo{videos.length > 1 ? "s" : ""}
+        </p>
+        <CampaignList
+          items={ordered}
+          endpoint="/api/videos"
+          queryKey={VIDEOS_QUERY_KEY}
+          nameOf={nameOf}
+          renderItem={(video, reorder) => (
+            <VideoRow
               video={video}
-              onEdit={(v) => {
-                setEditingVideo(v);
-                setEditDialogOpen(true);
-              }}
-              onDelete={handleDeleteClick}
+              reorder={reorder}
+              busy={false}
+              onEdit={() => setDialog({ open: true, video })}
+              onDelete={() => setDeleting(video)}
             />
-          ))}
-        </div>
+          )}
+        />
       </DataState>
 
-      {/* Delete Alert */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette vidéo ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. La vidéo sera retirée de votre
-              galerie.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90 min-h-11 text-white"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <VideoDialog
+        open={dialog.open}
+        onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
+        video={dialog.video}
+        onSubmit={save}
+        isPending={createVideo.isPending || updateVideo.isPending}
+      />
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Modifier la vidéo</DialogTitle>
-            <DialogDescription>
-              Mettez à jour les informations ci-dessous.
-            </DialogDescription>
-          </DialogHeader>
-          <VideoForm onSubmit={handleEdit} initialData={editingVideo} />
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleting(null);
+        }}
+        onConfirm={confirmDelete}
+        title={`Supprimer « ${deleting?.title ?? ""} » ?`}
+        description="La vidéo disparaît de la galerie du site public ; elle reste sur YouTube. Cette action ne peut pas être annulée."
+        isLoading={isDeleting}
+      />
     </PageShell>
   );
 }

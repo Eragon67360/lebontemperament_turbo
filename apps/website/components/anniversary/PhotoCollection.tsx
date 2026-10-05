@@ -6,8 +6,10 @@ import type { Photo } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
 import { AnimatePresence, motion, useInView } from "motion/react";
 import { useRef, useState } from "react";
-import { FaImages, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import AnniversaryCTA from "./AnniversaryCTA";
+import ProgrammeHeading from "./programme/ProgrammeHeading";
+import { PROGRAMME_PARTS } from "./programme/sections";
 
 interface PhotoCollectionProps {
   photos: Photo[];
@@ -34,37 +36,21 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
     <section
       id="photos"
       ref={sectionRef}
-      className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+      className="relative scroll-mt-20 overflow-hidden py-16 sm:py-24"
     >
-      <div className="absolute inset-0 z-0">
-        <div className="bg-primary/5 absolute top-1/4 right-0 h-112 w-md rounded-full blur-[100px]" />
-        <div className="bg-primary/5 absolute bottom-1/4 left-0 h-75 w-75 rounded-full blur-[80px]" />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
-            <FaImages className="text-3xl sm:text-4xl" />
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
-            Galerie Photo
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
-            Explorez 40 ans de souvenirs visuels et de moments capturés du Bon
-            Tempérament.
-          </p>
-        </motion.div>
+      <div className="relative z-10 mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8">
+        <ProgrammeHeading
+          part={PROGRAMME_PARTS.photos!.part}
+          title="Galerie photo"
+          intro="Explorez 40 ans de souvenirs visuels et de moments capturés du Bon Tempérament."
+          className="mb-12"
+        />
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full bg-slate-200/50 p-1 dark:bg-slate-800/50"
+          className="bg-surface-secondary/60 mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full p-1"
         >
           {categories.map((category) => (
             <button
@@ -73,13 +59,13 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
               className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${
                 selectedCategory === category
                   ? "text-white"
-                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  : "text-muted hover:text-foreground"
               }`}
             >
               {selectedCategory === category && (
                 <motion.div
                   layoutId="photo-category-pill"
-                  className="bg-primary absolute inset-0 -z-10 rounded-full"
+                  className="bg-primary-600 dark:bg-primary-700 absolute inset-0 -z-10 rounded-full"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
@@ -99,7 +85,7 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="group focus-visible:outline-primary relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-slate-800/50 dark:bg-slate-900/30"
+                className="group focus-visible:outline-primary border-separator bg-surface-secondary/30 relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border backdrop-blur-md transition-shadow duration-300 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2"
                 onClick={() => setSelectedPhoto(photo)}
                 role="button"
                 tabIndex={0}

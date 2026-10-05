@@ -1,7 +1,7 @@
 "use client";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { RoundedSize } from "@/utils/types";
-import { motion, useScroll, useTransform } from "motion/react";
+import { m, useScroll, useTransform } from "motion/react";
 import { useEffect, useState } from "react";
 import CloudinaryImage from "./CloudinaryImage";
 
@@ -91,7 +91,7 @@ const Hero: React.FC<HeroProps> = ({
   };
 
   return (
-    <motion.section
+    <m.section
       className="fixed top-0 left-0 z-0 flex h-screen w-full items-center justify-center overflow-hidden"
       data-testid={dataTestId}
       variants={containerVariants}
@@ -100,7 +100,7 @@ const Hero: React.FC<HeroProps> = ({
       aria-labelledby="hero-title"
     >
       {bannerSrc ? (
-        <motion.div
+        <m.div
           className="absolute inset-0 z-0"
           variants={imageVariants}
           style={{
@@ -118,7 +118,7 @@ const Hero: React.FC<HeroProps> = ({
             sizes="100vw"
           />
           <div className="absolute inset-0 bg-black/75" aria-hidden="true" />
-        </motion.div>
+        </m.div>
       ) : (
         <div
           className="absolute inset-0 z-0"
@@ -131,7 +131,7 @@ const Hero: React.FC<HeroProps> = ({
 
       {/* Content */}
       <div className="relative z-0 container mx-auto px-4 text-center">
-        <motion.div
+        <m.div
           className="mx-auto max-w-4xl"
           style={{
             scale,
@@ -147,26 +147,26 @@ const Hero: React.FC<HeroProps> = ({
               {title}
             </span>
             {subtitle && (
-              <motion.span
+              <m.span
                 className="text-title mb-6 block leading-none font-bold text-white drop-shadow-lg"
                 variants={textVariants}
               >
                 {subtitle}
-              </motion.span>
+              </m.span>
             )}
           </h1>
           {description && (
-            <motion.p
+            <m.p
               className="mx-auto max-w-2xl text-lg leading-relaxed text-white/90 drop-shadow-md md:text-xl"
               variants={textVariants}
               dangerouslySetInnerHTML={{ __html: description as string }}
-            ></motion.p>
+            ></m.p>
           )}
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Decorative elements for visual interest */}
-      <motion.div
+      <m.div
         className="absolute right-0 bottom-0 left-0 h-16 bg-gradient-to-t from-black/20 to-transparent"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -181,7 +181,7 @@ const Hero: React.FC<HeroProps> = ({
         onClick={handleScroll}
         aria-label="Défiler vers le contenu"
       >
-        <motion.div
+        <m.div
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
           animate={prefersReducedMotion ? { y: 0 } : { y: [0, 10, 0] }}
           transition={{
@@ -205,9 +205,9 @@ const Hero: React.FC<HeroProps> = ({
               d="M19 9l-7 7-7-7"
             />
           </svg>
-        </motion.div>
+        </m.div>
       </button>
-    </motion.section>
+    </m.section>
   );
 };
 

@@ -39,7 +39,7 @@ export default function AG2026Page() {
     <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
       <div className="mb-8">
         <h1>
-          <span className="text-primary/50 dark:text-primary text-title block leading-none font-light">
+          <span className="text-primary-400 dark:text-primary text-title block leading-none font-light">
             Assemblée
           </span>
           <span className="text-foreground text-title block leading-none font-bold">
@@ -75,7 +75,7 @@ export default function AG2026Page() {
             href={CONVOCATION_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-primary hover:bg-primary/90 inline-flex w-fit items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
+            className="bg-primary-solid hover:bg-primary-solid-hover inline-flex w-fit items-center gap-2 rounded-md px-6 py-3 text-white transition-colors"
             aria-label="Télécharger la convocation"
           >
             Télécharger la convocation
@@ -98,7 +98,7 @@ export default function AG2026Page() {
             href={PROCURATION_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="border-primary text-primary hover:bg-primary/10 inline-flex w-fit items-center gap-2 rounded-md border px-6 py-3 transition-colors"
+            className="border-primary text-primary-text hover:bg-primary/10 inline-flex w-fit items-center gap-2 rounded-md border px-6 py-3 transition-colors"
             aria-label="Télécharger le formulaire de procuration"
           >
             Télécharger le formulaire de procuration
@@ -184,7 +184,7 @@ export default function AG2026Page() {
       <div className="mt-12">
         <Link
           href="/"
-          className="border-primary text-primary hover:bg-primary/10 inline-flex w-fit items-center gap-2 rounded-md border px-6 py-3 transition-colors"
+          className="border-primary text-primary-text hover:bg-primary/10 inline-flex w-fit items-center gap-2 rounded-md border px-6 py-3 transition-colors"
           aria-label="Retour à l'accueil"
         >
           <svg

@@ -43,7 +43,10 @@ export default function Preview() {
             Les données de ce CD n&apos;ont pas pu être trouvées, nous en sommes
             désolés
           </h2>
-          <Link href={"/concerts/autres"} className="bg-primary text-white">
+          <Link
+            href={"/concerts/autres"}
+            className="bg-primary-solid text-white"
+          >
             Voir tous les CDs
           </Link>
         </div>
@@ -115,7 +118,7 @@ export default function Preview() {
           </div>
           <Link
             href={cd.payment}
-            className="bg-primary hover:bg-primary/80 flex h-12 w-full items-center justify-between rounded font-bold text-white uppercase transition-all duration-200 hover:shadow-md"
+            className="bg-primary-solid hover:bg-primary-solid-hover flex h-12 w-full items-center justify-between rounded font-bold text-white uppercase transition-all duration-200 hover:shadow-md"
           >
             <p className="w-full text-center">Acheter ce CD</p>
           </Link>

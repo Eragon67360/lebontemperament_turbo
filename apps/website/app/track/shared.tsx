@@ -11,6 +11,8 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 
+import { useNow } from "@/hooks/useNow";
+
 // --- Data Interfaces (No changes here) ---
 export interface Delivery {
   id: string;
@@ -175,6 +177,8 @@ export function RecipientSinglePanel({
   status: "live" | "pending";
 }) {
   const isInProgress = delivery.current_recipient_id === recipient.id;
+  // Ticks every few seconds so the "in N minutes" label keeps counting down.
+  const now = useNow();
   const scheduledTime =
     recipient.scheduled_at != null
       ? calculateETA(recipient.scheduled_at, delivery.delay_minutes)
@@ -199,8 +203,7 @@ export function RecipientSinglePanel({
       return formatTime(scheduledTime);
     }
 
-    const remainingSeconds =
-      (etaForCurrentRecipient.getTime() - Date.now()) / 1000;
+    const remainingSeconds = (etaForCurrentRecipient.getTime() - now) / 1000;
     const remainingMinutes = Math.round(remainingSeconds / 60);
     const absoluteTime = formatTime(etaForCurrentRecipient);
 

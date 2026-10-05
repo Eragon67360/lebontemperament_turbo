@@ -1,232 +1,171 @@
 "use client";
 
-import { IconPicker } from "@/components/anniversary/IconPicker";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+  IconField,
+  SelectField,
+  SwitchField,
+  TextareaField,
+  TextField,
+} from "@/components/anniversary/form-fields";
+import {
+  FormFeedback,
+  saveErrorMessage,
+} from "@/components/anniversary/FormFeedback";
+import { Form } from "@/components/ui/form";
+import { FormDialog } from "@/components/ui/form-dialog";
 import {
   useCreateNavigationCard,
   useUpdateNavigationCard,
 } from "@/hooks/useAnniversaryNavigation";
-import { AnniversaryNavigationCard, IconName } from "@/types/anniversary";
-import { Loader2 } from "lucide-react";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
+import type { AnniversaryNavigationCard } from "@/types/anniversary";
+import { DEFAULT_ICON, isIconName } from "@/utils/anniversary/icons";
+import { PAGE_SECTIONS } from "@/utils/anniversary/sections";
+import {
+  navigationCardFormSchema,
+  type NavigationCardFormValues,
+} from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+const FORM_ID = "navigation-card-form";
+
+const LABELS = {
+  title: { label: "Titre", id: "card-title" },
+  description: { label: "Description", id: "card-description" },
+  target_section_id: { label: "Mène à la section", id: "card-target" },
+  icon_name: { label: "Icône", id: "card-icon" },
+  is_visible: { label: "Visible sur le site", id: "card-visible" },
+};
+
+const SECTION_OPTIONS = PAGE_SECTIONS.map((section) => ({
+  value: section.id,
+  label: section.label,
+}));
+
+const defaults = (
+  card?: AnniversaryNavigationCard,
+): NavigationCardFormValues => ({
+  title: card?.title ?? "",
+  description: card?.description ?? "",
+  icon_name: isIconName(card?.icon_name) ? card.icon_name : DEFAULT_ICON,
+  target_section_id: card?.target_section_id ?? "",
+  is_visible: card?.is_visible ?? true,
+});
 
 interface NavigationCardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   card?: AnniversaryNavigationCard;
-  maxOrder: number;
+  nextOrder: number;
 }
 
 export function NavigationCardDialog({
   open,
   onOpenChange,
   card,
-  maxOrder,
+  nextOrder,
 }: NavigationCardDialogProps) {
-  const createCard = useCreateNavigationCard();
-  const updateCard = useUpdateNavigationCard();
+  const create = useCreateNavigationCard();
+  const update = useUpdateNavigationCard();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    icon_name: "FaMusic" as IconName,
-    target_section_id: "",
-    display_order: maxOrder + 1,
-    is_visible: true,
+  const form = useForm<NavigationCardFormValues>({
+    resolver: zodResolver(navigationCardFormSchema),
+    defaultValues: defaults(card),
+    shouldFocusError: false,
   });
 
+  // A fresh open starts clean: the fields from the item, no stale error.
+  useResetOnChange([open], () => setSaveError(null));
   useEffect(() => {
-    if (card) {
-      setFormData({
-        title: card.title,
-        description: card.description,
-        icon_name: card.icon_name as IconName,
-        target_section_id: card.target_section_id,
-        display_order: card.display_order,
-        is_visible: card.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        icon_name: "FaMusic",
-        target_section_id: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-  }, [card, maxOrder, open]);
+    if (open) form.reset(defaults(card));
+  }, [open, card, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (values: NavigationCardFormValues) => {
+    setSaveError(null);
     try {
       if (card) {
-        await updateCard.mutateAsync({
-          id: card.id,
-          ...formData,
-        });
-        toast.success("Carte mise à jour avec succès");
+        await update.mutateAsync({ id: card.id, ...values });
+        toast.success(`« ${values.title} » enregistrée`);
       } else {
-        await createCard.mutateAsync(formData);
-        toast.success("Carte créée avec succès");
+        await create.mutateAsync({ ...values, display_order: nextOrder });
+        toast.success(`« ${values.title} » ajoutée`);
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(
-        card ? "Erreur lors de la mise à jour" : "Erreur lors de la création",
-      );
-      console.error("Error:", error);
+      const message = saveErrorMessage(error);
+      setSaveError(message);
+      toast.error("L'enregistrement a échoué", { description: message });
     }
   };
 
-  const isLoading = createCard.isPending || updateCard.isPending;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
-            {card ? "Modifier la carte" : "Nouvelle carte"}
-          </DialogTitle>
-          <DialogDescription>
-            {card
-              ? "Modifiez les informations de la carte de navigation"
-              : "Ajoutez une nouvelle carte de navigation vers une section"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">
-              Titre <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              placeholder="Notre Histoire"
-              required
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">
-              Description <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Parcourez 40 ans de moments marquants..."
-              rows={3}
-              required
-            />
-          </div>
-
-          {/* Icon Picker */}
-          <IconPicker
-            value={formData.icon_name}
-            onChange={(icon) => setFormData({ ...formData, icon_name: icon })}
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={card ? `Modifier « ${card.title} »` : "Ajouter une carte"}
+      description="Une carte en haut de la page, qui emmène le visiteur vers une de ses sections."
+      formId={FORM_ID}
+      isDirty={form.formState.isDirty}
+      isPending={create.isPending || update.isPending}
+      submitLabel={card ? "Enregistrer" : "Ajouter"}
+    >
+      <Form {...form}>
+        <form
+          id={FORM_ID}
+          onSubmit={form.handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-5"
+        >
+          <FormFeedback
+            errors={form.formState.errors}
+            labels={LABELS}
+            submitCount={form.formState.submitCount}
+            saveError={saveError}
           />
-
-          {/* Target Section ID */}
-          <div className="space-y-2">
-            <Label htmlFor="target_section_id">
-              ID de la section cible <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="target_section_id"
-              value={formData.target_section_id}
-              onChange={(e) =>
-                setFormData({ ...formData, target_section_id: e.target.value })
-              }
-              placeholder="timeline"
-              required
-            />
-            <p className="text-muted-foreground text-xs">
-              L'ID HTML de la section vers laquelle naviguer (ex: "timeline")
-            </p>
-          </div>
-
-          {/* Display Order */}
-          <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
-            <Input
-              id="display_order"
-              type="number"
-              min="1"
-              value={formData.display_order}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  display_order: parseInt(e.target.value),
-                })
-              }
-              required
-            />
-          </div>
-
-          {/* Visibility Toggle */}
-          <div className="border-border bg-muted/50 flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_visible" className="text-base">
-                Visible
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Afficher cette carte sur le site
-              </p>
-            </div>
-            <Switch
-              id="is_visible"
-              checked={formData.is_visible}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, is_visible: checked })
-              }
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {card ? "Mise à jour..." : "Création..."}
-                </>
-              ) : (
-                <>{card ? "Mettre à jour" : "Créer"}</>
-              )}
-            </Button>
-          </DialogFooter>
+          <TextField
+            control={form.control}
+            name="title"
+            id={LABELS.title.id}
+            label={LABELS.title.label}
+            required
+            placeholder="Notre histoire"
+          />
+          <TextareaField
+            control={form.control}
+            name="description"
+            id={LABELS.description.id}
+            label={LABELS.description.label}
+            required
+            placeholder="Parcourez 40 ans de moments marquants…"
+            hint="Une ou deux phrases sous le titre de la carte."
+          />
+          <SelectField
+            control={form.control}
+            name="target_section_id"
+            id={LABELS.target_section_id.id}
+            label={LABELS.target_section_id.label}
+            options={SECTION_OPTIONS}
+            placeholder="Choisir une section de la page"
+            hint="La section de la page des 40 ans jusqu'à laquelle la carte fait défiler."
+          />
+          <IconField
+            control={form.control}
+            name="icon_name"
+            id={LABELS.icon_name.id}
+          />
+          <SwitchField
+            control={form.control}
+            name="is_visible"
+            id={LABELS.is_visible.id}
+            label={LABELS.is_visible.label}
+            hint="Masquée, la carte reste ici sans apparaître sur la page."
+          />
         </form>
-      </DialogContent>
-    </Dialog>
+      </Form>
+    </FormDialog>
   );
 }

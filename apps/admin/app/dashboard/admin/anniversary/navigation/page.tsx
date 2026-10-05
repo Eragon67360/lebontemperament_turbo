@@ -1,10 +1,15 @@
 "use client";
 
+import { CampaignList } from "@/components/anniversary/CampaignList";
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { AddButton } from "@/components/anniversary/ListPageHeaderAction";
 import { NavigationCardDialog } from "@/components/anniversary/NavigationCardDialog";
 import { NavigationCardItem } from "@/components/anniversary/NavigationCardItem";
+import {
+  countLine,
+  useListActions,
+} from "@/components/anniversary/useListActions";
 import { PageShell } from "@/components/layouts/PageShell";
-import { Button } from "@/components/ui/button";
 import {
   DataState,
   EmptyState,
@@ -13,11 +18,13 @@ import {
 import {
   useDeleteNavigationCard,
   useNavigationCards,
+  useUpdateNavigationCard,
 } from "@/hooks/useAnniversaryNavigation";
-import { AnniversaryNavigationCard } from "@/types/anniversary";
-import { Compass, Plus } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import type { AnniversaryNavigationCard } from "@/types/anniversary";
+import { nextOrder } from "@/utils/anniversary/reorder";
+import { Compass } from "lucide-react";
+
+const nameOf = (card: AnniversaryNavigationCard) => card.title;
 
 export default function NavigationPage() {
   const {
@@ -26,71 +33,24 @@ export default function NavigationPage() {
     isError,
     refetch,
   } = useNavigationCards();
-  const deleteCard = useDeleteNavigationCard();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedCard, setSelectedCard] =
-    useState<AnniversaryNavigationCard | null>(null);
-
-  const handleEdit = (card: AnniversaryNavigationCard) => {
-    setSelectedCard(card);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (card: AnniversaryNavigationCard) => {
-    setSelectedCard(card);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedCard) return;
-
-    try {
-      await deleteCard.mutateAsync(selectedCard.id);
-      toast.success("Carte supprimée avec succès");
-      setDeleteDialogOpen(false);
-      setSelectedCard(null);
-    } catch (error) {
-      toast.error("Erreur lors de la suppression");
-      console.error("Delete error:", error);
-    }
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) {
-      setSelectedCard(null);
-    }
-  };
-
-  const maxOrder = cards.reduce(
-    (max, card) => Math.max(max, card.display_order),
-    0,
-  );
+  const update = useUpdateNavigationCard();
+  const remove = useDeleteNavigationCard();
+  const list = useListActions<AnniversaryNavigationCard>({
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    nameOf,
+    feminine: true,
+  });
 
   return (
     <PageShell
-      title="Cartes de navigation"
-      description="Gérer les cartes de navigation vers les différentes sections"
-      theme="anniversary"
       className="py-4 sm:py-6"
+      title="Cartes de navigation"
+      description="Les cartes en haut de la page des 40 ans, qui emmènent le visiteur vers chacune de ses sections."
       headerAction={
-        <Button
-          className="min-h-11 w-full sm:w-auto"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Ajouter une carte
-        </Button>
+        <AddButton label="Ajouter une carte" onClick={list.openCreate} />
       }
     >
-      {!isLoading && !isError && (
-        <p className="text-muted-foreground mb-4 text-sm">
-          {cards.length} carte{cards.length > 1 ? "s" : ""} de navigation
-        </p>
-      )}
-
       <DataState
         isLoading={isLoading}
         isError={isError}
@@ -102,44 +62,48 @@ export default function NavigationPage() {
           <EmptyState
             icon={Compass}
             title="Aucune carte de navigation"
-            description="Ajoutez une carte pour guider les visiteurs vers les sections de la page anniversaire."
+            description="Une carte par section de la page (chronologie, vidéos, photos…) aide le visiteur à s'y retrouver."
             action={
-              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden />
-                Ajouter une carte
-              </Button>
+              <AddButton label="Ajouter une carte" onClick={list.openCreate} />
             }
           />
         }
       >
-        <div className="space-y-4">
-          {cards.map((card) => (
+        <p className="text-note text-muted-foreground mb-3">
+          {countLine(cards, "carte", "cartes")}
+        </p>
+        <CampaignList
+          items={cards}
+          endpoint="/api/anniversary/navigation"
+          queryKey={["anniversary", "navigation"]}
+          nameOf={nameOf}
+          renderItem={(card, reorder) => (
             <NavigationCardItem
-              key={card.id}
               card={card}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              reorder={reorder}
+              busy={list.busyId === card.id}
+              onEdit={() => list.openEdit(card)}
+              onToggleVisibility={() => list.toggleVisibility(card)}
+              onDelete={() => list.askDelete(card)}
             />
-          ))}
-        </div>
+          )}
+        />
       </DataState>
 
-      {/* Create/Edit Dialog */}
       <NavigationCardDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        card={selectedCard || undefined}
-        maxOrder={maxOrder}
+        open={list.dialogOpen}
+        onOpenChange={list.onDialogOpenChange}
+        card={list.editing}
+        nextOrder={nextOrder(cards)}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        title="Supprimer cette carte ?"
-        description={`Êtes-vous sûr de vouloir supprimer la carte « ${selectedCard?.title} » ? Cette action est irréversible.`}
-        isLoading={deleteCard.isPending}
+        open={list.deleting !== null}
+        onOpenChange={list.cancelDelete}
+        onConfirm={list.confirmDelete}
+        title={`Supprimer « ${list.deleting?.title ?? ""} » ?`}
+        description="La carte disparaît de la page des 40 ans et d'ici. Cette action ne peut pas être annulée."
+        isLoading={list.isDeleting}
       />
     </PageShell>
   );

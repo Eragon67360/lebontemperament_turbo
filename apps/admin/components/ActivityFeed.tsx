@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
 import {
   DataState,
   EmptyState,
@@ -9,106 +15,131 @@ import {
 import { useActivities } from "@/hooks/useActivities";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Bell, Calendar, Music, UserPlus, Users2 } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  type LucideIcon,
+  Music,
+  UserPlus,
+  Users2,
+} from "lucide-react";
+import { useState } from "react";
 
-function getActivityIcon(type: string) {
-  const iconClasses = "h-4 w-4 text-primary";
+const ACTIVITIES_FETCHED = 20;
+const ACTIVITIES_SHOWN = 6;
+
+function activityIcon(type: string): LucideIcon {
   switch (type) {
     case "user_created":
-      return <UserPlus className={iconClasses} />;
+      return UserPlus;
     case "concert_created":
     case "concert_updated":
-      return <Music className={iconClasses} />;
+      return Music;
     case "group_updated":
-      return <Users2 className={iconClasses} />;
+      return Users2;
     default:
-      return <Calendar className={iconClasses} />;
+      return Calendar;
   }
 }
 
-export function ActivityFeed() {
+/**
+ * « Activité récente »: the activity log, compact and last on the home. The
+ * first rows are shown; the rest unfolds on demand.
+ */
+export function ActivityFeed({ className }: { className?: string }) {
   const {
     data: activities = [],
     isLoading,
     isError,
     refetch,
-  } = useActivities(50);
+  } = useActivities(ACTIVITIES_FETCHED);
+  const [expanded, setExpanded] = useState(false);
+
+  const shown = expanded ? activities : activities.slice(0, ACTIVITIES_SHOWN);
+  const hidden = activities.length - shown.length;
 
   return (
-    <Card className="flex h-full flex-col rounded-2xl bg-white">
-      <CardHeader className="flex-none pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-gray-500" />
-            <CardTitle className="text-base font-semibold text-gray-900">
-              Activités récentes
-              {!isLoading && (
-                <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({activities.length})
-                </span>
-              )}
-            </CardTitle>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="min-h-0 flex-1">
-        <div className="custom-scrollbar h-full max-h-[500px] space-y-1 overflow-y-auto pr-2 lg:max-h-none">
+    <section aria-labelledby="activity-h" className={className}>
+      <Card>
+        <CardHeader>
+          <h2 id="activity-h" className="text-[17px] leading-6 font-semibold">
+            Activité récente
+          </h2>
+          <CardDescription>
+            Les dernières actions dans l’administration.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <DataState
             isLoading={isLoading}
             isError={isError}
             isEmpty={activities.length === 0}
             onRetry={() => refetch()}
-            errorDescription="Le fil d'activités n'a pas pu être chargé."
+            errorDescription="Le fil d'activité n'a pas pu être chargé."
             skeleton={
-              <ListSkeleton rows={5} label="Chargement des activités…" />
+              <ListSkeleton rows={4} label="Chargement de l'activité…" />
             }
             empty={
               <EmptyState
                 icon={Bell}
                 title="Aucune activité récente"
-                className="py-10"
+                description="Les comptes créés et les concerts ajoutés ou modifiés s'inscrivent ici."
+                className="py-8"
               />
             }
           >
-            {activities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start gap-3 rounded-md p-3 hover:bg-gray-50"
-              >
-                <div className="bg-primary/10 mt-0.5 rounded-full p-1.5">
-                  {getActivityIcon(activity.type)}
-                </div>
-
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {activity.title}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {activity.description}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <span>
-                      {formatDistanceToNow(new Date(activity.created_at), {
-                        addSuffix: true,
-                        locale: fr,
-                      })}
+            <ul className="divide-border border-border -mx-4 divide-y border-t sm:-mx-6">
+              {shown.map((activity) => {
+                const Icon = activityIcon(activity.type);
+                return (
+                  <li
+                    key={activity.id}
+                    className="flex items-start gap-3 px-4 py-3 sm:px-6"
+                  >
+                    <span
+                      aria-hidden
+                      className="bg-primary-soft text-primary-text mt-0.5 grid size-8 shrink-0 place-items-center rounded-md"
+                    >
+                      <Icon className="size-4" />
                     </span>
-                    {activity.profiles && (
-                      <>
-                        <span className="h-1 w-1 rounded-full bg-gray-300" />
-                        <span>
-                          {activity.profiles.display_name ||
-                            activity.profiles.email}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] leading-5 font-medium">
+                        {activity.title}
+                      </p>
+                      <p className="text-detail text-muted-foreground">
+                        {activity.description}
+                      </p>
+                      <p className="text-note text-muted-foreground mt-0.5">
+                        {formatDistanceToNow(new Date(activity.created_at), {
+                          addSuffix: true,
+                          locale: fr,
+                        })}
+                        {activity.profiles && (
+                          <>
+                            {" · "}
+                            {activity.profiles.display_name ||
+                              activity.profiles.email}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {hidden > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary-text mt-3 -ml-3"
+                onClick={() => setExpanded(true)}
+              >
+                Afficher les {hidden} suivantes
+              </Button>
+            )}
           </DataState>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </section>
   );
 }

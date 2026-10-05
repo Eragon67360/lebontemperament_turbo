@@ -1,85 +1,45 @@
 import { PageShell } from "@/components/layouts/PageShell";
+import { Disclosure } from "@/components/travail/Disclosure";
 import { DriveFoldersSection } from "@/components/travail/DriveFoldersSection";
-import { Badge } from "@/components/ui/badge";
+import { DriveIndexOverview } from "@/components/travail/DriveIndexViews";
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/data-state";
-import type { Program } from "@/types/work";
-import RouteNames from "@/utils/routes";
+  DriveSyncButton,
+  DriveSyncProvider,
+} from "@/components/travail/DriveSyncSection";
+import { LegacyStorageSection } from "@/components/travail/LegacyStorageSection";
 import { createClient } from "@/utils/supabase/server";
-import { FolderOpen } from "lucide-react";
-import Link from "next/link";
 
 /**
- * Lists the work programs that actually exist, instead of the four hardcoded
- * cards this page used to show — those pointed at /dashboard/travail/*, a route
- * tree that was moved under /dashboard/members and left every card a dead link.
+ * « Partitions et documents »: the Drive index (programmes → groups →
+ * documents) as the members see it, with « Synchroniser depuis Drive » as the
+ * page's one primary action. The old Storage explorer (« Espace de travail »,
+ * never shown to members) stays reachable at the bottom until it is retired.
  */
 export default async function TravailPage() {
   const supabase = await createClient();
   const { data: programs, error } = await supabase
     .from("programs")
-    .select("*")
+    .select("id, name, start_date, end_date, is_active")
     .order("start_date", { ascending: false });
 
-  // Without this, a failed query renders "Aucun programme" and reads as an
-  // empty account. app/dashboard/error.tsx catches it and offers a retry.
-  if (error) throw error;
-
   return (
-    <PageShell
-      theme="members"
-      title="Espace de travail"
-      description="Partitions et ressources pédagogiques, par programme."
-      contentClassName="space-y-8"
-    >
-      {programs?.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {programs.map((program: Program) => (
-            <Link
-              key={program.id}
-              href={`${RouteNames.DASHBOARD.MEMBERS.TRAVAIL_ROOT}/${program.id}`}
-              className="group focus-visible:ring-ring rounded-2xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              <Card className="h-full transition-shadow duration-150 ease-out group-hover:shadow-md motion-reduce:transition-none">
-                <CardHeader>
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <FolderOpen
-                      className="text-primary h-7 w-7 shrink-0"
-                      aria-hidden
-                    />
-                    {program.is_active && <Badge>En cours</Badge>}
-                  </div>
-                  <CardTitle className="text-base">{program.name}</CardTitle>
-                  <CardDescription>
-                    {formatSeason(program.start_date, program.end_date)}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon={FolderOpen}
-          title="Aucun programme"
-          description="Les programmes de travail apparaîtront ici dès qu'un premier aura été créé."
-        />
-      )}
+    <DriveSyncProvider>
+      <PageShell
+        title="Partitions et documents"
+        description="Les programmes, leurs groupes et leurs documents, lus dans Google Drive tels que les membres les retrouvent."
+        headerAction={<DriveSyncButton />}
+        contentClassName="space-y-8"
+      >
+        <DriveIndexOverview />
 
-      <DriveFoldersSection />
-    </PageShell>
+        <Disclosure label="Dossiers Drive suivis">
+          <DriveFoldersSection />
+        </Disclosure>
+
+        <Disclosure label="Anciens fichiers (stockage)">
+          <LegacyStorageSection programs={programs ?? []} failed={!!error} />
+        </Disclosure>
+      </PageShell>
+    </DriveSyncProvider>
   );
-}
-
-function formatSeason(start: string, end: string) {
-  const format = new Intl.DateTimeFormat("fr-FR", {
-    month: "long",
-    year: "numeric",
-  });
-  return `${format.format(new Date(start))} – ${format.format(new Date(end))}`;
 }

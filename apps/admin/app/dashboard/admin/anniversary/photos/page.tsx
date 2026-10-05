@@ -1,89 +1,57 @@
 "use client";
 
+import { useGridReorder } from "@/components/anniversary/CampaignList";
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { AddButton } from "@/components/anniversary/ListPageHeaderAction";
 import { PhotoDialog } from "@/components/anniversary/PhotoDialog";
 import { PhotoItem } from "@/components/anniversary/PhotoItem";
+import {
+  countLine,
+  useListActions,
+} from "@/components/anniversary/useListActions";
 import { PageShell } from "@/components/layouts/PageShell";
-import { Button } from "@/components/ui/button";
 import {
   CardGridSkeleton,
   DataState,
   EmptyState,
 } from "@/components/ui/data-state";
-import { useDeletePhoto, usePhotos } from "@/hooks/useAnniversaryPhotos";
-import { AnniversaryPhoto } from "@/types/anniversary";
-import { Images, Plus } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import {
+  useDeletePhoto,
+  usePhotos,
+  useUpdatePhoto,
+} from "@/hooks/useAnniversaryPhotos";
+import type { AnniversaryPhoto } from "@/types/anniversary";
+import { nextOrder } from "@/utils/anniversary/reorder";
+import { Images } from "lucide-react";
+
+const nameOf = (photo: AnniversaryPhoto) => photo.title;
 
 export default function PhotosPage() {
   const { data: photos = [], isLoading, isError, refetch } = usePhotos();
-  const deletePhoto = useDeletePhoto();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState<AnniversaryPhoto | null>(
-    null,
-  );
-
-  const handleEdit = (photo: AnniversaryPhoto) => {
-    setSelectedPhoto(photo);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (photo: AnniversaryPhoto) => {
-    setSelectedPhoto(photo);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedPhoto) return;
-
-    try {
-      await deletePhoto.mutateAsync(selectedPhoto.id);
-      toast.success("Photo supprimée avec succès");
-      setDeleteDialogOpen(false);
-      setSelectedPhoto(null);
-    } catch (error) {
-      toast.error("Erreur lors de la suppression");
-      console.error("Delete error:", error);
-    }
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) {
-      setSelectedPhoto(null);
-    }
-  };
-
-  const maxOrder = photos.reduce(
-    (max, photo) => Math.max(max, photo.display_order),
-    0,
-  );
+  const update = useUpdatePhoto();
+  const remove = useDeletePhoto();
+  const list = useListActions<AnniversaryPhoto>({
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    nameOf,
+    feminine: true,
+  });
+  const grid = useGridReorder({
+    items: photos,
+    endpoint: "/api/anniversary/photos",
+    queryKey: ["anniversary", "photos"],
+    nameOf,
+  });
 
   return (
     <PageShell
-      title="Collection photos"
-      description="Gérer la galerie de photos des 40 ans"
-      theme="anniversary"
       className="py-4 sm:py-6"
+      title="Photos"
+      description="La collection de photos des 40 ans, dans l'ordre où la page les montre."
       headerAction={
-        <Button
-          className="min-h-11 w-full sm:w-auto"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Ajouter une photo
-        </Button>
+        <AddButton label="Ajouter une photo" onClick={list.openCreate} />
       }
     >
-      {photos.length > 0 && (
-        <p className="text-muted-foreground mb-4 text-sm">
-          {photos.length} photo{photos.length > 1 ? "s" : ""}
-        </p>
-      )}
-
       <DataState
         isLoading={isLoading}
         isError={isError}
@@ -95,44 +63,46 @@ export default function PhotosPage() {
           <EmptyState
             icon={Images}
             title="Aucune photo"
-            description="Ajoutez les photos de concerts, de répétitions et de tournées à afficher dans la galerie des 40 ans."
+            description="Concerts, répétitions, tournées : chaque photo a un titre et, si vous la connaissez, son année."
             action={
-              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden />
-                Ajouter une photo
-              </Button>
+              <AddButton label="Ajouter une photo" onClick={list.openCreate} />
             }
           />
         }
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {photos.map((photo) => (
-            <PhotoItem
-              key={photo.id}
-              photo={photo}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+        <p className="text-note text-muted-foreground mb-3">
+          {countLine(photos, "photo", "photos")}
+        </p>
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {grid.ordered.map((photo, index) => (
+            <li key={photo.id} className="list-none">
+              <PhotoItem
+                photo={photo}
+                reorder={grid.controlsFor(photo, index)}
+                busy={list.busyId === photo.id}
+                onEdit={() => list.openEdit(photo)}
+                onToggleVisibility={() => list.toggleVisibility(photo)}
+                onDelete={() => list.askDelete(photo)}
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       </DataState>
 
-      {/* Create/Edit Dialog */}
       <PhotoDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        photo={selectedPhoto || undefined}
-        maxOrder={maxOrder}
+        open={list.dialogOpen}
+        onOpenChange={list.onDialogOpenChange}
+        photo={list.editing}
+        nextOrder={nextOrder(photos)}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        title="Supprimer cette photo ?"
-        description={`Êtes-vous sûr de vouloir supprimer la photo "${selectedPhoto?.title}" ? Cette action est irréversible.`}
-        isLoading={deletePhoto.isPending}
+        open={list.deleting !== null}
+        onOpenChange={list.cancelDelete}
+        onConfirm={list.confirmDelete}
+        title={`Supprimer « ${list.deleting?.title ?? ""} » ?`}
+        description="La photo disparaît de la collection et son fichier est effacé. Cette action ne peut pas être annulée."
+        isLoading={list.isDeleting}
       />
     </PageShell>
   );

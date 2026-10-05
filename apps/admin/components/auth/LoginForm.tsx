@@ -99,7 +99,7 @@ export default function LoginForm() {
 
       <Button
         type="submit"
-        className="bg-primary hover:bg-primary/90 focus-visible:outline-primary flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2"
+        className="bg-primary-600 hover:bg-primary-600/90 focus-visible:outline-primary flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2"
         disabled={isPending}
       >
         {isPending ? (

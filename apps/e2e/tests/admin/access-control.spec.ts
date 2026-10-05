@@ -20,17 +20,19 @@ const ADMIN_GET_ROUTES = [
   "/api/anniversary/memories",
   "/api/anniversary/navigation",
   "/api/anniversary/photos",
+  "/api/anniversary/readiness",
   "/api/anniversary/timeline",
   "/api/anniversary/videos",
   "/api/bug-messages",
   "/api/cas",
   "/api/drive-folders",
+  "/api/drive-index",
+  "/api/drive-sync",
   "/api/events",
   "/api/feature-flags",
   `/api/files?programId=${NO_ID}&groupId=${NO_ID}`,
   `/api/folders?programId=${NO_ID}&groupId=${NO_ID}`,
   "/api/google-groups",
-  "/api/members/excel",
   "/api/my-bug-reports",
   "/api/prochains-concerts",
   "/api/projects",
@@ -54,7 +56,11 @@ test.describe("admin API, anonymous", () => {
 });
 
 test.describe("admin pages, anonymous", () => {
-  for (const path of ["/dashboard", "/dashboard/admin/users"]) {
+  for (const path of [
+    "/dashboard",
+    "/dashboard/admin/users",
+    "/dashboard/admin/users/sync",
+  ]) {
     test(`${path} redirects to the login page`, async ({ request }) => {
       const response = await request.get(path, { maxRedirects: 0 });
       expect([302, 303, 307, 308]).toContain(response.status());

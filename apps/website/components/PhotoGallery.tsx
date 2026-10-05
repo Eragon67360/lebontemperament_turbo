@@ -2,9 +2,13 @@
 import { setColumns } from "@/utils/setColumns";
 import { PhotoData } from "@/utils/types";
 import { Accordion } from "@heroui/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m, type HTMLMotionProps } from "motion/react";
 import { useEffect, useState } from "react";
-import { MasonryPhotoAlbum } from "react-photo-album";
+import {
+  MasonryPhotoAlbum,
+  type ElementRef,
+  type RenderButtonProps,
+} from "react-photo-album";
 import "react-photo-album/masonry.css";
 import Lightbox, { type Labels } from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
@@ -19,13 +23,37 @@ const lightboxLabels: Labels = {
   Lightbox: "Visionneuse de photos",
 };
 
-export default function PhotoGallery() {
-  const [imagesConcerts, setImagesConcerts] = useState<PhotoData[]>([]);
-  const [imagesVieBT, setImagesVieBT] = useState<PhotoData[]>([]);
+type PhotoGalleryProps = {
+  /** Listed on the server (cached); when missing, the folder is fetched here. */
+  initialConcerts?: PhotoData[];
+  initialVieBT?: PhotoData[];
+};
+
+// Loading skeleton component
+const LoadingSkeleton = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="bg-surface-tertiary h-64 w-full rounded" />
+      ))}
+    </div>
+  </div>
+);
+
+export default function PhotoGallery({
+  initialConcerts,
+  initialVieBT,
+}: PhotoGalleryProps) {
+  const [imagesConcerts, setImagesConcerts] = useState<PhotoData[]>(
+    initialConcerts ?? [],
+  );
+  const [imagesVieBT, setImagesVieBT] = useState<PhotoData[]>(
+    initialVieBT ?? [],
+  );
   const [photoIndexConcerts, setPhotoIndexConcerts] = useState(-1);
   const [photoIndexVieBT, setPhotoIndexVieBT] = useState(-1);
-  const [isLoadingConcerts, setIsLoadingConcerts] = useState(true);
-  const [isLoadingVieBT, setIsLoadingVieBT] = useState(true);
+  const [isLoadingConcerts, setIsLoadingConcerts] = useState(!initialConcerts);
+  const [isLoadingVieBT, setIsLoadingVieBT] = useState(!initialVieBT);
 
   const [columns, setColumnsState] = useState<number>(2);
 
@@ -48,6 +76,7 @@ export default function PhotoGallery() {
   }, []);
 
   useEffect(() => {
+    if (initialConcerts) return;
     const fetchImages = async () => {
       try {
         setIsLoadingConcerts(true);
@@ -66,9 +95,10 @@ export default function PhotoGallery() {
     };
 
     fetchImages();
-  }, []);
+  }, [initialConcerts]);
 
   useEffect(() => {
+    if (initialVieBT) return;
     const fetchImages = async () => {
       try {
         setIsLoadingVieBT(true);
@@ -86,22 +116,15 @@ export default function PhotoGallery() {
       }
     };
     fetchImages();
-  }, []);
-
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <div className="animate-pulse space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-surface-tertiary h-64 w-full rounded" />
-        ))}
-      </div>
-    </div>
-  );
+  }, [initialVieBT]);
 
   // Custom render function for the interactive button wrapper to add motion
-  const renderAnimatedButton = ({ ref, children, ...restProps }: any) => (
-    <motion.button
+  const renderAnimatedButton = ({
+    ref,
+    children,
+    ...restProps
+  }: RenderButtonProps & ElementRef<HTMLButtonElement>) => (
+    <m.button
       ref={ref}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -109,10 +132,12 @@ export default function PhotoGallery() {
         duration: 0.5,
         ease: "easeOut",
       }}
-      {...restProps}
+      // The album passes plain button props; motion only redeclares a few
+      // handler names (onAnimationStart, onDrag...) that it never sends.
+      {...(restProps as HTMLMotionProps<"button">)}
     >
       {children}
-    </motion.button>
+    </m.button>
   );
 
   return (
@@ -129,16 +154,16 @@ export default function PhotoGallery() {
             <Accordion.Body>
               <AnimatePresence mode="wait">
                 {isLoadingConcerts ? (
-                  <motion.div
+                  <m.div
                     key="loading-concerts"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <LoadingSkeleton />
-                  </motion.div>
+                  </m.div>
                 ) : (
-                  <motion.div
+                  <m.div
                     key="content-concerts"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -152,7 +177,7 @@ export default function PhotoGallery() {
                       }
                       render={{ button: renderAnimatedButton }}
                     />
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </Accordion.Body>
@@ -169,16 +194,16 @@ export default function PhotoGallery() {
             <Accordion.Body>
               <AnimatePresence mode="wait">
                 {isLoadingVieBT ? (
-                  <motion.div
+                  <m.div
                     key="loading-viebt"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <LoadingSkeleton />
-                  </motion.div>
+                  </m.div>
                 ) : (
-                  <motion.div
+                  <m.div
                     key="content-viebt"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -192,7 +217,7 @@ export default function PhotoGallery() {
                       }
                       render={{ button: renderAnimatedButton }}
                     />
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </Accordion.Body>

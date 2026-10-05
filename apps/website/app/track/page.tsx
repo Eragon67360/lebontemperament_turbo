@@ -49,11 +49,9 @@ const TRACKING_ERRORS: Record<Exclude<TrackingState["kind"], "ok">, string> = {
 
 /**
  * Core component for handling the tracking logic based on a URL token.
+ * Remounted by its parent when the token changes, which resets its state.
  */
-function TrackByTokenContent() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-
+function TrackByTokenContent({ token }: { token: string | null }) {
   // State management
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [recipient, setRecipient] = useState<DeliveryRecipient | null>(null);
@@ -92,7 +90,7 @@ function TrackByTokenContent() {
     return { kind: "ok", ...tracking };
   }, [token, supabase]);
 
-  // Initial load
+  // Initial load (the initial state already says "loading, no error")
   useEffect(() => {
     // The initial state is already "loading, no error"; the token never
     // changes during the page's life.
@@ -267,7 +265,14 @@ function TrackByTokenContent() {
 export default function TrackByTokenPage() {
   return (
     <Suspense fallback={<TrackPageLoadingFallback />}>
-      <TrackByTokenContent />
+      <TrackByToken />
     </Suspense>
   );
+}
+
+/** Reads the token from the URL; a new token starts a fresh tracking view. */
+function TrackByToken() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  return <TrackByTokenContent key={token ?? ""} token={token} />;
 }

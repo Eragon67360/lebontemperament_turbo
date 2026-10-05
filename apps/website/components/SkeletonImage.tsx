@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 
 interface SkeletonImageProps {
   width: number;
@@ -15,7 +15,7 @@ const SkeletonImage: React.FC<SkeletonImageProps> = ({
   dataTestId = "skeleton-image",
 }) => {
   return (
-    <motion.div
+    <m.div
       className={`animate-pulse bg-gradient-to-br from-gray-200 to-gray-300 ${className}`}
       style={{ width, height }}
       data-testid={dataTestId}
@@ -41,7 +41,7 @@ const SkeletonImage: React.FC<SkeletonImageProps> = ({
           />
         </svg>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

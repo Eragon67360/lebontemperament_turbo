@@ -48,3 +48,6 @@ yarn-error.log*
 # OS artefacts
 desktop.ini
 Thumbs.db
+
+# Claude Code local settings (per machine)
+.claude/settings.local.json

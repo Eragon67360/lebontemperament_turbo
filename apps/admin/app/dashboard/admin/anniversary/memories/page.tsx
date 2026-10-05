@@ -14,84 +14,71 @@ import {
   useMemories,
   useUpdateMemory,
 } from "@/hooks/useAnniversaryMemories";
-import { AnniversaryMemory } from "@/types/anniversary";
+import type { AnniversaryMemory } from "@/types/anniversary";
 import { MessageSquareQuote } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 type MemoryFilter = "pending" | "approved" | "all";
 
-const EMPTY_DESCRIPTIONS: Record<MemoryFilter, string> = {
-  pending: "Aucun témoignage n'attend de modération pour le moment.",
-  approved: "Aucun témoignage n'a encore été approuvé.",
-  all: "Les témoignages soumis par les visiteurs apparaîtront ici.",
+const EMPTY: Record<MemoryFilter, { title: string; description: string }> = {
+  pending: {
+    title: "Rien à relire",
+    description:
+      "Les souvenirs envoyés par les visiteurs arrivent ici ; ils ne sont publiés qu'après votre relecture.",
+  },
+  approved: {
+    title: "Aucun témoignage publié",
+    description:
+      "Publiez un témoignage en attente pour qu'il apparaisse sur la page.",
+  },
+  all: {
+    title: "Aucun témoignage reçu",
+    description:
+      "Dès qu'un visiteur partage un souvenir par le formulaire, il apparaît ici.",
+  },
 };
 
 export default function MemoriesPage() {
-  const [activeTab, setActiveTab] = useState<MemoryFilter>("pending");
-  const {
-    data: memories = [],
-    isLoading,
-    isError,
-    refetch,
-  } = useMemories(activeTab);
-  const updateMemory = useUpdateMemory();
-  const deleteMemory = useDeleteMemory();
+  const [tab, setTab] = useState<MemoryFilter>("pending");
+  const { data: memories = [], isLoading, isError, refetch } = useMemories(tab);
+  const update = useUpdateMemory();
+  const remove = useDeleteMemory();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<AnniversaryMemory | null>(null);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedMemory, setSelectedMemory] =
-    useState<AnniversaryMemory | null>(null);
-
-  const handleApprove = async (memory: AnniversaryMemory) => {
+  const change = async (
+    memory: AnniversaryMemory,
+    data: { is_approved?: boolean; is_featured?: boolean },
+    done: string,
+  ) => {
+    setBusyId(memory.id);
     try {
-      await updateMemory.mutateAsync({
-        id: memory.id,
-        is_approved: true,
-      });
-      toast.success("Témoignage approuvé avec succès");
+      await update.mutateAsync({ id: memory.id, ...data });
+      toast.success(done);
     } catch (error) {
-      toast.error("Erreur lors de l'approbation");
-      console.error("Approve error:", error);
-    }
-  };
-
-  const handleFeature = async (memory: AnniversaryMemory) => {
-    try {
-      await updateMemory.mutateAsync({
-        id: memory.id,
-        is_featured: !memory.is_featured,
+      toast.error("Le changement n'a pas été enregistré", {
+        description: error instanceof Error ? error.message : undefined,
       });
-      toast.success(
-        memory.is_featured
-          ? "Témoignage retiré de la une"
-          : "Témoignage mis à la une",
-      );
-    } catch (error) {
-      toast.error("Erreur lors de la mise à jour");
-      console.error("Feature error:", error);
+    } finally {
+      setBusyId(null);
     }
-  };
-
-  const handleDelete = (memory: AnniversaryMemory) => {
-    setSelectedMemory(memory);
-    setDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!selectedMemory) return;
-
+    if (!deleting) return;
     try {
-      await deleteMemory.mutateAsync(selectedMemory.id);
-      toast.success("Témoignage supprimé avec succès");
-      setDeleteDialogOpen(false);
-      setSelectedMemory(null);
+      await remove.mutateAsync(deleting.id);
+      toast.success(`Témoignage de ${deleting.name} supprimé`);
+      setDeleting(null);
     } catch (error) {
-      toast.error("Erreur lors de la suppression");
-      console.error("Delete error:", error);
+      toast.error("La suppression a échoué", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
-  const memoryList = (
+  const list = (
     <DataState
       isLoading={isLoading}
       isError={isError}
@@ -102,79 +89,95 @@ export default function MemoriesPage() {
       empty={
         <EmptyState
           icon={MessageSquareQuote}
-          title="Aucun témoignage"
-          description={EMPTY_DESCRIPTIONS[activeTab]}
+          title={EMPTY[tab].title}
+          description={EMPTY[tab].description}
         />
       }
     >
-      <div className="space-y-4">
+      <ul className="space-y-3">
         {memories.map((memory) => (
-          <MemoryItem
-            key={memory.id}
-            memory={memory}
-            onApprove={handleApprove}
-            onFeature={handleFeature}
-            onDelete={handleDelete}
-          />
+          <li key={memory.id} className="list-none">
+            <MemoryItem
+              memory={memory}
+              busy={busyId === memory.id}
+              onPublish={() =>
+                change(
+                  memory,
+                  { is_approved: true },
+                  `Témoignage de ${memory.name} publié`,
+                )
+              }
+              // Back to « En attente »: the same PATCH the approval uses,
+              // with the feature flag cleared so it leaves the home too.
+              onUnpublish={() =>
+                change(
+                  memory,
+                  { is_approved: false, is_featured: false },
+                  `Témoignage de ${memory.name} retiré de la publication`,
+                )
+              }
+              onFeature={() =>
+                change(
+                  memory,
+                  { is_featured: !memory.is_featured },
+                  memory.is_featured
+                    ? `Témoignage de ${memory.name} retiré de la une`
+                    : `Témoignage de ${memory.name} mis à la une`,
+                )
+              }
+              onDelete={() => setDeleting(memory)}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
     </DataState>
   );
 
   return (
     <PageShell
-      title="Modération des témoignages"
-      description="Approuver et gérer les témoignages soumis par les visiteurs"
-      theme="anniversary"
       className="py-4 sm:py-6"
+      title="Modération"
+      description="Relisez les souvenirs envoyés par les visiteurs : un témoignage n'apparaît sur la page qu'une fois publié."
     >
       <Tabs
-        value={activeTab}
-        onValueChange={(value) => setActiveTab(value as MemoryFilter)}
+        value={tab}
+        onValueChange={(value) => setTab(value as MemoryFilter)}
       >
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList
-            aria-label="Filtrer les témoignages par statut"
+            aria-label="Filtrer les témoignages"
             className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto"
           >
-            <TabsTrigger value="pending" className="min-h-11">
-              En attente
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="min-h-11">
-              Approuvés
-            </TabsTrigger>
-            <TabsTrigger value="all" className="min-h-11">
-              Tous
-            </TabsTrigger>
+            <TabsTrigger value="pending">En attente</TabsTrigger>
+            <TabsTrigger value="approved">Publiés</TabsTrigger>
+            <TabsTrigger value="all">Tous</TabsTrigger>
           </TabsList>
           {!isLoading && !isError && (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-note text-muted-foreground">
               {memories.length} témoignage{memories.length > 1 ? "s" : ""}
             </p>
           )}
         </div>
-
         <TabsContent value="pending" className="mt-0">
-          {memoryList}
+          {list}
         </TabsContent>
-
         <TabsContent value="approved" className="mt-0">
-          {memoryList}
+          {list}
         </TabsContent>
-
         <TabsContent value="all" className="mt-0">
-          {memoryList}
+          {list}
         </TabsContent>
       </Tabs>
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        open={deleting !== null}
+        onOpenChange={(open) => {
+          if (!open && !remove.isPending) setDeleting(null);
+        }}
         onConfirm={confirmDelete}
-        title="Supprimer ce témoignage ?"
-        description={`Êtes-vous sûr de vouloir supprimer le témoignage de « ${selectedMemory?.name} » ? Cette action est irréversible.`}
-        isLoading={deleteMemory.isPending}
+        title={`Supprimer le témoignage de ${deleting?.name ?? ""} ?`}
+        description="Le texte et l'adresse e-mail de la personne sont effacés définitivement. Pour le garder sans l'afficher, retirez-le plutôt de la publication."
+        isLoading={remove.isPending}
       />
     </PageShell>
   );

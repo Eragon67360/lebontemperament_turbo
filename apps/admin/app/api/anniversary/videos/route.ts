@@ -1,4 +1,9 @@
 import { cloudinary } from "@/lib/cloudinary";
+import {
+  parsePatchBody,
+  readJson,
+  videoPatchSchema,
+} from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -92,12 +97,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const body = await request.json();
-    const { id, ...updates } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    // Only the columns the dialog, the visibility toggle and the reorder
+    // send; anything else is refused (#471).
+    const parsed = parsePatchBody(videoPatchSchema, await readJson(request));
+    if (!parsed.ok) {
+      return NextResponse.json(
+        { error: parsed.error },
+        { status: parsed.status },
+      );
     }
+    const { id, ...updates } = parsed.data;
 
     const supabase = await createClient();
     const { data, error } = await supabase

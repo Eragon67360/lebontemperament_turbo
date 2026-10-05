@@ -100,7 +100,7 @@ export default function ArchivesPageClient({
   );
 
   const filteredDocuments = useMemo(() => {
-    let filtered = archives.filter((doc) => {
+    const filtered = archives.filter((doc) => {
       const matchesSearch =
         searchQuery === "" ||
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,7 +141,7 @@ export default function ArchivesPageClient({
     <div className="bg-background min-h-screen">
       <section
         ref={sectionRef}
-        className="relative overflow-hidden bg-slate-50 py-16 text-slate-800 sm:py-24 dark:bg-slate-900 dark:text-slate-200"
+        className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
       >
         <div className="absolute inset-0 z-0">
           <div className="bg-primary/5 absolute top-1/4 right-0 h-112 w-md rounded-full blur-[100px]" />
@@ -159,7 +159,7 @@ export default function ArchivesPageClient({
             {showAnniversaryLink && (
               <Link
                 href="/40-ans"
-                className="text-primary hover:text-primary/80 mb-8 inline-flex items-center gap-2 font-medium transition-colors"
+                className="text-primary-600 hover:text-primary-600/80 dark:text-primary-500 dark:hover:text-primary-500/80 mb-8 inline-flex items-center gap-2 font-medium transition-colors"
               >
                 <FaArrowLeft />
                 <span>Retour à la page 40 ans</span>
@@ -169,10 +169,10 @@ export default function ArchivesPageClient({
               <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
                 <FaArchive className="text-3xl sm:text-4xl" />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">
+              <h1 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
                 Archives Publiques
               </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 dark:text-slate-400">
+              <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
                 Plongez dans notre histoire à travers les documents qui ont
                 jalonné notre parcours.
               </p>
@@ -183,7 +183,7 @@ export default function ArchivesPageClient({
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="mb-8 space-y-4 rounded-xl border border-slate-200/80 bg-white/30 p-4 backdrop-blur-md sm:p-6 dark:border-slate-800/50 dark:bg-slate-900/30"
+            className="border-separator bg-surface-secondary/30 mb-8 space-y-4 rounded-xl border p-4 backdrop-blur-md sm:p-6"
           >
             <SearchField
               aria-label="Rechercher dans les archives"
@@ -191,9 +191,9 @@ export default function ArchivesPageClient({
               onChange={setSearchQuery}
               fullWidth
             >
-              <SearchField.Group className="focus-within:border-primary focus-within:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus-within:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
+              <SearchField.Group className="focus-within:border-primary focus-within:ring-primary border-separator bg-background/50 text-foreground placeholder:text-muted text-sm font-light focus-within:ring-1">
                 <SearchField.SearchIcon>
-                  <FaSearch className="text-slate-400" />
+                  <FaSearch className="text-muted" />
                 </SearchField.SearchIcon>
                 <SearchField.Input
                   className="w-full text-sm"
@@ -210,8 +210,8 @@ export default function ArchivesPageClient({
                 onChange={(key) => setSelectedType(key as string)}
                 className="w-full"
               >
-                <Select.Trigger className="focus:border-primary focus:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
-                  <FaFilter className="text-slate-400" />
+                <Select.Trigger className="focus:border-primary focus:ring-primary border-separator bg-background/50 text-foreground placeholder:text-muted text-sm font-light focus:ring-1">
+                  <FaFilter className="text-muted" />
                   <Select.Value />
                   <Select.Indicator />
                 </Select.Trigger>
@@ -237,8 +237,8 @@ export default function ArchivesPageClient({
                 onChange={(key) => setSelectedTheme(key as string)}
                 className="w-full"
               >
-                <Select.Trigger className="focus:border-primary focus:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
-                  <FaFilter className="text-slate-400" />
+                <Select.Trigger className="focus:border-primary focus:ring-primary border-separator bg-background/50 text-foreground placeholder:text-muted text-sm font-light focus:ring-1">
+                  <FaFilter className="text-muted" />
                   <Select.Value />
                   <Select.Indicator />
                 </Select.Trigger>
@@ -264,8 +264,8 @@ export default function ArchivesPageClient({
                 onChange={(key) => setSortBy(key as SortOption)}
                 className="w-full"
               >
-                <Select.Trigger className="focus:border-primary focus:ring-primary border-slate-300 bg-white/50 text-sm font-light text-slate-800 placeholder-slate-400 focus:ring-1 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500">
-                  <FaSort className="text-slate-400" />
+                <Select.Trigger className="focus:border-primary focus:ring-primary border-separator bg-background/50 text-foreground placeholder:text-muted text-sm font-light focus:ring-1">
+                  <FaSort className="text-muted" />
                   <Select.Value />
                   <Select.Indicator />
                 </Select.Trigger>
@@ -283,7 +283,7 @@ export default function ArchivesPageClient({
             </div>
           </motion.div>
 
-          <p className="mb-8 text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-muted mb-8 text-sm">
             {filteredDocuments.length} document
             {filteredDocuments.length !== 1 ? "s" : ""} trouvé
             {filteredDocuments.length !== 1 ? "s" : ""}
@@ -314,30 +314,31 @@ export default function ArchivesPageClient({
                     scale: shouldReduceMotion ? 1 : 0.95,
                   }}
                   transition={{ duration: 0.4, ease: "easeInOut" }}
-                  className="group flex flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/30 p-5 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl dark:border-slate-800/50 dark:bg-slate-900/30"
+                  className="group border-separator bg-surface-secondary/30 flex flex-col overflow-hidden rounded-xl border p-5 backdrop-blur-md transition-shadow duration-300 hover:shadow-xl"
                 >
                   <div className="mb-4 flex items-start justify-between">
                     <div className="bg-primary/5 text-primary dark:bg-primary/10 rounded-lg p-3">
                       <IconComponent className="text-2xl" />
                     </div>
-                    <span className="shrink-0 rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    <span className="bg-surface-tertiary text-foreground shrink-0 rounded-full px-3 py-1 text-xs font-semibold">
                       {doc.year}
                     </span>
                   </div>
-                  <h3 className="mb-2 line-clamp-2 text-lg font-medium text-slate-900 dark:text-white">
+                  <h3 className="text-foreground mb-2 line-clamp-2 text-lg font-medium">
                     {doc.title}
                   </h3>
-                  <p className="mb-5 line-clamp-3 grow text-sm font-light text-slate-500 dark:text-slate-400">
+                  <p className="text-muted mb-5 line-clamp-3 grow text-sm font-light">
                     {doc.description}
                   </p>
                   <div className="mt-auto flex items-end justify-between">
-                    <span className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+                    <span className="text-muted flex items-center gap-1.5 text-xs">
                       <FaFilePdf /> {doc.file_size}
                     </span>
                     <div className="flex shrink-0 gap-2">
                       <motion.button
                         onClick={() => openViewer(doc)}
-                        className="group/btn relative inline-flex items-center justify-center overflow-hidden rounded-md border border-slate-300 bg-white/50 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-white/80 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800"
+                        aria-label={`Consulter ${doc.title}`}
+                        className="group/btn border-separator bg-background/50 text-muted hover:border-muted hover:bg-background/80 hover:text-foreground relative inline-flex items-center justify-center overflow-hidden rounded-md border px-3 py-2 text-sm font-medium transition-colors"
                       >
                         <FaEye />
                       </motion.button>
@@ -362,11 +363,11 @@ export default function ArchivesPageClient({
               animate={{ opacity: 1 }}
               className="py-16 text-center"
             >
-              <FaArchive className="mx-auto mb-4 text-5xl text-slate-300 dark:text-slate-700" />
-              <p className="text-lg font-medium text-slate-600 dark:text-slate-400">
+              <FaArchive className="text-muted/40 mx-auto mb-4 text-5xl" />
+              <p className="text-muted text-lg font-medium">
                 Aucun document trouvé
               </p>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="text-muted mt-2 text-sm">
                 Essayez de modifier vos critères de recherche ou de filtrage.
               </p>
             </motion.div>

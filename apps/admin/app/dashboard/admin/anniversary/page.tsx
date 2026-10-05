@@ -1,7 +1,11 @@
 "use client";
 
+import {
+  PUBLIC_PAGE,
+  PublicationDialog,
+} from "@/components/anniversary/PublicationDialog";
 import { PageShell } from "@/components/layouts/PageShell";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,225 +13,317 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DataState } from "@/components/ui/data-state";
-import { Label } from "@/components/ui/label";
+import { DataState, ErrorState } from "@/components/ui/data-state";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Stepper } from "@/components/ui/stepper";
+import { useAnniversaryReadiness } from "@/hooks/useAnniversaryReadiness";
 import { useFeatureFlag, useUpdateFeatureFlag } from "@/hooks/useFeatureFlags";
-import { Calendar, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type {
+  ReadinessRow,
+  ReadinessState,
+} from "@/utils/anniversary/readiness";
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleDashed,
+  ExternalLink,
+  EyeOff,
+  Globe,
+  type LucideIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 import { toast } from "sonner";
 
-export default function AnniversaryAdminPage() {
-  const {
-    data: featureFlag,
-    isLoading,
-    isError,
-    refetch,
-  } = useFeatureFlag("anniversary_40_years");
-  const updateFeatureFlag = useUpdateFeatureFlag();
+const FLAG = "anniversary_40_years";
 
-  // Toggle feature flag
-  const handleToggle = async (enabled: boolean) => {
+const STATE: Record<
+  ReadinessState,
+  { icon: LucideIcon; className: string; word: string }
+> = {
+  ready: { icon: CircleCheck, className: "text-success", word: "Prêt" },
+  attention: {
+    icon: CircleAlert,
+    className: "text-warning",
+    word: "À vérifier",
+  },
+  empty: {
+    icon: CircleDashed,
+    className: "text-foreground-faint",
+    word: "Vide",
+  },
+};
+
+function publicUrl() {
+  const base =
+    process.env.NEXT_PUBLIC_WEBSITE_URL ?? "https://www.lebontemperament.com";
+  return `${base.replace(/\/$/, "")}/40-ans`;
+}
+
+export default function AnniversaryOverviewPage() {
+  const flag = useFeatureFlag(FLAG);
+  const readiness = useAnniversaryReadiness();
+  const updateFlag = useUpdateFeatureFlag();
+  const [dialog, setDialog] = useState<"publish" | "hide" | null>(null);
+
+  const published = flag.data?.is_enabled === true;
+  const rows = readiness.data?.rows ?? [];
+  const notReady = rows
+    .filter((row) => row.state !== "ready")
+    .map((row) => row.label);
+
+  const setPublished = async (next: boolean) => {
     try {
-      await updateFeatureFlag.mutateAsync({
-        flag_key: "anniversary_40_years",
-        is_enabled: enabled,
-      });
-
+      await updateFlag.mutateAsync({ flag_key: FLAG, is_enabled: next });
+      setDialog(null);
       toast.success(
-        enabled
-          ? "Page anniversaire activée avec succès"
-          : "Page anniversaire désactivée avec succès",
+        next
+          ? "La page des 40 ans est publiée"
+          : "La page des 40 ans est masquée",
       );
     } catch (error) {
-      console.error("Error updating feature flag:", error);
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Erreur lors de la mise à jour du statut",
+        next ? "La publication a échoué" : "La page n'a pas pu être masquée",
+        { description: error instanceof Error ? error.message : undefined },
       );
     }
   };
 
+  const currentStep = published ? 3 : readiness.data?.publishable ? 1 : 0;
+
   return (
     <PageShell
       className="py-4 sm:py-6"
-      title="Anniversaire 40 ans"
-      description="Gérer l'affichage de la page anniversaire et des éléments associés"
-      theme="anniversary"
+      title="Vue d’ensemble et publication"
+      description="Vérifiez chaque section, puis publiez la page des 40 ans quand tout est prêt : rien n'est visible des visiteurs avant."
     >
-      <DataState
-        isLoading={isLoading}
-        isError={isError || (!isLoading && !featureFlag)}
-        onRetry={() => refetch()}
-        errorDescription="Les paramètres de la fonctionnalité n'ont pas pu être chargés."
-        skeleton={
-          <div role="status" aria-busy>
-            <span className="sr-only">Chargement des paramètres…</span>
-            <Skeleton className="h-56 w-full rounded-2xl" aria-hidden />
-          </div>
-        }
-      >
-        {featureFlag && (
-          <div className="grid gap-4">
-            {/* Warning Card */}
-            <Card className="border-red-300 bg-red-50">
-              <CardContent className="pt-6">
-                <div className="flex gap-3">
-                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500">
-                    <span className="text-xs font-bold text-white">⚠</span>
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="text-sm font-bold text-red-900">
-                      ⚠️ ATTENTION - Ne pas activer sans autorisation
-                    </p>
-                    <p className="text-xs font-medium text-red-800 sm:text-sm">
-                      Cette fonctionnalité ne doit PAS être activée sans
-                      l&apos;autorisation explicite de Thomas. Veuillez
-                      contacter Thomas avant toute activation.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      <div className="flex flex-col gap-6">
+        <Stepper
+          aria-label="Les étapes de la publication"
+          current={currentStep}
+          steps={[
+            {
+              label: "Préparer",
+              description: "Remplir chaque section de la page.",
+            },
+            {
+              label: "Vérifier",
+              description:
+                "Relire la liste ci-dessous et prévisualiser la page.",
+            },
+            {
+              label: "Publier",
+              description:
+                "Une confirmation qui dit ce qui change pour les visiteurs.",
+            },
+          ]}
+        />
 
-            {/* Main Toggle Card */}
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl">
-                      <Calendar className="h-6 w-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-lg sm:text-xl">
-                        {featureFlag.flag_name}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {featureFlag.description}
-                      </CardDescription>
-                    </div>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>Contenu de la page</CardTitle>
+              <CardDescription>
+                Une ligne par section : son état et ce qu&apos;il reste à faire.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataState
+                isLoading={readiness.isLoading}
+                isError={readiness.isError}
+                onRetry={() => readiness.refetch()}
+                errorDescription="L'état des sections n'a pas pu être calculé."
+                skeleton={
+                  <div role="status" aria-busy className="space-y-3">
+                    <span className="sr-only">
+                      Calcul de l&apos;état des sections…
+                    </span>
+                    {Array.from({ length: 6 }, (_, index) => (
+                      <Skeleton
+                        key={index}
+                        className="h-12 w-full"
+                        aria-hidden
+                      />
+                    ))}
                   </div>
-                  <Badge
-                    variant={featureFlag.is_enabled ? "default" : "secondary"}
-                    className="flex w-fit items-center gap-1.5 px-3 py-1"
-                  >
-                    {featureFlag.is_enabled ? (
-                      <>
-                        <Eye className="h-3.5 w-3.5" />
-                        Activé
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="h-3.5 w-3.5" />
-                        Désactivé
-                      </>
-                    )}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <Label
-                      htmlFor="anniversary-toggle"
-                      className="text-sm font-medium sm:text-base"
-                    >
-                      Visibilité de la page
-                    </Label>
-                    <p className="text-xs text-gray-500 sm:text-sm">
-                      {featureFlag.is_enabled
-                        ? "La page est actuellement visible par tous les utilisateurs"
-                        : "La page est actuellement masquée et redirige vers la page 404"}
-                    </p>
-                  </div>
-                  <Switch
-                    id="anniversary-toggle"
-                    checked={featureFlag.is_enabled}
-                    onCheckedChange={handleToggle}
-                    disabled={updateFeatureFlag.isPending}
-                    className="self-start sm:self-auto"
-                  />
-                </div>
-
-                {featureFlag.updated_at && (
-                  <p className="mt-4 text-xs text-gray-500">
-                    Dernière modification :{" "}
-                    {new Date(featureFlag.updated_at).toLocaleString("fr-FR", {
-                      dateStyle: "long",
-                      timeStyle: "short",
-                    })}
-                  </p>
+                }
+              >
+                {readiness.data && (
+                  <>
+                    <div className="mb-4 space-y-2">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-body font-semibold">
+                          {readiness.data.ready} section
+                          {readiness.data.ready > 1 ? "s" : ""} prête
+                          {readiness.data.ready > 1 ? "s" : ""} sur{" "}
+                          {readiness.data.total}
+                        </p>
+                        <p className="text-detail text-muted-foreground tabular-nums">
+                          {Math.round(
+                            (readiness.data.ready / readiness.data.total) * 100,
+                          )}{" "}
+                          %
+                        </p>
+                      </div>
+                      <Progress
+                        value={
+                          (readiness.data.ready / readiness.data.total) * 100
+                        }
+                        aria-label="Sections prêtes"
+                      />
+                    </div>
+                    <ul className="divide-border -mx-4 divide-y sm:-mx-6">
+                      {rows.map((row) => (
+                        <ReadinessLine key={row.key} row={row} />
+                      ))}
+                    </ul>
+                  </>
                 )}
-              </CardContent>
-            </Card>
+              </DataState>
+            </CardContent>
+          </Card>
 
-            {/* Information Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Éléments affectés</CardTitle>
-                <CardDescription>
-                  Ces éléments seront automatiquement masqués lorsque la page
-                  est désactivée
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2.5 text-xs sm:text-sm">
-                  <li className="flex items-start gap-2">
-                    <div className="bg-primary/10 mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" />
-                    <span className="flex-1">
-                      Page{" "}
-                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] sm:text-xs">
-                        /40-ans
-                      </code>{" "}
-                      (redirection vers 404)
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="bg-primary/10 mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" />
-                    <span className="flex-1">
-                      Lien dans la navigation principale du site
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="bg-primary/10 mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" />
-                    <span className="flex-1">
-                      Section anniversaire dans le hero de la page
-                      d&apos;accueil
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="bg-primary/10 mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" />
-                    <span className="flex-1">
-                      Bouton flottant «&nbsp;40 ans&nbsp;» sur toutes les pages
-                    </span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Publication</CardTitle>
+              <CardDescription>
+                Ce que voient les visiteurs sur {PUBLIC_PAGE}.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {flag.isLoading ? (
+                <div role="status" aria-busy className="space-y-3">
+                  <span className="sr-only">
+                    Chargement de l&apos;état de publication…
+                  </span>
+                  <Skeleton className="h-7 w-28" aria-hidden />
+                  <Skeleton className="h-11 w-full" aria-hidden />
+                </div>
+              ) : flag.isError || !flag.data ? (
+                <ErrorState
+                  description="L'état de publication n'a pas pu être lu."
+                  onRetry={() => flag.refetch()}
+                  className="py-4"
+                />
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <StatusBadge tone={published ? "success" : "neutral"}>
+                      {published ? "Publiée" : "Masquée"}
+                    </StatusBadge>
+                    <p className="text-detail text-muted-foreground">
+                      {published
+                        ? "La page est en ligne pour tous les visiteurs, avec son lien dans le menu, la section d'accueil et le bouton flottant."
+                        : "Les visiteurs voient une erreur 404 ; connecté à l'administration, vous pouvez la prévisualiser."}
+                    </p>
+                    {flag.data.updated_at && (
+                      <p className="text-note text-muted-foreground">
+                        Dernier changement le{" "}
+                        {new Date(flag.data.updated_at).toLocaleString(
+                          "fr-FR",
+                          {
+                            dateStyle: "long",
+                            timeStyle: "short",
+                          },
+                        )}
+                      </p>
+                    )}
+                  </div>
 
-            {/* Two separate coloured notice cards said two small things; one muted
-            card keeps the page's only real warning (the red one) loud. */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Bon à savoir</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground space-y-2 text-sm">
-                <p>
-                  Les administrateurs connectés accèdent à la page anniversaire
-                  par son URL même lorsque la fonctionnalité est désactivée
-                  (version preview).
-                </p>
-                <p>
-                  Les changements s&apos;appliquent immédiatement sur le site :
-                  la navigation s&apos;affiche ou se masque en temps réel pour
-                  les visiteurs connectés.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </DataState>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <Button variant="outline" asChild>
+                      <a href={publicUrl()} target="_blank" rel="noreferrer">
+                        <ExternalLink aria-hidden />
+                        {published ? "Voir la page" : "Prévisualiser la page"}
+                        <span className="sr-only"> (nouvel onglet)</span>
+                      </a>
+                    </Button>
+                    {!published && (
+                      <Button onClick={() => setDialog("publish")}>
+                        <Globe aria-hidden />
+                        Publier la page
+                      </Button>
+                    )}
+                  </div>
+
+                  {published && (
+                    <section
+                      aria-labelledby="sensitive-h"
+                      className="border-border space-y-3 rounded-md border p-4"
+                    >
+                      <div>
+                        <h3
+                          id="sensitive-h"
+                          className="text-body font-semibold"
+                        >
+                          Actions sensibles
+                        </h3>
+                        <p className="text-detail text-muted-foreground">
+                          Masquer la page la retire du site pour tout le monde,
+                          sans rien effacer.
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive-outline"
+                        onClick={() => setDialog("hide")}
+                      >
+                        <EyeOff aria-hidden />
+                        Masquer la page
+                      </Button>
+                    </section>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <PublicationDialog
+        open={dialog === "publish"}
+        onOpenChange={(open) => setDialog(open ? "publish" : null)}
+        action="publish"
+        notReady={notReady}
+        isPending={updateFlag.isPending}
+        onConfirm={() => setPublished(true)}
+      />
+      <PublicationDialog
+        open={dialog === "hide"}
+        onOpenChange={(open) => setDialog(open ? "hide" : null)}
+        action="hide"
+        isPending={updateFlag.isPending}
+        onConfirm={() => setPublished(false)}
+      />
     </PageShell>
+  );
+}
+
+function ReadinessLine({ row }: { row: ReadinessRow }) {
+  const state = STATE[row.state];
+  const Icon = state.icon;
+  return (
+    <li className="flex items-center gap-3 px-4 py-3 sm:px-6">
+      <Icon className={cn("size-5 shrink-0", state.className)} aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="text-[15px] leading-5 font-medium">
+          {row.label}
+          <span className="sr-only"> : {state.word}.</span>
+        </p>
+        <p className="text-note text-muted-foreground">{row.reason}</p>
+      </div>
+      <Button
+        variant={row.state === "ready" ? "ghost" : "outline"}
+        size="sm"
+        asChild
+      >
+        <Link href={row.href}>
+          {row.action}
+          <span className="sr-only"> : {row.label}</span>
+        </Link>
+      </Button>
+    </li>
   );
 }

@@ -1,34 +1,19 @@
 "use client";
 
-import { ConcertForm } from "@/components/ConcertForm";
-import { ConcertCard } from "@/components/concerts/ConcertCard";
+import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { ConcertDialog } from "@/components/concerts/ConcertDialog";
+import { ConcertRow } from "@/components/concerts/ConcertRow";
 import { ConcertSelectionDialog } from "@/components/concerts/ConcertSelectionDialog";
-import { TourCard } from "@/components/concerts/TourCard";
+import { TourDialog } from "@/components/concerts/TourDialog";
+import { TourRow } from "@/components/concerts/TourRow";
 import { PageShell } from "@/components/layouts/PageShell";
-import { TourForm } from "@/components/TourForm";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  CardGridSkeleton,
   DataState,
   EmptyState,
+  ListSkeleton,
 } from "@/components/ui/data-state";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useConcerts,
   useCreateConcert,
@@ -41,21 +26,39 @@ import {
   useTours,
   useUpdateTour,
 } from "@/hooks/useTours";
-import { Tour } from "@/types/tours";
-import { Concert, Context } from "@repo/domain/types/concerts";
+import type { Tour } from "@/types/tours";
+import {
+  concertCountLabel,
+  concertTitle,
+  splitConcerts,
+  splitTours,
+  todayIso,
+} from "@/utils/concerts/schedule";
+import type { ConcertFormValues, TourFormValues } from "@/utils/formSchemas";
+import type { Concert } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { Music2, Plus, Users } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-export default function ProchainsConcerts() {
-  // Queries
+/** Uploads a poster through the existing route and returns its public URL. */
+async function uploadPoster(file: File): Promise<string> {
+  const body = new FormData();
+  body.append("file", file);
+  const response = await fetch("/api/upload", { method: "POST", body });
+  if (!response.ok) throw new Error("L'affiche n'a pas pu être envoyée.");
+  const { url } = (await response.json()) as { url: string };
+  return url;
+}
+
+type Period = "upcoming" | "past";
+
+type DeleteTarget =
+  { type: "concert"; item: Concert } | { type: "tour"; item: Tour };
+
+export default function ConcertsAndToursPage() {
   const concertsQuery = useConcerts();
   const toursQuery = useTours();
-  const concerts = concertsQuery.data ?? [];
-  const tours = toursQuery.data ?? [];
-
-  // Mutations
   const createConcert = useCreateConcert();
   const updateConcert = useUpdateConcert();
   const deleteConcert = useDeleteConcert();
@@ -63,512 +66,417 @@ export default function ProchainsConcerts() {
   const updateTour = useUpdateTour();
   const deleteTour = useDeleteTour();
 
-  // State
-  const [createConcertOpen, setCreateConcertOpen] = useState(false);
-  const [createTourOpen, setCreateTourOpen] = useState(false);
-  const [editConcert, setEditConcert] = useState<Concert | null>(null);
-  const [editTour, setEditTour] = useState<Tour | null>(null);
-  const [deleteDialog, setDeleteDialog] = useState<{
-    type: "concert" | "tour";
-    id: string;
-    name?: string;
-  } | null>(null);
-
-  // Manage Tour State
+  const [tab, setTab] = useState<Period>("upcoming");
+  const [concertDialog, setConcertDialog] = useState<{
+    open: boolean;
+    concert: Concert | null;
+  }>({ open: false, concert: null });
+  const [tourDialog, setTourDialog] = useState<{
+    open: boolean;
+    tour: Tour | null;
+  }>({ open: false, tour: null });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<DeleteTarget | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [manageTour, setManageTour] = useState<Tour | null>(null);
 
-  // Derived Data
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const upcomingConcerts = concerts.filter((c) => c.date >= todayStr);
-  const upcomingTours = tours.filter(
-    (t) => (t.end_date ?? t.start_date ?? "") >= todayStr,
+  // Memoised: ConcertSelectionDialog re-seeds its ticks when its concerts
+  // array changes, so a fresh array on every render would drop the admin's
+  // unsaved selection. Today is read when the data changes, so a page left
+  // open overnight stays consistent until it refetches.
+  const concerts = useMemo(
+    () => splitConcerts(concertsQuery.data ?? [], todayIso()),
+    [concertsQuery.data],
+  );
+  const tours = useMemo(
+    () => splitTours(toursQuery.data ?? [], todayIso()),
+    [toursQuery.data],
+  );
+  const tourNames = useMemo(
+    () => new Map((toursQuery.data ?? []).map((t) => [t.id, t.name])),
+    [toursQuery.data],
+  );
+  // Every tour is selectable in the concert form (a past concert may belong
+  // to a past tour); upcoming ones first, past ones labelled.
+  const tourOptions = useMemo(
+    () => [
+      ...tours.upcoming.map((t) => ({ id: t.id, name: t.name })),
+      ...tours.past.map((t) => ({ id: t.id, name: t.name, past: true })),
+    ],
+    [tours],
   );
 
-  // Handlers - Concerts
-  const handleCreateConcert = async (
-    e: React.FormEvent<HTMLFormElement>,
-    formDate: Date | undefined,
-    selectedFile: File | null,
+  // --- Concerts ---
+
+  const saveConcert = async (
+    values: ConcertFormValues,
+    poster: File | null,
   ) => {
-    e.preventDefault();
+    const editing = concertDialog.concert;
+    setSaving(true);
     try {
-      let affiche = null;
-      const form = e.target as HTMLFormElement;
-
-      if (selectedFile) {
-        const fileFormData = new FormData();
-        fileFormData.append("file", selectedFile);
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: fileFormData,
-        });
-        if (!uploadResponse.ok) throw new Error("Upload failed");
-        const { url } = await uploadResponse.json();
-        affiche = url;
-      }
-
-      const concertData = {
-        place: form.place.value,
-        date: formDate ? format(formDate, "yyyy-MM-dd") : "",
-        time: form.time.value,
-        context: form.context.value,
-        name: form.concertName.value,
-        additional_informations: form.additional_informations.value,
-        related_link: form.related_link.value || null,
+      const affiche = poster
+        ? await uploadPoster(poster)
+        : (editing?.affiche ?? null);
+      const data = {
+        place: values.place,
+        date: format(values.date, "yyyy-MM-dd"),
+        time: values.time,
+        context: values.context,
+        name: values.concertName,
+        additional_informations: values.additional_informations,
+        related_link: values.related_link || null,
+        tour_id: values.tour_id || null,
         affiche,
       };
-
-      await createConcert.mutateAsync(concertData);
-      toast.success("Concert ajouté");
-      setCreateConcertOpen(false);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors de l'ajout");
-    }
-  };
-
-  const handleEditConcert = async (
-    e: React.FormEvent<HTMLFormElement>,
-    formDate: Date | undefined,
-    selectedFile: File | null,
-  ) => {
-    e.preventDefault();
-    if (!editConcert) return;
-    try {
-      let affiche = editConcert.affiche;
-      const formData = new FormData(e.currentTarget);
-
-      if (selectedFile) {
-        const fileData = new FormData();
-        fileData.append("file", selectedFile);
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: fileData,
-        });
-        if (!uploadResponse.ok) throw new Error("Upload failed");
-        const { url } = await uploadResponse.json();
-        affiche = url;
-      }
-
-      const concertData = {
-        id: editConcert.id,
-        place: formData.get("place") as string,
-        date: formDate ? format(formDate, "yyyy-MM-dd") : editConcert.date,
-        time: formData.get("time") as string,
-        context: formData.get("context") as Context,
-        name: formData.get("concertName") as string,
-        additional_informations: formData.get(
-          "additional_informations",
-        ) as string,
-        related_link: (formData.get("related_link") as string) || null,
-        affiche,
-      };
-
-      await updateConcert.mutateAsync(concertData);
-      toast.success("Concert modifié");
-      setEditConcert(null);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors de la modification");
-    }
-  };
-
-  // Handlers - Tours
-  const handleCreateTour = async (
-    e: React.FormEvent<HTMLFormElement>,
-    startDate: Date | undefined,
-    endDate: Date | undefined,
-    selectedFile: File | null,
-  ) => {
-    e.preventDefault();
-    try {
-      const form = e.target as HTMLFormElement;
-      let tour_poster = null;
-
-      if (selectedFile) {
-        const fileData = new FormData();
-        fileData.append("file", selectedFile);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: fileData,
-        });
-        if (!res.ok) throw new Error("Upload failed");
-        const { url } = await res.json();
-        tour_poster = url;
-      }
-
-      await createTour.mutateAsync({
-        name: form.tourName.value,
-        description: form.description.value,
-        context: form.context.value,
-        start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-        tour_poster,
+      const title = concertTitle({
+        name: values.concertName,
+        place: values.place,
       });
-
-      toast.success("Tournée créée");
-      setCreateTourOpen(false);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur création tournée");
-    }
-  };
-
-  const handleEditTour = async (
-    e: React.FormEvent<HTMLFormElement>,
-    startDate: Date | undefined,
-    endDate: Date | undefined,
-    selectedFile: File | null,
-  ) => {
-    e.preventDefault();
-    if (!editTour) return;
-    try {
-      const form = e.target as HTMLFormElement;
-      let tour_poster = editTour.tour_poster;
-
-      if (selectedFile) {
-        const fileData = new FormData();
-        fileData.append("file", selectedFile);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: fileData,
-        });
-        if (!res.ok) throw new Error("Upload failed");
-        const { url } = await res.json();
-        tour_poster = url;
-      }
-
-      await updateTour.mutateAsync({
-        id: editTour.id,
-        name: form.tourName.value,
-        description: form.description.value,
-        context: form.context.value,
-        start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-        tour_poster,
-      });
-
-      toast.success("Tournée mise à jour");
-      setEditTour(null);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur modification tournée");
-    }
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteDialog) return;
-    try {
-      if (deleteDialog.type === "concert") {
-        await deleteConcert.mutateAsync(deleteDialog.id);
-        toast.success("Concert supprimé");
+      if (editing) {
+        await updateConcert.mutateAsync({ id: editing.id, ...data });
+        toast.success(`« ${title} » enregistré`);
       } else {
-        await deleteTour.mutateAsync(deleteDialog.id);
-        toast.success("Tournée supprimée");
+        await createConcert.mutateAsync(data);
+        toast.success(`« ${title} » ajouté aux prochains concerts`);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors de la suppression");
     } finally {
-      setDeleteDialog(null);
+      setSaving(false);
     }
   };
 
-  const handleUpdateTourConcerts = async (concertIds: string[]) => {
-    if (!manageTour) return;
+  // --- Tours ---
+
+  const saveTour = async (values: TourFormValues, poster: File | null) => {
+    const editing = tourDialog.tour;
+    setSaving(true);
     try {
-      // Logic:
-      // 1. Find concerts currently in this tour that are NOT in concertIds -> remove them (set tour_id null)
-      // 2. Find concerts in concertIds -> set tour_id to manageTour.id
-
-      // Current concerts in this tour
-      const currentTourConcerts = concerts.filter(
-        (c) => c.tour_id === manageTour.id,
-      );
-
-      // To Remove:
-      const toRemove = currentTourConcerts.filter(
-        (c) => !concertIds.includes(c.id),
-      );
-      // To Add:
-      const toAddIds = concertIds; // simpler to just update all selected to ensure they are assigned
-
-      const promises = [
-        ...toRemove.map((c) =>
-          updateConcert.mutateAsync({ id: c.id, tour_id: null }),
-        ),
-        ...toAddIds.map((id) =>
-          updateConcert.mutateAsync({ id, tour_id: manageTour.id }),
-        ),
-      ];
-
-      await Promise.all(promises);
-      toast.success("Liste des concerts mise à jour");
-      setManageTour(null);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur mise à jour concerts");
+      const tour_poster = poster
+        ? await uploadPoster(poster)
+        : (editing?.tour_poster ?? null);
+      const data = {
+        name: values.tourName,
+        description: values.description,
+        context: values.context,
+        start_date: values.start_date
+          ? format(values.start_date, "yyyy-MM-dd")
+          : null,
+        end_date: values.end_date
+          ? format(values.end_date, "yyyy-MM-dd")
+          : null,
+        tour_poster,
+      };
+      if (editing) {
+        await updateTour.mutateAsync({ id: editing.id, ...data });
+        toast.success(`« ${values.tourName} » enregistrée`);
+      } else {
+        await createTour.mutateAsync(data);
+        toast.success(`« ${values.tourName} » créée`);
+      }
+    } finally {
+      setSaving(false);
     }
   };
+
+  // --- Deletion ---
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setIsDeleting(true);
+    try {
+      if (deleting.type === "concert") {
+        await deleteConcert.mutateAsync(deleting.item.id);
+        toast.success(`« ${concertTitle(deleting.item)} » supprimé`);
+      } else {
+        await deleteTour.mutateAsync(deleting.item.id);
+        toast.success(`« ${deleting.item.name} » supprimée`);
+      }
+      setDeleting(null);
+    } catch (error) {
+      toast.error("La suppression a échoué", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // --- « Gérer les concerts »: one PATCH per concert, partial failures named ---
+
+  const manageConcerts =
+    manageTour && tours.past.some((t) => t.id === manageTour.id)
+      ? concerts.past
+      : concerts.upcoming;
+
+  const updateTourConcerts = async (concertIds: string[]) => {
+    if (!manageTour) return;
+    // Only the concerts the dialog listed: a tour still « À venir » keeps
+    // the concerts it has already played, which the dialog doesn't show.
+    const all = manageConcerts;
+    const toRemove = all.filter(
+      (c) => c.tour_id === manageTour.id && !concertIds.includes(c.id),
+    );
+    const toAdd = all.filter(
+      (c) => concertIds.includes(c.id) && c.tour_id !== manageTour.id,
+    );
+    const changes = [
+      ...toRemove.map((c) => ({ concert: c, tour_id: null })),
+      ...toAdd.map((c) => ({ concert: c, tour_id: manageTour.id })),
+    ];
+    if (changes.length === 0) {
+      setManageTour(null);
+      return;
+    }
+    const results = await Promise.allSettled(
+      changes.map((change) =>
+        updateConcert.mutateAsync({
+          id: change.concert.id,
+          tour_id: change.tour_id,
+        }),
+      ),
+    );
+    const failed = changes.filter((_, i) => results[i]!.status === "rejected");
+    if (failed.length === 0) {
+      toast.success(`Concerts de « ${manageTour.name} » mis à jour`);
+      setManageTour(null);
+      return;
+    }
+    toast.error(
+      failed.length === changes.length
+        ? "Aucun changement n'a été enregistré"
+        : "Une partie des changements n'a pas été enregistrée",
+      {
+        description: `Non enregistré : ${failed
+          .map((f) => `« ${concertTitle(f.concert)} »`)
+          .join(", ")}. La liste a été rechargée.`,
+      },
+    );
+    await Promise.all([concertsQuery.refetch(), toursQuery.refetch()]);
+  };
+
+  const openCreateConcert = () =>
+    setConcertDialog({ open: true, concert: null });
+  const openCreateTour = () => setTourDialog({ open: true, tour: null });
 
   // --- Render ---
 
-  return (
-    <PageShell
-      theme="public"
-      className="py-4 sm:py-6"
-      title="Prochains concerts"
-      description="Gérez la programmation, les dates et les tournées."
-      headerAction={
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button
-            variant="outline"
-            className="min-h-11 w-full sm:w-auto"
-            onClick={() => setCreateTourOpen(true)}
-          >
-            <Users className="h-4 w-4" aria-hidden />
-            Nouvelle tournée
-          </Button>
-          <Button
-            className="min-h-11 w-full sm:w-auto"
-            onClick={() => setCreateConcertOpen(true)}
-          >
-            <Plus className="h-4 w-4" aria-hidden />
-            Nouveau concert
-          </Button>
-        </div>
-      }
-    >
+  const renderPeriod = (key: Period) => {
+    const periodTours = tours[key];
+    const periodConcerts = concerts[key];
+    const past = key === "past";
+    return (
       <div className="space-y-8">
-        {/* TOURS SECTION */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Users className="text-primary h-5 w-5" aria-hidden />
-            <h2 className="text-lg font-semibold tracking-tight">
-              Tournées en cours
+        <section aria-labelledby={`${key}-tours-heading`} className="space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id={`${key}-tours-heading`} className="text-section">
+              {past ? "Tournées passées" : "Tournées"}
             </h2>
+            {periodTours.length > 0 && (
+              <p className="text-note text-muted-foreground">
+                {periodTours.length} tournée{periodTours.length > 1 ? "s" : ""}
+              </p>
+            )}
           </div>
           <DataState
             isLoading={toursQuery.isLoading}
             isError={toursQuery.isError}
-            isEmpty={upcomingTours.length === 0}
+            isEmpty={periodTours.length === 0}
             onRetry={() => toursQuery.refetch()}
             errorDescription="Les tournées n'ont pas pu être chargées."
             skeleton={
-              <CardGridSkeleton cards={2} label="Chargement des tournées…" />
+              <ListSkeleton rows={1} label="Chargement des tournées…" />
             }
             empty={
               <EmptyState
                 icon={Users}
-                title="Aucune tournée à venir"
-                description="Une tournée regroupe plusieurs concerts sous un même nom."
-                className="py-8"
+                title={
+                  past ? "Aucune tournée passée" : "Aucune tournée à venir"
+                }
+                description={
+                  past
+                    ? "Les tournées dont le dernier concert est passé apparaîtront ici."
+                    : "Une tournée regroupe plusieurs concerts sous un même nom ; vous pourrez en préciser les dates plus tard."
+                }
+                className="py-6"
                 action={
-                  <Button
-                    variant="outline"
-                    className="min-h-11"
-                    onClick={() => setCreateTourOpen(true)}
-                  >
-                    <Users className="h-4 w-4" aria-hidden />
-                    Créer une tournée
-                  </Button>
+                  past ? undefined : (
+                    <Button variant="outline" onClick={openCreateTour}>
+                      <Users aria-hidden />
+                      Créer une tournée
+                    </Button>
+                  )
                 }
               />
             }
           >
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {upcomingTours.map((tour) => (
-                <TourCard
-                  key={tour.id}
-                  tour={tour}
-                  onEdit={setEditTour}
-                  onDelete={(id) =>
-                    setDeleteDialog({ type: "tour", id, name: tour.name })
-                  }
-                  onManageConcerts={setManageTour}
-                />
+            <ul className="space-y-3">
+              {periodTours.map((tour) => (
+                <li key={tour.id} className="list-none">
+                  <TourRow
+                    tour={tour}
+                    onEdit={() => setTourDialog({ open: true, tour })}
+                    onDelete={() => setDeleting({ type: "tour", item: tour })}
+                    onManageConcerts={() => setManageTour(tour)}
+                  />
+                </li>
               ))}
-            </div>
+            </ul>
           </DataState>
         </section>
 
-        {/* CONCERTS SECTION */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Music2 className="text-primary h-5 w-5" aria-hidden />
-            <h2 className="text-lg font-semibold tracking-tight">
-              Concerts à venir
+        <section
+          aria-labelledby={`${key}-concerts-heading`}
+          className="space-y-3"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id={`${key}-concerts-heading`} className="text-section">
+              {past ? "Concerts passés" : "Concerts à venir"}
             </h2>
+            {periodConcerts.length > 0 && (
+              <p className="text-note text-muted-foreground">
+                {concertCountLabel(periodConcerts.length)}
+              </p>
+            )}
           </div>
           <DataState
             isLoading={concertsQuery.isLoading}
             isError={concertsQuery.isError}
-            isEmpty={upcomingConcerts.length === 0}
+            isEmpty={periodConcerts.length === 0}
             onRetry={() => concertsQuery.refetch()}
             errorDescription="Les concerts n'ont pas pu être chargés."
             skeleton={
-              <CardGridSkeleton cards={3} label="Chargement des concerts…" />
+              <ListSkeleton rows={3} label="Chargement des concerts…" />
             }
             empty={
               <EmptyState
                 icon={Music2}
-                title="Aucun concert à venir"
-                description="Aucune date n'est programmée pour le moment."
-                className="py-8"
+                title={past ? "Aucun concert passé" : "Aucun concert à venir"}
+                description={
+                  past
+                    ? "Les concerts dont la date est passée apparaîtront ici, prêts à être corrigés si besoin."
+                    : "Aucune date n'est programmée : le site public affiche « Aucun concert à venir » en attendant."
+                }
+                className="py-6"
                 action={
-                  <Button
-                    className="min-h-11"
-                    onClick={() => setCreateConcertOpen(true)}
-                  >
-                    <Plus className="h-4 w-4" aria-hidden />
-                    Ajouter un concert
-                  </Button>
+                  past ? undefined : (
+                    <Button variant="outline" onClick={openCreateConcert}>
+                      <Plus aria-hidden />
+                      Programmer un concert
+                    </Button>
+                  )
                 }
               />
             }
           >
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {upcomingConcerts.map((concert) => (
-                <ConcertCard
-                  key={concert.id}
-                  concert={concert}
-                  tourName={
-                    concert.tour_id
-                      ? tours.find((t) => t.id === concert.tour_id)?.name
-                      : undefined
-                  }
-                  onEdit={setEditConcert}
-                  onDelete={(id) => setDeleteDialog({ type: "concert", id })}
-                />
+            <ul className="space-y-3">
+              {periodConcerts.map((concert) => (
+                <li key={concert.id} className="list-none">
+                  <ConcertRow
+                    concert={concert}
+                    tourName={
+                      concert.tour_id
+                        ? tourNames.get(concert.tour_id)
+                        : undefined
+                    }
+                    onEdit={() => setConcertDialog({ open: true, concert })}
+                    onDelete={() =>
+                      setDeleting({ type: "concert", item: concert })
+                    }
+                  />
+                </li>
               ))}
-            </div>
+            </ul>
           </DataState>
         </section>
       </div>
+    );
+  };
 
-      {/* --- DIALOGS --- */}
+  const deleteTitle =
+    deleting?.type === "tour"
+      ? `Supprimer la tournée « ${deleting.item.name} » ?`
+      : `Supprimer « ${deleting ? concertTitle(deleting.item) : ""} » ?`;
+  // The tours route deletes the row only; the database then clears the
+  // concerts' tour_id (ON DELETE SET NULL per app/api/tours/route.ts).
+  const deleteDescription =
+    deleting?.type === "tour"
+      ? `${
+          deleting.item.concert_count
+            ? `Ses ${concertCountLabel(deleting.item.concert_count)} restent sur le site, sans tournée. `
+            : "Elle ne contient aucun concert. "
+        }La tournée disparaît du site public. Cette action ne peut pas être annulée.`
+      : "Le concert disparaît du site public et son affiche est effacée. Cette action ne peut pas être annulée.";
 
-      {/* Delete Confirmation */}
-      <AlertDialog
-        open={!!deleteDialog}
-        onOpenChange={(open) => !open && setDeleteDialog(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Suppression définitive</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer{" "}
-              {deleteDialog?.type === "tour" ? "la tournée" : "le concert"}
-              {deleteDialog?.name ? ` « ${deleteDialog.name} »` : ""} ?
-              <br />
-              Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90 min-h-11 text-white"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+  return (
+    <PageShell
+      className="py-4 sm:py-6"
+      title="Concerts et tournées"
+      description="Les concerts annoncés sur le site public, regroupés en tournées quand ils le sont. Les concerts passés restent consultables et corrigeables."
+      headerAction={
+        <>
+          <Button variant="outline" onClick={openCreateTour}>
+            <Users aria-hidden />
+            Nouvelle tournée
+          </Button>
+          <Button onClick={openCreateConcert}>
+            <Plus aria-hidden />
+            Ajouter un concert
+          </Button>
+        </>
+      }
+    >
+      <Tabs value={tab} onValueChange={(value) => setTab(value as Period)}>
+        <TabsList aria-label="Période">
+          <TabsTrigger value="upcoming">À venir</TabsTrigger>
+          <TabsTrigger value="past">Passés</TabsTrigger>
+        </TabsList>
+        <TabsContent value="upcoming" className="mt-5">
+          {renderPeriod("upcoming")}
+        </TabsContent>
+        <TabsContent value="past" className="mt-5">
+          {renderPeriod("past")}
+        </TabsContent>
+      </Tabs>
 
-      {/* Create Concert */}
-      <Dialog open={createConcertOpen} onOpenChange={setCreateConcertOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Ajouter un concert</DialogTitle>
-            <DialogDescription>
-              Renseignez les détails du nouvel événement.
-            </DialogDescription>
-          </DialogHeader>
-          <ConcertForm
-            onSubmit={handleCreateConcert}
-            loading={createConcert.isPending}
-            initialData={null}
-            submitLabel="Créer le concert"
-            onClose={() => setCreateConcertOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <ConcertDialog
+        open={concertDialog.open}
+        onOpenChange={(open) =>
+          setConcertDialog((current) => ({ ...current, open }))
+        }
+        concert={concertDialog.concert}
+        tours={tourOptions}
+        onSubmit={saveConcert}
+        isPending={saving}
+      />
 
-      {/* Edit Concert */}
-      <Dialog
-        open={!!editConcert}
-        onOpenChange={(open) => !open && setEditConcert(null)}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Modifier le concert</DialogTitle>
-            <DialogDescription>
-              Mettez à jour les informations de ce concert.
-            </DialogDescription>
-          </DialogHeader>
-          {editConcert && (
-            <ConcertForm
-              initialData={editConcert}
-              onSubmit={handleEditConcert}
-              loading={updateConcert.isPending}
-              submitLabel="Enregistrer"
-              onClose={() => setEditConcert(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <TourDialog
+        open={tourDialog.open}
+        onOpenChange={(open) =>
+          setTourDialog((current) => ({ ...current, open }))
+        }
+        tour={tourDialog.tour}
+        onSubmit={saveTour}
+        isPending={saving}
+      />
 
-      {/* Create Tour */}
-      <Dialog open={createTourOpen} onOpenChange={setCreateTourOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Nouvelle tournée</DialogTitle>
-            <DialogDescription>
-              Une tournée permet de regrouper plusieurs concerts.
-            </DialogDescription>
-          </DialogHeader>
-          <TourForm
-            onSubmit={handleCreateTour}
-            loading={createTour.isPending}
-            initialData={null}
-            submitLabel="Créer la tournée"
-            onClose={() => setCreateTourOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleting(null);
+        }}
+        onConfirm={confirmDelete}
+        title={deleteTitle}
+        description={deleteDescription}
+        isLoading={isDeleting}
+      />
 
-      {/* Edit Tour */}
-      <Dialog
-        open={!!editTour}
-        onOpenChange={(open) => !open && setEditTour(null)}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Modifier la tournée</DialogTitle>
-            <DialogDescription>
-              Mettez à jour les informations de cette tournée.
-            </DialogDescription>
-          </DialogHeader>
-          {editTour && (
-            <TourForm
-              initialData={editTour}
-              onSubmit={handleEditTour}
-              loading={updateTour.isPending}
-              submitLabel="Enregistrer"
-              onClose={() => setEditTour(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Manage Concerts in Tour */}
       <ConcertSelectionDialog
-        isOpen={!!manageTour}
+        isOpen={manageTour !== null}
         onClose={() => setManageTour(null)}
         tour={manageTour}
-        concerts={upcomingConcerts} // Only show upcoming concerts for assignment
-        onConfirm={handleUpdateTourConcerts}
+        concerts={manageConcerts}
+        onConfirm={updateTourConcerts}
+        isPending={updateConcert.isPending}
       />
     </PageShell>
   );

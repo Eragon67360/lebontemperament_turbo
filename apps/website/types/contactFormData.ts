@@ -4,5 +4,4 @@ export interface ContactFormProps {
   email: string;
   subject: string;
   message: string;
-  captchaValue?: string;
 }

@@ -1,6 +1,6 @@
 // app/api/videos/route.ts
+import { PUBLIC_VIDEO_COLUMNS, type PublicVideo } from "@/lib/publicVideos";
 import { createClient } from "@/utils/supabase/server";
-import { Video } from "@repo/domain/types/videos";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
 
     const { data: videos, error } = await supabase
       .from("youtube_links")
-      .select("*")
+      .select(PUBLIC_VIDEO_COLUMNS)
       .eq("is_active", true)
       .order("display_order", { ascending: true });
 
@@ -18,7 +18,7 @@ export async function GET() {
       return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
     }
 
-    return NextResponse.json((videos || []) as Video[]); // view-model: youtube_links nullability handled by UI defaults
+    return NextResponse.json((videos || []) as PublicVideo[]); // view-model: youtube_links nullability handled by UI defaults
   } catch (error) {
     console.error(error);
 

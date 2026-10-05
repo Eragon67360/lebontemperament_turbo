@@ -74,7 +74,7 @@ const PdfList: React.FC<PdfListProps> = ({ jsonFileName, context }) => {
           key={index}
           target="_blank"
           rel="noopener"
-          className="bg-primary flex items-center gap-4 rounded-lg p-2 text-xs text-white hover:bg-[#18858ba7] md:text-sm lg:p-4"
+          className="bg-primary-solid hover:bg-primary-solid-hover flex items-center gap-4 rounded-lg p-2 text-xs text-white md:text-sm lg:p-4"
         >
           <FaRegFilePdf />{" "}
           <span>

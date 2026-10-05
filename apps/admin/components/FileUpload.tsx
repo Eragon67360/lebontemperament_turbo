@@ -1,9 +1,17 @@
 // components/FileUpload.tsx
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+
+/** Stands in for a PDF already stored, so the field shows its name. */
+const pdfPlaceholder = (url: string) => {
+  const fileName = url.split("/").pop() || "document.pdf";
+  return new File([], fileName, { type: "application/pdf" });
+};
+
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
   onFileClear: () => void;
@@ -20,18 +28,21 @@ export function FileUpload({
   currentPDFUrl,
   mode,
 }: FileUploadProps) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(
+    currentImageUrl || null,
+  );
+  const [pdfFile, setPdfFile] = useState<File | null>(() =>
+    !currentImageUrl && currentPDFUrl ? pdfPlaceholder(currentPDFUrl) : null,
+  );
 
-  useEffect(() => {
+  // A new stored file from the parent replaces what the field shows.
+  useResetOnChange([currentImageUrl, currentPDFUrl], () => {
     if (currentImageUrl) {
       setPreview(currentImageUrl);
     } else if (currentPDFUrl) {
-      const fileName = currentPDFUrl.split("/").pop() || "document.pdf";
-      const fakeFile = new File([], fileName, { type: "application/pdf" });
-      setPdfFile(fakeFile);
+      setPdfFile(pdfPlaceholder(currentPDFUrl));
     }
-  }, [currentImageUrl, currentPDFUrl]);
+  });
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -120,7 +131,7 @@ export function FileUpload({
             <p className="text-xs">
               {mode === "pdf"
                 ? "PDF (max. 5MB)"
-                : "PNG, JPG, GIF, SVG ou WEBP (max. 5MB)"}
+                : "JPG, PNG, GIF, WebP ou AVIF, 5 Mo maximum"}
             </p>
           </div>
         </div>
@@ -136,10 +147,17 @@ export function FileUpload({
           />
           <button
             onClick={handleClear}
-            className="absolute top-2 right-2 z-10 rounded-full bg-black/50 p-1 transition-colors hover:bg-black/70"
+            className="absolute top-2 right-2 z-10 grid size-10 place-items-center rounded-full bg-black/50 transition-colors hover:bg-black/70"
             type="button"
+            // Clearing the stored image only opens the picker: saving
+            // without a new file keeps it.
+            aria-label={
+              preview === currentImageUrl
+                ? "Remplacer l'image"
+                : "Retirer l'image"
+            }
           >
-            <X className="h-4 w-4 text-white" />
+            <X className="h-4 w-4 text-white" aria-hidden />
           </button>
         </div>
       ) : pdfFile ? (
@@ -153,10 +171,11 @@ export function FileUpload({
             </div>
             <button
               onClick={handleClear}
-              className="rounded-full bg-black/50 p-1 transition-colors hover:bg-black/70"
+              className="grid size-10 place-items-center rounded-full bg-black/50 transition-colors hover:bg-black/70"
               type="button"
+              aria-label="Retirer le fichier"
             >
-              <X className="h-4 w-4 text-white" />
+              <X className="h-4 w-4 text-white" aria-hidden />
             </button>
           </div>
         </div>

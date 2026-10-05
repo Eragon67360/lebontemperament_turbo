@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
+import { loadBrowserClient, type BrowserClient } from "@/utils/supabase/lazy";
 import { DRIVE_ROOT_SLUG, driveFolderUrl } from "@repo/domain/utils/drive";
 import { useEffect, useState } from "react";
 
@@ -11,16 +11,18 @@ import { useEffect, useState } from "react";
  *
  * Only members can read `drive_folders`, so the query runs once a session
  * exists (at mount, or when the visitor signs in later): anonymous visitors
- * used to get a 406 and a console error on every public page.
+ * used to get a 406 and a console error on every public page. The callers
+ * (the signed-in user menu, the members' landing page) only mount for
+ * members, so loading supabase-js here costs visitors nothing.
  */
 export function useDriveRootUrl() {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    const supabase = createClient();
+    let unsubscribe: (() => void) | undefined;
 
-    const fetchRootFolder = async () => {
+    const fetchRootFolder = async (supabase: BrowserClient) => {
       const { data, error } = await supabase
         .from("drive_folders")
         .select("folder_id")
@@ -34,20 +36,25 @@ export function useDriveRootUrl() {
       if (data) setUrl(driveFolderUrl(data.folder_id));
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (isMounted && session) fetchRootFolder();
-    });
+    loadBrowserClient().then((supabase) => {
+      if (!isMounted) return;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) fetchRootFolder();
-      if (event === "SIGNED_OUT") setUrl(null);
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (isMounted && session) fetchRootFolder(supabase);
+      });
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" && session) fetchRootFolder(supabase);
+        if (event === "SIGNED_OUT") setUrl(null);
+      });
+      unsubscribe = () => subscription.unsubscribe();
     });
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, []);
 

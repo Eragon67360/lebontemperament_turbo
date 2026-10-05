@@ -10,22 +10,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 interface DeleteConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  title?: string;
-  description?: string;
+  /** Names the item: « Supprimer « La création » ? ». */
+  title: string;
+  /** What happens, and that it cannot be undone. */
+  description: string;
+  confirmLabel?: string;
   isLoading?: boolean;
 }
 
+/** The confirmation of a deletion: names the item, says the effect, filled red confirm. */
 export function DeleteConfirmDialog({
   open,
   onOpenChange,
   onConfirm,
-  title = "Êtes-vous sûr ?",
-  description = "Cette action est irréversible. L'élément sera définitivement supprimé.",
+  title,
+  description,
+  confirmLabel = "Supprimer",
   isLoading = false,
 }: DeleteConfirmDialogProps) {
   return (
@@ -38,14 +44,16 @@ export function DeleteConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>Annuler</AlertDialogCancel>
           <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
+            variant="destructive"
+            onClick={(event) => {
+              event.preventDefault();
               onConfirm();
             }}
             disabled={isLoading}
-            className="bg-destructive hover:bg-destructive/90 text-white"
+            aria-busy={isLoading || undefined}
           >
-            {isLoading ? "Suppression..." : "Supprimer"}
+            {isLoading && <Loader2 className="animate-spin" aria-hidden />}
+            {isLoading ? "Suppression…" : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

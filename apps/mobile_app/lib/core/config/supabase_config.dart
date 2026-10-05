@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:logger/logger.dart';
 
 class SupabaseConfig {
   static String get supabaseUrl {
@@ -19,7 +20,7 @@ class SupabaseConfig {
       await dotenv.load(fileName: ".env");
     } catch (e) {
       // If .env file doesn't exist or can't be loaded, continue with defaults
-      print('Warning: Could not load .env file: $e');
+      Logger().w('Could not load .env file, using the defaults: $e');
     }
 
     final url = supabaseUrl;

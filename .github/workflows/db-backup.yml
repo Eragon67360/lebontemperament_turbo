@@ -1,0 +1,79 @@
+name: Database backup
+
+# Nightly encrypted dump of the Supabase database (roles, schema, data),
+# kept 30 days as a workflow artifact. Needed because the Free plan has no
+# daily backups.
+#
+# The repo is public and anyone signed in to GitHub can download its
+# artifacts, so the dump is encrypted (AES-256) before upload. Secrets:
+#   SUPABASE_DB_URL    Session pooler connection string (Dashboard > Connect >
+#                      Session pooler; GitHub runners have no IPv6, so not the
+#                      direct db.<ref>.supabase.co host), with the password.
+#   BACKUP_PASSPHRASE  Long random passphrase, also kept in a password manager:
+#                      without it the backups can't be opened.
+#
+# Not covered: Storage files (only their metadata rows), Edge Function code
+# (in this repo) and Vault secrets' values.
+#
+# Restore: download the artifact, then
+#   gpg --decrypt db-backup.tar.gz.gpg | tar xz
+#   psql "$DB_URL" -f roles.sql -f schema.sql -c 'SET session_replication_role = replica' -f data.sql
+# into an empty project (see supabase.com/docs/guides/platform/migrating-within-supabase).
+
+on:
+  schedule:
+    # ~04:00 Europe/Paris, after the 03:15 UTC cron cleanup.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.119.0
+
+      - name: Dump roles, schema and data
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL secret is missing"
+            exit 1
+          fi
+          mkdir -p backup
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql --use-copy --data-only
+          ls -l backup
+
+      - name: Encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::BACKUP_PASSPHRASE secret is missing"
+            exit 1
+          fi
+          tar czf - -C backup . \
+            | gpg --batch --yes --pinentry-mode loopback \
+                --passphrase-fd 3 3<<<"$BACKUP_PASSPHRASE" \
+                --symmetric --cipher-algo AES256 -o db-backup.tar.gz.gpg
+          rm -rf backup
+          ls -l db-backup.tar.gz.gpg
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: db-backup.tar.gz.gpg
+          retention-days: 30
+          if-no-files-found: error

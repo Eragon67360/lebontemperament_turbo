@@ -12,7 +12,6 @@ type User = {
   home_phone?: string | null;
   mobile_phone?: string | null;
   isMissingInExcel?: boolean;
-  isMissingInDatabase?: boolean;
 };
 
 interface UseUsersOptions {
@@ -22,7 +21,16 @@ interface UseUsersOptions {
   search?: string;
 }
 
-export function useUsers(options?: UseUsersOptions) {
+/** Query behaviour a caller may tune without changing the cache key. */
+interface UseUsersQueryOptions {
+  staleTime?: number;
+  refetchOnWindowFocus?: boolean;
+}
+
+export function useUsers(
+  options?: UseUsersOptions,
+  query?: UseUsersQueryOptions,
+) {
   const params = new URLSearchParams();
   if (options?.sortBy) params.append("sortBy", options.sortBy);
   if (options?.sortOrder) params.append("sortOrder", options.sortOrder);
@@ -39,6 +47,7 @@ export function useUsers(options?: UseUsersOptions) {
       const data = await response.json();
       return data as User[];
     },
+    ...query,
   });
 }
 
@@ -148,68 +157,94 @@ export function useUpdateUserDisplayName() {
   });
 }
 
-// SYNC users with Excel
-export function useSyncUsers() {
+// INVITE users (one request, batched server-side)
+export interface InvitationResult {
+  email: string;
+  displayName: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface InviteUsersResponse {
+  invitationResults: InvitationResult[];
+  summary: { total: number; successful: number; failed: number };
+}
+
+export function useInviteUsers() {
   const queryClient = useQueryClient();
 
-  return useQuery({
-    queryKey: ["users-sync"],
-    queryFn: async () => {
-      const response = await fetch("/api/users/sync");
-      if (!response.ok) throw new Error("Failed to fetch sync data");
-      return response.json();
+  return useMutation({
+    mutationFn: async (
+      emails: Array<{ email: string; displayName: string }>,
+    ) => {
+      const response = await fetch("/api/invite-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Échec de l'invitation");
+      }
+
+      return result as InviteUsersResponse;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 }
 
-// SYNC users mutation (patch users with Excel data)
-export function useSyncUsersMutation() {
+// UPLOAD profile picture mutation
+export function useUploadProfilePicture() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (userIds: string[]) => {
-      const response = await fetch("/api/users/sync", {
+    mutationFn: async ({ userId, file }: { userId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", userId);
+
+      const response = await fetch("/api/users/profile-picture", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userIds }),
+        body: formData,
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to sync users");
+        throw new Error(error.error || "Failed to upload profile picture");
+      }
+
+      return response.json() as Promise<{ url: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+// DELETE profile picture mutation
+export function useDeleteProfilePicture() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch(
+        `/api/users/profile-picture?userId=${userId}`,
+        { method: "DELETE" },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete profile picture");
       }
 
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["users-sync"] });
-    },
-  });
-}
-
-// SYNC all user data from Excel
-export function useSyncAllUserData() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/users/sync-data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userIds: [] }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to sync user data");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["users-sync"] });
     },
   });
 }
