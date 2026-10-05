@@ -609,7 +609,9 @@ class _GroupTypeBadge extends StatelessWidget {
       case GroupType.femmes:
         return scheme.tertiary;
       case GroupType.jeunesEnfants:
-        return scheme.tertiaryContainer;
+        // The badge draws its text in this colour on a 10 % tint of it: the
+        // pale container colour made « Jeunes/Enfants » unreadable.
+        return scheme.onTertiaryContainer;
       case GroupType.choeurComplet:
         return scheme.error;
       default:
