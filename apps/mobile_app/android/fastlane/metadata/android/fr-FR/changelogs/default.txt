@@ -1,5 +1,2 @@
-Textes plus confortables :
-• Tailles de texte revues à la baisse, toujours lisibles. Pour agrandir, l’application suit la taille de texte choisie dans les réglages du téléphone.
-• Titres et compte à rebours de l’accueil plus sobres.
 Plus fiable :
-• Les partitions passent toujours par l’adresse officielle du site.
+• L’application se connecte désormais directement au serveur de l’association, sans adresse intermédiaire. Rien ne change pour vous.
