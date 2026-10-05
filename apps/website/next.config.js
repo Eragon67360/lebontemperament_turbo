@@ -85,6 +85,13 @@ const nextConfig = {
         // eslint-disable-next-line no-undef
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`,
       ),
+      // Both Supabase hosts, whatever NEXT_PUBLIC_SUPABASE_URL says: stored
+      // image URLs move from the custom domain (dropped with the Pro plan) to
+      // the project's own host, and both must render during the switch.
+      new URL(
+        "https://fsklunxplbbtzgurwqmc.supabase.co/storage/v1/object/public/**",
+      ),
+      new URL("https://api.lebontemperament.com/storage/v1/object/public/**"),
     ],
     formats: ["image/webp", "image/avif"],
     minimumCacheTTL: 60,
