@@ -1,0 +1,61 @@
+# Play Store automation for Le Bon Tempérament (see fastlane/README.md).
+#
+# Every lane talks to the real Play Console. They run from the
+# "Play Store" GitHub workflow; the ones that change the store need the
+# owner's approval on the `play-store` environment.
+
+default_platform(:android)
+
+METADATA = "fastlane/metadata/android"
+
+platform :android do
+  desc "Download the current store listing (texts, images, screenshots) into the metadata folder. Read-only."
+  lane :download_listing do
+    download_from_play_store(metadata_path: METADATA)
+  end
+
+  desc "Check the listing in the repository against Google Play without changing anything."
+  lane :validate_listing do
+    upload_listing(validate_only: true)
+  end
+
+  desc "Publish the listing in the repository: texts, icon, feature graphic, screenshots."
+  lane :publish_listing do
+    upload_listing(validate_only: false)
+  end
+
+  desc "Promote an internal-track release to production. Options: version_code, rollout (0-1), validate_only."
+  lane :promote do |options|
+    version_code = options[:version_code] || UI.user_error!("version_code is required")
+    rollout = options[:rollout].to_s.strip
+    full = rollout.empty? || rollout.to_f >= 1.0
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "production",
+      version_code: version_code.to_i,
+      # A staged rollout is "inProgress"; 100 % is "completed".
+      release_status: full ? "completed" : "inProgress",
+      rollout: full ? nil : rollout,
+      metadata_path: METADATA,
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      validate_only: options[:validate_only] == true || options[:validate_only].to_s == "true"
+    )
+  end
+
+  private_lane :upload_listing do |options|
+    upload_to_play_store(
+      metadata_path: METADATA,
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_changelogs: true,
+      # Only images whose content changed are sent again.
+      sync_image_upload: true,
+      validate_only: options[:validate_only]
+    )
+  end
+end

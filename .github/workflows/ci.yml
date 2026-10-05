@@ -205,3 +205,14 @@ jobs:
       # rules) before a merge instead of on main. No key.properties here, so
       # the APK is signed with the debug key and never leaves the runner.
       - run: flutter build apk --release
+      # The Play Store lanes install and load (no key here, nothing is sent).
+      - name: fastlane lanes
+        working-directory: apps/mobile_app/android
+        env:
+          LC_ALL: C.UTF-8
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_OPT_OUT_USAGE: "1"
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4
+          bundle exec fastlane lanes

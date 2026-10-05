@@ -1,0 +1,118 @@
+name: Play Store
+
+# Store listing and releases from the repository (fastlane supply). Run by
+# hand from Actions; see apps/mobile_app/android/fastlane/README.md.
+#
+# - download-listing  reads the live listing into an artifact (read-only)
+# - validate-listing  checks the repository's listing with Google (no change)
+# - publish-listing   publishes texts, icon, feature graphic and screenshots
+# - promote           moves an internal-track build to production
+#
+# publish-listing and promote change the public store: they run in the
+# `play-store` environment, which waits for the owner's approval.
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: What to do
+        type: choice
+        required: true
+        options:
+          - download-listing
+          - validate-listing
+          - publish-listing
+          - promote
+      version_code:
+        description: "promote: the build number (versionCode) to promote, e.g. 144"
+        required: false
+        type: string
+      rollout:
+        description: "promote: share of users, 0.1 = 10 %; empty = everyone"
+        required: false
+        type: string
+      validate_only:
+        description: "promote: only check with Google, change nothing"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-store
+  cancel-in-progress: false
+
+jobs:
+  read:
+    name: ${{ inputs.task }}
+    if: inputs.task == 'download-listing' || inputs.task == 'validate-listing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/mobile_app/android
+    env:
+      PLAY_STORE_JSON_KEY: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}
+      LC_ALL: C.UTF-8
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_OPT_OUT_USAGE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install fastlane
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4
+      - name: Download the live listing
+        if: inputs.task == 'download-listing'
+        run: |
+          rm -rf "$RUNNER_TEMP/listing" && mkdir -p "$RUNNER_TEMP/listing"
+          mv fastlane/metadata "$RUNNER_TEMP/repo-metadata"
+          bundle exec fastlane android download_listing
+          mv fastlane/metadata "$RUNNER_TEMP/listing/metadata"
+      - name: Upload the live listing
+        if: inputs.task == 'download-listing'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: play-store-listing
+          path: ${{ runner.temp }}/listing/metadata
+          retention-days: 7
+          if-no-files-found: error
+      - name: Validate the repository's listing
+        if: inputs.task == 'validate-listing'
+        run: bundle exec fastlane android validate_listing
+
+  write:
+    name: ${{ inputs.task }}
+    if: inputs.task == 'publish-listing' || inputs.task == 'promote'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: play-store
+    defaults:
+      run:
+        working-directory: apps/mobile_app/android
+    env:
+      PLAY_STORE_JSON_KEY: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}
+      LC_ALL: C.UTF-8
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_OPT_OUT_USAGE: "1"
+      VERSION_CODE: ${{ inputs.version_code }}
+      ROLLOUT: ${{ inputs.rollout }}
+      VALIDATE_ONLY: ${{ inputs.validate_only }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install fastlane
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4
+      - name: Publish the listing
+        if: inputs.task == 'publish-listing'
+        run: bundle exec fastlane android publish_listing
+      - name: Promote to production
+        if: inputs.task == 'promote'
+        run: |
+          case "$VERSION_CODE" in ''|*[!0-9]*) echo "version_code must be a number" >&2; exit 1;; esac
+          case "$ROLLOUT" in ''|0.[0-9]*|1|1.0) ;; *) echo "rollout must be between 0 and 1" >&2; exit 1;; esac
+          bundle exec fastlane android promote \
+            version_code:"$VERSION_CODE" rollout:"$ROLLOUT" validate_only:"$VALIDATE_ONLY"
