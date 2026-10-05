@@ -61,9 +61,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install fastlane
-        run: |
-          bundle config set --local path vendor/bundle
-          bundle install --jobs 4
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: apps/mobile_app/android
       - name: Download the live listing
         if: inputs.task == 'download-listing'
         run: |
@@ -103,9 +105,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install fastlane
-        run: |
-          bundle config set --local path vendor/bundle
-          bundle install --jobs 4
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: apps/mobile_app/android
       - name: Publish the listing
         if: inputs.task == 'publish-listing'
         run: bundle exec fastlane android publish_listing

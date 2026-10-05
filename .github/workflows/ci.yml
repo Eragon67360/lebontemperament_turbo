@@ -206,13 +206,16 @@ jobs:
       # the APK is signed with the debug key and never leaves the runner.
       - run: flutter build apk --release
       # The Play Store lanes install and load (no key here, nothing is sent).
+      - name: Install fastlane
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: apps/mobile_app/android
       - name: fastlane lanes
         working-directory: apps/mobile_app/android
         env:
           LC_ALL: C.UTF-8
           FASTLANE_SKIP_UPDATE_CHECK: "1"
           FASTLANE_OPT_OUT_USAGE: "1"
-        run: |
-          bundle config set --local path vendor/bundle
-          bundle install --jobs 4
-          bundle exec fastlane lanes
+        run: bundle exec fastlane lanes
