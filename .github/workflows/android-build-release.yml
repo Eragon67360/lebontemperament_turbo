@@ -26,7 +26,11 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     env:
-      SITE_URL: ${{ secrets.SITE_URL_PROD }}
+      # The production website, public and fixed: the app's Partitions,
+      # support form and tracking links call it. Not a secret, so a stale or
+      # staging value (behind Vercel Authentication) can't slip into a store
+      # build.
+      SITE_URL: https://www.lebontemperament.com
 
     steps:
       - name: Checkout
@@ -65,7 +69,6 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SITE_URL: ${{ secrets.SITE_URL_PROD }}
           DRIVE_FOLDER_ADULTES: ${{ secrets.DRIVE_FOLDER_ADULTES }}
           DRIVE_FOLDER_JEUNES: ${{ secrets.DRIVE_FOLDER_JEUNES }}
           DRIVE_FOLDER_ENFANTS: ${{ secrets.DRIVE_FOLDER_ENFANTS }}
@@ -136,7 +139,9 @@ jobs:
           releaseFiles: apps/mobile_app/build/app/outputs/bundle/release/app-release.aab
           mappingFile: apps/mobile_app/build/app/outputs/mapping/release/mapping.txt
           track: internal
-          status: draft
+          # Released to internal testers (not a draft): Google refuses to promote
+          # a draft, so the Play Store workflow's `promote` task needs this.
+          status: completed
           whatsNewDirectory: ${{ runner.temp }}/whatsnew
 
       # --- STEP 3: Generate APK from AAB (Optimization) ---

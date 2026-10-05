@@ -484,7 +484,7 @@ class _TrackingStatusHero extends StatelessWidget {
           Text(
             state.isTracking ? 'Suivi Actif' : 'Suivi Arrêté',
             style: AppFonts.sans(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: state.isTracking
                   ? Colors.white

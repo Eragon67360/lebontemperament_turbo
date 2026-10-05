@@ -150,7 +150,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       children: [
                         Text('Le Bon Tempérament',
                             style: AppFonts.sans(
-                              fontSize: 26,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onSurface,
                             )),

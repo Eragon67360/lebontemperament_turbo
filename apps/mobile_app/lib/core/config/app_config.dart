@@ -18,10 +18,13 @@ class AppConfig {
 
   /// Base URL of the public website (e.g. https://www.lebontemperament.com).
   /// Used to build the client tracking link: $siteUrl/track/{deliveryId}?token=...
+  /// Never ends with a slash, so `$siteUrl/api/...` stays a valid path.
   static String get siteUrl {
-    return _env('SITE_URL') ??
+    final url =
+        _env('SITE_URL') ??
         _env('WEBSITE_URL') ??
         'https://www.lebontemperament.com';
+    return url.replaceAll(RegExp(r'/+$'), '');
   }
 
   /// Main Drive folder (Accès Drive). Override via DRIVE_FOLDER_MAIN.

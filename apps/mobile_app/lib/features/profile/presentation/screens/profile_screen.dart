@@ -357,7 +357,7 @@ class _ProfileHeader extends ConsumerWidget {
         initials,
         style: AppFonts.sans(
           color: theme.colorScheme.onPrimary,
-          fontSize: 28,
+          fontSize: 24,
           fontWeight: FontWeight.w600,
         ),
       ),

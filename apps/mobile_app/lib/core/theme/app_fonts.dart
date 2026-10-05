@@ -7,9 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 /// - Bricolage Grotesque for titles and big numbers.
 ///
 /// [sans] is a drop-in for the `GoogleFonts.poppins(...)` calls the screens
-/// used. Readability for older members comes first, so it nudges small sizes
-/// up (Instrument Sans is narrower than Poppins, so the same lines still fit)
-/// and switches bold text of 20 pt and more to the display face.
+/// used. It keeps the sizes the screens ask for (older members who want
+/// bigger text get it from the system text size, which the app follows),
+/// never renders under [minSize], and switches bold text of 20 pt and more
+/// to the display face.
 class AppFonts {
   AppFonts._();
 
@@ -66,11 +67,8 @@ class AppFonts {
     );
   }
 
-  /// Sizes the screens ask for, mapped to what the app renders: one point up
-  /// below 20 pt, never under [minSize].
-  static double readableSize(double requested) {
-    if (requested >= 20) return requested;
-    final bumped = requested + 1;
-    return bumped < minSize ? minSize : bumped;
-  }
+  /// Sizes the screens ask for, mapped to what the app renders: never under
+  /// [minSize].
+  static double readableSize(double requested) =>
+      requested < minSize ? minSize : requested;
 }

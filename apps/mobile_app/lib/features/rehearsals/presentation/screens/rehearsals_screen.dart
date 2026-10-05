@@ -268,7 +268,7 @@ class _RehearsalsHeader extends StatelessWidget {
                 child: Text(
                   'Répétitions',
                   style: AppFonts.display(
-                    fontSize: 34,
+                    fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: s.onSurface,
                     height: 1.1,
@@ -415,7 +415,7 @@ class _MonthHeader extends StatelessWidget {
             child: Text(
               title,
               style: AppFonts.display(
-                fontSize: 21,
+                fontSize: 19,
                 fontWeight: FontWeight.w700,
                 color: s.onSurface,
               ),
@@ -534,7 +534,7 @@ class _RehearsalCard extends StatelessWidget {
                   Text(
                     '${date.day}',
                     style: AppFonts.display(
-                      fontSize: 30,
+                      fontSize: 26,
                       fontWeight: FontWeight.w800,
                       color: s.onSurface,
                       height: 1.05,
@@ -680,7 +680,7 @@ class _EmptyState extends StatelessWidget {
                 isFilterActive ? 'Aucun résultat' : 'Aucune répétition',
                 textAlign: TextAlign.center,
                 style: AppFonts.display(
-                  fontSize: 21,
+                  fontSize: 19,
                   fontWeight: FontWeight.w700,
                   color: s.onSurface,
                 ),
@@ -724,7 +724,7 @@ class _ErrorState extends StatelessWidget {
                     : 'Vous êtes hors ligne',
                 textAlign: TextAlign.center,
                 style: AppFonts.display(
-                  fontSize: 21,
+                  fontSize: 19,
                   fontWeight: FontWeight.w700,
                   color: s.onSurface,
                 ),

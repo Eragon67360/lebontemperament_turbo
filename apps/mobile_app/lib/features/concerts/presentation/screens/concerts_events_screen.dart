@@ -508,7 +508,7 @@ class _ConcertCard extends StatelessWidget {
                       style: AppFonts.sans(
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
-                        fontSize: 32,
+                        fontSize: 28,
                         height: 1.1,
                       ),
                     ),
