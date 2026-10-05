@@ -37,14 +37,21 @@ platform :android do
     upload_listing(validate_only: false)
   end
 
-  desc "Promote an internal-track release to production. Options: version_code, rollout (0-1), validate_only."
+  desc "Promote an internal-track release. Options: track (alpha = Closed testing, default; or production), version_code, rollout (0-1, production only), validate_only."
   lane :promote do |options|
     version_code = options[:version_code] || UI.user_error!("version_code is required")
+    # "alpha" is Closed testing, the highest track until Google grants
+    # production access.
+    track = options[:track].to_s.strip
+    track = "alpha" if track.empty?
+    UI.user_error!("track must be alpha or production") unless %w[alpha production].include?(track)
     rollout = options[:rollout].to_s.strip
-    full = rollout.empty? || rollout.to_f >= 1.0
+    # Staged rollouts exist on production only; a testing track gets the
+    # whole release.
+    full = track != "production" || rollout.empty? || rollout.to_f >= 1.0
     upload_to_play_store(
       track: "internal",
-      track_promote_to: "production",
+      track_promote_to: track,
       version_code: version_code.to_i,
       # A staged rollout is "inProgress"; 100 % is "completed".
       release_status: full ? "completed" : "inProgress",
