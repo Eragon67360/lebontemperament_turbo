@@ -116,11 +116,13 @@ class DriveService {
             'Ce dossier n\'est pas accessible depuis l\'application.',
           );
         }
-        final data = e.response?.data;
-        final msg = data is Map && data['error'] != null
-            ? data['error'].toString()
-            : 'Erreur $status';
-        throw DriveServiceException(msg);
+        // The website's 5xx bodies are English ("Failed to retrieve
+        // files"): members get a French sentence instead.
+        throw DriveServiceException(
+          status >= 500
+              ? 'Le serveur des partitions ne répond pas. Réessayez dans un instant.'
+              : 'Impossible de charger les fichiers (erreur $status).',
+        );
       }
       throw DriveServiceException(
         _networkMessage(e) ?? 'Impossible de charger les fichiers',

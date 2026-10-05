@@ -94,8 +94,13 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     super.dispose();
   }
 
+  /// Bumped by every load: an answer for a folder the member has already
+  /// left (a quick second tap, a back) is dropped instead of shown.
+  int _loadSeq = 0;
+
   Future<void> _loadFolder(String? folderId) async {
     if (folderId == null) return;
+    final seq = ++_loadSeq;
     setState(() {
       _loading = true;
       _error = null;
@@ -106,11 +111,11 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       final items = await driveService.getFolderContents(folderId);
 
       final folders = items.where((e) => e.isFolder).toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+        ..sort(compareDriveNames);
       final files = items.where((e) => !e.isFolder).toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+        ..sort(compareDriveNames);
 
-      if (mounted) {
+      if (mounted && seq == _loadSeq) {
         setState(() {
           _folders = folders;
           _files = files;
@@ -119,7 +124,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       }
     } catch (e) {
       // Whatever went wrong, leave the spinner for an error with « Réessayer ».
-      if (mounted) {
+      if (mounted && seq == _loadSeq) {
         setState(() {
           _error = e is DriveServiceException
               ? e.message
@@ -185,7 +190,9 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   bool _isPdfFile(DriveFile file) {
     final m = file.mimeType.toLowerCase();
     final name = file.name.toLowerCase();
-    return m.contains('pdf') || name.endsWith('.pdf');
+    return m.contains('pdf') ||
+        name.endsWith('.pdf') ||
+        kPdfExportableMimeTypes.contains(m);
   }
 
   // MARK: - Audio
@@ -722,7 +729,8 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   /// Room under the last row: the floating player when it is up (it grows
   /// with the text size), the navigation bar's clearance otherwise.
   double _listBottomPadding(BuildContext context) {
-    if (_audioFile == null) return kFloatingNavBarBottomPadding;
+    // A pushed route: no floating nav bar to clear.
+    if (_audioFile == null) return 24;
     final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
     final player = 150 + 70 * (scale - 1) + (_audioError != null ? 40 : 0);
     return player + 24;
@@ -1098,7 +1106,9 @@ class _FileRow extends StatelessWidget {
     if (status != null) return status!;
     switch (kind) {
       case _FileKind.pdf:
-        return 'Partition · PDF';
+        return kPdfExportableMimeTypes.contains(file.mimeType)
+            ? 'Document Google · PDF'
+            : 'Partition · PDF';
       case _FileKind.audio:
         return 'Enregistrement audio';
       case _FileKind.folder:
