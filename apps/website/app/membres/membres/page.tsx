@@ -1,5 +1,6 @@
 "use client";
 import { motion } from "motion/react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import {
@@ -257,9 +258,14 @@ const Membres = () => {
                   <div className="from-primary relative h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br to-purple-500 p-1 shadow-lg">
                     <div className="bg-surface-secondary flex h-full w-full items-center justify-center rounded-full">
                       {member.photoUrl ? (
-                        <img
+                        <Image
                           src={member.photoUrl}
                           alt={member["NOM Prénom"]}
+                          width={96}
+                          height={96}
+                          // Photos come from arbitrary external hosts, with the
+                          // initials fallback below: served as-is, as before.
+                          unoptimized
                           className="h-full w-full rounded-full object-cover"
                           crossOrigin="anonymous"
                           loading="lazy"
@@ -312,7 +318,7 @@ const Membres = () => {
                       <IoMailOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`mailto:${member["Adresse mail"]}`}
-                        className="text-primary break-all transition-colors hover:underline"
+                        className="text-primary-text break-all transition-colors hover:underline"
                       >
                         {member["Adresse mail"]}
                       </a>
@@ -324,7 +330,7 @@ const Membres = () => {
                       <IoPhonePortraitOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`tel:${member.Portable.replace(/\s/g, "")}`}
-                        className="text-foreground/70 hover:text-primary transition-colors"
+                        className="text-foreground/70 hover:text-primary-text transition-colors"
                       >
                         {member.Portable}
                       </a>
@@ -336,7 +342,7 @@ const Membres = () => {
                       <IoCallOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                       <a
                         href={`tel:${member.Domicile.replace(/\s/g, "")}`}
-                        className="text-foreground/70 hover:text-primary transition-colors"
+                        className="text-foreground/70 hover:text-primary-text transition-colors"
                       >
                         {member.Domicile}
                       </a>

@@ -39,11 +39,11 @@ export const metadata: Metadata = {
   },
 };
 
-const h2Class = "text-primary/80 mb-6 text-lg font-semibold xl:text-2xl";
-const h3Class = "text-primary/70 mt-6 mb-4 text-base font-semibold xl:text-xl";
+const h2Class = "text-primary-text mb-6 text-lg font-semibold xl:text-2xl";
+const h3Class = "text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl";
 const pClass = "text-foreground mb-4";
 const ulClass = "text-foreground mb-4 list-disc pl-5";
-const linkClass = "text-primary hover:text-primary/80 underline";
+const linkClass = "text-primary-text hover:text-primary-text/80 underline";
 
 const SECTIONS = [
   { id: "responsable", title: "Qui est responsable de vos données ?" },
@@ -358,7 +358,7 @@ export default function PrivacyPolicy() {
               ci-dessous ou le lien « Gérer les cookies » en bas de chaque page.
             </p>
             <div className="mb-4">
-              <CookiePreferencesButton className="text-primary hover:text-primary/80 cursor-pointer border-none bg-transparent p-0 font-medium text-inherit underline transition-colors">
+              <CookiePreferencesButton className="text-primary hover:text-primary-text/80 cursor-pointer border-none bg-transparent p-0 font-medium text-inherit underline transition-colors">
                 Gérer les préférences de cookies
               </CookiePreferencesButton>
             </div>

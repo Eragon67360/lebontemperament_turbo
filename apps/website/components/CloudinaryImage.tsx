@@ -1,6 +1,7 @@
 "use client";
+import { cloudinaryLoader } from "@/lib/cloudinaryImage";
 import { RoundedSize } from "@/utils/types";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
 import { FC } from "react";
 
 type CloudinaryImageProps = {
@@ -15,6 +16,8 @@ type CloudinaryImageProps = {
   quality?: number;
 };
 
+// next/image with the Cloudinary URLs CldImage used to build (see
+// lib/cloudinaryImage.ts): same rendition, without next-cloudinary's bundle.
 const CloudinaryImage: FC<CloudinaryImageProps> = ({
   src,
   alt,
@@ -45,8 +48,8 @@ const CloudinaryImage: FC<CloudinaryImageProps> = ({
   const useBlurPlaceholder = width >= 40 && height >= 40;
 
   return (
-    <CldImage
-      format="auto"
+    <Image
+      loader={cloudinaryLoader}
       alt={alt}
       src={src}
       width={width}

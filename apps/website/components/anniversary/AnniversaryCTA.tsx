@@ -36,7 +36,7 @@ const AnniversaryCTA = ({
 }: AnniversaryCTAProps) => {
   // Note: no `enabled:` variant — it only matches form controls, so the
   // hover styles would never apply when this renders as an <a>.
-  const classes = `group border-primary/40 text-primary focus-visible:outline-primary dark:border-primary/50 relative inline-flex items-center justify-center overflow-hidden rounded-md border bg-transparent font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 ${
+  const classes = `group border-primary/40 text-primary-text focus-visible:outline-primary dark:border-primary/50 relative inline-flex items-center justify-center overflow-hidden rounded-md border bg-transparent font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 ${
     disabled
       ? "cursor-not-allowed opacity-50"
       : "hover:border-primary/80 hover:text-white cursor-pointer active:scale-[0.97]"

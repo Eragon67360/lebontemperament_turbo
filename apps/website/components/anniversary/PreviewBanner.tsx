@@ -1,9 +1,14 @@
 "use client";
 
+import { useClientValue } from "@/hooks/useClientValue";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaExternalLinkAlt, FaEye, FaTimes } from "react-icons/fa";
+
+const DISMISSED_KEY = "anniversary-preview-banner-dismissed";
+const wasDismissedThisSession = () =>
+  sessionStorage.getItem(DISMISSED_KEY) === "true";
 
 interface PreviewBannerProps {
   isPreview: boolean;
@@ -15,26 +20,15 @@ const PreviewBanner = ({
   hideDuringIntro = false,
 }: PreviewBannerProps) => {
   const [isDismissed, setIsDismissed] = useState(false);
+  // Read in the browser only: the server never knows the session.
+  const wasDismissed = useClientValue(wasDismissedThisSession, false);
   const shouldReduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const dismissed = sessionStorage.getItem(
-        "anniversary-preview-banner-dismissed",
-      );
-      if (dismissed === "true") {
-        setIsDismissed(true);
-      }
-    }
-  }, []);
-
-  if (!isPreview || isDismissed) return null;
+  if (!isPreview || isDismissed || wasDismissed) return null;
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("anniversary-preview-banner-dismissed", "true");
-    }
+    sessionStorage.setItem(DISMISSED_KEY, "true");
   };
 
   const handleGoToAdmin = () => {
@@ -67,8 +61,9 @@ const PreviewBanner = ({
                   Mode prévisualisation
                 </p>
                 <p className="hidden text-sm text-white/90 md:block">
-                  Cette page n'est pas visible par le public. Activez le flag
-                  depuis le panneau d'administration pour la rendre publique.
+                  Cette page n&apos;est pas visible par le public. Activez le
+                  flag depuis le panneau d&apos;administration pour la rendre
+                  publique.
                 </p>
               </div>
             </div>

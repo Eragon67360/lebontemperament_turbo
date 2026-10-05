@@ -46,7 +46,7 @@ Each list is a starting point, not a boundary. Facts flagged on 2026-10-01 are m
 ### 5. Performance and architecture
 
 - Rendering mode per route, CDN caching (`x-vercel-cache`), TTFB, client component weight (HeroUI, GSAP, motion, FullCalendar, maps, PDF), images via Cloudinary, Supabase query patterns (N+1, `select('*')`, missing indexes), TanStack Query usage in the admin, edge function timeouts and cron health (`rehearsal_sync_logs`), mobile offline cache consistency.
-- Monorepo hygiene: duplicate dependencies across workspaces (root `package.json` carries app dependencies), TypeScript 5.9 at the root vs 7 in the apps, `@repo/ui` barely used.
+- Monorepo hygiene: dependencies declared outside the workspace that imports them (the root `package.json` carries tooling only), TypeScript 5.9 at the root vs 7 in the apps (deliberate, see project.md).
 
 ### 6. Engineering and delivery
 

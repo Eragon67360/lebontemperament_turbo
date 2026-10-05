@@ -1,3 +1,4 @@
+import { MEMBER_REHEARSAL_COLUMNS } from "@/lib/publicConcerts";
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
@@ -16,7 +17,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("rehearsals")
-      .select("*")
+      .select(MEMBER_REHEARSAL_COLUMNS)
       .order("date", { ascending: true });
 
     if (error) throw error;

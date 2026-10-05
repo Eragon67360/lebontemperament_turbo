@@ -1,44 +1,58 @@
 "use client";
 
-import { motion, useInView, useScroll, useTransform } from "motion/react";
+import { m, useInView, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
-import CDPochettePhotos from "@/components/CDPochettePhotos";
 import CloudinaryImage from "@/components/CloudinaryImage";
-import ConcertPhotos from "@/components/ConcertPhotos";
-import ContactForm from "@/components/ContactForm";
 import { LinkButton } from "@/components/LinkButton";
 import ProjectViewer from "@/components/ProjectViewer";
+import { useClientValue } from "@/hooks/useClientValue";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import type { ConcertProject } from "@/types/projects";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
-import { Button, Modal } from "@heroui/react";
+import { Button } from "@heroui/react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { IoIosArrowRoundForward, IoIosInformationCircle } from "react-icons/io";
 
-const HomeContent = () => {
+// Below-the-fold islands, fetched when their section comes near the viewport
+// (photo albums, the reCAPTCHA contact form) or when first opened (modal):
+// none of them is needed to paint the hero.
+const ConcertPhotos = dynamic(() => import("@/components/ConcertPhotos"));
+const CDPochettePhotos = dynamic(() => import("@/components/CDPochettePhotos"));
+const ContactForm = dynamic(() => import("@/components/ContactForm"));
+const CalendarInfoModal = dynamic(
+  () => import("@/components/home/CalendarInfoModal"),
+);
+
+// Mount a lazy section this far before it scrolls into view.
+const NEAR_VIEW_MARGIN = "0px 0px 1000px 0px";
+
+// Temporary CTAs, decided in the browser only: the server HTML never shows
+// them, so server and client render identically (as the old mount effects did).
+const CALENDAR_CTA_DEADLINE = new Date("2026-01-15").getTime();
+const AG_CTA_DEADLINE = new Date("2026-03-31").getTime();
+const isBeforeCalendarDeadline = () => Date.now() < CALENDAR_CTA_DEADLINE;
+const isBeforeAGDeadline = () => Date.now() < AG_CTA_DEADLINE;
+
+type HomeContentProps = {
+  /** Latest concert stories, loaded by the page on the server. */
+  stories?: ConcertProject[];
+};
+
+const HomeContent = ({ stories }: HomeContentProps) => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
   // Must render identically on server and client: measure in the effect below.
   const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
-  const [showCalendarButton, setShowCalendarButton] = useState<boolean>(false);
-  const [showAGButton, setShowAGButton] = useState<boolean>(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
 
-  // Check if we should show the calendar button (before January 15, 2026)
-  useEffect(() => {
-    const expirationDate = new Date("2026-01-15");
-    const now = new Date();
-    setShowCalendarButton(now < expirationDate);
-  }, []);
-
-  // Check if we should show the AG button (before March 31, 2026)
-  useEffect(() => {
-    const expirationDate = new Date("2026-03-31");
-    const now = new Date();
-    setShowAGButton(now < expirationDate);
-  }, []);
+  // Calendar button before January 15, 2026; AG button before March 31, 2026.
+  const showCalendarButton = useClientValue(isBeforeCalendarDeadline, false);
+  const showAGButton = useClientValue(isBeforeAGDeadline, false);
 
   // Refs for each section
   const projectsRef = useRef(null);
@@ -53,6 +67,23 @@ const HomeContent = () => {
   const concertsInView = useInView(concertsRef, { once: true, amount: 0.3 });
   const cdsInView = useInView(cdsRef, { once: true, amount: 0.3 });
   const contactInView = useInView(contactRef, { once: true, amount: 0.3 });
+
+  // Lazy islands mount ahead of their reveal animation.
+  const concertsNear = useInView(concertsRef, {
+    once: true,
+    margin: NEAR_VIEW_MARGIN,
+  });
+  const cdsNear = useInView(cdsRef, { once: true, margin: NEAR_VIEW_MARGIN });
+  const contactNear = useInView(contactRef, {
+    once: true,
+    margin: NEAR_VIEW_MARGIN,
+  });
+  // The modal's code is only fetched once the information button is pressed.
+  const [calendarModalLoaded, setCalendarModalLoaded] = useState(false);
+  const openInfoModal = () => {
+    setCalendarModalLoaded(true);
+    setIsInfoModalOpen(true);
+  };
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -73,16 +104,29 @@ const HomeContent = () => {
     <>
       <div className="relative flex min-h-screen w-full flex-col items-center overflow-x-hidden">
         {/* Hero Section */}
-        <motion.section
-          className="fixed top-0 left-0 z-0 flex h-full w-full justify-center bg-[url('/img/entre_terre_et_ciel.jpg')] bg-cover bg-fixed bg-center"
+        <m.section
+          className="fixed top-0 left-0 z-0 flex h-full w-full justify-center"
           aria-labelledby="hero-title"
           style={{ opacity }}
         >
+          {/* Former CSS background (bg-cover bg-center bg-fixed on a fixed,
+              viewport-sized section): the same framing as object-cover, now
+              resized and converted by the image optimizer and preloaded. */}
+          <Image
+            src="/img/entre_terre_et_ciel.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            quality={75}
+            className="object-cover object-center"
+            aria-hidden
+          />
           <div
             aria-hidden
             className="absolute inset-0 z-10 h-full bg-black/90"
           />
-          <motion.div
+          <m.div
             className="relative z-20 flex w-full justify-between gap-32 px-4 py-16"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -135,7 +179,7 @@ const HomeContent = () => {
 
               {/* Calendar CTA - Temporary until January 15, 2026 */}
               {showCalendarButton && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
@@ -162,16 +206,16 @@ const HomeContent = () => {
                     variant="ghost"
                     className="rounded-full text-white/80 hover:bg-white/10 hover:text-white"
                     aria-label="En savoir plus sur le calendrier musical"
-                    onPress={() => setIsInfoModalOpen(true)}
+                    onPress={openInfoModal}
                   >
                     <IoIosInformationCircle className="h-5 w-5 lg:h-6 lg:w-6" />
                   </Button>
-                </motion.div>
+                </m.div>
               )}
 
               {/* AG 2026 CTA - Temporary until March 31, 2026 */}
               {showAGButton && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
@@ -190,12 +234,12 @@ const HomeContent = () => {
                       aria-hidden="true"
                     />
                   </LinkButton>
-                </motion.div>
+                </m.div>
               )}
 
               {/* Anniversary CTA */}
               {(isAnniversaryEnabled || isAdmin) && (
-                <motion.div
+                <m.div
                   initial={{
                     opacity: 0,
                     scale: prefersReducedMotion ? 1 : 0.9,
@@ -220,10 +264,10 @@ const HomeContent = () => {
                       🎉
                     </span>
                   </LinkButton>
-                </motion.div>
+                </m.div>
               )}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Pulsing Arrow */}
           <button
@@ -237,7 +281,7 @@ const HomeContent = () => {
             }}
             aria-label="Défiler vers le contenu"
           >
-            <motion.div
+            <m.div
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
               animate={prefersReducedMotion ? { y: 0 } : { y: [0, 10, 0] }}
               transition={{
@@ -261,12 +305,12 @@ const HomeContent = () => {
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </motion.div>
+            </m.div>
           </button>
-        </motion.section>
+        </m.section>
 
         {/* Concert Stories Section */}
-        <motion.section
+        <m.section
           ref={projectsRef}
           className="bg-surface-secondary relative z-10 mt-[100dvh] flex w-full justify-center py-16"
           aria-labelledby="concert-stories-title"
@@ -282,9 +326,9 @@ const HomeContent = () => {
           }}
         >
           <div className="w-full max-w-360 px-8 lg:px-24">
-            <motion.h2
+            <m.h2
               id="concert-stories-title"
-              className="text-primary/50 dark:text-primary text-title mb-14 leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title mb-14 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 projectsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -292,21 +336,21 @@ const HomeContent = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               Histoires de concerts
-            </motion.h2>
+            </m.h2>
             <p className="text-muted -mt-8 mb-8 max-w-2xl">
               Retrouvez les programmes, les images et les coulisses des concerts
               qui ont marqué notre ensemble.
             </p>
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 30 }}
               animate={
                 projectsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
               }
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <ProjectViewer />
-            </motion.div>
-            <motion.div
+              <ProjectViewer initialStories={stories} />
+            </m.div>
+            <m.div
               className="mt-4 flex justify-center"
               initial={{ opacity: 0 }}
               animate={projectsInView ? { opacity: 1 } : { opacity: 0 }}
@@ -320,14 +364,14 @@ const HomeContent = () => {
               >
                 Toutes les histoires <IoIosArrowRoundForward />
               </LinkButton>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.section>
+        </m.section>
 
         {/* Main Content Container */}
         <div className="bg-background z-10 mx-0 flex w-full flex-col">
           {/* About Section */}
-          <motion.section
+          <m.section
             ref={aboutRef}
             className="mx-auto mt-16 flex w-full max-w-360 flex-col lg:flex-row"
             aria-labelledby="about-title"
@@ -337,7 +381,7 @@ const HomeContent = () => {
           >
             <div className="relative flex w-full max-w-360 gap-8 py-8 pr-8 pl-8 lg:w-3/5 lg:pl-25">
               <div className="flex w-1/2 flex-col gap-8">
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={
                     aboutInView
@@ -353,8 +397,8 @@ const HomeContent = () => {
                     height={270}
                     rounded={RoundedSize.NONE}
                   />
-                </motion.div>
-                <motion.div
+                </m.div>
+                <m.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={
                     aboutInView
@@ -370,9 +414,9 @@ const HomeContent = () => {
                     height={270}
                     rounded={RoundedSize.NONE}
                   />
-                </motion.div>
+                </m.div>
               </div>
-              <motion.div
+              <m.div
                 className="w-1/2 pt-8"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={
@@ -389,9 +433,9 @@ const HomeContent = () => {
                   height={270}
                   rounded={RoundedSize.NONE}
                 />
-              </motion.div>
+              </m.div>
             </div>
-            <motion.div
+            <m.div
               className="flex w-full flex-col items-start justify-between py-8 pr-8 pl-8 lg:w-2/5 lg:pr-16 lg:pl-0"
               initial={{ opacity: 0, x: 50 }}
               animate={
@@ -402,7 +446,7 @@ const HomeContent = () => {
               <div className="flex flex-col gap-5">
                 <h2
                   id="about-title"
-                  className="text-primary/50 dark:text-primary text-title leading-none font-light"
+                  className="text-primary-400 dark:text-primary text-title leading-none font-light"
                   style={{ fontWeight: 300 }}
                 >
                   Nous découvrir
@@ -434,7 +478,7 @@ const HomeContent = () => {
                     différents{" "}
                     <Link
                       href="/concerts"
-                      className="text-primary font-medium hover:underline"
+                      className="text-primary-text font-medium hover:underline"
                     >
                       concerts
                     </Link>{" "}
@@ -456,11 +500,11 @@ const HomeContent = () => {
                   aria-hidden="true"
                 />
               </LinkButton>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Notre Histoire Section */}
-          <motion.section
+          <m.section
             className="bg-surface-secondary mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="history-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
@@ -475,9 +519,9 @@ const HomeContent = () => {
               delay: 0.2,
             }}
           >
-            <motion.h2
+            <m.h2
               id="history-title"
-              className="text-primary/50 dark:text-primary text-title mb-8 leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title mb-8 leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 aboutInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -485,8 +529,8 @@ const HomeContent = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               Notre histoire
-            </motion.h2>
-            <motion.div
+            </m.h2>
+            <m.div
               className="text-foreground space-y-4 text-sm leading-relaxed font-light md:text-base lg:text-lg"
               initial={{ opacity: 0, y: 30 }}
               animate={
@@ -509,7 +553,7 @@ const HomeContent = () => {
                 passion commune pour la musique. Découvrez nos{" "}
                 <Link
                   href="/concerts"
-                  className="text-primary font-medium hover:underline"
+                  className="text-primary-text font-medium hover:underline"
                 >
                   concerts et événements
                 </Link>{" "}
@@ -523,11 +567,11 @@ const HomeContent = () => {
                 variées, alliant la puissance vocale de nos chœurs à la richesse
                 instrumentale de notre orchestre.
               </p>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Rejoignez-nous Section */}
-          <motion.section
+          <m.section
             className="bg-background mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="join-title"
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
@@ -542,7 +586,7 @@ const HomeContent = () => {
               delay: 0.4,
             }}
           >
-            <motion.div
+            <m.div
               className="flex flex-col gap-8 lg:flex-row lg:items-center"
               initial={{ opacity: 0 }}
               animate={aboutInView ? { opacity: 1 } : { opacity: 0 }}
@@ -551,7 +595,7 @@ const HomeContent = () => {
               <div className="flex-1">
                 <h2
                   id="join-title"
-                  className="text-primary/50 dark:text-primary text-title mb-6 leading-none font-light"
+                  className="text-primary-400 dark:text-primary text-title mb-6 leading-none font-light"
                 >
                   Rejoignez-nous
                 </h2>
@@ -598,7 +642,7 @@ const HomeContent = () => {
                 </div>
               </div>
               <div className="flex flex-1 justify-center lg:justify-end">
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={
                     aboutInView
@@ -614,13 +658,13 @@ const HomeContent = () => {
                     height={400}
                     rounded={RoundedSize.MD}
                   />
-                </motion.div>
+                </m.div>
               </div>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Concerts Section */}
-          <motion.section
+          <m.section
             ref={concertsRef}
             className="bg-background mx-auto mt-16 w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="concerts-title"
@@ -635,9 +679,9 @@ const HomeContent = () => {
               ease: "easeOut",
             }}
           >
-            <motion.h2
+            <m.h2
               id="concerts-title"
-              className="text-primary/50 dark:text-primary text-title leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 concertsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -645,8 +689,8 @@ const HomeContent = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos concerts
-            </motion.h2>
-            <motion.div
+            </m.h2>
+            <m.div
               className="mt-14"
               initial={{ opacity: 0, y: 30 }}
               animate={
@@ -654,7 +698,7 @@ const HomeContent = () => {
               }
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <ConcertPhotos />
+              {concertsNear && <ConcertPhotos />}
 
               <div className="mt-7.5 flex justify-end">
                 <LinkButton
@@ -671,11 +715,11 @@ const HomeContent = () => {
                   />
                 </LinkButton>
               </div>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* CDs Section */}
-          <motion.section
+          <m.section
             ref={cdsRef}
             className="bg-surface-secondary mx-auto w-full max-w-360 px-8 py-16 lg:px-24"
             aria-labelledby="cds-title"
@@ -690,9 +734,9 @@ const HomeContent = () => {
               ease: "easeOut",
             }}
           >
-            <motion.h2
+            <m.h2
               id="cds-title"
-              className="text-primary/50 dark:text-primary text-title leading-none font-light"
+              className="text-primary-400 dark:text-primary text-title leading-none font-light"
               initial={{ opacity: 0, x: -30 }}
               animate={
                 cdsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
@@ -700,14 +744,14 @@ const HomeContent = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               Nos CDs
-            </motion.h2>
-            <motion.div
+            </m.h2>
+            <m.div
               className="mt-14"
               initial={{ opacity: 0, y: 30 }}
               animate={cdsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <CDPochettePhotos />
+              {cdsNear && <CDPochettePhotos />}
 
               <div className="mt-7.5 flex justify-end">
                 <LinkButton
@@ -724,12 +768,16 @@ const HomeContent = () => {
                   />
                 </LinkButton>
               </div>
-            </motion.div>
-          </motion.section>
+            </m.div>
+          </m.section>
 
           {/* Contact Section */}
-          <motion.div
+          <m.div
             ref={contactRef}
+            // The wrapper answers the hero's "#contact" link until the form
+            // (which carries the id) has mounted; the placeholder keeps the
+            // page about as tall as the form so the footer does not jump.
+            id={contactNear ? undefined : "contact"}
             initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 50 }}
             animate={
               contactInView
@@ -741,88 +789,25 @@ const HomeContent = () => {
               ease: "easeOut",
             }}
           >
-            <ContactForm />
-          </motion.div>
+            {contactNear ? (
+              <ContactForm />
+            ) : (
+              <div
+                aria-hidden
+                className="mx-auto min-h-[48rem] w-full max-w-[1440px] px-8 py-16 lg:px-24"
+              />
+            )}
+          </m.div>
         </div>
       </div>
 
       {/* Calendar Info Modal */}
-      <Modal>
-        <Modal.Backdrop
+      {calendarModalLoaded && (
+        <CalendarInfoModal
           isOpen={isInfoModalOpen}
           onOpenChange={setIsInfoModalOpen}
-        >
-          <Modal.Container size="lg" scroll="inside">
-            <Modal.Dialog>
-              <Modal.CloseTrigger />
-              <Modal.Header>
-                <Modal.Heading className="text-2xl font-bold">
-                  🎄 Calendrier Musical 2025
-                </Modal.Heading>
-                <p className="text-muted text-sm font-normal">
-                  Une reconnaissance pour Le Bon Tempérament
-                </p>
-              </Modal.Header>
-              <Modal.Body>
-                <div className="space-y-4 text-sm leading-relaxed">
-                  <p>
-                    <strong>Cadence</strong> est un{" "}
-                    <a
-                      href="https://cadence-musique.fr/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary font-medium hover:underline"
-                    >
-                      pôle musical régional
-                    </a>{" "}
-                    qui œuvre pour le développement et la structuration des
-                    pratiques musicales en amateur par le soutien et
-                    l&apos;initiative de projets, la formation,
-                    l&apos;accompagnement et la mise en réseau des acteurs.
-                  </p>
-                  <p>
-                    Le Bon Tempérament a la joie d&apos;être mis à
-                    l&apos;honneur dans le{" "}
-                    <strong>Calendrier Musical 2025 de Cadence</strong>, en
-                    étant l&apos;ensemble amateur du jour pour le{" "}
-                    <strong>24 décembre</strong>.
-                  </p>
-                  <p className="text-primary font-medium">
-                    Cette reconnaissance couronne en beauté notre saison
-                    2024/2025 et témoigne de la qualité et de l&apos;engagement
-                    de notre ensemble vocal et instrumental.
-                  </p>
-                  <p className="text-muted text-xs italic">
-                    Cadence est soutenu par la Direction régionale des affaires
-                    culturelles du Grand Est, la Région Grand Est et la
-                    Collectivité européenne d&apos;Alsace.
-                  </p>
-                </div>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button
-                  variant="ghost"
-                  onPress={() => setIsInfoModalOpen(false)}
-                  aria-label="Fermer"
-                >
-                  Fermer
-                </Button>
-                <LinkButton
-                  onClick={() => setIsInfoModalOpen(false)}
-                  aria-label="Ouvrir le calendrier musical"
-                  variant="primary"
-                  href="https://view.genially.com/6915ed221c1347062848697b/presentation-calendrier-musical-2025-cadence"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Ouvrir le calendrier
-                  <IoIosArrowRoundForward className="ml-2" />
-                </LinkButton>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+        />
+      )}
     </>
   );
 };

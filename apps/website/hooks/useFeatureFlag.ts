@@ -1,169 +1,30 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
-import { RealtimeChannel } from "@supabase/supabase-js";
-import { useEffect, useRef, useState } from "react";
-
-type FeatureFlag = {
-  id: string;
-  flag_key: string;
-  flag_name: string;
-  description: string | null;
-  is_enabled: boolean;
-  created_at: string;
-  updated_at: string;
-};
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useFeatureFlags } from "@/components/providers/FeatureFlagProvider";
+import type { PublicFeatureFlags } from "@/lib/featureFlagKeys";
 
 /**
- * Hook to check if a feature flag is enabled with real-time updates
- * @param flagKey - The unique key of the feature flag
- * @returns Object containing the enabled state and loading state
+ * Reads a feature flag from the value rendered on the server
+ * (`FeatureFlagProvider`). Synchronous: nothing to fetch and no Realtime
+ * subscription per component any more; `isLoading` and `error` stay for
+ * the callers written against the former fetching hook.
  */
-export function useFeatureFlag(flagKey: string) {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const channelRef = useRef<RealtimeChannel | null>(null);
-  const supabase = createClient();
-
-  useEffect(() => {
-    let isMounted = true;
-    // Fetch initial state from API
-    const fetchFeatureFlag = async () => {
-      try {
-        const response = await fetch(`/api/feature-flags?flag_key=${flagKey}`);
-
-        if (!response.ok) {
-          console.error("Error fetching feature flag");
-          setIsEnabled(false);
-        } else {
-          const data = await response.json();
-          setIsEnabled(data?.is_enabled || false);
-        }
-      } catch (error) {
-        console.error("Error fetching feature flag:", error);
-        setIsEnabled(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFeatureFlag();
-
-    // Subscribe to real-time updates
-    const setupSubscription = async () => {
-      try {
-        // Unique per hook instance: two components mounting in the same ms
-        // would otherwise share a channel name and realtime-js throws when
-        // .on() is called on an already-subscribed channel
-        const channelName = `feature-flag-${flagKey}-${crypto.randomUUID()}`;
-
-        channelRef.current = supabase
-          .channel(channelName)
-          .on(
-            "postgres_changes",
-            {
-              event: "UPDATE",
-              schema: "public",
-              table: "feature_flags",
-              filter: `flag_key=eq.${flagKey}`,
-            },
-            (payload) => {
-              const newFlag = payload.new as FeatureFlag;
-              if (isMounted && newFlag) {
-                setIsEnabled(newFlag.is_enabled);
-              }
-            },
-          )
-          .subscribe((status, err) => {
-            if (err) {
-              console.error(`[FeatureFlag] Subscription error:`, err);
-            }
-
-            if (status === "SUBSCRIBED") {
-              if (isMounted) {
-                setError(null);
-              }
-            } else if (status === "CHANNEL_ERROR") {
-              console.error(`[FeatureFlag] Channel error for ${flagKey}`);
-              if (isMounted) {
-                setError("Realtime subscription failed");
-              }
-            } else if (status === "TIMED_OUT") {
-              if (isMounted) {
-                setError("Realtime subscription timed out");
-              }
-            }
-          });
-      } catch (error) {
-        console.error("[FeatureFlag] Failed to setup subscription:", error);
-        if (isMounted) {
-          setError("Failed to setup realtime subscription");
-        }
-      }
-    };
-
-    setupSubscription();
-
-    // Cleanup
-    return () => {
-      isMounted = false;
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-    };
-  }, [flagKey, supabase]);
-
-  return { isEnabled, isLoading, error };
+export function useFeatureFlag(flag: keyof PublicFeatureFlags) {
+  const flags = useFeatureFlags();
+  return { isEnabled: flags[flag], isLoading: false, error: null };
 }
 
-/**
- * Hook specifically for the 40 years anniversary feature
- * @returns Object containing the enabled state and loading state
- */
+/** The 40 years anniversary feature (`anniversary_40_years`). */
 export function useAnniversaryFeature() {
-  return useFeatureFlag("anniversary_40_years");
+  return useFeatureFlag("anniversary");
 }
 
 /**
- * Hook to check if the current authenticated user is an admin
- * @returns Object containing the admin status and loading state
+ * Whether the signed-in user is an admin or superadmin, from the auth
+ * provider (one profile read per session, nothing for anonymous visitors).
  */
 export function useAdminStatus() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchAdminStatus = async () => {
-      try {
-        const response = await fetch("/api/auth/check-admin");
-
-        if (!response.ok) {
-          console.error("Error fetching admin status");
-          setIsAdmin(false);
-        } else {
-          const data = await response.json();
-          setIsAdmin(data?.isAdmin || false);
-        }
-      } catch (error) {
-        console.error("Error fetching admin status:", error);
-        setIsAdmin(false);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchAdminStatus();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
+  const { isAdmin, isLoading } = useAuth();
   return { isAdmin, isLoading };
 }

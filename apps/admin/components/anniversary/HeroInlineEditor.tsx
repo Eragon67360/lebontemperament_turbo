@@ -1,231 +1,241 @@
 "use client";
 
+import {
+  EditorLoadError,
+  EditorSkeleton,
+  FieldGroup,
+} from "@/components/anniversary/EditorFrame";
+import {
+  SelectField,
+  SwitchField,
+  TextareaField,
+  TextField,
+} from "@/components/anniversary/form-fields";
+import {
+  FormFeedback,
+  saveErrorMessage,
+} from "@/components/anniversary/FormFeedback";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ErrorState } from "@/components/ui/data-state";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
+import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import {
   useAnniversaryHero,
   useUpdateAnniversaryHero,
 } from "@/hooks/useAnniversaryHero";
-import { Loader2, Save } from "lucide-react";
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
+import type { AnniversaryHero } from "@/types/anniversary";
+import { PAGE_SECTIONS } from "@/utils/anniversary/sections";
+import { heroFormSchema, type HeroFormValues } from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+const FORM_ID = "hero-form";
+
+const LABELS = {
+  hero_number: { label: "Chiffre", id: "hero-number" },
+  hero_subtitle: { label: "Sous-titre", id: "hero-subtitle" },
+  description: { label: "Texte d'introduction", id: "hero-description" },
+  cta_text: { label: "Texte du bouton", id: "hero-cta-text" },
+  cta_target_section: { label: "Le bouton mène à", id: "hero-cta-target" },
+  enable_intro_animation: {
+    label: "Jouer l'animation d'introduction",
+    id: "hero-animation",
+  },
+  skip_button_text: {
+    label: "Texte du bouton « Passer l'animation »",
+    id: "hero-skip-text",
+  },
+};
+
+const SECTION_OPTIONS = PAGE_SECTIONS.map((section) => ({
+  value: section.id,
+  label: section.label,
+}));
+
+const toValues = (hero: AnniversaryHero): HeroFormValues => ({
+  hero_number: hero.hero_number ?? "",
+  hero_subtitle: hero.hero_subtitle ?? "",
+  description: hero.description ?? "",
+  cta_text: hero.cta_text ?? "",
+  cta_target_section: hero.cta_target_section ?? "",
+  enable_intro_animation: hero.enable_intro_animation ?? true,
+  skip_button_text: hero.skip_button_text ?? "",
+});
 
 export function HeroInlineEditor() {
   const { data: hero, isLoading, isError, refetch } = useAnniversaryHero();
-  const updateHero = useUpdateAnniversaryHero();
 
-  const [formData, setFormData] = useState({
-    hero_number: "",
-    hero_subtitle: "",
-    description: "",
-    cta_text: "",
-    cta_target_section: "",
-    enable_intro_animation: true,
-    skip_button_text: "",
+  if (isLoading) {
+    return <EditorSkeleton label="Chargement de l'en-tête…" />;
+  }
+  if (isError || !hero) {
+    return (
+      <EditorLoadError
+        description="L'en-tête n'a pas pu être chargé. Rien n'est modifiable tant qu'il n'est pas récupéré."
+        onRetry={() => refetch()}
+      />
+    );
+  }
+  return <HeroForm hero={hero} />;
+}
+
+function HeroForm({ hero }: { hero: AnniversaryHero }) {
+  const update = useUpdateAnniversaryHero();
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const form = useForm<HeroFormValues>({
+    resolver: zodResolver(heroFormSchema),
+    defaultValues: toValues(hero),
+    shouldFocusError: false,
   });
+  const { isDirty } = form.formState;
+  useUnsavedChangesWarning(isDirty);
 
+  // A refetch (after a save, or in another tab) replaces the fields only
+  // when nothing is being edited.
   useEffect(() => {
-    if (hero) {
-      setFormData({
-        hero_number: hero.hero_number,
-        hero_subtitle: hero.hero_subtitle,
-        description: hero.description || "",
-        cta_text: hero.cta_text ?? "",
-        cta_target_section: hero.cta_target_section ?? "",
-        enable_intro_animation: hero.enable_intro_animation ?? true,
-        skip_button_text: hero.skip_button_text ?? "",
-      });
-    }
-  }, [hero]);
+    if (!form.formState.isDirty) form.reset(toValues(hero));
+  }, [hero, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (values: HeroFormValues) => {
+    setSaveError(null);
     try {
-      await updateHero.mutateAsync(formData);
-      toast.success("Section Hero mise à jour avec succès");
+      await update.mutateAsync(values);
+      form.reset(values);
+      toast.success("En-tête enregistré");
     } catch (error) {
-      toast.error("Erreur lors de la mise à jour");
-      console.error("Update error:", error);
+      const message = saveErrorMessage(error);
+      setSaveError(message);
+      toast.error("L'enregistrement a échoué", { description: message });
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="space-y-6 py-6" role="status" aria-busy>
-          <span className="sr-only">Chargement du contenu…</span>
-          <Skeleton className="h-10 w-full" aria-hidden />
-          <Skeleton className="h-10 w-full" aria-hidden />
-          <Skeleton className="h-24 w-full" aria-hidden />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Without this branch a failed load left every field empty and enabled: one
-  // "Enregistrer" would have overwritten the live hero content with blanks.
-  if (isError || !hero) {
-    return (
-      <Card>
-        <CardContent className="py-6">
-          <ErrorState
-            description="Le contenu de la section Hero n'a pas pu être chargé. Rien n'est modifiable tant qu'il n'est pas récupéré."
-            onRetry={() => refetch()}
-          />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>Contenu de la section Hero</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Hero Number */}
-          <div className="space-y-2">
-            <Label htmlFor="hero_number">Numéro principal</Label>
-            <Input
-              id="hero_number"
-              value={formData.hero_number}
-              onChange={(e) =>
-                setFormData({ ...formData, hero_number: e.target.value })
-              }
+    <Form {...form}>
+      <form
+        id={FORM_ID}
+        onSubmit={form.handleSubmit(onSubmit)}
+        noValidate
+        className="flex flex-col gap-5"
+      >
+        <FormFeedback
+          errors={form.formState.errors}
+          labels={LABELS}
+          submitCount={form.formState.submitCount}
+          saveError={saveError}
+        />
+
+        <FieldGroup
+          title="Le grand titre"
+          intro="Ce que le visiteur lit en premier : un chiffre en très grand, puis une phrase."
+        >
+          <div className="grid gap-5 sm:grid-cols-[8rem_1fr]">
+            <TextField
+              control={form.control}
+              name="hero_number"
+              id={LABELS.hero_number.id}
+              label={LABELS.hero_number.label}
+              required
               placeholder="40"
+            />
+            <TextField
+              control={form.control}
+              name="hero_subtitle"
+              id={LABELS.hero_subtitle.id}
+              label={LABELS.hero_subtitle.label}
               required
+              placeholder="années de passion musicale"
             />
-            <p className="text-muted-foreground text-xs">
-              Le nombre affiché en grand (ex.&nbsp;: «&nbsp;40&nbsp;»)
-            </p>
           </div>
+          <TextareaField
+            control={form.control}
+            name="description"
+            id={LABELS.description.id}
+            label={LABELS.description.label}
+            placeholder="Célébrons quatre décennies de musique partagée…"
+            hint="Deux ou trois phrases sous le titre."
+          />
+        </FieldGroup>
 
-          {/* Hero Subtitle */}
-          <div className="space-y-2">
-            <Label htmlFor="hero_subtitle">Sous-titre</Label>
-            <Input
-              id="hero_subtitle"
-              value={formData.hero_subtitle}
-              onChange={(e) =>
-                setFormData({ ...formData, hero_subtitle: e.target.value })
-              }
-              placeholder="Années de Passion Musicale"
+        <FieldGroup
+          title="Le bouton"
+          intro="Un bouton sous le titre fait défiler la page jusqu'à une de ses sections."
+        >
+          <div className="grid gap-5 sm:grid-cols-2">
+            <TextField
+              control={form.control}
+              name="cta_text"
+              id={LABELS.cta_text.id}
+              label={LABELS.cta_text.label}
               required
+              placeholder="Découvrir notre histoire"
+            />
+            <SelectField
+              control={form.control}
+              name="cta_target_section"
+              id={LABELS.cta_target_section.id}
+              label={LABELS.cta_target_section.label}
+              options={SECTION_OPTIONS}
+              placeholder="Choisir une section de la page"
             />
           </div>
+        </FieldGroup>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Célébrons quatre décennies d'excellence..."
-              rows={3}
-            />
-          </div>
+        <FieldGroup
+          title="L'animation d'introduction"
+          intro="À l'arrivée, une courte animation précède le titre ; les visiteurs peuvent la passer, et elle ne rejoue pas pour ceux qui reviennent."
+        >
+          <SwitchField
+            control={form.control}
+            name="enable_intro_animation"
+            id={LABELS.enable_intro_animation.id}
+            label={LABELS.enable_intro_animation.label}
+            hint="Désactivée, la page s'ouvre directement sur le titre."
+          />
+          <TextField
+            control={form.control}
+            name="skip_button_text"
+            id={LABELS.skip_button_text.id}
+            label={LABELS.skip_button_text.label}
+            required
+            placeholder="Passer l'animation"
+          />
+        </FieldGroup>
 
-          {/* CTA Text */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="cta_text">Texte du bouton</Label>
-              <Input
-                id="cta_text"
-                value={formData.cta_text}
-                onChange={(e) =>
-                  setFormData({ ...formData, cta_text: e.target.value })
-                }
-                placeholder="Découvrir Notre Histoire"
-                required
-              />
-            </div>
-
-            {/* CTA Target */}
-            <div className="space-y-2">
-              <Label htmlFor="cta_target_section">Section cible</Label>
-              <Input
-                id="cta_target_section"
-                value={formData.cta_target_section}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    cta_target_section: e.target.value,
-                  })
-                }
-                placeholder="anniversary-navigation"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Skip Button Text */}
-          <div className="space-y-2">
-            <Label htmlFor="skip_button_text">
-              Texte du bouton «&nbsp;Passer l&apos;animation&nbsp;»
-            </Label>
-            <Input
-              id="skip_button_text"
-              value={formData.skip_button_text}
-              onChange={(e) =>
-                setFormData({ ...formData, skip_button_text: e.target.value })
-              }
-              placeholder="Passer l'animation"
-              required
-            />
-          </div>
-
-          {/* Enable Intro Animation */}
-          <div className="border-border bg-muted/50 flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="enable_intro_animation" className="text-base">
-                Animation d&apos;introduction
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Activer l&apos;animation GSAP au chargement de la page
-              </p>
-            </div>
-            <Switch
-              id="enable_intro_animation"
-              checked={formData.enable_intro_animation}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, enable_intro_animation: checked })
-              }
-            />
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end">
+        <StickyActionBar
+          className="-mx-4 sm:-mx-6"
+          note={
+            isDirty
+              ? "Modifications non enregistrées."
+              : "Rien ne change sur le site avant « Enregistrer »."
+          }
+          secondary={
             <Button
-              type="submit"
-              disabled={updateHero.isPending}
-              className="min-h-11 w-full sm:w-auto sm:min-w-[120px]"
+              type="button"
+              variant="ghost"
+              disabled={!isDirty || update.isPending}
+              onClick={() => form.reset(toValues(hero))}
             >
-              {updateHero.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Enregistrer
-                </>
-              )}
+              Annuler les modifications
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </form>
+          }
+        >
+          <Button
+            type="submit"
+            form={FORM_ID}
+            disabled={update.isPending}
+            aria-busy={update.isPending || undefined}
+          >
+            {update.isPending && (
+              <Loader2 className="animate-spin" aria-hidden />
+            )}
+            {update.isPending ? "Enregistrement…" : "Enregistrer"}
+          </Button>
+        </StickyActionBar>
+      </form>
+    </Form>
   );
 }

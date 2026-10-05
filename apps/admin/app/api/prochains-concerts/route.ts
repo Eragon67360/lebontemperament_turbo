@@ -1,6 +1,14 @@
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
+import {
+  concertCreateSchema,
+  concertPatchSchema,
+} from "@/utils/concerts/apiSchemas";
+import {
+  REVALIDATE,
+  revalidateWebsiteAfterResponse,
+} from "@/utils/revalidateWebsite";
 import { createClient } from "@/utils/supabase/server";
-import { Concert, UpdateConcertDTO } from "@repo/domain/types/concerts";
 import { getFileNameFromUrl } from "@repo/domain/utils/storage";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -38,8 +46,16 @@ export async function POST(request: Request) {
     );
   }
 
+  // Only the columns the concert dialog sends (#489).
+  const parsed = parsePatchBody(concertCreateSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const concert = parsed.data;
   const supabase = await createClient();
-  const concert: Concert = await request.json();
 
   try {
     // First create the concert
@@ -77,6 +93,7 @@ export async function POST(request: Request) {
       // Don't throw here, just log the error
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json(newConcert);
   } catch (error) {
     console.error("Error creating concert:", error);
@@ -96,9 +113,16 @@ export async function PATCH(request: Request) {
     );
   }
 
+  // Only the columns the screen edits (#489): unknown keys are refused.
+  const parsed = parsePatchBody(concertPatchSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id, ...updateData } = parsed.data;
   const supabase = await createClient();
-  const concert: UpdateConcertDTO = await request.json();
-  const { id, ...updateData } = concert;
 
   const { data, error } = await supabase
     .from("concerts")
@@ -111,6 +135,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidateWebsiteAfterResponse(REVALIDATE.agenda);
   return NextResponse.json(data);
 }
 
@@ -162,6 +187,7 @@ export async function DELETE(request: Request) {
       throw deleteError;
     }
 
+    revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete operation error:", error);

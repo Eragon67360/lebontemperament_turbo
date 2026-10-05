@@ -14,9 +14,20 @@ const DASHBOARD_VIEWS = [
   "/dashboard/members/evenements",
   "/dashboard/members/travail",
   "/dashboard/admin/users",
+  "/dashboard/admin/users/sync",
   "/dashboard/admin/google-groups",
   "/dashboard/admin/ca",
   "/dashboard/admin/anniversary",
+  "/dashboard/admin/anniversary/hero",
+  "/dashboard/admin/anniversary/hero-stats",
+  "/dashboard/admin/anniversary/navigation",
+  "/dashboard/admin/anniversary/timeline",
+  "/dashboard/admin/anniversary/videos",
+  "/dashboard/admin/anniversary/audio",
+  "/dashboard/admin/anniversary/photos",
+  "/dashboard/admin/anniversary/archives",
+  "/dashboard/admin/anniversary/form",
+  "/dashboard/admin/anniversary/memories",
 ];
 
 for (const path of DASHBOARD_VIEWS) {

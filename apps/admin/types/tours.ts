@@ -6,8 +6,8 @@ export interface CreateTourDTO {
   name: string;
   description?: string;
   context: Context;
-  start_date?: string;
-  end_date?: string;
+  start_date?: string | null;
+  end_date?: string | null;
   tour_poster?: string | null;
   is_active?: boolean;
 }

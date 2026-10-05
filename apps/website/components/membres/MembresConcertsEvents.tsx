@@ -1,7 +1,7 @@
 "use client";
 
 import MusicList from "@/components/MusicList";
-import { Concert } from "@repo/domain/types/concerts";
+import type { PublicConcert } from "@/lib/publicConcerts";
 import { Event } from "@repo/domain/types/events";
 import { format, isAfter, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -10,8 +10,39 @@ import { useEffect, useState } from "react";
 import { IoCalendarClear, IoLocationSharp, IoTime } from "react-icons/io5";
 import { MdOpenInNew } from "react-icons/md";
 
+const SectionTitle = ({
+  subtitle,
+  title,
+}: {
+  subtitle: string;
+  title: string;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className="mb-6"
+  >
+    <p className="text-foreground/60 text-sm md:text-base">{subtitle}</p>
+    <h2 className="from-primary via-foreground mt-1 bg-gradient-to-r to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl">
+      {title}
+    </h2>
+  </motion.div>
+);
+
+const LoadingCard = () => (
+  <div className="bg-surface-secondary/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
+    <div className="bg-surface-tertiary/80 mb-4 h-6 w-3/4 rounded-lg"></div>
+    <div className="space-y-3">
+      <div className="bg-surface-tertiary/80 h-4 w-1/2 rounded-lg"></div>
+      <div className="bg-surface-tertiary/80 h-4 w-2/3 rounded-lg"></div>
+      <div className="bg-surface-tertiary/80 h-4 w-3/4 rounded-lg"></div>
+    </div>
+  </div>
+);
+
 const MembresConcertsEvents = () => {
-  const [concerts, setConcerts] = useState<Concert[]>([]);
+  const [concerts, setConcerts] = useState<PublicConcert[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +59,7 @@ const MembresConcertsEvents = () => {
       ]);
 
       const today = startOfDay(new Date());
-      const futureConcerts = concertsData.filter((concert: Concert) =>
+      const futureConcerts = concertsData.filter((concert: PublicConcert) =>
         isAfter(new Date(concert.date), today),
       );
 
@@ -42,7 +73,7 @@ const MembresConcertsEvents = () => {
 
       // Sort concerts by date
       const sortedConcerts = futureConcerts.sort(
-        (a: Concert, b: Concert) =>
+        (a: PublicConcert, b: PublicConcert) =>
           new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
 
@@ -102,37 +133,6 @@ const MembresConcertsEvents = () => {
       colors[type as keyof typeof colors] || "bg-surface-secondary text-muted"
     );
   };
-
-  const SectionTitle = ({
-    subtitle,
-    title,
-  }: {
-    subtitle: string;
-    title: string;
-  }) => (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="mb-6"
-    >
-      <p className="text-foreground/60 text-sm md:text-base">{subtitle}</p>
-      <h2 className="from-primary via-foreground mt-1 bg-gradient-to-r to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl">
-        {title}
-      </h2>
-    </motion.div>
-  );
-
-  const LoadingCard = () => (
-    <div className="bg-surface-secondary/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
-      <div className="bg-surface-tertiary/80 mb-4 h-6 w-3/4 rounded-lg"></div>
-      <div className="space-y-3">
-        <div className="bg-surface-tertiary/80 h-4 w-1/2 rounded-lg"></div>
-        <div className="bg-surface-tertiary/80 h-4 w-2/3 rounded-lg"></div>
-        <div className="bg-surface-tertiary/80 h-4 w-3/4 rounded-lg"></div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="container mx-auto flex w-full flex-col space-y-8 px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">
@@ -198,7 +198,7 @@ const MembresConcertsEvents = () => {
                   </div>
 
                   <div className="mt-4">
-                    <span className="from-primary/20 text-primary inline-block rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-semibold md:text-sm">
+                    <span className="from-primary/20 text-primary-text inline-block rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-semibold md:text-sm">
                       {concert.context === "orchestre_et_choeur"
                         ? "Orchestre et Chœur"
                         : concert.context.charAt(0).toUpperCase() +
@@ -287,7 +287,7 @@ const MembresConcertsEvents = () => {
                         Contact:{" "}
                         <a
                           href={`mailto:${event.responsible_email}`}
-                          className="text-primary font-medium hover:underline"
+                          className="text-primary-text font-medium hover:underline"
                         >
                           {event.responsible_name || event.responsible_email}
                         </a>
@@ -298,7 +298,7 @@ const MembresConcertsEvents = () => {
                         href={event.link}
                         target="_blank"
                         rel="noreferrer"
-                        className="from-primary/20 hover:from-primary/30 text-primary flex items-center gap-1 rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-medium transition-all hover:to-purple-500/30"
+                        className="from-primary/20 hover:from-primary/30 text-primary-text flex items-center gap-1 rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-medium transition-all hover:to-purple-500/30"
                       >
                         <span>Infos</span> <MdOpenInNew className="h-3 w-3" />
                       </a>

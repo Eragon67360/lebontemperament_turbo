@@ -40,7 +40,7 @@ export default async function globalSetup() {
   const email = process.env.E2E_USER_EMAIL;
   const password = process.env.E2E_USER_PASSWORD;
   const adminURL =
-    process.env.ADMIN_URL ?? "https://admin-dev.lebontemperament.com";
+    process.env.ADMIN_URL || "https://admin-dev.lebontemperament.com";
   const websiteURL =
     process.env.WEBSITE_URL ?? "https://dev.lebontemperament.com";
 

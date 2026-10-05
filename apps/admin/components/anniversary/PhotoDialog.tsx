@@ -1,269 +1,176 @@
 "use client";
 
-import { ImageUploader } from "@/components/anniversary/ImageUploader";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  AssetField,
+  SelectField,
+  SwitchField,
+  TextareaField,
+  TextField,
+  YearField,
+} from "@/components/anniversary/form-fields";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+  FormFeedback,
+  saveErrorMessage,
+} from "@/components/anniversary/FormFeedback";
+import { Form } from "@/components/ui/form";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { useCreatePhoto, useUpdatePhoto } from "@/hooks/useAnniversaryPhotos";
-import { AnniversaryPhoto, PHOTO_CATEGORIES } from "@/types/anniversary";
-import { Loader2 } from "lucide-react";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
+import { PHOTO_CATEGORIES, type AnniversaryPhoto } from "@/types/anniversary";
+import {
+  photoFormSchema,
+  type PhotoFormInput,
+  type PhotoFormValues,
+} from "@/utils/formSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+const FORM_ID = "photo-form";
+
+const LABELS = {
+  image_url: { label: "Photo", id: "photo-image" },
+  title: { label: "Titre", id: "photo-title" },
+  description: { label: "Description", id: "photo-description" },
+  year: { label: "Année", id: "photo-year" },
+  category: { label: "Catégorie", id: "photo-category" },
+  is_visible: { label: "Visible sur le site", id: "photo-visible" },
+};
+
+const CATEGORY_OPTIONS = PHOTO_CATEGORIES.map((value) => ({
+  value,
+  label: value,
+}));
+
+const defaults = (photo?: AnniversaryPhoto): PhotoFormInput => ({
+  image_url: photo?.image_url ?? "",
+  title: photo?.title ?? "",
+  description: photo?.description ?? "",
+  year: photo?.year ? String(photo.year) : "",
+  category: (photo?.category as PhotoFormValues["category"]) ?? "Concert",
+  is_visible: photo?.is_visible ?? true,
+});
 
 interface PhotoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   photo?: AnniversaryPhoto;
-  maxOrder: number;
+  nextOrder: number;
 }
 
 export function PhotoDialog({
   open,
   onOpenChange,
   photo,
-  maxOrder,
+  nextOrder,
 }: PhotoDialogProps) {
-  const createPhoto = useCreatePhoto();
-  const updatePhoto = useUpdatePhoto();
+  const create = useCreatePhoto();
+  const update = useUpdatePhoto();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    year: null as number | null,
-    category: "Concert" as string,
-    image_url: "",
-    display_order: maxOrder + 1,
-    is_visible: true,
+  const form = useForm<PhotoFormInput, unknown, PhotoFormValues>({
+    resolver: zodResolver(photoFormSchema),
+    defaultValues: defaults(photo),
+    shouldFocusError: false,
   });
 
+  // A fresh open starts clean: the fields from the item, no stale error.
+  useResetOnChange([open], () => setSaveError(null));
   useEffect(() => {
-    if (photo) {
-      setFormData({
-        title: photo.title,
-        description: photo.description || "",
-        year: photo.year,
-        category: photo.category,
-        image_url: photo.image_url,
-        display_order: photo.display_order,
-        is_visible: photo.is_visible ?? true,
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        year: null,
-        category: "Concert",
-        image_url: "",
-        display_order: maxOrder + 1,
-        is_visible: true,
-      });
-    }
-  }, [photo, maxOrder, open]);
+    if (open) form.reset(defaults(photo));
+  }, [open, photo, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.image_url) {
-      toast.error("Veuillez uploader une image");
-      return;
-    }
-
+  const onSubmit = async (values: PhotoFormValues) => {
+    setSaveError(null);
+    const data = { ...values, description: values.description || null };
     try {
       if (photo) {
-        await updatePhoto.mutateAsync({
-          id: photo.id,
-          ...formData,
-        });
-        toast.success("Photo mise à jour avec succès");
+        await update.mutateAsync({ id: photo.id, ...data });
+        toast.success(`« ${values.title} » enregistrée`);
       } else {
-        await createPhoto.mutateAsync(formData);
-        toast.success("Photo ajoutée avec succès");
+        await create.mutateAsync({ ...data, display_order: nextOrder });
+        toast.success(`« ${values.title} » ajoutée`);
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(
-        photo ? "Erreur lors de la mise à jour" : "Erreur lors de l'ajout",
-      );
-      console.error("Error:", error);
+      const message = saveErrorMessage(error);
+      setSaveError(message);
+      toast.error("L'enregistrement a échoué", { description: message });
     }
   };
 
-  const isLoading = createPhoto.isPending || updatePhoto.isPending;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
-            {photo ? "Modifier la photo" : "Nouvelle photo"}
-          </DialogTitle>
-          <DialogDescription>
-            {photo
-              ? "Modifiez les informations de la photo"
-              : "Ajoutez une nouvelle photo à la collection"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image Upload */}
-          <ImageUploader
-            value={formData.image_url}
-            onChange={(url) => setFormData({ ...formData, image_url: url })}
-            onRemove={() => setFormData({ ...formData, image_url: "" })}
-            label="Image"
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={photo ? `Modifier « ${photo.title} »` : "Ajouter une photo"}
+      description="Une photo de la collection des 40 ans, avec son titre et son année."
+      formId={FORM_ID}
+      isDirty={form.formState.isDirty}
+      isPending={create.isPending || update.isPending}
+      submitLabel={photo ? "Enregistrer" : "Ajouter"}
+    >
+      <Form {...form}>
+        <form
+          id={FORM_ID}
+          onSubmit={form.handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-5"
+        >
+          <FormFeedback
+            errors={form.formState.errors}
+            labels={LABELS}
+            submitCount={form.formState.submitCount}
+            saveError={saveError}
+          />
+          <AssetField
+            control={form.control}
+            name="image_url"
+            id={LABELS.image_url.id}
+            label={LABELS.image_url.label}
+            kind="image"
             folder="Site/anniversary/photos"
           />
-
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">
-              Titre <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              placeholder="Concert Inaugural 1984"
-              required
+          <TextField
+            control={form.control}
+            name="title"
+            id={LABELS.title.id}
+            label={LABELS.title.label}
+            required
+            placeholder="Concert inaugural, 1984"
+          />
+          <TextareaField
+            control={form.control}
+            name="description"
+            id={LABELS.description.id}
+            label={LABELS.description.label}
+            placeholder="Le tout premier concert du Bon Tempérament…"
+          />
+          <div className="grid gap-5 sm:grid-cols-2">
+            <YearField
+              control={form.control}
+              name="year"
+              id={LABELS.year.id}
+              label={LABELS.year.label}
+            />
+            <SelectField
+              control={form.control}
+              name="category"
+              id={LABELS.category.id}
+              label={LABELS.category.label}
+              options={CATEGORY_OPTIONS}
             />
           </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Le tout premier concert du Bon Tempérament..."
-              rows={3}
-            />
-          </div>
-
-          {/* Year & Category */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="year">Année</Label>
-              <Input
-                id="year"
-                type="number"
-                min="1984"
-                max="2100"
-                value={formData.year || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    year: e.target.value ? parseInt(e.target.value) : null,
-                  })
-                }
-                placeholder="2024"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">
-                Catégorie <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, category: value })
-                }
-              >
-                <SelectTrigger id="category">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PHOTO_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Display Order */}
-          <div className="space-y-2">
-            <Label htmlFor="display_order">Ordre d'affichage</Label>
-            <Input
-              id="display_order"
-              type="number"
-              min="1"
-              value={formData.display_order}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  display_order: parseInt(e.target.value),
-                })
-              }
-              required
-            />
-          </div>
-
-          {/* Visibility Toggle */}
-          <div className="border-border bg-muted/50 flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_visible" className="text-base">
-                Visible
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Afficher cette photo sur le site
-              </p>
-            </div>
-            <Switch
-              id="is_visible"
-              checked={formData.is_visible}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, is_visible: checked })
-              }
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {photo ? "Mise à jour..." : "Ajout..."}
-                </>
-              ) : (
-                <>{photo ? "Mettre à jour" : "Ajouter"}</>
-              )}
-            </Button>
-          </DialogFooter>
+          <SwitchField
+            control={form.control}
+            name="is_visible"
+            id={LABELS.is_visible.id}
+            label={LABELS.is_visible.label}
+            hint="Masquée, la photo reste ici sans apparaître sur la page."
+          />
         </form>
-      </DialogContent>
-    </Dialog>
+      </Form>
+    </FormDialog>
   );
 }

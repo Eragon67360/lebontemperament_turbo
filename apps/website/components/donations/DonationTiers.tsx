@@ -82,7 +82,7 @@ export default function DonationTiers() {
               aria-pressed={isSelected}
               className={`min-w-16 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
                 isSelected
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "border-primary bg-primary/10 text-primary-text dark:bg-primary/5"
                   : "border-default-300 hover:border-primary/50"
               }`}
             >
@@ -112,7 +112,7 @@ export default function DonationTiers() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Continuer sur HelloAsso (nouvel onglet)"
-          className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold text-white transition-colors"
+          className="bg-primary-solid hover:bg-primary-solid-hover inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold text-white transition-colors"
         >
           <FaHeart aria-hidden="true" />
           Continuer sur HelloAsso

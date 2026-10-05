@@ -37,7 +37,6 @@ Authentication, rehearsal/event calendar, file access, push notifications, offli
 ## Packages
 
 - **`@repo/domain`** — shared domain code used by both Next apps: generated Supabase types (`database.types.ts`), domain types (concerts, events, rehearsals, projects, anniversary, …), consts and utils. `npm run db:types` regenerates the DB types.
-- **`@repo/ui`** — shared React component library (minimal; apps mostly carry their own components).
 - **`@repo/eslint-config`** — shared ESLint flat configs (`base`, `next`, `react-internal`).
 - **`@repo/typescript-config`** — shared tsconfigs (`base`, `nextjs`, `react-library`).
 
@@ -46,6 +45,7 @@ Authentication, rehearsal/event calendar, file access, push notifications, offli
 - **Migrations** in `supabase/migrations` — members/profiles, anniversary CMS + realtime, feature flags, Stripe-era donations (donors, receipts), delivery tracking (deliveries, recipients, routes, ETA), rehearsal calendar sync.
 - **Edge functions** in `supabase/functions`:
   - `sync-rehearsals-from-calendar` — Google Calendar → rehearsals sync (cron)
+  - `sync-drive-index` — Google Drive → `drive_index_nodes` index, reviewed from the admin (nightly cron + manual)
   - `send-push-notification` — FCM push on new events
   - Delivery round: `start-delivery-round`, `optimize-recipients-route`, `send-delivery-sms`, `send-delivery-complete-sms`, `check-eta-and-send-arrival-sms` (cron)
 
@@ -53,7 +53,7 @@ Authentication, rehearsal/event calendar, file access, push notifications, offli
 
 Core: `profiles`, `groups`, `concerts`, `events`, `rehearsals`, `projects`, `programs`, `files`/`folders`, `cas`, `tours`, `activities`, `notifications`, `youtube_links`
 Anniversary CMS: `anniversary_*` (hero, stats, timeline, memories, photos, videos, …)
-Other: `bug_reports`/`bug_messages`, `feature_flags`, `donations`/`donors` (Stripe-era records), `deliveries`/`delivery_recipients`, `rehearsal_sync_logs`
+Other: `bug_reports`/`bug_messages`, `feature_flags`, `donations`/`donors` (Stripe-era records), `deliveries`/`delivery_recipients`, `rehearsal_sync_logs`, `drive_index_nodes`/`drive_sync_runs`
 
 ## Scripts
 
@@ -88,7 +88,6 @@ npm run test:rehearsal-sync  # test the calendar sync function (see scripts/READ
 │   └── mobile_app/     # Flutter app (not a turbo workspace)
 ├── packages
 │   ├── domain/         # @repo/domain — shared types & utils
-│   ├── ui/             # @repo/ui — shared components
 │   ├── eslint-config/
 │   └── typescript-config/
 ├── supabase/           # migrations + edge functions

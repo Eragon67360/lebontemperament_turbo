@@ -1,6 +1,8 @@
+import { PageHeader } from "@/components/layouts/PageHeader";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
+/** @deprecated Section hues are gone (one accent); the prop is ignored. */
 type Theme = "admin" | "members" | "public" | "anniversary" | "default";
 
 interface PageShellProps {
@@ -15,29 +17,14 @@ interface PageShellProps {
    * growing and letting the dashboard's scroll container handle it.
    */
   fullHeight?: boolean;
+  /** @deprecated Ignored since the redesign: every section shares the one teal accent. */
   theme?: Theme;
 }
 
-const THEME_CLASSES: Record<Theme, string> = {
-  admin: "theme-admin",
-  members: "theme-members",
-  public: "theme-public",
-  anniversary: "",
-  default: "",
-};
-
-const TITLE_CLASSES: Record<Theme, string> = {
-  admin:
-    "bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent",
-  members:
-    "bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent",
-  public:
-    "bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent",
-  anniversary:
-    "bg-gradient-to-r from-teal-600 to-pink-500 bg-clip-text text-transparent",
-  default: "text-gray-900",
-};
-
+/**
+ * Page frame: title, one-sentence description and the page's actions through
+ * `PageHeader`, then the content. « Vous êtes ici » is the shell header's job.
+ */
 export function PageShell({
   children,
   className,
@@ -46,7 +33,9 @@ export function PageShell({
   description,
   headerAction,
   fullHeight = false,
-  theme = "default",
+  // Accepted and ignored so pages compile untouched.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  theme,
 }: PageShellProps) {
   return (
     <div
@@ -54,37 +43,15 @@ export function PageShell({
         "mx-auto flex w-full max-w-7xl flex-col",
         // The dashboard shell already caps the height; a page only has to fill it.
         fullHeight ? "h-full min-h-0 grow overflow-hidden" : "gap-6",
-        THEME_CLASSES[theme],
         className,
       )}
     >
-      {(title || description || headerAction) && (
-        <div
-          className={cn(
-            "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
-            fullHeight && "mb-4 shrink-0",
-          )}
-        >
-          <div className="space-y-1.5">
-            {title && (
-              <h1
-                className={cn(
-                  "text-xl font-bold tracking-tight sm:text-2xl",
-                  TITLE_CLASSES[theme],
-                )}
-              >
-                {title}
-              </h1>
-            )}
-            {description && (
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {description}
-              </p>
-            )}
-          </div>
-          {headerAction && <div className="shrink-0">{headerAction}</div>}
-        </div>
-      )}
+      <PageHeader
+        title={title}
+        intro={description}
+        actions={headerAction}
+        className={cn(fullHeight && "mb-4 shrink-0")}
+      />
       <div
         className={cn(
           fullHeight

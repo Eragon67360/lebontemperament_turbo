@@ -67,7 +67,7 @@ export function useUpdateBugMessage() {
 
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Invalidate all bug messages queries (we could be more specific if needed)
       queryClient.invalidateQueries({
         queryKey: ["bug-messages"],

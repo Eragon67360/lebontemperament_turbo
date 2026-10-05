@@ -1,5 +1,7 @@
 "use client";
 
+import VideoFacade from "@/components/VideoFacade";
+import { youTubeEmbedUrl } from "@/components/YouTubeVideo";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Video } from "@/types/anniversary";
 import { motion, useTime, useTransform } from "motion/react";
@@ -11,24 +13,31 @@ interface VideoModalProps {
   onClose: () => void;
 }
 
-const getEmbedUrl = (url: string): string => {
+type Embed = { url: string; provider: string };
+
+/** Player URLs that set no cookie before the visitor plays. */
+const getEmbed = (url: string): Embed => {
   if (url.includes("youtube.com/watch?v=")) {
-    const videoId = url.split("v=")[1]?.split("&")[0];
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    const videoId = url.split("v=")[1]?.split("&")[0] ?? "";
+    return { url: youTubeEmbedUrl(videoId), provider: "YouTube" };
   }
   if (url.includes("youtu.be/")) {
-    const videoId = url.split("youtu.be/")[1]?.split("?")[0];
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    const videoId = url.split("youtu.be/")[1]?.split("?")[0] ?? "";
+    return { url: youTubeEmbedUrl(videoId), provider: "YouTube" };
   }
   if (url.includes("vimeo.com/")) {
     const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
-    return `https://player.vimeo.com/video/${videoId}?autoplay=1`;
+    return {
+      url: `https://player.vimeo.com/video/${videoId}?autoplay=1&dnt=1`,
+      provider: "Vimeo",
+    };
   }
-  return url;
+  return { url, provider: "le lecteur externe" };
 };
 
 export function VideoModal({ video, onClose }: VideoModalProps) {
   const shouldReduceMotion = useReducedMotion();
+  const embed = getEmbed(video.video_url || "");
   const time = useTime();
   const rotate = useTransform(time, [0, 4000], [0, 360], { clamp: false });
 
@@ -82,18 +91,13 @@ export function VideoModal({ video, onClose }: VideoModalProps) {
             className="absolute inset-0 rounded-lg"
             style={{ background: rotatingBg, zIndex: 0 }}
           />
-          <div
-            className="relative aspect-video overflow-hidden rounded-md bg-black"
-            style={{ zIndex: 1 }}
-          >
-            <iframe
-              src={getEmbedUrl(video.video_url || "")}
-              title={video.title}
-              className="absolute inset-0 h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
+          <VideoFacade
+            embedUrl={embed.url}
+            provider={embed.provider}
+            title={video.title}
+            poster={video.thumbnail_url || undefined}
+            className="z-[1] aspect-video rounded-md"
+          />
         </div>
 
         <div className="mt-4 text-center">

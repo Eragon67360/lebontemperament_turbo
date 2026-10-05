@@ -67,6 +67,30 @@ test.describe("members-only routes refuse anonymous callers", () => {
   }
 });
 
+test.describe("POST /api/revalidate is secret-protected", () => {
+  // 503 while REVALIDATE_SECRET is unset on the deployment, 401 once it is
+  // set: never a 200 for a caller without the secret.
+  test("refuses a call without the secret", async ({ request }) => {
+    const response = await request.post("/api/revalidate", {
+      data: { paths: ["/concerts"] },
+    });
+    expect([401, 503]).toContain(response.status());
+  });
+
+  test("refuses a wrong secret", async ({ request }) => {
+    const response = await request.post("/api/revalidate", {
+      headers: { "x-revalidate-secret": "not-the-secret" },
+      data: { paths: ["/concerts"] },
+    });
+    expect([401, 503]).toContain(response.status());
+  });
+
+  test("only accepts POST", async ({ request }) => {
+    const response = await request.get("/api/revalidate");
+    expect(response.status()).toBe(405);
+  });
+});
+
 test("the CD catalogue renders without calling an API", async ({ page }) => {
   const apiCalls: string[] = [];
   page.on("request", (request) => {

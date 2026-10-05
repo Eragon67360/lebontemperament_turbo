@@ -1,43 +1,52 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../models/list_result.dart';
 import '../models/rehearsal.dart';
 import 'storage_service.dart';
 
 class RehearsalsService {
-  final SupabaseClient _supabase = Supabase.instance.client;
   final StorageService _storageService;
-  final Logger _logger = Logger();
+  final Future<List<Map<String, dynamic>>> Function() _fetchRows;
+  final Logger _logger;
 
-  RehearsalsService({StorageService? storageService})
-    : _storageService = storageService ?? StorageService(logger: Logger());
+  /// [fetchRows] replaces the Supabase query in tests.
+  RehearsalsService({
+    StorageService? storageService,
+    Future<List<Map<String, dynamic>>> Function()? fetchRows,
+    Logger? logger,
+  }) : _storageService = storageService ?? StorageService(logger: Logger()),
+       _fetchRows = fetchRows ?? _fetchFromSupabase,
+       _logger = logger ?? Logger();
 
-  Future<List<Rehearsal>> getRehearsals() async {
+  static SupabaseClient get _supabase => Supabase.instance.client;
+
+  static Future<List<Map<String, dynamic>>> _fetchFromSupabase() {
+    return _supabase.from('rehearsals').select().order('date', ascending: true);
+  }
+
+  /// Every rehearsal, fresh from the server or, when it cannot be reached,
+  /// from the local cache (the result says which). Never throws.
+  Future<ListResult<Rehearsal>> getRehearsals() async {
     try {
-      final response = await _supabase
-          .from('rehearsals')
-          .select()
-          .order('date', ascending: true);
-
+      final response = await _fetchRows();
       final rehearsals = response
           .map<Rehearsal>((json) => Rehearsal.fromJson(json))
           .toList();
 
-      // Save to local storage for caching
       await _storageService.saveRehearsals(rehearsals);
       _logger.i('Saved ${rehearsals.length} rehearsals to local storage');
 
-      return rehearsals;
+      return ListResult.fresh(rehearsals);
     } catch (e) {
       _logger.w('Failed to fetch rehearsals from server: $e');
-      _logger.i('Attempting to load rehearsals from local storage...');
 
-      // Fallback to local storage
       final cachedRehearsals = _storageService.getRehearsals();
       _logger.i(
         'Loaded ${cachedRehearsals.length} rehearsals from local storage',
       );
 
-      return cachedRehearsals;
+      return ListResult.cached(cachedRehearsals, error: e);
     }
   }
 
@@ -71,42 +80,6 @@ class RehearsalsService {
       );
 
       return cachedRehearsal;
-    }
-  }
-
-  Future<List<Rehearsal>> getRehearsalsByGroupType(GroupType groupType) async {
-    try {
-      final response = await _supabase
-          .from('rehearsals')
-          .select()
-          .eq('group_type', groupType.name)
-          .order('date', ascending: true);
-
-      final rehearsals = response
-          .map<Rehearsal>((json) => Rehearsal.fromJson(json))
-          .toList();
-
-      // Save to local storage for caching
-      await _storageService.saveRehearsals(rehearsals);
-      _logger.i(
-        'Saved ${rehearsals.length} rehearsals for group ${groupType.name} to local storage',
-      );
-
-      return rehearsals;
-    } catch (e) {
-      _logger.w('Failed to fetch rehearsals by group from server: $e');
-      _logger.i('Attempting to load rehearsals from local storage...');
-
-      // Fallback to local storage - filter by group type
-      final cachedRehearsals = _storageService.getRehearsals();
-      final filteredRehearsals = cachedRehearsals
-          .where((rehearsal) => rehearsal.groupType == groupType)
-          .toList();
-      _logger.i(
-        'Loaded ${filteredRehearsals.length} rehearsals for group ${groupType.name} from local storage',
-      );
-
-      return filteredRehearsals;
     }
   }
 }

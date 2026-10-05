@@ -22,6 +22,13 @@ const bypassHeaders = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
     }
   : undefined;
 
+// Logged-in pages show real members, and CI artifacts of this public repo
+// can be downloaded by anyone signed in to GitHub (#488): in CI the logged-in
+// projects record no screenshot, video or trace. Locally they still do.
+const loggedInCapture = process.env.CI
+  ? ({ trace: "off", video: "off", screenshot: "off" } as const)
+  : {};
+
 export default defineConfig({
   testDir: "./tests",
   globalSetup: "./global-setup.ts",
@@ -49,9 +56,10 @@ export default defineConfig({
       testDir: "./tests/admin",
       use: {
         baseURL:
-          process.env.ADMIN_URL ?? "https://admin-dev.lebontemperament.com",
+          process.env.ADMIN_URL || "https://admin-dev.lebontemperament.com",
         storageState: ".auth/admin.json",
         extraHTTPHeaders: bypassHeaders,
+        ...loggedInCapture,
       },
     },
     {
@@ -61,6 +69,7 @@ export default defineConfig({
         baseURL: process.env.WEBSITE_URL ?? "https://dev.lebontemperament.com",
         storageState: ".auth/website.json",
         extraHTTPHeaders: bypassHeaders,
+        ...loggedInCapture,
       },
     },
   ],

@@ -8,6 +8,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   turbopack: {
     root: path.join(__dirname, "..", ".."),
+    resolveAlias: {
+      // `motion/react` binds the full-featured `motion` proxy (drag, layout)
+      // eagerly, so every page importing `m` or a hook from it bundled those
+      // features. framer-motion (the package `motion` wraps, same version) has
+      // a tree-shakeable barrel: only what a page imports is bundled.
+      "motion/react": "framer-motion",
+    },
   },
   transpilePackages: ["@repo/domain"],
   async redirects() {

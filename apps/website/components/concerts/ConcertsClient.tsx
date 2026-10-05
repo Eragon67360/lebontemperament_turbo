@@ -2,12 +2,15 @@
 
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { LinkButton } from "@/components/LinkButton";
+import type {
+  PublicConcert as Concert,
+  PublicRehearsal as Rehearsal,
+  PublicTour as Tour,
+} from "@/lib/publicConcerts";
 import { ConcertProject } from "@/types/projects";
 import { RoundedSize } from "@/utils/types";
 import { Button, Modal, Tooltip } from "@heroui/react";
-import { Concert, Tour } from "@repo/domain/types/concerts";
 import { Event } from "@repo/domain/types/events";
-import { Rehearsal } from "@repo/domain/types/rehearsals";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
@@ -140,7 +143,7 @@ const ConcertCard = ({
         className={`flex flex-1 flex-col ${featured ? "p-7 md:p-10" : "p-6"}`}
       >
         {featured && (
-          <span className="text-primary mb-4 text-xs font-semibold tracking-[0.18em] uppercase">
+          <span className="text-primary-text mb-4 text-xs font-semibold tracking-[0.18em] uppercase">
             Prochain rendez-vous
           </span>
         )}
@@ -331,7 +334,7 @@ const ConcertsClient = ({
       <div className="container mx-auto mb-8 flex w-full flex-col">
         <header className="px-6 py-10 md:px-8 md:py-14 lg:py-20">
           <h1 className="text-title leading-none">
-            <span className="text-primary/60 dark:text-primary block font-light">
+            <span className="text-primary-400 dark:text-primary block font-light">
               Agenda
             </span>{" "}
             <span className="text-foreground block font-bold">
@@ -361,8 +364,8 @@ const ConcertsClient = ({
                   }
                   className={`shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:ring-2 ${
                     activeSection === item.id
-                      ? "bg-primary text-white"
-                      : "text-muted hover:bg-surface-secondary hover:text-primary"
+                      ? "bg-primary-solid text-white"
+                      : "text-muted hover:bg-surface-secondary hover:text-primary-text"
                   }`}
                 >
                   {item.label}
@@ -383,7 +386,7 @@ const ConcertsClient = ({
               >
                 <div className="mb-9 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                   <div>
-                    <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
+                    <p className="text-primary-text text-xs font-semibold tracking-[0.2em] uppercase">
                       À vos agendas
                     </p>
                     <h2
@@ -459,7 +462,7 @@ const ConcertsClient = ({
                               </div>
                             )}
                             <div>
-                              <span className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+                              <span className="text-primary-text text-xs font-semibold tracking-[0.18em] uppercase">
                                 Tournée
                               </span>
                               <h3
@@ -473,7 +476,7 @@ const ConcertsClient = ({
                                   {tour.description}
                                 </p>
                               )}
-                              <span className="bg-background text-primary mt-4 inline-flex rounded-full px-3 py-1 text-xs font-medium">
+                              <span className="bg-background text-primary-text mt-4 inline-flex rounded-full px-3 py-1 text-xs font-medium">
                                 {contextLabels[tour.context] ?? tour.context}
                               </span>
                             </div>
@@ -522,7 +525,7 @@ const ConcertsClient = ({
                 aria-labelledby="stories-title"
               >
                 <div className="mb-9 max-w-3xl">
-                  <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
+                  <p className="text-primary-text text-xs font-semibold tracking-[0.2em] uppercase">
                     Mémoire musicale
                   </p>
                   <h2
@@ -573,7 +576,7 @@ const ConcertsClient = ({
                           )}
                         </Link>
                         <div className="flex flex-1 flex-col p-6">
-                          <span className="text-primary text-xs font-semibold tracking-[0.16em] uppercase">
+                          <span className="text-primary-text text-xs font-semibold tracking-[0.16em] uppercase">
                             {new Date(story.date).getFullYear()}
                           </span>
                           <h3 className="text-foreground mt-2 text-xl font-bold">
@@ -586,7 +589,7 @@ const ConcertsClient = ({
                           )}
                           <LinkButton
                             variant="ghost"
-                            className="text-primary data-[hovered=true]:bg-primary/20 mt-5 w-fit"
+                            className="text-primary-text data-[hovered=true]:bg-primary/20 mt-5 w-fit"
                             href={`/concerts/${story.slug}`}
                           >
                             Lire l’histoire
@@ -608,7 +611,7 @@ const ConcertsClient = ({
                 aria-labelledby="events-title"
               >
                 <div className="mb-9">
-                  <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
+                  <p className="text-primary-text text-xs font-semibold tracking-[0.2em] uppercase">
                     Autour de l’ensemble
                   </p>
                   <h2
@@ -634,7 +637,7 @@ const ConcertsClient = ({
                           <h3 className="text-foreground text-lg font-semibold">
                             {event.title}
                           </h3>
-                          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-3 py-1 text-xs font-medium">
+                          <span className="bg-primary/10 text-primary-text shrink-0 rounded-full px-3 py-1 text-xs font-medium">
                             {eventTypeLabels[event.event_type]}
                           </span>
                         </div>
@@ -667,7 +670,7 @@ const ConcertsClient = ({
                         {event.link && (
                           <LinkButton
                             variant="ghost"
-                            className="text-primary data-[hovered=true]:bg-primary/20 mt-5 w-fit"
+                            className="text-primary-text data-[hovered=true]:bg-primary/20 mt-5 w-fit"
                             href={event.link}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -743,7 +746,7 @@ const ConcertsClient = ({
                       }
                       className={`border-l-2 px-5 py-3 text-left text-sm font-medium transition-colors focus-visible:ring-2 ${
                         activeSection === item.id
-                          ? "border-primary bg-primary/5 text-primary"
+                          ? "border-primary bg-primary/5 text-primary-text"
                           : "border-separator text-muted hover:border-primary/40 hover:bg-surface-secondary hover:text-foreground"
                       }`}
                     >

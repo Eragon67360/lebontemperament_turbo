@@ -28,7 +28,7 @@ final filteredRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
 
   return rehearsalsAsync.when(
     data: (rehearsals) {
-      final upcoming = rehearsals.where((r) {
+      final upcoming = rehearsals.items.where((r) {
         return app_date_utils.isRehearsalUpcoming(
           date: r.date,
           startTime: r.startTime,

@@ -1,15 +1,24 @@
 "use client";
 
-import FloatingAnniversaryButton from "@/components/anniversary/FloatingAnniversaryButton";
 import { BubbleContainer } from "@/components/BubbleContainer";
 import ConditionalVercelAnalytics from "@/components/cookies/ConditionalVercelAnalytics";
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
+import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+
+// gsap + motion springs: only fetched when the button can actually show.
+const FloatingAnniversaryButton = dynamic(
+  () => import("@/components/anniversary/FloatingAnniversaryButton"),
+  { ssr: false },
+);
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isTrackPage = pathname?.startsWith("/track");
+  const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
+  const { isAdmin } = useAdminStatus();
 
   if (isTrackPage) {
     return (
@@ -25,7 +34,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     <>
       <a
         href="#main-content"
-        className="focus:bg-primary focus:ring-primary sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-offset-2 focus:outline-none"
+        className="focus:bg-primary-solid focus:ring-primary sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-offset-2 focus:outline-none"
       >
         Aller au contenu principal
       </a>
@@ -35,7 +44,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
         <BubbleContainer />
-        <FloatingAnniversaryButton />
+        {(isAnniversaryEnabled || isAdmin) && <FloatingAnniversaryButton />}
         <ConditionalVercelAnalytics />
         <Footer />
       </div>

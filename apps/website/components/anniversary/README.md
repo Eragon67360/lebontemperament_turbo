@@ -6,52 +6,25 @@ Cette page de célébration des 40 ans du Bon Tempérament est une expérience i
 
 ## Structure des Composants
 
-### 1. `AnniversaryLanding.tsx`
+La page suit la direction D « Le Programme » choisie par le propriétaire (octobre 2026), qui remplace la direction A « Mesure 40 » : la page se lit comme le programme d'un concert de gala. Polices Bodoni Moda (titres, `--font-programme-display`) et EB Garamond (texte, `--font-programme-text`), chargées par `app/40-ans/page.tsx` pour cette page seulement ; Roboto pour les petites capitales et les boutons. Tons papier (ivoire, papier, filets) en jetons de page dans `programme/theme.ts`, avec une variante sombre ; le teal du site comme accent. Logique pure et testée : `lib/anniversaryProgramme.ts` (chiffres romains, saisons, affiches).
 
-**Rôle**: Animation d'entrée spectaculaire et hero section
+### 1. `programme/ProgrammeCover.tsx`
 
-**Fonctionnalités**:
+Couverture : sur teal profond dans un filet, un grand « 40 » (`hero_number`) en Bodoni découpé dans une photo de concert (`public/img/entre_terre_et_ciel.jpg`, optimisée par `getImageProps`) qui glisse lentement, le titre (`hero_subtitle`) en italique, MCMLXXXVII — MMXXVII, le bouton du CMS (`cta_text` → `cta_target_section`), « Concert des 40 ans » (vers le billet) et les statistiques. Statique si `enable_intro_animation` est désactivé ou si le visiteur préfère réduire les animations.
 
-- Animation GSAP avec système de particules
-- Révélation animée du nombre "40"
-- Statistiques animées (40 ans, 200+ concerts, etc.)
-- Option de skip pour les utilisateurs pressés
-- Responsive et accessible
+### 2. `programme/ProgrammeContents.tsx` (`#anniversary-navigation`)
 
-**Technologies**:
+« Au programme » : une ligne numérotée (I, II…) par carte de navigation du CMS, avec points de conduite et la marque de la section (`programme/sections.ts`), puis le grand concert anniversaire ; à côté, une photo et le texte `description` du CMS.
 
-- GSAP pour les animations complexes
-- Motion (Framer Motion) pour les transitions
-- Particules animées en CSS/GSAP
+### 3. `programme/ProgrammeSeasons.tsx` (`#timeline`)
 
-### 2. `AnniversaryNavigation.tsx`
+« Première partie · Quarante saisons » : un événement de la frise par saison (année en Bodoni, titre, texte), la photo de la galerie de la même année et les souvenirs mis en avant de la période (un souvenir rejoint la dernière saison commencée avant ou pendant son année). « Vous y étiez ? Signez le livre d'or » reporte l'année dans le formulaire.
 
-**Rôle**: Hub de navigation vers les différentes sections
+### 4. `programme/ProgrammeEntracte.tsx`, `ProgrammeDistribution.tsx`, `ProgrammeArchives.tsx` (`#archives`), `ProgrammeTicket.tsx` (`#billet`)
 
-**Fonctionnalités**:
+« Entracte » : la citation de Simone Duclos. « Distribution » : les chœurs, l'orchestre et leurs chefs, et la photo de toute la troupe (Camino Latino, Châteaulin, août 2023). « Les archives » : une pile du disque des 20 ans et des affiches de concerts récents (table `concerts`, une par programme, sans les `E2E_`, `getProgrammePosters`), puis le lien vers `/40-ans/archives`. Le billet du grand concert renvoie à l'agenda : aucune date ni aucun lieu n'est inventé. Les sections média et le livre d'or (`MemorySharing.tsx`) gardent leur contenu, avec l'en-tête commun `programme/ProgrammeHeading.tsx`.
 
-- 5 cartes de navigation interactives
-- Scroll smooth vers les sections
-- Animations au hover
-- Design avec gradients colorés
-
-### 3. `AnniversaryTimeline.tsx`
-
-**Rôle**: Timeline interactive des 40 ans d'histoire
-
-**Fonctionnalités**:
-
-- Timeline verticale avec ligne animée
-- Événements clés avec icônes et descriptions
-- Animation au scroll
-- Layout alterné (gauche/droite)
-
-**Contenu**:
-
-- 7 événements majeurs (1984-2024)
-- Placeholder data à remplacer par le contenu réel
-
-### 4. `VideoGallery.tsx`
+### 5. `VideoGallery.tsx`
 
 **Rôle**: Galerie vidéo avec filtres par catégorie
 
@@ -68,7 +41,7 @@ Cette page de célébration des 40 ans du Bon Tempérament est une expérience i
 - 6 vidéos placeholder
 - Catégories: Concert, Témoignage, Documentaire, etc.
 
-### 5. `AudioMemories.tsx`
+### 6. `AudioMemories.tsx`
 
 **Rôle**: Lecteurs audio pour les souvenirs sonores
 
@@ -84,7 +57,7 @@ Cette page de célébration des 40 ans du Bon Tempérament est une expérience i
 - 6 fichiers audio placeholder
 - URLs à remplacer par les vrais fichiers
 
-### 6. `PhotoCollection.tsx`
+### 7. `PhotoCollection.tsx`
 
 **Rôle**: Galerie photo en style masonry
 
@@ -100,7 +73,7 @@ Cette page de célébration des 40 ans du Bon Tempérament est une expérience i
 - 9 photos placeholder
 - Images à remplacer par les vraies photos
 
-### 7. `MemorySharing.tsx`
+### 8. `MemorySharing.tsx`
 
 **Rôle**: Section témoignages et formulaire de partage
 

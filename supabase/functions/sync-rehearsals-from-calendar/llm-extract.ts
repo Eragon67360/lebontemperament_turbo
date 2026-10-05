@@ -9,6 +9,8 @@ import { isAllDayEvent } from "./datetime.ts";
 const OPENAI_CHAT_COMPLETIONS_URL =
   "https://api.openai.com/v1/chat/completions";
 const MODEL = "gpt-4o-mini";
+export const LLM_TIMEOUT_MS = 15_000;
+const MAX_ATTEMPTS = 3;
 
 const systemPrompt = `Tu es un extracteur de données pour un chœur francophone (Le Bon Temperament).
 À partir d'un événement Google Calendar, tu dois D'ABORD déterminer si l'événement
@@ -114,9 +116,12 @@ function sleep(ms: number): Promise<void> {
 async function callOpenAI(
   apiKey: string,
   event: GoogleCalendarEvent,
+  timeoutMs: number,
 ): Promise<unknown> {
   const response = await fetch(OPENAI_CHAT_COMPLETIONS_URL, {
     method: "POST",
+    // Covers the connection and the body read, so a stalled call cannot hang.
+    signal: AbortSignal.timeout(timeoutMs),
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
@@ -191,13 +196,28 @@ function logLlm(event: string, data: Record<string, unknown>): void {
   );
 }
 
+export interface ExtractOptions {
+  timeoutMs?: number;
+  sleep?: (ms: number) => Promise<void>;
+}
+
+function isTimeout(error: unknown): boolean {
+  return (
+    error instanceof DOMException &&
+    (error.name === "TimeoutError" || error.name === "AbortError")
+  );
+}
+
 export async function extractRehearsalFields(
   apiKey: string,
   event: GoogleCalendarEvent,
+  options: ExtractOptions = {},
 ): Promise<LlmExtraction> {
+  const timeoutMs = options.timeoutMs ?? LLM_TIMEOUT_MS;
+  const wait = options.sleep ?? sleep;
   let lastError: unknown;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
       logLlm("request", {
         event_id: event.id,
@@ -205,7 +225,7 @@ export async function extractRehearsalFields(
         summary: event.summary ?? "",
       });
 
-      const parsed = await callOpenAI(apiKey, event);
+      const parsed = await callOpenAI(apiKey, event, timeoutMs);
       const result = LlmExtractionSchema.parse(parsed);
 
       logLlm("classified", {
@@ -218,22 +238,25 @@ export async function extractRehearsalFields(
 
       return result;
     } catch (error) {
-      lastError = error;
+      lastError = isTimeout(error)
+        ? new Error(`OpenAI request timed out after ${timeoutMs} ms.`)
+        : error;
       logLlm("attempt_failed", {
         event_id: event.id,
         attempt: attempt + 1,
-        message: error instanceof Error ? error.message : String(error),
+        timed_out: isTimeout(error),
+        message:
+          lastError instanceof Error ? lastError.message : String(lastError),
       });
 
-      if (attempt < 2) {
-        await sleep(500 * 2 ** attempt);
+      if (attempt < MAX_ATTEMPTS - 1) {
+        await wait(500 * 2 ** attempt);
       }
     }
   }
 
   logLlm("failed", {
     event_id: event.id,
-    summary: event.summary ?? "",
     message: lastError instanceof Error ? lastError.message : String(lastError),
   });
 

@@ -2,9 +2,14 @@
 
 import { AudioMemoryDialog } from "@/components/anniversary/AudioMemoryDialog";
 import { AudioMemoryItem } from "@/components/anniversary/AudioMemoryItem";
+import { CampaignList } from "@/components/anniversary/CampaignList";
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { AddButton } from "@/components/anniversary/ListPageHeaderAction";
+import {
+  countLine,
+  useListActions,
+} from "@/components/anniversary/useListActions";
 import { PageShell } from "@/components/layouts/PageShell";
-import { Button } from "@/components/ui/button";
 import {
   DataState,
   EmptyState,
@@ -13,136 +18,96 @@ import {
 import {
   useAudioMemories,
   useDeleteAudioMemory,
+  useUpdateAudioMemory,
 } from "@/hooks/useAnniversaryAudio";
-import { AnniversaryAudioMemory } from "@/types/anniversary";
-import { Mic, Plus } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import type { AnniversaryAudioMemory } from "@/types/anniversary";
+import { nextOrder } from "@/utils/anniversary/reorder";
+import { Mic } from "lucide-react";
+
+const nameOf = (audio: AnniversaryAudioMemory) => audio.title;
 
 export default function AudioPage() {
   const {
-    data: audioMemories = [],
+    data: memories = [],
     isLoading,
     isError,
     refetch,
   } = useAudioMemories();
-  const deleteAudio = useDeleteAudioMemory();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedAudio, setSelectedAudio] =
-    useState<AnniversaryAudioMemory | null>(null);
-
-  const handleEdit = (audio: AnniversaryAudioMemory) => {
-    setSelectedAudio(audio);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (audio: AnniversaryAudioMemory) => {
-    setSelectedAudio(audio);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedAudio) return;
-
-    try {
-      await deleteAudio.mutateAsync(selectedAudio.id);
-      toast.success("Mémoire audio supprimée avec succès");
-      setDeleteDialogOpen(false);
-      setSelectedAudio(null);
-    } catch (error) {
-      toast.error("Erreur lors de la suppression");
-      console.error("Delete error:", error);
-    }
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) {
-      setSelectedAudio(null);
-    }
-  };
-
-  const maxOrder = audioMemories.reduce(
-    (max, audio) => Math.max(max, audio.display_order),
-    0,
-  );
+  const update = useUpdateAudioMemory();
+  const remove = useDeleteAudioMemory();
+  const list = useListActions<AnniversaryAudioMemory>({
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    nameOf,
+  });
 
   return (
     <PageShell
-      title="Mémoires audio"
-      description="Gérer les témoignages et extraits audio"
-      theme="anniversary"
       className="py-4 sm:py-6"
+      title="Souvenirs audio"
+      description="Les témoignages et extraits sonores à écouter sur la page des 40 ans."
       headerAction={
-        <Button
-          className="min-h-11 w-full sm:w-auto"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Ajouter un souvenir audio
-        </Button>
+        <AddButton label="Ajouter un souvenir" onClick={list.openCreate} />
       }
     >
-      {audioMemories.length > 0 && (
-        <p className="text-muted-foreground mb-4 text-sm">
-          {audioMemories.length} mémoire{audioMemories.length > 1 ? "s" : ""}{" "}
-          audio
-        </p>
-      )}
-
       <DataState
         isLoading={isLoading}
         isError={isError}
-        isEmpty={audioMemories.length === 0}
+        isEmpty={memories.length === 0}
         onRetry={() => refetch()}
-        errorDescription="Les mémoires audio n'ont pas pu être chargées."
+        errorDescription="Les souvenirs audio n'ont pas pu être chargés."
         skeleton={
-          <ListSkeleton rows={4} label="Chargement des mémoires audio…" />
+          <ListSkeleton rows={4} label="Chargement des souvenirs audio…" />
         }
         empty={
           <EmptyState
             icon={Mic}
-            title="Aucune mémoire audio"
-            description="Ajoutez les témoignages et extraits sonores à faire écouter dans la section des 40 ans."
+            title="Aucun souvenir audio"
+            description="Un enregistrement de quelques minutes, une personne qui raconte : les visiteurs l'écoutent directement sur la page."
             action={
-              <Button className="min-h-11" onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden />
-                Ajouter un souvenir audio
-              </Button>
+              <AddButton
+                label="Ajouter un souvenir"
+                onClick={list.openCreate}
+              />
             }
           />
         }
       >
-        <div className="space-y-4">
-          {audioMemories.map((audio) => (
+        <p className="text-note text-muted-foreground mb-3">
+          {countLine(memories, "souvenir", "souvenirs")}
+        </p>
+        <CampaignList
+          items={memories}
+          endpoint="/api/anniversary/audio"
+          queryKey={["anniversary", "audio"]}
+          nameOf={nameOf}
+          renderItem={(audio, reorder) => (
             <AudioMemoryItem
-              key={audio.id}
               audio={audio}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              reorder={reorder}
+              busy={list.busyId === audio.id}
+              onEdit={() => list.openEdit(audio)}
+              onToggleVisibility={() => list.toggleVisibility(audio)}
+              onDelete={() => list.askDelete(audio)}
             />
-          ))}
-        </div>
+          )}
+        />
       </DataState>
 
-      {/* Create/Edit Dialog */}
       <AudioMemoryDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        audio={selectedAudio || undefined}
-        maxOrder={maxOrder}
+        open={list.dialogOpen}
+        onOpenChange={list.onDialogOpenChange}
+        audio={list.editing}
+        nextOrder={nextOrder(memories)}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        title="Supprimer cette mémoire audio ?"
-        description={`Êtes-vous sûr de vouloir supprimer "${selectedAudio?.title}" ? Cette action est irréversible.`}
-        isLoading={deleteAudio.isPending}
+        open={list.deleting !== null}
+        onOpenChange={list.cancelDelete}
+        onConfirm={list.confirmDelete}
+        title={`Supprimer « ${list.deleting?.title ?? ""} » ?`}
+        description="Le souvenir disparaît de la page et son fichier audio est effacé. Cette action ne peut pas être annulée."
+        isLoading={list.isDeleting}
       />
     </PageShell>
   );

@@ -1,8 +1,8 @@
 "use client";
 
+import { useHydrated } from "@/hooks/useClientValue";
 import { Button } from "@heroui/react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 import { FiMonitor, FiMoon, FiSun } from "react-icons/fi";
 
 /**
@@ -18,13 +18,9 @@ import { FiMonitor, FiMoon, FiSun } from "react-icons/fi";
  * - Prevents hydration mismatch
  */
 export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
-  const [mounted, setMounted] = useState(false);
+  // Prevent hydration mismatch - the theme is only known in the browser
+  const mounted = useHydrated();
   const { theme, setTheme } = useTheme();
-
-  // Prevent hydration mismatch - only render after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) {
     return (
@@ -95,12 +91,8 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
  * Minimal version with single button cycle for space-constrained areas
  */
 export function ThemeSwitcherCompact() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const { theme, setTheme, systemTheme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) {
     return (

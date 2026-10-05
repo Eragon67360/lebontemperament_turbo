@@ -11,58 +11,70 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { cn } from "@/lib/utils";
 import type { Tour } from "@/types/tours";
+import { concertTitle, formatShortDateFr } from "@/utils/concerts/schedule";
 import type { Concert } from "@repo/domain/types/concerts";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Music2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Loader2, Music2 } from "lucide-react";
+import { useState } from "react";
 
+/** Ids of the concerts already assigned to the tour. */
+const concertIdsInTour = (concerts: readonly Concert[], tour: Tour | null) =>
+  tour ? concerts.filter((c) => c.tour_id === tour.id).map((c) => c.id) : [];
+
+/**
+ * « Gérer les concerts » of a tour: tick the concerts that belong to it.
+ * The caller writes one update per changed concert and names the ones
+ * that fail.
+ */
 export function ConcertSelectionDialog({
   isOpen,
   onClose,
   tour,
   concerts,
   onConfirm,
+  isPending = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
   tour: Tour | null;
-  concerts: Concert[];
+  /** The concerts of the tour's period: assignable are those in it or in no tour. */
+  concerts: readonly Concert[];
   onConfirm: (ids: string[]) => void;
+  isPending?: boolean;
 }) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(() =>
+    isOpen ? concertIdsInTour(concerts, tour) : [],
+  );
 
-  // Reset selection when modal opens
-  useEffect(() => {
-    if (isOpen && tour) {
-      const alreadyInTour = concerts
-        .filter((c) => c.tour_id === tour.id)
-        .map((c) => c.id);
-      setSelectedIds(alreadyInTour);
-    }
-  }, [isOpen, tour, concerts]);
+  useResetOnChange([isOpen, tour, concerts], () => {
+    if (isOpen && tour) setSelectedIds(concertIdsInTour(concerts, tour));
+  });
 
-  // Assignable concerts: already in this tour, or not in any tour yet.
   const availableConcerts = concerts.filter(
     (c) => c.tour_id === tour?.id || !c.tour_id,
   );
 
-  const handleToggle = (id: string) => {
+  const toggle = (id: string) =>
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
-  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isPending) onClose();
+      }}
+    >
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Gérer les concerts</DialogTitle>
           <DialogDescription>
-            Ajoutez ou retirez des concerts pour la tournée «&nbsp;
-            {tour?.name}&nbsp;».
+            Cochez les concerts qui font partie de la tournée «&nbsp;
+            {tour?.name}&nbsp;». Un concert ne peut appartenir qu&apos;à une
+            tournée.
           </DialogDescription>
         </DialogHeader>
 
@@ -70,61 +82,58 @@ export function ConcertSelectionDialog({
           <EmptyState
             icon={Music2}
             title="Aucun concert disponible"
-            description="Créez un concert à venir pour pouvoir l'ajouter à cette tournée."
-            className="py-8"
+            description="Ajoutez d'abord un concert (sans tournée), puis rattachez-le ici."
+            className="py-6"
           />
         ) : (
-          <div className="space-y-2">
+          <ul className="space-y-2">
             {availableConcerts.map((concert) => {
-              const isSelected = selectedIds.includes(concert.id);
+              const checked = selectedIds.includes(concert.id);
+              const title = concertTitle(concert);
               return (
-                <label
-                  key={concert.id}
-                  className={cn(
-                    "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors duration-150 ease-out motion-reduce:transition-none",
-                    isSelected
-                      ? "border-primary/50 bg-primary/5"
-                      : "hover:bg-muted/50",
-                  )}
-                >
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => handleToggle(concert.id)}
-                    className="mt-0.5 size-5 shrink-0"
-                  />
-                  <span className="min-w-0 space-y-1">
-                    <span className="block truncate text-sm font-medium">
-                      {concert.name || "Concert sans titre"}
-                    </span>
-                    <span className="text-muted-foreground flex min-w-0 flex-wrap items-center gap-2 text-xs">
-                      <span>
-                        {format(new Date(concert.date), "dd MMM yyyy", {
-                          locale: fr,
-                        })}
+                <li key={concert.id} className="list-none">
+                  <label
+                    className={cn(
+                      "border-border flex min-h-11 cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors motion-reduce:transition-none",
+                      checked
+                        ? "border-primary-soft-border bg-primary-soft"
+                        : "hover:bg-accent",
+                    )}
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={() => toggle(concert.id)}
+                      className="mt-0.5"
+                      disabled={isPending}
+                    />
+                    <span className="min-w-0 space-y-0.5">
+                      <span className="block truncate text-[15px] font-medium">
+                        {title}
                       </span>
-                      <span aria-hidden>•</span>
-                      <span className="truncate">{concert.place}</span>
+                      <span className="text-note text-muted-foreground block truncate">
+                        {formatShortDateFr(concert.date)} · {concert.place}
+                      </span>
                     </span>
-                  </span>
-                </label>
+                  </label>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            className="min-h-11 w-full sm:w-auto"
-            onClick={onClose}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isPending}>
             Annuler
           </Button>
           <Button
-            className="min-h-11 w-full sm:w-auto"
             onClick={() => onConfirm(selectedIds)}
+            disabled={isPending || availableConcerts.length === 0}
+            aria-busy={isPending || undefined}
           >
-            Enregistrer ({selectedIds.length})
+            {isPending && <Loader2 className="animate-spin" aria-hidden />}
+            {isPending
+              ? "Enregistrement…"
+              : `Enregistrer (${selectedIds.length})`}
           </Button>
         </DialogFooter>
       </DialogContent>

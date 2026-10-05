@@ -1,31 +1,46 @@
 "use client";
 
-import AnniversaryLanding from "@/components/anniversary/AnniversaryLanding";
-import AnniversaryNavigation from "@/components/anniversary/AnniversaryNavigation";
-import AnniversaryTimeline from "@/components/anniversary/AnniversaryTimeline";
-import ArchivesSection from "@/components/anniversary/ArchivesSection";
 import AudioMemories from "@/components/anniversary/AudioMemories";
 import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
 import PreviewBanner from "@/components/anniversary/PreviewBanner";
+import ProgrammeArchives from "@/components/anniversary/programme/ProgrammeArchives";
+import ProgrammeContents from "@/components/anniversary/programme/ProgrammeContents";
+import ProgrammeCover from "@/components/anniversary/programme/ProgrammeCover";
+import ProgrammeDistribution from "@/components/anniversary/programme/ProgrammeDistribution";
+import ProgrammeEntracte from "@/components/anniversary/programme/ProgrammeEntracte";
+import ProgrammeSeasons from "@/components/anniversary/programme/ProgrammeSeasons";
+import ProgrammeTicket from "@/components/anniversary/programme/ProgrammeTicket";
+import { PROGRAMME_ROOT } from "@/components/anniversary/programme/theme";
 import VideoGallery from "@/components/anniversary/VideoGallery";
-import type { AnniversaryPageData } from "@/types/anniversary";
+import {
+  ANNIVERSARY_AUDIO_MEMORY_COLUMNS,
+  ANNIVERSARY_HERO_STAT_COLUMNS,
+  ANNIVERSARY_NAVIGATION_CARD_COLUMNS,
+  ANNIVERSARY_PHOTO_COLUMNS,
+  ANNIVERSARY_TIMELINE_EVENT_COLUMNS,
+  ANNIVERSARY_VIDEO_COLUMNS,
+} from "@/lib/anniversaryColumns";
+import type { ProgrammePoster } from "@/lib/anniversaryProgramme";
+import type { AnniversaryPageData, Memory } from "@/types/anniversary";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
 interface AnniversaryPageClientProps {
   data: AnniversaryPageData;
+  /** Recent concert posters for the archive stack (not live-updated). */
+  posters: ProgrammePoster[];
   isPreview?: boolean;
 }
 
 export default function AnniversaryPageClient({
   data: initialData,
+  posters,
   isPreview = false,
 }: AnniversaryPageClientProps) {
   const [data, setData] = useState<AnniversaryPageData>(initialData);
-  const [isIntroActive, setIsIntroActive] = useState(
-    initialData.hero.enable_intro_animation ?? true,
-  );
+  // « Signez le livre d’or » on a season prefills the memory form's year.
+  const [memoryYear, setMemoryYear] = useState<number | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -67,7 +82,7 @@ export default function AnniversaryPageClient({
           // Refetch visible stats
           const { data: stats } = await supabase
             .from("anniversary_hero_stats")
-            .select("*")
+            .select(ANNIVERSARY_HERO_STAT_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -102,7 +117,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: cards } = await supabase
             .from("anniversary_navigation_cards")
-            .select("*")
+            .select(ANNIVERSARY_NAVIGATION_CARD_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -138,7 +153,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: events } = await supabase
             .from("anniversary_timeline_events")
-            .select("*")
+            .select(ANNIVERSARY_TIMELINE_EVENT_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -174,7 +189,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: videos } = await supabase
             .from("anniversary_videos")
-            .select("*")
+            .select(ANNIVERSARY_VIDEO_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -212,7 +227,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: audioMemories } = await supabase
             .from("anniversary_audio_memories")
-            .select("*")
+            .select(ANNIVERSARY_AUDIO_MEMORY_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -250,7 +265,7 @@ export default function AnniversaryPageClient({
         async () => {
           const { data: photos } = await supabase
             .from("anniversary_photos")
-            .select("*")
+            .select(ANNIVERSARY_PHOTO_COLUMNS)
             .eq("is_visible", true)
             .order("display_order", { ascending: true });
 
@@ -306,28 +321,20 @@ export default function AnniversaryPageClient({
           table: "anniversary_memories",
         },
         async () => {
-          // Refetch featured memories
-          const { data: featuredMemories } = await supabase
-            .from("anniversary_memories")
-            .select("id, name, email, message, year, is_featured, created_at")
-            .eq("is_approved", true)
-            .eq("is_featured", true)
-            .order("created_at", { ascending: false })
-            .limit(10);
-
-          if (featuredMemories) {
-            setData((prev) => ({
-              ...prev,
-              featuredMemories: featuredMemories.map((m) => ({
-                id: m.id,
-                name: m.name,
-                email: m.email,
-                message: m.message,
-                year: m.year,
-                is_featured: m.is_featured ?? false,
-                created_at: m.created_at ?? "",
-              })),
-            }));
+          // Refetch through the server: visitors may not read the table
+          // (RLS), and the route returns the public columns only. On any
+          // failure the memories already rendered stay as they are.
+          try {
+            const response = await fetch("/api/anniversary/featured-memories");
+            if (!response.ok) return;
+            const { memories } = (await response.json()) as {
+              memories: Memory[];
+            };
+            if (Array.isArray(memories)) {
+              setData((prev) => ({ ...prev, featuredMemories: memories }));
+            }
+          } catch (error) {
+            console.error("Error refetching featured memories:", error);
           }
         },
       )
@@ -342,23 +349,31 @@ export default function AnniversaryPageClient({
   }, [supabase]);
 
   return (
-    <div className="bg-background min-h-screen">
-      <PreviewBanner isPreview={isPreview} hideDuringIntro={isIntroActive} />
-      <AnniversaryLanding
-        hero={data.hero}
-        stats={data.heroStats}
-        onIntroStateChange={setIsIntroActive}
+    <div className={`${PROGRAMME_ROOT} min-h-screen overflow-x-clip`}>
+      <PreviewBanner isPreview={isPreview} />
+      <ProgrammeCover hero={data.hero} stats={data.heroStats} />
+      <ProgrammeContents
+        cards={data.navigationCards}
+        description={data.hero.description ?? ""}
       />
-      <AnniversaryNavigation cards={data.navigationCards} />
-      <AnniversaryTimeline events={data.timelineEvents} />
+      <ProgrammeSeasons
+        events={data.timelineEvents}
+        memories={data.featuredMemories}
+        photos={data.photos}
+        onWriteMemory={data.formConfig.is_enabled ? setMemoryYear : undefined}
+      />
+      <ProgrammeEntracte />
+      <ProgrammeDistribution />
       <VideoGallery videos={data.videos} />
       <AudioMemories audioMemories={data.audioMemories} />
       <PhotoCollection photos={data.photos} />
-      <ArchivesSection />
+      <ProgrammeArchives posters={posters} />
       <MemorySharing
         config={data.formConfig}
         featuredMemories={data.featuredMemories}
+        prefillYear={memoryYear}
       />
+      <ProgrammeTicket />
     </div>
   );
 }

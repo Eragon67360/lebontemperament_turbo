@@ -13,6 +13,17 @@ on:
         type: choice
         options: [all, website, admin]
         default: all
+      admin_url:
+        description: >-
+          Optional: run the admin specs against this PR preview instead of
+          staging (https://lebontemperament-admin-<hash>-le-bon-temperament.vercel.app).
+          Needs ref. Nothing is uploaded: logged-in pages show real members.
+        type: string
+        default: ""
+      ref:
+        description: Branch or commit whose specs run against admin_url (the PR head)
+        type: string
+        default: ""
 
 # Deployment-triggered runs are per-commit and cancel superseded gate-waiters;
 # scheduled/dispatch runs share one group and are never cancelled mid-run
@@ -37,13 +48,38 @@ jobs:
     outputs:
       run: ${{ steps.decide.outputs.run }}
       ref: ${{ steps.decide.outputs.ref }}
+      admin_url: ${{ steps.decide.outputs.admin_url }}
+      preview: ${{ steps.decide.outputs.preview }}
     steps:
       - name: Decide whether to run
         id: decide
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ADMIN_URL_INPUT: ${{ inputs.admin_url }}
+          REF_INPUT: ${{ inputs.ref }}
         with:
           script: |
             const { owner, repo } = context.repo;
+            core.setOutput('preview', 'false');
+            const adminUrl = (process.env.ADMIN_URL_INPUT ?? '').trim();
+            if (context.eventName === 'workflow_dispatch' && adminUrl) {
+              // The e2e account's credentials go to this host: only this
+              // team's admin previews are accepted.
+              if (!/^https:\/\/lebontemperament-admin-[a-z0-9]+-le-bon-temperament\.vercel\.app$/.test(adminUrl)) {
+                core.setFailed(`admin_url must be an admin preview of the le-bon-temperament team, got ${adminUrl}.`);
+                return;
+              }
+              const ref = (process.env.REF_INPUT ?? '').trim();
+              if (!/^[A-Za-z0-9._\/-]+$/.test(ref)) {
+                core.setFailed('ref (the PR head branch or commit) is required with admin_url.');
+                return;
+              }
+              core.setOutput('run', 'true');
+              core.setOutput('ref', ref);
+              core.setOutput('admin_url', adminUrl);
+              core.setOutput('preview', 'true');
+              return;
+            }
             if (context.eventName !== 'deployment_status') {
               core.setOutput('run', 'true');
               core.setOutput('ref', 'dev');
@@ -111,12 +147,12 @@ jobs:
           # Scheduled and manual runs test the dev branch (what staging serves);
           # deployment runs test the exact commit Vercel deployed.
           ref: ${{ needs.gate.outputs.ref }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
           cache: npm
       - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -132,17 +168,22 @@ jobs:
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # Empty unless this is a preview run (the config falls back to staging).
+          ADMIN_URL: ${{ needs.gate.outputs.admin_url }}
         run: >-
           npx playwright test --shard=${{ matrix.shard }}/2
-          ${{ inputs.project && inputs.project != 'all' && format('--project={0}', inputs.project) || '' }}
+          ${{ needs.gate.outputs.preview == 'true' && '--project=admin' || (inputs.project && inputs.project != 'all' && format('--project={0}', inputs.project)) || '' }}
+      # Preview runs upload nothing: reports, traces and screenshots of
+      # logged-in pages show real members, and artifacts of a public repo are
+      # downloadable by anyone signed in to GitHub.
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
+        if: always() && needs.gate.outputs.preview != 'true'
         with:
           name: blob-report-${{ matrix.shard }}
           path: apps/e2e/blob-report/
           retention-days: 7
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: failure()
+        if: failure() && needs.gate.outputs.preview != 'true'
         with:
           name: test-results-${{ matrix.shard }}
           path: apps/e2e/test-results/
@@ -152,14 +193,14 @@ jobs:
     needs: [gate, test]
     # Runs only when the tests actually ran (not when the gate skipped them or
     # a superseding deployment cancelled them).
-    if: always() && contains(fromJSON('["success", "failure"]'), needs.test.result)
+    if: always() && needs.gate.outputs.preview != 'true' && contains(fromJSON('["success", "failure"]'), needs.test.result)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.gate.outputs.ref }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
           cache: npm

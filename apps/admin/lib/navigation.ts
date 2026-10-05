@@ -1,202 +1,220 @@
 import RouteNames from "@/utils/routes";
 import {
-  Archive,
-  BarChart3,
-  Briefcase,
-  Bug,
-  Building2,
-  Calendar,
+  Cake,
   CalendarDays,
-  Clock,
-  FileText,
-  Headphones,
-  Image as ImageIcon,
-  LayoutDashboard,
+  House,
+  Landmark,
   type LucideIcon,
-  Map,
-  MessageCircle,
-  MessageSquare,
-  PartyPopper,
-  Sparkles,
+  Music2,
   Users,
-  Video,
 } from "lucide-react";
-
-/** Sentinel href: opens the messages dialog instead of navigating. */
-export const MESSAGES_ACTION = "#messages";
 
 export type NavItem = {
   href: string;
   label: string;
-  icon: LucideIcon;
   /** A number renders a count pill (hidden at 0); "dot" renders an attention dot. */
   badge?: number | "dot";
+};
+
+/** Items of a section, optionally under a small heading (« Contenu », « Témoignages »). */
+export type NavGroup = {
+  id: string;
+  label?: string;
+  items: NavItem[];
 };
 
 export type NavSection = {
   id: string;
   label: string;
-  items: NavItem[];
-  /** Secondary sections collapse by default and read as lower priority. */
-  secondary?: boolean;
+  /** One line under the label: what the section is for. Must stay true as features change. */
+  description: string;
+  icon: LucideIcon;
+  /** A section that is itself a page (Accueil) links here and has no children. */
+  href?: string;
+  groups: NavGroup[];
 };
 
 type NavContext = {
-  unreadMessages?: number;
   unreadBugReports?: number;
   isSuperAdmin?: boolean;
 };
 
 /**
- * Single source of truth for the dashboard navigation: the sidebar renders it and
- * the breadcrumbs read their labels from it. Only routes that actually exist and
- * work belong here.
+ * Single source of truth for the dashboard navigation (direction B, IA of
+ * docs/redesign/00-inventory.md § d.1): the sidebar renders it, the header's
+ * « Vous êtes ici » trail reads its labels. Routes keep their URLs; only the
+ * grouping and the wording are the IA's. Only routes that exist belong here.
+ *
+ * Messages lives in the account menu (not here) and keeps its own badge.
  */
 export function buildNavSections({
-  unreadMessages = 0,
   unreadBugReports = 0,
   isSuperAdmin = false,
 }: NavContext = {}): NavSection[] {
   const sections: NavSection[] = [
     {
-      id: "general",
-      label: "Général",
-      items: [
+      id: "home",
+      label: "Accueil",
+      description: "Ce qui vous attend et l’activité récente",
+      icon: House,
+      href: RouteNames.DASHBOARD.ROOT,
+      groups: [],
+    },
+    {
+      // Primary until the page is published (early 2027), then it moves to
+      // an archive section: a later decision.
+      id: "campaign",
+      label: "Campagne 40 ans",
+      description: "Préparer et publier la page des 40 ans",
+      icon: Cake,
+      groups: [
         {
-          href: RouteNames.DASHBOARD.ROOT,
-          label: "Tableau de bord",
-          icon: LayoutDashboard,
+          id: "campaign-overview",
+          items: [
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.ROOT,
+              label: "Vue d’ensemble et publication",
+            },
+          ],
         },
         {
-          href: MESSAGES_ACTION,
-          label: "Messages",
-          icon: MessageCircle,
-          badge: unreadMessages,
+          id: "campaign-content",
+          label: "Contenu",
+          items: [
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.HERO,
+              label: "En-tête de la page",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.HERO_STATS,
+              label: "Chiffres clés",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.NAVIGATION,
+              label: "Cartes de navigation",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.TIMELINE,
+              label: "Chronologie",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.VIDEOS,
+              label: "Vidéos",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.AUDIO,
+              label: "Souvenirs audio",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.PHOTOS,
+              label: "Photos",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.ARCHIVES,
+              label: "Archives",
+            },
+          ],
+        },
+        {
+          id: "campaign-memories",
+          label: "Témoignages",
+          items: [
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.FORM,
+              label: "Formulaire",
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.MEMORIES,
+              label: "Modération",
+            },
+          ],
         },
       ],
     },
     {
       id: "public",
-      label: "Site public",
-      items: [
+      label: "Concerts et site public",
+      description: "Ce que le public voit sur le site",
+      icon: Music2,
+      groups: [
         {
-          href: RouteNames.DASHBOARD.PUBLIC.PROCHAINS_CONCERTS,
-          label: "Prochains concerts",
-          icon: Calendar,
+          id: "public-pages",
+          items: [
+            {
+              href: RouteNames.DASHBOARD.PUBLIC.PROCHAINS_CONCERTS,
+              label: "Concerts et tournées",
+            },
+            {
+              href: RouteNames.DASHBOARD.PUBLIC.PROJETS.ROOT,
+              label: "Histoires de concerts",
+            },
+            {
+              href: RouteNames.DASHBOARD.PUBLIC.GALLERY.VIDEOS,
+              label: "Vidéos",
+            },
+          ],
         },
+      ],
+    },
+    {
+      id: "season",
+      label: "Saison des membres",
+      description: "Partitions, répétitions et événements",
+      icon: CalendarDays,
+      groups: [
         {
-          href: RouteNames.DASHBOARD.PUBLIC.PROJETS.ROOT,
-          label: "Projets",
-          icon: Sparkles,
-        },
-        {
-          href: RouteNames.DASHBOARD.PUBLIC.GALLERY.VIDEOS,
-          label: "Galerie vidéos",
-          icon: Video,
+          id: "season-pages",
+          items: [
+            {
+              href: RouteNames.DASHBOARD.MEMBERS.TRAVAIL_ROOT,
+              label: "Partitions et documents",
+            },
+            {
+              href: RouteNames.DASHBOARD.MEMBERS.REPETITIONS,
+              label: "Répétitions",
+            },
+            {
+              href: RouteNames.DASHBOARD.MEMBERS.EVENEMENTS,
+              label: "Événements",
+            },
+          ],
         },
       ],
     },
     {
       id: "members",
-      label: "Espace membres",
-      items: [
+      label: "Membres et accès",
+      description: "Qui fait partie de l’association",
+      icon: Users,
+      groups: [
         {
-          href: RouteNames.DASHBOARD.MEMBERS.REPETITIONS,
-          label: "Répétitions",
-          icon: CalendarDays,
-        },
-        {
-          href: RouteNames.DASHBOARD.MEMBERS.EVENEMENTS,
-          label: "Événements",
-          icon: Calendar,
-        },
-        {
-          href: RouteNames.DASHBOARD.MEMBERS.TRAVAIL_ROOT,
-          label: "Espace de travail",
-          icon: Briefcase,
+          id: "members-pages",
+          items: [
+            { href: RouteNames.DASHBOARD.ADMIN.USERS, label: "Membres" },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.GOOGLE_GROUPS,
+              label: "Liste de diffusion",
+            },
+          ],
         },
       ],
     },
     {
-      id: "administration",
-      label: "Administration",
-      items: [
+      id: "association",
+      label: "Association",
+      description: isSuperAdmin
+        ? "Comptes rendus du CA et signalements"
+        : "Comptes rendus du conseil d’administration",
+      icon: Landmark,
+      groups: [
         {
-          href: RouteNames.DASHBOARD.ADMIN.USERS,
-          label: "Utilisateurs",
-          icon: Users,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.GOOGLE_GROUPS,
-          label: "Groupes Google",
-          icon: Users,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.CA,
-          label: "Conseil d'administration",
-          icon: Building2,
-        },
-      ],
-    },
-    {
-      id: "anniversary",
-      label: "Campagne 40 ans",
-      secondary: true,
-      items: [
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.ROOT,
-          label: "Gestion de la page",
-          icon: PartyPopper,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.HERO,
-          label: "Section Hero",
-          icon: Sparkles,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.HERO_STATS,
-          label: "Statistiques Hero",
-          icon: BarChart3,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.NAVIGATION,
-          label: "Cartes de navigation",
-          icon: Map,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.TIMELINE,
-          label: "Chronologie",
-          icon: Clock,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.VIDEOS,
-          label: "Galerie vidéo",
-          icon: Video,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.AUDIO,
-          label: "Mémoires audio",
-          icon: Headphones,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.PHOTOS,
-          label: "Collection photos",
-          icon: ImageIcon,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.ARCHIVES,
-          label: "Archives publiques",
-          icon: Archive,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.FORM,
-          label: "Configuration formulaire",
-          icon: FileText,
-        },
-        {
-          href: RouteNames.DASHBOARD.ADMIN.ANNIVERSARY.MEMORIES,
-          label: "Modération témoignages",
-          icon: MessageSquare,
+          id: "association-pages",
+          items: [
+            {
+              href: RouteNames.DASHBOARD.ADMIN.CA,
+              label: "Comptes rendus du CA",
+            },
+          ],
         },
       ],
     },
@@ -204,16 +222,23 @@ export function buildNavSections({
 
   if (isSuperAdmin) {
     sections
-      .find((section) => section.id === "administration")
-      ?.items.push({
+      .find((section) => section.id === "association")
+      ?.groups[0]?.items.push({
         href: RouteNames.DASHBOARD.ADMIN.BUG_REPORTS,
-        label: "Rapports de bugs",
-        icon: Bug,
+        label: "Signalements",
         badge: unreadBugReports > 0 ? "dot" : undefined,
       });
   }
 
   return sections;
+}
+
+/** Every link of the tree, section-level pages (Accueil) included, in reading order. */
+export function flattenNavItems(sections: NavSection[]): NavItem[] {
+  return sections.flatMap((section) => [
+    ...(section.href ? [{ href: section.href, label: section.label }] : []),
+    ...section.groups.flatMap((group) => group.items),
+  ]);
 }
 
 /**
@@ -225,22 +250,31 @@ export function activeNavHref(
   sections: NavSection[],
   pathname: string,
 ): string | undefined {
-  return sections
-    .flatMap((section) => section.items.map((item) => item.href))
-    .filter(
-      (href) =>
-        href !== MESSAGES_ACTION &&
-        (pathname === href || pathname.startsWith(`${href}/`)),
-    )
+  return flattenNavItems(sections)
+    .map((item) => item.href)
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
     .sort((a, b) => b.length - a.length)[0];
 }
 
-/** Label of the nav entry for an exact href, used by the breadcrumb trail. */
+/** The section that owns a nav href (a section-level page owns itself). */
+export function navSectionForHref(
+  sections: NavSection[],
+  href: string | undefined,
+): NavSection | undefined {
+  if (!href) return undefined;
+  return sections.find(
+    (section) =>
+      section.href === href ||
+      section.groups.some((group) =>
+        group.items.some((item) => item.href === href),
+      ),
+  );
+}
+
+/** Label of the nav entry for an exact href, used by the « Vous êtes ici » trail. */
 export function navLabelForHref(
   sections: NavSection[],
   href: string,
 ): string | undefined {
-  return sections
-    .flatMap((section) => section.items)
-    .find((item) => item.href === href)?.label;
+  return flattenNavItems(sections).find((item) => item.href === href)?.label;
 }

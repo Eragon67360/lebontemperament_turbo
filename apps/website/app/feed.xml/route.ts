@@ -1,6 +1,20 @@
 import { createAdminClient } from "@/utils/supabase/admin";
 import type { Project } from "@repo/domain/types/projects";
 
+// What an item needs: title, link, description and a publication date.
+const FEED_COLUMNS =
+  "slug, name, sub_name, explanation, date, created_at, updated_at";
+type FeedProject = Pick<
+  Project,
+  | "slug"
+  | "name"
+  | "sub_name"
+  | "explanation"
+  | "date"
+  | "created_at"
+  | "updated_at"
+>;
+
 const WEBSITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://www.lebontemperament.com";
 
@@ -16,7 +30,7 @@ const escapeXml = (s: string) =>
 
 // Publication date of a concert story: the concert date itself when it
 // exists, otherwise the record's own timestamps.
-const itemDate = (p: Project): Date | null => {
+const itemDate = (p: FeedProject): Date | null => {
   for (const raw of [p.date, p.updated_at, p.created_at]) {
     if (!raw) continue;
     const d = new Date(raw);
@@ -33,12 +47,12 @@ export async function GET() {
     const supabase = createAdminClient();
     const { data: projects } = await supabase
       .from("projects")
-      .select("*")
+      .select(FEED_COLUMNS)
       .order("date", { ascending: false })
       .limit(20);
 
     if (projects) {
-      items = projects.map((p: Project) => {
+      items = projects.map((p: FeedProject) => {
         const url = `${WEBSITE_URL}/concerts/${p.slug}`;
         const date = itemDate(p);
         if (date && (!lastBuildDate || date > lastBuildDate)) {

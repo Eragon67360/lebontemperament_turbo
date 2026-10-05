@@ -77,9 +77,8 @@ export function TrackMapClient({
   const isInitialLoad = useRef(true);
   const isProgrammaticMove = useRef(false);
 
+  // The setter has a stable identity, so the map's listeners can hold it.
   const [userHasInteracted, setUserHasInteracted] = useState(false);
-  const setUserHasInteractedRef = useRef(setUserHasInteracted);
-  setUserHasInteractedRef.current = setUserHasInteracted;
 
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [styleVersion, setStyleVersion] = useState(0);
@@ -146,7 +145,7 @@ export function TrackMapClient({
           isProgrammaticMove.current = false;
           return;
         }
-        setUserHasInteractedRef.current(true);
+        setUserHasInteracted(true);
       });
     });
 

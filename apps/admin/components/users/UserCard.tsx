@@ -70,7 +70,7 @@ export function UserCard({
       {user.isMissingInExcel && (
         <div className="flex w-full items-center justify-center gap-2 bg-orange-100 py-1.5 text-xs font-medium text-orange-700">
           <AlertTriangle aria-hidden className="h-3 w-3" />
-          <span>Non trouvé dans Excel</span>
+          <span>Absent de la liste des membres</span>
         </div>
       )}
 

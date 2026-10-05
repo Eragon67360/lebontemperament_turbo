@@ -7,9 +7,12 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
+import 'package:lebontemperament/core/widgets/notice_banner.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lebontemperament/data/models/concert.dart';
 import 'package:lebontemperament/data/models/event.dart';
+import 'package:lebontemperament/data/models/list_result.dart';
+import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -65,6 +68,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
     final theme = Theme.of(context);
     final concertsAsync = ref.watch(upcomingConcertsProvider);
     final eventsAsync = ref.watch(upcomingEventsProvider);
+    final isOnline = ref.watch(isOnlineProvider).value ?? true;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -148,12 +152,21 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
               child: Builder(
                 builder: (BuildContext context) {
                   return concertsAsync.when(
-                    data: (concerts) => _ConcertsList(concerts: concerts),
+                    // Server down and nothing cached: an error, not "no concert".
+                    data: (concerts) => concerts.isUnavailable
+                        ? _buildScrollableContent(
+                            context,
+                            _ErrorState(
+                              onRetry: _onRefresh,
+                              isOnline: isOnline,
+                            ),
+                          )
+                        : _ConcertsList(result: concerts, isOnline: isOnline),
                     loading: () =>
                         _buildScrollableContent(context, const _LoadingState()),
                     error: (_, __) => _buildScrollableContent(
                       context,
-                      _ErrorState(onRetry: _onRefresh),
+                      _ErrorState(onRetry: _onRefresh, isOnline: isOnline),
                     ),
                   );
                 },
@@ -167,12 +180,20 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
               child: Builder(
                 builder: (BuildContext context) {
                   return eventsAsync.when(
-                    data: (events) => _EventsList(events: events),
+                    data: (events) => events.isUnavailable
+                        ? _buildScrollableContent(
+                            context,
+                            _ErrorState(
+                              onRetry: _onRefresh,
+                              isOnline: isOnline,
+                            ),
+                          )
+                        : _EventsList(result: events, isOnline: isOnline),
                     loading: () =>
                         _buildScrollableContent(context, const _LoadingState()),
                     error: (_, __) => _buildScrollableContent(
                       context,
-                      _ErrorState(onRetry: _onRefresh),
+                      _ErrorState(onRetry: _onRefresh, isOnline: isOnline),
                     ),
                   );
                 },
@@ -268,12 +289,30 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
 
 // MARK: - Tab Content Lists
 
-class _ConcertsList extends StatelessWidget {
-  final List<Concert> concerts;
-  const _ConcertsList({required this.concerts});
+/// The "Données hors ligne" notice above a list served from the cache.
+class _OfflineSliver extends StatelessWidget {
+  final bool isOnline;
+  const _OfflineSliver({required this.isOnline});
 
   @override
   Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        child: OfflineDataBanner(isOnline: isOnline),
+      ),
+    );
+  }
+}
+
+class _ConcertsList extends StatelessWidget {
+  final ListResult<Concert> result;
+  final bool isOnline;
+  const _ConcertsList({required this.result, required this.isOnline});
+
+  @override
+  Widget build(BuildContext context) {
+    final concerts = result.items;
     if (concerts.isEmpty) {
       return CustomScrollView(
         key: const PageStorageKey('concerts_empty'),
@@ -301,6 +340,7 @@ class _ConcertsList extends StatelessWidget {
         SliverOverlapInjector(
           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
         ),
+        if (result.fromCache) _OfflineSliver(isOnline: isOnline),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             20,
@@ -338,11 +378,13 @@ class _ConcertsList extends StatelessWidget {
 }
 
 class _EventsList extends StatelessWidget {
-  final List<Event> events;
-  const _EventsList({required this.events});
+  final ListResult<Event> result;
+  final bool isOnline;
+  const _EventsList({required this.result, required this.isOnline});
 
   @override
   Widget build(BuildContext context) {
+    final events = result.items;
     if (events.isEmpty) {
       return CustomScrollView(
         key: const PageStorageKey('events_empty'),
@@ -370,6 +412,7 @@ class _EventsList extends StatelessWidget {
         SliverOverlapInjector(
           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
         ),
+        if (result.fromCache) _OfflineSliver(isOnline: isOnline),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             20,
@@ -730,7 +773,8 @@ class _LoadingState extends StatelessWidget {
 
 class _ErrorState extends StatelessWidget {
   final VoidCallback onRetry;
-  const _ErrorState({required this.onRetry});
+  final bool isOnline;
+  const _ErrorState({required this.onRetry, this.isOnline = true});
 
   @override
   Widget build(BuildContext context) {
@@ -749,7 +793,9 @@ class _ErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Oups, une erreur est survenue',
+                isOnline
+                    ? 'Oups, une erreur est survenue'
+                    : 'Vous êtes hors ligne',
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -758,7 +804,9 @@ class _ErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Nous n\'avons pas pu charger les données. Vérifiez votre connexion et réessayez.',
+                isOnline
+                    ? 'Nous n\'avons pas pu charger les données. Vérifiez votre connexion et réessayez.'
+                    : 'Rien n\'est encore enregistré sur cet appareil. Reconnectez-vous pour charger les données.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,

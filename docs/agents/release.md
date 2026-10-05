@@ -14,7 +14,7 @@ There is one database, used by production, staging, previews and local developme
 - **Every migration is backward compatible** with the code currently on `main`, on staging, and in every app version still installed: add tables and nullable columns first; ship code that uses them; backfill; only in a later release make columns required, rename or drop, and only once no supported app version uses them.
 - **The owner applies migrations** (Supabase CLI `supabase db push` linked to the project, or the SQL editor), unless he explicitly delegates one. Your PR contains the migration file in `supabase/migrations/` with a timestamped name, the exact SQL reviewed line by line, RLS enabled with policies for any new table, and a rollback note (Supabase migrations have no automatic `down`).
 - **Order**: migration applied → `npm run db:types` → code using it merged into `dev`. Code merged before its migration breaks staging (and production on release).
-- **Edge functions** are deployed with `supabase functions deploy <name>` by the owner (or with his approval). Scheduled jobs (`pg_cron`) live in migrations (e.g. `20260626091000_cron_sync_rehearsals.sql`); check `rehearsal_sync_logs` after a change to the sync.
+- **Edge functions** are deployed with `supabase functions deploy <name>` by the owner (or with his approval). Scheduled jobs (`pg_cron`) live in migrations (e.g. `20260626091000_cron_sync_rehearsals.sql`); check `rehearsal_sync_logs` (or `drive_sync_runs` for the Drive index) after a change to a sync.
 - The core tables have no migration history; before changing one, read its current definition and policies from the database (read-only) and capture them in the migration's comments.
 
 ## Preparing a release
