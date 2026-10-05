@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -93,9 +94,10 @@ void main() {
     );
     final service = _service(adapter, token: 'test-access-token');
 
-    final files = await service.getFolderContents('folder-test');
+    final listing = await service.getFolderContents('folder-test');
 
-    expect(files.single.name, 'Partition.pdf');
+    expect(listing.items.single.name, 'Partition.pdf');
+    expect(listing.truncated, isFalse);
     expect(
       adapter.lastRequest?.headers['Authorization'],
       'Bearer test-access-token',
@@ -145,13 +147,37 @@ void main() {
     );
   });
 
-  test('downloads a file through the authenticated proxy', () async {
-    final adapter = _RecordingAdapter(body: 'pdf-bytes');
+  test('flags a truncated listing from the website header', () async {
+    final adapter = _RecordingAdapter(
+      headers: const {
+        Headers.contentTypeHeader: ['application/json'],
+        kDriveTruncatedHeader: ['true'],
+      },
+    );
     final service = _service(adapter, token: 'test-access-token');
 
-    final bytes = await service.downloadFile('file-test-1');
+    final listing = await service.getFolderContents('folder-test');
 
-    expect(utf8.decode(bytes), 'pdf-bytes');
+    expect(listing.items, isEmpty);
+    expect(listing.truncated, isTrue);
+  });
+
+  test('streams a file through the authenticated proxy to disk', () async {
+    final adapter = _RecordingAdapter(body: 'pdf-bytes');
+    final service = _service(adapter, token: 'test-access-token');
+    final dir = await Directory.systemTemp.createTemp('lbt_test_');
+    addTearDown(() => dir.delete(recursive: true));
+    final progress = <(int, int)>[];
+
+    final download = await service.downloadToFile(
+      'file-test-1',
+      savePath: '${dir.path}/partition.pdf',
+      onProgress: (received, total) => progress.add((received, total)),
+    );
+
+    expect(await download.file.readAsString(), 'pdf-bytes');
+    expect(progress, isNotEmpty);
+    expect(progress.last.$1, 'pdf-bytes'.length);
     expect(adapter.lastRequest?.uri.path, '/api/drive/file');
     expect(adapter.lastRequest?.uri.queryParameters['fileId'], 'file-test-1');
     expect(
@@ -177,9 +203,16 @@ void main() {
     );
     final service = _service(adapter, token: 'test-access-token');
 
-    final download = await service.downloadAttachment('file-test-1');
+    final dir = await Directory.systemTemp.createTemp('lbt_test_');
+    addTearDown(() => dir.delete(recursive: true));
 
-    expect(utf8.decode(download.bytes), 'pdf-bytes');
+    final download = await service.downloadToFile(
+      'file-test-1',
+      savePath: '${dir.path}/attachment.pdf',
+      attachment: true,
+    );
+
+    expect(await download.file.readAsString(), 'pdf-bytes');
     expect(download.fileName, "Chœur d'été.pdf");
     expect(download.contentType, 'application/pdf');
     expect(adapter.lastRequest?.uri.path, '/api/drive/file');
@@ -196,8 +229,14 @@ void main() {
       _RecordingAdapter(status: 415, body: '{"error":"unsupported"}'),
       token: 'test-access-token',
     );
+    final dir = await Directory.systemTemp.createTemp('lbt_test_');
+    addTearDown(() => dir.delete(recursive: true));
     await expectLater(
-      service.downloadAttachment('file-test-1'),
+      service.downloadToFile(
+        'file-test-1',
+        savePath: '${dir.path}/doc.pdf',
+        attachment: true,
+      ),
       throwsA(
         isA<DriveServiceException>().having(
           (e) => e.message,
@@ -206,6 +245,25 @@ void main() {
         ),
       ),
     );
+    expect(dir.listSync(), isEmpty);
+  });
+
+  test('a cancelled download leaves no file and no error message', () async {
+    final adapter = _RecordingAdapter(body: 'pdf-bytes');
+    final service = _service(adapter, token: 'test-access-token');
+    final dir = await Directory.systemTemp.createTemp('lbt_test_');
+    addTearDown(() => dir.delete(recursive: true));
+    final token = CancelToken()..cancel();
+
+    await expectLater(
+      service.downloadToFile(
+        'file-test-1',
+        savePath: '${dir.path}/doc.pdf',
+        cancelToken: token,
+      ),
+      throwsA(isA<DriveDownloadCancelled>()),
+    );
+    expect(dir.listSync(), isEmpty);
   });
 
   group('fileNameFromContentDisposition', () {
@@ -259,9 +317,9 @@ void main() {
         },
       );
 
-      final files = await service.getFolderContents('folder-test');
+      final listing = await service.getFolderContents('folder-test');
 
-      expect(files, isEmpty);
+      expect(listing.items, isEmpty);
       expect(refreshes, 1);
       expect(adapter.seenAuthorizations, ['Bearer expired', 'Bearer fresh']);
     });

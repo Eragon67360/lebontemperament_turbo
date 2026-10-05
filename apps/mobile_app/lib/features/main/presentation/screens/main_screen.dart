@@ -16,14 +16,15 @@ import '../../../../features/notifications/presentation/providers/notification_s
 
 // --- Data moved outside the build method for performance ---
 
-class _NavItemData {
+/// One tab of the floating bar. Public so the bar can be tested on its own.
+class NavItemData {
   final IconData outlinedIcon;
   final IconData filledIcon;
   final String label;
 
   /// Spoken name when the visible label is shortened.
   final String? semanticLabel;
-  const _NavItemData({
+  const NavItemData({
     required this.outlinedIcon,
     required this.filledIcon,
     required this.label,
@@ -38,24 +39,24 @@ const List<Widget> _screens = [
   ProfileScreen(),
 ];
 
-const List<_NavItemData> _navItems = [
-  _NavItemData(
+const List<NavItemData> kMainNavItems = [
+  NavItemData(
     outlinedIcon: Icons.home_outlined,
     filledIcon: Icons.home,
     label: 'Accueil',
   ),
-  _NavItemData(
+  NavItemData(
     outlinedIcon: Icons.event_outlined,
     filledIcon: Icons.event,
     label: 'Concerts',
-    semanticLabel: 'Concerts & Évènements',
+    semanticLabel: 'Concerts & Événements',
   ),
-  _NavItemData(
+  NavItemData(
     outlinedIcon: Icons.calendar_month_outlined,
     filledIcon: Icons.calendar_month,
     label: 'Calendrier',
   ),
-  _NavItemData(
+  NavItemData(
     outlinedIcon: Icons.person_outline,
     filledIcon: Icons.person,
     label: 'Profil',
@@ -140,8 +141,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               child: _screens[currentIndex],
             ),
           ),
-          _FrostedGlassNavBar(
-            items: _navItems,
+          FrostedGlassNavBar(
+            items: kMainNavItems,
             currentIndex: currentIndex,
             onTap: (index) =>
                 ref.read(mainNavigationProvider.notifier).setTab(index),
@@ -157,12 +158,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 /// The floating bottom bar (« Coulisses »): every tab keeps its label, so
 /// nobody has to guess what an icon means; the current tab sits in an accent
 /// pill.
-class _FrostedGlassNavBar extends StatelessWidget {
-  final List<_NavItemData> items;
+class FrostedGlassNavBar extends StatelessWidget {
+  final List<NavItemData> items;
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  const _FrostedGlassNavBar({
+  const FrostedGlassNavBar({
+    super.key,
     required this.items,
     required this.currentIndex,
     required this.onTap,
@@ -266,17 +268,24 @@ class _NavBarItem extends StatelessWidget {
                     size: 24,
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    label,
-                    style: AppFonts.sans(
-                      fontSize: 12,
-                      color: fg,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w600,
+                  // The labels are single words (« Calendrier »), so a second
+                  // line would not help: with large text they shrink to the
+                  // tab's width instead of ending in « Calend… ».
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: AppFonts.sans(
+                        fontSize: 12,
+                        color: fg,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      softWrap: false,
+                      textAlign: TextAlign.center,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

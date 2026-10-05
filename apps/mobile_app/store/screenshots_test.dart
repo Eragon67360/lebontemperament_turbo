@@ -22,6 +22,7 @@ import 'package:lebontemperament/data/models/event.dart';
 import 'package:lebontemperament/data/models/list_result.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
+import 'package:lebontemperament/data/services/drive_service.dart';
 import 'package:lebontemperament/features/concerts/presentation/screens/concert_detail_screen.dart';
 import 'package:lebontemperament/features/concerts/presentation/screens/concerts_events_screen.dart';
 import 'package:lebontemperament/features/home/presentation/screens/home_screen.dart';
@@ -159,44 +160,47 @@ final _catalog = DriveFolderCatalog(
 /// repertoire, made-up file names).
 class _DemoDriveService extends FakeDriveService {
   @override
-  Future<List<DriveFile>> getFolderContents(String folderId) async => const [
-    DriveFile(
-      id: 'demo-f1',
-      name: 'Concert de printemps',
-      type: 'folder',
-      mimeType: 'application/vnd.google-apps.folder',
-    ),
-    DriveFile(
-      id: 'demo-f2',
-      name: 'Chants de Noël',
-      type: 'folder',
-      mimeType: 'application/vnd.google-apps.folder',
-    ),
-    DriveFile(
-      id: 'demo-p1',
-      name: 'Fauré – Cantique de Jean Racine.pdf',
-      type: 'file',
-      mimeType: 'application/pdf',
-    ),
-    DriveFile(
-      id: 'demo-a1',
-      name: 'Cantique – pupitre soprano.mp3',
-      type: 'file',
-      mimeType: 'audio/mpeg',
-    ),
-    DriveFile(
-      id: 'demo-a2',
-      name: 'Cantique – pupitre alto.mp3',
-      type: 'file',
-      mimeType: 'audio/mpeg',
-    ),
-    DriveFile(
-      id: 'demo-p2',
-      name: 'Mozart – Ave verum corpus.pdf',
-      type: 'file',
-      mimeType: 'application/pdf',
-    ),
-  ];
+  Future<DriveListing> getFolderContents(String folderId) async =>
+      const DriveListing(
+        items: [
+          DriveFile(
+            id: 'demo-f1',
+            name: 'Concert de printemps',
+            type: 'folder',
+            mimeType: 'application/vnd.google-apps.folder',
+          ),
+          DriveFile(
+            id: 'demo-f2',
+            name: 'Chants de Noël',
+            type: 'folder',
+            mimeType: 'application/vnd.google-apps.folder',
+          ),
+          DriveFile(
+            id: 'demo-p1',
+            name: 'Fauré – Cantique de Jean Racine.pdf',
+            type: 'file',
+            mimeType: 'application/pdf',
+          ),
+          DriveFile(
+            id: 'demo-a1',
+            name: 'Cantique – pupitre soprano.mp3',
+            type: 'file',
+            mimeType: 'audio/mpeg',
+          ),
+          DriveFile(
+            id: 'demo-a2',
+            name: 'Cantique – pupitre alto.mp3',
+            type: 'file',
+            mimeType: 'audio/mpeg',
+          ),
+          DriveFile(
+            id: 'demo-p2',
+            name: 'Mozart – Ave verum corpus.pdf',
+            type: 'file',
+            mimeType: 'application/pdf',
+          ),
+        ],
+      );
 }
 
 class _Shot {
@@ -401,8 +405,8 @@ void main() {
               displayName: 'Camille',
               drive: _DemoDriveService(),
               catalog: _catalog,
-              homeRehearsals: _rehearsals,
-              homeConcerts: _concerts,
+              homeRehearsals: AsyncData(_rehearsals),
+              homeConcerts: AsyncData(_concerts),
             ),
             realtimeConcertsProvider.overrideWith((ref) async => concerts),
             concertProvider.overrideWith(

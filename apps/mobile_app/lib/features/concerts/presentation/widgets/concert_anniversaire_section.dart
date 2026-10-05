@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -14,45 +16,80 @@ class ConcertAnniversaireSection extends StatefulWidget {
       _ConcertAnniversaireSectionState();
 }
 
-class _ConcertAnniversaireSectionState
-    extends State<ConcertAnniversaireSection> {
+/// Kept alive while scrolled out of the concerts list (a sliver would
+/// otherwise dispose it, and the music with it).
+class _ConcertAnniversaireSectionState extends State<ConcertAnniversaireSection>
+    with AutomaticKeepAliveClientMixin {
   late final AudioPlayer _player;
-  int? _playingIndex;
+  StreamSubscription<PlayerState>? _stateSubscription;
+
+  /// The track loaded in the player, playing or paused.
+  int? _currentIndex;
+  bool _playing = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     _player = AudioPlayer();
-    _player.onPlayerStateChanged.listen((state) {
-      if (state == PlayerState.stopped || state == PlayerState.completed) {
-        if (mounted) setState(() => _playingIndex = null);
-      }
+    _stateSubscription = _player.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        _playing = state == PlayerState.playing;
+        if (state == PlayerState.stopped || state == PlayerState.completed) {
+          _currentIndex = null;
+        }
+      });
     });
   }
 
   @override
   void dispose() {
+    _stateSubscription?.cancel();
     _player.dispose();
     super.dispose();
   }
 
+  /// Plays track [index]; pauses it when it is playing, resumes it when it
+  /// is the paused one.
   Future<void> _playTrack(int index) async {
     HapticFeedback.lightImpact();
-    final track = kAnniversaryTracks[index];
-    final url = anniversaryTrackUrl(track.name);
-
-    if (_playingIndex == index) {
-      await _player.pause();
-      setState(() => _playingIndex = null);
-      return;
+    try {
+      if (_currentIndex == index) {
+        if (_playing) {
+          await _player.pause();
+        } else {
+          await _player.resume();
+        }
+        return;
+      }
+      final track = kAnniversaryTracks[index];
+      setState(() {
+        _currentIndex = index;
+        _playing = true;
+      });
+      await _player.play(UrlSource(anniversaryTrackUrl(track.name)));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _currentIndex = null;
+        _playing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Impossible de lire ce morceau. Vérifiez votre connexion.',
+          ),
+        ),
+      );
     }
-
-    await _player.play(UrlSource(url));
-    setState(() => _playingIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final theme = Theme.of(context);
 
     return Container(
@@ -157,7 +194,8 @@ class _ConcertAnniversaireSectionState
               itemCount: kAnniversaryTracks.length,
               itemBuilder: (context, index) {
                 final track = kAnniversaryTracks[index];
-                final isPlaying = _playingIndex == index;
+                final isCurrent = _currentIndex == index;
+                final isPlaying = isCurrent && _playing;
 
                 return InkWell(
                   onTap: () => _playTrack(index),
@@ -170,7 +208,7 @@ class _ConcertAnniversaireSectionState
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: isPlaying
+                            color: isCurrent
                                 ? theme.colorScheme.primary.withValues(
                                     alpha: 0.2,
                                   )
@@ -194,7 +232,7 @@ class _ConcertAnniversaireSectionState
                                 track.displayName,
                                 style: AppFonts.sans(
                                   fontSize: 14,
-                                  fontWeight: isPlaying
+                                  fontWeight: isCurrent
                                       ? FontWeight.w600
                                       : FontWeight.w500,
                                   color: theme.colorScheme.onSurface,

@@ -13,13 +13,26 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
   return authService.authStateChanges;
 });
 
-final currentUserProvider = Provider<User?>((ref) {
-  final authState = ref.watch(authStateProvider);
+/// The user from the auth stream, or the one Supabase still holds when the
+/// stream has nothing better: a failed token refresh (offline, server down)
+/// is reported as a stream error while the session stays on the device. Before,
+/// that error made the member « Utilisateur » without their role, and a cold
+/// start offline went through the permission screen as if logged out.
+User? resolveCurrentUser(
+  AsyncValue<AuthState> authState,
+  User? Function() persisted,
+) {
   return authState.when(
     data: (authState) => authState.session?.user,
-    loading: () => null,
-    error: (_, __) => null,
+    loading: persisted,
+    error: (_, _) => persisted(),
   );
+}
+
+final currentUserProvider = Provider<User?>((ref) {
+  final authService = ref.watch(authServiceProvider);
+  final authState = ref.watch(authStateProvider);
+  return resolveCurrentUser(authState, () => authService.currentUser);
 });
 
 /// Profile from database (profiles table). Fetched when user is logged in.
@@ -48,8 +61,7 @@ final displayNameProvider = Provider<String>((ref) {
 /// Profile picture URL: profile.profile_picture_url first, then auth avatar_url (Google).
 final profilePictureUrlProvider = Provider<String?>((ref) {
   final profileAsync = ref.watch(userProfileProvider);
-  final fromProfile =
-      profileAsync.value?['profile_picture_url']?.toString();
+  final fromProfile = profileAsync.value?['profile_picture_url']?.toString();
   if (fromProfile != null && fromProfile.trim().isNotEmpty) {
     return fromProfile.trim();
   }
@@ -68,16 +80,16 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AsyncValue<void>>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return AuthController(authService, ref);
-});
+      final authService = ref.watch(authServiceProvider);
+      return AuthController(authService, ref);
+    });
 
 class AuthController extends StateNotifier<AsyncValue<void>> {
   final AuthService _authService;
   final Ref _ref;
 
   AuthController(this._authService, this._ref)
-      : super(const AsyncValue.data(null));
+    : super(const AsyncValue.data(null));
 
   Future<void> signIn(String email, String password) async {
     try {

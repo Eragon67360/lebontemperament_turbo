@@ -41,7 +41,12 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
     final paris = tz.getLocation('Europe/Paris');
     final inParis = tz.TZDateTime.from(utc, paris);
     return DateTime(
-        inParis.year, inParis.month, inParis.day, inParis.hour, inParis.minute);
+      inParis.year,
+      inParis.month,
+      inParis.day,
+      inParis.hour,
+      inParis.minute,
+    );
   }
 
   Future<void> _load() async {
@@ -160,10 +165,9 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                   Icon(
                     Icons.history_rounded,
                     size: 64,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -229,10 +233,12 @@ class _HistoryCardState extends State<_HistoryCard> {
     final theme = Theme.of(context);
     final d = widget.item.delivery;
     final recipients = widget.item.recipients;
-    final deliveredCount =
-        recipients.where((r) => r.deliveredAt != null).length;
+    final deliveredCount = recipients
+        .where((r) => r.deliveredAt != null)
+        .length;
     final total = recipients.length;
-    final dateStr = widget.formatDate(d.createdAt);
+    // Supabase timestamps parse as UTC: "today" is a local-day question.
+    final dateStr = widget.formatDate(d.createdAt?.toLocal());
     final windowStr = widget.formatScheduledWindow(d);
 
     return Card(
@@ -347,7 +353,10 @@ class _RecipientRow extends StatelessWidget {
           ),
           if (recipient.deliveredAt != null)
             Text(
-              DateFormat('HH:mm', 'fr_FR').format(recipient.deliveredAt!),
+              DateFormat(
+                'HH:mm',
+                'fr_FR',
+              ).format(recipient.deliveredAt!.toLocal()),
               style: AppFonts.sans(
                 fontSize: 12,
                 color: theme.colorScheme.onSurfaceVariant,

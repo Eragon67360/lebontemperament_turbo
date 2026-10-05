@@ -63,10 +63,12 @@ class NotificationService {
       const androidSettings = AndroidInitializationSettings(
         '@mipmap/ic_launcher',
       );
+      // The explanatory permission screen drives the iOS prompt: initializing
+      // must not pop it on its own.
       const iosSettings = DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
       );
 
       const initSettings = InitializationSettings(
@@ -187,11 +189,8 @@ class NotificationService {
           );
           _logger.i('iOS notification permissions result: $iosSettings');
 
-          // If iOS permissions were granted, we're good
-          if (iosSettings != null) {
-            _logger.i('iOS permissions granted successfully');
-            return true;
-          }
+          // The plugin answers false (not null) when the member refuses.
+          return iosSettings == true;
         }
       } catch (e) {
         _logger.w('Could not request iOS notification permissions: $e');
@@ -211,6 +210,18 @@ class NotificationService {
     }
   }
 
+  /// True when the system will no longer show the permission prompt (Android
+  /// after two refusals, iOS after one): only the system settings can help.
+  Future<bool> isPermissionPermanentlyDenied() async {
+    try {
+      final status = await Permission.notification.status;
+      return status.isPermanentlyDenied;
+    } catch (e) {
+      _logger.w('Could not read notification permission status: $e');
+      return false;
+    }
+  }
+
   Future<bool> hasPermissions() async {
     try {
       // For iOS, check using flutter_local_notifications first
@@ -226,13 +237,9 @@ class NotificationService {
           final iosSettings = await iosPlugin.checkPermissions();
           _logger.i('iOS notification settings: $iosSettings');
 
-          // If we can get the settings and they're not null, permissions are granted
-          if (iosSettings != null) {
-            _logger.i(
-              'iOS permissions confirmed via flutter_local_notifications',
-            );
-            return true;
-          }
+          // The options come back non-null even when the member refused:
+          // only isEnabled says whether notifications may be shown.
+          return iosSettings?.isEnabled == true;
         }
       } catch (e) {
         _logger.w('Could not check iOS notification settings: $e');
@@ -340,33 +347,30 @@ class NotificationService {
         'Data: ${concerts.length} concerts, ${rehearsals.length} rehearsals',
       );
 
-      if (!settings.enabled) {
-        _logger.i('Notifications disabled, skipping scheduling');
-        return;
-      }
-
       // Ensure service is initialized
       if (!_isInitialized) {
         _logger.i('Notification service not initialized, initializing now...');
         await initialize();
       }
 
-      // Check permissions
-      final permissionsGranted = await hasPermissions();
-      if (!permissionsGranted) {
-        _logger.w('No notification permissions, requesting...');
-        final granted = await requestPermissions();
-        if (!granted) {
-          _logger.e(
-            'Notification permissions not granted, cannot schedule notifications',
-          );
-          return;
-        }
+      if (!settings.enabled) {
+        // Reminders scheduled while the switch was on must not fire.
+        _logger.i('Notifications disabled, cancelling pending reminders');
+        await cancelPendingNotifications();
+        return;
       }
 
-      // Cancel existing notifications
-      await cancelAllNotifications();
-      _logger.i('Cancelled existing notifications');
+      // Only check: the scheduler runs after every resume and data change,
+      // so asking here kept popping the system prompt until it was
+      // auto-denied. The permission screen and the settings switch ask.
+      final permissionsGranted = await hasPermissions();
+      if (!permissionsGranted) {
+        _logger.w('No notification permissions, skipping scheduling');
+        return;
+      }
+
+      // Replace the pending reminders; delivered ones stay in the tray.
+      await cancelPendingNotifications();
 
       int scheduledCount = 0;
 
@@ -694,12 +698,29 @@ class NotificationService {
     return hash.abs();
   }
 
+  /// Cancel every notification, pending or already shown. Rescheduling uses
+  /// [cancelPendingNotifications] instead, so the tray is left alone.
   Future<void> cancelAllNotifications() async {
     try {
       await _notifications.cancelAll();
       _logger.i('Cancelled all notifications');
     } catch (e) {
       _logger.e('Error cancelling notifications: $e');
+    }
+  }
+
+  /// Cancel the scheduled reminders that have not fired yet. Notifications
+  /// already delivered (pushes, realtime alerts, past reminders) stay in
+  /// the tray until the member dismisses them.
+  Future<void> cancelPendingNotifications() async {
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      for (final request in pending) {
+        await _notifications.cancel(request.id);
+      }
+      _logger.i('Cancelled ${pending.length} pending notifications');
+    } catch (e) {
+      _logger.e('Error cancelling pending notifications: $e');
     }
   }
 
