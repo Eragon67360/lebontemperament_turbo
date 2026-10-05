@@ -8,8 +8,8 @@ import { AnimatePresence, motion, useInView } from "motion/react";
 import { useRef, useState } from "react";
 import { FaPlay, FaYoutube } from "react-icons/fa";
 import AnniversaryCTA from "./AnniversaryCTA";
-import ScoreHeading from "./score/ScoreHeading";
-import { SECTION_MARKS } from "./score/sections";
+import ProgrammeHeading from "./programme/ProgrammeHeading";
+import { PROGRAMME_PARTS } from "./programme/sections";
 import { VideoModal } from "./VideoModal";
 
 interface VideoGalleryProps {
@@ -37,11 +37,11 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
     <section
       id="videos"
       ref={sectionRef}
-      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
+      className="relative scroll-mt-20 overflow-hidden py-16 sm:py-24"
     >
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <ScoreHeading
-          kicker={SECTION_MARKS.videos!}
+      <div className="relative z-10 mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8">
+        <ProgrammeHeading
+          part={PROGRAMME_PARTS.videos!.part}
           title="Galerie vidéo"
           intro="Revivez nos concerts, témoignages et moments mémorables en vidéo."
           className="mb-12"

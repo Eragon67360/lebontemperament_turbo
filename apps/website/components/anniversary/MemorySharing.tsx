@@ -1,23 +1,21 @@
 "use client";
 
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { SCORE_FIRST_YEAR } from "@/lib/anniversaryScore";
+import { PROGRAMME_FIRST_YEAR } from "@/lib/anniversaryProgramme";
 import type { FormConfig, Memory } from "@/types/anniversary";
-import { Input, Label, TextArea, TextField } from "@heroui/react";
 import { FILL_TIME_FIELD, HONEYPOT_FIELD } from "@repo/domain/utils/formAbuse";
 import { motion, useInView } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { FaPaperPlane, FaQuoteLeft, FaUser } from "react-icons/fa";
 import { toast } from "sonner";
-import AnniversaryCTA from "./AnniversaryCTA";
-import ScoreHeading from "./score/ScoreHeading";
-import { SECTION_MARKS } from "./score/sections";
+import ProgrammeHeading from "./programme/ProgrammeHeading";
+import { PROGRAMME_PARTS } from "./programme/sections";
+import { BUTTON_TEAL, CAPS, PAPER, TEXT } from "./programme/theme";
 
 interface MemorySharingProps {
   config: FormConfig;
   featuredMemories: Memory[];
-  /** A year chosen on the score (« Écrivez cette mesure »), to prefill. */
+  /** A year chosen on a season (« Signez le livre d’or »), to prefill. */
   prefillYear?: number | null;
 }
 
@@ -37,7 +35,7 @@ const MemorySharing = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // A measure picked on the score fills the year (state adjusted while
+  // A season picked in « Quarante saisons » fills the year (state adjusted while
   // rendering, the React way to follow a prop without an effect).
   const [lastPrefill, setLastPrefill] = useState(prefillYear);
   if (prefillYear !== lastPrefill) {
@@ -96,110 +94,129 @@ const MemorySharing = ({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const fieldLabel = `${CAPS} text-(--p-muted)`;
+  const fieldInput = `${TEXT} w-full min-w-0 rounded-none border-0 border-b border-(--p-ink) bg-transparent py-2.5 text-xl text-(--p-ink) focus:border-b-2 focus:border-(--p-teal) focus:outline-none disabled:opacity-60`;
+
   return (
     <section
       id="memories"
       ref={sectionRef}
-      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
+      className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
     >
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <ScoreHeading
-          kicker={SECTION_MARKS.memories!}
-          title={config.section_title}
-          intro={config.section_description}
-          className="mb-12"
-        />
-
+      <div className="mx-auto max-w-[1180px]">
         {featuredMemories.length > 0 && (
-          <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-            {featuredMemories.map((memory, index) => (
-              <motion.div
-                key={memory.id}
-                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="border-separator bg-surface-secondary/30 relative flex flex-col rounded-xl border p-6 backdrop-blur-md"
-              >
-                <div className="text-foreground/10 absolute top-6 right-6 z-0">
-                  <FaQuoteLeft className="text-4xl" />
-                </div>
-                <div className="relative z-10 flex grow flex-col">
-                  <p className="text-muted grow leading-relaxed font-light italic">
-                    “{memory.message}”
-                  </p>
-                  <div className="border-separator mt-6 flex items-center gap-4 border-t pt-4">
-                    <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                      <FaUser />
-                    </div>
-                    <div>
-                      <p className="text-foreground font-medium">
-                        {memory.name}
-                      </p>
-                      {memory.year && (
-                        <p className="text-muted text-xs">{memory.year}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+          <div className="mb-16">
+            <ProgrammeHeading
+              part={PROGRAMME_PARTS.memories!.part}
+              title="Ils ont signé"
+              className="mb-10"
+            />
+            <ul className="grid gap-x-12 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
+              {featuredMemories.map((memory, index) => (
+                <motion.li
+                  key={memory.id}
+                  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: index * 0.1, duration: 0.6 }}
+                  className="border-t border-(--p-rule) pt-6"
+                >
+                  <figure>
+                    <blockquote
+                      className={`${TEXT} text-xl leading-snug italic`}
+                    >
+                      « {memory.message} »
+                    </blockquote>
+                    <figcaption className={`${CAPS} mt-4 text-(--p-muted)`}>
+                      {memory.name}
+                      {memory.year && ` · ${memory.year}`}
+                    </figcaption>
+                  </figure>
+                </motion.li>
+              ))}
+            </ul>
           </div>
         )}
 
         {config.is_enabled && (
-          <motion.div
-            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="border-separator bg-surface-secondary/30 mx-auto max-w-2xl rounded-xl border p-6 backdrop-blur-md sm:p-8"
+          <div
+            className={`${PAPER} grid gap-12 px-6 py-12 sm:px-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-16 lg:px-20 lg:py-[72px]`}
           >
-            <h3 className="text-foreground mb-6 text-center text-2xl font-medium">
-              Partagez Votre Témoignage
-            </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <TextField
-                  name="name"
-                  isRequired
-                  isDisabled={isSubmitting}
-                  value={formData.name}
-                  onChange={(value) => handleFieldChange("name", value)}
-                >
-                  <Label>{config.name_label}</Label>
-                  <Input type="text" autoComplete="name" />
-                </TextField>
-                <TextField
-                  name="email"
-                  type="email"
-                  isRequired
-                  isDisabled={isSubmitting}
-                  value={formData.email}
-                  onChange={(value) => handleFieldChange("email", value)}
-                >
-                  <Label>{config.email_label}</Label>
-                  <Input autoComplete="email" />
-                </TextField>
+            <ProgrammeHeading
+              part="Votre mot"
+              size="sm"
+              title={config.section_title}
+              intro={config.section_description}
+            />
+            <form
+              onSubmit={handleSubmit}
+              className="relative flex flex-col gap-6"
+            >
+              <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px]">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="memory-name" className={fieldLabel}>
+                    {config.name_label}
+                  </label>
+                  <input
+                    id="memory-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    disabled={isSubmitting}
+                    value={formData.name}
+                    onChange={(e) => handleFieldChange("name", e.target.value)}
+                    className={fieldInput}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="memory-email" className={fieldLabel}>
+                    {config.email_label}
+                  </label>
+                  <input
+                    id="memory-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    disabled={isSubmitting}
+                    value={formData.email}
+                    onChange={(e) => handleFieldChange("email", e.target.value)}
+                    className={fieldInput}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="memory-year" className={fieldLabel}>
+                    {config.year_label}
+                  </label>
+                  <input
+                    id="memory-year"
+                    name="year"
+                    type="number"
+                    inputMode="numeric"
+                    min={PROGRAMME_FIRST_YEAR}
+                    max={new Date().getFullYear()}
+                    disabled={isSubmitting}
+                    value={formData.year}
+                    onChange={(e) => handleFieldChange("year", e.target.value)}
+                    className={fieldInput}
+                  />
+                </div>
               </div>
-              <TextField
-                name="year"
-                type="number"
-                isDisabled={isSubmitting}
-                value={formData.year}
-                onChange={(value) => handleFieldChange("year", value)}
-              >
-                <Label>{config.year_label}</Label>
-                <Input min={SCORE_FIRST_YEAR} max={new Date().getFullYear()} />
-              </TextField>
-              <TextField
-                name="message"
-                isRequired
-                isDisabled={isSubmitting}
-                value={formData.message}
-                onChange={(value) => handleFieldChange("message", value)}
-              >
-                <Label>{config.message_label}</Label>
-                <TextArea rows={5} />
-              </TextField>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="memory-message" className={fieldLabel}>
+                  {config.message_label}
+                </label>
+                <textarea
+                  id="memory-message"
+                  name="message"
+                  rows={4}
+                  required
+                  disabled={isSubmitting}
+                  value={formData.message}
+                  onChange={(e) => handleFieldChange("message", e.target.value)}
+                  className={`${fieldInput} resize-y`}
+                />
+              </div>
               {/* Honeypot, off-screen and hidden from assistive technologies */}
               <div
                 aria-hidden="true"
@@ -216,32 +233,31 @@ const MemorySharing = ({
                   autoComplete="off"
                 />
               </div>
-              <div className="pt-2 text-center">
-                <AnniversaryCTA
+              <div>
+                <button
                   type="submit"
                   disabled={isSubmitDisabled || isSubmitting}
-                  className="w-full"
+                  className={`${BUTTON_TEAL} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isSubmitting ? "Envoi..." : config.submit_button_text}
-                  {!isSubmitting && <FaPaperPlane />}
-                </AnniversaryCTA>
+                </button>
               </div>
 
-              <p className="text-muted pt-2 text-center text-xs font-light">
+              <p className="text-xs leading-relaxed text-(--p-muted)">
                 Les témoignages sont modérés avant publication. Votre nom et
                 votre témoignage peuvent être publiés sur cette page ; votre
                 adresse e-mail n’est jamais publiée et est effacée après la
                 modération. En savoir plus dans notre{" "}
                 <Link
                   href="/politique-de-confidentialite"
-                  className="text-primary-text underline hover:no-underline"
+                  className="text-(--p-teal) underline hover:no-underline"
                 >
                   politique de confidentialité
                 </Link>
                 .
               </p>
             </form>
-          </motion.div>
+          </div>
         )}
       </div>
     </section>

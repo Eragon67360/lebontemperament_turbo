@@ -6,21 +6,25 @@ Cette page de célébration des 40 ans du Bon Tempérament est une expérience i
 
 ## Structure des Composants
 
-La page suit la direction A « Mesure 40 » choisie par le propriétaire (octobre 2026) : la page est une partition. Police d'affichage Fraunces (`--font-score`, chargée par `app/40-ans/page.tsx` pour cette page seulement), Roboto pour le texte, le teal du site comme seul accent.
+La page suit la direction D « Le Programme » choisie par le propriétaire (octobre 2026), qui remplace la direction A « Mesure 40 » : la page se lit comme le programme d'un concert de gala. Polices Bodoni Moda (titres, `--font-programme-display`) et EB Garamond (texte, `--font-programme-text`), chargées par `app/40-ans/page.tsx` pour cette page seulement ; Roboto pour les petites capitales et les boutons. Tons papier (ivoire, papier, filets) en jetons de page dans `programme/theme.ts`, avec une variante sombre ; le teal du site comme accent. Logique pure et testée : `lib/anniversaryProgramme.ts` (chiffres romains, saisons, affiches).
 
-### 1. `score/ScoreHero.tsx`
+### 1. `programme/ProgrammeCover.tsx`
 
-Ouverture : une portée de cinq lignes se trace, une mesure 4/0 (`hero_number`) s'installe, une note par décennie (1987, 1997, 2007, 2017) tombe sur la portée et 2027 reçoit le point d'orgue. Titre (`hero_subtitle`), texte (`description`), bouton (`cta_text` → `cta_target_section`) et statistiques du CMS. Statique si `enable_intro_animation` est désactivé ou si le visiteur préfère réduire les animations.
+Couverture : sur teal profond dans un filet, un grand « 40 » (`hero_number`) en Bodoni découpé dans une photo de concert (`public/img/entre_terre_et_ciel.jpg`, optimisée par `getImageProps`) qui glisse lentement, le titre (`hero_subtitle`) en italique, MCMLXXXVII — MMXXVII, le bouton du CMS (`cta_text` → `cta_target_section`), « Concert des 40 ans » (vers le billet) et les statistiques. Statique si `enable_intro_animation` est désactivé ou si le visiteur préfère réduire les animations.
 
-### 2. `score/ScoreTimeline.tsx` (`#timeline`)
+### 2. `programme/ProgrammeContents.tsx` (`#anniversary-navigation`)
 
-« La partition des 40 ans » : 40 mesures (1987 à 2026), dix par ligne, puis 2027 en point d'orgue. Les événements de la frise et les souvenirs mis en avant (avec une année) sont les notes ; une année vide est un silence qui invite à écrire un souvenir (l'année est reportée dans le formulaire). Les mesures forment un groupe radio (flèches, Début, Fin) ; « Jouer la partition » les parcourt. Une photo de la galerie de la même année s'affiche à côté. Logique pure et testée : `lib/anniversaryScore.ts`. Les années hors 1987–2027 sont ramenées à la première mesure ou au point d'orgue.
+« Au programme » : une ligne numérotée (I, II…) par carte de navigation du CMS, avec points de conduite et la marque de la section (`programme/sections.ts`), puis le grand concert anniversaire ; à côté, une photo et le texte `description` du CMS.
 
-### 3. `score/ScoreVoices.tsx`, `score/ScoreMovements.tsx` (`#anniversary-navigation`), `score/ScoreFine.tsx`
+### 3. `programme/ProgrammeSeasons.tsx` (`#timeline`)
 
-« Tutti » : les chœurs, l'orchestre et leurs chefs, avec la citation de Simone Duclos. « Le programme » : les cartes de navigation du CMS, marquées par le tempo de leur section (`score/sections.ts` : Prélude, I · Allegro, II · Andante, III · Scherzo, IV · Adagio, Coda). « Fine » clôt la page. Les sections média gardent leur contenu, avec l'en-tête commun `score/ScoreHeading.tsx`.
+« Première partie · Quarante saisons » : un événement de la frise par saison (année en Bodoni, titre, texte), la photo de la galerie de la même année et les souvenirs mis en avant de la période (un souvenir rejoint la dernière saison commencée avant ou pendant son année). « Vous y étiez ? Signez le livre d'or » reporte l'année dans le formulaire.
 
-### 4. `VideoGallery.tsx`
+### 4. `programme/ProgrammeEntracte.tsx`, `ProgrammeDistribution.tsx`, `ProgrammeArchives.tsx` (`#archives`), `ProgrammeTicket.tsx` (`#billet`)
+
+« Entracte » : la citation de Simone Duclos. « Distribution » : les chœurs, l'orchestre et leurs chefs, et la photo de toute la troupe (Camino Latino, Châteaulin, août 2023). « Les archives » : une pile du disque des 20 ans et des affiches de concerts récents (table `concerts`, une par programme, sans les `E2E_`, `getProgrammePosters`), puis le lien vers `/40-ans/archives`. Le billet du grand concert renvoie à l'agenda : aucune date ni aucun lieu n'est inventé. Les sections média et le livre d'or (`MemorySharing.tsx`) gardent leur contenu, avec l'en-tête commun `programme/ProgrammeHeading.tsx`.
+
+### 5. `VideoGallery.tsx`
 
 **Rôle**: Galerie vidéo avec filtres par catégorie
 
@@ -37,7 +41,7 @@ Ouverture : une portée de cinq lignes se trace, une mesure 4/0 (`hero_number`) 
 - 6 vidéos placeholder
 - Catégories: Concert, Témoignage, Documentaire, etc.
 
-### 5. `AudioMemories.tsx`
+### 6. `AudioMemories.tsx`
 
 **Rôle**: Lecteurs audio pour les souvenirs sonores
 
@@ -53,7 +57,7 @@ Ouverture : une portée de cinq lignes se trace, une mesure 4/0 (`hero_number`) 
 - 6 fichiers audio placeholder
 - URLs à remplacer par les vrais fichiers
 
-### 6. `PhotoCollection.tsx`
+### 7. `PhotoCollection.tsx`
 
 **Rôle**: Galerie photo en style masonry
 
@@ -69,7 +73,7 @@ Ouverture : une portée de cinq lignes se trace, une mesure 4/0 (`hero_number`) 
 - 9 photos placeholder
 - Images à remplacer par les vraies photos
 
-### 7. `MemorySharing.tsx`
+### 8. `MemorySharing.tsx`
 
 **Rôle**: Section témoignages et formulaire de partage
 

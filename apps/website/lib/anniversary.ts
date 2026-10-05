@@ -14,6 +14,7 @@ import {
   PUBLIC_MEMORY_SELECT,
   toPublicMemory,
 } from "@/lib/anniversaryMemories";
+import { pickPosters, type ProgrammePoster } from "@/lib/anniversaryProgramme";
 import type { AnniversaryPageData, Archive, Memory } from "@/types/anniversary";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createPublicClient } from "@/utils/supabase/public";
@@ -245,6 +246,35 @@ export async function getArchives(): Promise<Archive[]> {
     );
   } catch (error) {
     console.error("Error fetching archives:", error);
+    return [];
+  }
+}
+
+/** How many concert posters the archive stack of `/40-ans` fans out. */
+const PROGRAMME_POSTER_COUNT = 5;
+
+/**
+ * Recent concert posters for the archive stack of `/40-ans`: the same public
+ * rows as the agenda (anon key, no cookies), one per programme.
+ */
+export async function getProgrammePosters(): Promise<ProgrammePoster[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("concerts")
+      .select("id, name, date, affiche")
+      .not("affiche", "is", null)
+      .order("date", { ascending: false })
+      .limit(60);
+
+    if (error) {
+      console.error("Error fetching concert posters:", error);
+      return [];
+    }
+
+    return pickPosters(data ?? [], PROGRAMME_POSTER_COUNT);
+  } catch (error) {
+    console.error("Error fetching concert posters:", error);
     return [];
   }
 }
