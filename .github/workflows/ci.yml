@@ -175,3 +175,33 @@ jobs:
       # Errors fail the job; the 72 pre-existing infos/warnings are tracked in #362.
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: flutter test
+
+  android:
+    name: Android build
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/mobile_app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: "3.35.7"
+          channel: stable
+          cache: true
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/dev' }}
+      - run: cp .env.example .env
+      - run: flutter pub get
+      # Compiles the Android project (Gradle, manifests, R8 with the release
+      # rules) before a merge instead of on main. No key.properties here, so
+      # the APK is signed with the debug key and never leaves the runner.
+      - run: flutter build apk --release
