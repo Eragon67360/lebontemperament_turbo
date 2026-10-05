@@ -1,2 +1,6 @@
-Plus fiable :
-• L’application se connecte désormais directement au serveur de l’association, sans adresse intermédiaire. Rien ne change pour vous.
+Plus confortable pour tous :
+• Les rappels restent bien activés quand vous acceptez les notifications.
+• Écrans lisibles avec une grande taille de texte.
+• Partitions : téléchargements avec pourcentage, avance et retour de 10 s dans les enregistrements.
+• « Mot de passe oublié ? » fonctionne.
+• Séjours affichés sur toutes leurs dates, recherche de membres sans accents.
