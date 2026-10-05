@@ -1,0 +1,7 @@
+Plus fiable au quotidien :
+• Les grandes partitions et les enregistrements s’ouvrent et se téléchargent.
+• Une session expirée se renouvelle toute seule.
+• Le bouton retour remonte d’un dossier dans les partitions.
+• Toucher un rappel ouvre le bon concert ou le bon événement.
+• Le filtre des répétitions garde celles du chœur complet et de tous.
+• L’annuaire affiche aussi les membres sans adresse e-mail.

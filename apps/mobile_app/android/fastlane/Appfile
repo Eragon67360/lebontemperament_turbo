@@ -1,0 +1,5 @@
+# The service account key comes from the PLAY_STORE_JSON_KEY environment
+# variable (the ANDROID_SERVICE_ACCOUNT_JSON GitHub secret); it is never
+# written to disk or committed.
+json_key_data_raw(ENV["PLAY_STORE_JSON_KEY"]) if ENV["PLAY_STORE_JSON_KEY"]
+package_name("com.lebontemperament.app")
