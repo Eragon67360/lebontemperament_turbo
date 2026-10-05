@@ -5,8 +5,8 @@ import type { AudioMemory } from "@/types/anniversary";
 import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 import { CustomAudioPlayer } from "./CustomAudioPlayer";
-import ScoreHeading from "./score/ScoreHeading";
-import { SECTION_MARKS } from "./score/sections";
+import ProgrammeHeading from "./programme/ProgrammeHeading";
+import { PROGRAMME_PARTS } from "./programme/sections";
 
 interface AudioMemoriesProps {
   audioMemories: AudioMemory[];
@@ -21,11 +21,11 @@ const AudioMemories = ({ audioMemories }: AudioMemoriesProps) => {
     <section
       id="audio"
       ref={sectionRef}
-      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
+      className="relative scroll-mt-20 overflow-hidden py-16 sm:py-24"
     >
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <ScoreHeading
-          kicker={SECTION_MARKS.audio!}
+      <div className="relative z-10 mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8">
+        <ProgrammeHeading
+          part={PROGRAMME_PARTS.audio!.part}
           title="Mémoires audio"
           intro="Écoutez les voix et les sons qui ont marqué 40 ans d’histoire du Bon Tempérament."
           className="mb-12"

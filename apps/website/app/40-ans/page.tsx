@@ -1,21 +1,27 @@
 import { JsonLd } from "@/components/JsonLd";
-import { getAnniversaryPageData } from "@/lib/anniversary";
+import { getAnniversaryPageData, getProgrammePosters } from "@/lib/anniversary";
 import { getPublicFeatureFlags } from "@/lib/featureFlags";
 import { checkAdminAuth } from "@/utils/auth";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
-import { Fraunces } from "next/font/google";
+import { Bodoni_Moda, EB_Garamond } from "next/font/google";
 import { notFound } from "next/navigation";
 import AnniversaryPageClient from "./AnniversaryPageClient";
 
-// The score's display face (direction A, « Mesure 40 »), for this page only:
+// The programme's faces (direction D, « Le Programme »), for this page only:
 // the site keeps Roboto everywhere else.
-const fraunces = Fraunces({
+const bodoni = Bodoni_Moda({
   subsets: ["latin"],
   style: ["normal", "italic"],
   axes: ["opsz"],
   display: "swap",
-  variable: "--font-score",
+  variable: "--font-programme-display",
+});
+const garamond = EB_Garamond({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-programme-text",
 });
 
 export const metadata: Metadata = {
@@ -65,7 +71,10 @@ export default async function AnniversaryPage() {
     }
   }
 
-  const data = await getAnniversaryPageData();
+  const [data, posters] = await Promise.all([
+    getAnniversaryPageData(),
+    getProgrammePosters(),
+  ]);
 
   if (!data) {
     // Show error state or fallback
@@ -91,8 +100,12 @@ export default async function AnniversaryPage() {
           { name: "40 ans du Bon Tempérament", path: "/40-ans" },
         ])}
       />
-      <div className={fraunces.variable}>
-        <AnniversaryPageClient data={data} isPreview={isPreview} />
+      <div className={`${bodoni.variable} ${garamond.variable}`}>
+        <AnniversaryPageClient
+          data={data}
+          posters={posters}
+          isPreview={isPreview}
+        />
       </div>
     </>
   );
