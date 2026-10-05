@@ -1,9 +1,10 @@
 "use client";
 
 import { Modal } from "@heroui/react";
-import { Code, Github, Heart, PawPrint, User } from "lucide-react";
+import { Code, Heart, PawPrint, User } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
+import { FaGithub } from "react-icons/fa";
 
 // --- TechIcon Component (No changes) ---
 const TechIcon = ({ icon, name }: { icon: React.ReactNode; name: string }) => (
@@ -128,7 +129,10 @@ const DeveloperFootprintModal = ({
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <Github className="text-primary h-5 w-5" />
+                                  <FaGithub
+                                    className="text-primary h-5 w-5"
+                                    aria-hidden
+                                  />
                                   <a
                                     href="https://github.com/Eragon67360"
                                     target="_blank"
