@@ -7,6 +7,11 @@ import 'app_fonts.dart';
 /// read the app at arm's length. Dark is the default; the light variant keeps
 /// the same layout and type for those who prefer it.
 ///
+/// « Portée » (chosen 2026-10-05) keeps these colours and lightens the
+/// shapes: cards sit on the page ground behind a hairline instead of on a
+/// raised surface, titles are one or two weights lighter
+/// ([AppFonts.displayWeight]) and buttons are a little slimmer.
+///
 /// Every text/background pair below is at least 4.5:1 (measured), and borders
 /// at least 3:1 against their ground.
 class AppTheme {
@@ -167,10 +172,10 @@ class AppTheme {
       dividerTheme: DividerThemeData(color: s.outlineVariant, thickness: 1),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: s.surfaceContainer,
+        color: s.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: s.outlineVariant),
         ),
       ),
@@ -189,9 +194,9 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(64, 52),
+          minimumSize: const Size(64, 48),
           shape: pill,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           textStyle: text.labelLarge,
         ),
       ),
@@ -200,19 +205,19 @@ class AppTheme {
           elevation: 0,
           backgroundColor: s.primary,
           foregroundColor: s.onPrimary,
-          minimumSize: const Size(64, 52),
+          minimumSize: const Size(64, 48),
           shape: pill,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           textStyle: text.labelLarge,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: s.onSurface,
-          minimumSize: const Size(64, 52),
+          minimumSize: const Size(64, 48),
           shape: pill,
           side: BorderSide(color: s.outline),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           textStyle: text.labelLarge,
         ),
       ),
@@ -233,11 +238,13 @@ class AppTheme {
         shape: pill,
         side: BorderSide(color: s.outlineVariant),
         backgroundColor: Colors.transparent,
-        selectedColor: s.primary,
-        secondarySelectedColor: s.primary,
+        selectedColor: s.primaryContainer,
+        secondarySelectedColor: s.primaryContainer,
         labelStyle: text.labelMedium,
-        secondaryLabelStyle: text.labelMedium?.copyWith(color: s.onPrimary),
-        checkmarkColor: s.onPrimary,
+        secondaryLabelStyle: text.labelMedium?.copyWith(
+          color: s.onPrimaryContainer,
+        ),
+        checkmarkColor: s.onPrimaryContainer,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       ),
       inputDecorationTheme: InputDecorationTheme(

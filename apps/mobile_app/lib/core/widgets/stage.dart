@@ -1,13 +1,12 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
 
-/// Shared pieces of the « Coulisses » look: cards, date tiles, section
-/// headers, group colours and the countdown wording.
+/// Shared pieces of the « Coulisses » look, lightened to « Portée »: cards,
+/// date tiles, section headers, group colours, the week staff and the
+/// countdown wording.
 
 // MARK: - Groups
 
@@ -125,7 +124,8 @@ String frenchTimeRange(String? start, String? end) {
 
 // MARK: - Building blocks
 
-/// A card on the stage: raised surface, hairline border, rounded 20.
+/// A card on the stage (« Portée »): the page ground behind a hairline,
+/// rounded 16, so lists read as light outlines rather than blocks.
 class StageCard extends StatelessWidget {
   const StageCard({
     super.key,
@@ -154,7 +154,7 @@ class StageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       side: BorderSide(
         color: selected ? s.primary : s.outlineVariant,
         width: selected ? 1.5 : 1,
@@ -175,7 +175,7 @@ class StageCard extends StatelessWidget {
       );
     }
     final card = Material(
-      color: color ?? (selected ? s.primaryContainer : s.surfaceContainer),
+      color: color ?? (selected ? s.primaryContainer : s.surface),
       shape: shape,
       clipBehavior: Clip.antiAlias,
       child: content,
@@ -229,8 +229,8 @@ class StageSectionHeader extends StatelessWidget {
   }
 }
 
-/// Day and month on a light tile (or accent-coloured when [accent] is set).
-/// Grows with the text size instead of clipping.
+/// Day and month in a hairline frame, the day in the accent when [accent] is
+/// set. Grows with the text size instead of clipping.
 class StageDateTile extends StatelessWidget {
   const StageDateTile({
     super.key,
@@ -246,13 +246,12 @@ class StageDateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
-    final bg = accent ?? s.onSurface;
-    final fg = s.surface;
+    final dayColor = accent ?? s.primary;
     return Container(
       constraints: BoxConstraints(minWidth: size, minHeight: size),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
-        color: bg,
+        border: Border.all(color: s.outlineVariant),
         borderRadius: BorderRadius.circular(size / 4),
       ),
       child: Column(
@@ -263,18 +262,17 @@ class StageDateTile extends StatelessWidget {
             '${date.day}',
             style: AppFonts.display(
               fontSize: size * 0.44,
-              fontWeight: FontWeight.w800,
-              color: fg,
+              fontWeight: FontWeight.w400,
+              color: dayColor,
               height: 1,
             ),
           ),
           Text(
-            monthShort(date).toUpperCase(),
+            monthShort(date),
             style: AppFonts.sans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: fg,
-              letterSpacing: 1.2,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: s.onSurfaceVariant,
             ),
           ),
         ],
@@ -295,28 +293,25 @@ class StageEyebrow extends StatelessWidget {
       text.toUpperCase(),
       style: AppFonts.sans(
         fontSize: 13,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.6,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.2,
         color: color ?? Theme.of(context).colorScheme.primary,
       ),
     );
   }
 }
 
-/// A short coloured bar, the group's mark on rehearsal cards.
+/// The group's mark: a small dot in its colour, like a note head.
 class GroupMark extends StatelessWidget {
-  const GroupMark({super.key, required this.color, this.width = 28});
+  const GroupMark({super.key, required this.color, this.size = 8});
   final Color color;
-  final double width;
+  final double size;
 
   @override
   Widget build(BuildContext context) => Container(
-    width: width,
-    height: 4,
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(2),
-    ),
+    width: size,
+    height: size,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
   );
 }
 
@@ -365,38 +360,201 @@ class _ForkPainter extends CustomPainter {
   bool shouldRepaint(_ForkPainter old) => old.color != color;
 }
 
-/// Concentric rings behind the hero, like a tuning fork's resonance.
-class ResonanceRings extends StatelessWidget {
-  const ResonanceRings({super.key, required this.color, this.size = 220});
-  final Color color;
-  final double size;
+// MARK: - Week staff
+
+/// The current week as one bar of music (« Portée »): five hairlines, a day
+/// per column, and a note head in the group's colour on each day with a
+/// rehearsal. Today is the dashed line. The whole thing is read out as one
+/// sentence, so screen readers get the list, not the drawing.
+class WeekStaff extends StatelessWidget {
+  const WeekStaff({super.key, required this.rehearsals, this.now});
+
+  final List<Rehearsal> rehearsals;
+
+  /// Today, for tests.
+  final DateTime? now;
+
+  /// Line each group's notes sit on, from the bottom (0) to the top (4), so
+  /// two groups on the same day don't hide each other.
+  static int lineFor(GroupType group) => switch (group) {
+    GroupType.orchestre => 0,
+    GroupType.hommes => 1,
+    GroupType.choeurComplet || GroupType.tous => 2,
+    GroupType.femmes => 3,
+    GroupType.jeunesEnfants => 4,
+  };
+
+  /// Monday of the week holding [day].
+  static DateTime weekStart(DateTime day) {
+    final d = DateTime(day.year, day.month, day.day);
+    return d.subtract(Duration(days: d.weekday - 1));
+  }
+
+  /// The rehearsals falling in [day]'s week, as (weekday index 0–6, group).
+  static List<(int, GroupType)> notesFor(
+    List<Rehearsal> rehearsals,
+    DateTime day,
+  ) {
+    final start = weekStart(day);
+    final notes = <(int, GroupType)>[];
+    for (final r in rehearsals) {
+      final date = DateTime.tryParse(r.date ?? '');
+      if (date == null) continue;
+      final offset = DateTime(
+        date.year,
+        date.month,
+        date.day,
+      ).difference(start).inHours;
+      final index = (offset / 24).round();
+      if (index >= 0 && index < 7) notes.add((index, r.groupType));
+    }
+    return notes;
+  }
 
   @override
-  Widget build(BuildContext context) => IgnorePointer(
-    child: CustomPaint(size: Size.square(size), painter: _RingsPainter(color)),
-  );
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final today = now ?? DateTime.now();
+    final start = weekStart(today);
+    final todayIndex = today.weekday - 1;
+    final notes = notesFor(rehearsals, today);
+    final days = [for (var i = 0; i < 7; i++) start.add(Duration(days: i))];
+    final busy = {for (final n in notes) n.$1};
+
+    final spoken = notes.isEmpty
+        ? 'Cette semaine : aucune répétition'
+        : 'Cette semaine : ${[for (final n in notes) '${longDate(days[n.$1])}, ${groupLabel(n.$2)}'].join(' ; ')}';
+
+    return Semantics(
+      label: spoken,
+      container: true,
+      child: ExcludeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 64,
+              child: CustomPaint(
+                painter: _StaffPainter(
+                  line: s.outlineVariant,
+                  today: s.primary,
+                  todayIndex: todayIndex,
+                  notes: [
+                    for (final n in notes)
+                      (n.$1, lineFor(n.$2), groupColor(context, n.$2)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                for (var i = 0; i < 7; i++)
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        busy.contains(i) || i == todayIndex
+                            ? '${weekdayShort(days[i])} ${days[i].day}'
+                            : weekdayShort(days[i]),
+                        maxLines: 1,
+                        style: AppFonts.sans(
+                          fontSize: 13,
+                          fontWeight: i == todayIndex
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: i == todayIndex
+                              ? s.primary
+                              : (busy.contains(i)
+                                    ? s.onSurface
+                                    : s.onSurfaceVariant),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _RingsPainter extends CustomPainter {
-  _RingsPainter(this.color);
-  final Color color;
+class _StaffPainter extends CustomPainter {
+  _StaffPainter({
+    required this.line,
+    required this.today,
+    required this.todayIndex,
+    required this.notes,
+  });
+
+  final Color line;
+  final Color today;
+  final int todayIndex;
+
+  /// (day 0–6, staff line 0–4 from the bottom, colour).
+  final List<(int, int, Color)> notes;
+
+  static const double _gap = 8;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final c = size.center(Offset.zero);
-    final r = math.min(size.width, size.height) / 2;
-    for (final (f, w) in [(0.36, 1.5), (0.64, 1.0), (0.92, 0.6)]) {
-      canvas.drawCircle(
-        c,
-        r * f,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w,
+    final w = size.width;
+    final column = w / 7;
+    // The staff sits in the lower part, leaving room for the stems.
+    final bottom = size.height - 4;
+    double yOf(int lineIndex) => bottom - lineIndex * _gap;
+
+    final hair = Paint()
+      ..color = line
+      ..strokeWidth = 1;
+    for (var i = 0; i < 5; i++) {
+      canvas.drawLine(Offset(0, yOf(i)), Offset(w, yOf(i)), hair);
+    }
+    canvas.drawLine(Offset(0.5, yOf(4)), Offset(0.5, yOf(0)), hair);
+    canvas.drawLine(Offset(w - 0.5, yOf(4)), Offset(w - 0.5, yOf(0)), hair);
+
+    // Today: a dashed line through the staff.
+    final dash = Paint()
+      ..color = today
+      ..strokeWidth = 1;
+    final x = column * (todayIndex + 0.5);
+    for (var y = yOf(4) - 6; y < yOf(0) + 6; y += 5) {
+      canvas.drawLine(Offset(x, y), Offset(x, y + 2), dash);
+    }
+
+    for (final (day, lineIndex, color) in notes) {
+      final cx = column * (day + 0.5);
+      final cy = yOf(lineIndex);
+      final fill = Paint()..color = color;
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(-0.35);
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset.zero, width: 13, height: 9),
+        fill,
       );
+      canvas.restore();
+      final stem = Paint()
+        ..color = color
+        ..strokeWidth = 1.5;
+      canvas.drawLine(Offset(cx + 6, cy - 1.5), Offset(cx + 6, cy - 26), stem);
     }
   }
 
   @override
-  bool shouldRepaint(_RingsPainter old) => old.color != color;
+  bool shouldRepaint(_StaffPainter old) =>
+      old.line != line ||
+      old.today != today ||
+      old.todayIndex != todayIndex ||
+      old.notes.length != notes.length ||
+      !_sameNotes(old.notes, notes);
+
+  static bool _sameNotes(List<(int, int, Color)> a, List<(int, int, Color)> b) {
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 }

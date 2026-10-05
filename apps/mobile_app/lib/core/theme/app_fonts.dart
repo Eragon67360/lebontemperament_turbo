@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// The app's two typefaces (direction « Coulisses »), bundled under
-/// `assets/google_fonts` so nothing is fetched at runtime:
+/// The app's two typefaces (« Coulisses », lightened to « Portée »), bundled
+/// under `assets/google_fonts` so nothing is fetched at runtime:
 /// - Instrument Sans for running text,
 /// - Bricolage Grotesque for titles and big numbers.
 ///
@@ -55,17 +55,25 @@ class AppFonts {
     double? height,
     double? letterSpacing,
   }) {
-    final weight = fontWeight ?? FontWeight.w700;
     return GoogleFonts.bricolageGrotesque(
       color: color,
       fontSize: fontSize,
-      // Only 600–800 are bundled.
-      fontWeight: weight.value < 600 ? FontWeight.w600 : weight,
+      fontWeight: displayWeight(fontWeight ?? FontWeight.w700),
       height: height,
       letterSpacing:
           letterSpacing ?? (fontSize != null && fontSize >= 28 ? -0.5 : null),
     );
   }
+
+  /// « Portée » (chosen 2026-10-05): titles one or two steps lighter than
+  /// the weights the screens ask for, so the app reads « léger » without
+  /// touching every call site. 400–600 are bundled.
+  static FontWeight displayWeight(FontWeight requested) =>
+      switch (requested.value) {
+        >= 800 => FontWeight.w600,
+        >= 500 => FontWeight.w500,
+        _ => FontWeight.w400,
+      };
 
   /// Sizes the screens ask for, mapped to what the app renders: never under
   /// [minSize].

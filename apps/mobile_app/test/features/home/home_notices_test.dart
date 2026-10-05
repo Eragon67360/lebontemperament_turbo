@@ -94,6 +94,6 @@ void main() {
 
     expect(find.text(offline), findsOneWidget);
     expect(find.textContaining('Pas de connexion'), findsOneWidget);
-    expect(find.text(kTestRehearsal.place!), findsOneWidget);
+    expect(find.textContaining(kTestRehearsal.place!), findsOneWidget);
   });
 }
