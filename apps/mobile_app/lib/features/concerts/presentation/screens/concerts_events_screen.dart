@@ -412,7 +412,7 @@ class _EventsList extends StatelessWidget {
             hasScrollBody: false,
             child: _EmptyState(
               icon: Icons.event_busy_outlined,
-              message: 'Aucun évènement',
+              message: 'Aucun événement',
               subMessage: 'Aucun événement planifié pour le moment.',
             ),
           ),

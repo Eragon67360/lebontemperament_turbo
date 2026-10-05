@@ -49,7 +49,7 @@ const List<NavItemData> kMainNavItems = [
     outlinedIcon: Icons.event_outlined,
     filledIcon: Icons.event,
     label: 'Concerts',
-    semanticLabel: 'Concerts & Évènements',
+    semanticLabel: 'Concerts & Événements',
   ),
   NavItemData(
     outlinedIcon: Icons.calendar_month_outlined,
