@@ -98,10 +98,13 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
           _loading = false;
         });
       }
-    } on DriveServiceException catch (e) {
+    } catch (e) {
+      // Whatever went wrong, leave the spinner for an error with « Réessayer ».
       if (mounted) {
         setState(() {
-          _error = e.message;
+          _error = e is DriveServiceException
+              ? e.message
+              : 'Impossible de charger les fichiers';
           _loading = false;
         });
       }
@@ -150,9 +153,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
   bool _isAudioFile(DriveFile file) {
     final m = file.mimeType.toLowerCase();
     final name = file.name.toLowerCase();
-    return m.contains('audio') ||
-        m.contains('mpeg') ||
-        m.contains('mp3') ||
+    return m.startsWith('audio/') ||
         name.endsWith('.mp3') ||
         name.endsWith('.wav') ||
         name.endsWith('.m4a') ||
@@ -193,7 +194,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       builder: (ctx) => PdfViewerSheet(
         url: url,
         fileName: file.name,
-        headers: driveService.authHeaders,
+        load: () => driveService.downloadFile(file.id!),
         onClose: () => Navigator.of(ctx).pop(),
         onOpenInBrowser: (u) async {
           // The browser has no app session: open the file on Drive instead
@@ -272,45 +273,53 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     final catalog = ref.watch(driveFolderCatalogProvider);
     _ensureInitialLoad(catalog);
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(context, theme),
-            if (catalog.hasError && !catalog.hasValue)
-              Expanded(
-                child: _buildCatalogError(
-                  theme,
-                  onRetry: () => ref.invalidate(driveFolderCatalogProvider),
+    // System back (gesture or button) goes up one folder before it leaves
+    // the screen, like the header arrow.
+    return PopScope(
+      canPop: _folderStack.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack();
+      },
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildAppBar(context, theme),
+              if (catalog.hasError && !catalog.hasValue)
+                Expanded(
+                  child: _buildCatalogError(
+                    theme,
+                    onRetry: () => ref.invalidate(driveFolderCatalogProvider),
+                  ),
+                )
+              else if (!catalog.hasValue)
+                Expanded(child: _buildLoading(theme))
+              else if (isWide)
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTabBarVertical(theme, catalog.value!.tabs),
+                      Expanded(
+                        child: _buildExplorerContent(theme, catalog.value!),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildTabBarHorizontal(theme, catalog.value!.tabs),
+                      Expanded(
+                        child: _buildExplorerContent(theme, catalog.value!),
+                      ),
+                    ],
+                  ),
                 ),
-              )
-            else if (!catalog.hasValue)
-              Expanded(child: _buildLoading(theme))
-            else if (isWide)
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildTabBarVertical(theme, catalog.value!.tabs),
-                    Expanded(
-                      child: _buildExplorerContent(theme, catalog.value!),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Expanded(
-                child: Column(
-                  children: [
-                    _buildTabBarHorizontal(theme, catalog.value!.tabs),
-                    Expanded(
-                      child: _buildExplorerContent(theme, catalog.value!),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -965,7 +974,7 @@ class _DriveAudioPlayerSheetState extends State<_DriveAudioPlayerSheet> {
   void dispose() {
     _player.stop();
     _player.dispose();
-    _tempFile?.delete().ignore();
+    _tempFile?.parent.delete(recursive: true).ignore();
     super.dispose();
   }
 
