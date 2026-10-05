@@ -17,6 +17,7 @@ import '../../features/driver_tracking/presentation/screens/recipient_details_sc
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/notifications/presentation/screens/permission_request_screen.dart';
+import '../../features/onboarding/presentation/screens/welcome_tour_screen.dart';
 import '../../features/profile/presentation/screens/developer_mode_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 
@@ -41,6 +42,7 @@ class AppRouter {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String main = '/main';
+  static const String welcome = '/welcome';
   static const String eventDetail = '/events/:id';
   static const String concertDetail = '/concerts/:id';
   static const String rehearsals = '/rehearsals';
@@ -115,6 +117,13 @@ class AppRouter {
           name: 'main',
           builder: (context, state) =>
               Consumer(builder: (context, ref, _) => const MainScreen()),
+        ),
+
+        // Welcome tour: once after the first sign-in, and from the profile.
+        GoRoute(
+          path: welcome,
+          name: 'welcome',
+          builder: (context, state) => const WelcomeTourScreen(),
         ),
 
         // Event Detail Route (protected)

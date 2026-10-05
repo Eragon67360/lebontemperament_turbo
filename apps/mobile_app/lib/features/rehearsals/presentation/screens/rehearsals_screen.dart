@@ -16,6 +16,7 @@ import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/connectivity_provider.dart';
 import '../../../../data/providers/data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../onboarding/presentation/widgets/first_time_tip.dart';
 import '../providers/rehearsal_filter_provider.dart';
 
 class RehearsalsScreen extends ConsumerStatefulWidget {
@@ -110,6 +111,16 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
                     .setFilter(groupType),
                 onClearFilter: () =>
                     ref.read(rehearsalFilterProvider.notifier).clearFilter(),
+              ),
+            ),
+
+            const SliverToBoxAdapter(
+              child: FirstTimeTip(
+                id: 'calendar_filter',
+                message:
+                    'Touchez un ensemble pour ne voir que ses répétitions, '
+                    'ou « Tous » pour toute la saison.',
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
               ),
             ),
 
