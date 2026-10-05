@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 
 import '../../../../data/services/fcm_notification_handler.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -149,14 +149,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Column(
                       children: [
                         Text('Le Bon Tempérament',
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onSurface,
                             )),
                         const SizedBox(height: 8),
                         Text('Application mobile',
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 16,
                               color: theme.colorScheme.onSurfaceVariant,
                             )),

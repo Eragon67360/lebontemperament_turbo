@@ -200,7 +200,7 @@ class _DemoDriveService extends FakeDriveService {
 }
 
 class _Shot {
-  const _Shot(this.file, this.caption, this.screen, {this.dark = false});
+  const _Shot(this.file, this.caption, this.screen, {this.dark = true});
   final String file;
   final String caption;
   final Widget screen;
@@ -226,10 +226,10 @@ final _shots = [
     ConcertDetailScreen(concertId: 'demo-c1'),
   ),
   const _Shot(
-    '6_theme_sombre',
-    'Aussi en\nthème sombre',
+    '6_theme_clair',
+    'Aussi en\nthème clair',
     HomeScreen(),
-    dark: true,
+    dark: false,
   ),
 ];
 
@@ -246,11 +246,10 @@ Future<void> _loadFonts() async {
     await loader.load();
   }
 
-  // Poppins, Playfair and Fira come from assets/google_fonts (google_fonts
-  // loads them from the asset bundle); the frame's caption uses Poppins too.
-  await family('Poppins', [
-    for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold'])
-      'assets/google_fonts/Poppins-$w.ttf',
+  // The app's fonts come from assets/google_fonts (google_fonts loads them
+  // from the asset bundle); the frame's caption uses the display face too.
+  await family('Caption', [
+    'assets/google_fonts/BricolageGrotesque-ExtraBold.ttf',
   ]);
   await family('Roboto', [
     for (final w in ['Regular', 'Medium', 'Bold', 'Light'])
@@ -259,7 +258,8 @@ Future<void> _loadFonts() async {
   await family('MaterialIcons', ['$material/MaterialIcons-Regular.otf']);
 }
 
-/// The store frame: brand teal, the caption, and the real screen in a
+/// The store frame: the stage's dark ground lit in teal, the caption, and
+/// the real screen in a
 /// phone-shaped window at a true phone size (390 × 844), scaled down.
 class _Frame extends StatelessWidget {
   const _Frame({required this.caption, required this.child});
@@ -277,7 +277,7 @@ class _Frame extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1A878D), Color(0xFF105155)],
+            colors: [Color(0xFF14474B), Color(0xFF0D1517)],
           ),
         ),
         child: Column(
@@ -287,8 +287,8 @@ class _Frame extends StatelessWidget {
               caption,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w700,
+                fontFamily: 'Caption',
+                fontWeight: FontWeight.w800,
                 fontSize: 27,
                 height: 1.2,
                 color: Colors.white,
@@ -304,7 +304,7 @@ class _Frame extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
-                        color: const Color(0xFF0B3A3D),
+                        color: const Color(0xFF2A3B3E),
                         width: 6,
                       ),
                       boxShadow: const [

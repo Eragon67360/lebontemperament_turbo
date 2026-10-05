@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 
 /// A placeholder screen for features not yet implemented.
 /// Displays a "Bientôt disponible" message with the feature title.
@@ -62,7 +62,7 @@ class ComingSoonScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   Text(
                     title,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
@@ -73,7 +73,7 @@ class ComingSoonScreen extends StatelessWidget {
                   Text(
                     description ??
                         'Cette fonctionnalité sera bientôt disponible.',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 15,
                       color: theme.colorScheme.onSurfaceVariant,
                       height: 1.4,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
@@ -122,11 +122,11 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
                 dividerColor: theme.colorScheme.outlineVariant.withValues(
                   alpha: 0.2,
                 ),
-                labelStyle: GoogleFonts.poppins(
+                labelStyle: AppFonts.sans(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
-                unselectedLabelStyle: GoogleFonts.poppins(
+                unselectedLabelStyle: AppFonts.sans(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -231,7 +231,7 @@ class _ConcertsEventsAppBar extends StatelessWidget {
         centerTitle: false,
         title: Text(
           'Concerts & Évènements',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w600,
           ),
@@ -495,7 +495,7 @@ class _ConcertCard extends StatelessWidget {
                       month,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -505,7 +505,7 @@ class _ConcertCard extends StatelessWidget {
                     Text(
                       day,
                       maxLines: 1,
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
@@ -530,7 +530,7 @@ class _ConcertCard extends StatelessWidget {
                   children: [
                     Text(
                       concert.name ?? 'Concert sans titre',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                         fontSize: 17,
@@ -629,7 +629,7 @@ class _EventCard extends StatelessWidget {
                         children: [
                           Text(
                             event.title ?? 'Événement sans titre',
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               color: theme.colorScheme.onSurface,
                               fontWeight: FontWeight.w600,
                               fontSize: 17,
@@ -639,7 +639,7 @@ class _EventCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             _formatEventDateTime(event.dateFrom, event.time),
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -657,7 +657,7 @@ class _EventCard extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                   child: Text(
                     event.description ?? '',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: theme.colorScheme.onSurfaceVariant.withValues(
                         alpha: 0.8,
                       ),
@@ -679,7 +679,7 @@ class _EventCard extends StatelessWidget {
                   children: [
                     Text(
                       'Voir les détails',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
@@ -735,7 +735,7 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 message,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
@@ -745,7 +745,7 @@ class _EmptyState extends StatelessWidget {
               Text(
                 subMessage,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 14,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -796,7 +796,7 @@ class _ErrorState extends StatelessWidget {
                 isOnline
                     ? 'Oups, une erreur est survenue'
                     : 'Vous êtes hors ligne',
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
@@ -808,7 +808,7 @@ class _ErrorState extends StatelessWidget {
                     ? 'Nous n\'avons pas pu charger les données. Vérifiez votre connexion et réessayez.'
                     : 'Rien n\'est encore enregistré sur cet appareil. Reconnectez-vous pour charger les données.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 14,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -916,7 +916,7 @@ class _InfoRow extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.poppins(
+            style: AppFonts.sans(
               color: theme.colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),

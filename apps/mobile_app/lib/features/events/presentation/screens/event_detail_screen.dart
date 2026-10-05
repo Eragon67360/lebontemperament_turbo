@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -77,7 +77,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         delay: 300,
                         child: Text(
                           event.description!,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 15,
                             height: 1.6,
@@ -159,7 +159,7 @@ class _EventDetailHeader extends StatelessWidget {
                     ),
                     child: Text(
                       _getEventTypeText(event.eventType),
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.sans(
                         color: eventTheme.iconColor,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
@@ -169,7 +169,7 @@ class _EventDetailHeader extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     event.title ?? 'Événement sans titre',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 28,
@@ -268,7 +268,7 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 13,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -276,7 +276,7 @@ class _InfoRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.poppins(
+                  style: AppFonts.sans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
@@ -299,7 +299,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.onSurface,

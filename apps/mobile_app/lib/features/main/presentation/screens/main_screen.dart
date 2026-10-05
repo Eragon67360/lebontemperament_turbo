@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:logger/logger.dart';
 import 'dart:ui'; // Required for ImageFilter.blur
 
@@ -20,10 +20,15 @@ class _NavItemData {
   final IconData outlinedIcon;
   final IconData filledIcon;
   final String label;
-  const _NavItemData(
-      {required this.outlinedIcon,
-      required this.filledIcon,
-      required this.label});
+
+  /// Spoken name when the visible label is shortened.
+  final String? semanticLabel;
+  const _NavItemData({
+    required this.outlinedIcon,
+    required this.filledIcon,
+    required this.label,
+    this.semanticLabel,
+  });
 }
 
 const List<Widget> _screens = [
@@ -35,21 +40,26 @@ const List<Widget> _screens = [
 
 const List<_NavItemData> _navItems = [
   _NavItemData(
-      outlinedIcon: Icons.home_outlined,
-      filledIcon: Icons.home,
-      label: 'Accueil'),
+    outlinedIcon: Icons.home_outlined,
+    filledIcon: Icons.home,
+    label: 'Accueil',
+  ),
   _NavItemData(
-      outlinedIcon: Icons.event_outlined,
-      filledIcon: Icons.event,
-      label: 'Concerts & Évènements'),
+    outlinedIcon: Icons.event_outlined,
+    filledIcon: Icons.event,
+    label: 'Concerts',
+    semanticLabel: 'Concerts & Évènements',
+  ),
   _NavItemData(
-      outlinedIcon: Icons.calendar_month_outlined,
-      filledIcon: Icons.calendar_month,
-      label: 'Calendrier'),
+    outlinedIcon: Icons.calendar_month_outlined,
+    filledIcon: Icons.calendar_month,
+    label: 'Calendrier',
+  ),
   _NavItemData(
-      outlinedIcon: Icons.person_outline,
-      filledIcon: Icons.person,
-      label: 'Profil'),
+    outlinedIcon: Icons.person_outline,
+    filledIcon: Icons.person,
+    label: 'Profil',
+  ),
 ];
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -124,10 +134,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               switchInCurve: Curves.easeIn,
               switchOutCurve: Curves.easeOut,
               transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: child,
-                );
+                return FadeTransition(opacity: animation, child: child);
               },
               // We explicitly pass the widget from the list based on index
               child: _screens[currentIndex],
@@ -147,6 +154,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
 // MARK: - Custom Navigation Bar Components
 
+/// The floating bottom bar (« Coulisses »): every tab keeps its label, so
+/// nobody has to guess what an icon means; the current tab sits in an accent
+/// pill.
 class _FrostedGlassNavBar extends StatelessWidget {
   final List<_NavItemData> items;
   final int currentIndex;
@@ -162,35 +172,36 @@ class _FrostedGlassNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Positioned(
-      bottom: 20,
-      left: 20,
-      right: 20,
+      bottom: 14,
+      left: 12,
+      right: 12,
       child: SafeArea(
         top: false,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(32),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+            filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
             child: Container(
               // 70 at the default text size; grows with large text instead
-              // of clipping the selected label.
+              // of clipping the labels.
               constraints: const BoxConstraints(minHeight: 70),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withValues(alpha: 0.8),
-                border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(24),
+                color: theme.colorScheme.surfaceContainer.withValues(
+                  alpha: 0.94,
+                ),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+                borderRadius: BorderRadius.circular(32),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: List.generate(items.length, (index) {
                   final item = items[index];
-                  final isSelected = index == currentIndex;
                   return _NavBarItem(
                     outlinedIcon: item.outlinedIcon,
                     filledIcon: item.filledIcon,
                     label: item.label,
-                    isSelected: isSelected,
+                    semanticLabel: item.semanticLabel ?? item.label,
+                    isSelected: index == currentIndex,
                     onTap: () => onTap(index),
                   );
                 }),
@@ -207,6 +218,7 @@ class _NavBarItem extends StatelessWidget {
   final IconData outlinedIcon;
   final IconData filledIcon;
   final String label;
+  final String semanticLabel;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -214,66 +226,57 @@ class _NavBarItem extends StatelessWidget {
     required this.outlinedIcon,
     required this.filledIcon,
     required this.label,
+    required this.semanticLabel,
     required this.isSelected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = isSelected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant;
+    final scheme = Theme.of(context).colorScheme;
+    final fg = isSelected ? scheme.onPrimary : scheme.onSurfaceVariant;
 
-    // Unselected tabs show no text, so the accessible name comes from here
-    // (TalkBack / VoiceOver read "Accueil, onglet, sélectionné").
     return Expanded(
       child: Semantics(
         button: true,
         selected: isSelected,
-        label: label,
+        label: semanticLabel,
         child: InkWell(
           onTap: () {
             HapticFeedback.lightImpact();
             onTap();
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(26),
           child: ExcludeSemantics(
-            child: Padding(
-              // Reduced vertical padding to give contents more space.
-              padding: const EdgeInsets.symmetric(vertical: 6.0),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
+              decoration: BoxDecoration(
+                color: isSelected ? scheme.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(26),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                // mainAxisSize.min keeps the column as tall as its children,
-                // so the parent centers it correctly.
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     isSelected ? filledIcon : outlinedIcon,
-                    color: color,
+                    color: fg,
                     size: 24,
                   ),
                   const SizedBox(height: 2),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(scale: animation, child: child),
+                  Text(
+                    label,
+                    style: AppFonts.sans(
+                      fontSize: 12,
+                      color: fg,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                     ),
-                    child: isSelected
-                        ? Text(
-                            label,
-                            key: ValueKey<String>(label),
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              color: color,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            // Prevents the text itself from wrapping
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          )
-                        : const SizedBox.shrink(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

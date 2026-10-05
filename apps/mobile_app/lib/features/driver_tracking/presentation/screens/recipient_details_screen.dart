@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Required for Clipboard
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart'; // Required for pop
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -134,7 +134,7 @@ class RecipientDetailsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(currentRecipient.label,
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            style: AppFonts.sans(fontWeight: FontWeight.w600)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -151,7 +151,7 @@ class RecipientDetailsScreen extends ConsumerWidget {
                     children: [
                       Text('Statut',
                           style:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                              AppFonts.sans(fontWeight: FontWeight.w600)),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
@@ -160,7 +160,7 @@ class RecipientDetailsScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(statusLabel,
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                                 fontWeight: FontWeight.bold,
                                 color: statusColor)),
                       ),
@@ -168,22 +168,22 @@ class RecipientDetailsScreen extends ConsumerWidget {
                   ),
                   const Divider(height: 32),
                   Text('Adresse',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      style: AppFonts.sans(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
                   Text(
                     currentRecipient.address ?? 'Aucune adresse renseignée',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                         fontSize: 14,
                         color: theme.colorScheme.onSurfaceVariant),
                   ),
                   const Divider(height: 32), // <-- ADDED a divider
                   Text('Téléphone', // <-- ADDED new section title
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      style: AppFonts.sans(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
                   Text(
                     // <-- ADDED new text field for phone
                     currentRecipient.phoneNumber ?? 'Aucun numéro renseigné',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                         fontSize: 14,
                         color: theme.colorScheme.onSurfaceVariant),
                   ),
@@ -191,12 +191,12 @@ class RecipientDetailsScreen extends ConsumerWidget {
                     const Divider(height: 32),
                     Text('Heure de livraison',
                         style:
-                            GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                            AppFonts.sans(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
                     Text(
                       DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR')
                           .format(currentRecipient.deliveredAt!),
-                      style: GoogleFonts.poppins(fontSize: 14),
+                      style: AppFonts.sans(fontSize: 14),
                     ),
                   ]
                 ],
@@ -337,7 +337,7 @@ class _ActionButton extends StatelessWidget {
                           .withValues(alpha: 0.5)),
           padding: const EdgeInsets.symmetric(vertical: 14),
           textStyle:
-              GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
+              AppFonts.sans(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       );
     }
@@ -350,7 +350,7 @@ class _ActionButton extends StatelessWidget {
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle:
-            GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+            AppFonts.sans(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }

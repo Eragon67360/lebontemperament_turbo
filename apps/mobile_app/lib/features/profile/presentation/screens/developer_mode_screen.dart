@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/custom_toast.dart';
 import 'package:lebontemperament/data/models/concert.dart';
@@ -89,7 +89,7 @@ class DeveloperModeScreen extends ConsumerWidget {
         ),
         title: Text(
           'Mode développeur',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w700,
           ),
@@ -200,7 +200,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: AppFonts.sans(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.primary,
@@ -284,7 +284,7 @@ class _DevActionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
@@ -293,7 +293,7 @@ class _DevActionTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 13,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

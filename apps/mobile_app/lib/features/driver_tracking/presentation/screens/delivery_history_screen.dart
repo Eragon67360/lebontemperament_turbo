@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -109,7 +109,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
         ),
         title: Text(
           'Historique des tournées',
-          style: GoogleFonts.poppins(
+          style: AppFonts.sans(
             color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w600,
           ),
@@ -121,7 +121,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
             return Center(
               child: Text(
                 'Accès non autorisé',
-                style: GoogleFonts.poppins(
+                style: AppFonts.sans(
                   fontSize: 16,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -138,7 +138,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                 children: [
                   Text(
                     _error!,
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
@@ -168,7 +168,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'Aucune tournée passée',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
@@ -177,7 +177,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Vos tournées apparaîtront ici.',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -260,7 +260,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                       children: [
                         Text(
                           dateStr,
-                          style: GoogleFonts.poppins(
+                          style: AppFonts.sans(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: theme.colorScheme.onSurface,
@@ -270,7 +270,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                           const SizedBox(height: 4),
                           Text(
                             windowStr,
-                            style: GoogleFonts.poppins(
+                            style: AppFonts.sans(
                               fontSize: 13,
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -281,7 +281,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                   ),
                   Text(
                     '$deliveredCount/$total livrés',
-                    style: GoogleFonts.poppins(
+                    style: AppFonts.sans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       // green 800: Colors.green was 2.8:1 on the surface.
@@ -338,7 +338,7 @@ class _RecipientRow extends StatelessWidget {
           Expanded(
             child: Text(
               recipient.label,
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 14,
                 color: theme.colorScheme.onSurface,
                 decoration: isDelivered ? TextDecoration.lineThrough : null,
@@ -348,7 +348,7 @@ class _RecipientRow extends StatelessWidget {
           if (recipient.deliveredAt != null)
             Text(
               DateFormat('HH:mm', 'fr_FR').format(recipient.deliveredAt!),
-              style: GoogleFonts.poppins(
+              style: AppFonts.sans(
                 fontSize: 12,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
