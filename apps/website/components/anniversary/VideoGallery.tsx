@@ -8,6 +8,8 @@ import { AnimatePresence, motion, useInView } from "motion/react";
 import { useRef, useState } from "react";
 import { FaPlay, FaYoutube } from "react-icons/fa";
 import AnniversaryCTA from "./AnniversaryCTA";
+import ProgrammeHeading from "./programme/ProgrammeHeading";
+import { PROGRAMME_PARTS } from "./programme/sections";
 import { VideoModal } from "./VideoModal";
 
 interface VideoGalleryProps {
@@ -35,26 +37,15 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
     <section
       id="videos"
       ref={sectionRef}
-      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
+      className="relative scroll-mt-20 overflow-hidden py-16 sm:py-24"
     >
-      <div className="absolute inset-0 z-0">
-        <div className="bg-primary/5 absolute top-1/4 left-0 h-125 w-125 rounded-full blur-[100px]" />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Galerie Vidéo
-          </h2>
-          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
-            Revivez nos concerts, témoignages et moments mémorables en vidéo.
-          </p>
-        </motion.div>
+      <div className="relative z-10 mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8">
+        <ProgrammeHeading
+          part={PROGRAMME_PARTS.videos!.part}
+          title="Galerie vidéo"
+          intro="Revivez nos concerts, témoignages et moments mémorables en vidéo."
+          className="mb-12"
+        />
 
         <motion.div
           initial={{ opacity: 0 }}

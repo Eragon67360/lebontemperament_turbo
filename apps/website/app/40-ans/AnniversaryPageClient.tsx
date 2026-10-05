@@ -1,13 +1,17 @@
 "use client";
 
-import AnniversaryLanding from "@/components/anniversary/AnniversaryLanding";
-import AnniversaryNavigation from "@/components/anniversary/AnniversaryNavigation";
-import AnniversaryTimeline from "@/components/anniversary/AnniversaryTimeline";
-import ArchivesSection from "@/components/anniversary/ArchivesSection";
 import AudioMemories from "@/components/anniversary/AudioMemories";
 import MemorySharing from "@/components/anniversary/MemorySharing";
 import PhotoCollection from "@/components/anniversary/PhotoCollection";
 import PreviewBanner from "@/components/anniversary/PreviewBanner";
+import ProgrammeArchives from "@/components/anniversary/programme/ProgrammeArchives";
+import ProgrammeContents from "@/components/anniversary/programme/ProgrammeContents";
+import ProgrammeCover from "@/components/anniversary/programme/ProgrammeCover";
+import ProgrammeDistribution from "@/components/anniversary/programme/ProgrammeDistribution";
+import ProgrammeEntracte from "@/components/anniversary/programme/ProgrammeEntracte";
+import ProgrammeSeasons from "@/components/anniversary/programme/ProgrammeSeasons";
+import ProgrammeTicket from "@/components/anniversary/programme/ProgrammeTicket";
+import { PROGRAMME_ROOT } from "@/components/anniversary/programme/theme";
 import VideoGallery from "@/components/anniversary/VideoGallery";
 import {
   ANNIVERSARY_AUDIO_MEMORY_COLUMNS,
@@ -17,23 +21,26 @@ import {
   ANNIVERSARY_TIMELINE_EVENT_COLUMNS,
   ANNIVERSARY_VIDEO_COLUMNS,
 } from "@/lib/anniversaryColumns";
+import type { ProgrammePoster } from "@/lib/anniversaryProgramme";
 import type { AnniversaryPageData, Memory } from "@/types/anniversary";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
 interface AnniversaryPageClientProps {
   data: AnniversaryPageData;
+  /** Recent concert posters for the archive stack (not live-updated). */
+  posters: ProgrammePoster[];
   isPreview?: boolean;
 }
 
 export default function AnniversaryPageClient({
   data: initialData,
+  posters,
   isPreview = false,
 }: AnniversaryPageClientProps) {
   const [data, setData] = useState<AnniversaryPageData>(initialData);
-  const [isIntroActive, setIsIntroActive] = useState(
-    initialData.hero.enable_intro_animation ?? true,
-  );
+  // « Signez le livre d’or » on a season prefills the memory form's year.
+  const [memoryYear, setMemoryYear] = useState<number | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -342,23 +349,31 @@ export default function AnniversaryPageClient({
   }, [supabase]);
 
   return (
-    <div className="bg-background min-h-screen">
-      <PreviewBanner isPreview={isPreview} hideDuringIntro={isIntroActive} />
-      <AnniversaryLanding
-        hero={data.hero}
-        stats={data.heroStats}
-        onIntroStateChange={setIsIntroActive}
+    <div className={`${PROGRAMME_ROOT} min-h-screen overflow-x-clip`}>
+      <PreviewBanner isPreview={isPreview} />
+      <ProgrammeCover hero={data.hero} stats={data.heroStats} />
+      <ProgrammeContents
+        cards={data.navigationCards}
+        description={data.hero.description ?? ""}
       />
-      <AnniversaryNavigation cards={data.navigationCards} />
-      <AnniversaryTimeline events={data.timelineEvents} />
+      <ProgrammeSeasons
+        events={data.timelineEvents}
+        memories={data.featuredMemories}
+        photos={data.photos}
+        onWriteMemory={data.formConfig.is_enabled ? setMemoryYear : undefined}
+      />
+      <ProgrammeEntracte />
+      <ProgrammeDistribution />
       <VideoGallery videos={data.videos} />
       <AudioMemories audioMemories={data.audioMemories} />
       <PhotoCollection photos={data.photos} />
-      <ArchivesSection />
+      <ProgrammeArchives posters={posters} />
       <MemorySharing
         config={data.formConfig}
         featuredMemories={data.featuredMemories}
+        prefillYear={memoryYear}
       />
+      <ProgrammeTicket />
     </div>
   );
 }

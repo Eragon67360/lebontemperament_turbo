@@ -6,8 +6,10 @@ import type { Photo } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
 import { AnimatePresence, motion, useInView } from "motion/react";
 import { useRef, useState } from "react";
-import { FaImages, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import AnniversaryCTA from "./AnniversaryCTA";
+import ProgrammeHeading from "./programme/ProgrammeHeading";
+import { PROGRAMME_PARTS } from "./programme/sections";
 
 interface PhotoCollectionProps {
   photos: Photo[];
@@ -34,31 +36,15 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
     <section
       id="photos"
       ref={sectionRef}
-      className="bg-background text-foreground relative overflow-hidden py-16 sm:py-24"
+      className="relative scroll-mt-20 overflow-hidden py-16 sm:py-24"
     >
-      <div className="absolute inset-0 z-0">
-        <div className="bg-primary/5 absolute top-1/4 right-0 h-112 w-md rounded-full blur-[100px]" />
-        <div className="bg-primary/5 absolute bottom-1/4 left-0 h-75 w-75 rounded-full blur-[80px]" />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <div className="bg-primary/5 text-primary dark:bg-primary/10 mb-6 inline-flex rounded-full p-4">
-            <FaImages className="text-3xl sm:text-4xl" />
-          </div>
-          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Galerie Photo
-          </h2>
-          <p className="text-muted mx-auto mt-4 max-w-2xl text-lg font-light">
-            Explorez 40 ans de souvenirs visuels et de moments capturés du Bon
-            Tempérament.
-          </p>
-        </motion.div>
+      <div className="relative z-10 mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8">
+        <ProgrammeHeading
+          part={PROGRAMME_PARTS.photos!.part}
+          title="Galerie photo"
+          intro="Explorez 40 ans de souvenirs visuels et de moments capturés du Bon Tempérament."
+          className="mb-12"
+        />
 
         <motion.div
           initial={{ opacity: 0 }}
