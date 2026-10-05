@@ -8,8 +8,20 @@ import '../../core/config/app_config.dart';
 /// Returns the current Supabase access token, or null when signed out.
 typedef AccessTokenProvider = String? Function();
 
+/// Refreshes the session once; true when a new access token is available.
+typedef SessionRefresher = Future<bool> Function();
+
 String? _supabaseAccessToken() =>
     Supabase.instance.client.auth.currentSession?.accessToken;
+
+Future<bool> _refreshSupabaseSession() async {
+  try {
+    final result = await Supabase.instance.client.auth.refreshSession();
+    return result.session != null;
+  } catch (_) {
+    return false;
+  }
+}
 
 /// Fetches Drive folder contents via the website API.
 ///
@@ -17,21 +29,41 @@ String? _supabaseAccessToken() =>
 /// sends cookies, the app sends `Authorization: Bearer <access token>` (the
 /// same scheme as `/api/contact/mobile`).
 class DriveService {
-  DriveService({Logger? logger, Dio? dio, AccessTokenProvider? accessToken})
-    : _logger = logger ?? Logger(),
-      _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 15),
-            ),
-          ),
-      _accessToken = accessToken ?? _supabaseAccessToken;
+  DriveService({
+    Logger? logger,
+    Dio? dio,
+    AccessTokenProvider? accessToken,
+    SessionRefresher? refreshSession,
+  }) : _logger = logger ?? Logger(),
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               connectTimeout: const Duration(seconds: 15),
+               receiveTimeout: const Duration(seconds: 15),
+             ),
+           ),
+       _accessToken = accessToken ?? _supabaseAccessToken,
+       _refreshSession = refreshSession ?? _refreshSupabaseSession;
 
   final Logger _logger;
   final Dio _dio;
   final AccessTokenProvider _accessToken;
+  final SessionRefresher _refreshSession;
+
+  /// Sends [request] with [authHeaders]; on a 401 (an access token that
+  /// expired while the app slept, before supabase_flutter refreshed it)
+  /// refreshes the session once and retries.
+  Future<Response<T>> _authorized<T>(
+    Future<Response<T>> Function(Map<String, String> headers) request,
+  ) async {
+    try {
+      return await request(authHeaders);
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 401 || !await _refreshSession()) rethrow;
+      return request(authHeaders);
+    }
+  }
 
   /// Headers that authenticate the member against the website API; empty
   /// when there is no session (the API then answers 401, as it should).
@@ -54,19 +86,22 @@ class DriveService {
         '${AppConfig.siteUrl}/api/drive/files?folderID=${Uri.encodeComponent(folderId)}';
 
     try {
-      final response = await _dio.get<List<dynamic>>(
-        url,
-        options: Options(headers: authHeaders),
+      final response = await _authorized(
+        (headers) => _dio.get<dynamic>(url, options: Options(headers: headers)),
       );
 
-      if (response.data == null) {
-        throw DriveServiceException('Réponse vide');
+      final data = response.data;
+      // Anything but a JSON array (a captive-portal page, a proxy error
+      // page) is a failure the screen must show, not a crash.
+      if (data is! List) {
+        throw DriveServiceException('Réponse inattendue du serveur');
       }
-
-      final list = response.data!;
-      return list
-          .map((e) => DriveFile.fromJson(e as Map<String, dynamic>))
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(DriveFile.fromJson)
           .toList();
+    } on DriveServiceException {
+      rethrow;
     } on DioException catch (e) {
       _logger.e('DriveService getFolderContents failed: $e');
       final status = e.response?.statusCode;
@@ -88,8 +123,11 @@ class DriveService {
         throw DriveServiceException(msg);
       }
       throw DriveServiceException(
-        e.message ?? 'Impossible de charger les fichiers',
+        _networkMessage(e) ?? 'Impossible de charger les fichiers',
       );
+    } catch (e) {
+      _logger.e('DriveService getFolderContents failed: $e');
+      throw DriveServiceException('Impossible de charger les fichiers');
     }
   }
 
@@ -108,11 +146,10 @@ class DriveService {
     required bool download,
   }) async {
     try {
-      final response = await _dio.get<List<int>>(
-        fileProxyUrl(fileId, download: download),
-        options: Options(
-          headers: authHeaders,
-          responseType: ResponseType.bytes,
+      final response = await _authorized(
+        (headers) => _dio.get<List<int>>(
+          fileProxyUrl(fileId, download: download),
+          options: Options(headers: headers, responseType: ResponseType.bytes),
         ),
       );
       final bytes = response.data;
@@ -143,9 +180,24 @@ class DriveService {
         );
       }
       throw DriveServiceException(
-        e.message ?? 'Impossible de télécharger le fichier',
+        _networkMessage(e) ?? 'Impossible de télécharger le fichier',
       );
     }
+  }
+}
+
+/// French wording for failures that never reached the server (Dio's own
+/// messages are English and technical).
+String? _networkMessage(DioException e) {
+  switch (e.type) {
+    case DioExceptionType.connectionError:
+      return 'Connexion impossible. Vérifiez votre réseau.';
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.receiveTimeout:
+    case DioExceptionType.sendTimeout:
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
+    default:
+      return null;
   }
 }
 

@@ -35,13 +35,48 @@ class _RecordingAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-DriveService _service(_RecordingAdapter adapter, {String? token}) {
+DriveService _service(
+  HttpClientAdapter adapter, {
+  String? token,
+  String? Function()? accessToken,
+  Future<bool> Function()? refreshSession,
+}) {
   final dio = Dio()..httpClientAdapter = adapter;
   return DriveService(
     dio: dio,
-    accessToken: () => token,
+    accessToken: accessToken ?? () => token,
+    refreshSession: refreshSession ?? () async => false,
     logger: Logger(level: Level.off),
   );
+}
+
+/// Answers 401 until the request carries [validToken], then a JSON list.
+class _ExpiringTokenAdapter implements HttpClientAdapter {
+  _ExpiringTokenAdapter(this.validToken);
+
+  final String validToken;
+  final List<String?> seenAuthorizations = [];
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final auth = options.headers['Authorization'] as String?;
+    seenAuthorizations.add(auth);
+    final ok = auth == 'Bearer $validToken';
+    return ResponseBody.fromString(
+      ok ? '[]' : '{"error":"Non autorisé"}',
+      ok ? 200 : 401,
+      headers: {
+        Headers.contentTypeHeader: ['application/json'],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 void main() {
@@ -206,6 +241,71 @@ void main() {
       expect(fileNameFromContentDisposition(null), isNull);
       expect(fileNameFromContentDisposition('inline'), isNull);
       expect(fileNameFromContentDisposition('attachment; filename=""'), isNull);
+    });
+  });
+
+  group('robustness', () {
+    test('refreshes an expired session once and retries', () async {
+      var token = 'expired';
+      var refreshes = 0;
+      final adapter = _ExpiringTokenAdapter('fresh');
+      final service = _service(
+        adapter,
+        accessToken: () => token,
+        refreshSession: () async {
+          refreshes++;
+          token = 'fresh';
+          return true;
+        },
+      );
+
+      final files = await service.getFolderContents('folder-test');
+
+      expect(files, isEmpty);
+      expect(refreshes, 1);
+      expect(adapter.seenAuthorizations, ['Bearer expired', 'Bearer fresh']);
+    });
+
+    test('says the session expired when the refresh fails', () async {
+      final adapter = _ExpiringTokenAdapter('never');
+      final service = _service(adapter, token: 'expired');
+
+      await expectLater(
+        service.getFolderContents('folder-test'),
+        throwsA(
+          isA<DriveServiceException>().having(
+            (e) => e.message,
+            'message',
+            contains('Session expirée'),
+          ),
+        ),
+      );
+      expect(adapter.seenAuthorizations, hasLength(1));
+    });
+
+    test('an HTML page instead of JSON is an error, not a crash', () async {
+      final adapter = _RecordingAdapter(
+        body: '<html><body>Wi-Fi login</body></html>',
+        headers: const {
+          Headers.contentTypeHeader: ['text/html'],
+        },
+      );
+      final service = _service(adapter, token: 't');
+
+      await expectLater(
+        service.getFolderContents('folder-test'),
+        throwsA(isA<DriveServiceException>()),
+      );
+    });
+
+    test('a JSON object instead of a list is an error, not a crash', () async {
+      final adapter = _RecordingAdapter(body: '{"unexpected":true}');
+      final service = _service(adapter, token: 't');
+
+      await expectLater(
+        service.getFolderContents('folder-test'),
+        throwsA(isA<DriveServiceException>()),
+      );
     });
   });
 }

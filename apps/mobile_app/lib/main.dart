@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent;
 
 import 'core/config/dependency_injection.dart';
 import 'core/config/supabase_config.dart';
@@ -41,6 +42,16 @@ void main() async {
     currentSession: auth.currentSession,
     authStateChanges: auth.onAuthStateChange,
   );
+
+  // Re-run the router's auth redirect on every sign-in and sign-out,
+  // including a session the server ended (revoked or expired refresh
+  // token), so a signed-out member lands on the login screen.
+  auth.onAuthStateChange.listen((state) {
+    if (state.event == AuthChangeEvent.signedIn ||
+        state.event == AuthChangeEvent.signedOut) {
+      AuthStateListener().notifyAuthStateChanged();
+    }
+  });
 
   runApp(const ProviderScope(child: LeBonTemperamentApp()));
 }

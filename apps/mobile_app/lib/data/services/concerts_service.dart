@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/concert.dart';
 import '../models/list_result.dart';
 import 'storage_service.dart';
+import '../../core/utils/parse_rows.dart';
 
 class ConcertsService {
   final StorageService _storageService;
@@ -30,9 +31,11 @@ class ConcertsService {
   Future<ListResult<Concert>> getConcerts() async {
     try {
       final response = await _fetchRows();
-      final concerts = response
-          .map<Concert>((json) => Concert.fromJson(json))
-          .toList();
+      final concerts = parseRows(
+        response,
+        Concert.fromJson,
+        onSkip: (e, row) => _logger.w('Skipped concert ${row['id']}: $e'),
+      );
 
       await _storageService.saveConcerts(concerts);
       _logger.i('Saved ${concerts.length} concerts to local storage');

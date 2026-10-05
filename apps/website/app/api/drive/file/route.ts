@@ -11,6 +11,7 @@ import {
 } from "@repo/domain/utils/driveDownload";
 import { isDriveId } from "@repo/domain/utils/driveScope";
 import { NextRequest, NextResponse } from "next/server";
+import { Readable } from "node:stream";
 
 const FORBIDDEN = { error: "Accès refusé" };
 
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
     try {
       metadata = await drive.files.get({
         fileId,
-        fields: "mimeType, name, parents",
+        fields: "mimeType, name, parents, size",
         supportsAllDrives: true,
       });
     } catch (error) {
@@ -90,33 +91,43 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Fetch file content (arraybuffer avoids stream conversion issues)
+    // Streamed, not buffered: a buffered function response is capped at
+    // 4.5 MB on Vercel, and scanned scores or recordings are often larger.
     const res =
       plan.kind === "export"
         ? await drive.files.export(
             { fileId, mimeType: plan.mimeType },
-            { responseType: "arraybuffer" },
+            { responseType: "stream" },
           )
         : await drive.files.get(
             { fileId, alt: "media", supportsAllDrives: true },
-            { responseType: "arraybuffer" },
+            { responseType: "stream" },
           );
 
-    const buffer = Buffer.from(res.data as ArrayBuffer);
+    // gaxios hands back a Node stream or, with its fetch adapter, a web one.
+    const data = res.data as unknown;
+    const body =
+      data instanceof Readable
+        ? (Readable.toWeb(data) as ReadableStream<Uint8Array>)
+        : (data as ReadableStream<Uint8Array>);
 
     const headers: Record<string, string> = {
       "Content-Type": plan.mimeType,
-      "Content-Length": buffer.length.toString(),
       // Members-only content: browsers may cache it, shared caches may not.
       "Cache-Control": "private, max-age=3600",
     };
+    // Drive knows the size of stored files (not of exports), so the app and
+    // the browser can show progress.
+    if (plan.kind !== "export" && metadata.data.size) {
+      headers["Content-Length"] = metadata.data.size;
+    }
     if (download) {
       headers["Content-Disposition"] = contentDisposition(
         driveDownloadName(metadata.data.name, plan),
       );
     }
 
-    return new NextResponse(buffer, { headers });
+    return new NextResponse(body, { headers });
   } catch (error: unknown) {
     console.error("Drive file proxy error:", error);
     return NextResponse.json(

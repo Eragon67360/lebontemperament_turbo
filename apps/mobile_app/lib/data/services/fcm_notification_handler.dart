@@ -18,6 +18,12 @@ class FcmNotificationHandler {
   static final _logger = Logger();
   static bool _foregroundSetupDone = false;
 
+  /// A notification that launched the app, waiting for the splash to reach
+  /// the home screen (opened earlier, the splash's own redirect would
+  /// replace it).
+  static String? _pendingLaunchPath;
+  static bool _homeReached = false;
+
   /// Register the background handler (must be called from main() before runApp).
   static void registerBackgroundHandler() {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -26,11 +32,14 @@ class FcmNotificationHandler {
   /// Top-level background handler (runs in separate isolate when app is background/killed).
   @pragma('vm:entry-point')
   static Future<void> _firebaseMessagingBackgroundHandler(
-      RemoteMessage message) async {
+    RemoteMessage message,
+  ) async {
     await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     _logger.i(
-        '[FCM Background] messageId=${message.messageId}, data=${message.data}');
+      '[FCM Background] messageId=${message.messageId}, data=${message.data}',
+    );
     // A message with a "notification" block is displayed by the system while
     // the app is in the background: showing it again here produced duplicates.
     // Only data-only messages need a local notification.
@@ -42,7 +51,9 @@ class FcmNotificationHandler {
     final body = message.data['body'] ?? '';
     final type = message.data['type'] ?? '';
     final id = message.data['id'] ?? '';
-    final payload = type.isNotEmpty && id.isNotEmpty ? '${type}_$id' : '${message.messageId ?? ''}';
+    final payload = type.isNotEmpty && id.isNotEmpty
+        ? '${type}_$id'
+        : '${message.messageId ?? ''}';
     try {
       final notificationService = NotificationService();
       await notificationService.initialize();
@@ -67,11 +78,16 @@ class FcmNotificationHandler {
     // Foreground: show local notification so it appears in tray with our channel
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       _logger.i('[FCM Foreground] onMessage: ${message.messageId}');
-      final title = message.notification?.title ?? message.data['title'] ?? 'Notification';
+      final title =
+          message.notification?.title ??
+          message.data['title'] ??
+          'Notification';
       final body = message.notification?.body ?? message.data['body'] ?? '';
       final type = message.data['type'] ?? '';
       final id = message.data['id'] ?? '';
-      final payload = type.isNotEmpty && id.isNotEmpty ? '${type}_$id' : '${message.messageId ?? ''}';
+      final payload = type.isNotEmpty && id.isNotEmpty
+          ? '${type}_$id'
+          : '${message.messageId ?? ''}';
       NotificationService().showFromFcm(
         title: title,
         body: body,
@@ -85,15 +101,51 @@ class FcmNotificationHandler {
       _navigateFromFcmData(message.data);
     });
 
-    // Cold start from notification tap
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    // Cold start from a tap on an FCM notification message
+    FirebaseMessaging.instance.getInitialMessage().then((
+      RemoteMessage? message,
+    ) {
       if (message != null) {
         _logger.i('[FCM] getInitialMessage: ${message.data}');
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _navigateFromFcmData(message.data);
-        });
+        _openFromLaunch(
+          _pathFromTypeAndId(
+            message.data['type']?.toString() ?? '',
+            message.data['id']?.toString() ?? '',
+          ),
+        );
       }
     });
+
+    // Cold start from a tap on a local notification (reminders, data-only
+    // pushes shown by the app): the plugin doesn't call its tap callback for
+    // the notification that launched the app, it has to be asked.
+    NotificationService().launchPayload().then((payload) {
+      if (payload != null && payload.isNotEmpty) {
+        _logger.i('[FCM] launched from local notification: $payload');
+        _openFromLaunch(_pathFromPayload(payload));
+      }
+    });
+  }
+
+  static void _openFromLaunch(String? path) {
+    if (path == null) return;
+    if (_homeReached) {
+      _navigateTo(path);
+    } else {
+      _pendingLaunchPath = path;
+    }
+  }
+
+  /// Called by the splash once it has sent a signed-in member to the home
+  /// screen: opens the notification that launched the app, if any, on top
+  /// of it (so back returns home).
+  static void onHomeReached() {
+    _homeReached = true;
+    final path = _pendingLaunchPath;
+    _pendingLaunchPath = null;
+    if (path != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _navigateTo(path));
+    }
   }
 
   static void _navigateFromFcmData(Map<String, dynamic> data) {
@@ -133,7 +185,9 @@ class FcmNotificationHandler {
   static void _navigateTo(String path) {
     final context = AppRouter.navigatorKey.currentContext;
     if (context != null && context.mounted) {
-      context.go(path);
+      // Pushed over the current screen so back returns to it instead of
+      // leaving the app.
+      context.push(path);
     } else {
       _logger.w('[FCM] No context for navigation to $path');
     }
