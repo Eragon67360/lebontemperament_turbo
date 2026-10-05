@@ -253,6 +253,19 @@ class NotificationService {
     }
   }
 
+  /// Payload of the local notification whose tap launched the app, or null
+  /// when the app was opened another way.
+  Future<String?> launchPayload() async {
+    try {
+      final details = await _notifications.getNotificationAppLaunchDetails();
+      if (details?.didNotificationLaunchApp != true) return null;
+      return details!.notificationResponse?.payload;
+    } catch (e) {
+      _logger.w('Could not read notification launch details: $e');
+      return null;
+    }
+  }
+
   /// Callback for notification tap (set by FcmNotificationHandler to navigate).
   static void Function(String? payload)? onNotificationTap;
 

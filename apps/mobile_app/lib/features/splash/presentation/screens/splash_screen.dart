@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../data/services/fcm_notification_handler.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -64,6 +65,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final isAuthenticated = ref.read(isAuthenticatedProvider);
     if (isAuthenticated) {
       context.go('/main');
+      FcmNotificationHandler.onHomeReached();
     } else {
       context.go('/permissions');
     }
