@@ -372,12 +372,33 @@ export function StoppedOverlay({ delivery }: { delivery: Delivery }) {
 }
 
 /**
+ * What happens to the recipient's data, with a link to the privacy policy.
+ */
+export function TrackPrivacyNotice() {
+  return (
+    <p className="px-1 text-center text-xs text-gray-600 dark:text-gray-400">
+      Vos coordonnées servent uniquement à cette livraison et sont effacées 30
+      jours après la tournée.{" "}
+      <a
+        href="/politique-de-confidentialite"
+        className="underline underline-offset-2 hover:text-gray-900 dark:hover:text-gray-200"
+      >
+        Politique de confidentialité
+      </a>
+    </p>
+  );
+}
+
+/**
  * A layout for the "Pending" state, showing info panels without a map.
  */
 export function PendingPanel({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh w-full items-start justify-center bg-gray-100 p-3 pt-12 sm:p-4 sm:pt-16 dark:bg-gray-900">
-      <div className="flex w-full max-w-lg flex-col gap-3">{children}</div>
+      <div className="flex w-full max-w-lg flex-col gap-3">
+        {children}
+        <TrackPrivacyNotice />
+      </div>
     </div>
   );
 }
