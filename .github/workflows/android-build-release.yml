@@ -136,7 +136,9 @@ jobs:
           releaseFiles: apps/mobile_app/build/app/outputs/bundle/release/app-release.aab
           mappingFile: apps/mobile_app/build/app/outputs/mapping/release/mapping.txt
           track: internal
-          status: draft
+          # Released to internal testers (not a draft): Google refuses to promote
+          # a draft, so the Play Store workflow's `promote` task needs this.
+          status: completed
           whatsNewDirectory: ${{ runner.temp }}/whatsnew
 
       # --- STEP 3: Generate APK from AAB (Optimization) ---

@@ -5,13 +5,13 @@ reaches the store through fastlane ([supply](https://docs.fastlane.tools/actions
 Claude edits these files in pull requests; nothing reaches the store without
 the owner's go.
 
-| What                       | Where                                                                               | How it reaches Google Play                 |
-| -------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------ |
-| App bundle                 | built by `.github/workflows/android-build-release.yml` on `main`                    | automatically, internal track, as a draft  |
-| Release notes (Nouveautés) | `metadata/android/fr-FR/changelogs/default.txt` (≤ 500 characters)                  | with the bundle above                      |
-| Title, short and full text | `metadata/android/fr-FR/title.txt`, `short_description.txt`, `full_description.txt` | **Play Store** workflow, `publish-listing` |
-| Phone screenshots          | `metadata/android/fr-FR/images/phoneScreenshots/*.png` (1080 × 1920)                | **Play Store** workflow, `publish-listing` |
-| Promotion to production    | the build number (versionCode)                                                      | **Play Store** workflow, `promote`         |
+| What                       | Where                                                                               | How it reaches Google Play                         |
+| -------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------- |
+| App bundle                 | built by `.github/workflows/android-build-release.yml` on `main`                    | automatically, internal track, released to testers |
+| Release notes (Nouveautés) | `metadata/android/fr-FR/changelogs/default.txt` (≤ 500 characters)                  | with the bundle above                              |
+| Title, short and full text | `metadata/android/fr-FR/title.txt`, `short_description.txt`, `full_description.txt` | **Play Store** workflow, `publish-listing`         |
+| Phone screenshots          | `metadata/android/fr-FR/images/phoneScreenshots/*.png` (1080 × 1920)                | **Play Store** workflow, `publish-listing`         |
+| Promotion to production    | the build number (versionCode)                                                      | **Play Store** workflow, `promote`                 |
 
 A test (`test/store/store_listing_test.dart`) checks Google's length limits on
 every pull request.
