@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -6,22 +8,57 @@ import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/data_providers.dart';
 import 'notification_settings_provider.dart';
 
+/// Runs an action at most once per [window], trailing: a call inside the
+/// window is not dropped but deferred to the end of it (the latest call
+/// wins), so the last settings or data change is always applied.
+class TrailingDebouncer {
+  TrailingDebouncer(this.window);
+
+  final Duration window;
+
+  /// Runs while the window opened by the last run is still open.
+  Timer? _window;
+  void Function()? _pending;
+
+  void call(void Function() action) {
+    if (_window != null) {
+      _pending = action;
+      return;
+    }
+    _run(action);
+  }
+
+  void _run(void Function() action) {
+    _pending = null;
+    _window = Timer(window, () {
+      _window = null;
+      final pending = _pending;
+      if (pending != null) _run(pending);
+    });
+    action();
+  }
+
+  void dispose() {
+    _window?.cancel();
+    _window = null;
+    _pending = null;
+  }
+}
+
 class NotificationSchedulerNotifier extends StateNotifier<void> {
   NotificationSchedulerNotifier(this.ref) : super(null);
 
   final Ref ref;
-  DateTime? _lastSchedulingTime;
+  final _debouncer = TrailingDebouncer(const Duration(seconds: 5));
 
   Future<void> scheduleNotifications() async {
-    try {
-      // Add debounce to prevent too frequent scheduling
-      final now = DateTime.now();
-      if (_lastSchedulingTime != null &&
-          now.difference(_lastSchedulingTime!).inSeconds < 5) {
-        return; // Skip if last scheduling was less than 5 seconds ago
-      }
-      _lastSchedulingTime = now;
+    // Debounce: the scheduler is called on mount, on every data change and
+    // on every resume, often within the same second.
+    _debouncer(_scheduleNow);
+  }
 
+  Future<void> _scheduleNow() async {
+    try {
       final notificationService = ref.read(notificationServiceProvider);
       final settings = ref.read(notificationSettingsProvider);
 
@@ -46,12 +83,18 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       // Handle error silently
     }
   }
+
+  @override
+  void dispose() {
+    _debouncer.dispose();
+    super.dispose();
+  }
 }
 
 final notificationSchedulerProvider =
     StateNotifierProvider<NotificationSchedulerNotifier, void>(
-  (ref) => NotificationSchedulerNotifier(ref),
-);
+      (ref) => NotificationSchedulerNotifier(ref),
+    );
 
 // Provider that automatically schedules notifications when data changes
 final autoScheduleNotificationsProvider = Provider<void>((ref) {

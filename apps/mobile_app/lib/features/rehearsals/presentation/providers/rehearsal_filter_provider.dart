@@ -34,7 +34,7 @@ final filteredRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
           startTime: r.startTime,
           endTime: r.endTime,
         );
-      }).toList();
+      }).toList()..sort(compareRehearsals);
       if (selectedFilter == null) {
         return upcoming;
       }
@@ -46,6 +46,17 @@ final filteredRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
     error: (_, __) => [],
   );
 });
+
+/// Soonest first, by date then start time, so two rehearsals on the same
+/// day keep their order and the first one is the next one. Rows without a
+/// date (« Date à confirmer ») go last.
+int compareRehearsals(Rehearsal a, Rehearsal b) {
+  final da = a.date ?? '', db = b.date ?? '';
+  if (da.isEmpty != db.isEmpty) return da.isEmpty ? 1 : -1;
+  final byDate = da.compareTo(db);
+  if (byDate != 0) return byDate;
+  return (a.startTime ?? '').compareTo(b.startTime ?? '');
+}
 
 /// Whether a rehearsal for [group] concerns members who filtered on
 /// [filter]: « Tous » concerns everyone, and the full choir concerns the men

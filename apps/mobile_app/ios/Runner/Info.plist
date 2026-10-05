@@ -51,6 +51,7 @@
 	<string>Votre position est partagée en temps réel avec les clients lors du suivi de livraison, même lorsque l'app est en arrière-plan.</string>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>audio</string>
 		<string>remote-notification</string>
 		<string>location</string>
 	</array>

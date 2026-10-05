@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../data/models/event.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../core/utils/date_utils.dart' as app_date_utils;
+import '../../../../core/utils/text_scale.dart';
 
 // IMPORTANT: This screen expects a provider that can fetch a single event by its ID.
 // Make sure you have a provider like this defined in your `data_providers.dart` file:
@@ -41,67 +43,165 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: eventAsync.when(
-        data: (event) => CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              stretch: true,
-              expandedHeight: 250.0,
-              backgroundColor: theme.colorScheme.surface,
-              surfaceTintColor: theme.colorScheme.surface,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                onPressed: () => Navigator.of(context).pop(),
-                tooltip: 'Retour',
+        data: (event) {
+          // Deleted meanwhile, or a stale link: no event to show.
+          if (event == null) {
+            return _NotFoundState(onBack: () => Navigator.of(context).pop());
+          }
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                stretch: true,
+                expandedHeight: headerHeight(context, 250, text: 110),
+                backgroundColor: theme.colorScheme.surface,
+                surfaceTintColor: theme.colorScheme.surface,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => Navigator.of(context).pop(),
+                  tooltip: 'Retour',
+                ),
+                flexibleSpace: _EventDetailHeader(event: event),
               ),
-              flexibleSpace: _EventDetailHeader(event: event as Event),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FadeInUp(delay: 100, child: _EventInfoCard(event: event)),
-                    if (event.description != null &&
-                        event.description!.isNotEmpty) ...[
-                      const SizedBox(height: 32),
-                      const FadeInUp(
-                        delay: 200,
-                        child: _SectionTitle(
-                          title: 'À propos de cet événement',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      FadeInUp(
-                        delay: 300,
-                        child: Text(
-                          event.description!,
-                          style: AppFonts.sans(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 15,
-                            height: 1.6,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FadeInUp(delay: 100, child: _EventInfoCard(event: event)),
+                      if (event.description != null &&
+                          event.description!.isNotEmpty) ...[
+                        const SizedBox(height: 32),
+                        const FadeInUp(
+                          delay: 200,
+                          child: _SectionTitle(
+                            title: 'À propos de cet événement',
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        FadeInUp(
+                          delay: 300,
+                          child: Text(
+                            event.description!,
+                            style: AppFonts.sans(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 15,
+                              height: 1.6,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 80),
                     ],
-                    const SizedBox(height: 80),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
         loading: () => Center(
           child: CircularProgressIndicator(color: theme.colorScheme.primary),
         ),
-        error: (err, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              'Erreur: Impossible de charger les détails de l\'événement.\n$err',
+        error: (err, stack) => _ErrorState(
+          onRetry: () => ref.invalidate(eventProvider(widget.eventId)),
+          onBack: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotFoundState extends StatelessWidget {
+  final VoidCallback onBack;
+
+  const _NotFoundState({required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off_outlined,
+              size: 64,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              'Événement non trouvé',
+              textAlign: TextAlign.center,
+              style: AppFonts.sans(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Il a peut-être été supprimé ou déplacé.',
+              textAlign: TextAlign.center,
+              style: AppFonts.sans(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                onBack();
+              },
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Retour'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final VoidCallback onRetry;
+  final VoidCallback onBack;
+
+  const _ErrorState({required this.onRetry, required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 64,
+              color: theme.colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Impossible de charger cet événement. Vérifiez votre connexion et réessayez.',
+              textAlign: TextAlign.center,
+              style: AppFonts.sans(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Réessayer'),
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Retour'),
+            ),
+          ],
         ),
       ),
     );
@@ -208,8 +308,14 @@ class _EventInfoCard extends StatelessWidget {
         children: [
           _InfoRow(
             icon: Icons.calendar_today_outlined,
-            title: 'Date',
-            subtitle: _formatEventDate(event.dateFrom),
+            title: event.dateTo != null && event.dateTo != event.dateFrom
+                ? 'Dates'
+                : 'Date',
+            subtitle: app_date_utils.formatEventDates(
+              event.dateFrom,
+              event.dateTo,
+              fallback: 'Non spécifiée',
+            ),
           ),
           if (event.time != null ||
               (event.location != null && event.location!.isNotEmpty))
@@ -369,16 +475,6 @@ String _getEventTypeText(EventType eventType) {
       return 'Séjour';
     case EventType.autre:
       return 'Autre';
-  }
-}
-
-String _formatEventDate(String? dateFrom) {
-  if (dateFrom == null) return 'Non spécifiée';
-  try {
-    final date = DateTime.parse(dateFrom);
-    return DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(date);
-  } catch (e) {
-    return dateFrom;
   }
 }
 

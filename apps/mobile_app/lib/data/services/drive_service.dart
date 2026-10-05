@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,6 +12,14 @@ typedef AccessTokenProvider = String? Function();
 
 /// Refreshes the session once; true when a new access token is available.
 typedef SessionRefresher = Future<bool> Function();
+
+/// Bytes received so far and the total announced by the server (-1 when it
+/// did not say, e.g. a Google Doc exported on the fly).
+typedef DriveProgress = void Function(int received, int total);
+
+/// Response header the website sets when a folder has more items than the
+/// listing could return (see `apps/website/app/api/drive/files/route.ts`).
+const kDriveTruncatedHeader = 'x-drive-truncated';
 
 String? _supabaseAccessToken() =>
     Supabase.instance.client.auth.currentSession?.accessToken;
@@ -81,7 +91,7 @@ class DriveService {
       '${download ? '&download=1' : ''}';
 
   /// Fetches files and folders for the given folder ID.
-  Future<List<DriveFile>> getFolderContents(String folderId) async {
+  Future<DriveListing> getFolderContents(String folderId) async {
     final url =
         '${AppConfig.siteUrl}/api/drive/files?folderID=${Uri.encodeComponent(folderId)}';
 
@@ -96,10 +106,15 @@ class DriveService {
       if (data is! List) {
         throw DriveServiceException('Réponse inattendue du serveur');
       }
-      return data
-          .whereType<Map<String, dynamic>>()
-          .map(DriveFile.fromJson)
-          .toList();
+      return DriveListing(
+        items: data
+            .whereType<Map<String, dynamic>>()
+            .map(DriveFile.fromJson)
+            .toList(),
+        truncated:
+            response.headers.value(kDriveTruncatedHeader)?.toLowerCase() ==
+            'true',
+      );
     } on DriveServiceException {
       rethrow;
     } on DioException catch (e) {
@@ -116,11 +131,13 @@ class DriveService {
             'Ce dossier n\'est pas accessible depuis l\'application.',
           );
         }
-        final data = e.response?.data;
-        final msg = data is Map && data['error'] != null
-            ? data['error'].toString()
-            : 'Erreur $status';
-        throw DriveServiceException(msg);
+        // The website's 5xx bodies are English ("Failed to retrieve
+        // files"): members get a French sentence instead.
+        throw DriveServiceException(
+          status >= 500
+              ? 'Le serveur des partitions ne répond pas. Réessayez dans un instant.'
+              : 'Impossible de charger les fichiers (erreur $status).',
+        );
       }
       throw DriveServiceException(
         _networkMessage(e) ?? 'Impossible de charger les fichiers',
@@ -131,40 +148,46 @@ class DriveService {
     }
   }
 
-  /// Downloads a Drive file through the website proxy, authenticated.
-  Future<List<int>> downloadFile(String fileId) async =>
-      (await _fetchFile(fileId, download: false)).bytes;
-
-  /// Downloads a Drive file as an attachment, to save or share: the proxy
-  /// names it like the Drive file (Google Docs exported as PDF) and the name
-  /// comes back in [DriveDownload.fileName].
-  Future<DriveDownload> downloadAttachment(String fileId) =>
-      _fetchFile(fileId, download: true);
-
-  Future<DriveDownload> _fetchFile(
+  /// Streams a Drive file through the website proxy, authenticated, into
+  /// [savePath] (never whole in memory: recordings run to tens of MB).
+  /// [onProgress] reports the bytes received; cancelling [cancelToken]
+  /// stops the transfer, deletes the partial file and throws
+  /// [DriveDownloadCancelled].
+  ///
+  /// With [attachment], the proxy names the file like the Drive file
+  /// (Google Docs exported as PDF) and the name comes back in
+  /// [DriveDownload.fileName].
+  Future<DriveDownload> downloadToFile(
     String fileId, {
-    required bool download,
+    required String savePath,
+    bool attachment = false,
+    DriveProgress? onProgress,
+    CancelToken? cancelToken,
   }) async {
     try {
       final response = await _authorized(
-        (headers) => _dio.get<List<int>>(
-          fileProxyUrl(fileId, download: download),
-          options: Options(headers: headers, responseType: ResponseType.bytes),
+        (headers) => _dio.download(
+          fileProxyUrl(fileId, download: attachment),
+          savePath,
+          options: Options(headers: headers),
+          onReceiveProgress: onProgress,
+          cancelToken: cancelToken,
         ),
       );
-      final bytes = response.data;
-      if (bytes == null || bytes.isEmpty) {
+      final file = File(savePath);
+      if (!await file.exists() || await file.length() == 0) {
         throw DriveServiceException('Fichier vide');
       }
       return DriveDownload(
-        bytes: bytes,
+        file: file,
         fileName: fileNameFromContentDisposition(
           response.headers.value('content-disposition'),
         ),
         contentType: response.headers.value('content-type'),
       );
     } on DioException catch (e) {
-      _logger.e('DriveService downloadFile failed: $e');
+      if (e.type == DioExceptionType.cancel) throw DriveDownloadCancelled();
+      _logger.e('DriveService downloadToFile failed: $e');
       final status = e.response?.statusCode;
       if (status == 401) {
         throw DriveServiceException(
@@ -201,17 +224,35 @@ String? _networkMessage(DioException e) {
   }
 }
 
+/// A folder's items, and whether the website could list them all.
+class DriveListing {
+  const DriveListing({required this.items, this.truncated = false});
+
+  final List<DriveFile> items;
+
+  /// True when the folder holds more than the listing returned.
+  final bool truncated;
+}
+
 /// A file fetched through the proxy, with what the response said about it.
 class DriveDownload {
-  const DriveDownload({required this.bytes, this.fileName, this.contentType});
+  const DriveDownload({required this.file, this.fileName, this.contentType});
 
-  final List<int> bytes;
+  /// Where the bytes were written (the caller's [downloadToFile] savePath).
+  final File file;
 
   /// Name from the `Content-Disposition` header, or null without one.
   final String? fileName;
 
   /// `Content-Type` of the bytes (a Google Doc comes back as a PDF).
   final String? contentType;
+}
+
+/// The member (or the screen going away) stopped a download: nothing to
+/// tell them.
+class DriveDownloadCancelled implements Exception {
+  @override
+  String toString() => 'Téléchargement annulé';
 }
 
 final _extendedFileName = RegExp(

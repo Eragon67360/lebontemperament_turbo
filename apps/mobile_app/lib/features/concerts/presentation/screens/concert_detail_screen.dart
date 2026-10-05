@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../data/models/concert.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../core/utils/text_scale.dart';
 
 class ConcertDetailScreen extends ConsumerStatefulWidget {
   final String concertId;
@@ -43,7 +44,7 @@ class _ConcertDetailScreenState extends ConsumerState<ConcertDetailScreen> {
               SliverAppBar(
                 pinned: true,
                 stretch: true,
-                expandedHeight: 250.0,
+                expandedHeight: headerHeight(context, 250, text: 110),
                 backgroundColor: theme.colorScheme.surface,
                 surfaceTintColor: theme.colorScheme.surface,
                 leading: IconButton(
@@ -94,8 +95,14 @@ class _ConcertDetailScreenState extends ConsumerState<ConcertDetailScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 64,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 16),
                 Text(
-                  'Erreur: Impossible de charger les détails du concert.\n$err',
+                  'Impossible de charger ce concert. Vérifiez votre connexion et réessayez.',
                   textAlign: TextAlign.center,
                   style: AppFonts.sans(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -103,6 +110,13 @@ class _ConcertDetailScreenState extends ConsumerState<ConcertDetailScreen> {
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
+                  onPressed: () =>
+                      ref.invalidate(concertProvider(widget.concertId)),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Réessayer'),
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.arrow_back),
                   label: const Text('Retour'),

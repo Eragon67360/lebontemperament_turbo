@@ -56,7 +56,8 @@ class RecipientDetailsScreen extends ConsumerWidget {
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Impossible d\'ouvrir une application de carte.')),
+          content: Text('Impossible d\'ouvrir une application de carte.'),
+        ),
       );
     }
   }
@@ -70,7 +71,10 @@ class RecipientDetailsScreen extends ConsumerWidget {
 
   /// Shows a confirmation dialog before deleting the recipient.
   Future<void> _confirmDelete(
-      BuildContext context, WidgetRef ref, String recipientId) async {
+    BuildContext context,
+    WidgetRef ref,
+    String recipientId,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -78,12 +82,14 @@ class RecipientDetailsScreen extends ConsumerWidget {
         content: const Text('Cette action est irréversible.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Annuler')),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Supprimer'),
           ),
         ],
@@ -112,7 +118,8 @@ class RecipientDetailsScreen extends ConsumerWidget {
     final isDelivered = currentRecipient.deliveredAt != null;
     final isInProgress =
         currentDelivery.currentRecipientId == currentRecipient.id;
-    final canLaunchMaps = (currentRecipient.latitude != null &&
+    final canLaunchMaps =
+        (currentRecipient.latitude != null &&
             currentRecipient.longitude != null) ||
         (currentRecipient.address != null &&
             currentRecipient.address!.isNotEmpty);
@@ -133,8 +140,10 @@ class RecipientDetailsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(currentRecipient.label,
-            style: AppFonts.sans(fontWeight: FontWeight.w600)),
+        title: Text(
+          currentRecipient.label,
+          style: AppFonts.sans(fontWeight: FontWeight.w600),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -149,56 +158,72 @@ class RecipientDetailsScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Statut',
-                          style:
-                              AppFonts.sans(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Statut',
+                        style: AppFonts.sans(fontWeight: FontWeight.w600),
+                      ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(statusLabel,
-                            style: AppFonts.sans(
-                                fontWeight: FontWeight.bold,
-                                color: statusColor)),
+                        child: Text(
+                          statusLabel,
+                          style: AppFonts.sans(
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const Divider(height: 32),
-                  Text('Adresse',
-                      style: AppFonts.sans(fontWeight: FontWeight.w600)),
+                  Text(
+                    'Adresse',
+                    style: AppFonts.sans(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     currentRecipient.address ?? 'Aucune adresse renseignée',
                     style: AppFonts.sans(
-                        fontSize: 14,
-                        color: theme.colorScheme.onSurfaceVariant),
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const Divider(height: 32), // <-- ADDED a divider
-                  Text('Téléphone', // <-- ADDED new section title
-                      style: AppFonts.sans(fontWeight: FontWeight.w600)),
+                  Text(
+                    'Téléphone', // <-- ADDED new section title
+                    style: AppFonts.sans(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     // <-- ADDED new text field for phone
                     currentRecipient.phoneNumber ?? 'Aucun numéro renseigné',
                     style: AppFonts.sans(
-                        fontSize: 14,
-                        color: theme.colorScheme.onSurfaceVariant),
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   if (isDelivered) ...[
                     const Divider(height: 32),
-                    Text('Heure de livraison',
-                        style:
-                            AppFonts.sans(fontWeight: FontWeight.w600)),
+                    Text(
+                      'Heure de livraison',
+                      style: AppFonts.sans(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR')
-                          .format(currentRecipient.deliveredAt!),
+                      // Supabase timestamps parse as UTC: show local time.
+                      DateFormat(
+                        'dd/MM/yyyy à HH:mm',
+                        'fr_FR',
+                      ).format(currentRecipient.deliveredAt!.toLocal()),
                       style: AppFonts.sans(fontSize: 14),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -227,8 +252,8 @@ class RecipientDetailsScreen extends ConsumerWidget {
               onPressed: state.isActionLoading
                   ? null
                   : () => ref
-                      .read(driverTrackingProvider.notifier)
-                      .startDrivingToRecipient(currentRecipient.id),
+                        .read(driverTrackingProvider.notifier)
+                        .startDrivingToRecipient(currentRecipient.id),
             ),
           if (isInProgress) ...[
             _ActionButton(
@@ -273,8 +298,11 @@ class RecipientDetailsScreen extends ConsumerWidget {
                 ? () {
                     final url = _getRecipientUrl(currentRecipient);
                     Clipboard.setData(ClipboardData(text: url));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Lien copié dans le presse-papiers')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Lien copié dans le presse-papiers'),
+                      ),
+                    );
                   }
                 : null,
           ),
@@ -328,16 +356,15 @@ class _ActionButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: color,
           side: BorderSide(
-              color: effectiveOnPressed == null
-                  ? Colors.grey.withValues(alpha: 0.4)
-                  : color ??
-                      Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withValues(alpha: 0.5)),
+            color: effectiveOnPressed == null
+                ? Colors.grey.withValues(alpha: 0.4)
+                : color ??
+                      Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.5),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          textStyle:
-              AppFonts.sans(fontSize: 15, fontWeight: FontWeight.w600),
+          textStyle: AppFonts.sans(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       );
     }
@@ -349,8 +376,7 @@ class _ActionButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        textStyle:
-            AppFonts.sans(fontSize: 16, fontWeight: FontWeight.w600),
+        textStyle: AppFonts.sans(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }

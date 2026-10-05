@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/core/widgets/notice_banner.dart';
+import 'package:lebontemperament/core/widgets/confirm_logout_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lebontemperament/data/models/concert.dart';
 import 'package:lebontemperament/data/models/event.dart';
@@ -17,6 +18,8 @@ import 'package:lebontemperament/data/providers/data_providers.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/concert_anniversaire_section.dart';
+import '../../../../core/utils/date_utils.dart' as app_date_utils;
+import '../../../../core/utils/text_scale.dart';
 
 class ConcertsEventsScreen extends ConsumerStatefulWidget {
   const ConcertsEventsScreen({super.key});
@@ -43,10 +46,35 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
     super.dispose();
   }
 
+  /// Reloads both lists and keeps the indicator spinning until they are
+  /// back (an error shows in the list, not here).
   Future<void> _onRefresh() async {
     ref.invalidate(realtimeConcertsProvider);
     ref.invalidate(realtimeEventsProvider);
     ref.invalidate(refreshTriggerProvider);
+    try {
+      await Future.wait([
+        ref.read(upcomingConcertsProvider.future),
+        ref.read(upcomingEventsProvider.future),
+      ]);
+    } catch (_) {}
+  }
+
+  Future<void> _logout() async {
+    if (!await confirmLogout(context)) return;
+    try {
+      await ref.read(authServiceProvider).signOut();
+      if (!mounted) return;
+      context.go('/login');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(kLogoutFailedMessage),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   /// Helper to wrap non-list content (Loading/Error) so it sits correctly
@@ -93,21 +121,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
                   }
                 }
               },
-              onLogout: () async {
-                try {
-                  await ref.read(authServiceProvider).signOut();
-                  if (!context.mounted) return;
-                  context.go('/login');
-                } catch (e) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Erreur lors de la déconnexion: $e'),
-                      backgroundColor: theme.colorScheme.error,
-                    ),
-                  );
-                }
-              },
+              onLogout: _logout,
             ),
           ),
           SliverPersistentHeader(
@@ -132,7 +146,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
                 ),
                 tabs: const [
                   Tab(text: 'Concerts'),
-                  Tab(text: 'Évènements'),
+                  Tab(text: 'Événements'),
                 ],
               ),
               theme.colorScheme.surface,
@@ -225,12 +239,13 @@ class _ConcertsEventsAppBar extends StatelessWidget {
       surfaceTintColor: theme.colorScheme.surface,
       pinned: true,
       floating: true,
-      expandedHeight: 120.0,
+      expandedHeight: headerHeight(context, 120, text: 80),
       flexibleSpace: FlexibleSpaceBar(
+        expandedTitleScale: expandedTitleScale(context),
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         centerTitle: false,
         title: Text(
-          'Concerts & Évènements',
+          'Concerts & Événements',
           style: AppFonts.sans(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w600,
@@ -397,7 +412,7 @@ class _EventsList extends StatelessWidget {
             hasScrollBody: false,
             child: _EmptyState(
               icon: Icons.event_busy_outlined,
-              message: 'Aucun évènement',
+              message: 'Aucun événement',
               subMessage: 'Aucun événement planifié pour le moment.',
             ),
           ),
@@ -535,7 +550,7 @@ class _ConcertCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         fontSize: 17,
                       ),
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
@@ -638,7 +653,11 @@ class _EventCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            _formatEventDateTime(event.dateFrom, event.time),
+                            _formatEventDateTime(
+                              event.dateFrom,
+                              event.dateTo,
+                              event.time,
+                            ),
                             style: AppFonts.sans(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontSize: 13,
@@ -883,21 +902,17 @@ _EventTypeTheme _getEventTypeTheme(EventType eventType, ThemeData theme) {
   }
 }
 
-String _formatEventDateTime(String? dateFrom, String? time) {
-  if (dateFrom == null) return 'Date non spécifiée';
-  try {
-    final date = DateTime.parse(dateFrom);
-    final formattedDate = DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(date);
-    if (time != null && time.isNotEmpty) {
-      final timeParts = time.split(':');
-      if (timeParts.length >= 2) {
-        return '$formattedDate à ${timeParts[0]}h${timeParts[1]}';
-      }
+/// « samedi 5 juillet 2026 à 14h00 », « Du 5 au 15 juillet 2026 » for a
+/// multi-day event.
+String _formatEventDateTime(String? dateFrom, String? dateTo, String? time) {
+  final formattedDate = app_date_utils.formatEventDates(dateFrom, dateTo);
+  if (time != null && time.isNotEmpty) {
+    final timeParts = time.split(':');
+    if (timeParts.length >= 2) {
+      return '$formattedDate à ${timeParts[0]}h${timeParts[1]}';
     }
-    return formattedDate;
-  } catch (_) {
-    return dateFrom;
   }
+  return formattedDate;
 }
 
 class _InfoRow extends StatelessWidget {
@@ -920,7 +935,7 @@ class _InfoRow extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),

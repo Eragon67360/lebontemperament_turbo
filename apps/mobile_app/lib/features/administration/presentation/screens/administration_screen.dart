@@ -7,6 +7,7 @@ import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
+import 'package:lebontemperament/core/widgets/confirm_logout_dialog.dart';
 import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
 import 'package:lebontemperament/data/constants/pdf_archives.dart';
 import 'package:lebontemperament/data/models/ca_minute.dart';
@@ -15,21 +16,27 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-/// Measures label width to decide 1 vs 2 columns. Chip has ~52px fixed (icon+padding).
-double _measureLabelWidth(String label) {
+/// Measures label width (at the member's text size) to decide 1 vs 2
+/// columns. Chip has ~52px fixed (icon+padding).
+double _measureLabelWidth(String label, TextScaler textScaler) {
   final painter = TextPainter(
     text: TextSpan(
       text: label,
       style: AppFonts.sans(fontSize: 13, fontWeight: FontWeight.w500),
     ),
     maxLines: 1,
+    textScaler: textScaler,
     textDirection: ui.TextDirection.ltr,
   )..layout();
   return painter.width;
 }
 
 /// Returns itemWidth for Wrap: full width for long labels, half for short.
-double _computeItemWidth(double maxWidth, List<String> labels) {
+double _computeItemWidth(
+  double maxWidth,
+  List<String> labels,
+  TextScaler textScaler,
+) {
   const spacing = 8.0;
   const chipFixedWidth = 52.0; // icon + padding
   final halfWidth = (maxWidth - spacing) / 2;
@@ -37,7 +44,7 @@ double _computeItemWidth(double maxWidth, List<String> labels) {
   if (labels.isEmpty) return halfWidth;
 
   final maxLabelWidth = labels
-      .map(_measureLabelWidth)
+      .map((l) => _measureLabelWidth(l, textScaler))
       .reduce((a, b) => a > b ? a : b);
   final chipWidth = chipFixedWidth + maxLabelWidth;
 
@@ -90,15 +97,16 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
             tooltip: 'Déconnexion',
             onPressed: () async {
               HapticFeedback.lightImpact();
+              if (!await confirmLogout(context)) return;
               try {
                 await ref.read(authServiceProvider).signOut();
                 if (!context.mounted) return;
                 context.go('/login');
-              } catch (e) {
+              } catch (_) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Erreur: $e'),
+                    content: const Text(kLogoutFailedMessage),
                     backgroundColor: theme.colorScheme.error,
                   ),
                 );
@@ -177,15 +185,21 @@ class _TabBar extends StatelessWidget {
                         horizontal: 4,
                       ),
                       child: ExcludeSemantics(
-                        child: Text(
-                          tabs[i],
-                          textAlign: TextAlign.center,
-                          style: AppFonts.sans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
+                        // Shrinks a long label at large text sizes rather
+                        // than breaking it in the middle of the word.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            tabs[i],
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                            style: AppFonts.sans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),
@@ -260,7 +274,8 @@ class _ArchivesTab extends ConsumerWidget {
               subtitle: 'Archives des gazettes',
               entries: kGazettesPdfs,
               pdfContext: 'Gazettes',
-              labelBuilder: (e) => 'Gazette ${_formatPdfDate(e.date)}',
+              labelBuilder: (e) =>
+                  e.title ?? 'Gazette ${_formatPdfDate(e.date)}',
               onLaunchUrl: _launchUrl,
               onShowPdfSheet: _showPdfSheet,
             ),
@@ -354,7 +369,11 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
               final labels = displayed
                   .map((m) => 'CA du ${widget.formatDate(m.dateFrom)}')
                   .toList();
-              final itemWidth = _computeItemWidth(constraints.maxWidth, labels);
+              final itemWidth = _computeItemWidth(
+                constraints.maxWidth,
+                labels,
+                MediaQuery.textScalerOf(context),
+              );
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -405,12 +424,23 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
           padding: EdgeInsets.all(16),
           child: Center(child: CircularProgressIndicator()),
         ),
-        error: (e, _) => Text(
-          'Erreur: $e',
-          style: AppFonts.sans(
-            color: theme.colorScheme.error,
-            fontSize: 14,
-          ),
+        error: (e, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Impossible de charger les comptes-rendus. Vérifiez votre connexion et réessayez.',
+              style: AppFonts.sans(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => ref.invalidate(caMinutesProvider),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: Text('Réessayer', style: AppFonts.sans(fontSize: 14)),
+            ),
+          ],
         ),
       ),
     );
@@ -450,7 +480,7 @@ class _ExpandablePdfArchiveSectionState
 
   @override
   Widget build(BuildContext context) {
-    final entries = widget.entries;
+    final entries = sortedByDateDesc(widget.entries);
     final displayCount = _showAll
         ? entries.length
         : entries.length.clamp(0, _initialCount);
@@ -465,7 +495,11 @@ class _ExpandablePdfArchiveSectionState
         builder: (context, constraints) {
           const spacing = 8.0;
           final labels = displayed.map(widget.labelBuilder).toList();
-          final itemWidth = _computeItemWidth(constraints.maxWidth, labels);
+          final itemWidth = _computeItemWidth(
+            constraints.maxWidth,
+            labels,
+            MediaQuery.textScalerOf(context),
+          );
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -502,10 +536,7 @@ class _ExpandablePdfArchiveSectionState
                 TextButton.icon(
                   onPressed: () => setState(() => _showAll = false),
                   icon: const Icon(Icons.expand_less, size: 18),
-                  label: Text(
-                    'Réduire',
-                    style: AppFonts.sans(fontSize: 14),
-                  ),
+                  label: Text('Réduire', style: AppFonts.sans(fontSize: 14)),
                 ),
               ],
             ],
@@ -662,29 +693,34 @@ class _PdfChip extends StatelessWidget {
               }
             : null,
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Icon(
-                Icons.picture_as_pdf,
-                size: 18,
-                color: theme.colorScheme.onPrimary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppFonts.sans(
-                    fontSize: 13,
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+        // 48 dp tall at least; a long label wraps rather than vanishing.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Icon(
+                  Icons.picture_as_pdf,
+                  size: 18,
+                  color: theme.colorScheme.onPrimary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppFonts.sans(
+                      fontSize: 13,
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1010,7 +1046,7 @@ class _LogicielsTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Windows Media Player permet de modifier la vitesse de lecture d\'un enregistrement sans modifier la tessiture...',
+                  'Windows Media Player permet de modifier la vitesse de lecture d\'un enregistrement sans modifier la tessiture.',
                   style: AppFonts.sans(
                     fontSize: 14,
                     color: theme.colorScheme.onSurfaceVariant,

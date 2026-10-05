@@ -203,6 +203,11 @@ serveHttp(async (req) => {
       message: {
         topic,
         notification: { title, body: bodyText },
+        // Background pushes are shown by the system: without a channel they
+        // land in Android's "Miscellaneous" channel, silent and unranked.
+        // "fcm_push" is the channel the app creates at start-up
+        // (NotificationService._createRealtimeNotificationChannels).
+        android: { notification: { channel_id: "fcm_push" } },
         data: {
           type: table.slice(0, -1),
           id: String(id),
