@@ -51,7 +51,7 @@ Variables are listed by **name** in `turbo.json` (`globalEnv`, `tasks.build.env`
 | `NEXT_PUBLIC_ADMIN_PASSWORD`                                                                             | deleted from Vercel                            | Deleted on 2026-10-01; the password is used nowhere else                                                                    |
 | `POSTGRES_*`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET`                                 | Production only (integration)                  |                                                                                                                             |
 
-Mobile: `apps/mobile_app/.env` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, Drive folder IDs, Twilio) is generated from GitHub secrets in the Android workflow; locally it comes from `.env.example`.
+Mobile: `apps/mobile_app/.env` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, Drive folder IDs, Twilio) is generated in the Android workflow from GitHub secrets, except `SITE_URL`, which is pinned to `https://www.lebontemperament.com` there (a staging URL sits behind Vercel Authentication and breaks Partitions); locally it comes from `.env.example`.
 
 ## Known quirks
 

@@ -103,7 +103,7 @@ class _WelcomeHeader extends ConsumerWidget {
             child: Text(
               firstName.isEmpty ? greeting : '$greeting, $firstName',
               style: AppFonts.display(
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
                 height: 1.15,
@@ -338,7 +338,7 @@ class _NextRehearsalHero extends StatelessWidget {
                     Text(
                       big,
                       style: AppFonts.display(
-                        fontSize: 56,
+                        fontSize: 44,
                         fontWeight: FontWeight.w800,
                         color: scheme.onSurface,
                         height: 1,
@@ -546,7 +546,7 @@ class _RehearsalRow extends StatelessWidget {
                 Text(
                   date != null ? '${date.day}' : '—',
                   style: AppFonts.display(
-                    fontSize: 28,
+                    fontSize: 24,
                     fontWeight: FontWeight.w800,
                     color: scheme.onSurface,
                     height: 1,

@@ -172,7 +172,7 @@ class _EventDetailHeader extends StatelessWidget {
                     style: AppFonts.sans(
                       color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
-                      fontSize: 28,
+                      fontSize: 24,
                       height: 1.2,
                     ),
                     maxLines: 3,

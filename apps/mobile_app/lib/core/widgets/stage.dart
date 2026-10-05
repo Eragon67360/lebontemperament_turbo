@@ -207,7 +207,7 @@ class StageSectionHeader extends StatelessWidget {
             child: Text(
               title,
               style: AppFonts.display(
-                fontSize: 21,
+                fontSize: 19,
                 fontWeight: FontWeight.w700,
                 color: s.onSurface,
               ),

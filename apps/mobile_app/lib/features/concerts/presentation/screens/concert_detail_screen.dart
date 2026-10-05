@@ -203,7 +203,7 @@ class _ConcertDetailHeader extends StatelessWidget {
                   style: AppFonts.sans(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 28,
+                    fontSize: 24,
                     height: 1.2,
                   ),
                   maxLines: 3,
@@ -272,7 +272,7 @@ class _ConcertDetailHeader extends StatelessWidget {
                   style: AppFonts.sans(
                     color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
-                    fontSize: 28,
+                    fontSize: 24,
                     height: 1.2,
                   ),
                   maxLines: 3,

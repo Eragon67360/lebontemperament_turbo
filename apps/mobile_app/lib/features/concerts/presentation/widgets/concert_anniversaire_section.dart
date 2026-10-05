@@ -79,7 +79,7 @@ class _ConcertAnniversaireSectionState
           Text(
             'Concert Anniversaire',
             style: AppFonts.sans(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.onSurface,
             ),
