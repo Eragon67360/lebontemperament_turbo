@@ -8,6 +8,19 @@ default_platform(:android)
 
 METADATA = "fastlane/metadata/android"
 
+# The app's current build number (versionCode), from pubspec.yaml's
+# "version: x.y.z+N". Supply needs a release to attach the listing to, even
+# when release notes are skipped; without one it looks for a release with no
+# version code on the production track and fails.
+def current_version_code
+  # Lanes run in fastlane/, actions in android/: try both.
+  pubspec = ["../../pubspec.yaml", "../pubspec.yaml"].find { |p| File.exist?(p) }
+  UI.user_error!("pubspec.yaml not found") unless pubspec
+  build = File.read(pubspec)[/^version:\s*\S+\+(\d+)/, 1]
+  UI.user_error!("No build number in #{pubspec}") unless build
+  build.to_i
+end
+
 platform :android do
   desc "Download the current store listing (texts, images, screenshots) into the metadata folder. Read-only."
   lane :download_listing do
@@ -50,6 +63,10 @@ platform :android do
   private_lane :upload_listing do |options|
     upload_to_play_store(
       metadata_path: METADATA,
+      # Every build is released to the internal track first (see
+      # android-build-release.yml), so the current one is always there.
+      track: "internal",
+      version_code: current_version_code,
       skip_upload_aab: true,
       skip_upload_apk: true,
       skip_upload_changelogs: true,
