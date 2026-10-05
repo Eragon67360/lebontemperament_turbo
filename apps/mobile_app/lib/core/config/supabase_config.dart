@@ -4,7 +4,7 @@ import 'package:logger/logger.dart';
 
 class SupabaseConfig {
   static String get supabaseUrl {
-    return dotenv.env['SUPABASE_URL'] ?? 'https://api.lebontemperament.com';
+    return dotenv.env['SUPABASE_URL'] ?? 'https://fsklunxplbbtzgurwqmc.supabase.co';
   }
 
   static String get supabaseAnonKey {
