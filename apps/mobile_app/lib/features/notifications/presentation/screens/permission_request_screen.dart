@@ -28,7 +28,8 @@ class _PermissionRequestScreenState
     final hasPermissions = await notificationService.hasPermissions();
 
     if (hasPermissions && mounted) {
-      _navigateToLogin();
+      await NotificationPermissionPrompt.markAnswered();
+      if (mounted) _navigateToLogin();
     }
   }
 
@@ -49,13 +50,18 @@ class _PermissionRequestScreenState
               .read(notificationSettingsProvider.notifier)
               .setEnabled(true);
         }
-        _navigateToLogin();
+        // Granted or refused, the system has its answer: the screen is
+        // not shown again (the settings screen can ask once more).
+        await NotificationPermissionPrompt.markAnswered();
+        if (mounted) _navigateToLogin();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de la demande de permissions: $e'),
+            content: const Text(
+              'Impossible de demander l\'autorisation pour l\'instant.',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -69,8 +75,9 @@ class _PermissionRequestScreenState
     }
   }
 
-  void _skipPermissions() {
-    _navigateToLogin();
+  Future<void> _skipPermissions() async {
+    await NotificationPermissionPrompt.markAnswered();
+    if (mounted) _navigateToLogin();
   }
 
   void _navigateToLogin() {

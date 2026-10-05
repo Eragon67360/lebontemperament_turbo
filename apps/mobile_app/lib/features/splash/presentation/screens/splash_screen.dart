@@ -7,6 +7,7 @@ import 'package:lebontemperament/core/theme/app_fonts.dart';
 
 import '../../../../data/services/fcm_notification_handler.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/providers/notification_settings_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -34,17 +35,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 1500),
     );
 
-    _logoScale = Tween<double>(begin: 0.8, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+    _logoScale = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn)));
-    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
+    );
+    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.4, 1.0, curve: Curves.easeOut)));
-    _textSlide = Tween<double>(begin: 20.0, end: 0.0).animate(CurvedAnimation(
+        curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
+      ),
+    );
+    _textSlide = Tween<double>(begin: 20.0, end: 0.0).animate(
+      CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.4, 1.0, curve: Curves.easeOut)));
+        curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
+      ),
+    );
 
     _controller.forward();
   }
@@ -66,9 +78,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (isAuthenticated) {
       context.go('/main');
       FcmNotificationHandler.onHomeReached();
-    } else {
-      context.go('/permissions');
+      return;
     }
+    // The explanatory notification screen is shown once; after that a
+    // signed-out start goes straight to the login.
+    final answered = await NotificationPermissionPrompt.wasAnswered();
+    if (!mounted) return;
+    context.go(answered ? '/login' : '/permissions');
   }
 
   @override
@@ -121,8 +137,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           color: theme.colorScheme.primary,
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.3),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.3,
+                              ),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
@@ -148,18 +165,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                     child: Column(
                       children: [
-                        Text('Le Bon Tempérament',
-                            style: AppFonts.sans(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            )),
+                        Text(
+                          'Le Bon Tempérament',
+                          style: AppFonts.sans(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        Text('Application mobile',
-                            style: AppFonts.sans(
-                              fontSize: 16,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            )),
+                        Text(
+                          'Application mobile',
+                          style: AppFonts.sans(
+                            fontSize: 16,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
                   ),

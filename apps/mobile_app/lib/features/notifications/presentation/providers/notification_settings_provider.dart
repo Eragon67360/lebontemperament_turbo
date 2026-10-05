@@ -102,6 +102,31 @@ final notificationSettingsProvider =
       (ref) => NotificationSettingsNotifier(),
     );
 
+/// Remembers that the member answered (or skipped) the explanatory
+/// notification screen, so a signed-out cold start goes straight to the
+/// login instead of asking again every time.
+class NotificationPermissionPrompt {
+  static const String _answeredKey = 'notification_permission_answered';
+
+  static Future<bool> wasAnswered() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_answeredKey) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> markAnswered() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_answeredKey, true);
+    } catch (_) {
+      // Asking once more on the next start is the only consequence.
+    }
+  }
+}
+
 final notificationServiceProvider = Provider<NotificationService>(
   (ref) => NotificationService(),
 );

@@ -28,7 +28,13 @@ class TrackingPosition {
 class DriverTrackingState {
   final Delivery? delivery;
   final List<DeliveryRecipient> recipients;
+
+  /// Positions are being sent: a GPS stream runs in this process.
   final bool isTracking;
+
+  /// The database says the round is live but no GPS stream runs here (the
+  /// app was killed mid-round): the driver must resume or stop it.
+  final bool isTrackingInterrupted;
   final TrackingPosition? position;
   final String? error;
   final bool isLoading;
@@ -38,6 +44,7 @@ class DriverTrackingState {
     this.delivery,
     this.recipients = const [],
     this.isTracking = false,
+    this.isTrackingInterrupted = false,
     this.position,
     this.error,
     this.isLoading = false,
@@ -48,6 +55,7 @@ class DriverTrackingState {
     Delivery? delivery,
     List<DeliveryRecipient>? recipients,
     bool? isTracking,
+    bool? isTrackingInterrupted,
     TrackingPosition? position,
     String? error,
     bool? isLoading,
@@ -57,6 +65,8 @@ class DriverTrackingState {
       delivery: delivery ?? this.delivery,
       recipients: recipients ?? this.recipients,
       isTracking: isTracking ?? this.isTracking,
+      isTrackingInterrupted:
+          isTrackingInterrupted ?? this.isTrackingInterrupted,
       position: position ?? this.position,
       error: error,
       isLoading: isLoading ?? this.isLoading,
@@ -71,9 +81,9 @@ final deliveryServiceProvider = Provider<DeliveryService>((ref) {
 
 final driverTrackingProvider =
     StateNotifierProvider<DriverTrackingNotifier, DriverTrackingState>((ref) {
-  final service = ref.watch(deliveryServiceProvider);
-  return DriverTrackingNotifier(service);
-});
+      final service = ref.watch(deliveryServiceProvider);
+      return DriverTrackingNotifier(service);
+    });
 
 class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   final DeliveryService _service;
@@ -95,13 +105,21 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
           recipients = await _service.getRecipients(delivery.id);
         } catch (_) {}
       }
+      // "Active" in the database only means live when this process still
+      // streams positions; after an app kill it is stale, and the screen
+      // must not claim the position is shared (nothing is written here:
+      // resuming or stopping is the driver's call).
+      final dbActive = delivery?.isTrackingActive ?? false;
+      final streaming = _positionSubscription != null;
       state = state.copyWith(
         delivery: delivery,
         recipients: recipients,
         isLoading: false,
         error: null,
-        isTracking: delivery?.isTrackingActive ?? false,
-        position: delivery != null &&
+        isTracking: dbActive && streaming,
+        isTrackingInterrupted: dbActive && !streaming,
+        position:
+            delivery != null &&
                 delivery.latitude != null &&
                 delivery.longitude != null
             ? TrackingPosition(
@@ -148,8 +166,9 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         state = state.copyWith(delivery: updated, error: null);
     } catch (e) {
       _logger.e('DriverTrackingNotifier updateScheduledRange', error: e);
-      state =
-          state.copyWith(error: 'Erreur lors de la mise à jour de l\'heure.');
+      state = state.copyWith(
+        error: 'Erreur lors de la mise à jour de l\'heure.',
+      );
     }
   }
 
@@ -181,18 +200,20 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         state = state.copyWith(delivery: updated, error: null);
     } catch (e) {
       _logger.e('DriverTrackingNotifier setProblemMessage', error: e);
-      state =
-          state.copyWith(error: 'Erreur lors de la mise à jour du message.');
+      state = state.copyWith(
+        error: 'Erreur lors de la mise à jour du message.',
+      );
     }
   }
 
   /// Add a recipient.
-  Future<void> addRecipient(
-      {required String label,
-      String? address,
-      double? latitude,
-      double? longitude,
-      String? phoneNumber}) async {
+  Future<void> addRecipient({
+    required String label,
+    String? address,
+    double? latitude,
+    double? longitude,
+    String? phoneNumber,
+  }) async {
     final delivery = state.delivery;
     if (delivery == null) return;
     try {
@@ -237,16 +258,19 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       );
       if (response.status != 200) {
         _logger.w(
-            'SMS function invocation failed with status: ${response.status}',
-            error: response.data);
+          'SMS function invocation failed with status: ${response.status}',
+          error: response.data,
+        );
       } else {
-        _logger
-            .i('SMS function invoked successfully for recipient $recipientId');
+        _logger.i(
+          'SMS function invoked successfully for recipient $recipientId',
+        );
       }
     } catch (e) {
       _logger.e('DriverTrackingNotifier startDrivingToRecipient', error: e);
-      state =
-          state.copyWith(error: 'Erreur lors du démarrage de la livraison.');
+      state = state.copyWith(
+        error: 'Erreur lors du démarrage de la livraison.',
+      );
     } finally {
       state = state.copyWith(isActionLoading: false);
     }
@@ -292,9 +316,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     if (delivery == null) return;
     state = state.copyWith(isActionLoading: true, error: null);
     try {
-      final body = <String, dynamic>{
-        'deliveryId': delivery.id,
-      };
+      final body = <String, dynamic>{'deliveryId': delivery.id};
       if (startLat != null && startLng != null) {
         body['startLat'] = startLat;
         body['startLng'] = startLng;
@@ -507,7 +529,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       return;
     }
 
-    state = state.copyWith(isTracking: true);
+    state = state.copyWith(isTracking: true, isTrackingInterrupted: false);
 
     final deliveryId = delivery.id;
 
@@ -554,14 +576,13 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
             activityType: ActivityType.automotiveNavigation,
           );
 
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen(
-      onPosition,
-      onError: (e) {
-        _logger.w('DriverTrackingNotifier position stream error', error: e);
-      },
-    );
+    _positionSubscription =
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+          onPosition,
+          onError: (e) {
+            _logger.w('DriverTrackingNotifier position stream error', error: e);
+          },
+        );
 
     // Fire one position update immediately, then every 10 seconds (stream may not emit if device hasn't moved 10m)
     void sendBackupPosition() async {
@@ -572,14 +593,18 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         );
         await onPosition(pos);
       } catch (e) {
-        _logger.w('DriverTrackingNotifier backup getCurrentPosition failed',
-            error: e);
+        _logger.w(
+          'DriverTrackingNotifier backup getCurrentPosition failed',
+          error: e,
+        );
       }
     }
 
     sendBackupPosition();
     _backupTimer = Timer.periodic(
-        const Duration(seconds: 10), (_) => sendBackupPosition());
+      const Duration(seconds: 10),
+      (_) => sendBackupPosition(),
+    );
 
     _logger.i('DriverTrackingNotifier: tracking started for $deliveryId');
   }
@@ -600,7 +625,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       }
     }
 
-    state = state.copyWith(isTracking: false);
+    state = state.copyWith(isTracking: false, isTrackingInterrupted: false);
     _logger.i('DriverTrackingNotifier: tracking stopped');
   }
 
@@ -616,8 +641,9 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       return updated;
     } catch (e) {
       _logger.e('DriverTrackingNotifier resetToken', error: e);
-      state =
-          state.copyWith(error: 'Erreur lors de la réinitialisation du token.');
+      state = state.copyWith(
+        error: 'Erreur lors de la réinitialisation du lien de partage.',
+      );
       return null;
     }
   }

@@ -7,6 +7,7 @@ import 'package:geocoding/geocoding.dart' show locationFromAddress;
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
+import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
@@ -21,6 +22,20 @@ import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../providers/driver_tracking_provider.dart';
+
+/// Recipient ids in their new order after a drag in a ReorderableListView,
+/// whose [newIndex] counts the dragged item as still in place.
+List<String> reorderedRecipientIds(
+  List<DeliveryRecipient> recipients,
+  int oldIndex,
+  int newIndex,
+) {
+  if (newIndex > oldIndex) newIndex -= 1;
+  final newOrder = List<DeliveryRecipient>.from(recipients);
+  final item = newOrder.removeAt(oldIndex);
+  newOrder.insert(newIndex, item);
+  return newOrder.map((r) => r.id).toList();
+}
 
 DateTime _utcToParis(DateTime utc) {
   final paris = tz.getLocation('Europe/Paris');
@@ -228,7 +243,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Réinitialiser le token'),
+        title: const Text('Réinitialiser le lien de partage'),
         content: const Text(
           'L\'ancien lien ne fonctionnera plus. Les clients devront utiliser la nouvelle URL. Continuer ?',
         ),
@@ -295,7 +310,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                 const SizedBox(height: 32),
                 const FadeInUp(
                   delay: 200,
-                  child: _SectionTitle(title: 'Panneau de Contrôle'),
+                  child: _SectionTitle(title: 'Panneau de contrôle'),
                 ),
                 const SizedBox(height: 12),
                 FadeInUp(delay: 300, child: _ActionButtons(state: state)),
@@ -372,7 +387,7 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                       const SizedBox(height: 32),
                       const FadeInUp(
                         delay: 600,
-                        child: _SectionTitle(title: 'Mises à Jour en Direct'),
+                        child: _SectionTitle(title: 'Mises à jour en direct'),
                       ),
                       const SizedBox(height: 12),
                       FadeInUp(
@@ -444,12 +459,36 @@ class _TrackingStatusHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final live = state.isTracking;
+    final interrupted = state.isTrackingInterrupted;
+    // White on green 400-600 was below 3:1; green 800-900 keeps the card
+    // green and the white text above 4.5:1.
+    final foreground = live ? Colors.white : theme.colorScheme.onSurface;
+    final secondary = live
+        ? Colors.white.withValues(alpha: 0.9)
+        : theme.colorScheme.onSurfaceVariant;
+
+    final String title;
+    final String subtitle;
+    if (live) {
+      title = 'Suivi actif';
+      subtitle = 'Votre position est partagée en temps réel.';
+    } else if (interrupted) {
+      title = 'Suivi interrompu';
+      subtitle =
+          'L\'application a été fermée pendant la tournée : votre position '
+          'n\'est plus partagée. Reprenez le suivi ou arrêtez la tournée.';
+    } else {
+      title = 'Suivi arrêté';
+      subtitle = 'Démarrez la livraison pour partager votre position.';
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: state.isTracking
-              ? [Colors.green.shade400, Colors.green.shade600]
+          colors: live
+              ? [AppTheme.successText, Colors.green.shade900]
               : [
                   theme.colorScheme.surfaceContainerHighest,
                   theme.colorScheme.surfaceContainerHighest.withValues(
@@ -460,9 +499,12 @@ class _TrackingStatusHero extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
+        border: interrupted
+            ? Border.all(color: theme.colorScheme.error, width: 2)
+            : null,
         boxShadow: [
           BoxShadow(
-            color: state.isTracking
+            color: live
                 ? Colors.green.withValues(alpha: 0.3)
                 : Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
@@ -475,36 +517,29 @@ class _TrackingStatusHero extends StatelessWidget {
           if (state.error != null)
             Column(
               children: [
-                _ErrorBanner(error: state.error!),
+                _ErrorBanner(error: state.error!, onGreen: live),
                 const SizedBox(height: 16),
               ],
             ),
-          _StatusIndicator(isActive: state.isTracking),
+          if (interrupted)
+            Icon(Icons.gps_off_rounded, color: theme.colorScheme.error)
+          else
+            _StatusIndicator(isActive: live),
           const SizedBox(height: 12),
           Text(
-            state.isTracking ? 'Suivi Actif' : 'Suivi Arrêté',
+            title,
+            textAlign: TextAlign.center,
             style: AppFonts.sans(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: state.isTracking
-                  ? Colors.white
-                  : theme.colorScheme.onSurface,
+              color: foreground,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            state.isTracking
-                ? 'Votre position est partagée en temps réel.'
-                : 'Démarrez la livraison pour partager votre position.',
+            subtitle,
             textAlign: TextAlign.center,
-            style: AppFonts.sans(
-              fontSize: 14,
-              color:
-                  (state.isTracking
-                          ? Colors.white
-                          : theme.colorScheme.onSurfaceVariant)
-                      .withValues(alpha: 0.9),
-            ),
+            style: AppFonts.sans(fontSize: 14, color: secondary),
           ),
         ],
       ),
@@ -552,32 +587,55 @@ class _ActionButtons extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final canStop = state.isTracking || state.isTrackingInterrupted;
+    final progress = const SizedBox(
+      width: 28,
+      height: 28,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FilledButton.icon(
-          onPressed: state.isTracking || state.isActionLoading
-              ? null
-              : () => _onStartDelivery(context, ref),
-          icon: state.isActionLoading
-              ? const SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.play_arrow_rounded, size: 28),
-          label: const Text('Démarrer la livraison'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: AppFonts.sans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+        if (state.isTrackingInterrupted)
+          // The round is still open in the database: resuming restarts the
+          // GPS stream without a second start-of-round SMS.
+          FilledButton.icon(
+            onPressed: state.isActionLoading
+                ? null
+                : () =>
+                      ref.read(driverTrackingProvider.notifier).startTracking(),
+            icon: state.isActionLoading
+                ? progress
+                : const Icon(Icons.gps_fixed_rounded, size: 28),
+            label: const Text('Reprendre le suivi'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: AppFonts.sans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          )
+        else
+          FilledButton.icon(
+            onPressed: state.isTracking || state.isActionLoading
+                ? null
+                : () => _onStartDelivery(context, ref),
+            icon: state.isActionLoading
+                ? progress
+                : const Icon(Icons.play_arrow_rounded, size: 28),
+            label: const Text('Démarrer la livraison'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: AppFonts.sans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
-          onPressed: !state.isTracking
+          onPressed: !canStop
               ? null
               : () => ref.read(driverTrackingProvider.notifier).stopTracking(),
           icon: const Icon(Icons.stop_rounded, size: 28),
@@ -585,15 +643,12 @@ class _ActionButtons extends ConsumerWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.error,
             side: BorderSide(
-              color: !state.isTracking
+              color: !canStop
                   ? Colors.grey.withValues(alpha: 0.4)
                   : Theme.of(context).colorScheme.error,
             ),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: AppFonts.sans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            textStyle: AppFonts.sans(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -648,12 +703,9 @@ class _RecipientsCard extends ConsumerWidget {
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               itemCount: recipients.length,
-              onReorder: (oldIndex, newIndex) {
-                final newOrder = List<DeliveryRecipient>.from(recipients);
-                final item = newOrder.removeAt(oldIndex);
-                newOrder.insert(newIndex, item);
-                onReorder(newOrder.map((r) => r.id).toList());
-              },
+              onReorder: (oldIndex, newIndex) => onReorder(
+                reorderedRecipientIds(recipients, oldIndex, newIndex),
+              ),
               itemBuilder: (_, index) => _RecipientTile(
                 key: ValueKey(recipients[index].id),
                 reorderIndex: index,
@@ -728,9 +780,16 @@ class _RecipientTile extends ConsumerWidget {
       onTap: onTap,
       leading: ReorderableDragStartListener(
         index: reorderIndex,
-        child: Icon(
-          Icons.drag_handle,
-          color: theme.colorScheme.onSurfaceVariant,
+        child: Semantics(
+          label: 'Déplacer ${recipient.label}',
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(
+              Icons.drag_handle,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
       ),
       title: Row(
@@ -753,10 +812,7 @@ class _RecipientTile extends ConsumerWidget {
             ),
             child: Text(
               statusLabel,
-              style: AppFonts.sans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppFonts.sans(fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -823,9 +879,7 @@ class _LiveUpdatesCard extends ConsumerWidget {
             ),
             subtitle: Text(
               scheduledStr,
-              style: AppFonts.sans(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: AppFonts.sans(color: theme.colorScheme.onSurfaceVariant),
             ),
             trailing: TextButton(
               onPressed: onPickTime,
@@ -992,7 +1046,8 @@ class _SessionDetailsCard extends StatelessWidget {
           ),
           const Divider(height: 32),
           Text(
-            'Expire le ${DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(delivery.expiresAt)}',
+            // Supabase timestamps parse as UTC: format the local time.
+            'Expire le ${DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(delivery.expiresAt.toLocal())}',
             style: AppFonts.sans(
               fontSize: 12,
               color: theme.colorScheme.onSurfaceVariant,
@@ -1002,7 +1057,7 @@ class _SessionDetailsCard extends StatelessWidget {
           Center(
             child: TextButton(
               onPressed: onResetToken,
-              child: const Text('Réinitialiser le token de partage'),
+              child: const Text('Réinitialiser le lien de partage'),
             ),
           ),
         ],
@@ -1136,7 +1191,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
                 labelText: 'Téléphone (pour SMS)',
-                hintText: 'Format international (ex: +336...))',
+                hintText: 'Format international (ex. : +336…)',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -1228,21 +1283,23 @@ class _StatusIndicatorState extends State<_StatusIndicator>
 
 class _ErrorBanner extends StatelessWidget {
   final String error;
-  const _ErrorBanner({required this.error});
+
+  /// Shown on the green "live" card (white text) or on the neutral card,
+  /// where white was unreadable in the light theme.
+  final bool onGreen;
+  const _ErrorBanner({required this.error, required this.onGreen});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = onGreen ? Colors.white : theme.colorScheme.error;
     return Column(
       children: [
         Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 24),
+            Icon(Icons.error_outline, color: color, size: 24),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                error,
-                style: AppFonts.sans(color: Colors.white),
-              ),
+              child: Text(error, style: AppFonts.sans(color: color)),
             ),
           ],
         ),

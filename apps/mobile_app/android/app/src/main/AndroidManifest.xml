@@ -75,6 +75,13 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Channel for FCM pushes shown by the system (app in background):
+             the app creates "fcm_push" at start-up; without this, a push
+             sent without a channel lands in "Miscellaneous". -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="fcm_push" />
     </application>
 
     <!-- Required to query activities that can process text, see:
