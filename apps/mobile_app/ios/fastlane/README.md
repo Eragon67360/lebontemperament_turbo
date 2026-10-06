@@ -25,7 +25,9 @@ file on `main`, GitHub's rule). Each run waits for approval on the
    certificate and the provisioning profile in the developer account;
 3. uploads it to TestFlight and sets the « À tester » text.
 
-Internal testers (App Store Connect users) get every build. Members are
+Internal testers (App Store Connect users) get every build: each upload is
+also added to the internal groups that don't take new builds automatically,
+and the log lists every internal group with its number of testers. Members are
 external testers in the « BT - Testeurs » group, which they join through its public
 link. A build reaches them only when the owner sends it, like a Play
 promotion: Actions → **iOS TestFlight** → Run workflow → **Send the latest
