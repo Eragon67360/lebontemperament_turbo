@@ -4,6 +4,14 @@ name: CI
 # preview builds run separately; these are the gates docs/agents/quality-gates.md
 # asks for: lint, types, domain tests, a build of each changed app, and the
 # Flutter analyzer, tests and Android and iOS builds when the mobile app changed.
+#
+# A job that already passed on the exact same code is skipped instead of run
+# twice: each job leaves a marker artifact keyed by the code it checked, and
+# "Changed paths" looks for it. The release PR dev -> main checks the same
+# tree as the version-bump PR merged just before it, so it usually reuses
+# everything. Website, admin and the checks key on the whole tree; the
+# mobile jobs on apps/mobile_app plus this file, so a PR that only touched
+# the website doesn't make the app rebuild either.
 
 on:
   pull_request:
@@ -42,12 +50,64 @@ jobs:
     permissions:
       contents: read
       pull-requests: read # paths-filter lists the PR's files through the API
+      actions: read # looks up the markers of earlier runs
     outputs:
       # On workflow_dispatch there is no base to diff against: run everything.
       website: ${{ github.event_name != 'pull_request' || steps.filter.outputs.website == 'true' }}
       admin: ${{ github.event_name != 'pull_request' || steps.filter.outputs.admin == 'true' }}
       mobile: ${{ github.event_name != 'pull_request' || steps.filter.outputs.mobile == 'true' }}
+      # The code each job checks, and the jobs that already passed on it.
+      tree: ${{ steps.keys.outputs.tree }}
+      mobile_key: ${{ steps.keys.outputs.mobile }}
+      passed: ${{ steps.reuse.outputs.passed || '[]' }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # On a pull request this is GitHub's test merge with the base: the code
+      # that lands if the PR is merged now.
+      - name: Hash the code
+        id: keys
+        run: |
+          echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+          echo "mobile=$(git rev-parse HEAD:apps/mobile_app HEAD:.github/workflows/ci.yml | sha1sum | cut -c1-40)" >> "$GITHUB_OUTPUT"
+      - name: Look for jobs that already passed on this code
+        id: reuse
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TREE: ${{ steps.keys.outputs.tree }}
+          MOBILE: ${{ steps.keys.outputs.mobile }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const repoId = context.payload.repository.id;
+            const { TREE, MOBILE } = process.env;
+            const keys = {
+              lint: TREE, types: TREE, 'domain-tests': TREE,
+              'build-website': TREE, 'build-admin': TREE,
+              flutter: MOBILE, android: MOBILE, ios: MOBILE,
+            };
+            const passed = [];
+            for (const [job, key] of Object.entries(keys)) {
+              try {
+                const { data } = await github.rest.actions.listArtifactsForRepo({
+                  owner, repo, name: `ci-passed-${job}-${key}`, per_page: 10,
+                });
+                // Only this repository's own runs count: a fork's PR can
+                // upload an artifact with any name.
+                const hit = data.artifacts.find(
+                  (a) => !a.expired && a.workflow_run?.head_repository_id === repoId,
+                );
+                if (hit) {
+                  passed.push(job);
+                  core.notice(`${job} already passed on this exact code in ${context.serverUrl}/${owner}/${repo}/actions/runs/${hit.workflow_run.id}: skipped.`);
+                }
+              } catch (error) {
+                // Can't tell: run the job.
+                core.warning(`Could not look up ${job}: ${error.message}`);
+              }
+            }
+            core.setOutput('passed', JSON.stringify(passed));
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         if: github.event_name == 'pull_request'
@@ -71,6 +131,9 @@ jobs:
 
   lint:
     name: Lint
+    needs: changes
+    # Still runs if "Changed paths" itself failed.
+    if: ${{ !cancelled() && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'lint') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -81,9 +144,17 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Record the pass
+        if: needs.changes.outputs.tree != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: lint
+          key: ${{ needs.changes.outputs.tree }}
 
   types:
     name: Types
+    needs: changes
+    if: ${{ !cancelled() && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'types') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -94,9 +165,17 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check-types
+      - name: Record the pass
+        if: needs.changes.outputs.tree != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: types
+          key: ${{ needs.changes.outputs.tree }}
 
   domain-tests:
     name: Domain tests
+    needs: changes
+    if: ${{ !cancelled() && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'domain-tests') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -107,11 +186,17 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test -w @repo/domain
+      - name: Record the pass
+        if: needs.changes.outputs.tree != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: domain-tests
+          key: ${{ needs.changes.outputs.tree }}
 
   build-website:
     name: Build website
     needs: changes
-    if: needs.changes.outputs.website == 'true'
+    if: needs.changes.outputs.website == 'true' && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'build-website')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -128,11 +213,17 @@ jobs:
             next-website-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
       - run: npm ci
       - run: npx turbo build --filter=website
+      - name: Record the pass
+        if: needs.changes.outputs.tree != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: build-website
+          key: ${{ needs.changes.outputs.tree }}
 
   build-admin:
     name: Build admin
     needs: changes
-    if: needs.changes.outputs.admin == 'true'
+    if: needs.changes.outputs.admin == 'true' && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'build-admin')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -149,11 +240,17 @@ jobs:
             next-admin-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
       - run: npm ci
       - run: npx turbo build --filter=admin
+      - name: Record the pass
+        if: needs.changes.outputs.tree != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: build-admin
+          key: ${{ needs.changes.outputs.tree }}
 
   flutter:
     name: Flutter
     needs: changes
-    if: needs.changes.outputs.mobile == 'true'
+    if: needs.changes.outputs.mobile == 'true' && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'flutter')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -175,11 +272,17 @@ jobs:
       # Errors fail the job; the 72 pre-existing infos/warnings are tracked in #362.
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: flutter test
+      - name: Record the pass
+        if: needs.changes.outputs.mobile_key != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: flutter
+          key: ${{ needs.changes.outputs.mobile_key }}
 
   android:
     name: Android build
     needs: changes
-    if: needs.changes.outputs.mobile == 'true'
+    if: needs.changes.outputs.mobile == 'true' && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'android')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -219,11 +322,17 @@ jobs:
           FASTLANE_SKIP_UPDATE_CHECK: "1"
           FASTLANE_OPT_OUT_USAGE: "1"
         run: bundle exec fastlane lanes
+      - name: Record the pass
+        if: needs.changes.outputs.mobile_key != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: android
+          key: ${{ needs.changes.outputs.mobile_key }}
 
   ios:
     name: iOS build
     needs: changes
-    if: needs.changes.outputs.mobile == 'true'
+    if: needs.changes.outputs.mobile == 'true' && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'ios')
     runs-on: macos-26
     timeout-minutes: 45
     defaults:
@@ -241,3 +350,9 @@ jobs:
       # Installs the pods and compiles the iOS project with the same Xcode as
       # the TestFlight workflow, without signing (nothing leaves the runner).
       - run: flutter build ios --release --no-codesign
+      - name: Record the pass
+        if: needs.changes.outputs.mobile_key != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: ios
+          key: ${{ needs.changes.outputs.mobile_key }}
