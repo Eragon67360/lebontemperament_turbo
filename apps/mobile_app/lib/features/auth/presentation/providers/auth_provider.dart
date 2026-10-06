@@ -110,6 +110,28 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     }
   }
 
+  /// Google or Apple. The sheet's own UI shows while it is open; the overlay
+  /// covers the exchange and the membership check that follow.
+  Future<void> signInWithGoogle() =>
+      _signInSocial(_authService.signInWithGoogle);
+
+  Future<void> signInWithApple() => _signInSocial(_authService.signInWithApple);
+
+  Future<void> _signInSocial(Future<bool> Function() signIn) async {
+    try {
+      state = const AsyncValue.loading();
+      final signedIn = await signIn();
+      state = const AsyncValue.data(null);
+      if (!signedIn) return;
+
+      _ref.invalidate(authStateProvider);
+      AuthStateListener().notifyAuthStateChanged();
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
   Future<void> signOut() async {
     try {
       state = const AsyncValue.loading();

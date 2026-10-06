@@ -29,6 +29,12 @@ dependencies:
   supabase_flutter: ^2.12.0
   dio: ^5.9.1
 
+  # Social sign-in: Google through the system browser sheet
+  # (ASWebAuthenticationSession / Custom Tabs), Apple natively on iOS.
+  flutter_web_auth_2: ^5.1.0
+  sign_in_with_apple: ^7.0.1
+  crypto: ^3.0.6
+
   # Local Storage (Aligned versions)
   hive: ^2.2.3
   hive_flutter: ^1.1.0
