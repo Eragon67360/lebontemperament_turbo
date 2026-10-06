@@ -3,3 +3,4 @@ Une appli plus légère et plus musicale :
 • Votre semaine dessinée comme une portée, une note par répétition.
 • Une visite de bienvenue présente chaque rubrique et ouvre le calendrier sur votre ensemble. À revoir dans Profil.
 • Quelques astuces la première fois, sur le calendrier, les membres et les partitions.
+• Les interrupteurs des réglages de notifications montrent bien leur position.
