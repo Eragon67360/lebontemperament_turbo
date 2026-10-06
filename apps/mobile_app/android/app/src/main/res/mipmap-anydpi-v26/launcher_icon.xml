@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher icon on Android 8+ (adaptive: the launcher picks the shape;
+  monochrome is the Android 13+ themed icon). Sources: AppIcons/source.
+  Notifications keep using the plain @mipmap/ic_launcher PNGs, since an
+  adaptive icon as a notification small icon crashes Android 8.0's system UI.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
+</adaptive-icon>

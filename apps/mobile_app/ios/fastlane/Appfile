@@ -1,0 +1,4 @@
+# The App Store Connect API key comes from the workflow (see README.md): the
+# key file is written to the runner's temporary folder for the run only,
+# never committed.
+app_identifier("com.lebontemperament.app")
