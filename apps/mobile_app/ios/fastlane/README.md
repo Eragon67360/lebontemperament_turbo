@@ -48,6 +48,9 @@ as the Android build; TestFlight refuses a number it already has.
    The workflow writes the key to the runner's temporary folder for the run
    only. Never commit it or paste it anywhere else.
 
-4. Push notifications: developer.apple.com → Keys → a key with **Apple Push
+4. Register at least one iPhone or iPad under Certificates, Identifiers &
+   Profiles › Devices: automatic signing needs one to create its profiles
+   (done, 2026-10-06).
+5. Push notifications: developer.apple.com → Keys → a key with **Apple Push
    Notifications service (APNs)**, then upload that `.p8` to Firebase
    (Project settings → Cloud Messaging → Apple app configuration).
