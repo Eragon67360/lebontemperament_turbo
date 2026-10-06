@@ -1,6 +1,1 @@
-Une appli plus légère et plus musicale :
-• Un style allégé : moins de cadres, des titres plus fins, plus d'air.
-• Votre semaine dessinée comme une portée, une note par répétition.
-• Une visite de bienvenue présente chaque rubrique et ouvre le calendrier sur votre ensemble. À revoir dans Profil.
-• Quelques astuces la première fois, sur le calendrier, les membres et les partitions.
-• Les interrupteurs des réglages de notifications montrent bien leur position.
+Une nouvelle icône pour l'appli : un diapason sur fond turquoise, plus facile à repérer sur votre écran d'accueil. Sur Android 13 et plus, elle suit aussi la couleur de vos icônes si vous les avez personnalisées.
