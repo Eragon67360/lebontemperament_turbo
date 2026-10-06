@@ -135,9 +135,38 @@ platform :ios do
     build = builds.first || UI.user_error!("No valid build in App Store Connect")
     UI.message("Build #{build.app_version} (#{build.version})")
 
+    # The version being prepared, renamed to the build's version if needed.
+    app.ensure_version!(build.app_version, platform: Spaceship::ConnectAPI::Platform::IOS)
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("No App Store version being prepared") unless version
+
+    # App Review details first: deliver fails on a version that has none
+    # yet. Apple's App Review gets the same contact and sign-in account as
+    # the beta review, typed by the owner in TestFlight: copied as is, never
+    # printed (the workflow logs are public).
+    beta = Spaceship::ConnectAPI.get_beta_app_review_detail(filter: { app: app.id }).to_models.first
+    fields = %w[contact_first_name contact_last_name contact_phone contact_email demo_account_name demo_account_password]
+    missing = beta ? fields.select { |f| beta.send(f).to_s.strip.empty? } : fields
+    attributes = { "notes" => STORE_REVIEW_NOTES }
+    if missing.empty?
+      fields.each { |f| attributes[f] = beta.send(f) }
+      attributes["demo_account_required"] = true
+    end
+    # Spaceship raises "No data" when the version has no review details yet.
+    detail = begin
+      version.fetch_app_store_review_detail
+    rescue StandardError
+      nil
+    end
+    detail ? detail.update(attributes: attributes) : version.create_app_store_review_detail(attributes: attributes)
+    if missing.empty?
+      UI.success("App Review contact and sign-in account copied from the beta review")
+    else
+      UI.important("App Review contact and sign-in not set: the beta review lacks #{missing.join(', ')}")
+    end
+
     # Texts (metadata/), screenshots (screenshots/, rendered by
-    # store/screenshots_test.dart) and age rating. The version being
-    # prepared is renamed to the build's version when needed.
+    # store/screenshots_test.dart) and age rating.
     deliver(
       api_key: key,
       app_identifier: app.bundle_id,
@@ -155,27 +184,8 @@ platform :ios do
       force: true
     )
 
-    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
-    UI.user_error!("No App Store version being prepared") unless version
     version.select_build(build_id: build.id)
-    UI.success("Build #{build.version} attached to version #{version.version_string}")
-
-    # Apple's App Review gets the same contact and sign-in account as the
-    # beta review, typed by the owner in TestFlight: copied as is, never
-    # printed (the workflow logs are public).
-    beta = Spaceship::ConnectAPI.get_beta_app_review_detail(filter: { app: app.id }).to_models.first
-    fields = %w[contact_first_name contact_last_name contact_phone contact_email demo_account_name demo_account_password]
-    missing = beta ? fields.select { |f| beta.send(f).to_s.strip.empty? } : fields
-    if missing.empty?
-      attributes = fields.to_h { |f| [f, beta.send(f)] }
-      attributes["demo_account_required"] = true
-      attributes["notes"] = STORE_REVIEW_NOTES
-      detail = version.fetch_app_store_review_detail rescue nil
-      detail ? detail.update(attributes: attributes) : version.create_app_store_review_detail(attributes: attributes)
-      UI.success("App Review contact and sign-in account copied from the beta review")
-    else
-      UI.important("App Review details not set: the beta review lacks #{missing.join(', ')}")
-    end
+    UI.success("Build #{build.version} attached to version #{build.app_version}")
   end
 
   desc "Send the latest TestFlight build to the members' external group and submit it for Apple's beta review."
