@@ -55,6 +55,20 @@ def signing_xcargs
   ].join(" ")
 end
 
+# Names of the internal TestFlight groups without automatic distribution,
+# or nil when there are none. Logs every internal group with its tester
+# count (no names or emails: the workflow logs are public).
+def manual_internal_groups
+  app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+  internal = app.get_beta_groups(includes: "betaTesters").select(&:is_internal_group)
+  internal.each do |group|
+    UI.message("Internal group « #{group.name} »: #{Array(group.beta_testers).size} tester(s), " \
+               "#{group.has_access_to_all_builds ? 'gets every build automatically' : 'builds added by hand'}")
+  end
+  names = internal.reject(&:has_access_to_all_builds).map(&:name)
+  names.empty? ? nil : names
+end
+
 platform :ios do
   desc "Archive the app (after `flutter build ios --no-codesign`), sign it for the App Store and upload it to TestFlight."
   lane :beta do
@@ -84,9 +98,12 @@ platform :ios do
       ipa: "build/LeBonTemperament.ipa",
       # « À tester » shown to testers; set once the build is processed.
       changelog: File.read(WHAT_TO_TEST).strip,
-      # Internal testers (App Store Connect users) get every build. Members
-      # are external testers: a group and Apple's beta review, added later.
-      distribute_external: false
+      # Internal groups that don't take every build automatically get this
+      # one explicitly. Members are external testers: a group and Apple's
+      # beta review, added later with the `members` lane.
+      groups: manual_internal_groups,
+      distribute_external: false,
+      submit_beta_review: false
     )
   end
 
