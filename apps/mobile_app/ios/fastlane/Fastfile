@@ -11,6 +11,26 @@ default_platform(:ios)
 
 WHAT_TO_TEST = "testflight/what_to_test.txt"
 
+# External TestFlight group the members join through its public link
+# (created by hand in App Store Connect).
+MEMBERS_GROUP = "Membres"
+
+# TestFlight « Test Information », shown to members when they join and to
+# Apple's beta reviewers. Public texts only: the reviewer's sign-in account
+# and the contact details are typed by the owner in App Store Connect.
+BETA_APP_INFO = {
+  description: "L'appli des membres du Bon Tempérament : répétitions, partitions et concerts.",
+  feedback_email: "lebontemperament@gmail.com",
+  privacy_policy_url: "https://www.lebontemperament.com/politique-de-confidentialite"
+}.freeze
+
+BETA_REVIEW_NOTES = <<~NOTES.strip
+  Le Bon Tempérament is a French amateur choir and orchestra association.
+  This app is for its members only: rehearsal calendar, sheet music,
+  concerts and the member directory. Please use the sign-in account
+  provided in this form; accounts are created by the association.
+NOTES
+
 def env!(name)
   ENV[name].to_s.strip.empty? ? UI.user_error!("#{name} is not set") : ENV[name]
 end
@@ -67,6 +87,27 @@ platform :ios do
       # Internal testers (App Store Connect users) get every build. Members
       # are external testers: a group and Apple's beta review, added later.
       distribute_external: false
+    )
+  end
+
+  desc "Send the latest TestFlight build to the members' external group and submit it for Apple's beta review."
+  lane :members do
+    upload_to_testflight(
+      api_key: api_key,
+      distribute_only: true,
+      # Latest uploaded build unless BUILD_NUMBER picks one.
+      build_number: ENV["BUILD_NUMBER"].to_s.strip.empty? ? nil : ENV["BUILD_NUMBER"],
+      # fr-FR is the app's primary language: pilot creates the texts when
+      # they don't exist yet ("default" only fills existing languages).
+      localized_app_info: { "fr-FR" => BETA_APP_INFO, "default" => BETA_APP_INFO },
+      localized_build_info: { "fr-FR" => { whats_new: File.read(WHAT_TO_TEST).strip } },
+      # Only the notes: pilot leaves the contact and sign-in fields as set
+      # in App Store Connect.
+      beta_app_review_info: { notes: BETA_REVIEW_NOTES },
+      distribute_external: true,
+      groups: [MEMBERS_GROUP],
+      submit_beta_review: true,
+      notify_external_testers: true
     )
   end
 end
