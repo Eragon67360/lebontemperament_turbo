@@ -22,8 +22,11 @@ name: Database backup
 
 on:
   schedule:
-    # ~04:00 Europe/Paris, after the 03:15 UTC cron cleanup.
-    - cron: "0 2 * * *"
+    # ~04:40 Europe/Paris. Off the hour on purpose: GitHub drops scheduled
+    # runs at busy times, and the 02:00 UTC run was skipped on 2026-10-06.
+    # A second daily slot gives the backup another chance on such days.
+    - cron: "41 2 * * *"
+    - cron: "41 14 * * *"
   workflow_dispatch:
 
 concurrency:
