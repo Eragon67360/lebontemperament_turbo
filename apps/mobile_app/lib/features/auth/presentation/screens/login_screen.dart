@@ -1,11 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/services/auth_service.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/google_logo.dart';
+
+/// Sign in with Apple is offered on iOS only: App Store review requires it
+/// next to Google there, and on Android it would need a web flow with a
+/// secret to renew every six months.
+bool get showAppleSignIn =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
 /// Loose on purpose: Supabase validates the address, the field only catches
 /// a typo (no « @ », no domain). Long TLDs and « + » tags are valid.
@@ -155,6 +164,22 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
     }
   }
 
+  Future<void> _handleSocial(Future<void> Function() signIn) async {
+    FocusScope.of(context).unfocus();
+    try {
+      await signIn();
+      // Navigation is handled by the auth state listener in the router
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(
+          e is SignInException
+              ? e.message
+              : 'Connexion impossible. Réessayez dans quelques instants.',
+        );
+      }
+    }
+  }
+
   /// Opens the website's reset page in the browser: the e-mail it sends
   /// brings the member back to that same browser, where the flow completes
   /// (see [forgotPasswordUri]).
@@ -282,8 +307,70 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
             ),
             child: const Text('Se connecter'),
           ),
+          const SizedBox(height: 24),
+
+          // --- Google / Apple ---
+          const _OrDivider(),
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
+            onPressed: isLoading
+                ? null
+                : () => _handleSocial(
+                    ref.read(authControllerProvider.notifier).signInWithGoogle,
+                  ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: AppFonts.sans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            icon: const GoogleLogo(),
+            label: const Text('Continuer avec Google'),
+          ),
+          if (showAppleSignIn) ...[
+            const SizedBox(height: 12),
+            SignInWithAppleButton(
+              text: 'Continuer avec Apple',
+              height: 52,
+              borderRadius: const BorderRadius.all(Radius.circular(26)),
+              style: theme.brightness == Brightness.dark
+                  ? SignInWithAppleButtonStyle.white
+                  : SignInWithAppleButtonStyle.black,
+              onPressed: isLoading
+                  ? null
+                  : () => _handleSocial(
+                      ref.read(authControllerProvider.notifier).signInWithApple,
+                    ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'ou',
+            style: AppFonts.sans(
+              fontSize: 14,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider()),
+      ],
     );
   }
 }

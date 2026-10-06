@@ -93,6 +93,13 @@ insert into feature_flags (flag_key, flag_name, description, is_enabled) values
 
 The rows must be readable by signed-in members (the same `select` policy the website uses with the anon key for `anniversary_40_years`).
 
+### Google and Apple sign-in
+
+The login screen offers « Continuer avec Google » (Android and iOS) and « Continuer avec Apple » (iOS only), next to the e-mail and password form (`lib/features/auth/data/services/auth_service.dart`). Like the website, they only let members in: sign-ups are closed in Supabase, and a session without a `profiles` row is signed out at once with « Ce compte n'est relié à aucun membre ». A member's Google or Apple account must use the e-mail address the association has; with Apple, « Masquer mon adresse e-mail » gives a relay address that matches no member.
+
+- **Google** uses the same Supabase Google provider as the website, opened in the system's sign-in sheet (`flutter_web_auth_2`: ASWebAuthenticationSession on iOS, Custom Tabs on Android). Supabase sends the browser back to `com.lebontemperament.app://login-callback`, which must be listed in Supabase › Authentication › URL Configuration › Redirect URLs; Android catches it with the `CallbackActivity` in `AndroidManifest.xml`.
+- **Apple** is native (`sign_in_with_apple`): the ID token goes to the Supabase Apple provider, whose Client IDs list the bundle ID `com.lebontemperament.app`. It needs the Sign in with Apple capability on the App ID and the `com.apple.developer.applesignin` entitlement (`ios/Runner/Runner.entitlements`). Android has no Apple button: it would need a web flow with a secret key to renew every six months.
+
 ### Offline states
 
 The rehearsals, concerts and events lists are cached in Hive. When the server cannot be reached they show the cached rows under a "Données hors ligne" banner; with nothing cached they show an error with a retry (worded "Vous êtes hors ligne" when `connectivity_plus` reports no network), and a fresh empty list shows the empty state. The lists reload by themselves when the network comes back.
