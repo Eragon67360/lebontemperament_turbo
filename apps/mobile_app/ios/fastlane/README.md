@@ -26,12 +26,12 @@ file on `main`, GitHub's rule). Each run waits for approval on the
 3. uploads it to TestFlight and sets the « À tester » text.
 
 Internal testers (App Store Connect users) get every build. Members are
-external testers in the « Membres » group, which they join through its public
+external testers in the « BT - Testeurs » group, which they join through its public
 link. A build reaches them only when the owner sends it, like a Play
 promotion: Actions → **iOS TestFlight** → Run workflow → **Send the latest
 build to members** (`fastlane ios members`). That run sets the TestFlight
 test information (description, feedback email, privacy policy URL, reviewer
-notes), adds the newest build to « Membres » and submits it for Apple's beta
+notes), adds the newest build to « BT - Testeurs » and submits it for Apple's beta
 review; members are notified once Apple approves it. The reviewer's contact
 details and sign-in account are typed by the owner in App Store Connect
 (TestFlight → Test Information → Beta App Review Information) and are never

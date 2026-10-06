@@ -12,8 +12,8 @@ default_platform(:ios)
 WHAT_TO_TEST = "testflight/what_to_test.txt"
 
 # External TestFlight group the members join through its public link
-# (created by hand in App Store Connect).
-MEMBERS_GROUP = "Membres"
+# (created by hand in App Store Connect; the name must match exactly).
+MEMBERS_GROUP = "BT - Testeurs"
 
 # TestFlight « Test Information », shown to members when they join and to
 # Apple's beta reviewers. Public texts only: the reviewer's sign-in account
@@ -92,8 +92,15 @@ platform :ios do
 
   desc "Send the latest TestFlight build to the members' external group and submit it for Apple's beta review."
   lane :members do
+    key = api_key
+    # pilot skips a group it can't find without saying so: fail instead.
+    app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+    group_names = app.get_beta_groups.map(&:name)
+    unless group_names.include?(MEMBERS_GROUP)
+      UI.user_error!("TestFlight group « #{MEMBERS_GROUP} » not found (groups: #{group_names.join(', ')})")
+    end
     upload_to_testflight(
-      api_key: api_key,
+      api_key: key,
       distribute_only: true,
       # Latest uploaded build unless BUILD_NUMBER picks one.
       build_number: ENV["BUILD_NUMBER"].to_s.strip.empty? ? nil : ENV["BUILD_NUMBER"],
