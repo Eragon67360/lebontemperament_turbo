@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { checkWorkFile, WORK_FILE_ACCEPT } from "@/utils/workFiles";
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -21,13 +22,16 @@ export function UploadFileDialog({
   onSubmit,
 }: UploadFileDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const check = checkWorkFile(file);
+    setSelectedFile(check.ok ? file : null);
+    setFileError(check.ok ? null : `${file.name} : ${check.error}`);
   };
 
   const handleSubmit = async () => {
@@ -57,6 +61,7 @@ export function UploadFileDialog({
             <input
               type="file"
               ref={fileInputRef}
+              accept={WORK_FILE_ACCEPT}
               className="hidden"
               onChange={handleFileSelect}
             />
@@ -73,6 +78,15 @@ export function UploadFileDialog({
                 {selectedFile.name}
               </p>
             )}
+            {fileError && (
+              <p role="alert" className="text-destructive text-sm">
+                {fileError}
+              </p>
+            )}
+            <p className="text-muted-foreground mt-2 text-center text-xs">
+              PDF, images, audio, MIDI, MusicXML ou documents bureautiques,
+              50&nbsp;Mo maximum.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2">
@@ -80,6 +94,7 @@ export function UploadFileDialog({
               variant="outline"
               onClick={() => {
                 setSelectedFile(null);
+                setFileError(null);
                 onOpenChange(false);
               }}
               disabled={uploading}

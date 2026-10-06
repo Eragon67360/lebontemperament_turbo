@@ -11,6 +11,7 @@ import {
 } from "@/hooks/useFolders";
 import { FileRecord, Folder } from "@/types/files";
 import { createClient } from "@/utils/supabase/client";
+import { checkWorkFile, workFileStoragePath } from "@/utils/workFiles";
 import { FolderPlus, Upload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -72,31 +73,52 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
   };
 
   const handleFileUpload = async (file: File) => {
+    // The dialog already refuses files the bucket would refuse.
+    const check = checkWorkFile(file);
+    if (!check.ok) {
+      toast.error(check.error);
+      return;
+    }
+
     toast.promise(
       async () => {
         const supabase = createClient();
+        const bucket = supabase.storage.from("programs");
 
-        const path = `${programId}/${groupId}/${Date.now()}_${file.name}`;
+        const path = workFileStoragePath(
+          programId,
+          groupId,
+          file.name,
+          Date.now(),
+        );
 
-        const { error: uploadError } = await supabase.storage
-          .from("programs") // bucket name
-          .upload(path, file, {
-            cacheControl: "3600",
-            upsert: false,
-          });
+        // Re-wrapped so the upload carries the checked type: the bucket
+        // compares it with its allow-list, and browsers send none for some
+        // scores and MIDI files.
+        const body = new File([file], file.name, { type: check.contentType });
+        const { error: uploadError } = await bucket.upload(path, body, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
         if (uploadError) throw uploadError;
 
-        await createFile.mutateAsync({
-          name: file.name,
-          original_name: file.name,
-          size: file.size,
-          mime_type: file.type,
-          storage_path: path,
-          program_id: programId,
-          group_id: groupId,
-          folder_id: currentFolder?.id,
-        });
+        try {
+          await createFile.mutateAsync({
+            name: file.name,
+            original_name: file.name,
+            size: file.size,
+            mime_type: check.contentType,
+            storage_path: path,
+            program_id: programId,
+            group_id: groupId,
+            folder_id: currentFolder?.id,
+          });
+        } catch (error) {
+          // No row points to the object: remove it rather than orphan it.
+          await bucket.remove([path]);
+          throw error;
+        }
 
         setIsUploadFileOpen(false);
       },
