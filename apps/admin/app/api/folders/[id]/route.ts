@@ -1,8 +1,8 @@
 // app/api/folders/[id]/route.ts
 import { UpdateFolderDTO } from "@/types/files";
 import { checkAuthorization } from "@/utils/auth";
-import { deleteStorageFolder } from "@/utils/storage";
 import { createClient } from "@/utils/supabase/server";
+import { storagePathBatches } from "@/utils/workFiles";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
@@ -51,7 +51,6 @@ export async function DELETE(
   const supabase = await createClient();
 
   try {
-    // Start a transaction
     const { data: folder, error: folderError } = await supabase
       .from("folders")
       .select("*")
@@ -89,12 +88,20 @@ export async function DELETE(
       throw filesError;
     }
 
-    // Delete files from storage
-    if (files && files.length > 0) {
-      const storagePath = `${folder.program_id}/${folder.group_id}/${folder.id}`;
-      await deleteStorageFolder(storagePath);
+    // Remove the stored objects first, by their recorded paths (uploads are
+    // not stored under a folder prefix), with this request's admin session,
+    // like the single-file delete: if Storage fails, the rows stay and the
+    // admin can retry, rather than rows vanishing while objects remain.
+    for (const paths of storagePathBatches(files ?? [])) {
+      const { error: storageError } = await supabase.storage
+        .from("programs")
+        .remove(paths);
+      if (storageError) {
+        throw storageError;
+      }
+    }
 
-      // Delete file records from database
+    if (files && files.length > 0) {
       const { error: deleteFilesError } = await supabase
         .from("files")
         .delete()
