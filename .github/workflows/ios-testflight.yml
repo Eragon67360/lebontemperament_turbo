@@ -12,6 +12,8 @@ on:
   push:
     branches:
       - main
+      # TEMPORARY: first trial run from the pull request; removed before merge.
+      - claude/project-thread-f3sflq
     paths:
       - "apps/mobile_app/**"
       - "!apps/mobile_app/pubspec.yaml"
