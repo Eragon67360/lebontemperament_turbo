@@ -1,0 +1,63 @@
+# App Store Connect and TestFlight automation for Le Bon Tempérament (see
+# fastlane/README.md).
+#
+# Every lane talks to the real App Store Connect. They run from the
+# "iOS TestFlight" GitHub workflow, in the `app-store` environment that
+# waits for the owner's approval.
+
+require "shellwords"
+
+default_platform(:ios)
+
+WHAT_TO_TEST = "testflight/what_to_test.txt"
+
+def env!(name)
+  ENV[name].to_s.strip.empty? ? UI.user_error!("#{name} is not set") : ENV[name]
+end
+
+def api_key
+  app_store_connect_api_key(
+    key_id: env!("ASC_KEY_ID"),
+    issuer_id: env!("ASC_ISSUER_ID"),
+    key_filepath: env!("ASC_KEY_PATH")
+  )
+end
+
+# xcodebuild signs with the same API key: automatic signing creates the
+# certificate and provisioning profile in the developer account when they
+# are missing (cloud signing needs an Admin key).
+def signing_xcargs
+  [
+    "-allowProvisioningUpdates",
+    "-authenticationKeyPath #{env!('ASC_KEY_PATH').shellescape}",
+    "-authenticationKeyID #{env!('ASC_KEY_ID').shellescape}",
+    "-authenticationKeyIssuerID #{env!('ASC_ISSUER_ID').shellescape}"
+  ].join(" ")
+end
+
+platform :ios do
+  desc "Archive the app (after `flutter build ios --no-codesign`), sign it for the App Store and upload it to TestFlight."
+  lane :beta do
+    key = api_key
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "LeBonTemperament.ipa",
+      xcargs: "#{signing_xcargs} DEVELOPMENT_TEAM=#{env!('APPLE_TEAM_ID').shellescape} CODE_SIGN_STYLE=Automatic",
+      export_xcargs: signing_xcargs,
+      export_team_id: env!("APPLE_TEAM_ID")
+    )
+    upload_to_testflight(
+      api_key: key,
+      ipa: "build/LeBonTemperament.ipa",
+      # « À tester » shown to testers; set once the build is processed.
+      changelog: File.read(WHAT_TO_TEST).strip,
+      # Internal testers (App Store Connect users) get every build. Members
+      # are external testers: a group and Apple's beta review, added later.
+      distribute_external: false
+    )
+  end
+end
