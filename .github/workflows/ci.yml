@@ -3,7 +3,7 @@ name: CI
 # Checks on every pull request into dev or main (and on demand). Vercel's
 # preview builds run separately; these are the gates docs/agents/quality-gates.md
 # asks for: lint, types, domain tests, a build of each changed app, and the
-# Flutter analyzer and tests when the mobile app changed.
+# Flutter analyzer, tests and Android and iOS builds when the mobile app changed.
 
 on:
   pull_request:
@@ -219,3 +219,25 @@ jobs:
           FASTLANE_SKIP_UPDATE_CHECK: "1"
           FASTLANE_OPT_OUT_USAGE: "1"
         run: bundle exec fastlane lanes
+
+  ios:
+    name: iOS build
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: macos-26
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/mobile_app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: "3.35.7"
+          channel: stable
+          cache: true
+      - run: cp .env.example .env
+      - run: flutter pub get
+      # Installs the pods and compiles the iOS project with the same Xcode as
+      # the TestFlight workflow, without signing (nothing leaves the runner).
+      - run: flutter build ios --release --no-codesign

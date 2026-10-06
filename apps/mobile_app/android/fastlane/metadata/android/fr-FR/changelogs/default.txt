@@ -1,1 +1,1 @@
-Une nouvelle icône pour l'appli : un diapason sur fond turquoise, plus facile à repérer sur votre écran d'accueil. Sur Android 13 et plus, elle suit aussi la couleur de vos icônes si vous les avez personnalisées.
+Connexion plus simple : vous pouvez maintenant vous connecter avec votre compte Google, et sur iPhone avec votre compte Apple. Utilisez l'adresse e-mail que vous avez donnée à l'association.
