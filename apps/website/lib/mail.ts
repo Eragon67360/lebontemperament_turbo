@@ -5,24 +5,14 @@ import nodemailer, { type Transporter } from "nodemailer";
 type SmtpCredentials = { user: string; pass: string };
 
 /**
- * Credentials of the association's mailbox. `SMTP_USER` / `SMTP_PASSWORD` are
- * the server-only names; the `NEXT_PUBLIC_BURNER_*` pair is a temporary
- * fallback until those variables are deleted from Vercel (then remove it).
+ * Credentials of the association's sending mailbox, from the server-only
+ * `SMTP_USER` / `SMTP_PASSWORD` variables (#321). Never give them a
+ * `NEXT_PUBLIC_` prefix: those are sent to every browser.
  */
 function getSmtpCredentials(): SmtpCredentials | null {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASSWORD;
-  if (user && pass) {
-    return { user, pass };
-  }
-
-  const legacyUser = process.env.NEXT_PUBLIC_BURNER_USERNAME;
-  const legacyPass = process.env.NEXT_PUBLIC_BURNER_PASSWORD;
-  if (legacyUser && legacyPass) {
-    return { user: legacyUser, pass: legacyPass };
-  }
-
-  return null;
+  return user && pass ? { user, pass } : null;
 }
 
 export type Mailer = {

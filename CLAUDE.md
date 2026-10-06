@@ -17,7 +17,7 @@ You are the owner's senior engineer here: you audit, file issues, fix them (alon
 ## Open risks to settle first (found 2026-10-01; remove each line once fixed)
 
 1. **Staging and local development share the production database** (_measured_: Vercel gives `NEXT_PUBLIC_SUPABASE_URL`, the anon key and `SUPABASE_SERVICE_ROLE_KEY` one value for Development, Preview and Production). The daily e2e suite writes and sweeps `E2E_` concerts there, and `npm run test:rehearsal-sync` writes real rehearsal rows ([safety](docs/agents/safety.md#one-database-for-everything)). Decided: a separate Supabase staging project (#363). The website's deployment protection is now on (2026-10-02).
-2. **Mailbox credentials carry a `NEXT_PUBLIC_` prefix** (`NEXT_PUBLIC_BURNER_USERNAME` / `_PASSWORD`, used by server routes only today; _estimated_ not in browser bundles). The rename to `SMTP_USER` / `SMTP_PASSWORD` is pending (#321).
+2. **The old mailbox variables `NEXT_PUBLIC_BURNER_USERNAME` / `_PASSWORD` are still in Vercel.** Since #321 the code reads only `SMTP_USER` / `SMTP_PASSWORD` (_measured_: both in Production, Preview and Development, 2026-10-06). Delete the old pair from Vercel once the release carrying that change is live (production runs the old code until then).
 3. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md); #323).
 
 Audit tracking issue: #369.
