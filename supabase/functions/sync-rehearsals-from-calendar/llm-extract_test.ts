@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert@1";
-import { extractRehearsalFields } from "./llm-extract.ts";
+import { applyGroupRules, extractRehearsalFields } from "./llm-extract.ts";
 
 const event = {
   id: "evt_test",
@@ -124,4 +124,17 @@ Deno.test("a timeout followed by a success still succeeds", async () => {
   );
   assertEquals(n, 2);
   assertEquals(result.is_rehearsal, false);
+});
+
+Deno.test("a « Dimanche BT » is always the full choir", () => {
+  const dimanche = { ...event, summary: "Dimanche BT à Wangen" };
+  const answer = {
+    is_rehearsal: true,
+    name: "Dimanche BT",
+    place: "Wangen",
+    group_type: "Tous" as const,
+  };
+  assertEquals(applyGroupRules(dimanche, answer).group_type, "Choeur complet");
+  // Other rehearsals keep the LLM's answer.
+  assertEquals(applyGroupRules(event, answer).group_type, "Tous");
 });
