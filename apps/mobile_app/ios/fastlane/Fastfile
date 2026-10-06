@@ -39,6 +39,15 @@ platform :ios do
   desc "Archive the app (after `flutter build ios --no-codesign`), sign it for the App Store and upload it to TestFlight."
   lane :beta do
     key = api_key
+    # Team and automatic signing set on the project for this run (not as
+    # xcargs: gym passes xcargs to the export step too, where xcodebuild
+    # refuses duplicate options).
+    update_code_signing_settings(
+      path: "Runner.xcodeproj",
+      targets: ["Runner"],
+      use_automatic_signing: true,
+      team_id: env!("APPLE_TEAM_ID")
+    )
     build_app(
       workspace: "Runner.xcworkspace",
       scheme: "Runner",
@@ -46,8 +55,8 @@ platform :ios do
       export_method: "app-store",
       output_directory: "build",
       output_name: "LeBonTemperament.ipa",
-      xcargs: "#{signing_xcargs} DEVELOPMENT_TEAM=#{env!('APPLE_TEAM_ID').shellescape} CODE_SIGN_STYLE=Automatic",
-      export_xcargs: signing_xcargs,
+      # Also used by gym for the export (re-signing for the App Store).
+      xcargs: signing_xcargs,
       export_team_id: env!("APPLE_TEAM_ID")
     )
     upload_to_testflight(
