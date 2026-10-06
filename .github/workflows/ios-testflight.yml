@@ -1,0 +1,119 @@
+name: iOS TestFlight
+
+# Builds the iPhone app, signs it for the App Store and uploads it to
+# TestFlight (fastlane, apps/mobile_app/ios/fastlane). Runs on each release
+# to main that touches the app, like the Android build, or by hand from
+# Actions. See apps/mobile_app/ios/fastlane/README.md.
+#
+# It changes App Store Connect, so the job runs in the `app-store`
+# environment, which holds the API key and waits for the owner's approval.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/mobile_app/**"
+      - "!apps/mobile_app/pubspec.yaml"
+      - ".github/workflows/ios-testflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-store
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    name: Build and upload to TestFlight
+    runs-on: macos-26
+    timeout-minutes: 90
+    environment: app-store
+    env:
+      # Same fixed production website as the Android build.
+      SITE_URL: https://www.lebontemperament.com
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_OPT_OUT_USAGE: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check the secrets
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=""
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "Missing secrets in the app-store environment:$missing" >&2
+            exit 1
+          fi
+          xcodebuild -version
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: "3.35.7"
+          channel: "stable"
+          cache: true
+
+      - name: Create .env
+        working-directory: apps/mobile_app
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DRIVE_FOLDER_ADULTES: ${{ secrets.DRIVE_FOLDER_ADULTES }}
+          DRIVE_FOLDER_JEUNES: ${{ secrets.DRIVE_FOLDER_JEUNES }}
+          DRIVE_FOLDER_ENFANTS: ${{ secrets.DRIVE_FOLDER_ENFANTS }}
+          DRIVE_FOLDER_ORCHESTRE: ${{ secrets.DRIVE_FOLDER_ORCHESTRE }}
+          DRIVE_FOLDER_CAHIER_30_ANS: ${{ secrets.DRIVE_FOLDER_CAHIER_30_ANS }}
+          DRIVE_FOLDER_MAIN: ${{ secrets.DRIVE_FOLDER_MAIN }}
+        run: |
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          echo "SITE_URL=$SITE_URL" >> .env
+          [ -n "$DRIVE_FOLDER_ADULTES" ] && echo "DRIVE_FOLDER_ADULTES=$DRIVE_FOLDER_ADULTES" >> .env
+          [ -n "$DRIVE_FOLDER_JEUNES" ] && echo "DRIVE_FOLDER_JEUNES=$DRIVE_FOLDER_JEUNES" >> .env
+          [ -n "$DRIVE_FOLDER_ENFANTS" ] && echo "DRIVE_FOLDER_ENFANTS=$DRIVE_FOLDER_ENFANTS" >> .env
+          [ -n "$DRIVE_FOLDER_ORCHESTRE" ] && echo "DRIVE_FOLDER_ORCHESTRE=$DRIVE_FOLDER_ORCHESTRE" >> .env
+          [ -n "$DRIVE_FOLDER_CAHIER_30_ANS" ] && echo "DRIVE_FOLDER_CAHIER_30_ANS=$DRIVE_FOLDER_CAHIER_30_ANS" >> .env
+          [ -n "$DRIVE_FOLDER_MAIN" ] && echo "DRIVE_FOLDER_MAIN=$DRIVE_FOLDER_MAIN" >> .env
+          true
+
+      # Compiles the Flutter part and installs the pods; fastlane then
+      # archives and signs.
+      - name: Build (unsigned)
+        working-directory: apps/mobile_app
+        run: |
+          flutter pub get
+          flutter build ios --release --no-codesign
+
+      - name: Install fastlane
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: apps/mobile_app/ios
+
+      - name: Sign and upload to TestFlight
+        working-directory: apps/mobile_app/ios
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          export ASC_KEY_PATH="$RUNNER_TEMP/asc-key.p8"
+          ( umask 077; printf '%s\n' "$ASC_KEY_P8" > "$ASC_KEY_PATH" )
+          trap 'rm -f "$ASC_KEY_PATH"' EXIT
+          bundle exec fastlane ios beta

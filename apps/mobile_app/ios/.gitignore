@@ -32,3 +32,16 @@ Runner/GeneratedPluginRegistrant.*
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# fastlane (App Store Connect and TestFlight): local gems, reports, builds,
+# never a key file
+/.bundle/
+/vendor/
+fastlane/report.xml
+fastlane/README.md.tmp
+fastlane/test_output/
+*.ipa
+*.dSYM.zip
+*.p8
+*.p12
+*.mobileprovision
