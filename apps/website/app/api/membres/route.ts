@@ -18,12 +18,11 @@ export async function GET() {
     const supabase = authCheck.supabase;
     const supabaseAdmin = createAdminClient();
 
-    // Fetch all profiles - all authenticated users can read profiles
+    // Members see each other's name, email, voice and photo only (owner
+    // decision on #350): phones and postal address stay in the admin.
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select(
-        "id, email, display_name, address, home_phone, mobile_phone, voice, profile_picture_url",
-      )
+      .select("id, email, display_name, voice, profile_picture_url")
       .order("display_name", { ascending: true, nullsFirst: false });
 
     if (error) {
@@ -92,15 +91,14 @@ export async function GET() {
           "NOM Prénom":
             profile.display_name || profile.email?.split("@")[0] || "",
           "Adresse mail": profile.email || "",
-          "Adresse postale": profile.address || "",
-          Domicile: profile.home_phone || "",
-          Portable: profile.mobile_phone || "",
           Voix: profile.voice || "",
           photoUrl,
         };
       });
 
-    return NextResponse.json(members);
+    return NextResponse.json(members, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error) {
     console.error("Error in membres API:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

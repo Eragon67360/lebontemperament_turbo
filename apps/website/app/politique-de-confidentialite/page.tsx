@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.0";
-const POLICY_UPDATED_ON = "3 octobre 2026";
+const POLICY_VERSION = "2.1";
+const POLICY_UPDATED_ON = "6 octobre 2026";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -40,7 +40,8 @@ export const metadata: Metadata = {
 };
 
 const h2Class = "text-primary-text mb-6 text-lg font-semibold xl:text-2xl";
-const h3Class = "text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl";
+const h3Class =
+  "text-primary-text mt-6 mb-4 text-base font-semibold xl:text-xl";
 const pClass = "text-foreground mb-4";
 const ulClass = "text-foreground mb-4 list-disc pl-5";
 const linkClass = "text-primary-text hover:text-primary-text/80 underline";
@@ -505,15 +506,12 @@ export default function PrivacyPolicy() {
               ]}
             />
 
-            {/* TODO(owner): these fields are owner decision 8 (#350, board to
-                confirm). Publish this text together with #350, or adapt it to
-                what the directory shows at that time. */}
             <Processing
               title="Annuaire des membres"
               facts={[
                 [
                   "Visible par les autres membres connectés, sur le site et dans l’application",
-                  "nom, pupitre, adresse e-mail et photo de profil ; votre numéro de téléphone seulement si vous l’acceptez ; jamais votre adresse postale",
+                  "nom, pupitre, adresse e-mail et photo de profil ; jamais vos numéros de téléphone ni votre adresse postale, qui restent réservés aux administrateurs",
                 ],
                 [
                   "Finalité",
@@ -521,7 +519,7 @@ export default function PrivacyPolicy() {
                 ],
                 [
                   "Base légale",
-                  "intérêt légitime de l’association (article 6.1.f du RGPD) ; pour le téléphone, votre consentement (article 6.1.a)",
+                  "intérêt légitime de l’association (article 6.1.f du RGPD)",
                 ],
               ]}
             />
@@ -863,8 +861,8 @@ export default function PrivacyPolicy() {
               <li className="mb-2">
                 <strong>Retrait du consentement</strong> : à tout moment, pour
                 les traitements fondés sur votre consentement (cookies de mesure
-                d’audience, lettre d’information, souvenirs, téléphone dans
-                l’annuaire), sans remettre en cause ce qui a été fait avant.
+                d’audience, lettre d’information, souvenirs), sans remettre en
+                cause ce qui a été fait avant.
               </li>
               <li className="mb-2">
                 <strong>Directives après le décès</strong> : indiquer ce que
