@@ -31,6 +31,17 @@ BETA_REVIEW_NOTES = <<~NOTES.strip
   provided in this form; accounts are created by the association.
 NOTES
 
+# Notes for Apple's App Review of the App Store version.
+STORE_REVIEW_NOTES = <<~NOTES.strip
+  #{BETA_REVIEW_NOTES}
+
+  The "Mode livraison" screen (background location) is only shown to the
+  association's administrators: during the association's fundraising
+  deliveries, the volunteer driver's position is shared with the people
+  waiting for their order, who follow it on the website. It is not
+  available with the review account.
+NOTES
+
 def env!(name)
   ENV[name].to_s.strip.empty? ? UI.user_error!("#{name} is not set") : ENV[name]
 end
@@ -105,6 +116,66 @@ platform :ios do
       distribute_external: false,
       submit_beta_review: false
     )
+  end
+
+  desc "Fill the App Store page of the version being prepared: texts, screenshots, age rating, build and review details. Never submits it."
+  lane :store do
+    key = api_key
+    app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+    UI.user_error!("App not found in App Store Connect") unless app
+
+    # The newest valid build (or BUILD_NUMBER): the page takes its version.
+    builds = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      build_number: ENV["BUILD_NUMBER"].to_s.strip.empty? ? nil : ENV["BUILD_NUMBER"],
+      platform: "IOS",
+      processing_states: "VALID",
+      limit: 1
+    )
+    build = builds.first || UI.user_error!("No valid build in App Store Connect")
+    UI.message("Build #{build.app_version} (#{build.version})")
+
+    # Texts (metadata/), screenshots (screenshots/, rendered by
+    # store/screenshots_test.dart) and age rating. The version being
+    # prepared is renamed to the build's version when needed.
+    deliver(
+      api_key: key,
+      app_identifier: app.bundle_id,
+      app_version: build.app_version,
+      platform: "ios",
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots",
+      app_rating_config_path: "./fastlane/age_rating.json",
+      skip_binary_upload: true,
+      skip_app_version_update: false,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      # No HTML preview to confirm: the texts are reviewed in the pull request.
+      force: true
+    )
+
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("No App Store version being prepared") unless version
+    version.select_build(build_id: build.id)
+    UI.success("Build #{build.version} attached to version #{version.version_string}")
+
+    # Apple's App Review gets the same contact and sign-in account as the
+    # beta review, typed by the owner in TestFlight: copied as is, never
+    # printed (the workflow logs are public).
+    beta = Spaceship::ConnectAPI.get_beta_app_review_detail(filter: { app: app.id }).to_models.first
+    fields = %w[contact_first_name contact_last_name contact_phone contact_email demo_account_name demo_account_password]
+    missing = beta ? fields.select { |f| beta.send(f).to_s.strip.empty? } : fields
+    if missing.empty?
+      attributes = fields.to_h { |f| [f, beta.send(f)] }
+      attributes["demo_account_required"] = true
+      attributes["notes"] = STORE_REVIEW_NOTES
+      detail = version.fetch_app_store_review_detail rescue nil
+      detail ? detail.update(attributes: attributes) : version.create_app_store_review_detail(attributes: attributes)
+      UI.success("App Review contact and sign-in account copied from the beta review")
+    else
+      UI.important("App Review details not set: the beta review lacks #{missing.join(', ')}")
+    end
   end
 
   desc "Send the latest TestFlight build to the members' external group and submit it for Apple's beta review."

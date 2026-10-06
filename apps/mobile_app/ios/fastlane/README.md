@@ -4,11 +4,14 @@ The iPhone app is built, signed and uploaded to TestFlight by fastlane, from
 the **iOS TestFlight** GitHub workflow (`.github/workflows/ios-testflight.yml`).
 Nothing reaches Apple without the owner's approval.
 
-| What                        | Where                                                         | How it reaches Apple                                 |
-| --------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
-| App build                   | built on a GitHub macOS runner from `main`                    | **iOS TestFlight** workflow, after approval          |
-| « À tester » (What to Test) | `testflight/what_to_test.txt`                                 | with the build                                       |
-| Push notifications          | `Runner/Runner.entitlements` (Firebase Cloud Messaging, APNs) | with the build; the APNs key is uploaded to Firebase |
+| What                        | Where                                                          | How it reaches Apple                                 |
+| --------------------------- | -------------------------------------------------------------- | ---------------------------------------------------- |
+| App build                   | built on a GitHub macOS runner from `main`                     | **iOS TestFlight** workflow, after approval          |
+| « À tester » (What to Test) | `testflight/what_to_test.txt`                                  | with the build                                       |
+| Push notifications          | `Runner/Runner.entitlements` (Firebase Cloud Messaging, APNs)  | with the build; the APNs key is uploaded to Firebase |
+| App Store page texts        | `metadata/fr-FR/*.txt`, `metadata/*.txt` (copyright, category) | **Update the App Store page**, after approval        |
+| App Store screenshots       | `screenshots/fr-FR` (iPhone 6.9" and iPad 13")                 | **Update the App Store page**, after approval        |
+| Age rating answers          | `age_rating.json` (4+: none of Apple's content questions)      | **Update the App Store page**, after approval        |
 
 The bundle ID is `com.lebontemperament.app`, the same as on Android.
 
@@ -38,6 +41,22 @@ review; members are notified once Apple approves it. The reviewer's contact
 details and sign-in account are typed by the owner in App Store Connect
 (TestFlight → Test Information → Beta App Review Information) and are never
 stored in this repository.
+
+## The App Store page
+
+Actions → **iOS TestFlight** → Run workflow → **Update the App Store page**
+(`fastlane ios store`) fills the App Store version being prepared: the texts
+in `metadata/`, the screenshots in `screenshots/` (rendered by
+`store/screenshots_test.dart` with demo data, see the Android README), the
+age rating, the newest valid build (its version becomes the page's version),
+and the App Review details: the contact and sign-in account are copied from
+the beta review information the owner typed in TestFlight, without being
+printed or stored here. It never submits the version: the owner presses
+**Add for Review** in App Store Connect.
+
+Not reachable with the API key, so set by hand in App Store Connect: App
+Privacy (the data the app collects), Pricing and Availability, the content
+rights declaration, and the EU trader status (Business).
 
 The build number is the one in `pubspec.yaml` (`version: x.y.z+N`), the same
 as the Android build; TestFlight refuses a number it already has.

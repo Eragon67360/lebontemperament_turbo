@@ -1,14 +1,18 @@
-// Play Store screenshots, rendered from the real screens with demo data.
+// Store screenshots, rendered from the real screens with demo data.
 //
-//   flutter test store/screenshots_test.dart --update-goldens
+//   flutter test store/screenshots_test.dart
 //
-// writes the framed 1080 × 1920 images into the store listing
-// (android/fastlane/metadata/android/fr-FR/images/phoneScreenshots), which
-// the "Play Store" workflow publishes. Demo data only: no member, no real
-// address, nothing from the database.
+// writes the framed images into both store listings: Google Play's phone
+// format (android/fastlane/metadata/android/fr-FR/images/phoneScreenshots,
+// published by the "Play Store" workflow) and the App Store's iPhone 6.9"
+// and iPad 13" formats (ios/fastlane/screenshots/fr-FR, published by the
+// "iOS TestFlight" workflow's « Update the App Store page »). Demo data
+// only: no member, no real address, nothing from the database.
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,8 +35,70 @@ import 'package:lebontemperament/features/rehearsals/presentation/screens/rehear
 
 import '../test/helpers/screen_harness.dart';
 
-const _out =
-    '../android/fastlane/metadata/android/fr-FR/images/phoneScreenshots';
+/// One store format: the image size, and the screen shown in the frame at
+/// its true size on that device.
+class _Device {
+  const _Device({
+    required this.out,
+    required this.prefix,
+    required this.physicalSize,
+    required this.pixelRatio,
+    required this.screen,
+    required this.topInset,
+    this.scale = 1,
+  });
+
+  /// Folder (relative to the app, where flutter test runs) the images are written to.
+  final String out;
+
+  /// File name prefix: deliver orders the App Store screenshots by name and
+  /// tells the devices apart by size, so iPhone and iPad share the folder.
+  final String prefix;
+  final Size physicalSize;
+  final double pixelRatio;
+  final Size screen;
+
+  /// Status bar height on the device, left empty at the top of the screen.
+  final double topInset;
+
+  /// Frame scale: caption, margins and border grow with the image.
+  final double scale;
+}
+
+const _ios = 'ios/fastlane/screenshots/fr-FR';
+
+const _devices = [
+  // 360 × 640 logical at 3× = 1080 × 1920, Google Play's phone format.
+  _Device(
+    out: 'android/fastlane/metadata/android/fr-FR/images/phoneScreenshots',
+    prefix: '',
+    physicalSize: Size(1080, 1920),
+    pixelRatio: 3,
+    screen: Size(390, 844),
+    topInset: 24,
+  ),
+  // 440 × 956 logical at 3× = 1320 × 2868, the App Store's iPhone 6.9"
+  // format (Apple scales it down for the smaller iPhones).
+  _Device(
+    out: _ios,
+    prefix: 'iphone_',
+    physicalSize: Size(1320, 2868),
+    pixelRatio: 3,
+    screen: Size(390, 844),
+    topInset: 47,
+  ),
+  // 1032 × 1376 logical at 2× = 2064 × 2752, the App Store's iPad 13"
+  // format: the screens at their real iPad size.
+  _Device(
+    out: _ios,
+    prefix: 'ipad_',
+    physicalSize: Size(2064, 2752),
+    pixelRatio: 2,
+    screen: Size(1032, 1376),
+    topInset: 24,
+    scale: 1.8,
+  ),
+];
 
 /// A date [days] from today, as the database stores it (YYYY-MM-DD): the
 /// screens only list what is still to come.
@@ -263,17 +329,22 @@ Future<void> _loadFonts() async {
 }
 
 /// The store frame: the stage's dark ground lit in teal, the caption, and
-/// the real screen in a
-/// phone-shaped window at a true phone size (390 × 844), scaled down.
+/// the real screen in a device-shaped window at the device's true size,
+/// scaled down.
 class _Frame extends StatelessWidget {
-  const _Frame({required this.caption, required this.child});
+  const _Frame({
+    required this.caption,
+    required this.device,
+    required this.child,
+  });
   final String caption;
+  final _Device device;
   final Widget child;
-
-  static const _phone = Size(390, 844);
 
   @override
   Widget build(BuildContext context) {
+    final k = device.scale;
+    final screen = device.screen;
     return Material(
       type: MaterialType.transparency,
       child: DecoratedBox(
@@ -286,30 +357,30 @@ class _Frame extends StatelessWidget {
         ),
         child: Column(
           children: [
-            const SizedBox(height: 44),
+            SizedBox(height: 44 * k),
             Text(
               caption,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Caption',
                 fontWeight: FontWeight.w800,
-                fontSize: 27,
+                fontSize: 27 * k,
                 height: 1.2,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28 * k),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 34),
+                padding: EdgeInsets.symmetric(horizontal: 34 * k),
                 child: Align(
                   alignment: Alignment.topCenter,
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(30 * k),
                       border: Border.all(
                         color: const Color(0xFF2A3B3E),
-                        width: 6,
+                        width: 6 * k,
                       ),
                       boxShadow: const [
                         BoxShadow(
@@ -320,17 +391,19 @@ class _Frame extends StatelessWidget {
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(24 * k),
                       child: FittedBox(
                         fit: BoxFit.fitWidth,
                         alignment: Alignment.topCenter,
                         child: SizedBox.fromSize(
-                          size: _phone,
+                          size: screen,
                           child: MediaQuery(
                             data: MediaQuery.of(context).copyWith(
-                              size: _phone,
-                              padding: const EdgeInsets.only(top: 24),
-                              viewPadding: const EdgeInsets.only(top: 24),
+                              size: screen,
+                              padding: EdgeInsets.only(top: device.topInset),
+                              viewPadding: EdgeInsets.only(
+                                top: device.topInset,
+                              ),
                               textScaler: TextScaler.noScaling,
                             ),
                             child: child,
@@ -371,77 +444,142 @@ void _mockPlugins() {
   }
 }
 
+final _shotKey = GlobalKey();
+
+/// A PNG of [rgba] without its alpha channel (the frame is opaque).
+Uint8List _rgbPng(int width, int height, ByteData rgba) {
+  final pixels = rgba.buffer.asUint8List(
+    rgba.offsetInBytes,
+    rgba.lengthInBytes,
+  );
+  final raw = BytesBuilder();
+  for (var y = 0; y < height; y++) {
+    raw.addByte(0); // no filter
+    for (var x = 0; x < width; x++) {
+      final i = (y * width + x) * 4;
+      raw.add([pixels[i], pixels[i + 1], pixels[i + 2]]);
+    }
+  }
+  final out = BytesBuilder();
+  void chunk(String type, List<int> data) {
+    final body = [...type.codeUnits, ...data];
+    out
+      ..add((ByteData(4)..setUint32(0, data.length)).buffer.asUint8List())
+      ..add(body)
+      ..add((ByteData(4)..setUint32(0, _crc32(body))).buffer.asUint8List());
+  }
+
+  out.add([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+  final header = ByteData(13)
+    ..setUint32(0, width)
+    ..setUint32(4, height)
+    ..setUint8(8, 8) // 8 bits per channel
+    ..setUint8(9, 2); // RGB
+  chunk('IHDR', header.buffer.asUint8List());
+  chunk('IDAT', ZLibEncoder(level: 9).convert(raw.takeBytes()));
+  chunk('IEND', const []);
+  return out.takeBytes();
+}
+
+int _crc32(List<int> bytes) {
+  var crc = 0xFFFFFFFF;
+  for (final b in bytes) {
+    crc ^= b;
+    for (var k = 0; k < 8; k++) {
+      crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320 : crc >> 1;
+    }
+  }
+  return crc ^ 0xFFFFFFFF;
+}
+
 void main() {
   setUpAll(() async {
     _mockPlugins();
     await _loadFonts();
   });
 
-  for (final shot in _shots) {
-    testWidgets(shot.file, (tester) async {
-      GoogleFonts.config.allowRuntimeFetching = false;
-      // 360 × 640 logical at 3× = 1080 × 1920, Google Play's phone format.
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 3;
-      addTearDown(tester.view.reset);
+  for (final device in _devices) {
+    for (final shot in _shots) {
+      testWidgets('${device.prefix}${shot.file}', (tester) async {
+        GoogleFonts.config.allowRuntimeFetching = false;
+        tester.view.physicalSize = device.physicalSize;
+        tester.view.devicePixelRatio = device.pixelRatio;
+        addTearDown(tester.view.reset);
 
-      // Each audio player listens on its own event channel (a random name):
-      // there's nothing to mock, and no sound in a screenshot anyway.
-      final reportError = FlutterError.onError;
-      FlutterError.onError = (details) {
-        if (details.exception is MissingPluginException) return;
-        reportError?.call(details);
-      };
-      addTearDown(() => FlutterError.onError = reportError);
+        // Each audio player listens on its own event channel (a random name):
+        // there's nothing to mock, and no sound in a screenshot anyway.
+        final reportError = FlutterError.onError;
+        FlutterError.onError = (details) {
+          if (details.exception is MissingPluginException) return;
+          reportError?.call(details);
+        };
+        addTearDown(() => FlutterError.onError = reportError);
 
-      final concerts = ListResult.fresh(_concerts);
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            ...offlineOverrides(
-              rehearsals: ListResult.fresh(_rehearsals),
-              concerts: concerts,
-              events: ListResult.fresh(_events),
-              displayName: 'Camille',
-              drive: _DemoDriveService(),
-              catalog: _catalog,
-              homeRehearsals: AsyncData(_rehearsals),
-              homeConcerts: AsyncData(_concerts),
-            ),
-            realtimeConcertsProvider.overrideWith((ref) async => concerts),
-            concertProvider.overrideWith(
-              (ref, id) async => _concerts.firstWhere((c) => c.id == id),
-            ),
-          ],
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: shot.dark ? AppTheme.darkTheme : AppTheme.lightTheme,
-            locale: const Locale('fr', 'FR'),
-            supportedLocales: const [Locale('fr', 'FR')],
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
+        final concerts = ListResult.fresh(_concerts);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              ...offlineOverrides(
+                rehearsals: ListResult.fresh(_rehearsals),
+                concerts: concerts,
+                events: ListResult.fresh(_events),
+                displayName: 'Camille',
+                drive: _DemoDriveService(),
+                catalog: _catalog,
+                homeRehearsals: AsyncData(_rehearsals),
+                homeConcerts: AsyncData(_concerts),
+              ),
+              realtimeConcertsProvider.overrideWith((ref) async => concerts),
+              concertProvider.overrideWith(
+                (ref, id) async => _concerts.firstWhere((c) => c.id == id),
+              ),
             ],
-            home: _Frame(caption: shot.caption, child: shot.screen),
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: shot.dark ? AppTheme.darkTheme : AppTheme.lightTheme,
+              locale: const Locale('fr', 'FR'),
+              supportedLocales: const [Locale('fr', 'FR')],
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              home: RepaintBoundary(
+                key: _shotKey,
+                child: _Frame(
+                  caption: shot.caption,
+                  device: device,
+                  child: shot.screen,
+                ),
+              ),
+            ),
           ),
-        ),
-      );
-      // Fonts load from the asset bundle asynchronously; then the entrance
-      // animations (up to 1.3 s).
-      await tester.pump();
-      await tester.runAsync(GoogleFonts.pendingFonts);
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(const Duration(seconds: 2));
-      await tester.pump(const Duration(seconds: 1));
+        );
+        // Fonts load from the asset bundle asynchronously; then the entrance
+        // animations (up to 1.3 s).
+        await tester.pump();
+        await tester.runAsync(GoogleFonts.pendingFonts);
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pump(const Duration(seconds: 2));
+        await tester.pump(const Duration(seconds: 1));
 
-      await expectLater(
-        find.byType(_Frame),
-        matchesGoldenFile('$_out/${shot.file}.png'),
-      );
-      // Let the screens' own timers (entrance animations) run out.
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump(const Duration(seconds: 5));
-    });
+        // At the device's pixel ratio (a golden file would be at 1×), in
+        // RGB: the App Store wants the exact pixel size and no alpha.
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(_shotKey),
+        );
+        await tester.runAsync(() async {
+          final image = await boundary.toImage(pixelRatio: device.pixelRatio);
+          final rgba = await image.toByteData();
+          File('${device.out}/${device.prefix}${shot.file}.png')
+            ..parent.createSync(recursive: true)
+            ..writeAsBytesSync(_rgbPng(image.width, image.height, rgba!));
+          image.dispose();
+        });
+        // Let the screens' own timers (entrance animations) run out.
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(seconds: 5));
+      });
+    }
   }
 }

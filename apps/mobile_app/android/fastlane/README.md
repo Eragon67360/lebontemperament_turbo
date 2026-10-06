@@ -58,11 +58,12 @@ from the database), framed in the brand teal with a caption:
 
 ```sh
 cd apps/mobile_app
-flutter test store/screenshots_test.dart --update-goldens
+flutter test store/screenshots_test.dart
 ```
 
 Captions, demo data and the list of screens are in
-`store/screenshots_test.dart`. Run it again after any visual change and commit
+`store/screenshots_test.dart`. The same run writes the App Store images
+(`ios/fastlane/screenshots`). Run it again after any visual change and commit
 the images.
 
 ## Running fastlane locally
