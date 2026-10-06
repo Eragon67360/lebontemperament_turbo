@@ -1,6 +1,6 @@
 # Quality gates
 
-Nothing is "done" until these pass, and your report says exactly which ran and what they returned. `.github/workflows/ci.yml` runs lint, types, domain tests, the builds of the changed apps and the Flutter checks on every PR into `dev` or `main` (check names: `Lint`, `Types`, `Domain tests`, `Build website`, `Build admin`, `Flutter`); run them locally anyway before opening the PR, since the hook and CI take minutes. If you skip one, say which and why.
+Nothing is "done" until these pass, and your report says exactly which ran and what they returned. `.github/workflows/ci.yml` runs lint, types, domain tests, the builds of the changed apps and the Flutter checks on every PR into `dev` or `main` (check names: `Lint`, `Types`, `Domain tests`, `Build website`, `Build admin`, `Flutter`). A job that already passed on identical code (the same tree; for the app jobs, the same `apps/mobile_app` and `ci.yml`) is skipped, with a notice on the run linking the run that passed: the release PR `dev` → `main` usually reuses the version-bump PR's run. Run them locally anyway before opening the PR, since the hook and CI take minutes. If you skip one, say which and why.
 
 ## Before every PR
 

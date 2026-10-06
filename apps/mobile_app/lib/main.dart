@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent;
 
 import 'core/config/dependency_injection.dart';
+import 'core/platform/liquid_glass_support.dart';
 import 'core/config/supabase_config.dart';
 import 'core/config/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -52,6 +53,9 @@ void main() async {
       AuthStateListener().notifyAuthStateChanged();
     }
   });
+
+  // Liquid Glass tab bar on iOS 26 and later only (#549).
+  await LiquidGlassSupport.init();
 
   runApp(const ProviderScope(child: LeBonTemperamentApp()));
 }

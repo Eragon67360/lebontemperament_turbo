@@ -35,7 +35,7 @@ Règles d'extraction (toujours remplir name, place et group_type, même si is_re
   - "Hommes"         → hommes, ténors, basses
   - "Femmes"         → femmes, sopranos, altos
   - "Jeunes/Enfants" → jeunes, enfants
-  - "Choeur complet" → chœur complet, mixte complet
+  - "Choeur complet" → chœur complet, mixte complet, "Dimanche BT"
   - "Tous"           → tous, général, ou si ambigu
 - Ne devine pas une date ni une heure.
 - Sois déterministe: même entrée → même sortie.
@@ -77,7 +77,7 @@ Exemple 6 (Dimanche BT, journée entière → répétition):
   description: ""
   location: "Église Saint-Pierre"
   start/end: journée entière (all-day)
-  → { "is_rehearsal": true, "name": "Dimanche BT", "place": "Église Saint-Pierre", "group_type": "Tous" }`;
+  → { "is_rehearsal": true, "name": "Dimanche BT", "place": "Église Saint-Pierre", "group_type": "Choeur complet" }`;
 
 interface ChatCompletionResponse {
   choices?: Array<{
@@ -208,6 +208,20 @@ function isTimeout(error: unknown): boolean {
   );
 }
 
+/**
+ * A « Dimanche BT » is the full choir's rehearsal day, not the orchestra's:
+ * always « Choeur complet », whatever the LLM answered.
+ */
+export function applyGroupRules(
+  event: GoogleCalendarEvent,
+  result: LlmExtraction,
+): LlmExtraction {
+  if (result.is_rehearsal && /\bdimanche\s+bt\b/i.test(event.summary ?? "")) {
+    return { ...result, group_type: "Choeur complet" };
+  }
+  return result;
+}
+
 export async function extractRehearsalFields(
   apiKey: string,
   event: GoogleCalendarEvent,
@@ -226,7 +240,7 @@ export async function extractRehearsalFields(
       });
 
       const parsed = await callOpenAI(apiKey, event, timeoutMs);
-      const result = LlmExtractionSchema.parse(parsed);
+      const result = applyGroupRules(event, LlmExtractionSchema.parse(parsed));
 
       logLlm("classified", {
         event_id: event.id,

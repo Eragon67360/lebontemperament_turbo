@@ -3,7 +3,11 @@ name: iOS TestFlight
 # Builds the iPhone app, signs it for the App Store and uploads it to
 # TestFlight (fastlane, apps/mobile_app/ios/fastlane). Runs on each release
 # to main that touches the app, like the Android build, or by hand from
-# Actions. See apps/mobile_app/ios/fastlane/README.md.
+# Actions. Run by hand with "Send the latest build to members", it instead
+# adds the newest TestFlight build to the members' external group and
+# submits it for Apple's beta review; with "Update the App Store page", it
+# fills the App Store version being prepared (texts, screenshots, age rating,
+# build) without submitting it. See apps/mobile_app/ios/fastlane/README.md.
 #
 # It changes App Store Connect, so the job runs in the `app-store`
 # environment, which holds the API key and waits for the owner's approval.
@@ -17,6 +21,15 @@ on:
       - "!apps/mobile_app/pubspec.yaml"
       - ".github/workflows/ios-testflight.yml"
   workflow_dispatch:
+    inputs:
+      action:
+        description: What to do
+        type: choice
+        default: Build and upload
+        options:
+          - Build and upload
+          - Send the latest build to members
+          - Update the App Store page
 
 permissions:
   contents: read
@@ -28,11 +41,14 @@ concurrency:
 jobs:
   testflight:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    name: Build and upload to TestFlight
+    name: ${{ inputs.action && inputs.action != 'Build and upload' && inputs.action || 'Build and upload to TestFlight' }}
     runs-on: macos-26
     timeout-minutes: 90
     environment: app-store
     env:
+      # Only "Build and upload" (and a push to main) builds the app.
+      BUILD: ${{ !inputs.action || inputs.action == 'Build and upload' }}
+      ACTION: ${{ inputs.action || 'Build and upload' }}
       # Same fixed production website as the Android build.
       SITE_URL: https://www.lebontemperament.com
       LC_ALL: en_US.UTF-8
@@ -61,6 +77,7 @@ jobs:
           xcodebuild -version
 
       - name: Setup Flutter
+        if: env.BUILD == 'true'
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: "3.35.7"
@@ -68,6 +85,7 @@ jobs:
           cache: true
 
       - name: Create .env
+        if: env.BUILD == 'true'
         working-directory: apps/mobile_app
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -93,6 +111,7 @@ jobs:
       # Compiles the Flutter part and installs the pods; fastlane then
       # archives and signs.
       - name: Build (unsigned)
+        if: env.BUILD == 'true'
         working-directory: apps/mobile_app
         run: |
           flutter pub get
@@ -105,7 +124,7 @@ jobs:
           bundler-cache: true
           working-directory: apps/mobile_app/ios
 
-      - name: Sign and upload to TestFlight
+      - name: Run fastlane (upload, send to members, or App Store page)
         working-directory: apps/mobile_app/ios
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -116,4 +135,8 @@ jobs:
           export ASC_KEY_PATH="$RUNNER_TEMP/asc-key.p8"
           ( umask 077; printf '%s\n' "$ASC_KEY_P8" > "$ASC_KEY_PATH" )
           trap 'rm -f "$ASC_KEY_PATH"' EXIT
-          bundle exec fastlane ios beta
+          case "$ACTION" in
+            "Send the latest build to members") bundle exec fastlane ios members ;;
+            "Update the App Store page") bundle exec fastlane ios store ;;
+            *) bundle exec fastlane ios beta ;;
+          esac

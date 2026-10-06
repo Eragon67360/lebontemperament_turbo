@@ -1,1 +1,1 @@
-Connexion plus simple : vous pouvez maintenant vous connecter avec votre compte Google, et sur iPhone avec votre compte Apple. Utilisez l'adresse e-mail que vous avez donnée à l'association.
+Petites améliorations en coulisses pour une appli plus solide.

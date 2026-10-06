@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lebontemperament/core/platform/liquid_glass_support.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:logger/logger.dart';
 
 import '../../../../data/providers/connectivity_provider.dart';
@@ -156,9 +160,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
 // MARK: - Custom Navigation Bar Components
 
+/// Tint of the glass bar: the page ground at this opacity. High enough that
+/// the labels keep 4.5:1 over mid-grey content scrolling under the bar (see
+/// nav_bar_test.dart), low enough that the content still shows through.
+@visibleForTesting
+const double kNavGlassTintDark = 0.85;
+@visibleForTesting
+const double kNavGlassTintLight = 0.9;
+
 /// The bottom bar (« Portée »): docked on the page ground behind a hairline,
 /// no pill. Every tab keeps its label, so nobody has to guess what an icon
 /// means; the current tab is in the accent with a dot under its label.
+///
+/// On iOS 26 and later the same tabs float on Liquid Glass, like Apple's own
+/// apps on that version (#549); see [LiquidGlassSupport] for who gets it.
 class FrostedGlassNavBar extends StatelessWidget {
   final List<NavItemData> items;
   final int currentIndex;
@@ -173,6 +188,18 @@ class FrostedGlassNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: LiquidGlassSupport.available,
+      builder: (context, _, _) {
+        final glass = LiquidGlassSupport.enabledFor(
+          highContrast: MediaQuery.highContrastOf(context),
+        );
+        return glass ? _buildGlass(context) : _buildDocked(context);
+      },
+    );
+  }
+
+  Widget _buildDocked(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Positioned(
       bottom: 0,
@@ -183,28 +210,58 @@ class FrostedGlassNavBar extends StatelessWidget {
           color: scheme.surface,
           border: Border(top: BorderSide(color: scheme.outlineVariant)),
         ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            // 64 at the default text size; grows with large text instead of
-            // clipping the labels.
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 64),
-              child: Row(
-                children: List.generate(items.length, (index) {
-                  final item = items[index];
-                  return _NavBarItem(
-                    icon: item.outlinedIcon,
-                    label: item.label,
-                    semanticLabel: item.semanticLabel ?? item.label,
-                    isSelected: index == currentIndex,
-                    onTap: () => onTap(index),
-                  );
-                }),
-              ),
-            ),
+        child: SafeArea(top: false, child: _tabs()),
+      ),
+    );
+  }
+
+  /// A capsule floating above the home indicator; the page scrolls under it
+  /// (every tab already leaves `kFloatingNavBarBottomPadding` free).
+  Widget _buildGlass(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
+    final homeIndicator = MediaQuery.viewPaddingOf(context).bottom;
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: math.max(homeIndicator - 12, 10),
+      child: LiquidGlassLens(
+        style: LiquidGlassStyle(
+          shape: const LiquidGlassShape.continuousRoundedRectangle(
+            cornerRadius: 32,
           ),
+          appearance: LiquidGlassAppearance(
+            color: scheme.surface.withValues(
+              alpha: isDark ? kNavGlassTintDark : kNavGlassTintLight,
+            ),
+            blur: const LiquidGlassBlur(sigmaX: 12, sigmaY: 12),
+            shadow: const LiquidGlassShadow(),
+          ),
+        ),
+        // The taps' ink is drawn on this Material, inside the glass.
+        child: Material(type: MaterialType.transparency, child: _tabs()),
+      ),
+    );
+  }
+
+  Widget _tabs() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      // 64 at the default text size; grows with large text instead of
+      // clipping the labels.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
+        child: Row(
+          children: List.generate(items.length, (index) {
+            final item = items[index];
+            return _NavBarItem(
+              icon: item.outlinedIcon,
+              label: item.label,
+              semanticLabel: item.semanticLabel ?? item.label,
+              isSelected: index == currentIndex,
+              onTap: () => onTap(index),
+            );
+          }),
         ),
       ),
     );
