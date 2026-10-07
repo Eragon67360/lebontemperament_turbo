@@ -48,9 +48,8 @@ test("create and delete an E2E concert", async ({ page }) => {
   // accessible names, with today prefixed — "Today, samedi 5 septembre 2026".
   // Pick today (substring match): the admin list and the public site both
   // filter on date >= today.
-  await dialog
-    .getByRole("button", { name: "Choisir une date", exact: true })
-    .click();
+  // The trigger is named by its « Date » label, not by its placeholder.
+  await dialog.locator("#concert-date").click();
   const todayLabel = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
     day: "numeric",
