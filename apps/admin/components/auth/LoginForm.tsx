@@ -4,9 +4,13 @@ import { login } from "@/app/auth/login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import RouteNames from "@/utils/routes";
 import { ERROR_MESSAGES } from "@repo/domain/consts/errorMessages";
+import { clsx } from "clsx";
 import { Loader2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -25,7 +29,6 @@ export default function LoginForm() {
     email: "",
     password: "",
   });
-  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,73 +47,86 @@ export default function LoginForm() {
   };
 
   return (
-    <form className="space-y-6" action={handleSubmit}>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-            Email
-          </Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="nom@exemple.com"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            autoComplete="email"
-            disabled={isPending}
-            className="focus:border-primary focus:ring-primary block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-          />
-        </div>
+    <form className="flex flex-col gap-5" action={handleSubmit}>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="email">Adresse e-mail</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="prenom.nom@exemple.fr"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          autoComplete="email"
+          disabled={isPending}
+        />
+      </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label
-              htmlFor="password"
-              className="text-sm font-medium text-gray-700"
-            >
-              Mot de passe
-            </Label>
-            <Button
-              variant="link"
-              className="text-primary hover:text-primary/80 h-auto p-0 text-xs font-medium"
-              onClick={() => router.push("/auth/reset-password")}
-              type="button"
-              disabled={isPending}
-            >
-              Mot de passe oublié ?
-            </Button>
-          </div>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            autoComplete="current-password"
-            disabled={isPending}
-            className="focus:border-primary focus:ring-primary block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-          />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-3">
+          <Label htmlFor="password">Mot de passe</Label>
+          <Link
+            href={RouteNames.AUTH.RESET_PASSWORD}
+            aria-disabled={isPending || undefined}
+            tabIndex={isPending ? -1 : undefined}
+            // clsx, not cn(): tailwind-merge reads `text-detail` as a colour
+            // and would drop it next to `text-primary-text`.
+            className={clsx(
+              "text-detail text-primary-text inline-flex min-h-6 items-center rounded-sm font-medium underline-offset-4 hover:underline pointer-coarse:min-h-11",
+              isPending && "pointer-events-none opacity-55",
+            )}
+          >
+            Mot de passe oublié ?
+          </Link>
         </div>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          autoComplete="current-password"
+          disabled={isPending}
+        />
       </div>
 
       <Button
         type="submit"
-        className="bg-primary-600 hover:bg-primary-600/90 focus-visible:outline-primary flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2"
+        className="w-full"
         disabled={isPending}
+        aria-busy={isPending || undefined}
       >
         {isPending ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Connexion...
+            <Loader2
+              className="animate-spin motion-reduce:animate-none"
+              aria-hidden
+            />
+            Connexion…
           </>
         ) : (
           "Se connecter"
         )}
       </Button>
     </form>
+  );
+}
+
+/** The form's shape while the search params resolve (the page is static). */
+export function LoginFormSkeleton() {
+  return (
+    <div className="flex flex-col gap-5" aria-hidden="true">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-(--control-h) w-full" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-(--control-h) w-full" />
+      </div>
+      <Skeleton className="h-(--control-h) w-full" />
+    </div>
   );
 }

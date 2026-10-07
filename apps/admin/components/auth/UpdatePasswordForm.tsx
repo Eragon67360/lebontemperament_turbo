@@ -1,6 +1,6 @@
-// components/UpdatePasswordForm.tsx
 "use client";
 
+import { AuthCardHeader } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,40 +57,44 @@ export default function UpdatePasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Nouveau mot de passe</h1>
-        <p className="text-muted-foreground text-sm text-balance">
-          Entrez votre nouveau mot de passe
-        </p>
-      </div>
-      <div className="grid gap-6">
-        <div className="grid gap-2">
+    <form onSubmit={handleSubmit}>
+      <AuthCardHeader
+        as="h1"
+        title="Nouveau mot de passe"
+        intro="Choisissez votre nouveau mot de passe, puis confirmez-le."
+      />
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="password">Nouveau mot de passe</Label>
           <Input
             id="password"
             type="password"
-            placeholder="Nouveau mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="new-password"
             disabled={loading}
           />
         </div>
-        <div className="grid gap-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
           <Input
             id="confirmPassword"
             type="password"
-            placeholder="Confirmer le mot de passe"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
+            autoComplete="new-password"
             disabled={loading}
           />
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={loading}
+          aria-busy={loading || undefined}
+        >
+          {loading ? "Mise à jour…" : "Mettre à jour le mot de passe"}
         </Button>
       </div>
     </form>

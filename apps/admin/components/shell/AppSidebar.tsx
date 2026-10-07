@@ -4,20 +4,10 @@ import { BrandMark } from "@/components/shell/BrandMark";
 import { SidebarNav } from "@/components/shell/SidebarNav";
 import type { NavSection } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { WEBSITE_URL, websiteHost } from "@/lib/website";
 import RouteNames from "@/utils/routes";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-
-const WEBSITE_URL =
-  process.env.NEXT_PUBLIC_WEBSITE_URL || "https://www.lebontemperament.com";
-
-function websiteHost() {
-  try {
-    return new URL(WEBSITE_URL).host.replace(/^www\./, "");
-  } catch {
-    return WEBSITE_URL;
-  }
-}
 
 /**
  * Direction B's 280 px sidebar: brand, the navigation tree, and the way to
