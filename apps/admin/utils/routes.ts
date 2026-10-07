@@ -9,6 +9,8 @@ const RouteNames = {
     ADMIN: {
       BUG_REPORTS: "/dashboard/admin/bug-reports",
       USERS: "/dashboard/admin/users",
+      /** One member's page. */
+      USER: (id: string) => `/dashboard/admin/users/${encodeURIComponent(id)}`,
       USERS_SYNC: "/dashboard/admin/users/sync",
       CA: "/dashboard/admin/ca",
       GOOGLE_GROUPS: "/dashboard/admin/google-groups",

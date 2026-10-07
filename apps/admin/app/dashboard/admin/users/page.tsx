@@ -1,186 +1,117 @@
 "use client";
 
 import { PageShell } from "@/components/layouts/PageShell";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
+import { Card } from "@/components/ui/card";
 import {
-  CardGridSkeleton,
   DataState,
   EmptyState,
+  ListSkeleton,
 } from "@/components/ui/data-state";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AddUserDialog,
   type AddUserFormValues,
 } from "@/components/users/AddUserDialog";
-import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { InviteUserDialog } from "@/components/users/InviteUsersDialog";
-import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
-import { UserCard } from "@/components/users/UserCard";
-import { UserHeader } from "@/components/users/UserHeader";
-import { UserSearch } from "@/components/users/UserSearch";
+import { MembersList } from "@/components/users/MembersList";
+import { useMemberDialogs } from "@/components/users/useMemberDialogs";
+import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ROSTER_REVIEW_KEY, useRosterReview } from "@/hooks/useRosterSync";
+import { useCreateUser, useUsers } from "@/hooks/useUsers";
 import {
-  useCreateUser,
-  useDeleteUser,
-  useUpdateUserDisplayName,
-  useUpdateUserRole,
-  useUsers,
-} from "@/hooks/useUsers";
-import { SortConfig, User } from "@/types/user";
+  filterMembers,
+  hasFilters,
+  memberCountLabel,
+  NO_FILTERS,
+  pendingSyncCount,
+  pendingSyncSummary,
+  ROLE_FILTERS,
+  rosterFlags,
+  STATUS_FILTERS,
+  VOICE_OPTIONS,
+  type MemberFilters,
+  type RoleFilter,
+  type StatusFilter,
+} from "@/utils/members/list";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, RefreshCw, UserPlus, Users2 } from "lucide-react";
+import { RefreshCw, Search, UserPlus, Users2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
-  const supabase = createClient();
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  // UI State
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [editingUser, setEditingUser] = useState<{
-    id: string;
-    display_name: string;
-  } | null>(null);
-  const [profilePictureUser, setProfilePictureUser] = useState<User | null>(
-    null,
-  );
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    sortBy: "created_at",
-    sortOrder: "desc",
-  });
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<MemberFilters>(NO_FILTERS);
 
-  // Debounced search term for queries
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-    }, 300);
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
-
-  // Fetch data using hooks
-  const {
-    data: users = [],
-    isLoading,
-    isError,
-    refetch,
-  } = useUsers({
-    search: debouncedSearch,
-  });
-  const { data: currentUserData } = useCurrentUser();
-  const currentUser = currentUserData?.id || null;
+  // Every account in one request (about 130): search and filters are local,
+  // so they answer as you type.
+  const usersQuery = useUsers();
+  const users = useMemo(() => usersQuery.data ?? [], [usersQuery.data]);
+  const { data: currentUser } = useCurrentUser();
+  const { data: profile } = useCurrentProfile();
+  const actor = { id: currentUser?.id, role: profile?.role };
   // The reviewed diff with the member roster (also feeds the sync page).
   const { data: rosterReview } = useRosterReview();
+  const flags = useMemo(() => rosterFlags(rosterReview), [rosterReview]);
+  const visible = useMemo(
+    () => filterMembers(users, filters, flags),
+    [users, filters, flags],
+  );
+  const pending = pendingSyncCount(rosterReview);
 
-  // Mark the accounts the roster no longer lists
-  const usersWithSyncStatus = useMemo(() => {
-    if (!rosterReview) return users;
-    const absent = new Set(
-      rosterReview.groups.absents.map((member) => member.profileId),
-    );
-    return users.map((user) => ({
-      ...user,
-      isMissingInExcel: absent.has(user.id),
-    }));
-  }, [users, rosterReview]);
-
-  // Mutations
   const createUser = useCreateUser();
-  const deleteUser = useDeleteUser();
-  const updateRole = useUpdateUserRole();
-  const updateDisplayName = useUpdateUserDisplayName();
+  const dialogs = useMemberDialogs({
+    actorIsSuperAdmin: profile?.role === "superadmin",
+  });
 
-  // Real-time subscription for live updates
+  // Live updates when another admin or the sync changes a profile.
   useEffect(() => {
+    const supabase = createClient();
     const subscription = supabase
       .channel("profiles-changes")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "profiles",
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["users"] });
-        },
+        { event: "*", schema: "public", table: "profiles" },
+        () => queryClient.invalidateQueries({ queryKey: ["users"] }),
       )
       .subscribe();
-
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, queryClient]);
+  }, [queryClient]);
 
-  // Sorted users - computed from query data
-  const sortedUsers = useMemo(() => {
-    return [...usersWithSyncStatus].sort((a, b) => {
-      switch (sortConfig.sortBy) {
-        case "invite_status":
-          if (sortConfig.sortOrder === "asc") {
-            return a.invite_status.localeCompare(b.invite_status);
-          }
-          return b.invite_status.localeCompare(a.invite_status);
+  // « / » jumps to the search, unless you are already typing somewhere.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey)
+        return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']"))
+        return;
+      event.preventDefault();
+      searchRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-        case "email":
-          return sortConfig.sortOrder === "asc"
-            ? a.email.localeCompare(b.email)
-            : b.email.localeCompare(a.email);
-
-        case "display_name": {
-          const displayNameA = a.display_name || "";
-          const displayNameB = b.display_name || "";
-          return sortConfig.sortOrder === "asc"
-            ? displayNameA.localeCompare(displayNameB)
-            : displayNameB.localeCompare(displayNameA);
-        }
-
-        case "created_at": {
-          const dateA = new Date(a.created_at).getTime();
-          const dateB = new Date(b.created_at).getTime();
-          return sortConfig.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-        }
-
-        default:
-          return 0;
-      }
-    });
-  }, [usersWithSyncStatus, sortConfig]);
-
-  // Invite counts
-  const inviteCounts = useMemo(() => {
-    return users.reduce(
-      (acc, user) => {
-        if (user.invite_status === "en attente") {
-          acc.pending++;
-        } else if (user.invite_status === "approuvé") {
-          acc.approved++;
-        }
-        return acc;
-      },
-      { pending: 0, approved: 0 },
-    );
-  }, [users]);
-
-  // Handlers
   const handleAddUser = async (values: AddUserFormValues) => {
     try {
       await createUser.mutateAsync({
@@ -189,205 +120,239 @@ export default function UsersPage() {
         role: values.role,
         display_name: values.display_name || values.email.split("@")[0] || "",
       });
-
-      toast.success("Succès", {
-        description: "L'utilisateur a été créé avec succès",
-      });
-
+      toast.success("Compte créé");
       setIsAddUserOpen(false);
     } catch (error) {
-      toast.error("Erreur", {
-        description:
-          error instanceof Error ? error.message : "Une erreur est survenue",
-      });
-    }
-  };
-
-  const handleDeleteUser = async (user: User) => {
-    if (user.role === "superadmin") {
-      toast.error("Action non autorisée", {
-        description: "Impossible de supprimer un super administrateur.",
-      });
-      return;
-    }
-
-    try {
-      await deleteUser.mutateAsync(user.id);
-      toast.success("Utilisateur supprimé");
-    } catch (error) {
-      toast.error("Erreur lors de la suppression", {
-        description: error instanceof Error ? error.message : undefined,
-      });
-    } finally {
-      setUserToDelete(null);
-    }
-  };
-
-  const handleRoleChange = async (
-    userId: string,
-    newRole: "user" | "admin",
-  ) => {
-    try {
-      const userToUpdate = users.find((u) => u.id === userId);
-      if (userToUpdate?.role === "superadmin") {
-        toast.error("Impossible de modifier un superadmin");
-        return;
-      }
-      await updateRole.mutateAsync({ userId, role: newRole });
-      toast.success("Rôle mis à jour");
-    } catch (error) {
-      // Shows the API's reason, e.g. a refused superadmin or self change.
-      toast.error("Erreur lors de la modification du rôle", {
+      toast.error("Le compte n’a pas été créé", {
         description: error instanceof Error ? error.message : undefined,
       });
     }
   };
 
-  const handleUpdateDisplayName = async (
-    userId: string,
-    newDisplayName: string,
-  ) => {
-    try {
-      await updateDisplayName.mutateAsync({
-        userId,
-        display_name: newDisplayName,
-      });
-      toast.success("Nom d'affichage mis à jour");
-      setEditingUser(null);
-    } catch {
-      toast.error("Erreur lors de la mise à jour");
-    }
-  };
-
-  // Everything the sync page has to show, except unchanged accounts.
-  const pendingSyncCount = rosterReview
-    ? rosterReview.groups.nouveaux.length +
-      rosterReview.groups.modifies.length +
-      rosterReview.groups.absents.length +
-      rosterReview.groups.aRegler.length
-    : 0;
+  const filtered = hasFilters(filters);
+  const update = (patch: Partial<MemberFilters>) =>
+    setFilters((current) => ({ ...current, ...patch }));
 
   return (
     <PageShell
-      theme="admin"
-      className="px-2 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8"
-      title="Gestion des utilisateurs"
-      description="Gérez les comptes utilisateurs de l'ensemble de l'équipe."
+      className="py-4 sm:py-6"
+      title="Membres"
+      description={
+        <>
+          {users.length > 0 &&
+            `${memberCountLabel(users.length)} ont un compte. `}
+          La liste des membres de l’association fait référence.
+        </>
+      }
       headerAction={
-        <div className="flex flex-wrap gap-2">
-          <Button
-            asChild
-            variant="outline"
-            className="min-h-11 sm:h-9 sm:min-h-0"
-          >
-            <Link
-              href={RouteNames.DASHBOARD.ADMIN.USERS_SYNC}
-              aria-label={
-                pendingSyncCount > 0
-                  ? `Synchroniser (${pendingSyncCount} écarts détectés)`
-                  : "Synchroniser"
-              }
-            >
+        <>
+          <Button variant="outline" onClick={() => setIsInviteOpen(true)}>
+            <UserPlus aria-hidden />
+            Inviter
+          </Button>
+          <Button variant="outline" onClick={() => setIsAddUserOpen(true)}>
+            Créer un compte
+          </Button>
+          <Button asChild>
+            <Link href={RouteNames.DASHBOARD.ADMIN.USERS_SYNC}>
               <RefreshCw aria-hidden />
-              <span className="hidden sm:inline">Synchroniser</span>
-              {pendingSyncCount > 0 && (
-                <span
-                  aria-hidden
-                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white"
+              Synchroniser avec la liste
+              {pending > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="bg-primary-foreground text-primary-text min-h-5 px-1.5"
                 >
-                  {pendingSyncCount}
-                </span>
+                  {pending}
+                  <span className="sr-only">
+                    {pending > 1
+                      ? " changements à vérifier"
+                      : " changement à vérifier"}
+                  </span>
+                </Badge>
               )}
             </Link>
           </Button>
-
-          <Button
-            variant="outline"
-            className="min-h-11 sm:h-9 sm:min-h-0"
-            onClick={() => setIsInviteOpen(true)}
-            aria-label="Inviter des utilisateurs"
-          >
-            <UserPlus aria-hidden />
-            <span className="hidden sm:inline">Inviter</span>
-          </Button>
-
-          <Button
-            className="min-h-11 sm:h-9 sm:min-h-0"
-            onClick={() => setIsAddUserOpen(true)}
-          >
-            <Plus aria-hidden />
-            <span className="hidden sm:inline">Nouvel utilisateur</span>
-            <span className="sm:hidden">Ajouter</span>
-          </Button>
-        </div>
+        </>
       }
     >
-      <div className="space-y-4">
-        <UserHeader
-          pendingInvites={inviteCounts.pending}
-          approvedInvites={inviteCounts.approved}
-        />
-
-        <UserSearch
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortConfig={sortConfig}
-          setSortConfig={setSortConfig}
-        />
-
-        <section>
-          <h2 className="sr-only">Liste des utilisateurs</h2>
-          <DataState
-            isLoading={isLoading}
-            isError={isError}
-            isEmpty={users.length === 0}
-            onRetry={() => refetch()}
-            errorDescription="Les utilisateurs n'ont pas pu être chargés. Vérifiez votre connexion, puis réessayez."
-            skeleton={
-              <CardGridSkeleton
-                cards={6}
-                label="Chargement des utilisateurs…"
-              />
+      <div className="space-y-6">
+        {pending > 0 && (
+          <Callout
+            tone="warning"
+            title={
+              pending > 1
+                ? `${pending} changements attendent votre avis`
+                : "1 changement attend votre avis"
             }
-            empty={
-              <EmptyState
-                icon={Users2}
-                title={debouncedSearch ? "Aucun résultat" : "Aucun utilisateur"}
-                description={
-                  debouncedSearch
-                    ? `Aucun utilisateur ne correspond à « ${debouncedSearch} ».`
-                    : "Commencez par ajouter votre premier utilisateur pour gérer les accès."
-                }
-                action={
-                  <Button
-                    className="min-h-11"
-                    onClick={() => setIsAddUserOpen(true)}
-                  >
-                    <Plus aria-hidden />
-                    Ajouter un utilisateur
-                  </Button>
-                }
-              />
+            actions={
+              <Button asChild variant="outline" size="sm">
+                <Link href={RouteNames.DASHBOARD.ADMIN.USERS_SYNC}>
+                  Voir les changements
+                </Link>
+              </Button>
             }
           >
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {sortedUsers.map((user) => (
-                <UserCard
-                  key={user.id}
-                  user={user}
-                  currentUser={currentUser}
-                  onEdit={setEditingUser}
-                  onDelete={setUserToDelete}
-                  onRoleChange={handleRoleChange}
-                  onProfilePicture={setProfilePictureUser}
-                />
-              ))}
+            La liste des membres et les comptes ne disent pas la même chose :{" "}
+            {pendingSyncSummary(rosterReview)}.
+          </Callout>
+        )}
+
+        <Card className="overflow-hidden p-0">
+          <section aria-labelledby="members-heading">
+            <div className="flex flex-col gap-4 p-4 lg:px-6 lg:pt-5">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2
+                  id="members-heading"
+                  className="text-[17px] leading-6 font-semibold"
+                >
+                  Tous les membres
+                </h2>
+                {users.length > 0 && (
+                  <p
+                    className="text-note text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    {filtered
+                      ? `${visible.length} sur ${memberCountLabel(users.length)}`
+                      : memberCountLabel(users.length)}
+                  </p>
+                )}
+              </div>
+              <form
+                role="search"
+                aria-label="Filtrer les membres"
+                className="grid gap-2 sm:grid-cols-3 lg:flex lg:items-center"
+                onSubmit={(event) => event.preventDefault()}
+              >
+                <div className="relative sm:col-span-3 lg:min-w-56 lg:flex-1">
+                  <label htmlFor="member-search" className="sr-only">
+                    Rechercher un membre
+                  </label>
+                  <Search
+                    aria-hidden
+                    className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2"
+                  />
+                  <Input
+                    id="member-search"
+                    ref={searchRef}
+                    type="search"
+                    autoComplete="off"
+                    placeholder="Nom ou e-mail"
+                    className="pr-10 pl-11"
+                    value={filters.query}
+                    onChange={(event) => update({ query: event.target.value })}
+                  />
+                  <kbd
+                    aria-hidden
+                    className="border-border-strong text-muted-foreground absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-sm border px-1.5 text-xs font-medium lg:block"
+                  >
+                    /
+                  </kbd>
+                </div>
+                <Select
+                  value={filters.voice}
+                  onValueChange={(voice) => update({ voice })}
+                >
+                  <SelectTrigger className="lg:w-44" aria-label="Voix">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les voix</SelectItem>
+                    {VOICE_OPTIONS.map((voice) => (
+                      <SelectItem key={voice} value={voice}>
+                        {voice}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={filters.status}
+                  onValueChange={(status) =>
+                    update({ status: status as StatusFilter })
+                  }
+                >
+                  <SelectTrigger className="lg:w-52" aria-label="Statut">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_FILTERS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={filters.role}
+                  onValueChange={(role) => update({ role: role as RoleFilter })}
+                >
+                  <SelectTrigger className="lg:w-44" aria-label="Rôle">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLE_FILTERS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </form>
             </div>
-          </DataState>
-        </section>
+
+            <div className="border-border border-t">
+              <DataState
+                isLoading={usersQuery.isLoading}
+                isError={usersQuery.isError}
+                isEmpty={visible.length === 0}
+                onRetry={() => usersQuery.refetch()}
+                errorDescription="Les membres n’ont pas pu être chargés. Vérifiez votre connexion, puis réessayez."
+                skeleton={
+                  <div className="p-4">
+                    <ListSkeleton rows={8} label="Chargement des membres…" />
+                  </div>
+                }
+                empty={
+                  filtered ? (
+                    <EmptyState
+                      icon={Search}
+                      title="Aucun membre ne correspond"
+                      description="Essayez un autre nom, ou retirez un filtre."
+                      className="py-8"
+                      action={
+                        <Button
+                          variant="outline"
+                          onClick={() => setFilters(NO_FILTERS)}
+                        >
+                          Effacer les filtres
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Users2}
+                      title="Aucun compte pour l’instant"
+                      description="Synchronisez avec la liste des membres : chaque personne reçoit une invitation par e-mail."
+                      className="py-8"
+                    />
+                  )
+                }
+              >
+                <MembersList
+                  users={visible}
+                  flags={flags}
+                  actor={actor}
+                  onRole={dialogs.openRole}
+                  onRename={dialogs.openRename}
+                  onPhoto={dialogs.openPhoto}
+                  onDelete={dialogs.openDelete}
+                />
+              </DataState>
+            </div>
+          </section>
+        </Card>
       </div>
 
-      {/* --- Dialogs --- */}
       <AddUserDialog
         isOpen={isAddUserOpen}
         onOpenChange={setIsAddUserOpen}
@@ -401,42 +366,7 @@ export default function UsersPage() {
           queryClient.invalidateQueries({ queryKey: ROSTER_REVIEW_KEY })
         }
       />
-      <EditUserDialog
-        editingUser={editingUser}
-        onClose={() => setEditingUser(null)}
-        onSubmit={handleUpdateDisplayName}
-      />
-      <ProfilePictureDialog
-        userId={profilePictureUser?.id || ""}
-        currentAvatar={profilePictureUser?.avatar}
-        displayName={profilePictureUser?.display_name || ""}
-        email={profilePictureUser?.email || ""}
-        isOpen={!!profilePictureUser}
-        onOpenChange={(open) => !open && setProfilePictureUser(null)}
-      />
-      <AlertDialog
-        open={!!userToDelete}
-        onOpenChange={() => setUserToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action
-              est irréversible et retirera tous les accès de ce membre.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => userToDelete && handleDeleteUser(userToDelete)}
-              className="bg-destructive hover:bg-destructive/90 text-white"
-            >
-              Supprimer le compte
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {dialogs.dialogs}
     </PageShell>
   );
 }

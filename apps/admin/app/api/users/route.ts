@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     let query = supabaseAdmin
       .from("profiles")
       .select(
-        "id, email, display_name, role, created_at, address, home_phone, mobile_phone, profile_picture_url",
+        "id, email, display_name, role, created_at, address, home_phone, mobile_phone, voice, profile_picture_url",
       );
 
     if (search) {
@@ -70,6 +70,8 @@ export async function GET(request: Request) {
         ...profile,
         invite_status,
         avatar,
+        last_sign_in_at: authUser?.last_sign_in_at ?? null,
+        invited_at: authUser?.invited_at ?? null,
       };
     });
 

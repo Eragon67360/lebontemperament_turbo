@@ -113,18 +113,19 @@ export function decideUserCreation(
 }
 
 /**
- * Account deletion (DELETE /api/users): deleting a superadmin revokes that
- * role, so only a superadmin may do it; nobody deletes their own account here.
+ * Account deletion (DELETE /api/users): permanent, for erasure requests, so
+ * superadmins only (owner decision, #433: people who leave are deactivated,
+ * not deleted); nobody deletes their own account here.
  */
 export function decideUserDeletion(actor: Actor, target: Target): Decision {
   if (!isAdminRole(actor.role)) return deny(403, "Non autorisé");
   if (actor.id === target.id) {
     return deny(403, "Vous ne pouvez pas supprimer votre propre compte");
   }
-  if (target.role === "superadmin" && actor.role !== "superadmin") {
+  if (actor.role !== "superadmin") {
     return deny(
       403,
-      "Seul un super administrateur peut supprimer un super administrateur",
+      "Seul un super administrateur peut supprimer définitivement un compte",
     );
   }
   return { allowed: true };
