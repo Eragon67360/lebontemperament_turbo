@@ -597,14 +597,22 @@ export type Database = {
           context: string;
           created_at: string | null;
           created_by: string | null;
+          city: string | null;
+          country: string | null;
           date: string;
+          event_data_generated_at: string | null;
           id: string;
+          is_free: boolean | null;
           name: string | null;
           place: string;
+          postal_code: string | null;
+          price: number | null;
           related_link: string | null;
+          street_address: string | null;
           time: string;
           tour_id: string | null;
           updated_at: string | null;
+          venue_name: string | null;
         };
         Insert: {
           additional_informations?: string | null;
@@ -612,14 +620,22 @@ export type Database = {
           context: string;
           created_at?: string | null;
           created_by?: string | null;
+          city?: string | null;
+          country?: string | null;
           date: string;
+          event_data_generated_at?: string | null;
           id?: string;
+          is_free?: boolean | null;
           name?: string | null;
           place: string;
+          postal_code?: string | null;
+          price?: number | null;
           related_link?: string | null;
+          street_address?: string | null;
           time: string;
           tour_id?: string | null;
           updated_at?: string | null;
+          venue_name?: string | null;
         };
         Update: {
           additional_informations?: string | null;
@@ -627,14 +643,22 @@ export type Database = {
           context?: string;
           created_at?: string | null;
           created_by?: string | null;
+          city?: string | null;
+          country?: string | null;
           date?: string;
+          event_data_generated_at?: string | null;
           id?: string;
+          is_free?: boolean | null;
           name?: string | null;
           place?: string;
+          postal_code?: string | null;
+          price?: number | null;
           related_link?: string | null;
+          street_address?: string | null;
           time?: string;
           tour_id?: string | null;
           updated_at?: string | null;
+          venue_name?: string | null;
         };
         Relationships: [
           {
@@ -1610,6 +1634,19 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      concert_event_data_write: {
+        Args: {
+          p_city: string;
+          p_country: string;
+          p_id: string;
+          p_is_free: boolean;
+          p_postal_code: string;
+          p_price: number;
+          p_street_address: string;
+          p_venue_name: string;
+        };
+        Returns: boolean;
+      };
       drive_index_apply: {
         Args: {
           p_counts: Json;

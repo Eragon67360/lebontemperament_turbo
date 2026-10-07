@@ -23,6 +23,23 @@ export type PublicConcert = Pick<
   | "related_link"
 >;
 
+/**
+ * What the agenda's MusicEvent JSON-LD adds to each concert (#328): the
+ * venue, address and price the AI fills when an admin saves a concert.
+ */
+export const CONCERT_EVENT_DATA_COLUMNS =
+  "venue_name, street_address, postal_code, city, country, is_free, price";
+export type PublicConcertEventData = Pick<
+  Concert,
+  | "venue_name"
+  | "street_address"
+  | "postal_code"
+  | "city"
+  | "country"
+  | "is_free"
+  | "price"
+>;
+
 export const TOUR_COLUMNS =
   "id, name, description, context, tour_poster, start_date, end_date";
 export type PublicTour = Pick<
