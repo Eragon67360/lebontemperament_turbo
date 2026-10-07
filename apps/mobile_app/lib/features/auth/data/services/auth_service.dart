@@ -79,6 +79,17 @@ Uri forgotPasswordUri() =>
 const oauthCallbackScheme = 'com.lebontemperament.app';
 const oauthRedirectUrl = '$oauthCallbackScheme://login-callback';
 
+/// Android browsers tried first for the Google sheet, in this order.
+/// Firefox does not follow Supabase's redirect back to the app: it stops on
+/// a raw « Found » page instead (a tester hit it, 2026-10-06). Chrome,
+/// Samsung Internet and Edge do, and nearly every Android phone has one of
+/// them; otherwise the phone's default browser is used, as before.
+const oauthAndroidBrowsers = [
+  'com.android.chrome',
+  'com.sec.android.app.sbrowser',
+  'com.microsoft.emmx',
+];
+
 /// What the browser came back with: a PKCE code to exchange, or an error
 /// code (`signup_disabled` when the account matches no member). Supabase puts
 /// errors in the query or in the fragment, so both are read.
@@ -156,6 +167,9 @@ class AuthService {
         result = await FlutterWebAuth2.authenticate(
           url: oauth.url,
           callbackUrlScheme: oauthCallbackScheme,
+          options: const FlutterWebAuth2Options(
+            customTabsPackageOrder: oauthAndroidBrowsers,
+          ),
         );
       } on PlatformException catch (e) {
         if (e.code == 'CANCELED') return false;

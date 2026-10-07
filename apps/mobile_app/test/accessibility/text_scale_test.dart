@@ -50,12 +50,18 @@ void main() {
     await pumpScreen(tester, const HomeScreen(), textScale: 2.0);
     expect(tester.takeException(), isNull);
 
-    // The badge shows the day of the month of the fixture concert (21).
+    // The badge shows the day of the month of the fixture concert (21), in
+    // the concert block further down the page.
+    await tester.scrollUntilVisible(find.text('21'), 300);
     final dayText = find.text('21').first;
     final badge = find
         .ancestor(of: dayText, matching: find.byType(Container))
         .first;
     final badgeSize = tester.getSize(badge);
     expect(badgeSize.height, greaterThan(48));
+    // Let the scroll settle and the blocks it brought in finish their
+    // entrance animation.
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 2));
   });
 }
