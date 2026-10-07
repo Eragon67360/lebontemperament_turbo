@@ -97,7 +97,7 @@ export function MemberActionsMenu({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-danger focus:bg-danger-soft focus:text-danger"
+              variant="destructive"
               onSelect={later(() => onDelete(user))}
               aria-label={`Supprimer définitivement le compte de ${name}`}
             >

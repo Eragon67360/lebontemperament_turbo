@@ -84,15 +84,27 @@ const DropdownMenuContent = React.forwardRef<
 ));
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
+/** A destructive item (« Supprimer… »): danger text and icon, soft red focus. */
+const destructiveItemClassName =
+  "text-danger-foreground focus:bg-danger-soft focus:text-danger-foreground [&>svg]:text-danger-foreground";
+
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean;
+    /** `destructive` for an item that deletes or disables: danger text. */
+    variant?: "default" | "destructive";
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, variant = "default", ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
-    className={cn(itemClassName, inset && "pl-11", className)}
+    data-variant={variant === "destructive" ? "destructive" : undefined}
+    className={cn(
+      itemClassName,
+      variant === "destructive" && destructiveItemClassName,
+      inset && "pl-11",
+      className,
+    )}
     {...props}
   />
 ));

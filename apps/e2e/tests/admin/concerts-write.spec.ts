@@ -82,10 +82,17 @@ test("create and delete an E2E concert", async ({ page }) => {
   const heading = main.getByRole("heading", { name, exact: true });
   await expect(heading).toBeVisible();
 
-  // Delete via the row's button, named by its sr-only suffix
-  // ("Supprimer « <name> »", apps/admin/components/concerts/ConcertRow.tsx).
+  // Delete through the row's « Plus d'actions » menu: the trigger and the
+  // item both name the concert (apps/admin/components/ui/row-actions-menu.tsx).
   await main
-    .getByRole("button", { name: `Supprimer « ${name} »`, exact: true })
+    .getByRole("button", {
+      name: `Plus d'actions pour « ${name} »`,
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("menu")
+    .getByRole("menuitem", { name: `Supprimer « ${name} »`, exact: true })
     .click();
   const confirm = page.getByRole("alertdialog", {
     name: `Supprimer « ${name} » ?`,

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   eventPeriodLabel,
@@ -19,7 +20,6 @@ import {
   ExternalLink,
   MapPin,
   Pencil,
-  Trash2,
   User,
 } from "lucide-react";
 
@@ -27,7 +27,7 @@ import {
  * One event of the « À venir » or « Passés » list: date block, title, type
  * chip, « Public » or « Membres » visibility, period, time, place and the
  * person in charge, an excerpt of the description, then the link,
- * « Modifier » and « Supprimer ».
+ * « Modifier » and the « Plus d'actions » menu (« Supprimer… »).
  */
 export function EventRow({
   event,
@@ -108,7 +108,7 @@ export function EventRow({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {event.link && (
             <Button variant="outline" size="sm" asChild>
               <a href={event.link} target="_blank" rel="noreferrer">
@@ -126,16 +126,7 @@ export function EventRow({
             Modifier
             <span className="sr-only"> « {event.title} »</span>
           </Button>
-          <Button
-            type="button"
-            variant="destructive-outline"
-            size="sm"
-            onClick={onDelete}
-          >
-            <Trash2 aria-hidden />
-            Supprimer
-            <span className="sr-only"> « {event.title} »</span>
-          </Button>
+          <RowActionsMenu name={event.title} onDelete={onDelete} />
         </div>
       </div>
     </Card>

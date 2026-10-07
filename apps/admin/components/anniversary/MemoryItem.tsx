@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { AnniversaryMemory } from "@/types/anniversary";
 import {
@@ -10,7 +11,6 @@ import {
   Mail,
   Star,
   StarOff,
-  Trash2,
   Undo2,
 } from "lucide-react";
 
@@ -75,7 +75,7 @@ export function MemoryItem({
         {memory.message}
       </blockquote>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {published ? (
           <>
             <Button
@@ -112,17 +112,12 @@ export function MemoryItem({
             <span className="sr-only"> le témoignage de {memory.name}</span>
           </Button>
         )}
-        <Button
-          type="button"
-          variant="destructive-outline"
-          size="sm"
-          onClick={onDelete}
+        <RowActionsMenu
+          name={memory.name}
+          subject={`le témoignage de ${memory.name}`}
+          onDelete={onDelete}
           disabled={busy}
-        >
-          <Trash2 aria-hidden />
-          Supprimer
-          <span className="sr-only"> le témoignage de {memory.name}</span>
-        </Button>
+        />
       </div>
     </Card>
   );
