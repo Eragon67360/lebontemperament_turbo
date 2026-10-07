@@ -1,13 +1,10 @@
 "use client";
 
 import ChangePasswordModal from "@/components/ChangePasswordModal";
-import CloudinaryImage from "@/components/CloudinaryImage";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { useDriveRootUrl } from "@/hooks/useDriveRootUrl";
 import RouteNames from "@/utils/routes";
 import { loadBrowserClient } from "@/utils/supabase/lazy";
-import { RoundedSize } from "@/utils/types";
-import { Avatar, Button, Link, Popover, toast, Tooltip } from "@heroui/react";
+import { Avatar, Button, Popover, toast } from "@heroui/react";
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -31,7 +28,6 @@ const UserMenu = ({ user }: { user: User }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const driveUrl = useDriveRootUrl();
   const router = useRouter();
 
   useEffect(() => {
@@ -83,31 +79,6 @@ const UserMenu = ({ user }: { user: User }) => {
   return (
     <>
       <div className="flex items-center gap-4">
-        {driveUrl && (
-          <Tooltip>
-            <Tooltip.Trigger>
-              <Link
-                href={driveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Ouvrir le drive Google dans un nouvel onglet"
-                className="bg-primary/20 hover:bg-primary/40 dark:bg-primary/30 dark:hover:bg-primary/50 size-8 h-full shrink-0 rounded-md p-2 transition-colors"
-              >
-                <CloudinaryImage
-                  src={"Site/membres/logos/drive"}
-                  alt="Icône Google Drive"
-                  width={16}
-                  height={16}
-                  rounded={RoundedSize.NONE}
-                  className="size-4"
-                />
-              </Link>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              <p>Accéder au drive Google</p>
-            </Tooltip.Content>
-          </Tooltip>
-        )}
         <Popover>
           <Popover.Trigger
             className="flex shrink-0 cursor-pointer items-center gap-1"

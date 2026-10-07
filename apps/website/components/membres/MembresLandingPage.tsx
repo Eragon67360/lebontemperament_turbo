@@ -1,6 +1,5 @@
 "use client";
 
-import { useDriveRootUrl } from "@/hooks/useDriveRootUrl";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { AnimatePresence, motion, Variants } from "motion/react";
@@ -10,7 +9,6 @@ import {
   IoCalendarClear,
   IoCalendarOutline,
   IoClose,
-  IoCloudDownloadOutline,
   IoDocumentTextOutline,
   IoLogoWhatsapp,
   IoMusicalNotesOutline,
@@ -87,7 +85,6 @@ export const MembresLandingPage = () => {
   };
 
   const [user, setUser] = useState<User | null>(null);
-  const driveUrl = useDriveRootUrl();
   const supabase = createClient();
 
   useEffect(() => {
@@ -156,20 +153,8 @@ export const MembresLandingPage = () => {
         target: "_self" as const,
         icon: IoDocumentTextOutline,
       },
-      // Hidden until the folder is known, rather than linking somewhere stale.
-      ...(driveUrl
-        ? [
-            {
-              title: "Accès Drive",
-              description: "Accès direct au Google Drive",
-              href: driveUrl,
-              target: "_blank" as const,
-              icon: IoCloudDownloadOutline,
-            },
-          ]
-        : []),
     ],
-    [driveUrl],
+    [],
   );
 
   // FIX: Explicitly type these as Variants to solve the TS error

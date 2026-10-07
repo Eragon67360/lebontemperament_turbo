@@ -2,13 +2,12 @@
 
 import { RoundedSize } from "@/utils/types";
 import { motion } from "motion/react";
-import Link from "next/link";
 import { useState } from "react";
 import { IconType } from "react-icons";
 import { FaMusic } from "react-icons/fa";
 import { FaPerson } from "react-icons/fa6";
 import { GiTrumpet } from "react-icons/gi";
-import { LuBaby, LuExternalLink } from "react-icons/lu";
+import { LuBaby } from "react-icons/lu";
 import CloudinaryImage from "../CloudinaryImage";
 import Explorer from "./Explorer";
 
@@ -34,10 +33,9 @@ const DEFAULT_STYLE = { icon: FaMusic, iconColor: "11BBF8" };
 
 interface FileExplorerProps {
   folders: DriveFolderTab[];
-  driveUrl?: string;
 }
 
-const FileExplorer: React.FC<FileExplorerProps> = ({ folders, driveUrl }) => {
+const FileExplorer: React.FC<FileExplorerProps> = ({ folders }) => {
   const tabs = folders.map((folder) => ({
     ...folder,
     ...(TAB_STYLES[folder.slug] ?? DEFAULT_STYLE),
@@ -124,26 +122,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ folders, driveUrl }) => {
                 </motion.button>
               ))}
             </div>
-
-            {driveUrl && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                className="mt-4 md:mt-6"
-              >
-                <Link href={driveUrl} target="_blank" rel="noopener">
-                  <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="from-primary flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r to-purple-500 px-4 py-3 text-sm font-medium text-white shadow-lg transition-shadow hover:shadow-xl"
-                  >
-                    Accès direct au drive
-                    <LuExternalLink className="h-4 w-4" />
-                  </motion.div>
-                </Link>
-              </motion.div>
-            )}
           </div>
         </motion.div>
 
