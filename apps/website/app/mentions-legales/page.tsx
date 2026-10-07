@@ -18,6 +18,13 @@ import type { ReactNode } from "react";
  */
 const ASSOCIATION_REGISTRY: string | null = null;
 
+/**
+ * The president's phone number, required of the publisher by the LCEN. It is
+ * shown on this page only, as plain text: everywhere else the site's contacts
+ * are the mailbox and the contact form (owner decision, 2026-10-07, #329).
+ */
+const PUBLISHER_PHONE = "+33 6 89 68 74 82";
+
 export const metadata: Metadata = {
   title: "Mentions légales",
   description:
@@ -78,6 +85,7 @@ export default function MentionsLegales() {
                 Le Bon Tempérament, association de droit local (Alsace-Moselle)
               </Row>
               <Row label="Siège">{CONTACT_ADDRESS_LINE}</Row>
+              <Row label="Téléphone">{PUBLISHER_PHONE}</Row>
               <Row label="E-mail">
                 <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
                   {CONTACT_EMAIL}
