@@ -33,7 +33,10 @@ const valuesFromFolders = (folders: DriveFolder[] | undefined) =>
 
 /** Explains what each row actually drives on the members site. */
 const HINTS: Record<string, string> = {
-  racine: "Bouton « Accès direct au drive » (navigation et espace membres)",
+  // The website no longer links to Drive itself (#347); the app still does
+  // until its next update.
+  racine:
+    "Dossier racine du Drive : il alimente l’index des documents. L’application l’utilise aussi pour son bouton Drive.",
 };
 
 export function DriveFoldersSection() {
