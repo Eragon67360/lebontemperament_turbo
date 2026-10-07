@@ -2,23 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { meetingDateLabel } from "@/utils/ca/list";
 import { parseIsoDate } from "@/utils/concerts/schedule";
 import type { CA } from "@repo/domain/types/ca";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ExternalLink, FileText, MoreHorizontal, Trash2 } from "lucide-react";
+import { ExternalLink, FileText } from "lucide-react";
 
 /**
  * One meeting of « Comptes rendus du CA »: month and year block, title,
  * meeting day, « Ouvrir le PDF » when a file is attached, and a « ⋯ » menu
- * holding « Supprimer ».
+ * holding « Supprimer… » (`RowActionsMenu`).
  */
 export function CARow({
   ca,
@@ -81,25 +76,11 @@ export function CARow({
         )}
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="-mt-1 -mr-1 shrink-0">
-            <MoreHorizontal aria-hidden />
-            <span className="sr-only">
-              Plus d&apos;actions pour « {ca.title} »
-            </span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onSelect={onDelete}
-            className="text-danger-foreground focus:text-danger-foreground [&>svg]:text-danger"
-          >
-            <Trash2 aria-hidden />
-            Supprimer
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowActionsMenu
+        name={ca.title}
+        onDelete={onDelete}
+        className="-mt-1 -mr-1 shrink-0"
+      />
     </Card>
   );
 }
