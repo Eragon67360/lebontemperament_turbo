@@ -1,14 +1,24 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import {
+  ConversationRow,
+  MessageBubble,
+} from "@/components/bug-reports/ConversationRow";
 import { Button } from "@/components/ui/button";
+import {
+  DataState,
+  EmptyState,
+  ListSkeleton,
+} from "@/components/ui/data-state";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useBugMessages,
@@ -20,13 +30,10 @@ import { useMyBugReports } from "@/hooks/useMyBugReports";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { cn } from "@/lib/utils";
 import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle2,
-  Clock,
-  MessageCircle,
-  Send,
-} from "lucide-react";
+  bugReportStatusLabel,
+  bugReportStatusTone,
+} from "@/utils/bug-reports/status";
+import { ArrowLeft, Loader2, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -35,15 +42,29 @@ interface MessagesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * The account menu's « Messages »: the signalements you sent on the left,
+ * the conversation with the team on the right. On phones the two panes
+ * slide: the list first, then the conversation with a back button.
+ */
 export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [showMobileChat, setShowMobileChat] = useState(false);
 
-  const { data: bugReports = [], isLoading: isLoadingReports } =
-    useMyBugReports();
+  const {
+    data: bugReports = [],
+    isLoading: isLoadingReports,
+    isError: isReportsError,
+    refetch: refetchReports,
+  } = useMyBugReports();
   const { data: currentUser } = useCurrentUser();
-  const { data: messages = [], isLoading: isLoadingMessages } = useBugMessages({
+  const {
+    data: messages = [],
+    isLoading: isLoadingMessages,
+    isError: isMessagesError,
+    refetch: refetchMessages,
+  } = useBugMessages({
     bug_report_id: selectedReportId || "",
   });
   const createMessageMutation = useCreateBugMessage();
@@ -84,156 +105,82 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
 
       setNewMessage("");
     } catch (error) {
-      toast.error("Erreur lors de l'envoi du message");
+      toast.error("Le message n'a pas pu être envoyé");
       console.error(error);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Clock className="h-3 w-3" />;
-      case "in_progress":
-        return <AlertCircle className="h-3 w-3" />;
-      case "resolved":
-        return <CheckCircle2 className="h-3 w-3" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800";
-      case "resolved":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "En attente";
-      case "in_progress":
-        return "En cours";
-      case "resolved":
-        return "Résolu";
-      default:
-        return status;
-    }
-  };
+  const isSending = createMessageMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[85vh] p-0 lg:min-w-7xl">
-        <div className="relative flex h-full overflow-hidden">
-          {/* Left Sidebar - Conversations List */}
+      <DialogContent className="h-[85dvh] gap-0 overflow-hidden p-0 sm:p-0 md:max-w-[calc(100%-4rem)] xl:max-w-6xl">
+        <div className="relative flex h-full min-h-0 overflow-hidden">
+          {/* Conversations */}
           <div
             className={cn(
-              "flex w-full max-w-full flex-col overflow-hidden border-r bg-gray-50 transition-transform duration-300 ease-in-out md:w-96 md:max-w-96",
+              "bg-surface-sunken border-border flex w-full max-w-full flex-col overflow-hidden border-r transition-transform duration-300 ease-in-out motion-reduce:transition-none md:w-96 md:max-w-96",
               "md:translate-x-0",
               showMobileChat
                 ? "-translate-x-full md:translate-x-0"
                 : "translate-x-0",
             )}
           >
-            <DialogHeader className="border-b bg-white p-4">
+            <DialogHeader className="border-border bg-card border-b p-4 pr-14 text-left">
               <DialogTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
+                <MessageCircle
+                  className="text-primary size-5 shrink-0"
+                  aria-hidden
+                />
                 Mes messages
               </DialogTitle>
+              <DialogDescription>
+                Vos signalements et les réponses de l&apos;équipe.
+              </DialogDescription>
             </DialogHeader>
 
             <div className="w-full flex-1 overflow-x-hidden overflow-y-auto">
-              {isLoadingReports ? (
-                <div className="p-4 text-center text-sm text-gray-500">
-                  Chargement...
-                </div>
-              ) : bugReports.length === 0 ? (
-                <div className="p-4 text-center text-sm text-gray-500">
-                  Aucun rapport de bug
-                </div>
-              ) : (
-                <div className="flex w-full flex-col gap-1 p-2">
+              <DataState
+                isLoading={isLoadingReports}
+                isError={isReportsError}
+                isEmpty={bugReports.length === 0}
+                onRetry={() => refetchReports()}
+                errorDescription="Vos signalements n'ont pas pu être chargés."
+                skeleton={
+                  <ListSkeleton
+                    rows={4}
+                    className="p-2"
+                    label="Chargement de vos signalements…"
+                  />
+                }
+                empty={
+                  <EmptyState
+                    icon={MessageCircle}
+                    title="Aucun signalement"
+                    description="Ce que vous envoyez avec « Signaler un problème » apparaît ici, avec les réponses de l'équipe."
+                    className="py-8"
+                  />
+                }
+              >
+                <ul className="flex w-full flex-col gap-1 p-2">
                   {bugReports.map((report) => (
-                    <button
-                      key={report.id}
-                      onClick={() => handleSelectReport(report.id)}
-                      className={cn(
-                        "w-full overflow-hidden rounded-lg p-3 text-left transition-colors hover:bg-white",
-                        selectedReportId === report.id
-                          ? "bg-white shadow-sm"
-                          : "bg-transparent",
-                      )}
-                    >
-                      <div className="mb-1 flex min-w-0 items-start justify-between gap-2">
-                        <h4 className="line-clamp-1 min-w-0 flex-1 truncate text-sm font-medium">
-                          {report.title}
-                        </h4>
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            "flex h-5 shrink-0 items-center gap-1 px-1.5 py-0.5 text-[10px]",
-                            getStatusColor(report.status),
-                          )}
-                        >
-                          {getStatusIcon(report.status)}
-                          <span className="whitespace-nowrap">
-                            {getStatusLabel(report.status)}
-                          </span>
-                        </Badge>
-                      </div>
-                      {report.last_message ? (
-                        <p className="truncate overflow-hidden text-xs text-gray-500">
-                          {report.last_message.message}
-                        </p>
-                      ) : (
-                        <p className="text-muted-foreground text-xs italic">
-                          Aucun message
-                        </p>
-                      )}
-                      <div className="mt-1 flex min-w-0 items-center justify-between gap-2">
-                        <span className="text-muted-foreground shrink-0 text-[10px]">
-                          {new Date(report.created_at).toLocaleDateString(
-                            "fr-FR",
-                            {
-                              day: "numeric",
-                              month: "short",
-                            },
-                          )}
-                        </span>
-                        <div className="flex shrink-0 items-center gap-2">
-                          {report.message_count > 0 && (
-                            <span className="text-muted-foreground text-[10px] whitespace-nowrap">
-                              {report.message_count}{" "}
-                              {report.message_count === 1
-                                ? "message"
-                                : "messages"}
-                            </span>
-                          )}
-                          {report.unread_count > 0 && (
-                            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-semibold text-white">
-                              {report.unread_count}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
+                    <li key={report.id} className="list-none">
+                      <ConversationRow
+                        report={report}
+                        selected={selectedReportId === report.id}
+                        onSelect={() => handleSelectReport(report.id)}
+                      />
+                    </li>
                   ))}
-                </div>
-              )}
+                </ul>
+              </DataState>
             </div>
           </div>
 
-          {/* Right Side - Chat View */}
+          {/* Conversation */}
           <div
             className={cn(
-              "absolute inset-0 flex flex-col bg-white transition-transform duration-300 ease-in-out md:relative md:flex-1",
+              "bg-card absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out motion-reduce:transition-none md:relative md:flex-1",
               "md:translate-x-0",
               showMobileChat
                 ? "translate-x-0"
@@ -242,121 +189,76 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
           >
             {selectedReport ? (
               <>
-                {/* Chat Header */}
-                <div className="border-b bg-gray-50 p-4">
+                <div className="border-border bg-card border-b p-4 pr-14">
                   <div className="flex items-start gap-3">
-                    {/* Mobile Back Button */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="shrink-0 md:hidden"
+                      className="-my-1 shrink-0 md:hidden"
                       onClick={handleBackToList}
                     >
-                      <ArrowLeft className="h-5 w-5" />
+                      <ArrowLeft aria-hidden />
+                      <span className="sr-only">Retour à mes messages</span>
                     </Button>
-                    <div className="flex min-w-0 flex-1 items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-sm font-semibold">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <h3 className="text-body text-foreground min-w-0 truncate font-semibold">
                           {selectedReport.title}
                         </h3>
-                        <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-                          {selectedReport.description}
-                        </p>
+                        <StatusBadge
+                          tone={bugReportStatusTone(selectedReport.status)}
+                        >
+                          {bugReportStatusLabel(selectedReport.status)}
+                        </StatusBadge>
                       </div>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "ml-2 flex shrink-0 items-center gap-1 text-xs",
-                          getStatusColor(selectedReport.status),
-                        )}
-                      >
-                        {getStatusIcon(selectedReport.status)}
-                        <span className="hidden sm:inline">
-                          {getStatusLabel(selectedReport.status)}
-                        </span>
-                      </Badge>
+                      <p className="text-note text-muted-foreground line-clamp-2">
+                        {selectedReport.description}
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Messages Area */}
-                <ScrollArea className="flex-1 bg-gray-50 p-4">
-                  {isLoadingMessages ? (
-                    <div className="text-center text-sm text-gray-500">
-                      Chargement des messages...
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="flex h-full items-center justify-center">
-                      <div className="text-center text-gray-500">
-                        <MessageCircle className="mx-auto mb-2 h-12 w-12 text-gray-300" />
-                        <p className="text-sm">Aucun message pour le moment</p>
-                        <p className="mt-1 text-xs">
-                          Envoyez un message pour démarrer la conversation
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {messages.map((message) => {
-                        const isCurrentUser =
-                          message.sender_id === currentUser?.id;
-                        return (
-                          <div
-                            key={message.id}
-                            className={cn(
-                              "flex",
-                              isCurrentUser ? "justify-end" : "justify-start",
-                            )}
-                          >
-                            <div
-                              className={cn(
-                                "max-w-[70%] rounded-2xl px-4 py-2 shadow-sm",
-                                isCurrentUser
-                                  ? "rounded-br-sm bg-blue-500 text-white"
-                                  : "rounded-bl-sm border border-gray-200 bg-white",
-                              )}
-                            >
-                              {!isCurrentUser && (
-                                <p className="mb-1 text-xs font-medium text-gray-700">
-                                  {message.sender.display_name ||
-                                    message.sender.email}
-                                </p>
-                              )}
-                              <p className="text-sm break-words whitespace-pre-wrap">
-                                {message.message}
-                              </p>
-                              <p
-                                className={cn(
-                                  "mt-1 text-[10px]",
-                                  isCurrentUser
-                                    ? "text-blue-100"
-                                    : "text-muted-foreground",
-                                )}
-                              >
-                                {new Date(
-                                  message.created_at,
-                                ).toLocaleTimeString("fr-FR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                <ScrollArea className="bg-surface-sunken flex-1 p-4">
+                  <DataState
+                    isLoading={isLoadingMessages}
+                    isError={isMessagesError}
+                    isEmpty={messages.length === 0}
+                    onRetry={() => refetchMessages()}
+                    errorDescription="Les messages de ce signalement n'ont pas pu être chargés."
+                    skeleton={
+                      <ListSkeleton rows={3} label="Chargement des messages…" />
+                    }
+                    empty={
+                      <EmptyState
+                        icon={MessageCircle}
+                        title="Aucun message pour le moment"
+                        description="Envoyez un message pour démarrer la conversation avec l'équipe."
+                      />
+                    }
+                  >
+                    <ul className="space-y-3">
+                      {messages.map((message) => (
+                        <li key={message.id} className="list-none">
+                          <MessageBubble
+                            message={message}
+                            isMine={message.sender_id === currentUser?.id}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </DataState>
                 </ScrollArea>
 
-                {/* Message Input */}
-                <div className="border-t bg-white p-4">
+                <div className="border-border bg-card border-t p-4">
                   <div className="flex gap-2">
                     <Textarea
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Écrivez votre message..."
-                      className="min-h-[60px] resize-none"
-                      disabled={createMessageMutation.isPending}
+                      placeholder="Écrivez votre message…"
+                      aria-label="Votre message"
+                      aria-describedby="messages-send-hint"
+                      className="min-h-16 resize-none"
+                      disabled={isSending}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
@@ -366,30 +268,34 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
                     />
                     <Button
                       onClick={handleSendMessage}
-                      disabled={
-                        createMessageMutation.isPending || !newMessage.trim()
-                      }
+                      disabled={isSending || !newMessage.trim()}
+                      aria-busy={isSending || undefined}
                       className="self-end"
                       size="icon"
                     >
-                      <Send className="h-4 w-4" />
+                      {isSending ? (
+                        <Loader2 className="animate-spin" aria-hidden />
+                      ) : (
+                        <Send aria-hidden />
+                      )}
+                      <span className="sr-only">Envoyer le message</span>
                     </Button>
                   </div>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Appuyez sur Entrée pour envoyer, Shift + Entrée pour une
-                    nouvelle ligne
+                  <p
+                    id="messages-send-hint"
+                    className="text-note text-muted-foreground mt-1"
+                  >
+                    Entrée pour envoyer, Maj + Entrée pour aller à la ligne.
                   </p>
                 </div>
               </>
             ) : (
-              <div className="text-muted-foreground hidden h-full items-center justify-center md:flex">
-                <div className="text-center">
-                  <MessageCircle className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-                  <p className="text-sm">Sélectionnez une conversation</p>
-                  <p className="mt-1 text-xs">
-                    Choisissez un rapport de bug pour voir les messages
-                  </p>
-                </div>
+              <div className="hidden h-full items-center justify-center md:flex">
+                <EmptyState
+                  icon={MessageCircle}
+                  title="Choisissez une conversation"
+                  description="Sélectionnez un signalement à gauche pour lire ses messages."
+                />
               </div>
             )}
           </div>
