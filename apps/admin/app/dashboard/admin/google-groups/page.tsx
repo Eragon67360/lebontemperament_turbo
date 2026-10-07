@@ -29,6 +29,7 @@ import {
   groupLabel,
   groupsWithDefault,
   memberEmails,
+  readAtLabel,
 } from "@/utils/google-groups/members";
 import { Clock, Mail, RefreshCw, Users } from "lucide-react";
 import { useState } from "react";
@@ -110,7 +111,7 @@ export default function GoogleGroupsPage() {
                   const label = groupLabel(group);
                   return (
                     <SelectItem key={group.email} value={group.email}>
-                      <span className="flex min-w-0 flex-col">
+                      <span className="flex min-w-0 flex-col text-left">
                         <span className="truncate font-medium">
                           {label.name}
                         </span>
@@ -162,8 +163,7 @@ export default function GoogleGroupsPage() {
               )}
             </dl>
             <ProvenanceNote icon={Clock} className="mt-4">
-              Lu dans Google Groups le{" "}
-              {new Date(stats.retrievedAt).toLocaleString("fr-FR")}
+              Lu dans Google Groups le {readAtLabel(stats.retrievedAt)}
             </ProvenanceNote>
           </Card>
         )}

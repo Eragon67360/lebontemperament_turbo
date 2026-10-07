@@ -5,6 +5,7 @@ import {
   groupLabel,
   groupsWithDefault,
   memberEmails,
+  readAtLabel,
 } from "./members";
 
 // --- An empty groups answer still offers the newsletter group ---
@@ -53,5 +54,6 @@ assert.deepEqual(memberEmails(undefined), []);
 
 assert.equal(addressCountLabel(1), "1 adresse");
 assert.equal(addressCountLabel(42), "42 adresses");
+assert.equal(readAtLabel("2026-10-08T07:55:00Z"), "8 octobre 2026 à 09:55");
 
 console.log("google-groups/members: ok");
