@@ -1,3 +1,4 @@
+import 'package:cupertino_native_better/cupertino_native_better.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,6 +55,9 @@ class AppRouter {
   static GoRouter createRouter() {
     return GoRouter(
       navigatorKey: navigatorKey,
+      // Hides Apple's tab bar (a native view) under sheets and dialogs, so it
+      // never shows through them (iOS 26 glass bar, #549).
+      observers: [CNTabBarRouteObserver()],
       initialLocation: splash,
       redirect: (context, state) {
         // Use the auth service directly to check authentication state

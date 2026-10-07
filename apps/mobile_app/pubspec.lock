@@ -337,6 +337,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
+  cupertino_native_better:
+    dependency: "direct main"
+    description:
+      name: cupertino_native_better
+      sha256: "41c2a8ed69bc3448c2c05e3797e92e04fae340f1443ace396f8163035313903a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.6.0"
   dart_jsonwebtoken:
     dependency: transitive
     description:
@@ -869,14 +877,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
-  liquid_glass_easy:
-    dependency: "direct main"
-    description:
-      name: liquid_glass_easy
-      sha256: "48f2147e8b662402ccef9304cf8c216082b7913ad985ea2ac3d4f402b16ab417"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.3.4"
   logger:
     dependency: "direct main"
     description:
