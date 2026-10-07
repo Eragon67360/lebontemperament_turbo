@@ -29,3 +29,7 @@ Since 2026-10-02 both projects use Vercel Authentication with `all_except_custom
 - `www.lebontemperament.com` and `admin.lebontemperament.com` stay public.
 - The e2e suite uses one automation bypass secret, valid for both projects.
 - Production deployments are retained 36,500 days, so old builds are now behind the protection too.
+
+## Environment variables
+
+Values live in Proton Pass and are pushed to both projects (and to GitHub secrets) from the owner's Mac with `npm run env:push`; the templates in [`env/`](env/README.md) say which variable goes to which environment. Change a value in Proton Pass, not in the Vercel dashboard: the next push overwrites dashboard edits. After a push, force the build as described above.
