@@ -37,14 +37,13 @@ const double kExtraScrollPadding = 20.0;
 const double kFloatingNavBarBottomPadding =
     kNavBarHeight + kNavBarBottomMargin + kExtraScrollPadding; // Result: 110.0
 
-// --- External URLs and contact (replace with real values) ---
+// --- External URLs and contact ---
 const String kPrivacyPolicyUrl =
     'https://www.lebontemperament.com/politique-de-confidentialite';
 
-const String kSupportEmail = 'contactlebontemperament@gmail.com';
-
-/// WhatsApp number with country code, no + or spaces (e.g. 33123456789).
-const String kSupportWhatsAppPhone = '33647849308';
+/// The association's main inbox, the only public contact besides the
+/// website's contact form (#329). No phone number is published.
+const String kSupportEmail = 'lebontemperament@gmail.com';
 
 /// Website base URL for PDFs and static assets.
 const String kWebsiteBaseUrl = 'https://www.lebontemperament.com';
