@@ -47,16 +47,23 @@ errors.push(...validateTarget(target, targetConfig, entries, config.rules));
 if (errors.length) fail(errors.join("\n"));
 
 // pass-cli has resolved every reference by now; anything still looking like one wasn't.
+// Optional names with an empty field are skipped and left as they are in the destination.
 const values = {};
+const skipped = [];
 for (const { name } of entries) {
   const value = process.env[name];
   if (!value || value.startsWith("pass://")) {
+    if (config.optional?.[name]) {
+      skipped.push(name);
+      continue;
+    }
     fail(
-      `${name} has no value: start this through "npm run env:push", which resolves it with pass-cli.`,
+      `${name} has no value: fill its field in Proton Pass, and start this through "npm run env:push", which resolves it with pass-cli.`,
     );
   }
   values[name] = value;
 }
+const active = entries.filter((e) => !skipped.includes(e.name));
 
 const state = loadState();
 const known = state.pushed[target] ?? {};
@@ -72,7 +79,7 @@ console.log(`\n${target} -> ${where}`);
 const plan =
   targetConfig.kind === "vercel"
     ? planVercel({
-        entries,
+        entries: active,
         existing: await vercelList(),
         environments: targetConfig.environments,
         values,
@@ -81,7 +88,7 @@ const plan =
         force,
       })
     : planGithub({
-        entries,
+        entries: active,
         existingNames: githubList(),
         values,
         known,
@@ -106,7 +113,11 @@ for (const a of plan.actions) {
         : NOTES[a.action];
   console.log(`  ${a.action.padEnd(10)} ${a.name}${note ? `   ${note}` : ""}`);
 }
-for (const name of plan.extras)
+for (const name of skipped)
+  console.log(
+    `  ${"skipped".padEnd(10)} ${name}   empty in Proton Pass, optional: left as it is`,
+  );
+for (const name of plan.extras.filter((n) => !skipped.includes(n)))
   console.log(
     `  ${"extra".padEnd(10)} ${name}   only in the destination, left alone`,
   );

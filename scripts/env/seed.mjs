@@ -90,6 +90,14 @@ for (const entries of Object.values(templates)) {
   }
 }
 if (!items.size) fail(`No template reads the vault "${opts.vault}".`);
+// A field is optional when every variable that reads it may be left out of a push.
+const refNames = new Map();
+for (const e of Object.values(templates).flat()) {
+  if (!refNames.has(refKey(e))) refNames.set(refKey(e), new Set());
+  refNames.get(refKey(e)).add(e.name);
+}
+const isOptional = (ref) =>
+  [...(refNames.get(ref) ?? [])].every((name) => config.optional?.[name]);
 const wanted = new Set(
   [...items.values()].flatMap(({ vault, item, fields }) =>
     [...fields].map((field) => refKey({ vault, item, field })),
@@ -236,7 +244,7 @@ for (const { vault, item, fields } of [...items.values()].sort((a, b) =>
     const why = [...(notes.get(ref) ?? [])].join("; ");
     const status = found
       ? `from ${found.sources.join(", ")}`
-      : `empty${why ? `: ${why}` : ""}${FILE_FIELDS.has(field) ? " (from a file: --file or --base64)" : opts.ask ? " (will ask)" : ""}`;
+      : `empty${why ? `: ${why}` : ""}${isOptional(ref) ? " (optional)" : ""}${FILE_FIELDS.has(field) ? " (from a file: --file or --base64)" : opts.ask ? " (will ask)" : ""}`;
     console.log(`    ${field.padEnd(24)} ${status}`);
   }
 }

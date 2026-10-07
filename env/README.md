@@ -64,7 +64,7 @@ Groups: `dev`, `production`, `github`; or name targets one by one. `--force` rew
 What a run does:
 
 1. `pass-cli run` resolves the template's references into the push script's environment. No value is written to a file, and the CLI masks values in the output.
-2. The script lists each name as `create`, `update` (changed since the last push from this Mac), `overwrite` (exists but never pushed from this Mac), `unchanged`, `split` (a Vercel variable shared with other environments gets its own copy; the others keep their value) or `conflict` (fix by hand). Names only in the destination show as `extra` and are never deleted.
+2. The script lists each name as `create`, `update` (changed since the last push from this Mac), `overwrite` (exists but never pushed from this Mac), `unchanged`, `split` (a Vercel variable shared with other environments gets its own copy; the others keep their value) or `conflict` (fix by hand). Names only in the destination show as `extra` and are never deleted. Names listed under `optional` in `targets.json` (the code works without them) show as `skipped` when their Proton Pass field is empty, and stay as they are in the destination.
 3. With `--apply`, it writes. Vercel production variables are created as **sensitive**; dev ones as encrypted (Vercel refuses sensitive variables on Development). GitHub values go to `gh secret set` on standard input.
 4. It remembers a keyed fingerprint of each pushed value in `~/.config/lbt-env/` (outside the repo), because Vercel sensitive variables and GitHub secrets can't be read back.
 

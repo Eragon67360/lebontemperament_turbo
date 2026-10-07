@@ -7,6 +7,14 @@
   "unmanaged": {
     "ROSTER_SHEET_RANGE": "optional, the admin defaults to A:ZZ"
   },
+  "$optional": "Names a push skips when their Proton Pass field is empty (the code works without them), with why.",
+  "optional": {
+    "NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID": "the map falls back to the default style",
+    "GOOGLE_SITE_VERIFICATION": "only needed to verify the site in Google Search Console",
+    "BING_SITE_VERIFICATION": "only needed to verify the site in Bing Webmaster Tools",
+    "INDEXNOW_SUBMIT_SECRET": "without it /api/indexnow refuses every submission",
+    "REVALIDATE_SECRET": "without it admin edits wait for the cache to expire instead of refreshing the site"
+  },
   "targets": {
     "website.production": {
       "kind": "vercel",

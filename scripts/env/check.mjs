@@ -49,6 +49,16 @@ for (const [target, targetConfig] of Object.entries(config.targets)) {
   }
 }
 
+const everyName = new Set(
+  Object.values(parsed)
+    .flat()
+    .map((e) => e.name),
+);
+for (const name of Object.keys(config.optional ?? {})) {
+  if (!everyName.has(name))
+    errors.push(`targets.json: optional ${name} is in no template`);
+}
+
 const sync = readTemplate("sync");
 errors.push(...sync.errors);
 
