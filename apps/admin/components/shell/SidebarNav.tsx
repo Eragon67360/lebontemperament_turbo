@@ -9,6 +9,7 @@ import {
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import {
   activeNavHref,
+  isSectionCurrent,
   navSectionForHref,
   type NavItem,
   type NavSection,
@@ -19,7 +20,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-/** A section row: icon, label, one-line description (B's `.nav-item`). */
+/** A section row: icon, label, and the open section's description (B's `.nav-item`). */
 const sectionRowClassName = cn(
   "flex min-h-11 w-full items-start gap-3 rounded-md px-3 py-2 text-left text-foreground",
   "transition-colors hover:bg-surface-sunken motion-reduce:transition-none",
@@ -31,8 +32,9 @@ const currentClassName =
 
 /**
  * The sidebar's tree: six sections, one open at a time (the one that owns
- * the current page opens by itself), each with a one-line description so a
- * monthly visitor knows what is behind the label before clicking.
+ * the current page opens by itself). The open section shows its one-line
+ * description under the label; the others carry it as a tooltip, so a
+ * monthly visitor can still tell what is behind a label before clicking.
  */
 export function SidebarNav({
   sections,
@@ -57,36 +59,27 @@ export function SidebarNav({
     <nav aria-label={label}>
       <ul className="flex flex-col gap-1">
         {sections.map((section) => {
-          const Icon = section.icon;
+          const isOpen = openSectionId === section.id;
+          const isCurrent = isSectionCurrent(section, activeHref);
           const rowContent = (
-            <>
-              <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
-              <span className="min-w-0 flex-1">
-                <span className="text-body block truncate leading-6 font-medium">
-                  {section.label}
-                </span>
-                <span
-                  className={cn(
-                    "text-note block truncate",
-                    section.href === activeHref
-                      ? "text-primary-text"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {section.description}
-                </span>
-              </span>
-            </>
+            <SectionRowContent
+              section={section}
+              showDescription={isOpen}
+              isCurrent={isCurrent}
+            />
           );
+          // A section whose description is hidden keeps it as a tooltip and
+          // accessible description; the open one shows it in the row.
+          const rowTitle = isOpen ? undefined : section.description;
 
           if (section.href) {
-            const isCurrent = section.href === activeHref;
             return (
               <li key={section.id}>
                 <Link
                   href={section.href}
                   onClick={onNavigate}
                   aria-current={isCurrent ? "page" : undefined}
+                  title={rowTitle}
                   className={cn(
                     sectionRowClassName,
                     isCurrent && currentClassName,
@@ -98,7 +91,6 @@ export function SidebarNav({
             );
           }
 
-          const isOpen = openSectionId === section.id;
           return (
             <li key={section.id}>
               <Collapsible
@@ -108,6 +100,7 @@ export function SidebarNav({
                 }
               >
                 <CollapsibleTrigger
+                  title={rowTitle}
                   className={cn(sectionRowClassName, "group")}
                 >
                   {rowContent}
@@ -158,6 +151,44 @@ export function SidebarNav({
         })}
       </ul>
     </nav>
+  );
+}
+
+/**
+ * Icon, label and, for the open section only, its description in full: one
+ * description at a time instead of six truncated ones (« Préparer et publier
+ * l… »). Teal only when the section is itself the current page (Accueil).
+ */
+export function SectionRowContent({
+  section,
+  showDescription,
+  isCurrent,
+}: {
+  section: NavSection;
+  showDescription: boolean;
+  isCurrent: boolean;
+}) {
+  const Icon = section.icon;
+  return (
+    <>
+      <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
+      <span className="min-w-0 flex-1">
+        <span className="text-body block truncate leading-6 font-medium">
+          {section.label}
+        </span>
+        {showDescription && (
+          <span
+            // Not cn(): tailwind-merge reads `text-note` as a colour and
+            // would drop it next to the text colour, leaving the row's 16 px.
+            className={`text-note block ${
+              isCurrent ? "text-primary-text" : "text-muted-foreground"
+            }`}
+          >
+            {section.description}
+          </span>
+        )}
+      </span>
+    </>
   );
 }
 

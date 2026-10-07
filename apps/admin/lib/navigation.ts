@@ -271,6 +271,19 @@ export function navSectionForHref(
   );
 }
 
+/**
+ * Whether a section is itself the current page (Accueil on /dashboard). Only
+ * a section with a page can be: on a route outside the menu `activeHref` is
+ * undefined, like the `href` of every collapsible section, and comparing the
+ * two would mark them all as current.
+ */
+export function isSectionCurrent(
+  section: Pick<NavSection, "href">,
+  activeHref: string | undefined,
+): boolean {
+  return section.href !== undefined && section.href === activeHref;
+}
+
 /** Label of the nav entry for an exact href, used by the « Vous êtes ici » trail. */
 export function navLabelForHref(
   sections: NavSection[],

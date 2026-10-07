@@ -1,11 +1,11 @@
 "use client";
 
+import { BrandMark } from "@/components/shell/BrandMark";
 import { SidebarNav } from "@/components/shell/SidebarNav";
 import type { NavSection } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import RouteNames from "@/utils/routes";
 import { ExternalLink } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
 const WEBSITE_URL =
@@ -46,15 +46,7 @@ export function AppSidebar({
           onClick={onNavigate}
           className="flex min-w-0 items-center gap-3 rounded-sm"
         >
-          <span className="bg-primary-soft flex size-9 shrink-0 items-center justify-center rounded-full">
-            <Image
-              src="/picto.svg"
-              alt=""
-              width={20}
-              height={20}
-              className="size-5"
-            />
-          </span>
+          <BrandMark />
           <span className="min-w-0 leading-tight">
             <span className="text-foreground block truncate text-[15px] font-semibold">
               Le Bon Tempérament

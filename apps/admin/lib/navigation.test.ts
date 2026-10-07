@@ -3,6 +3,7 @@ import {
   activeNavHref,
   buildNavSections,
   flattenNavItems,
+  isSectionCurrent,
   navLabelForHref,
   navSectionForHref,
 } from "./navigation";
@@ -116,5 +117,23 @@ assert.equal(
 );
 assert.equal(navSectionForHref(admin, "/dashboard")?.id, "home");
 assert.equal(navSectionForHref(admin, undefined), undefined);
+
+// Only a section that is a page can be current. On a route outside the menu
+// both hrefs are undefined: that must not mark every collapsible section.
+assert.equal(isSectionCurrent({ href: undefined }, undefined), false);
+assert.equal(isSectionCurrent({ href: "/dashboard" }, undefined), false);
+assert.equal(isSectionCurrent({ href: "/dashboard" }, "/dashboard"), true);
+assert.equal(
+  isSectionCurrent({ href: undefined }, "/dashboard/admin/users"),
+  false,
+);
+assert.deepEqual(
+  admin
+    .filter((section) =>
+      isSectionCurrent(section, activeNavHref(admin, "/hors-du-menu")),
+    )
+    .map((section) => section.id),
+  [],
+);
 
 console.log("navigation: ok");
