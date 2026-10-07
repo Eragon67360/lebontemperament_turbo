@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { reportOrigin } from "../../utils/bug-reports/status";
 import { BugReportRow } from "./BugReportRow";
 
 const noop = () => {};
@@ -55,5 +56,26 @@ const report = {
   assert.match(html, /paul@example\.org/);
   assert.match(html, /En attente/);
 }
+
+// --- A report from the app with screenshots says so after the date ---
+{
+  const html = renderToStaticMarkup(
+    createElement(BugReportRow, {
+      report: {
+        ...report,
+        source: "app" as const,
+        screenshot_paths: ["u1/a.jpg", "u1/b.jpg"],
+      },
+      onStatusChange: noop,
+    }),
+  );
+  assert.match(html, /depuis l&#x27;application, 2 captures/);
+}
+
+// --- reportOrigin: nothing for an admin report without screenshots ---
+assert.equal(reportOrigin({ source: "admin", screenshot_paths: [] }), null);
+assert.equal(reportOrigin({}), null);
+assert.equal(reportOrigin({ screenshot_paths: ["u1/a.jpg"] }), "1 capture");
+assert.equal(reportOrigin({ source: "app" }), "depuis l'application");
 
 console.log("components/bug-reports: ok");

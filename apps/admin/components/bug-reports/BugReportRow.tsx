@@ -16,6 +16,7 @@ import {
   bugReportStatusTone,
   formatReportDate,
   personName,
+  reportOrigin,
   type BugReportStatus,
 } from "@/utils/bug-reports/status";
 import type { ReactNode } from "react";
@@ -32,11 +33,19 @@ export function BugReportRow({
 }: {
   report: Pick<
     BugReport,
-    "id" | "title" | "description" | "status" | "created_at" | "profiles"
+    | "id"
+    | "title"
+    | "description"
+    | "status"
+    | "created_at"
+    | "profiles"
+    | "source"
+    | "screenshot_paths"
   >;
   onStatusChange: (status: BugReportStatus) => void;
   details?: ReactNode;
 }) {
+  const origin = reportOrigin(report);
   return (
     <Card className="flex flex-col gap-4 p-4 sm:p-5">
       <div className="min-w-0 space-y-1">
@@ -54,6 +63,7 @@ export function BugReportRow({
             {personName(report.profiles)}
           </span>{" "}
           · {formatReportDate(report.created_at)}
+          {origin && <> · {origin}</>}
         </p>
       </div>
 

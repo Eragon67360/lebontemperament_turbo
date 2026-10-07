@@ -54,3 +54,18 @@ export function personName(
 ): string {
   return person?.display_name || person?.email || "Quelqu'un";
 }
+
+/**
+ * « depuis l'application, 2 captures »: what the row adds after the date for
+ * a report sent from the mobile app or carrying screenshots; null otherwise.
+ */
+export function reportOrigin(report: {
+  source?: string;
+  screenshot_paths?: string[] | null;
+}): string | null {
+  const parts: string[] = [];
+  if (report.source === "app") parts.push("depuis l'application");
+  const shots = report.screenshot_paths?.length ?? 0;
+  if (shots > 0) parts.push(shots === 1 ? "1 capture" : `${shots} captures`);
+  return parts.length > 0 ? parts.join(", ") : null;
+}

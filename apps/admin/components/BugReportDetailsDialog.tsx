@@ -1,4 +1,5 @@
 // components/BugReportDetailsDialog.tsx
+import { BugScreenshots } from "@/components/bug-reports/BugScreenshots";
 import { Button } from "@/components/ui/button";
 import {
   DataState,
@@ -37,6 +38,9 @@ interface BugReportDetailsProps {
     description: string;
     status: "pending" | "in_progress" | "resolved";
     created_at: string;
+    screenshot_paths?: string[];
+    source?: "admin" | "app";
+    app_info?: string | null;
     profiles: {
       email: string;
       display_name: string | null;
@@ -113,6 +117,16 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
               {report.description}
             </p>
           </div>
+          {report.source === "app" && (
+            <p className="text-note text-muted-foreground break-words">
+              Envoyé depuis l&apos;application
+              {report.app_info ? ` · ${report.app_info}` : ""}
+            </p>
+          )}
+          <BugScreenshots
+            paths={report.screenshot_paths}
+            title={report.title}
+          />
         </div>
 
         <section aria-labelledby={`${baseId}-messages`} className="space-y-3">
