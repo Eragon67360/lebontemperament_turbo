@@ -1,14 +1,18 @@
-// Static renders of the sidebar (no DOM): which section shows its
-// description, which one is teal, and the brand mark.
-import { buildNavSections } from "@/lib/navigation";
+// Static renders of the sidebar (no DOM): every page visible under its
+// section's title, one current entry, the campaign as one project entry, and
+// the brand mark.
+import { buildNavSections, flattenNavItems } from "@/lib/navigation";
 import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BrandMark } from "./BrandMark";
-import { SectionRowContent, SidebarNav } from "./SidebarNav";
+import { SidebarNav } from "./SidebarNav";
 
 const sections = buildNavSections({ isSuperAdmin: true });
-const descriptions = sections.map((section) => section.description);
+const campaign = sections.find((section) => section.id === "campaign")!;
+const campaignHrefs = new Set(
+  campaign.groups.flatMap((group) => group.items.map((item) => item.href)),
+);
 
 /** The sidebar as the shell renders it on `pathname` (usePathname reads this context). */
 function renderNav(pathname: string) {
@@ -24,69 +28,54 @@ function visibleCount(html: string, text: string) {
   return html.split(`>${text}<`).length - 1;
 }
 
-// --- One description at a time: the open section's, in full ---
-{
-  const html = renderNav("/dashboard/admin/anniversary/hero");
-  const campaign = sections.find((section) => section.id === "campaign")!;
-  assert.equal(visibleCount(html, campaign.description), 1);
-  for (const section of sections) {
-    if (section.id === "campaign") continue;
-    assert.equal(
-      visibleCount(html, section.description),
-      0,
-      `${section.label}'s description is shown although the section is closed`,
-    );
-    // …but it stays the row's tooltip and accessible description.
-    assert.ok(
-      html.includes(`title="${section.description}"`),
-      `${section.label} lost its description tooltip`,
-    );
-  }
-  assert.doesNotMatch(html, /line-clamp|truncate[^"]*">Préparer/);
-  // 13 px `text-note` survives next to the colour (tailwind-merge drops it in cn()).
-  assert.match(
-    html,
-    new RegExp(
-      `class="text-note block text-muted-foreground">${campaign.description}<`,
-    ),
-  );
-}
-
-// --- Accueil is the current page on /dashboard: its row and description are teal ---
+// --- Flat: every page outside the campaign is visible, nothing folds ---
 {
   const html = renderNav("/dashboard");
-  const home = sections[0]!;
-  assert.match(html, new RegExp(`text-primary-text">${home.description}<`));
-  assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
+  for (const item of flattenNavItems(sections)) {
+    if (campaignHrefs.has(item.href)) continue;
+    assert.ok(html.includes(`href="${item.href}"`), `${item.label} is hidden`);
+  }
+  assert.doesNotMatch(html, /aria-expanded|<button/);
+  // Section titles name their lists; descriptions stay on the home page.
+  for (const section of sections) {
+    if (section.href || section.kind === "project") continue;
+    assert.equal(visibleCount(html, section.label), 1);
+    assert.ok(html.includes(`aria-labelledby="nav-title-${section.id}"`));
+  }
+  for (const section of sections) {
+    assert.equal(visibleCount(html, section.description), 0);
+  }
+  assert.equal(visibleCount(html, "Projets"), 1);
 }
 
-// --- Outside the menu (both hrefs undefined) nothing is current or teal ---
-// Before the fix, `section.href === activeHref` was true for every
-// collapsible section here and painted their descriptions teal.
+// --- Accueil is the current page on /dashboard, and the only one ---
+{
+  const html = renderNav("/dashboard");
+  assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
+  assert.match(html, /aria-current="page"[^>]*>.*?Accueil</);
+}
+
+// --- A campaign page lights up the one « Campagne 40 ans » entry ---
+{
+  const html = renderNav("/dashboard/admin/anniversary/hero");
+  assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
+  assert.match(html, /aria-current="page"[^>]*>.*?Campagne 40 ans</);
+  // Its eleven pages are not in the sidebar (they have their own menu).
+  assert.equal(visibleCount(html, "Chronologie"), 0);
+  assert.equal(visibleCount(html, "En-tête de la page"), 0);
+}
+
+// --- A nested route lights up its closest entry ---
+{
+  const html = renderNav("/dashboard/admin/users/some-id");
+  assert.match(html, /aria-current="page"[^>]*>.*?Membres</);
+}
+
+// --- Outside the menu nothing is current or teal ---
 {
   const html = renderNav("/hors-du-menu");
   assert.doesNotMatch(html, /aria-current/);
   assert.doesNotMatch(html, /text-primary-text/);
-  for (const description of descriptions) {
-    assert.equal(visibleCount(html, description), 0);
-  }
-}
-
-// --- SectionRowContent itself: teal only when current ---
-{
-  const campaign = sections[1]!;
-  const open = renderToStaticMarkup(
-    <SectionRowContent section={campaign} showDescription isCurrent={false} />,
-  );
-  assert.match(open, /text-muted-foreground">Préparer et publier/);
-  const closed = renderToStaticMarkup(
-    <SectionRowContent
-      section={campaign}
-      showDescription={false}
-      isCurrent={false}
-    />,
-  );
-  assert.doesNotMatch(closed, /Préparer et publier/);
 }
 
 // --- Brand mark: decorative, token colours, the tuning fork ---

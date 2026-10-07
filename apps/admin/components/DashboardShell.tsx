@@ -3,6 +3,7 @@
 import { BugReportDialog } from "@/components/BugReportDialog";
 import { MessagesDialog } from "@/components/MessagesDialog";
 import { PageTransition } from "@/components/PageTransition";
+import { AccountMenu } from "@/components/shell/AccountMenu";
 import { AppHeader } from "@/components/shell/AppHeader";
 import { AppSidebar } from "@/components/shell/AppSidebar";
 import { ShellDialogsProvider } from "@/components/shell/ShellDialogs";
@@ -17,8 +18,9 @@ interface DashboardShellProps {
 }
 
 /**
- * Direction B's shell: a 280 px sidebar from `lg`, a drawer below it, a
- * sticky header with « Vous êtes ici » and the account menu, and the page in
+ * Direction B's shell: a 280 px sidebar from `lg` (the account at its foot),
+ * a drawer below it, a sticky header with « Vous êtes ici » (and the account
+ * menu below `lg`), and the page in
  * a scrolling column capped at 1120 px. The badge queries live here, always
  * mounted, so the counts stay fresh whatever is open.
  */
@@ -62,7 +64,17 @@ export function DashboardShell({ children }: DashboardShellProps) {
           bottom of the shell off behind Safari's address bar. */}
       <div className="bg-background flex h-dvh overflow-hidden">
         <aside className="border-border bg-sidebar hidden w-[280px] shrink-0 border-r lg:flex lg:flex-col">
-          <AppSidebar sections={sections} />
+          <AppSidebar
+            sections={sections}
+            account={
+              <AccountMenu
+                placement="sidebar"
+                unreadMessages={unreadMessages}
+                onOpenMessages={() => setMessagesDialogOpen(true)}
+                onOpenBugReport={() => setBugReportDialogOpen(true)}
+              />
+            }
+          />
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">

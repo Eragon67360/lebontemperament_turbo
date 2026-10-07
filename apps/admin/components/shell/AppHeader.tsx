@@ -22,7 +22,8 @@ import { useState } from "react";
 /**
  * The sticky header: on phones the menu button that opens the sidebar as a
  * drawer, then « Vous êtes ici » (parent › page on phones), then the account
- * menu. The page scrolls underneath it.
+ * menu below `lg` (above it, the account is in the sidebar). The page
+ * scrolls underneath it.
  */
 export function AppHeader({
   sections,
@@ -75,7 +76,8 @@ export function AppHeader({
 
       <PageTrail items={trail} className="min-w-0 flex-1" />
 
-      <div className="ml-auto flex shrink-0 items-center">
+      {/* From lg the account sits at the foot of the sidebar. */}
+      <div className="ml-auto flex shrink-0 items-center lg:hidden">
         <AccountMenu
           unreadMessages={unreadMessages}
           onOpenMessages={onOpenMessages}

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // P1 — sidebar orientation. Guards the longest-prefix matching in
 // apps/admin/lib/navigation.ts: a nested route must light up the nav entry it
 // belongs to (exact-href matching highlights nothing on these deeper routes),
-// and its section must be the one open in the sidebar.
+// listed under its section's title.
 test("a nested route marks its closest sidebar entry as current", async ({
   page,
 }) => {
@@ -15,8 +15,10 @@ test("a nested route marks its closest sidebar entry as current", async ({
     "Concerts et tournées",
   );
   await expect(
-    nav.getByRole("button", { name: /Concerts et site public/ }),
-  ).toHaveAttribute("aria-expanded", "true");
+    nav
+      .getByRole("list", { name: "Concerts et site public", exact: true })
+      .locator("[aria-current='page']"),
+  ).toHaveText("Concerts et tournées");
 });
 
 // P1 — « Vous êtes ici » is worded like the sidebar, section first.
@@ -49,16 +51,17 @@ test("no sidebar entry leads to a missing page", async ({ page }) => {
     }
   };
 
-  // One section is open at a time: open each in turn and collect its links.
+  // The menu is flat: every link is there at once. The campaign's pages are
+  // in its own menu, above each of them.
   await collect();
-  for (const trigger of await nav.getByRole("button").all()) {
-    if ((await trigger.getAttribute("data-state")) === "closed") {
-      await trigger.click();
-      await expect(trigger).toHaveAttribute("aria-expanded", "true");
-    }
-    await collect();
+  await page.goto("/dashboard/admin/anniversary");
+  for (const href of await page
+    .getByRole("navigation", { name: "Pages de la campagne" })
+    .getByRole("link")
+    .evaluateAll((links) => links.map((link) => link.getAttribute("href")))) {
+    if (href?.startsWith("/dashboard")) hrefs.add(href);
   }
-  expect(hrefs.size).toBeGreaterThan(5);
+  expect(hrefs.size).toBeGreaterThan(15);
 
   for (const href of hrefs) {
     const response = await page.request.get(href);
@@ -79,8 +82,7 @@ test("the mobile drawer opens the navigation and closes on navigation", async ({
   const drawer = page.getByRole("dialog", { name: "Navigation principale" });
   await expect(drawer).toBeVisible();
 
-  await drawer.getByRole("button", { name: /Membres et accès/ }).click();
-  await drawer.getByRole("link", { name: "Membres" }).click();
+  await drawer.getByRole("link", { name: "Membres", exact: true }).click();
 
   await expect(page).toHaveURL(/\/dashboard\/admin\/users$/);
   await expect(drawer).toBeHidden();
