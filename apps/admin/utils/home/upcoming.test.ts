@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import {
-  dateBlockFr,
   formatDayFr,
   formatTimeFr,
   localDateTime,
@@ -35,10 +34,6 @@ const now = new Date(2026, 9, 3, 10, 0, 0);
 
   assert.equal(formatDayFr(new Date(2026, 9, 7), now), "Mercredi 7 octobre");
   assert.equal(formatDayFr(new Date(2027, 0, 9), now), "Samedi 9 janvier 2027");
-  assert.deepEqual(dateBlockFr(new Date(2026, 9, 7)), {
-    day: "7",
-    month: "oct.",
-  });
 }
 
 const rehearsals = [
