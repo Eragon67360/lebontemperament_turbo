@@ -1,12 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/platform/liquid_glass_support.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
+import 'package:cupertino_native_better/cupertino_native_better.dart';
 import 'package:logger/logger.dart';
 
 import '../../../../data/providers/connectivity_provider.dart';
@@ -160,14 +158,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
 // MARK: - Custom Navigation Bar Components
 
-/// Tint of the glass bar: the page ground at this opacity. High enough that
-/// the labels keep 4.5:1 over mid-grey content scrolling under the bar (see
-/// nav_bar_test.dart), low enough that the content still shows through.
-@visibleForTesting
-const double kNavGlassTintDark = 0.85;
-@visibleForTesting
-const double kNavGlassTintLight = 0.9;
-
 /// The bottom bar (« Portée »): docked on the page ground behind a hairline,
 /// no pill. Every tab keeps its label, so nobody has to guess what an icon
 /// means; the current tab is in the accent with a dot under its label.
@@ -215,31 +205,30 @@ class FrostedGlassNavBar extends StatelessWidget {
     );
   }
 
-  /// A capsule floating above the home indicator; the page scrolls under it
-  /// (every tab already leaves `kFloatingNavBarBottomPadding` free).
+  /// Apple's own tab bar (a native UITabBar), so iOS 26 draws its real
+  /// Liquid Glass and follows the iPhone's accessibility settings itself.
+  /// The page scrolls under it (every tab already leaves
+  /// `kFloatingNavBarBottomPadding` free).
   Widget _buildGlass(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = scheme.brightness == Brightness.dark;
-    final homeIndicator = MediaQuery.viewPaddingOf(context).bottom;
     return Positioned(
-      left: 12,
-      right: 12,
-      bottom: math.max(homeIndicator - 12, 10),
-      child: LiquidGlassLens(
-        style: LiquidGlassStyle(
-          shape: const LiquidGlassShape.continuousRoundedRectangle(
-            cornerRadius: 32,
-          ),
-          appearance: LiquidGlassAppearance(
-            color: scheme.surface.withValues(
-              alpha: isDark ? kNavGlassTintDark : kNavGlassTintLight,
-            ),
-            blur: const LiquidGlassBlur(sigmaX: 12, sigmaY: 12),
-            shadow: const LiquidGlassShadow(),
-          ),
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: SafeArea(
+        top: false,
+        child: CNTabBar(
+          items: [
+            for (final item in items)
+              CNTabBarItem(label: item.label, customIcon: item.outlinedIcon),
+          ],
+          currentIndex: currentIndex,
+          onTap: (index) {
+            HapticFeedback.lightImpact();
+            onTap(index);
+          },
+          tint: scheme.primary,
         ),
-        // The taps' ink is drawn on this Material, inside the glass.
-        child: Material(type: MaterialType.transparency, child: _tabs()),
       ),
     );
   }
