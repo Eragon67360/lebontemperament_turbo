@@ -58,14 +58,6 @@ export function formatDayFr(date: Date, now: Date = new Date()): string {
   return capitalize(format(date, pattern, { locale: fr }));
 }
 
-/** « 7 » and « oct. » for the date block of an agenda row. */
-export function dateBlockFr(date: Date): { day: string; month: string } {
-  return {
-    day: format(date, "d", { locale: fr }),
-    month: format(date, "MMM", { locale: fr }),
-  };
-}
-
 // --- The merge ---
 
 export type UpcomingKind = "rehearsal" | "event" | "concert";

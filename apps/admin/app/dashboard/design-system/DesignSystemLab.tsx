@@ -43,6 +43,7 @@ import {
   ErrorState,
   ListSkeleton,
 } from "@/components/ui/data-state";
+import { DateBlock } from "@/components/ui/date-block";
 import {
   Dialog,
   DialogClose,
@@ -654,9 +655,29 @@ export function DesignSystemLab() {
         <Section
           id="divers"
           title="Divers"
-          intro="Avatar, progression, provenance, fil d’Ariane."
+          intro="Avatar, bloc de date, progression, provenance, fil d’Ariane."
         >
           <div className="flex flex-col gap-5">
+            <Row label="Bloc de date (programme) : sm dans une liste, lg pour le prochain concert">
+              <span className="flex items-center gap-3">
+                <DateBlock date={new Date(2026, 9, 14)} />
+                <span className="text-[15px] font-medium">Répétition</span>
+              </span>
+              <span className="flex items-center gap-3">
+                <DateBlock date={new Date(2026, 10, 15)} tone="primary" />
+                <span className="text-[15px] font-medium">Concert</span>
+              </span>
+              <span className="flex items-center gap-5">
+                <DateBlock
+                  date={new Date(2026, 10, 15)}
+                  size="lg"
+                  tone="primary"
+                />
+                <span className="text-2xl leading-8 font-semibold">
+                  Entre terre et ciel
+                </span>
+              </span>
+            </Row>
             <Row label="Avatar">
               <Avatar>
                 <AvatarFallback>LB</AvatarFallback>
