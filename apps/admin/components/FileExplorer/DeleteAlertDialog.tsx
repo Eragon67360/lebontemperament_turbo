@@ -66,7 +66,7 @@ export function DeleteAlertDialog({
               e.preventDefault();
               onConfirm();
             }}
-            className="bg-destructive hover:bg-destructive/90 text-white"
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
           >
             Supprimer
           </AlertDialogAction>

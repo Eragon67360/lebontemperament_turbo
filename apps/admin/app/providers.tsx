@@ -7,25 +7,18 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AnimatePresence } from "motion/react";
 import { ThemeProvider } from "next-themes";
-import { usePathname } from "next/navigation";
 
 /**
- * Pages still hard-code light surfaces, so the theme is forced to light
- * everywhere until the Phase 5 dark-mode sweep. The design-system lab is the
- * one place where the switch works, to review the primitives in both themes.
+ * The theme follows the device until the person picks « Clair » or « Sombre »
+ * in the account menu (stored in this browser). Every surface uses tokens
+ * that have a `.dark` value, so no page is forced to light any more.
  */
-const THEME_SWITCHABLE_PATHS = ["/dashboard/design-system"];
-
 export function Providers({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const themeSwitchable = THEME_SWITCHABLE_PATHS.includes(pathname);
-
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="light"
-      enableSystem={false}
-      forcedTheme={themeSwitchable ? undefined : "light"}
+      defaultTheme="system"
+      enableSystem
       disableTransitionOnChange
     >
       <DensityProvider>

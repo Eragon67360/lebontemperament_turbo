@@ -7,9 +7,9 @@
   Direction B « Atelier guidé » (docs/redesign/phase-1/b-atelier/tokens.css).
   One accent (the brand teal), neutral surfaces, semantic colours only for
   meaning. The shadcn variable names stay so every primitive keeps working;
-  the B names are added next to them. Light is the default, dark lives under
-  `.dark` (next-themes, attribute="class") and stays forced to light until the
-  Phase 5 sweep, except on /dashboard/design-system.
+  the B names are added next to them. Dark lives under `.dark` (next-themes,
+  attribute="class"); the theme follows the device unless the person picks
+  « Clair » or « Sombre » in the account menu.
 */
 @theme inline {
   /* Shape: control · input/button · card · dialog */
