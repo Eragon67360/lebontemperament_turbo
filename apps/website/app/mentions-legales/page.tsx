@@ -1,4 +1,9 @@
-import { CONTACT_EMAIL, PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
+import {
+  CONTACT_ADDRESS_LINE,
+  CONTACT_EMAIL,
+  CONTACT_FORM_PATH,
+  PRIVACY_CONTACT_EMAIL,
+} from "@/lib/contact";
 import { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -72,12 +77,16 @@ export default function MentionsLegales() {
               <Row label="Éditeur">
                 Le Bon Tempérament, association de droit local (Alsace-Moselle)
               </Row>
-              <Row label="Siège">3 Rue Clemenceau, 67700 Saverne, France</Row>
-              <Row label="Téléphone">(+33) 06 89 68 74 82</Row>
+              <Row label="Siège">{CONTACT_ADDRESS_LINE}</Row>
               <Row label="E-mail">
                 <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
                   {CONTACT_EMAIL}
                 </a>
+              </Row>
+              <Row label="Formulaire">
+                <Link href={CONTACT_FORM_PATH} className={linkClass}>
+                  page Contact
+                </Link>
               </Row>
               <Row label="SIRET">499 664 654 00013</Row>
               {ASSOCIATION_REGISTRY && (

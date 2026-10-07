@@ -1,6 +1,6 @@
 import FileExplorer from "@/components/travail/FileExplorer";
 import { createClient } from "@/utils/supabase/server";
-import { DRIVE_ROOT_SLUG, driveFolderUrl } from "@repo/domain/utils/drive";
+import { DRIVE_ROOT_SLUG } from "@repo/domain/utils/drive";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -44,16 +44,13 @@ const Travail = async () => {
     );
   }
 
-  const rootFolder = data.find((folder) => folder.slug === DRIVE_ROOT_SLUG);
-
   return (
     <>
       <div className="w-full p-0 md:p-6">
+        {/* The root folder is not a tab, and members no longer get a link
+            to open Drive itself (#347): documents open through the site. */}
         <FileExplorer
           folders={data.filter((folder) => folder.slug !== DRIVE_ROOT_SLUG)}
-          driveUrl={
-            rootFolder ? driveFolderUrl(rootFolder.folder_id) : undefined
-          }
         />
       </div>
     </>

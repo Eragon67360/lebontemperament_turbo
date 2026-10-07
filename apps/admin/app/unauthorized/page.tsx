@@ -73,12 +73,12 @@ export default function UnauthorizedPage() {
 
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>
-            Pour toute assistance, contactez le support technique :{" "}
+            Pour toute assistance, écrivez à l&apos;association :{" "}
             <a
-              href="mailto:thomas-moser@orangefr"
+              href="mailto:lebontemperament@gmail.com"
               className="text-primary hover:text-primary/80 font-medium"
             >
-              thomas-moser@orange
+              lebontemperament@gmail.com
             </a>
           </p>
         </div>
