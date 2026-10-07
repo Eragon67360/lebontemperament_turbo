@@ -1,12 +1,12 @@
 "use client";
 import CookiePreferencesButton from "@/components/cookies/CookiePreferencesButton";
 import { cloudinaryLoader } from "@/lib/cloudinaryImage";
+import { CONTACT_ADDRESS, CONTACT_EMAIL } from "@/lib/contact";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CiMail } from "react-icons/ci";
 import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
-import { FiPhone } from "react-icons/fi";
 import { IoLocationOutline } from "react-icons/io5";
 
 const Footer = () => {
@@ -123,9 +123,10 @@ const Footer = () => {
                 aria-hidden="true"
               />
               <p className="text-left">
-                3 Rue Clemenceau,
+                {CONTACT_ADDRESS.street},
                 <br />
-                67700 SAVERNE, France
+                {CONTACT_ADDRESS.postalCode}{" "}
+                {CONTACT_ADDRESS.city.toUpperCase()}, {CONTACT_ADDRESS.country}
               </p>
             </div>
 
@@ -136,26 +137,11 @@ const Footer = () => {
                 aria-hidden="true"
               />
               <a
-                href="mailto:lebontemperament@gmail.com"
+                href={`mailto:${CONTACT_EMAIL}`}
                 aria-label="Envoyer un email à Le Bon Tempérament"
                 className="hover:text-primary-text transition-colors duration-200"
               >
-                lebontemperament@gmail.com
-              </a>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <FiPhone
-                size={18}
-                className="text-primary dark:text-primary shrink-0"
-                aria-hidden="true"
-              />
-              <a
-                href="tel:+33689687482"
-                aria-label="Appeler Le Bon Tempérament"
-                className="hover:text-primary-text transition-colors duration-200"
-              >
-                (+33) 06 89 68 74 82
+                {CONTACT_EMAIL}
               </a>
             </div>
           </address>

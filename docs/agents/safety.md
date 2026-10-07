@@ -2,22 +2,22 @@
 
 This ecosystem holds members' personal data (profiles, phone numbers, voices and groups), donors' data and receipts, delivery addresses and live driver locations, and it can reach every member's phone. Most of the ways an agent can hurt it are not code bugs but **writes, messages and payments in the wrong place**. Read this before any command that writes or sends.
 
-## One database for everything
+## Production and staging databases
 
-_Measured on 2026-10-01_: in both Vercel projects, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` each have **one value for Development, Preview and Production**. So:
+_Measured on 2026-10-07_: in both Vercel projects, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` have one value for Production and another for Preview and Development (#363). So:
 
-- **Staging** (`dev.lebontemperament.com`, `admin-dev.lebontemperament.com`), **PR previews** and **local `npm run dev`** all read and write the production database.
-- The **service-role key** (bypasses row-level security) is available locally and in previews.
-- There is no staging or development Supabase project to test schema changes on.
-
-Until that changes, treat every environment as production: no test sign-ups, no test concerts, no "quick check" inserts, no deletes, unless the owner agrees to that specific write. **Target state** (an improvement to propose): a separate Supabase project or branch for development and staging, with its own keys in Vercel's Development and Preview targets, seeded with fake data.
+- **Production** (`www.`, `admin.`), the **mobile apps**, the **edge functions** and the **cron jobs** use the production project `website` (ref `fsklunxplbbtzgurwqmc`).
+- **Staging** (`dev.lebontemperament.com`, `admin-dev.lebontemperament.com`), **PR previews** and **`vercel env pull`** use `website-staging` (ref `cevuqyhwtzjujxsocxkb`): production's structure with fake data, no edge functions, no crons, no vault secrets ([supabase/staging/README.md](../../supabase/staging/README.md)).
+- Writes to `website-staging` are fine for tests; it is still not a place for real member data. Its accounts are test accounts (the e2e account is an admin there).
+- **Check which project a command will hit before it writes.** A local `.env` written before 2026-10-07, a script given production keys, and the Supabase MCP on `website` all write to production. Production stays read-only from everywhere but production: a production write is a single-purpose script, run after the owner's go.
+- The other services are **not** split: Google Calendar, Drive and Groups, Cloudinary and the SMTP mailbox use the same accounts in every environment, so the rows below still apply on staging.
 
 ## What writes or sends, and where
 
 | Action                                                                              | Effect                                                                        | Rule                                                                       |
 | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Any form or admin action on staging, previews or local dev                          | Production rows                                                               | Read-only unless the owner agrees                                          |
-| `apps/e2e` `concerts-write.spec.ts` (and its teardown sweep)                        | Creates and deletes `E2E_` concerts in production                             | Don't add write tests without the owner; namespace them `E2E_`             |
+| Any form or admin action on production, or with production keys                     | Production rows                                                               | Read-only unless the owner agrees                                          |
+| `apps/e2e` `concerts-write.spec.ts` (and its teardown sweep)                        | Creates and deletes `E2E_` concerts in the database of the env that runs it   | Don't add write tests without the owner; namespace them `E2E_`             |
 | `npm run test:rehearsal-sync` (`scripts/test-rehearsal-sync.ts`)                    | Calls the deployed sync function in test mode: **writes real rehearsal rows** | Owner approval each time                                                   |
 | `send-push-notification`, anything creating `events`/`notifications`                | Push notifications to members' phones                                         | Never trigger from tests or experiments                                    |
 | Delivery-round functions (`send-delivery-sms`, `check-eta-and-send-arrival-sms`, …) | Real SMS through Twilio (costs money, reaches real people)                    | Never invoke                                                               |
@@ -36,7 +36,7 @@ Any bulk change or deletion (when approved): count first, restrict by the narrow
 - **Secret scanning and push protection are enabled** (since 2026-10-02). They are a net, not a guarantee: still check every commit and diff for secrets before you push.
 - Never print, echo or paste a secret: not in the terminal, issues, PRs or the chat. Read values only inside a process (`node --env-file=apps/website/.env.local -e '…'`) and print harmless facts (a hostname, a length, a boolean). Never `source` an env file.
 - Vercel: list variables by **name and target** only (`vercel env ls`, or the API without decrypting). Setting values is the owner's job; give him exact steps.
-- **`NEXT_PUBLIC_*` variables are sent to every browser** that runs code referencing them. Nothing secret may carry that prefix. Today `NEXT_PUBLIC_BURNER_USERNAME` / `NEXT_PUBLIC_BURNER_PASSWORD` (SMTP mailbox) are only read by server routes (`app/api/contact`, `contact/mobile`, `subscribe`, `anniversary/submit-memory`), so they are _estimated_ not to reach a bundle, but one client-side reference would publish them: rename to `SMTP_USER` / `SMTP_PASSWORD` (server-only, pending). `NEXT_PUBLIC_ADMIN_PASSWORD` was deleted from Vercel on 2026-10-01 (the password is used nowhere else); the `SMTP_*` rename is tracked in #321.
+- **`NEXT_PUBLIC_*` variables are sent to every browser** that runs code referencing them. Nothing secret may carry that prefix. The SMTP mailbox credentials were renamed for that reason: the code reads the server-only `SMTP_USER` / `SMTP_PASSWORD` (#321), and the old `NEXT_PUBLIC_BURNER_*` variables are deleted from Vercel once that release is live. `NEXT_PUBLIC_ADMIN_PASSWORD` was deleted from Vercel on 2026-10-01 (the password is used nowhere else).
 - The mobile app ships `SUPABASE_URL` and the **anon** key by design; it must never contain the service-role key or Twilio credentials (`apps/mobile_app/.env.example` lists `TWILIO_*`: check whether the app actually needs them; SMS sending belongs to edge functions).
 - If a secret leaks, tell the owner at once: what, where, since when, which key to rotate where. Don't rewrite history on your own.
 

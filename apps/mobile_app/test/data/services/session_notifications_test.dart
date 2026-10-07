@@ -24,6 +24,9 @@ Session _fakeSession() => Session.fromJson({
 class _Recorder {
   final calls = <String>[];
   bool failSubscribe = false;
+  bool failRegister = false;
+  String? token = 'fcm-test-token';
+  final refreshes = StreamController<String>.broadcast();
 
   late final SessionNotifications notifications = SessionNotifications(
     subscribe: (topic) async {
@@ -33,6 +36,13 @@ class _Recorder {
     unsubscribe: (topic) async => calls.add('unsubscribe:$topic'),
     deleteToken: () async => calls.add('deleteToken'),
     clearCache: () async => calls.add('clearCache'),
+    readToken: () async => token,
+    tokenRefreshes: refreshes.stream,
+    registerDevice: (token) async {
+      if (failRegister) throw Exception('function not deployed');
+      calls.add('register:$token');
+    },
+    unregisterDevice: (token) async => calls.add('unregister:$token'),
     logger: Logger(level: Level.off),
   );
 }
@@ -44,17 +54,66 @@ void main() {
       AuthChangeEvent.initialSession,
       _fakeSession(),
     );
-    expect(signedIn.calls, ['subscribe:all_users']);
+    expect(signedIn.calls, ['subscribe:all_users', 'register:fcm-test-token']);
 
     final signedOut = _Recorder();
     await signedOut.notifications.handle(AuthChangeEvent.initialSession, null);
     expect(signedOut.calls, ['unsubscribe:all_users']);
   });
 
-  test('subscribes on sign-in', () async {
+  test('subscribes and registers the phone on sign-in', () async {
     final r = _Recorder();
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
+    expect(r.calls, ['subscribe:all_users', 'register:fcm-test-token']);
+  });
+
+  test(
+    'registers nothing without a token (iPhone without permission)',
+    () async {
+      final r = _Recorder()..token = null;
+      await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
+      expect(r.calls, ['subscribe:all_users']);
+    },
+  );
+
+  test('a failing registration does not block the sign-in steps', () async {
+    final r = _Recorder()..failRegister = true;
+    await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
     expect(r.calls, ['subscribe:all_users']);
+  });
+
+  test('beforeSignOut unregisters the current token', () async {
+    final r = _Recorder();
+    await r.notifications.beforeSignOut();
+    expect(r.calls, ['unregister:fcm-test-token']);
+
+    final none = _Recorder()..token = null;
+    await none.notifications.beforeSignOut();
+    expect(none.calls, isEmpty);
+  });
+
+  test('a rotated token is registered only while signed in', () async {
+    final r = _Recorder();
+    final auth = StreamController<AuthState>();
+    addTearDown(auth.close);
+    r.notifications.bind(
+      currentSession: _fakeSession(),
+      authStateChanges: auth.stream,
+    );
+    await Future<void>.delayed(Duration.zero);
+    r.calls.clear();
+
+    r.refreshes.add('fcm-rotated-token');
+    await Future<void>.delayed(Duration.zero);
+    expect(r.calls, ['register:fcm-rotated-token']);
+
+    auth.add(const AuthState(AuthChangeEvent.signedOut, null));
+    await Future<void>.delayed(Duration.zero);
+    r.calls.clear();
+    r.refreshes.add('fcm-after-sign-out');
+    await Future<void>.delayed(Duration.zero);
+    expect(r.calls, isEmpty);
+    await r.notifications.dispose();
   });
 
   test(
@@ -79,7 +138,8 @@ void main() {
   test('a failing step does not block the others', () async {
     final r = _Recorder()..failSubscribe = true;
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-    expect(r.calls, isEmpty);
+    expect(r.calls, ['register:fcm-test-token']);
+    r.calls.clear();
     await r.notifications.handle(AuthChangeEvent.signedOut, null);
     expect(r.calls, ['unsubscribe:all_users', 'deleteToken', 'clearCache']);
   });
@@ -106,6 +166,7 @@ void main() {
     expect(r.calls, [
       'unsubscribe:all_users',
       'subscribe:all_users',
+      'register:fcm-test-token',
       'unsubscribe:all_users',
       'deleteToken',
       'clearCache',

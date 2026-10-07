@@ -13,8 +13,10 @@ import 'core/theme/theme_provider.dart';
 import 'data/services/notification_service.dart';
 import 'data/services/fcm_notification_handler.dart';
 import 'data/services/session_notifications.dart';
+import 'data/providers/my_groups_provider.dart';
 import 'data/providers/realtime_notifications_provider.dart';
 import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'features/onboarding/data/welcome_prefs.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -35,14 +37,16 @@ void main() async {
   // Initialize notification service (local + display for FCM)
   await NotificationService().initialize();
 
-  // Push notifications follow the session: subscribed to the topic only while
-  // a member is signed in; unsubscribed, token deleted and cache cleared on
-  // sign-out (#358).
+  // Push notifications follow the session: subscribed to the topic and the
+  // phone registered for alerts only while a member is signed in;
+  // unsubscribed, token deleted and cache cleared on sign-out (#358, #364).
   final auth = SupabaseConfig.client.auth;
-  SessionNotifications.production().bind(
-    currentSession: auth.currentSession,
-    authStateChanges: auth.onAuthStateChange,
-  );
+  final sessionNotifications = SessionNotifications.production()
+    ..bind(
+      currentSession: auth.currentSession,
+      authStateChanges: auth.onAuthStateChange,
+    );
+  DependencyInjection.getIt.registerSingleton(sessionNotifications);
 
   // Re-run the router's auth redirect on every sign-in and sign-out,
   // including a session the server ended (revoked or expired refresh
@@ -57,7 +61,16 @@ void main() async {
   // Liquid Glass tab bar on iOS 26 and later only (#549).
   await LiquidGlassSupport.init();
 
-  runApp(const ProviderScope(child: LeBonTemperamentApp()));
+  // Read before the first frame: the home screen shows only the member's
+  // ensembles from the start.
+  final myGroups = await WelcomePrefs.myGroups();
+
+  runApp(
+    ProviderScope(
+      overrides: [initialMyGroupsProvider.overrideWithValue(myGroups)],
+      child: const LeBonTemperamentApp(),
+    ),
+  );
 }
 
 class LeBonTemperamentApp extends ConsumerStatefulWidget {

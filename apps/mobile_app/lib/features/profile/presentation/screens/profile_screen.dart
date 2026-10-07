@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
+import 'package:lebontemperament/core/widgets/stage.dart';
+import 'package:lebontemperament/data/models/rehearsal.dart';
+import 'package:lebontemperament/data/providers/my_groups_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -13,9 +16,18 @@ import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
 import '../../../onboarding/data/welcome_prefs.dart';
 import 'about_screen.dart';
+import 'my_groups_screen.dart';
 import 'support_contact_screen.dart';
 import 'theme_settings_screen.dart';
 import '../../../../core/utils/text_scale.dart';
+
+/// « Femmes, Orchestre », or « Toute la saison » when nothing is ticked.
+String _myGroupsSummary(Set<GroupType> groups) => groups.isEmpty
+    ? 'Toute la saison'
+    : [
+        for (final g in memberGroups)
+          if (groups.contains(g)) groupLabel(g),
+      ].join(', ');
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -69,6 +81,18 @@ class ProfileScreen extends ConsumerWidget {
                     delay: 150,
                     child: _SettingsGroup(
                       children: [
+                        _SettingsTile(
+                          icon: Icons.groups_outlined,
+                          title: 'Mes ensembles',
+                          subtitle: _myGroupsSummary(
+                            ref.watch(myGroupsProvider),
+                          ),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const MyGroupsScreen(),
+                            ),
+                          ),
+                        ),
                         _SettingsTile(
                           icon: Icons.notifications_outlined,
                           title: 'Notifications',
@@ -211,8 +235,6 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-const String _kSupportEmail = 'contactlebontemperament@gmail.com';
-
 /// One tap on the header icon used to log out at once: a slip of the thumb
 /// cost the member their session.
 Future<bool?> _confirmLogout(BuildContext context) {
@@ -262,7 +284,7 @@ Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
   if (contactSupport == true && context.mounted) {
     final uri = Uri(
       scheme: 'mailto',
-      path: _kSupportEmail,
+      path: kSupportEmail,
       query: _encodeQueryParameters(
         subject: 'Demande de suppression de compte',
       ),
@@ -279,7 +301,7 @@ Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Aucune application e-mail trouvée : écrivez à $_kSupportEmail',
+            'Aucune application e-mail trouvée : écrivez à $kSupportEmail',
           ),
         ),
       );

@@ -160,11 +160,12 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Run E2E tests (shard ${{ matrix.shard }}/2)
         working-directory: apps/e2e
-        # Read-only run: E2E_ALLOW_WRITES is deliberately not set, so
-        # concerts-write.spec.ts is skipped and global-teardown sweeps nothing
-        # (staging shares the production database, see #363). The job
-        # therefore needs no Supabase key.
+        # Every target here (dev, admin-dev, admin previews) uses the staging
+        # database since #363, so concerts-write.spec.ts may create and delete
+        # its E2E_ concert there. global-teardown's orphan sweep is skipped:
+        # the job has no Supabase key.
         env:
+          E2E_ALLOW_WRITES: "1"
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

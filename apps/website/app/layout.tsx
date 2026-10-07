@@ -3,6 +3,11 @@ import CookieConsentComponent from "@/components/cookies/CookieConsent";
 import { DeveloperFootprint } from "@/components/DeveloperFootprint";
 import { EasterEgg } from "@/components/EasterEgg";
 import { LayoutShell } from "@/components/LayoutShell";
+import {
+  CONTACT_ADDRESS,
+  CONTACT_EMAIL,
+  CONTACT_FORM_PATH,
+} from "@/lib/contact";
 import { getPublicFeatureFlags } from "@/lib/featureFlags";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
@@ -169,11 +174,11 @@ export default async function RootLayout({
               ],
               address: {
                 "@type": "PostalAddress",
-                streetAddress: "3 Rue Clemenceau",
-                addressLocality: "Saverne",
-                addressRegion: "Alsace",
-                postalCode: "67700",
-                addressCountry: "FR",
+                streetAddress: CONTACT_ADDRESS.street,
+                addressLocality: CONTACT_ADDRESS.city,
+                addressRegion: CONTACT_ADDRESS.region,
+                postalCode: CONTACT_ADDRESS.postalCode,
+                addressCountry: CONTACT_ADDRESS.countryCode,
               },
               location: {
                 "@type": "Place",
@@ -186,9 +191,9 @@ export default async function RootLayout({
               },
               contactPoint: {
                 "@type": "ContactPoint",
-                telephone: "+33-09-52-39-57-89",
                 contactType: "customer service",
-                email: "lebontemperament@gmail.com",
+                email: CONTACT_EMAIL,
+                url: `${process.env.NEXT_PUBLIC_BASE_URL}${CONTACT_FORM_PATH}`,
                 areaServed: "FR",
                 availableLanguage: "fr",
               },

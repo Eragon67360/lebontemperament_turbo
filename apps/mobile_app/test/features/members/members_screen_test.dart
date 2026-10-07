@@ -12,8 +12,6 @@ const _members = [
     displayName: 'Hélène Test',
     email: 'helene@example.test',
     voice: 'Soprano',
-    mobilePhone: '06 00 00 00 00',
-    address: '1 rue de Test, Testville',
   ),
   Member(displayName: 'Bob Test', email: 'bob@example.test', voice: 'Ténor'),
 ];
@@ -37,9 +35,7 @@ void main() {
     expect(find.text('Bob Test'), findsNothing);
   });
 
-  testWidgets('contact lines and action chips are 48 dp targets and links', (
-    tester,
-  ) async {
+  testWidgets('the e-mail line is a 48 dp link', (tester) async {
     await _pump(tester);
 
     final email = find.bySemanticsLabel(
@@ -47,12 +43,14 @@ void main() {
     );
     expect(email, findsOneWidget);
     expect(tester.getSize(email).height, greaterThanOrEqualTo(48));
+  });
 
-    final call = find.byTooltip('Appeler');
-    expect(call, findsOneWidget);
-    final chip = tester.getSize(call);
-    expect(chip.height, greaterThanOrEqualTo(48));
-    expect(chip.width, greaterThanOrEqualTo(48));
+  testWidgets('no phone and no address on the cards (#350)', (tester) async {
+    await _pump(tester);
+    expect(find.byTooltip('Appeler'), findsNothing);
+    expect(find.byIcon(Icons.phone_outlined), findsNothing);
+    expect(find.byIcon(Icons.phone_android_outlined), findsNothing);
+    expect(find.byIcon(Icons.home_outlined), findsNothing);
   });
 
   for (final scale in const [1.3, 2.0]) {

@@ -1,4 +1,9 @@
-import { CONTACT_EMAIL, PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
+import {
+  CONTACT_ADDRESS_LINE,
+  CONTACT_EMAIL,
+  CONTACT_FORM_PATH,
+  PRIVACY_CONTACT_EMAIL,
+} from "@/lib/contact";
 import { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -12,6 +17,13 @@ import type { ReactNode } from "react";
  * reference. While it is null, nothing is rendered.
  */
 const ASSOCIATION_REGISTRY: string | null = null;
+
+/**
+ * The president's phone number, required of the publisher by the LCEN. It is
+ * shown on this page only, as plain text: everywhere else the site's contacts
+ * are the mailbox and the contact form (owner decision, 2026-10-07, #329).
+ */
+const PUBLISHER_PHONE = "+33 6 89 68 74 82";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
@@ -72,12 +84,17 @@ export default function MentionsLegales() {
               <Row label="Éditeur">
                 Le Bon Tempérament, association de droit local (Alsace-Moselle)
               </Row>
-              <Row label="Siège">3 Rue Clemenceau, 67700 Saverne, France</Row>
-              <Row label="Téléphone">(+33) 06 89 68 74 82</Row>
+              <Row label="Siège">{CONTACT_ADDRESS_LINE}</Row>
+              <Row label="Téléphone">{PUBLISHER_PHONE}</Row>
               <Row label="E-mail">
                 <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
                   {CONTACT_EMAIL}
                 </a>
+              </Row>
+              <Row label="Formulaire">
+                <Link href={CONTACT_FORM_PATH} className={linkClass}>
+                  page Contact
+                </Link>
               </Row>
               <Row label="SIRET">499 664 654 00013</Row>
               {ASSOCIATION_REGISTRY && (

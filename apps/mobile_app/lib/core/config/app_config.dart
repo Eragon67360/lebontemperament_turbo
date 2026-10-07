@@ -27,65 +27,30 @@ class AppConfig {
     return url.replaceAll(RegExp(r'/+$'), '');
   }
 
-  /// Main Drive folder (Accès Drive). Override via DRIVE_FOLDER_MAIN.
-  ///
-  /// Fallback only: the Partitions screen reads the `drive_folders` table
-  /// first (see `DriveFoldersService`).
-  static String get driveFolderMain => driveFolderUrl(driveFolderIdMain);
-
-  static String get driveFolderIdMain =>
-      _env('DRIVE_FOLDER_MAIN') ?? '1oQGEse5USfg9KhM7dZv7_w6olmk_slaU';
-
-  /// Partitions: folder IDs for the Drive API (file explorer). Fallback only.
-  static String get driveFolderIdAdultes =>
-      _env('DRIVE_FOLDER_ADULTES') ?? '1VUBWpzqILkYli_E6ecOC47PHg_XgF-PX';
-  static String get driveFolderIdJeunes =>
-      _env('DRIVE_FOLDER_JEUNES') ?? '18ZukzBIhWotJ9UxpUTdodGBSY1wf0Q81';
-  static String get driveFolderIdEnfants =>
-      _env('DRIVE_FOLDER_ENFANTS') ?? '1Jcn6pSKBHpOvFXp5j0h6kKcwOBrAIkId';
-  static String get driveFolderIdOrchestre =>
-      _env('DRIVE_FOLDER_ORCHESTRE') ?? '1t72TgfhowS2WqYDFYLkasqopdUI_FEem';
-  static String get driveFolderIdCahier30Ans =>
-      _env('DRIVE_FOLDER_CAHIER_30_ANS') ?? '1HJaLRjjkRxwIFiC2FUgN-c-7KoepLKFB';
-
-  /// Partitions: full Drive URLs (for "Accès direct" link). Fallback only.
-  static String get driveFolderAdultes => driveFolderUrl(driveFolderIdAdultes);
-  static String get driveFolderJeunes => driveFolderUrl(driveFolderIdJeunes);
-  static String get driveFolderEnfants => driveFolderUrl(driveFolderIdEnfants);
-  static String get driveFolderOrchestre =>
-      driveFolderUrl(driveFolderIdOrchestre);
-  static String get driveFolderCahier30Ans =>
-      driveFolderUrl(driveFolderIdCahier30Ans);
+  /// Partitions folder IDs from `.env`, used only when the `drive_folders`
+  /// table can't be read (see `DriveFoldersService`). No ID is compiled in:
+  /// this repository is public and the folders are members-only (#347).
+  static String? get driveFolderIdMain => _env('DRIVE_FOLDER_MAIN');
+  static String? get driveFolderIdAdultes => _env('DRIVE_FOLDER_ADULTES');
+  static String? get driveFolderIdJeunes => _env('DRIVE_FOLDER_JEUNES');
+  static String? get driveFolderIdEnfants => _env('DRIVE_FOLDER_ENFANTS');
+  static String? get driveFolderIdOrchestre => _env('DRIVE_FOLDER_ORCHESTRE');
+  static String? get driveFolderIdCahier30Ans =>
+      _env('DRIVE_FOLDER_CAHIER_30_ANS');
 
   /// The Partitions folders as the app knew them before the `drive_folders`
-  /// table existed, with the table's slugs. Used only when the table can't
-  /// be read.
+  /// table existed, with the table's slugs, for those set in `.env`. Used
+  /// only when the table can't be read.
   static List<DriveFolder> get fallbackDriveFolders => [
-    DriveFolder(
-      slug: kDriveRootSlug,
-      label: 'Drive complet',
-      folderId: driveFolderIdMain,
-    ),
-    DriveFolder(
-      slug: 'adultes',
-      label: 'Adultes',
-      folderId: driveFolderIdAdultes,
-    ),
-    DriveFolder(slug: 'jeunes', label: 'Jeunes', folderId: driveFolderIdJeunes),
-    DriveFolder(
-      slug: 'enfants',
-      label: 'Enfants',
-      folderId: driveFolderIdEnfants,
-    ),
-    DriveFolder(
-      slug: 'orchestre',
-      label: 'Orchestre',
-      folderId: driveFolderIdOrchestre,
-    ),
-    DriveFolder(
-      slug: 'cahier-30-ans',
-      label: 'Cahier 30 ans',
-      folderId: driveFolderIdCahier30Ans,
-    ),
+    for (final (slug, label, folderId) in [
+      (kDriveRootSlug, 'Drive complet', driveFolderIdMain),
+      ('adultes', 'Adultes', driveFolderIdAdultes),
+      ('jeunes', 'Jeunes', driveFolderIdJeunes),
+      ('enfants', 'Enfants', driveFolderIdEnfants),
+      ('orchestre', 'Orchestre', driveFolderIdOrchestre),
+      ('cahier-30-ans', 'Cahier 30 ans', driveFolderIdCahier30Ans),
+    ])
+      if (folderId != null)
+        DriveFolder(slug: slug, label: label, folderId: folderId),
   ];
 }

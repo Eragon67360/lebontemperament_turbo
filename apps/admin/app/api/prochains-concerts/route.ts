@@ -4,6 +4,8 @@ import {
   concertCreateSchema,
   concertPatchSchema,
 } from "@/utils/concerts/apiSchemas";
+import { generateConcertEventDataAfterResponse } from "@/utils/concerts/eventData";
+import { touchesEventDataInputs } from "@/utils/concerts/eventDataSummary";
 import {
   REVALIDATE,
   revalidateWebsiteAfterResponse,
@@ -13,6 +15,19 @@ import { getFileNameFromUrl } from "@repo/domain/utils/storage";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { NextResponse } from "next/server";
+
+// The AI fill of the event data runs after the response (#328).
+export const maxDuration = 60;
+
+/** The admin's access token, forwarded to the event-data function. */
+async function accessToken(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<string | undefined> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.access_token;
+}
 
 export async function GET() {
   const authCheck = await checkAuthorization();
@@ -94,6 +109,10 @@ export async function POST(request: Request) {
     }
 
     revalidateWebsiteAfterResponse(REVALIDATE.agenda);
+    generateConcertEventDataAfterResponse(
+      newConcert.id,
+      await accessToken(supabase),
+    );
     return NextResponse.json(newConcert);
   } catch (error) {
     console.error("Error creating concert:", error);
@@ -136,6 +155,9 @@ export async function PATCH(request: Request) {
   }
 
   revalidateWebsiteAfterResponse(REVALIDATE.agenda);
+  if (touchesEventDataInputs(updateData)) {
+    generateConcertEventDataAfterResponse(id, await accessToken(supabase));
+  }
   return NextResponse.json(data);
 }
 

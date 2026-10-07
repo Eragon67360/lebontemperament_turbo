@@ -9,7 +9,9 @@ import 'package:logger/logger.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/config/dependency_injection.dart';
 import '../../../../core/config/supabase_config.dart';
+import '../../../../data/services/session_notifications.dart';
 
 final _authLogger = Logger();
 
@@ -76,6 +78,17 @@ Uri forgotPasswordUri() =>
 /// Supabase › Authentication › URL Configuration › Redirect URLs.
 const oauthCallbackScheme = 'com.lebontemperament.app';
 const oauthRedirectUrl = '$oauthCallbackScheme://login-callback';
+
+/// Android browsers tried first for the Google sheet, in this order.
+/// Firefox does not follow Supabase's redirect back to the app: it stops on
+/// a raw « Found » page instead (a tester hit it, 2026-10-06). Chrome,
+/// Samsung Internet and Edge do, and nearly every Android phone has one of
+/// them; otherwise the phone's default browser is used, as before.
+const oauthAndroidBrowsers = [
+  'com.android.chrome',
+  'com.sec.android.app.sbrowser',
+  'com.microsoft.emmx',
+];
 
 /// What the browser came back with: a PKCE code to exchange, or an error
 /// code (`signup_disabled` when the account matches no member). Supabase puts
@@ -154,6 +167,9 @@ class AuthService {
         result = await FlutterWebAuth2.authenticate(
           url: oauth.url,
           callbackUrlScheme: oauthCallbackScheme,
+          options: const FlutterWebAuth2Options(
+            customTabsPackageOrder: oauthAndroidBrowsers,
+          ),
         );
       } on PlatformException catch (e) {
         if (e.code == 'CANCELED') return false;
@@ -256,6 +272,12 @@ class AuthService {
 
   // Sign out
   Future<void> signOut() async {
+    // While the session still exists: the server only lets a member remove
+    // their own phone from the alerts list (#364).
+    final getIt = DependencyInjection.getIt;
+    if (getIt.isRegistered<SessionNotifications>()) {
+      await getIt<SessionNotifications>().beforeSignOut();
+    }
     try {
       await _client.auth.signOut();
     } catch (e) {

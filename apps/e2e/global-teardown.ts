@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 // touching rows a concurrent run might still be using.
 // Runs server-side only — the service-role key never enters a browser context.
 // Like the write spec it serves (tests/admin/concerts-write.spec.ts), it only
-// runs with E2E_ALLOW_WRITES=1: the delete hits the production database.
+// runs with E2E_ALLOW_WRITES=1: the delete hits whichever database its keys name.
 export default async function globalTeardown() {
   if (process.env.E2E_ALLOW_WRITES !== "1") {
     console.log(

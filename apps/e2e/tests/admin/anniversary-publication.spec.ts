@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 // stays disabled until « J'ai vérifié le contenu » is ticked. The test
 // closes the dialog with « Annuler », never confirms, and aborts every
 // non-GET request so that even a regression could not flip the flag
-// (staging shares the production database).
+// (the suite can also run against production).
 test("publishing the 40 ans page asks for a check and can be cancelled", async ({
   page,
 }) => {

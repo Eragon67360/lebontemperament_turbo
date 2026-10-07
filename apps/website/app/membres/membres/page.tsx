@@ -4,22 +4,16 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import {
-  IoCallOutline,
-  IoHomeOutline,
   IoMailOutline,
   IoMusicalNotesOutline,
   IoPersonCircle,
-  IoPhonePortraitOutline,
 } from "react-icons/io5";
 
 interface Member {
   "NOM Prénom": string;
   "Adresse mail": string;
-  "Adresse postale": string;
-  Domicile: string;
-  Portable: string;
   Voix: string;
-  photoUrl?: string; // Optional field for future photo implementation
+  photoUrl?: string;
 }
 
 // Extract all unique words from voice values (e.g., "jeune", "basse", "orchestre" from "jeune & basse" or "orchestre & ténor")
@@ -65,9 +59,6 @@ const Membres = () => {
           .map((member: Member) => ({
             "NOM Prénom": member["NOM Prénom"]?.trim() || "",
             "Adresse mail": member["Adresse mail"]?.trim() || "",
-            "Adresse postale": member["Adresse postale"]?.trim() || "",
-            Domicile: member.Domicile?.trim() || "",
-            Portable: member.Portable?.trim() || "",
             Voix: member.Voix?.trim() || "",
             photoUrl: member.photoUrl,
           }));
@@ -98,11 +89,11 @@ const Membres = () => {
     return extractVoiceWords(uniqueVoices);
   }, [data]);
   const filteredData = data.filter((member) => {
-    // Filter by search term
+    // Filter by search term (name, email or voice, not the photo URL)
     const matchesSearch =
       searchTerm === "" ||
-      Object.values(member).some((value) =>
-        value?.toString().toLowerCase().includes(searchTerm.toLowerCase()),
+      [member["NOM Prénom"], member["Adresse mail"], member.Voix].some(
+        (value) => value.toLowerCase().includes(searchTerm.toLowerCase()),
       );
 
     // Filter by voice (case-insensitive substring match)
@@ -322,39 +313,6 @@ const Membres = () => {
                       >
                         {member["Adresse mail"]}
                       </a>
-                    </div>
-                  )}
-
-                  {member.Portable && (
-                    <div className="flex items-center gap-2">
-                      <IoPhonePortraitOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <a
-                        href={`tel:${member.Portable.replace(/\s/g, "")}`}
-                        className="text-foreground/70 hover:text-primary-text transition-colors"
-                      >
-                        {member.Portable}
-                      </a>
-                    </div>
-                  )}
-
-                  {member.Domicile && (
-                    <div className="flex items-center gap-2">
-                      <IoCallOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <a
-                        href={`tel:${member.Domicile.replace(/\s/g, "")}`}
-                        className="text-foreground/70 hover:text-primary-text transition-colors"
-                      >
-                        {member.Domicile}
-                      </a>
-                    </div>
-                  )}
-
-                  {member["Adresse postale"] && (
-                    <div className="my-auto flex h-fit items-center gap-2">
-                      <IoHomeOutline className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <span className="text-foreground/70 text-xs">
-                        {member["Adresse postale"]}
-                      </span>
                     </div>
                   )}
                 </div>

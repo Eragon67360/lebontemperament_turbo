@@ -1,0 +1,71 @@
+{
+  "$comment": "Where each template in env/ is pushed. Read by scripts/env/. Names only, no values.",
+  "passCliVersion": "2.4.2",
+  "vercelTeamId": "team_5NFi3yBnYiFnHmMVJJXhd9m4",
+  "githubRepo": "Eragon67360/lebontemperament_turbo",
+  "$unmanaged": "Names the code reads that are deliberately left out of the templates, with why.",
+  "unmanaged": {
+    "ROSTER_SHEET_RANGE": "optional, the admin defaults to A:ZZ"
+  },
+  "$optional": "Names a push skips when their Proton Pass field is empty (the code works without them), with why.",
+  "optional": {
+    "NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID": "the map falls back to the default style",
+    "GOOGLE_SITE_VERIFICATION": "only needed to verify the site in Google Search Console",
+    "BING_SITE_VERIFICATION": "only needed to verify the site in Bing Webmaster Tools",
+    "INDEXNOW_SUBMIT_SECRET": "without it /api/indexnow refuses every submission",
+    "REVALIDATE_SECRET": "without it admin edits wait for the cache to expire instead of refreshing the site"
+  },
+  "targets": {
+    "website.production": {
+      "kind": "vercel",
+      "project": "lebontemperament",
+      "environments": ["production"],
+      "production": true,
+      "scan": ["apps/website"]
+    },
+    "website.dev": {
+      "kind": "vercel",
+      "project": "lebontemperament",
+      "environments": ["preview", "development"],
+      "production": false,
+      "scan": ["apps/website"]
+    },
+    "admin.production": {
+      "kind": "vercel",
+      "project": "lebontemperament-admin",
+      "environments": ["production"],
+      "production": true,
+      "scan": ["apps/admin"]
+    },
+    "admin.dev": {
+      "kind": "vercel",
+      "project": "lebontemperament-admin",
+      "environments": ["preview", "development"],
+      "production": false,
+      "scan": ["apps/admin"]
+    },
+    "github.repo": {
+      "kind": "github",
+      "production": true,
+      "$allowStagingItems": "the e2e suite runs against staging",
+      "allowStagingItems": ["E2E"]
+    },
+    "github.app-store": {
+      "kind": "github",
+      "environment": "app-store",
+      "production": true
+    },
+    "github.play-store": {
+      "kind": "github",
+      "environment": "play-store",
+      "production": true
+    }
+  },
+  "rules": {
+    "productionVault": "LBT Production",
+    "stagingVault": "LBT Staging",
+    "productionOnlyItems": ["Supabase", "Sites"],
+    "$stagingSupabaseRef": "the website-staging project (public, it is in the staging URL); env:seed checks values against it",
+    "stagingSupabaseRef": "cevuqyhwtzjujxsocxkb"
+  }
+}

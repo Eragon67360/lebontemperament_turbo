@@ -9,7 +9,6 @@ const _members = [
     displayName: 'Hélène Test',
     email: 'helene@example.test',
     voice: 'Soprano',
-    mobilePhone: '06 00 00 00 00',
   ),
   Member(
     displayName: 'Émile Test',
@@ -36,9 +35,9 @@ void main() {
     expect(filterMembers(_members, '', 'tenor').single.displayName, 'Bob Test');
   });
 
-  test('a phone number still matches on its digits', () {
+  test('the e-mail matches too', () {
     expect(
-      filterMembers(_members, '06 00', '').single.displayName,
+      filterMembers(_members, 'helene@', '').single.displayName,
       'Hélène Test',
     );
   });

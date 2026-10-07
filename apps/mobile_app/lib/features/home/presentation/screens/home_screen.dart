@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
@@ -14,15 +13,17 @@ import 'package:lebontemperament/data/models/rehearsal.dart';
 import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:lebontemperament/data/providers/feature_flags_provider.dart';
+import 'package:lebontemperament/data/providers/my_groups_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
 
-/// Home (« Portée »): the next rehearsal first and large but on the page
-/// ground, the week as a bar of music, then the next concert, the rest of
-/// the season and the members' shortcuts.
+/// Home (« Portée »), in three blocks that never mix: the member's
+/// rehearsals (the next one large, the week as a bar of music, the two
+/// after), the members' shortcuts, then the next concert under its own
+/// heading. Only the member's ensembles show (Profil › Mes ensembles).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -46,11 +47,12 @@ class HomeScreen extends ConsumerWidget {
                   _WelcomeHeader(),
                   SizedBox(height: 24),
                   _NoticesSection(),
-                  _UpcomingSection(),
+                  _RehearsalsSection(),
                   SizedBox(height: 32),
                   StageSectionHeader(title: 'Espace membres'),
                   SizedBox(height: 12),
                   _MembresGrid(),
+                  _ConcertSection(),
                   SizedBox(height: 32),
                   _InfoCard(),
                   SizedBox(height: 16),
@@ -202,21 +204,24 @@ class _NoticesSection extends ConsumerWidget {
   }
 }
 
-// MARK: - Upcoming
+// MARK: - Rehearsals
 
-class _UpcomingSection extends ConsumerWidget {
-  const _UpcomingSection();
+class _RehearsalsSection extends ConsumerWidget {
+  const _RehearsalsSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.read(mainNavigationProvider.notifier);
     final isSuperadmin = ref.watch(isSuperadminProvider).value ?? false;
+    final filtered = ref.watch(myGroupsProvider).isNotEmpty;
     final rehearsalsAsync = ref.watch(homeUpcomingRehearsalsProvider);
-    final concertsAsync = ref.watch(homeUpcomingConcertsProvider);
     final rehearsals = rehearsalsAsync.value ?? const <Rehearsal>[];
     final weekRehearsals =
-        ref.watch(upcomingRehearsalsProvider).value?.items ??
-        const <Rehearsal>[];
+        ref.watch(myUpcomingRehearsalsProvider).value ?? const <Rehearsal>[];
+    final weekIsEmpty = WeekStaff.notesFor(
+      weekRehearsals,
+      DateTime.now(),
+    ).isEmpty;
 
     return FadeInUp(
       delay: 300,
@@ -231,8 +236,10 @@ class _UpcomingSection extends ConsumerWidget {
                 rehearsal: items.first,
                 onOpenCalendar: () => navigation.setTab(2),
               ),
-            AsyncData() => const _EmptyStateCard(
-              message: 'Aucune répétition programmée',
+            AsyncData() => _EmptyStateCard(
+              message: filtered
+                  ? 'Aucune répétition programmée pour vos ensembles'
+                  : 'Aucune répétition programmée',
               icon: Icons.event_busy_rounded,
             ),
             AsyncError() => _ErrorStateCard(
@@ -242,32 +249,25 @@ class _UpcomingSection extends ConsumerWidget {
             _ => const _LoadingCard(label: 'Chargement des répétitions…'),
           },
           if (rehearsalsAsync is AsyncData) ...[
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             const StageSectionHeader(title: 'Cette semaine'),
             const SizedBox(height: 8),
             WeekStaff(rehearsals: weekRehearsals),
-          ],
-          const SizedBox(height: 24),
-          switch (concertsAsync) {
-            AsyncData(value: final items) when items.isNotEmpty =>
-              _NextConcertCard(
-                concert: items.first,
-                onTap: () => navigation.setTab(1),
+            if (weekIsEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Pas de répétition cette semaine.',
+                style: AppFonts.sans(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            AsyncData() => const _EmptyStateCard(
-              message: 'Aucun concert à venir',
-              icon: Icons.piano_off_rounded,
-            ),
-            AsyncError() => _ErrorStateCard(
-              message: 'Impossible de charger les concerts.',
-              onRetry: () => ref.invalidate(realtimeConcertsProvider),
-            ),
-            _ => const _LoadingCard(label: 'Chargement des concerts…'),
-          },
+            ],
+          ],
           if (rehearsals.length > 1) ...[
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
             StageSectionHeader(
-              title: 'À suivre',
+              title: 'Répétitions suivantes',
               actionLabel: 'Tout voir',
               onAction: () => navigation.setTab(2),
             ),
@@ -286,6 +286,55 @@ class _UpcomingSection extends ConsumerWidget {
               onTap: () => context.push('/driver-tracking'),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+// MARK: - Concert
+
+/// The next concert, under its own heading and a hairline so it never reads
+/// as one more date in the rehearsal list.
+class _ConcertSection extends ConsumerWidget {
+  const _ConcertSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navigation = ref.read(mainNavigationProvider.notifier);
+    final concertsAsync = ref.watch(homeUpcomingConcertsProvider);
+    final scheme = Theme.of(context).colorScheme;
+
+    return FadeInUp(
+      delay: 380,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 28),
+          Divider(height: 1, thickness: 1, color: scheme.outlineVariant),
+          const SizedBox(height: 20),
+          StageSectionHeader(
+            title: 'Prochain concert',
+            actionLabel: 'Tous les concerts',
+            onAction: () => navigation.setTab(1),
+          ),
+          const SizedBox(height: 8),
+          switch (concertsAsync) {
+            AsyncData(value: final items) when items.isNotEmpty =>
+              _NextConcertCard(
+                concert: items.first,
+                onTap: () => navigation.setTab(1),
+              ),
+            AsyncData() => const _EmptyStateCard(
+              message: 'Aucun concert à venir',
+              icon: Icons.piano_off_rounded,
+            ),
+            AsyncError() => _ErrorStateCard(
+              message: 'Impossible de charger les concerts.',
+              onRetry: () => ref.invalidate(realtimeConcertsProvider),
+            ),
+            _ => const _LoadingCard(label: 'Chargement des concerts…'),
+          },
         ],
       ),
     );
@@ -740,34 +789,12 @@ class _MembresGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navigation = ref.read(mainNavigationProvider.notifier);
-
-    Future<void> openDrive() async {
-      // The root folder is configured in `drive_folders`; the `.env` value is
-      // only the fallback.
-      final catalog = await ref.read(driveFolderCatalogProvider.future);
-      final uri = Uri.parse(catalog.rootUrl ?? AppConfig.driveFolderMain);
-      try {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } catch (_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Impossible d\'ouvrir le Drive.')),
-          );
-        }
-      }
-    }
-
+    // No « Calendrier » tile: the tab bar and the next rehearsal open it.
     final tiles = <_Tile>[
       _Tile(
         Icons.library_music_outlined,
         'Partitions',
         () => context.push('/partitions'),
-      ),
-      _Tile(
-        Icons.calendar_month_outlined,
-        'Calendrier',
-        () => navigation.setTab(2),
       ),
       _Tile(Icons.group_outlined, 'Membres', () => context.push('/members')),
       _Tile(
@@ -775,19 +802,17 @@ class _MembresGrid extends ConsumerWidget {
         'Administration',
         () => context.push('/administration'),
       ),
-      _Tile(Icons.folder_open_outlined, 'Drive', openDrive),
     ];
 
     return FadeInUp(
       delay: 350,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Two columns on phones; a single one when large text would make
-          // the labels wrap badly.
+          // One row of three, icon above the label, so the shortcuts stay
+          // near the top; a list when large text would make the labels wrap
+          // badly.
           final scale = MediaQuery.textScalerOf(context).scale(1.0);
-          final columns = constraints.maxWidth > 560
-              ? 3
-              : (scale >= 1.6 ? 1 : 2);
+          final columns = scale >= 1.3 ? 1 : 3;
           const gap = 10.0;
           final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
           return Wrap(
@@ -797,7 +822,7 @@ class _MembresGrid extends ConsumerWidget {
               for (final t in tiles)
                 SizedBox(
                   width: width,
-                  child: _MembresTile(tile: t),
+                  child: _MembresTile(tile: t, stacked: columns > 1),
                 ),
             ],
           );
@@ -815,38 +840,48 @@ class _Tile {
 }
 
 class _MembresTile extends StatelessWidget {
-  const _MembresTile({required this.tile});
+  const _MembresTile({required this.tile, required this.stacked});
   final _Tile tile;
+
+  /// Icon above the label (a row of three) or beside it (a list).
+  final bool stacked;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final icon = Icon(tile.icon, color: scheme.primary, size: 24);
+    final label = Text(
+      tile.title,
+      textAlign: stacked ? TextAlign.center : TextAlign.start,
+      style: AppFonts.sans(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: scheme.onSurface,
+      ),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
     return StageCard(
       onTap: tile.onTap,
       semanticLabel: tile.title,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 32,
-            height: 44,
-            child: Icon(tile.icon, color: scheme.primary, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              tile.title,
-              style: AppFonts.sans(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: scheme.onSurface,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+      padding: stacked
+          ? const EdgeInsets.symmetric(horizontal: 6, vertical: 14)
+          : const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: stacked
+          ? Column(
+              children: [
+                SizedBox(height: 28, child: icon),
+                const SizedBox(height: 6),
+                FittedBox(fit: BoxFit.scaleDown, child: label),
+              ],
+            )
+          : Row(
+              children: [
+                SizedBox(width: 32, height: 44, child: icon),
+                const SizedBox(width: 12),
+                Expanded(child: label),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -36,7 +36,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? "blob" : "html",
+  // "github" turns failures into check annotations, readable without
+  // downloading the report artifacts.
+  reporter: process.env.CI ? [["blob"], ["github"]] : "html",
   use: {
     trace: "retain-on-failure",
     video: "retain-on-failure",

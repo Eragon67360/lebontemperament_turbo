@@ -1,9 +1,7 @@
 import 'dart:io' show Platform;
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 
 /// Decides whether the app draws Liquid Glass (#549).
 ///
@@ -35,16 +33,12 @@ class LiquidGlassSupport {
   /// app runs.
   static final ValueNotifier<bool> available = ValueNotifier(false);
 
-  /// Reads the iOS version and the transparency setting, and compiles the
-  /// glass shaders so the first frame of the bar is already glass. Never
-  /// throws: on any failure the app keeps the regular bar.
+  /// Reads the iOS version and the transparency setting. Never throws: on
+  /// any failure the app keeps the regular bar.
   static Future<void> init() async {
     if (kIsWeb || !Platform.isIOS) return;
     final major = iosMajorVersion(Platform.operatingSystemVersion);
-    _platformSupported =
-        major != null &&
-        major >= minIosVersion &&
-        ui.ImageFilter.isShaderFilterSupported;
+    _platformSupported = major != null && major >= minIosVersion;
     if (!_platformSupported) return;
 
     _channel.setMethodCallHandler((call) async {
@@ -56,7 +50,6 @@ class LiquidGlassSupport {
     try {
       _reduceTransparency.value =
           await _channel.invokeMethod<bool>('reduceTransparency') ?? false;
-      await LiquidGlassShaders.ensureLoaded();
     } catch (e) {
       debugPrint('Liquid Glass off: $e');
       _platformSupported = false;

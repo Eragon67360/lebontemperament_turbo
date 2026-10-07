@@ -4,46 +4,51 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
 import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../data/providers/my_groups_provider.dart';
 
-class RehearsalFilterNotifier extends StateNotifier<GroupType?> {
+/// The calendar's filters: the groups whose rehearsals are listed. `null`
+/// until the member changes them, so the calendar opens on the groups that
+/// concern their ensembles; choosing other ensembles in Profil starts over.
+class RehearsalFilterNotifier extends StateNotifier<Set<GroupType>?> {
   RehearsalFilterNotifier() : super(null);
 
-  void setFilter(GroupType? groupType) {
-    state = groupType;
-  }
+  void set(Set<GroupType> groups) => state = Set.unmodifiable(groups);
 
-  void clearFilter() {
-    state = null;
-  }
+  /// Back to the member's ensembles.
+  void reset() => state = null;
 }
 
 final rehearsalFilterProvider =
-    StateNotifierProvider<RehearsalFilterNotifier, GroupType?>(
-      (ref) => RehearsalFilterNotifier(),
-    );
+    StateNotifierProvider<RehearsalFilterNotifier, Set<GroupType>?>((ref) {
+      ref.watch(myGroupsProvider);
+      return RehearsalFilterNotifier();
+    });
+
+/// The groups the calendar lists right now.
+final calendarGroupsProvider = Provider<Set<GroupType>>(
+  (ref) =>
+      ref.watch(rehearsalFilterProvider) ??
+      ref.watch(myRehearsalGroupsProvider),
+);
 
 final filteredRehearsalsProvider = Provider<List<Rehearsal>>((ref) {
   final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
-  final selectedFilter = ref.watch(rehearsalFilterProvider);
+  final groups = ref.watch(calendarGroupsProvider);
 
   return rehearsalsAsync.when(
     data: (rehearsals) {
       final upcoming = rehearsals.items.where((r) {
-        return app_date_utils.isRehearsalUpcoming(
-          date: r.date,
-          startTime: r.startTime,
-          endTime: r.endTime,
-        );
+        return groups.contains(r.groupType) &&
+            app_date_utils.isRehearsalUpcoming(
+              date: r.date,
+              startTime: r.startTime,
+              endTime: r.endTime,
+            );
       }).toList()..sort(compareRehearsals);
-      if (selectedFilter == null) {
-        return upcoming;
-      }
-      return upcoming
-          .where((r) => rehearsalConcerns(r.groupType, selectedFilter))
-          .toList();
+      return upcoming;
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -56,13 +61,4 @@ int compareRehearsals(Rehearsal a, Rehearsal b) {
   final byDate = da.compareTo(db);
   if (byDate != 0) return byDate;
   return (a.startTime ?? '').compareTo(b.startTime ?? '');
-}
-
-/// Whether a rehearsal for [group] concerns members who filtered on
-/// [filter]: « Tous » concerns everyone, and the full choir concerns the men
-/// and the women too.
-bool rehearsalConcerns(GroupType group, GroupType filter) {
-  if (group == filter || group == GroupType.tous) return true;
-  return group == GroupType.choeurComplet &&
-      (filter == GroupType.hommes || filter == GroupType.femmes);
 }

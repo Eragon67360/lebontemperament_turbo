@@ -2,7 +2,7 @@ name: lebontemperament
 description: "Application mobile du Bon Tempérament"
 publish_to: "none"
 
-version: 2.0.136+153
+version: 2.0.137+154
 environment:
   sdk: ">=3.9.0 <4.0.0"
 
@@ -67,7 +67,7 @@ dependencies:
   share_plus: ^10.1.4
 
   # Liquid Glass tab bar on iOS 26 and later (shader drawn by Flutter).
-  liquid_glass_easy: ^4.3.4
+  cupertino_native_better: ^1.6.0
 
 dev_dependencies:
   flutter_test:

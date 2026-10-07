@@ -30,8 +30,8 @@ String foldForSearch(String text) {
   return out.toString();
 }
 
-/// The members matching [searchTerm] (name, e-mail, voice, phones, address,
-/// accents ignored) and [selectedVoice], sorted by folded name.
+/// The members matching [searchTerm] (name, e-mail or voice, accents
+/// ignored) and [selectedVoice], sorted by folded name.
 List<Member> filterMembers(
   List<Member> members,
   String searchTerm,
@@ -44,10 +44,7 @@ List<Member> filterMembers(
         term.isEmpty ||
         foldForSearch(m.displayName).contains(term) ||
         foldForSearch(m.email).contains(term) ||
-        foldForSearch(m.voice ?? '').contains(term) ||
-        (m.mobilePhone ?? '').contains(searchTerm.trim()) ||
-        (m.homePhone ?? '').contains(searchTerm.trim()) ||
-        foldForSearch(m.address ?? '').contains(term);
+        foldForSearch(m.voice ?? '').contains(term);
 
     final matchesVoice =
         voice.isEmpty || foldForSearch(m.voice ?? '').contains(voice);
