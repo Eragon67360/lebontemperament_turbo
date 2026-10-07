@@ -1,4 +1,6 @@
 import { JsonLd } from "@/components/JsonLd";
+import { CONTACT_EMAIL } from "@/lib/contact";
+import { JOINING_FACTS } from "@/lib/joining";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -31,7 +33,15 @@ export const metadata: Metadata = {
   },
 };
 
-const faqData = [
+type FaqItem = {
+  question: string;
+  /** Plain text, rendered as is and copied into the FAQPage JSON-LD. */
+  answer: string;
+  /** Optional link shown under the answer (not part of the answer text). */
+  link?: { href: string; label: string };
+};
+
+const faqData: FaqItem[] = [
   {
     question: "Qu'est-ce que Le Bon Tempérament?",
     answer:
@@ -44,8 +54,24 @@ const faqData = [
   },
   {
     question: "Comment rejoindre Le Bon Tempérament?",
-    answer:
-      "Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Pour nous rejoindre, consultez notre page dédiée pour toutes les informations sur le processus d'adhésion, ou contactez-nous directement par email à lebontemperament@gmail.com ou par téléphone au (+33) 06 89 68 74 82. Nous serons ravis de vous accueillir et de discuter de votre intégration dans l'ensemble.",
+    answer: `Le Bon Tempérament accueille des choristes amateurs, des chanteurs solistes professionnels et des instrumentistes de tous horizons. Écrivez-nous à ${CONTACT_EMAIL} ou par le formulaire de contact : nous vous proposerons une répétition d'essai, puis c'est vous qui décidez si vous restez. Notre page Rejoindre donne toutes les informations sur l'adhésion.`,
+    link: { href: "/rejoindre", label: "Découvrir la page Rejoindre" },
+  },
+  {
+    question: "Y a-t-il une audition pour entrer dans le chœur?",
+    answer: JOINING_FACTS.audition,
+  },
+  {
+    question: "Faut-il savoir lire la musique?",
+    answer: JOINING_FACTS.readingMusic,
+  },
+  {
+    question: "À partir de quel âge peut-on rejoindre Le Bon Tempérament?",
+    answer: JOINING_FACTS.ages,
+  },
+  {
+    question: "Quand peut-on rejoindre l'ensemble?",
+    answer: JOINING_FACTS.anyTime,
   },
   {
     question: "Faut-il avoir de l'expérience musicale pour rejoindre?",
@@ -84,8 +110,7 @@ const faqData = [
   },
   {
     question: "Y a-t-il des frais d'adhésion?",
-    answer:
-      "Pour obtenir des informations précises sur les frais d'adhésion et les modalités d'inscription, nous vous invitons à nous contacter directement par email ou téléphone. Une commission de solidarité est également mise en place pour aider les membres qui en auraient besoin.",
+    answer: JOINING_FACTS.fee,
   },
   {
     question: "Le Bon Tempérament vend-il des CDs?",
@@ -98,9 +123,13 @@ const faqData = [
       "Oui. Chaque été, Le Bon Tempérament organise une tournée d'une dizaine de jours dans une autre région de France. C'est au cours de ces séjours que se peaufine le programme de l'année et que se tissent les liens entre les membres de l'ensemble.",
   },
   {
-    question: "Quand et où ont lieu les répétitions?",
-    answer:
-      "Les répétitions générales réunissent tous les chœurs un dimanche par mois, et les répétitions de pupitres (soprano, alto, ténor, basse) ont lieu tous les 15 jours. Les lieux et horaires précis sont communiqués aux membres et aux personnes souhaitant découvrir l'ensemble — contactez-nous pour venir assister à une répétition.",
+    question: "Où ont lieu les répétitions?",
+    answer: JOINING_FACTS.where,
+  },
+  {
+    question: "Quand ont lieu les répétitions?",
+    answer: JOINING_FACTS.when,
+    link: { href: "/rejoindre#repetitions", label: "Voir les répétitions" },
   },
 ];
 
@@ -170,25 +199,14 @@ export default function FAQPage() {
                 itemType="https://schema.org/Answer"
                 itemProp="acceptedAnswer"
               >
-                {faq.question === "Comment rejoindre Le Bon Tempérament?" ? (
-                  <p itemProp="text">
-                    Le Bon Tempérament accueille des choristes amateurs, des
-                    chanteurs solistes professionnels et des instrumentistes de
-                    tous horizons. Pour nous rejoindre, consultez notre{" "}
-                    <Link
-                      href="/rejoindre"
-                      className="text-primary-text font-medium hover:underline"
-                    >
-                      page dédiée
-                    </Link>{" "}
-                    pour toutes les informations sur le processus
-                    d&apos;adhésion, ou contactez-nous directement par email à
-                    lebontemperament@gmail.com ou par téléphone au (+33) 09 52
-                    39 57 89. Nous serons ravis de vous accueillir et de
-                    discuter de votre intégration dans l&apos;ensemble.
-                  </p>
-                ) : (
-                  <p itemProp="text">{faq.answer}</p>
+                <p itemProp="text">{faq.answer}</p>
+                {faq.link && (
+                  <Link
+                    href={faq.link.href}
+                    className="text-primary-text mt-2 inline-block font-medium hover:underline"
+                  >
+                    {faq.link.label}
+                  </Link>
                 )}
               </div>
             </div>

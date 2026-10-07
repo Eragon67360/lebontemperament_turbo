@@ -2,15 +2,16 @@ import ContactForm from "@/components/ContactForm";
 import { JsonLd } from "@/components/JsonLd";
 import Map from "@/components/Maps";
 import Subscribe from "@/components/newsletter/Subscribe";
+import { CONTACT_ADDRESS, CONTACT_EMAIL } from "@/lib/contact";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact et accès à Saverne",
   description:
-    "Contactez Le Bon Tempérament à Saverne. Email, téléphone et adresse pour rejoindre l'ensemble, réserver des places ou obtenir des informations sur nos concerts.",
+    "Contactez Le Bon Tempérament à Saverne par email ou par le formulaire de contact pour rejoindre l'ensemble, réserver des places ou obtenir des informations sur nos concerts.",
   keywords:
-    "contact Le Bon Tempérament Saverne, adresse ensemble vocal Alsace, email chœur musique classique, téléphone Le Bon Tempérament",
+    "contact Le Bon Tempérament Saverne, adresse ensemble vocal Alsace, email chœur musique classique, formulaire de contact Le Bon Tempérament",
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -47,24 +48,21 @@ const Contact = () => {
           <hr className="border-separator mt-8" />
           <h3 className="text-foreground mt-8 font-bold">Où nous trouver</h3>
           <p className="text-foreground">
-            3 Rue Clemenceau,
+            {CONTACT_ADDRESS.street},
             <br />
-            67700 SAVERNE, France
+            {CONTACT_ADDRESS.postalCode} {CONTACT_ADDRESS.city.toUpperCase()},{" "}
+            {CONTACT_ADDRESS.country}
           </p>
           <h3 className="text-foreground mt-2 font-bold">Email</h3>
           <a
-            href="mailto:lebontemperament@gmail.com"
+            href={`mailto:${CONTACT_EMAIL}`}
             className="text-foreground hover:text-primary-text"
           >
-            lebontemperament@gmail.com
+            {CONTACT_EMAIL}
           </a>
-          <h3 className="text-foreground mt-2 font-bold">Téléphone</h3>
-          <a
-            href="tel:+33689687482"
-            className="text-foreground hover:text-primary-text"
-          >
-            (+33) 06 89 68 74 82
-          </a>
+          <p className="text-muted mt-2 text-sm">
+            Ou écrivez-nous avec le formulaire de cette page.
+          </p>
           <h3 className="text-foreground mt-8 font-bold">
             Questions fréquentes
           </h3>

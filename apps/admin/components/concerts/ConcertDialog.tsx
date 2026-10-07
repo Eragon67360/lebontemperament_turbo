@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Label, OptionalMark } from "@/components/ui/label";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
+import { eventDataSummary } from "@/utils/concerts/eventDataSummary";
 import {
   concertTitle,
   CONTEXT_LABELS,
@@ -303,6 +304,22 @@ export function ConcertDialog({
                 rows={4}
                 hint="Tarifs, entrée libre, programme… Quelques lignes suffisent."
               />
+              <div className="space-y-1.5">
+                <Label asChild>
+                  <span>Pour Google</span>
+                </Label>
+                <p className="text-[15px] leading-6">
+                  {eventDataSummary(concert) ??
+                    "Remplies automatiquement après l'enregistrement."}
+                </p>
+                <p className="text-detail text-muted-foreground">
+                  L&apos;adresse et le tarif que Google affiche sont déduits par
+                  IA du lieu, des informations complémentaires et de
+                  l&apos;affiche, à chaque enregistrement. S&apos;ils sont faux,
+                  précisez la ville dans le lieu ou le tarif dans les
+                  informations.
+                </p>
+              </div>
             </fieldset>
 
             <details className="border-border bg-card rounded-md border lg:hidden">
