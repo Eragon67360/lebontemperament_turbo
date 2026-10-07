@@ -1,8 +1,9 @@
 // Run with: npx tsx lib/contact.test.ts
 //
 // The association's contact details have one source, lib/contact.ts (#329):
-// no phone number anywhere on the website, the developer's address never on
-// it, and the mailbox literal written only once. llms.txt reads the same
+// no phone number on the website except the publisher's on the legal notice
+// (required there), the developer's address never on it, and the mailbox
+// literal written only once. llms.txt reads the same
 // constants as the pages (#334).
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -34,10 +35,15 @@ const relative = (file: string) => path.relative(websiteRoot, file);
 const PHONE_LITERAL =
   /(\+33|\(\+33\))[\s.-]?\(?0?\)?[1-9]([\s.-]?\d{2}){4}|\b0[1-9]([\s.-]\d{2}){4}\b|tel:\+?\d/;
 
+// The legal notice names the publisher's phone, as the LCEN requires.
+const ALLOWED_PHONE_LITERALS = new Set([
+  path.join("app", "mentions-legales", "page.tsx"),
+]);
+
 for (const file of files) {
   const source = readFileSync(file, "utf8");
   assert.ok(
-    !PHONE_LITERAL.test(source),
+    ALLOWED_PHONE_LITERALS.has(relative(file)) || !PHONE_LITERAL.test(source),
     `${relative(file)} contains a phone number: the site shows none (#329)`,
   );
   assert.ok(
