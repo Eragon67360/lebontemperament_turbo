@@ -514,59 +514,6 @@ class _MemberCard extends StatelessWidget {
                 mode: LaunchMode.externalApplication,
               ),
             ),
-          if (member.mobilePhone != null && member.mobilePhone!.isNotEmpty)
-            _ContactRow(
-              icon: Icons.phone_android_outlined,
-              text: member.mobilePhone!,
-              semanticsLabel: 'Appeler le ${member.mobilePhone}',
-              style: AppFonts.sans(
-                fontSize: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              onTap: () => launchUrl(
-                Uri.parse('tel:${member.mobilePhone!.replaceAll(' ', '')}'),
-                mode: LaunchMode.externalApplication,
-              ),
-            ),
-          if (member.homePhone != null && member.homePhone!.isNotEmpty)
-            _ContactRow(
-              icon: Icons.phone_outlined,
-              text: member.homePhone!,
-              semanticsLabel: 'Appeler le ${member.homePhone}',
-              style: AppFonts.sans(
-                fontSize: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              onTap: () => launchUrl(
-                Uri.parse('tel:${member.homePhone!.replaceAll(' ', '')}'),
-                mode: LaunchMode.externalApplication,
-              ),
-            ),
-          if (member.address != null && member.address!.isNotEmpty)
-            _ContactRow(
-              icon: Icons.home_outlined,
-              text: member.address!,
-              semanticsLabel: 'Copier l’adresse ${member.address}',
-              isLink: false,
-              style: AppFonts.sans(
-                fontSize: 13,
-                color: theme.colorScheme.primary,
-                decoration: TextDecoration.underline,
-              ),
-              onTap: () {
-                HapticFeedback.lightImpact();
-                Clipboard.setData(ClipboardData(text: member.address!));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Adresse copiée', style: AppFonts.sans()),
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              },
-            ),
-          const SizedBox(height: 8),
-          _ContactActionRow(member: member),
         ],
       ),
     );
@@ -598,14 +545,13 @@ class _MemberCard extends StatelessWidget {
   }
 }
 
-/// A tappable contact line (e-mail, phone, address): a link for screen
+/// A tappable contact line (the e-mail): a link for screen
 /// readers, at least 48 dp high for fingers.
 class _ContactRow extends StatelessWidget {
   final IconData icon;
   final String text;
   final TextStyle style;
   final String semanticsLabel;
-  final bool isLink;
   final VoidCallback onTap;
 
   const _ContactRow({
@@ -614,17 +560,19 @@ class _ContactRow extends StatelessWidget {
     required this.style,
     required this.semanticsLabel,
     required this.onTap,
-    this.isLink = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Its own node with its own tap action: the InkWell's is excluded below,
+    // and without one a screen reader merges the line into the card.
     return Semantics(
-      link: isLink,
-      button: !isLink,
+      container: true,
+      link: true,
       label: semanticsLabel,
+      onTap: onTap,
       excludeSemantics: true,
       child: Material(
         color: Colors.transparent,
@@ -643,105 +591,6 @@ class _ContactRow extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ContactActionRow extends StatelessWidget {
-  final Member member;
-
-  const _ContactActionRow({required this.member});
-
-  @override
-  Widget build(BuildContext context) {
-    final hasPhone =
-        (member.mobilePhone != null && member.mobilePhone!.isNotEmpty) ||
-        (member.homePhone != null && member.homePhone!.isNotEmpty);
-    final hasEmail = member.email.isNotEmpty;
-    final hasAddress = member.address != null && member.address!.isNotEmpty;
-
-    if (!hasPhone && !hasEmail && !hasAddress) return const SizedBox.shrink();
-
-    return Row(
-      children: [
-        if (hasPhone)
-          _ActionChip(
-            icon: Icons.phone_outlined,
-            tooltip: 'Appeler',
-            onTap: () {
-              HapticFeedback.lightImpact();
-              final tel = member.mobilePhone ?? member.homePhone ?? '';
-              launchUrl(
-                Uri.parse('tel:${tel.replaceAll(' ', '')}'),
-                mode: LaunchMode.externalApplication,
-              );
-            },
-          ),
-        if (hasPhone && (hasEmail || hasAddress)) const SizedBox(width: 8),
-        if (hasEmail)
-          _ActionChip(
-            icon: Icons.email_outlined,
-            tooltip: 'Envoyer un e-mail',
-            onTap: () {
-              HapticFeedback.lightImpact();
-              launchUrl(
-                Uri.parse('mailto:${member.email}'),
-                mode: LaunchMode.externalApplication,
-              );
-            },
-          ),
-        if (hasEmail && hasAddress) const SizedBox(width: 8),
-        if (hasAddress)
-          _ActionChip(
-            icon: Icons.copy_outlined,
-            tooltip: 'Copier l\'adresse',
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Clipboard.setData(ClipboardData(text: member.address!));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Adresse copiée', style: AppFonts.sans()),
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-      ],
-    );
-  }
-}
-
-class _ActionChip extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  const _ActionChip({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          // 48 dp: a comfortable target for every finger.
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 52, minHeight: 48),
-            child: Icon(icon, size: 20, color: theme.colorScheme.primary),
           ),
         ),
       ),

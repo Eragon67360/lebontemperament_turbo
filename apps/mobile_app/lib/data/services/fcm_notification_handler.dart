@@ -212,6 +212,21 @@ class FcmNotificationHandler {
     }
   }
 
+  /// The current FCM token without asking for permission: null on an iPhone
+  /// where notifications aren't allowed (yet). Used to register the phone
+  /// for the superadmins' alerts (#364).
+  static Future<String?> currentToken() async {
+    if (Platform.isIOS) {
+      final settings = await FirebaseMessaging.instance
+          .getNotificationSettings();
+      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+          settings.authorizationStatus != AuthorizationStatus.provisional) {
+        return null;
+      }
+    }
+    return FirebaseMessaging.instance.getToken();
+  }
+
   /// Get current FCM token (for optional server-side targeting).
   static Future<String?> getToken() async {
     if (Platform.isIOS) {

@@ -9,7 +9,9 @@ import 'package:logger/logger.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/config/dependency_injection.dart';
 import '../../../../core/config/supabase_config.dart';
+import '../../../../data/services/session_notifications.dart';
 
 final _authLogger = Logger();
 
@@ -256,6 +258,12 @@ class AuthService {
 
   // Sign out
   Future<void> signOut() async {
+    // While the session still exists: the server only lets a member remove
+    // their own phone from the alerts list (#364).
+    final getIt = DependencyInjection.getIt;
+    if (getIt.isRegistered<SessionNotifications>()) {
+      await getIt<SessionNotifications>().beforeSignOut();
+    }
     try {
       await _client.auth.signOut();
     } catch (e) {

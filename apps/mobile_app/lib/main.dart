@@ -35,14 +35,16 @@ void main() async {
   // Initialize notification service (local + display for FCM)
   await NotificationService().initialize();
 
-  // Push notifications follow the session: subscribed to the topic only while
-  // a member is signed in; unsubscribed, token deleted and cache cleared on
-  // sign-out (#358).
+  // Push notifications follow the session: subscribed to the topic and the
+  // phone registered for alerts only while a member is signed in;
+  // unsubscribed, token deleted and cache cleared on sign-out (#358, #364).
   final auth = SupabaseConfig.client.auth;
-  SessionNotifications.production().bind(
-    currentSession: auth.currentSession,
-    authStateChanges: auth.onAuthStateChange,
-  );
+  final sessionNotifications = SessionNotifications.production()
+    ..bind(
+      currentSession: auth.currentSession,
+      authStateChanges: auth.onAuthStateChange,
+    );
+  DependencyInjection.getIt.registerSingleton(sessionNotifications);
 
   // Re-run the router's auth redirect on every sign-in and sign-out,
   // including a session the server ended (revoked or expired refresh

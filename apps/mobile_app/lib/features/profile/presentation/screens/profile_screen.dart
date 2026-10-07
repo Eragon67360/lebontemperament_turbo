@@ -211,8 +211,6 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-const String _kSupportEmail = 'contactlebontemperament@gmail.com';
-
 /// One tap on the header icon used to log out at once: a slip of the thumb
 /// cost the member their session.
 Future<bool?> _confirmLogout(BuildContext context) {
@@ -262,7 +260,7 @@ Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
   if (contactSupport == true && context.mounted) {
     final uri = Uri(
       scheme: 'mailto',
-      path: _kSupportEmail,
+      path: kSupportEmail,
       query: _encodeQueryParameters(
         subject: 'Demande de suppression de compte',
       ),
@@ -279,7 +277,7 @@ Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Aucune application e-mail trouvée : écrivez à $_kSupportEmail',
+            'Aucune application e-mail trouvée : écrivez à $kSupportEmail',
           ),
         ),
       );

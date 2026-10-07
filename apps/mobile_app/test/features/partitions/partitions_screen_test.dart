@@ -76,7 +76,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.byTooltip('Télécharger Partition de test.pdf'), findsOneWidget);
-    expect(find.text('Accès direct au Drive'), findsOneWidget);
+    // No link out to Drive: the folders are members-only (#347).
+    expect(find.textContaining('Drive'), findsNothing);
     // No track loaded: no player.
     expect(find.byTooltip('Fermer le lecteur'), findsNothing);
   });
