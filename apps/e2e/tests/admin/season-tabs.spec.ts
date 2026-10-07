@@ -73,7 +73,9 @@ for (const screen of SCREENS) {
       if ((await rows.count()) > 0) {
         await expect(rows.first()).toBeVisible();
         await expect(
-          region.getByRole("button", { name: /^Supprimer « / }).first(),
+          region
+            .getByRole("button", { name: /^Plus d'actions pour « / })
+            .first(),
         ).toBeVisible();
       } else {
         await expect(

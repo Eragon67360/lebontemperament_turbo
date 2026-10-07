@@ -3,6 +3,7 @@
 import { useSortableHandle } from "@/components/anniversary/SortableList";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 import {
@@ -12,7 +13,6 @@ import {
   EyeOff,
   GripVertical,
   Pencil,
-  Trash2,
 } from "lucide-react";
 import * as React from "react";
 
@@ -57,9 +57,9 @@ export interface ContentRowProps {
 
 /**
  * One item of a campaign list: visual, title, status, facts, then the same
- * actions everywhere (« Modifier », « Masquer » / « Afficher »,
- * « Supprimer ») and the order controls (drag handle, « Monter »,
- * « Descendre »).
+ * actions everywhere (« Modifier », « Masquer » / « Afficher », and
+ * « Supprimer… » inside the « Plus d'actions » menu) and the order controls
+ * (drag handle, « Monter », « Descendre »).
  */
 export function ContentRow({
   name,
@@ -184,7 +184,7 @@ export function ContentRow({
 
         {children}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {extraActions}
           <Button
             type="button"
@@ -211,17 +211,7 @@ export function ContentRow({
               <span className="sr-only"> « {name} »</span>
             </Button>
           )}
-          <Button
-            type="button"
-            variant="destructive-outline"
-            size="sm"
-            onClick={onDelete}
-            disabled={busy}
-          >
-            <Trash2 aria-hidden />
-            Supprimer
-            <span className="sr-only"> « {name} »</span>
-          </Button>
+          <RowActionsMenu name={name} onDelete={onDelete} disabled={busy} />
         </div>
       </div>
     </Card>

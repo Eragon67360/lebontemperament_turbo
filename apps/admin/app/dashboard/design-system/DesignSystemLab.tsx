@@ -1,6 +1,8 @@
 "use client";
 
 import { useDensity } from "@/components/DensityProvider";
+import { ContentRow, IconTile } from "@/components/anniversary/ContentRow";
+import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
 import { PageHeader } from "@/components/layouts/PageHeader";
 import { PageShell } from "@/components/layouts/PageShell";
 import { AttentionDot, CountBadge } from "@/components/shell/NavBadge";
@@ -68,6 +70,7 @@ import { Input } from "@/components/ui/input";
 import { Label, OptionalMark, RequiredMark } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { ProvenanceNote } from "@/components/ui/provenance-note";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import {
   Select,
   SelectContent,
@@ -522,6 +525,14 @@ export function DesignSystemLab() {
               </TableBody>
             </Table>
           </Card>
+        </Section>
+
+        <Section
+          id="lignes"
+          title="Lignes de liste"
+          intro="« Modifier » reste visible ; « Supprimer… » passe dans le menu « ⋯ » (Plus d’actions), en dernier, en rouge, et ouvre toujours la confirmation qui nomme l’élément."
+        >
+          <RowActionsDemo />
         </Section>
 
         <Section
@@ -1252,6 +1263,50 @@ function SheetDemo() {
   );
 }
 
+function RowActionsDemo() {
+  const [deleting, setDeleting] = useState<string | null>(null);
+  return (
+    <div className="flex flex-col gap-4">
+      <ContentRow
+        name="Requiem"
+        title="Requiem"
+        visible
+        leading={
+          <IconTile>
+            <Music2 className="size-5" aria-hidden />
+          </IconTile>
+        }
+        description="Fauré, version de 1893 : la ligne type d’une liste."
+        onEdit={() => {}}
+        onToggleVisibility={() => {}}
+        onDelete={() => setDeleting("Requiem")}
+      />
+      <Row label="Menu seul, avec une autre action, en attente">
+        <RowActionsMenu
+          name="Week-end chantant"
+          onDelete={() => setDeleting("Week-end chantant")}
+        />
+        <RowActionsMenu
+          name="Lucie Bernard"
+          onDelete={() => setDeleting("Lucie Bernard")}
+        >
+          <DropdownMenuItem>
+            <Mail aria-hidden /> Renvoyer l’invitation
+          </DropdownMenuItem>
+        </RowActionsMenu>
+        <RowActionsMenu name="Vente de Noël" onDelete={() => {}} disabled />
+      </Row>
+      <DeleteConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        onConfirm={() => setDeleting(null)}
+        title={`Supprimer « ${deleting ?? ""} » ?`}
+        description="L’élément disparaît de la liste et du site. Cette action est définitive."
+      />
+    </div>
+  );
+}
+
 function DropdownDemo() {
   return (
     <DropdownMenu>
@@ -1269,7 +1324,7 @@ function DropdownDemo() {
           <Pencil /> Modifier la fiche
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-danger-foreground focus:text-danger-foreground [&>svg]:text-danger">
+        <DropdownMenuItem variant="destructive">
           <Trash2 /> Désactiver
         </DropdownMenuItem>
       </DropdownMenuContent>

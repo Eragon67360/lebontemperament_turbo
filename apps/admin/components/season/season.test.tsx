@@ -8,7 +8,7 @@ import { RehearsalRow } from "./RehearsalRow";
 
 const noop = () => {};
 
-// --- A rehearsal row: date, group, hours, place, the two actions ---
+// --- A rehearsal row: date, group, hours, place, « Modifier » and the menu ---
 {
   const html = renderToStaticMarkup(
     createElement(RehearsalRow, {
@@ -35,7 +35,10 @@ const noop = () => {};
   assert.match(html, /20 h – 22 h/);
   assert.match(html, /Salle paroissiale, Barr/);
   assert.match(html, /Modifier<span class="sr-only"> « Répétition générale »/);
-  assert.match(html, /Supprimer<span class="sr-only"> « Répétition générale »/);
+  // « Supprimer… » lives in the « Plus d'actions » menu, not on the row.
+  assert.match(html, /Plus d(&#x27;|')actions pour « Répétition générale »/);
+  assert.doesNotMatch(html, />Supprimer</);
+  assert.doesNotMatch(html, /border-danger/);
   assert.doesNotMatch(html, /Google Agenda/);
 }
 
@@ -97,7 +100,10 @@ const noop = () => {};
   assert.match(html, /Apportez vos partitions/);
   assert.match(html, /href="https:\/\/example.org\/inscription"/);
   assert.match(html, /Modifier<span class="sr-only"> « Week-end chantant »/);
-  assert.match(html, /Supprimer<span class="sr-only"> « Week-end chantant »/);
+  // « Supprimer… » lives in the « Plus d'actions » menu, not on the row.
+  assert.match(html, /Plus d(&#x27;|')actions pour « Week-end chantant »/);
+  assert.doesNotMatch(html, />Supprimer</);
+  assert.doesNotMatch(html, /border-danger/);
   assert.doesNotMatch(html, /sejour/);
 }
 
