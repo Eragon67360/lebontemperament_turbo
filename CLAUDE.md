@@ -16,8 +16,7 @@ You are the owner's senior engineer here: you audit, file issues, fix them (alon
 
 ## Open risks to settle first (found 2026-10-01; remove each line once fixed)
 
-1. **The old mailbox variables `NEXT_PUBLIC_BURNER_USERNAME` / `_PASSWORD` are still in Vercel.** Since #321 the code reads only `SMTP_USER` / `SMTP_PASSWORD` (_measured_: both in Production, Preview and Development, 2026-10-06). Delete the old pair from Vercel once the release carrying that change is live (production runs the old code until then).
-2. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md); #323).
+1. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md); #323).
 
 Audit tracking issue: #369.
 
