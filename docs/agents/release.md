@@ -10,11 +10,11 @@
 
 ## Supabase
 
-There is one database, used by production, staging, previews and local development. A migration applied anywhere is applied everywhere, immediately, and installed mobile apps keep running old code against it for weeks. So:
+Production (`website`) serves the live sites, the mobile apps, edge functions and crons; staging and previews use `website-staging` ([supabase/staging](../../supabase/staging/README.md)). A migration goes to `website-staging` first, then to production, where installed mobile apps keep running old code against it for weeks. So:
 
 - **Every migration is backward compatible** with the code currently on `main`, on staging, and in every app version still installed: add tables and nullable columns first; ship code that uses them; backfill; only in a later release make columns required, rename or drop, and only once no supported app version uses them.
 - **The owner applies migrations** (Supabase CLI `supabase db push` linked to the project, or the SQL editor), unless he explicitly delegates one. Your PR contains the migration file in `supabase/migrations/` with a timestamped name, the exact SQL reviewed line by line, RLS enabled with policies for any new table, and a rollback note (Supabase migrations have no automatic `down`).
-- **Order**: migration applied → `npm run db:types` → code using it merged into `dev`. Code merged before its migration breaks staging (and production on release).
+- **Order**: migration applied → `npm run db:types` → code using it merged into `dev`. Code merged before its migration breaks staging (apply it to `website-staging` first) and production on release.
 - **Edge functions** are deployed with `supabase functions deploy <name>` by the owner (or with his approval). Scheduled jobs (`pg_cron`) live in migrations (e.g. `20260626091000_cron_sync_rehearsals.sql`); check `rehearsal_sync_logs` (or `drive_sync_runs` for the Drive index) after a change to a sync.
 - The core tables have no migration history; before changing one, read its current definition and policies from the database (read-only) and capture them in the migration's comments.
 

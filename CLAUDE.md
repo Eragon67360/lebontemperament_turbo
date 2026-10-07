@@ -8,7 +8,7 @@ You are the owner's senior engineer here: you audit, file issues, fix them (alon
 
 1. **Never push, force-push or delete `main`.** Work on a branch, open a PR into `dev`. PRs into `dev` may be merged by you once the quality gates pass. The release PR `dev` → `main` is merged **only after the owner says "merge it"** (or equivalent explicit approval) for that release. Merging into `main` deploys both sites and, with mobile changes, uploads an Android build.
 2. **Breaking changes are discussed first**: URL changes, schema changes that drop or rename, anything the shipped mobile app relies on, removed features, anything members or admins notice as "different". Non-breaking judgement calls: pick the best option, do it, report it.
-3. **There is one Supabase database, and it is production.** Staging (`dev.lebontemperament.com`), previews and local development all use it, with the service-role key available in every environment. Any write, from any environment, is a production write. See [safety](docs/agents/safety.md).
+3. **Production data lives in one Supabase project, `website`; everything else uses `website-staging`.** Since 2026-10-07, staging (`dev.lebontemperament.com`, `admin-dev.lebontemperament.com`), PR previews and Vercel's Development target read and write `website-staging`, which holds fake data. Production sites, the mobile apps, edge functions and cron jobs use production. Anything that runs with production keys (a local `.env`, a script, the Supabase MCP on `website`) writes to production. See [safety](docs/agents/safety.md).
 4. **This repository is public.** Never commit, print or paste secrets or personal data. Write security issues without exploit recipes until the fix is live. Never use tokens, links, emails or passwords the owner pastes into the chat as test data.
 5. **The design system stays.** The website's teal HeroUI look, the admin's shadcn look and the app's theme get better (consistency, accessibility, polish), never replaced. See [design guardrails](docs/agents/design-guardrails.md).
 6. **Verify, don't assume.** Read the code, run the command, query the API. Label claims _measured_ or _estimated_. Report outcomes faithfully, including failures and skipped steps.
@@ -16,9 +16,8 @@ You are the owner's senior engineer here: you audit, file issues, fix them (alon
 
 ## Open risks to settle first (found 2026-10-01; remove each line once fixed)
 
-1. **Staging and local development share the production database** (_measured_: Vercel gives `NEXT_PUBLIC_SUPABASE_URL`, the anon key and `SUPABASE_SERVICE_ROLE_KEY` one value for Development, Preview and Production). The daily e2e suite writes and sweeps `E2E_` concerts there, and `npm run test:rehearsal-sync` writes real rehearsal rows ([safety](docs/agents/safety.md#one-database-for-everything)). Decided: a separate Supabase staging project (#363); `website-staging` is built with fake data (2026-10-07, `supabase/staging/`), waiting for its keys in Vercel's Preview and Development targets. The website's deployment protection is now on (2026-10-02).
-2. **The old mailbox variables `NEXT_PUBLIC_BURNER_USERNAME` / `_PASSWORD` are still in Vercel.** Since #321 the code reads only `SMTP_USER` / `SMTP_PASSWORD` (_measured_: both in Production, Preview and Development, 2026-10-06). Delete the old pair from Vercel once the release carrying that change is live (production runs the old code until then).
-3. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md); #323).
+1. **The old mailbox variables `NEXT_PUBLIC_BURNER_USERNAME` / `_PASSWORD` are still in Vercel.** Since #321 the code reads only `SMTP_USER` / `SMTP_PASSWORD` (_measured_: both in Production, Preview and Development, 2026-10-06). Delete the old pair from Vercel once the release carrying that change is live (production runs the old code until then).
+2. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md); #323).
 
 Audit tracking issue: #369.
 

@@ -2,22 +2,22 @@
 
 This ecosystem holds members' personal data (profiles, phone numbers, voices and groups), donors' data and receipts, delivery addresses and live driver locations, and it can reach every member's phone. Most of the ways an agent can hurt it are not code bugs but **writes, messages and payments in the wrong place**. Read this before any command that writes or sends.
 
-## One database for everything
+## Production and staging databases
 
-_Measured on 2026-10-01_: in both Vercel projects, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` each have **one value for Development, Preview and Production**. So:
+_Measured on 2026-10-07_: in both Vercel projects, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` have one value for Production and another for Preview and Development (#363). So:
 
-- **Staging** (`dev.lebontemperament.com`, `admin-dev.lebontemperament.com`), **PR previews** and **local `npm run dev`** all read and write the production database.
-- The **service-role key** (bypasses row-level security) is available locally and in previews.
-- A staging project now exists but is **not wired yet**: `website-staging` (ref `cevuqyhwtzjujxsocxkb`) holds production's structure and fake data since 2026-10-07 ([supabase/staging/README.md](../../supabase/staging/README.md)). Until the owner gives Vercel's Preview and Development targets its keys, the bullets above still hold.
-
-Until that switch, treat every environment as production: no test sign-ups, no test concerts, no "quick check" inserts, no deletes, unless the owner agrees to that specific write. After it, staging, previews and local development write to `website-staging` only; production stays read-only from everywhere but production. Writes to `website-staging` are free, but it is still not a place for real member data.
+- **Production** (`www.`, `admin.`), the **mobile apps**, the **edge functions** and the **cron jobs** use the production project `website` (ref `fsklunxplbbtzgurwqmc`).
+- **Staging** (`dev.lebontemperament.com`, `admin-dev.lebontemperament.com`), **PR previews** and **`vercel env pull`** use `website-staging` (ref `cevuqyhwtzjujxsocxkb`): production's structure with fake data, no edge functions, no crons, no vault secrets ([supabase/staging/README.md](../../supabase/staging/README.md)).
+- Writes to `website-staging` are fine for tests; it is still not a place for real member data. Its accounts are test accounts (the e2e account is an admin there).
+- **Check which project a command will hit before it writes.** A local `.env` written before 2026-10-07, a script given production keys, and the Supabase MCP on `website` all write to production. Production stays read-only from everywhere but production: a production write is a single-purpose script, run after the owner's go.
+- The other services are **not** split: Google Calendar, Drive and Groups, Cloudinary and the SMTP mailbox use the same accounts in every environment, so the rows below still apply on staging.
 
 ## What writes or sends, and where
 
 | Action                                                                              | Effect                                                                        | Rule                                                                       |
 | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Any form or admin action on staging, previews or local dev                          | Production rows                                                               | Read-only unless the owner agrees                                          |
-| `apps/e2e` `concerts-write.spec.ts` (and its teardown sweep)                        | Creates and deletes `E2E_` concerts in production                             | Don't add write tests without the owner; namespace them `E2E_`             |
+| Any form or admin action on production, or with production keys                     | Production rows                                                               | Read-only unless the owner agrees                                          |
+| `apps/e2e` `concerts-write.spec.ts` (and its teardown sweep)                        | Creates and deletes `E2E_` concerts in the database of the env that runs it   | Don't add write tests without the owner; namespace them `E2E_`             |
 | `npm run test:rehearsal-sync` (`scripts/test-rehearsal-sync.ts`)                    | Calls the deployed sync function in test mode: **writes real rehearsal rows** | Owner approval each time                                                   |
 | `send-push-notification`, anything creating `events`/`notifications`                | Push notifications to members' phones                                         | Never trigger from tests or experiments                                    |
 | Delivery-round functions (`send-delivery-sms`, `check-eta-and-send-arrival-sms`, …) | Real SMS through Twilio (costs money, reaches real people)                    | Never invoke                                                               |

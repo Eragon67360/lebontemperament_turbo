@@ -1,21 +1,33 @@
 import { expect, test } from "@playwright/test";
 
 // P4 — safe-write: creates an E2E_-namespaced concert through the real admin
-// UI, verifies it renders, then deletes it through the UI. Because staging
-// shares the production DB, the row is briefly visible on the public site
-// (today's date is required for it to appear in the admin « À venir » list) —
-// hence the unmistakable name. Orphans older than 24h are swept by
+// UI, verifies it renders, then deletes it through the UI. The row is briefly
+// visible on the target site's public pages (today's date is required for it
+// to appear in the admin « À venir » list) — hence the unmistakable name. Orphans older than 24h are swept by
 // global-teardown.ts.
 //
-// Off by default: every environment writes to the production database, so
-// this spec only runs with E2E_ALLOW_WRITES=1, which nothing sets until
-// staging has its own database (#363).
+// Off by default: it only runs with E2E_ALLOW_WRITES=1 (set by the e2e
+// workflow) AND when the signed-in session belongs to the staging database
+// (#363), so it skips itself against production even if the flag is set.
 test.skip(
   process.env.E2E_ALLOW_WRITES !== "1",
-  "writes to the shared production database — set E2E_ALLOW_WRITES=1 to run (see #363)",
+  "writes to the target's database — set E2E_ALLOW_WRITES=1 to run, staging only (see #363)",
 );
 
+// The staging Supabase project (#363). Production runs the push trigger and
+// edge functions, so a concert created there would notify members.
+const STAGING_REF = "cevuqyhwtzjujxsocxkb";
+
 test("create and delete an E2E concert", async ({ page }) => {
+  // Gate on the database the target really uses, not on its hostname:
+  // @supabase/ssr names the session cookie after the project ref
+  // (sb-<ref>-auth-token, possibly chunked as .0, .1).
+  const cookies = await page.context().cookies();
+  test.skip(
+    !cookies.some((c) => c.name.startsWith(`sb-${STAGING_REF}-auth-token`)),
+    "the target is not signed in to the staging database — no writes",
+  );
+
   const name = `E2E_Concert_${Date.now()}`;
 
   await page.goto("/dashboard/public/concerts/prochains-concerts");

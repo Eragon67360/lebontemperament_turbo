@@ -1,6 +1,6 @@
 # Agent tools
 
-Read-only helpers the lead agent used for releases and checks. None of them write anything, and none contain secrets: they read secrets from the environment. Every environment (staging, previews, production) reads the **production** database, so keep it that way. A production write is a single-purpose script, run after the owner's go.
+Read-only helpers the lead agent used for releases and checks. None of them write anything, and none contain secrets: they read secrets from the environment. Given production keys they read the **production** database, so keep them read-only. A production write is a single-purpose script, run after the owner's go.
 
 ## `smoke.mjs`: 24 read-only checks
 

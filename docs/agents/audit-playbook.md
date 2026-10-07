@@ -23,7 +23,7 @@ Each list is a starting point, not a boundary. Facts flagged on 2026-10-01 are m
 
 ### 1. Security, privacy and access
 
-- ⚑ One database for every environment, service-role key everywhere ([safety](safety.md#one-database-for-everything)).
+- ⚑ Staging has its own database since 2026-10-07 (#363), but Google, Cloudinary and SMTP accounts are still shared by every environment ([safety](safety.md#production-and-staging-databases)).
 - ⚑ Secret scanning off on a public repo; `NEXT_PUBLIC_` mailbox credentials; an unused `NEXT_PUBLIC_ADMIN_PASSWORD` in Vercel. Scan the git history for committed secrets (`git log -p` searches, or `gitleaks` via `npx`/a container) without printing what you find; report locations only.
 - RLS on every table (the core tables' policies live only in the database), service-role usage behind explicit checks, admin role checks (`admin` / `superadmin`), members-area access by group, API routes (auth, validation, reCAPTCHA, enumeration, rate limits), Stripe webhook verification and receipt numbering, delivery tracking tokens and location sharing, uploads, `proxy.ts` guards.
 - Mobile: no secrets in the app bundle beyond the anon key; Supabase session storage; push token handling.
@@ -84,4 +84,4 @@ The **tracking issue** lists every issue grouped into work packages (packages to
 
 ## Auditor brief (template)
 
-> You are auditing Le Bon Tempérament for **<dimension>**. Read `CLAUDE.md` and `docs/agents/project.md`, `safety.md` and `audit-playbook.md` first. Strictly read-only: no commits, no database writes (every environment is production), no notifications, SMS or emails, no settings changes, no secrets or personal data printed. Measure the live sites with `curl` where useful. Return at most 15 findings, most severe first, each with: title, severity P0/P1/P2, Measured or Estimated, where, evidence, proposed fix, done-when, and whether it needs an owner decision. Note anything already fixed. Under 1,200 words.
+> You are auditing Le Bon Tempérament for **<dimension>**. Read `CLAUDE.md` and `docs/agents/project.md`, `safety.md` and `audit-playbook.md` first. Strictly read-only: no commits, no database writes (production keys write to production; staging's database is for tests only when the lead says so), no notifications, SMS or emails, no settings changes, no secrets or personal data printed. Measure the live sites with `curl` where useful. Return at most 15 findings, most severe first, each with: title, severity P0/P1/P2, Measured or Estimated, where, evidence, proposed fix, done-when, and whether it needs an owner decision. Note anything already fixed. Under 1,200 words.
