@@ -1,12 +1,13 @@
 "use client";
 
+import { AuthCardHeader } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -14,7 +15,6 @@ export default function ResetPasswordForm() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,57 +50,55 @@ export default function ResetPasswordForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold">Email envoyé</h1>
-          <p className="text-muted-foreground text-sm text-balance">
-            Vérifiez votre boîte mail pour réinitialiser votre mot de passe.
-          </p>
-        </div>
-        <Button
-          onClick={() => router.push(RouteNames.AUTH.LOGIN)}
-          className="w-full"
-        >
-          Retour à la connexion
+      <div>
+        <AuthCardHeader
+          as="h1"
+          title="E-mail envoyé"
+          intro="Vérifiez votre boîte mail pour réinitialiser votre mot de passe."
+        />
+        <Button asChild className="w-full">
+          <Link href={RouteNames.AUTH.LOGIN}>Retour à la connexion</Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Réinitialiser le mot de passe</h1>
-        <p className="text-muted-foreground text-sm text-balance">
-          Entrez votre email pour recevoir un lien de réinitialisation
-        </p>
-      </div>
-      <div className="grid gap-6">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+    <form onSubmit={handleSubmit}>
+      <AuthCardHeader
+        as="h1"
+        title="Réinitialiser le mot de passe"
+        intro="Indiquez l’adresse e-mail de votre compte : vous recevrez un lien pour choisir un nouveau mot de passe."
+      />
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="email">Adresse e-mail</Label>
           <Input
             id="email"
             type="email"
-            placeholder="Email"
+            placeholder="prenom.nom@exemple.fr"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
             disabled={loading}
             className="lowercase"
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Envoi..." : "Envoyer le lien"}
-          </Button>
+        <div className="flex flex-col gap-3">
           <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push(RouteNames.AUTH.LOGIN)}
+            type="submit"
             className="w-full"
+            disabled={loading}
+            aria-busy={loading || undefined}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour à la connexion
+            {loading ? "Envoi…" : "Envoyer le lien"}
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link href={RouteNames.AUTH.LOGIN}>
+              <ArrowLeft aria-hidden />
+              Retour à la connexion
+            </Link>
           </Button>
         </div>
       </div>
