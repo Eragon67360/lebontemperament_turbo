@@ -524,29 +524,38 @@ export type Database = {
       };
       bug_reports: {
         Row: {
+          app_info: string | null;
           created_at: string;
           description: string;
           id: string;
           is_read: boolean | null;
           reported_by: string;
+          screenshot_paths: string[];
+          source: string;
           status: string | null;
           title: string;
         };
         Insert: {
+          app_info?: string | null;
           created_at?: string;
           description: string;
           id?: string;
           is_read?: boolean | null;
           reported_by: string;
+          screenshot_paths?: string[];
+          source?: string;
           status?: string | null;
           title: string;
         };
         Update: {
+          app_info?: string | null;
           created_at?: string;
           description?: string;
           id?: string;
           is_read?: boolean | null;
           reported_by?: string;
+          screenshot_paths?: string[];
+          source?: string;
           status?: string | null;
           title?: string;
         };
@@ -1685,6 +1694,10 @@ export type Database = {
       };
       is_admin: { Args: never; Returns: boolean };
       is_admin_or_superadmin: { Args: never; Returns: boolean };
+      mark_bug_report_read: {
+        Args: { p_report_id: string };
+        Returns: undefined;
+      };
       rehearsals_sync_write: {
         Args: {
           p_delete_ids: string[];

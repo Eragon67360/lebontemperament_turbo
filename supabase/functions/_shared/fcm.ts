@@ -56,6 +56,9 @@ export interface TokenMessage {
    * alert's « Rétabli » replaces its start). */
   tag: string;
   data: Record<string, string>;
+  /** Android channel the app created for this kind of push; "fcm_push" when
+   * left out. An app too old to know the channel files it under its default. */
+  channelId?: string;
 }
 
 export type SendResult = "sent" | "unregistered" | "failed";
@@ -80,11 +83,14 @@ export async function sendToToken(
         message: {
           token,
           notification: { title: msg.title, body: msg.body },
-          // "fcm_push" is the channel the app creates at start-up; without it
-          // Android files the push under "Miscellaneous", silent.
+          // "fcm_push" is the channel the app creates at start-up; without a
+          // channel Android files the push under "Miscellaneous", silent.
           android: {
             priority: "high",
-            notification: { channel_id: "fcm_push", tag: msg.tag },
+            notification: {
+              channel_id: msg.channelId ?? "fcm_push",
+              tag: msg.tag,
+            },
           },
           apns: {
             headers: { "apns-collapse-id": msg.tag.slice(0, 64) },
