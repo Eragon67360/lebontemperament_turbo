@@ -8,9 +8,9 @@ _Measured on 2026-10-01_: in both Vercel projects, `NEXT_PUBLIC_SUPABASE_URL`, `
 
 - **Staging** (`dev.lebontemperament.com`, `admin-dev.lebontemperament.com`), **PR previews** and **local `npm run dev`** all read and write the production database.
 - The **service-role key** (bypasses row-level security) is available locally and in previews.
-- There is no staging or development Supabase project to test schema changes on.
+- A staging project now exists but is **not wired yet**: `website-staging` (ref `cevuqyhwtzjujxsocxkb`) holds production's structure and fake data since 2026-10-07 ([supabase/staging/README.md](../../supabase/staging/README.md)). Until the owner gives Vercel's Preview and Development targets its keys, the bullets above still hold.
 
-Until that changes, treat every environment as production: no test sign-ups, no test concerts, no "quick check" inserts, no deletes, unless the owner agrees to that specific write. **Target state** (an improvement to propose): a separate Supabase project or branch for development and staging, with its own keys in Vercel's Development and Preview targets, seeded with fake data.
+Until that switch, treat every environment as production: no test sign-ups, no test concerts, no "quick check" inserts, no deletes, unless the owner agrees to that specific write. After it, staging, previews and local development write to `website-staging` only; production stays read-only from everywhere but production. Writes to `website-staging` are free, but it is still not a place for real member data.
 
 ## What writes or sends, and where
 
