@@ -14,6 +14,7 @@
     "test:e2e": "turbo run test:e2e",
     "env:check": "node scripts/env/check.mjs",
     "env:push": "node scripts/env/cli.mjs",
+    "env:seed": "node scripts/env/seed.mjs",
     "test:env": "node --test scripts/env/lib.test.mjs",
     "prepare": "node -e \"if (!process.env.CI && !process.env.VERCEL) { require('child_process').execSync('husky', { stdio: 'inherit' }) }\""
   },
