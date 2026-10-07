@@ -293,3 +293,160 @@ export function planGithub({
   const extras = existingNames.filter((n) => !listed.has(n)).sort();
   return { actions, extras };
 }
+
+// --- Seeding the vaults (scripts/env/seed.mjs) ------------------------------------
+
+export const refKey = ({ vault, item, field }) => `${vault}/${item}/${field}`;
+
+/** Parses a dotenv file (the format `vercel env pull` writes). Values stay in memory. */
+export function parseDotenv(text) {
+  const values = new Map();
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim().replace(/^export\s+/, "");
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq < 1) continue;
+    const name = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
+      value = value
+        .slice(1, -1)
+        .replace(/\\n/g, "\n")
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, "\\");
+    } else if (
+      value.startsWith("'") &&
+      value.endsWith("'") &&
+      value.length >= 2
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (NAME_RE.test(name)) values.set(name, value);
+  }
+  return values;
+}
+
+/**
+ * Merges candidate values for each reference. Each candidate is
+ * { ref, value, source, level }: a higher level wins (asked > file > dotenv > Vercel);
+ * different values at the same level are a conflict and the field is left out.
+ */
+export function mergeCandidates(candidates) {
+  const byRef = new Map();
+  for (const c of candidates) {
+    if (c.value === undefined || c.value === "") continue;
+    if (!byRef.has(c.ref)) byRef.set(c.ref, []);
+    byRef.get(c.ref).push(c);
+  }
+  const resolved = new Map();
+  const conflicts = new Map();
+  for (const [ref, list] of byRef) {
+    const top = Math.max(...list.map((c) => c.level));
+    const best = list.filter((c) => c.level === top);
+    if (new Set(best.map((c) => c.value)).size > 1) {
+      conflicts.set(ref, [...new Set(best.map((c) => c.source))]);
+    } else {
+      resolved.set(ref, {
+        value: best[0].value,
+        sources: [...new Set(best.map((c) => c.source))],
+      });
+    }
+  }
+  return { resolved, conflicts };
+}
+
+function jwtRef(value) {
+  if (!/^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(value)) return undefined;
+  try {
+    return JSON.parse(Buffer.from(value.split(".")[1], "base64url").toString())
+      .ref;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Keeps the two Supabase projects apart: staging values must point at the staging
+ * project, production values must never mention it. Messages name references only.
+ */
+export function checkSeedValues(resolved, rules) {
+  const errors = [];
+  const staging = rules.stagingSupabaseRef;
+  for (const [ref, { value }] of resolved) {
+    const [vault, item, field] = ref.split("/");
+    const tokenRef = jwtRef(value);
+    if (vault === rules.productionVault) {
+      if (value.includes(staging) || tokenRef === staging)
+        errors.push(`${ref} points at the staging Supabase project`);
+    } else if (vault === rules.stagingVault && item === "Supabase") {
+      if (field === "url" && !value.includes(staging))
+        errors.push(`${ref} is not the staging Supabase project`);
+      if (tokenRef && tokenRef !== staging)
+        errors.push(`${ref} is a key for another Supabase project`);
+    }
+  }
+  return errors;
+}
+
+// Fields that aren't secret show in clear in Proton Pass; everything else is hidden.
+const VISIBLE_FIELDS = new Set([
+  "url",
+  "website_url",
+  "admin_url",
+  "cloud_name",
+  "calendar_id",
+  "maps_map_id",
+  "apps_script_url",
+  "client_id",
+  "group_email",
+  "admin_email",
+  "smtp_user",
+  "user_email",
+  "issuer_id",
+  "key_id",
+  "team_id",
+  "key_alias",
+  "roster_sheet_id",
+  "publishable_key",
+]);
+const VISIBLE_ITEMS = new Set(["Drive folders", "Search verification"]);
+
+/** The JSON `pass-cli item create custom --from-template -` reads, for one item. */
+export function customItemTemplate(item, fields, values) {
+  return {
+    title: item,
+    note: "Read by env/ in Eragon67360/lebontemperament_turbo: keep the field names.",
+    sections: [
+      {
+        section_name: "Values",
+        fields: fields.map((field) => ({
+          field_name: field,
+          field_type:
+            VISIBLE_ITEMS.has(item) || VISIBLE_FIELDS.has(field)
+              ? "text"
+              : "hidden",
+          value: values[field] ?? "",
+        })),
+      },
+    ],
+  };
+}
+
+/** Every `title` in `pass-cli item list --output json`, wherever the CLI nests it. */
+export function itemTitles(json) {
+  const titles = new Set();
+  let sawEntries = false;
+  const walk = (node) => {
+    if (Array.isArray(node)) {
+      if (node.length) sawEntries = true;
+      node.forEach(walk);
+    } else if (node && typeof node === "object") {
+      for (const [key, value] of Object.entries(node)) {
+        if (key === "title" && typeof value === "string") titles.add(value);
+        else walk(value);
+      }
+    }
+  };
+  walk(json);
+  return { titles, readable: titles.size > 0 || !sawEntries };
+}

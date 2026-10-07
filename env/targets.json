@@ -56,6 +56,8 @@
   "rules": {
     "productionVault": "LBT Production",
     "stagingVault": "LBT Staging",
-    "productionOnlyItems": ["Supabase", "Sites"]
+    "productionOnlyItems": ["Supabase", "Sites"],
+    "$stagingSupabaseRef": "the website-staging project (public, it is in the staging URL); env:seed checks values against it",
+    "stagingSupabaseRef": "cevuqyhwtzjujxsocxkb"
   }
 }

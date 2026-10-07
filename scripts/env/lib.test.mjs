@@ -6,7 +6,12 @@ import { join } from "node:path";
 import { test } from "node:test";
 import {
   ROOT,
+  checkSeedValues,
+  customItemTemplate,
   fingerprint,
+  itemTitles,
+  mergeCandidates,
+  parseDotenv,
   parseTemplate,
   planGithub,
   planVercel,
@@ -17,6 +22,7 @@ const rules = {
   productionVault: "LBT Production",
   stagingVault: "LBT Staging",
   productionOnlyItems: ["Supabase", "Sites"],
+  stagingSupabaseRef: "stagingref",
 };
 const entry = (
   name,
@@ -223,4 +229,150 @@ test("a GitHub dry run prints names only and refuses to write production without
   assert.match(refused.stderr, /add --prod/);
   assert.doesNotMatch(readFileSync(log, "utf8"), /secret set/);
   rmSync(dir, { recursive: true, force: true });
+});
+
+test("parseDotenv reads vercel env pull files", () => {
+  const values = parseDotenv(
+    "# c\nA=\"x\\ny\"\nexport B=plain\nC='q'\nbad line\n",
+  );
+  assert.deepEqual(Object.fromEntries(values), {
+    A: "x\ny",
+    B: "plain",
+    C: "q",
+  });
+});
+
+test("mergeCandidates lets the stronger source win and flags same-level conflicts", () => {
+  const { resolved, conflicts } = mergeCandidates([
+    { ref: "V/I/a", value: "1", source: "vercel x", level: 1 },
+    { ref: "V/I/a", value: "2", source: "file", level: 3 },
+    { ref: "V/I/b", value: "1", source: "vercel x", level: 1 },
+    { ref: "V/I/b", value: "2", source: "vercel y", level: 1 },
+    { ref: "V/I/c", value: "1", source: "vercel x", level: 1 },
+    { ref: "V/I/c", value: "1", source: "vercel y", level: 1 },
+    { ref: "V/I/d", value: "", source: "vercel x", level: 1 },
+  ]);
+  assert.equal(resolved.get("V/I/a").value, "2");
+  assert.deepEqual(conflicts.get("V/I/b"), ["vercel x", "vercel y"]);
+  assert.deepEqual(resolved.get("V/I/c").sources, ["vercel x", "vercel y"]);
+  assert.equal(resolved.has("V/I/d"), false);
+});
+
+test("checkSeedValues keeps the staging and production Supabase projects apart", () => {
+  const jwt = (ref) =>
+    `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ ref })).toString("base64url")}.sig`;
+  const check = (pairs) =>
+    checkSeedValues(
+      new Map(pairs.map(([ref, value]) => [ref, { value }])),
+      rules,
+    );
+  assert.deepEqual(
+    check([
+      ["LBT Staging/Supabase/url", "https://stagingref.supabase.co"],
+      ["LBT Staging/Supabase/anon_key", jwt("stagingref")],
+      ["LBT Production/Supabase/url", "https://prodref.supabase.co"],
+      ["LBT Production/Supabase/anon_key", jwt("prodref")],
+    ]),
+    [],
+  );
+  const errors = check([
+    ["LBT Staging/Supabase/url", "https://prodref.supabase.co"],
+    ["LBT Staging/Supabase/anon_key", jwt("prodref")],
+    [
+      "LBT Production/Supabase/db_url",
+      "postgres://x@db.stagingref.supabase.co",
+    ],
+    ["LBT Production/Supabase/anon_key", jwt("stagingref")],
+  ]);
+  assert.equal(errors.length, 4);
+  assert.doesNotMatch(errors.join("\n"), /prodref|postgres/);
+});
+
+test("customItemTemplate hides secrets and keeps every field", () => {
+  const t = customItemTemplate("Cloudinary", ["api_secret", "cloud_name"], {
+    cloud_name: "lbt",
+  });
+  assert.equal(t.title, "Cloudinary");
+  assert.deepEqual(t.sections[0].fields, [
+    { field_name: "api_secret", field_type: "hidden", value: "" },
+    { field_name: "cloud_name", field_type: "text", value: "lbt" },
+  ]);
+});
+
+test("itemTitles finds titles wherever pass-cli nests them", () => {
+  assert.deepEqual(
+    [
+      ...itemTitles({ items: [{ content: { title: "A" } }, { title: "B" }] })
+        .titles,
+    ],
+    ["A", "B"],
+  );
+  assert.equal(itemTitles([]).readable, true);
+  assert.equal(itemTitles([{ id: "x" }]).readable, false);
+});
+
+test("seed.mjs creates missing items through stdin, prints no value, and refuses a production URL in staging", () => {
+  const dir = mkdtempSync(join(tmpdir(), "lbt-seed-"));
+  const created = join(dir, "created.jsonl");
+  writeFileSync(
+    join(dir, "pass-cli"),
+    `#!/bin/sh\ncase "$*" in\n  "item list LBT Staging"*) echo '[{"title":"E2E"}]';;\n  "item create custom"*) cat >> "${created}"; echo >> "${created}";;\n  *) exit 3;;\nesac\n`,
+    { mode: 0o755 },
+  );
+  const secret = "sb_secret_must-not-print";
+  const keyFile = join(dir, "key");
+  writeFileSync(keyFile, `${secret}\n`);
+  const dotenv = join(dir, "dev.env");
+  const run = (url, ...flags) => {
+    writeFileSync(dotenv, `NEXT_PUBLIC_SUPABASE_URL="${url}"\n`);
+    return spawnSync(
+      process.execPath,
+      [
+        join(ROOT, "scripts", "env", "seed.mjs"),
+        "--vault",
+        "LBT Staging",
+        "--dotenv",
+        `website.dev=${dotenv}`,
+        "--file",
+        `LBT Staging/Supabase/service_role_key=${keyFile}`,
+        ...flags,
+      ],
+      {
+        encoding: "utf8",
+        env: { PATH: `${dir}:${process.env.PATH}`, HOME: dir },
+      },
+    );
+  };
+  try {
+    const refused = run("https://prodref.supabase.co", "--apply");
+    assert.equal(refused.status, 1);
+    assert.match(
+      refused.stderr,
+      /LBT Staging\/Supabase\/url is not the staging/,
+    );
+
+    const staging = "https://cevuqyhwtzjujxsocxkb.supabase.co";
+    const dry = run(staging);
+    assert.equal(dry.status, 0, dry.stderr);
+    assert.match(dry.stdout, /LBT Staging \/ E2E\s+exists, left alone/);
+    assert.match(dry.stdout, /service_role_key\s+from file/);
+    assert.match(dry.stdout, /anon_key\s+empty/);
+
+    const applied = run(staging, "--apply");
+    assert.equal(applied.status, 0, applied.stderr);
+    assert.doesNotMatch(applied.stdout + applied.stderr, new RegExp(secret));
+    const items = readFileSync(created, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    assert.deepEqual(items.map((i) => i.title).sort(), ["Sites", "Supabase"]);
+    const supabase = items.find((i) => i.title === "Supabase").sections[0]
+      .fields;
+    assert.deepEqual(
+      Object.fromEntries(supabase.map((f) => [f.field_name, f.value])),
+      { anon_key: "", service_role_key: secret, url: staging },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

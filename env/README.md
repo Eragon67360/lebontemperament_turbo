@@ -25,6 +25,29 @@ Two vaults, one item per service, each value stored once even when several desti
 - `LBT Production`: production Supabase and sites, shared services (Cloudinary, Google, mailbox, Stripe, Mapbox), the mobile app's signing and store credentials, the backup passphrase, and `Sync tokens`.
 - `LBT Staging`: staging Supabase and sites, and the e2e user.
 
+## Filling the vaults (once, owner's Mac)
+
+`npm run env:seed` creates each missing item as a custom item with exactly the fields the templates read, and fills the values it can find. Items that already exist are left alone. Dry run unless `--apply`.
+
+```bash
+npm run env:seed -- --vault "LBT Staging" --vercel        # dry run: what it would create, and from where
+npm run env:seed -- --vercel --ask --apply \
+  --base64 "LBT Production/Android signing/keystore_base64=$HOME/keys/upload-keystore.jks" \
+  --file "LBT Production/App Store Connect/key_p8=$HOME/keys/AuthKey.p8" \
+  --file "LBT Production/Google Play/service_account_json=$HOME/keys/play.json" \
+  --file "LBT Production/Google service account/json=$HOME/keys/service-account.json"
+```
+
+| Source                     | Gives                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `--vercel`                 | Vercel's current values, through the `Sync tokens` item; **sensitive** variables can't be read back |
+| `--dotenv <target>=<path>` | a dotenv file of that target's variables (e.g. from `vercel env pull`)                              |
+| `--file <ref>=<path>`      | one field from a text file (JSON keys, the `.p8` key)                                               |
+| `--base64 <ref>=<path>`    | one field from a binary file, base64-encoded (the Android keystore)                                 |
+| `--ask`                    | prompts, without echo, for each field still empty (single-line values only)                         |
+
+A stronger source wins (asked, then files, then dotenv, then Vercel). Two different values from the same kind of source (say Vercel's Production and Preview copies of a shared key) are a conflict: the field stays empty, or `--ask` asks for it. The run refuses to write anything if a staging Supabase value points at another project or a production value points at staging. Values reach `pass-cli` on standard input; the output names fields only. Fill any field left empty in the Proton Pass app (keep the field name), then check with `npm run env:push -- dev`, which stops on a missing value.
+
 ## Pushing (owner's Mac)
 
 One-time set-up: install the Proton Pass CLI ([docs](https://protonpass.github.io/pass-cli/get-started/installation/); the script was written for the version in `targets.json`, and warns on another one), run `pass-cli login`, install the GitHub CLI and run `gh auth login`. Store a Vercel token (team Le Bon Tempérament, with an expiry) in `LBT Production / Sync tokens / vercel_token`.
