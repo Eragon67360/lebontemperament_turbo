@@ -1,18 +1,5 @@
+import type { User } from "@/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-type User = {
-  id: string;
-  email: string;
-  display_name: string | null;
-  role: "user" | "admin" | "superadmin";
-  created_at: string;
-  invite_status: "en attente" | "approuvé";
-  avatar?: string;
-  address?: string | null;
-  home_phone?: string | null;
-  mobile_phone?: string | null;
-  isMissingInExcel?: boolean;
-};
 
 interface UseUsersOptions {
   sortBy?: string;
@@ -23,6 +10,7 @@ interface UseUsersOptions {
 
 /** Query behaviour a caller may tune without changing the cache key. */
 interface UseUsersQueryOptions {
+  enabled?: boolean;
   staleTime?: number;
   refetchOnWindowFocus?: boolean;
 }
@@ -110,7 +98,10 @@ export function useUpdateUserRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { userId: string; role: "user" | "admin" }) => {
+    mutationFn: async (data: {
+      userId: string;
+      role: "user" | "admin" | "superadmin";
+    }) => {
       const response = await fetch("/api/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

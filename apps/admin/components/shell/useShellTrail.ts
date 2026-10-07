@@ -1,14 +1,17 @@
 "use client";
 
 import { useDriveIndex } from "@/hooks/useDriveIndex";
+import { useUsers } from "@/hooks/useUsers";
 import { buildNavSections } from "@/lib/navigation";
 import {
   buildTrail,
   groupSegmentFromPathname,
+  memberIdFromPathname,
   programIdFromPathname,
   type TrailItem,
 } from "@/lib/trail";
 import { isLegacyProgramId } from "@/utils/drive/tree";
+import { memberName as nameOfMember } from "@/utils/members/list";
 import { createClient } from "@/utils/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
@@ -30,6 +33,15 @@ export function useShellTrail(): TrailItem[] {
   const driveIndex = useDriveIndex({ enabled: !!programId && !legacy });
   const groupId =
     programId && !legacy ? groupSegmentFromPathname(pathname) : undefined;
+
+  // A member page: the same list query as the page (shared cache).
+  const memberId = memberIdFromPathname(pathname);
+  const users = useUsers(undefined, { enabled: !!memberId });
+  const memberName = useMemo(() => {
+    if (!memberId || !users.data) return undefined;
+    const found = users.data.find((user) => user.id === memberId);
+    return found ? nameOfMember(found) : null;
+  }, [memberId, users.data]);
 
   const names = useMemo(() => {
     if (legacy) return { programName: legacyName, groupName: undefined };
@@ -54,8 +66,10 @@ export function useShellTrail(): TrailItem[] {
         programName: names.programName,
         groupId,
         groupName: names.groupName,
+        memberId,
+        memberName,
       }),
-    [pathname, sections, programId, groupId, names],
+    [pathname, sections, programId, groupId, names, memberId, memberName],
   );
 }
 

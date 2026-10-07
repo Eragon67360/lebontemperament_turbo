@@ -3,6 +3,7 @@ import { buildNavSections } from "./navigation";
 import {
   buildTrail,
   groupSegmentFromPathname,
+  memberIdFromPathname,
   programIdFromPathname,
 } from "./trail";
 
@@ -127,3 +128,40 @@ assert.deepEqual(trail("/dashboard/design-system"), [
 ]);
 
 console.log("trail: ok");
+
+// A member page: the id is swapped for the name, the list is a link back.
+const memberPath =
+  "/dashboard/admin/users/00000000-0000-4000-8000-000000000001";
+assert.equal(
+  memberIdFromPathname(memberPath),
+  "00000000-0000-4000-8000-000000000001",
+);
+assert.equal(memberIdFromPathname("/dashboard/admin/users/sync"), undefined);
+assert.equal(memberIdFromPathname("/dashboard/admin/users"), undefined);
+const memberId = memberIdFromPathname(memberPath);
+assert.deepEqual(
+  trail(memberPath, {
+    pathname: memberPath,
+    sections,
+    memberId,
+    memberName: "Lucie BERNARD",
+  }),
+  [
+    { label: "Membres et accès" },
+    { label: "Membres", href: "/dashboard/admin/users" },
+    { label: "Lucie BERNARD" },
+  ],
+);
+assert.deepEqual(
+  trail(memberPath, { pathname: memberPath, sections, memberId }).at(-1),
+  { label: "Membre…" },
+);
+assert.deepEqual(
+  trail(memberPath, {
+    pathname: memberPath,
+    sections,
+    memberId,
+    memberName: null,
+  }).at(-1),
+  { label: "Membre introuvable" },
+);

@@ -97,8 +97,11 @@ assert.equal(status(decideUserCreation("admin", undefined)), 400);
 assert.equal(status(decideUserCreation("user", "user")), 403);
 
 // --- Account deletion ---
-assert.equal(status(decideUserDeletion(admin, member)), 200);
-assert.equal(status(decideUserDeletion(admin, otherAdmin)), 200);
+// Permanent deletion is superadmin-only (#433).
+assert.equal(status(decideUserDeletion(admin, member)), 403);
+assert.equal(status(decideUserDeletion(admin, otherAdmin)), 403);
+assert.equal(status(decideUserDeletion(superadmin, member)), 200);
+assert.equal(status(decideUserDeletion(superadmin, otherAdmin)), 200);
 assert.equal(status(decideUserDeletion(admin, otherSuperadmin)), 403);
 assert.equal(status(decideUserDeletion(admin, admin)), 403);
 assert.equal(status(decideUserDeletion(superadmin, otherSuperadmin)), 200);

@@ -28,6 +28,9 @@ type TrailInput = {
    */
   groupId?: string;
   groupName?: string | null;
+  /** The `[id]` segment of /dashboard/admin/users/<id>, swapped for the member's name. */
+  memberId?: string;
+  memberName?: string | null;
 };
 
 /** The `[programId]` segment of a travail route, used to swap the id for the programme name. */
@@ -47,6 +50,18 @@ export function groupSegmentFromPathname(pathname: string): string | undefined {
     : undefined;
 }
 
+/** The `[id]` of a member page (/dashboard/admin/users/<id>); not the sync page. */
+export function memberIdFromPathname(pathname: string): string | undefined {
+  const segments = pathname.split("/").filter(Boolean);
+  return segments.length === 4 &&
+    segments[0] === "dashboard" &&
+    segments[1] === "admin" &&
+    segments[2] === "users" &&
+    segments[3] !== "sync"
+    ? segments[3]
+    : undefined;
+}
+
 /**
  * « Vous êtes ici » for a dashboard pathname, worded like the sidebar
  * (inventory § d.2). A page that is a nav entry reads as its place in the
@@ -62,6 +77,8 @@ export function buildTrail({
   programName,
   groupId,
   groupName,
+  memberId,
+  memberName,
 }: TrailInput): TrailItem[] {
   const activeHref = activeNavHref(sections, pathname);
   const section = navSectionForHref(sections, activeHref);
@@ -98,7 +115,9 @@ export function buildTrail({
         ? dynamicLabel(programName, "Programme")
         : groupId && segment === groupId
           ? dynamicLabel(groupName, "Groupe")
-          : humanize(segment));
+          : memberId && segment === memberId
+            ? dynamicLabel(memberName, "Membre")
+            : humanize(segment));
     // Every surviving intermediate crumb has a page behind it, including the
     // programme id, so only the page you are on is a non-link.
     crumbs.push(isLast ? { label } : { label, href });

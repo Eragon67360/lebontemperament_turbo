@@ -143,14 +143,14 @@ export function ProfilePictureDialog({
           {/* Current Avatar Preview */}
           <div className="flex flex-col items-center gap-4">
             <Avatar
-              className="h-24 w-24 border-2 border-gray-200"
+              className="border-border h-24 w-24 border-2"
               key={currentAvatar}
             >
               <AvatarImage
                 src={preview || currentAvatar || undefined}
                 alt={displayName || email}
               />
-              <AvatarFallback className="bg-gray-50 text-lg font-medium text-gray-600">
+              <AvatarFallback className="text-lg font-medium">
                 {displayName?.[0] || email[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -162,18 +162,18 @@ export function ProfilePictureDialog({
                 className={`w-full cursor-pointer rounded-lg border-2 border-dashed p-6 transition-colors ${
                   isDragActive
                     ? "border-primary bg-primary/10"
-                    : "hover:border-primary border-gray-300"
+                    : "hover:border-primary border-border-strong"
                 }`}
               >
                 <input {...getInputProps()} />
-                <div className="flex flex-col items-center gap-2 text-gray-600">
+                <div className="text-muted-foreground flex flex-col items-center gap-2">
                   <Upload className="h-8 w-8" />
                   <p className="text-center text-sm">
                     {isDragActive
                       ? "Déposez l'image ici"
                       : "Glissez-déposez une image ou cliquez pour sélectionner"}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-note text-muted-foreground">
                     PNG, JPG, GIF, SVG ou WEBP (max. 5MB)
                   </p>
                 </div>
