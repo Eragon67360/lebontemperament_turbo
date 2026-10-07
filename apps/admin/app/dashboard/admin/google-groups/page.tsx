@@ -3,11 +3,14 @@
 
 import { PageShell } from "@/components/layouts/PageShell";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DataState,
   EmptyState,
   ListSkeleton,
 } from "@/components/ui/data-state";
+import { Label } from "@/components/ui/label";
+import { ProvenanceNote } from "@/components/ui/provenance-note";
 import {
   Select,
   SelectContent,
@@ -19,14 +22,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useGoogleGroupMembers,
   useGoogleGroupsList,
-  type GoogleGroup,
-  type GoogleGroupMember,
 } from "@/hooks/useGoogleGroups";
-import { RefreshCw, Users } from "lucide-react";
+import {
+  addressCountLabel,
+  DEFAULT_GROUP_EMAIL,
+  groupLabel,
+  groupsWithDefault,
+  memberEmails,
+} from "@/utils/google-groups/members";
+import { Clock, Mail, RefreshCw, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
-const DEFAULT_GROUP_EMAIL = "btnewsletter@googlegroups.com";
 
 export default function GoogleGroupsPage() {
   const [selectedGroupEmail, setSelectedGroupEmail] =
@@ -51,40 +57,30 @@ export default function GoogleGroupsPage() {
   const handleRefresh = () => {
     refetchMembers();
     refetchGroups();
-    toast.success("Actualisation en cours...");
+    toast.success("Actualisation en cours…");
   };
 
   // isFetching, not isLoading: a refresh over cached data still has to look busy.
   const isRefreshing = isFetchingMembers || isFetchingGroups;
-  const members: (GoogleGroupMember | string)[] = membersData?.data || [];
+  const members = memberEmails(membersData?.data);
   const stats = membersData?.stats;
-  // The groups endpoint can come back empty; the default group keeps the
-  // selector usable instead of showing an empty menu.
-  const groups: GoogleGroup[] = groupsData?.data?.length
-    ? groupsData.data
-    : [
-        {
-          email: DEFAULT_GROUP_EMAIL,
-          name: DEFAULT_GROUP_EMAIL,
-          description: null,
-        },
-      ];
+  const groups = groupsWithDefault(groupsData?.data);
 
   return (
     <PageShell
-      theme="admin"
       className="py-4 sm:py-6"
-      title="Groupes Google"
-      description="Consultez les membres des groupes Google."
+      title="Liste de diffusion"
+      description="Les adresses inscrites aux groupes Google de l'association, en lecture seule : les inscriptions se gèrent dans Google Groups."
       headerAction={
         <Button
           variant="outline"
-          className="min-h-11 w-full sm:w-auto"
+          className="w-full sm:w-auto"
           onClick={handleRefresh}
           disabled={isRefreshing}
+          aria-busy={isRefreshing || undefined}
         >
           <RefreshCw
-            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            className={isRefreshing ? "animate-spin" : undefined}
             aria-hidden
           />
           Actualiser
@@ -93,12 +89,7 @@ export default function GoogleGroupsPage() {
     >
       <div className="flex flex-col gap-6">
         <div className="space-y-2">
-          <label
-            htmlFor="google-group"
-            className="text-sm font-medium text-gray-700"
-          >
-            Sélectionner un groupe
-          </label>
+          <Label htmlFor="google-group">Groupe</Label>
           <DataState
             isLoading={isLoadingGroups}
             isError={isGroupsError}
@@ -111,117 +102,125 @@ export default function GoogleGroupsPage() {
               value={selectedGroupEmail}
               onValueChange={setSelectedGroupEmail}
             >
-              <SelectTrigger
-                id="google-group"
-                className="min-h-11 w-full sm:max-w-md"
-              >
+              <SelectTrigger id="google-group" className="w-full sm:max-w-md">
                 <SelectValue placeholder="Choisir un groupe" />
               </SelectTrigger>
               <SelectContent>
-                {groups.map((group) => (
-                  <SelectItem key={group.email} value={group.email}>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate font-medium">
-                        {group.name !== group.email ? group.name : group.email}
-                      </span>
-                      {group.name !== group.email && (
-                        <span className="truncate text-xs text-gray-500">
-                          {group.email}
+                {groups.map((group) => {
+                  const label = groupLabel(group);
+                  return (
+                    <SelectItem key={group.email} value={group.email}>
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate font-medium">
+                          {label.name}
                         </span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
+                        {label.email && (
+                          <span className="text-note text-muted-foreground truncate">
+                            {label.email}
+                          </span>
+                        )}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </DataState>
         </div>
 
         {stats && (
-          <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card className="p-4 sm:p-5">
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-500">
-                  Nombre de membres
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">
+                <dt className="text-detail text-muted-foreground">
+                  Adresses inscrites
+                </dt>
+                <dd className="text-title text-foreground mt-1 font-semibold">
                   {stats.total}
-                </p>
+                </dd>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-500">Groupe</p>
-                <p className="mt-1 truncate text-sm font-semibold text-gray-900">
-                  {stats.groupName}
-                </p>
-                <p className="truncate text-xs text-gray-500">
-                  {stats.groupEmail}
-                </p>
+                <dt className="text-detail text-muted-foreground">Groupe</dt>
+                <dd className="mt-1 min-w-0">
+                  <span className="text-body text-foreground block truncate font-semibold">
+                    {stats.groupName}
+                  </span>
+                  <span className="text-note text-muted-foreground block truncate">
+                    {stats.groupEmail}
+                  </span>
+                </dd>
               </div>
               {stats.description && (
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-500">
+                  <dt className="text-detail text-muted-foreground">
                     Description
-                  </p>
-                  <p className="mt-1 text-sm text-gray-700">
+                  </dt>
+                  <dd className="text-detail text-foreground mt-1 break-words">
                     {stats.description}
-                  </p>
+                  </dd>
                 </div>
               )}
-            </div>
-            <p className="text-muted-foreground mt-4 text-xs">
-              Dernière mise à jour:{" "}
+            </dl>
+            <ProvenanceNote icon={Clock} className="mt-4">
+              Lu dans Google Groups le{" "}
               {new Date(stats.retrievedAt).toLocaleString("fr-FR")}
-            </p>
-          </div>
+            </ProvenanceNote>
+          </Card>
         )}
 
-        <section className="rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
-            <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+        <section aria-labelledby="members-heading" className="space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="members-heading" className="text-section">
               Membres du groupe
             </h2>
+            {members.length > 0 && (
+              <p className="text-note text-muted-foreground">
+                {addressCountLabel(members.length)}
+              </p>
+            )}
           </div>
-          <DataState
-            isLoading={isLoadingMembers}
-            isError={isMembersError}
-            isEmpty={members.length === 0}
-            onRetry={() => refetchMembers()}
-            errorDescription="Les membres de ce groupe n'ont pas pu être chargés."
-            skeleton={
-              <ListSkeleton
-                rows={6}
-                className="p-4 sm:p-6"
-                label="Chargement des membres…"
-              />
-            }
-            empty={
-              <EmptyState
-                icon={Users}
-                title="Aucun membre trouvé"
-                description="Ce groupe ne contient aucun membre."
-              />
-            }
-          >
-            <ul className="divide-y divide-gray-200">
-              {members.map((member) => {
-                const email =
-                  typeof member === "string" ? member : member.email;
-                return (
+          <Card>
+            <DataState
+              isLoading={isLoadingMembers}
+              isError={isMembersError}
+              isEmpty={members.length === 0}
+              onRetry={() => refetchMembers()}
+              errorDescription="Les membres de ce groupe n'ont pas pu être chargés."
+              skeleton={
+                <ListSkeleton
+                  rows={6}
+                  className="p-4 sm:p-5"
+                  label="Chargement des membres…"
+                />
+              }
+              empty={
+                <EmptyState
+                  icon={Users}
+                  title="Aucun membre dans ce groupe"
+                  description="Personne n'est inscrit à ce groupe pour le moment. Les inscriptions se font dans Google Groups."
+                />
+              }
+            >
+              <ul className="divide-border divide-y">
+                {members.map((email) => (
                   <li
                     key={email}
-                    className="flex items-center gap-3 px-4 py-3 sm:px-6"
+                    className="flex min-h-(--row-h) items-center gap-3 px-4 py-2 sm:px-5"
                   >
-                    <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                      <Users className="text-primary h-5 w-5" aria-hidden />
-                    </div>
-                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900">
+                    <span
+                      className="bg-primary-soft text-primary-text grid size-9 shrink-0 place-items-center rounded-full"
+                      aria-hidden
+                    >
+                      <Mail className="size-4" />
+                    </span>
+                    <span className="text-detail text-foreground min-w-0 flex-1 truncate font-medium">
                       {email}
-                    </p>
+                    </span>
                   </li>
-                );
-              })}
-            </ul>
-          </DataState>
+                ))}
+              </ul>
+            </DataState>
+          </Card>
         </section>
       </div>
     </PageShell>
