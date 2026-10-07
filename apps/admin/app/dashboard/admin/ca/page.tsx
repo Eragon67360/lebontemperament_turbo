@@ -1,165 +1,48 @@
 "use client";
 
-import { FileUpload } from "@/components/FileUpload";
+import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { CADialog, type CAFormValues } from "@/components/ca/CADialog";
+import { CARow } from "@/components/ca/CARow";
 import { PageShell } from "@/components/layouts/PageShell";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card } from "@/components/ui/card";
 import {
-  CardGridSkeleton,
   DataState,
   EmptyState,
+  ListSkeleton,
 } from "@/components/ui/data-state";
+import { useCAs, useCreateCA, useDeleteCA } from "@/hooks/useCAs";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+  caCountLabel,
+  meetingDateLabel,
+  sortByMeetingDate,
+} from "@/utils/ca/list";
 import type { CA } from "@repo/domain/types/ca";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import {
-  CalendarDays,
-  Calendar as CalendarIcon,
-  Download,
-  FileText,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
-import { useCAs, useCreateCA, useDeleteCA } from "@/hooks/useCAs";
-
-// --- Sub-Components ---
-
-const CACard = ({
-  ca,
-  onDelete,
-}: {
-  ca: CA;
-  onDelete: (id: string) => void;
-}) => {
-  const dateObj = new Date(ca.date_from);
-
-  return (
-    <Card className="bg-card hover:border-primary/50 flex overflow-hidden rounded-2xl border transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-md">
-      {/* Date Tile */}
-      <div className="bg-muted/20 hidden w-[100px] shrink-0 flex-col items-center justify-center border-r px-5 py-4 text-center sm:flex">
-        <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-          {format(dateObj, "MMM", { locale: fr })}
-        </span>
-        <span className="text-foreground text-3xl leading-none font-black">
-          {format(dateObj, "yyyy")}
-        </span>
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <h2 className="line-clamp-2 text-base font-bold tracking-tight sm:text-lg">
-              {ca.title}
-            </h2>
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CalendarDays className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="truncate">
-                {format(dateObj, "dd MMMM yyyy", { locale: fr })}
-              </span>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-11 w-11 shrink-0"
-            onClick={() => onDelete(ca.id)}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden />
-            <span className="sr-only">Supprimer « {ca.title} »</span>
-          </Button>
-        </div>
-
-        <div className="mt-auto pt-4">
-          {ca.file_url ? (
-            <Button
-              variant="outline"
-              className="bg-secondary/50 hover:bg-secondary min-h-11 w-full justify-start gap-2"
-              asChild
-            >
-              <a href={ca.file_url} target="_blank" rel="noopener noreferrer">
-                <FileText className="text-primary h-4 w-4" aria-hidden />
-                <span className="min-w-0 flex-1 truncate text-left">
-                  Voir le compte-rendu
-                </span>
-                <Download className="h-3 w-3 opacity-50" aria-hidden />
-              </a>
-            </Button>
-          ) : (
-            <div className="text-muted-foreground flex items-center gap-2 rounded-md border border-dashed p-2 text-sm">
-              <FileText className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
-              <span>Aucun fichier joint</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// --- Main Component ---
 
 export default function ConseilsAdministration() {
   const { data: cas = [], isLoading, isError, refetch } = useCAs();
   const createCA = useCreateCA();
   const deleteCA = useDeleteCA();
 
-  // State
   const [open, setOpen] = useState(false);
-  const [dateFrom, setDateFrom] = useState<Date>();
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Delete State
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [caToDelete, setCaToDelete] = useState<string | null>(null);
+  // The item stays set while the dialog closes, so its text never empties.
+  const [deleting, setDeleting] = useState<CA | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!dateFrom) {
-      toast.error("Veuillez sélectionner une date");
-      return;
-    }
-
+  const handleCreate = async ({ title, date, file }: CAFormValues) => {
     setIsCreating(true);
-    const formData = new FormData(e.currentTarget);
-
     try {
       let file_url = null;
 
-      if (selectedFile) {
+      if (file) {
         const fileFormData = new FormData();
-        fileFormData.append("file", selectedFile);
+        fileFormData.append("file", file);
 
         const uploadResponse = await fetch("/api/upload", {
           method: "POST",
@@ -173,211 +56,130 @@ export default function ConseilsAdministration() {
         file_url = url;
       }
 
-      const caData = {
-        title: formData.get("title") as string,
-        date_from: format(dateFrom, "yyyy-MM-dd"),
+      await createCA.mutateAsync({
+        title,
+        date_from: format(date, "yyyy-MM-dd"),
         file_url,
-      };
+      });
 
-      await createCA.mutateAsync(caData);
-
-      toast.success("Compte-rendu ajouté");
-      setOpen(false);
-      resetForm();
+      toast.success("Compte rendu ajouté");
     } catch (error) {
-      toast.error("Erreur lors de l'ajout");
+      toast.error("Le compte rendu n'a pas pu être ajouté", {
+        description: "Vérifiez votre connexion, puis réessayez.",
+      });
       console.error(error);
+      // The dialog stays open with what was typed.
+      throw error;
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setCaToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!caToDelete) return;
-
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setIsDeleting(true);
     try {
-      await deleteCA.mutateAsync(caToDelete);
-      toast.success("Compte-rendu supprimé");
+      await deleteCA.mutateAsync(deleting.id);
+      toast.success(`« ${deleting.title} » supprimé`);
+      setConfirmOpen(false);
     } catch (error) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("La suppression a échoué", {
+        description: "Vérifiez votre connexion, puis réessayez.",
+      });
       console.error(error);
     } finally {
-      setDeleteDialogOpen(false);
-      setCaToDelete(null);
+      setIsDeleting(false);
     }
   };
 
-  const resetForm = () => {
-    setSelectedFile(null);
-    setDateFrom(undefined);
-  };
-
-  // Sort CAs by date descending
-  const sortedCAs = [...cas].sort(
-    (a, b) => new Date(b.date_from).getTime() - new Date(a.date_from).getTime(),
-  );
+  const sortedCAs = sortByMeetingDate(cas);
 
   return (
     <PageShell
-      theme="admin"
       className="py-4 sm:py-6"
-      title="Compte-rendus de CA"
-      description="Gestion et archivage des documents du Conseil d'Administration."
+      title="Comptes rendus du CA"
+      description="Les comptes rendus des réunions du conseil d'administration, du plus récent au plus ancien."
       headerAction={
-        <Dialog
-          open={open}
-          onOpenChange={(val) => {
-            setOpen(val);
-            if (!val) resetForm();
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button className="min-h-11 w-full sm:w-auto">
-              <Plus className="h-4 w-4" aria-hidden />
-              Ajouter un CA
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Nouveau compte-rendu</DialogTitle>
-              <DialogDescription>
-                Ajoutez un nouveau document aux archives du CA.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-6 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Titre du document</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  required
-                  placeholder="Ex: Réunion du 25 mai 2025"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ca-date">Date de la réunion</Label>
-                <Popover modal>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="ca-date"
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        "min-h-11 w-full justify-start text-left font-normal",
-                        !dateFrom && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="h-4 w-4" aria-hidden />
-                      {dateFrom ? (
-                        format(dateFrom, "PPP", { locale: fr })
-                      ) : (
-                        <span>Sélectionner une date...</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateFrom}
-                      onSelect={setDateFrom}
-                      autoFocus
-                      locale={fr}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Fichier PDF</Label>
-                <div className="bg-muted/30 rounded-lg border p-2">
-                  <FileUpload
-                    onFileSelect={(file) => setSelectedFile(file)}
-                    onFileClear={() => setSelectedFile(null)}
-                    value={selectedFile}
-                    currentImageUrl={null}
-                    mode="pdf"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="min-h-11"
-                  onClick={() => setOpen(false)}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  type="submit"
-                  className="min-h-11"
-                  disabled={isCreating}
-                >
-                  {isCreating ? "Enregistrement..." : "Ajouter le CA"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
+          <Plus aria-hidden />
+          Ajouter un compte rendu
+        </Button>
       }
     >
-      <DataState
-        isLoading={isLoading}
-        isError={isError}
-        isEmpty={sortedCAs.length === 0}
-        onRetry={() => refetch()}
-        errorDescription="Les comptes-rendus n'ont pas pu être chargés."
-        skeleton={
-          <CardGridSkeleton cards={6} label="Chargement des comptes-rendus…" />
-        }
-        empty={
-          <EmptyState
-            icon={FileText}
-            title="Aucun compte-rendu"
-            description="Archivez les décisions et les discussions de vos conseils d'administration ici."
-            action={
-              <Button className="min-h-11" onClick={() => setOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden />
-                Ajouter un CA
-              </Button>
-            }
-          />
-        }
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {sortedCAs.map((ca) => (
-            <CACard key={ca.id} ca={ca} onDelete={handleDeleteClick} />
-          ))}
+      <section aria-labelledby="ca-heading" className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="ca-heading" className="text-section">
+            Archives
+          </h2>
+          {sortedCAs.length > 0 && (
+            <p className="text-note text-muted-foreground">
+              {caCountLabel(sortedCAs.length)}
+            </p>
+          )}
         </div>
-      </DataState>
+        <DataState
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={sortedCAs.length === 0}
+          onRetry={() => refetch()}
+          errorDescription="Les comptes rendus n'ont pas pu être chargés."
+          skeleton={
+            <ListSkeleton rows={4} label="Chargement des comptes rendus…" />
+          }
+          empty={
+            <EmptyState
+              icon={FileText}
+              title="Aucun compte rendu"
+              description="Archivez ici les comptes rendus des conseils d'administration, avec leur PDF, pour les retrouver facilement."
+              className="py-6"
+              action={
+                <Button variant="outline" onClick={() => setOpen(true)}>
+                  <Plus aria-hidden />
+                  Ajouter le premier
+                </Button>
+              }
+            />
+          }
+        >
+          <ul className="space-y-3">
+            {sortedCAs.map((ca) => (
+              <li key={ca.id} className="list-none">
+                <CARow
+                  ca={ca}
+                  onDelete={() => {
+                    setDeleting(ca);
+                    setConfirmOpen(true);
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+        </DataState>
+      </section>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce compte-rendu ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Le fichier associé sera également
-              supprimé.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="min-h-11">Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-h-11"
-            >
-              Confirmer la suppression
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <CADialog
+        open={open}
+        onOpenChange={setOpen}
+        onSubmit={handleCreate}
+        isPending={isCreating}
+      />
+
+      <DeleteConfirmDialog
+        open={confirmOpen}
+        onOpenChange={(next) => {
+          if (!next && !isDeleting) setConfirmOpen(false);
+        }}
+        onConfirm={confirmDelete}
+        title={`Supprimer « ${deleting?.title ?? ""} » ?`}
+        description={`Le compte rendu de la réunion du ${
+          deleting ? meetingDateLabel(deleting.date_from) : ""
+        }${
+          deleting?.file_url
+            ? " et son fichier PDF sont supprimés"
+            : " est supprimé"
+        } des archives. Cette action ne peut pas être annulée.`}
+        isLoading={isDeleting}
+      />
     </PageShell>
   );
 }
