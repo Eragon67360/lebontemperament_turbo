@@ -793,7 +793,7 @@ export function DesignSystemLab() {
         <Section
           id="navigation"
           title="Navigation"
-          intro="La barre latérale du shell : six sections avec leur phrase, une seule ouverte à la fois, l’entrée courante marquée, les compteurs."
+          intro="La barre latérale du shell : six sections, une seule ouverte à la fois avec sa phrase, l’entrée courante marquée, les compteurs."
         >
           <div className="flex flex-wrap items-start gap-6">
             <Card className="bg-sidebar w-[280px] max-w-full p-3">
