@@ -84,9 +84,8 @@ This is for the next session, Claude or human. It picks up where the October 202
 
 4. **Wave 6:** Association (CA minutes editable, Signalements), auth and error pages.
 5. **Phase 5:**
-   - the dark-mode sweep, then unforce the theme (`app/providers.tsx`);
-   - accessibility pass;
-   - full regression on the Phase 0 inventory (`docs/redesign/00-inventory.md` a.2–a.4).
+   - done (P6, 2026-10-08): the dark-mode sweep and the unforced theme with a choice in the account menu; an axe pass on 15 pages in both themes (no violations) and a keyboard check of the skip link, focus order and focus ring;
+   - still to do: full regression on the Phase 0 inventory (`docs/redesign/00-inventory.md` a.2–a.4).
 6. **Open audit items:** #439, #440 (ready for an agent), #363 (staging database), #364, #355, #354, #352, #350, #348, #344, #329, #328, #321, #400. #397 and #403 wait for the owner or the board.
 
 ## Waiting on the owner

@@ -23,13 +23,14 @@ import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, LifeBuoy, LogOut, Mail } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 /**
  * The header's account menu (direction B): who is signed in, Messages with
  * its unread count (also pinned to the avatar), Signaler un problème, the
- * list density, Se déconnecter. Both dialogs are mounted by the shell, outside
+ * theme, the list density, Se déconnecter. Both dialogs are mounted by the shell, outside
  * this menu, so they survive the menu closing.
  */
 export function AccountMenu({
@@ -48,6 +49,13 @@ export function AccountMenu({
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
   const { data: profile } = useCurrentProfile();
   const { density, setDensity } = useDensity();
+  const { theme, setTheme } = useTheme();
+  // next-themes only knows the stored choice after hydration.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -143,6 +151,18 @@ export function AccountMenu({
           <LifeBuoy aria-hidden />
           Signaler un problème
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Thème</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={mounted ? (theme ?? "system") : "system"}
+          onValueChange={setTheme}
+        >
+          <DropdownMenuRadioItem value="system">
+            Comme l’appareil
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="light">Clair</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">Sombre</DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Densité des listes</DropdownMenuLabel>
         <DropdownMenuRadioGroup

@@ -845,6 +845,12 @@ export function DesignSystemLab() {
   );
 }
 
+const THEMES = [
+  { value: "system", label: "Appareil" },
+  { value: "light", label: "Clair" },
+  { value: "dark", label: "Sombre" },
+] as const;
+
 function Switches() {
   const { theme, setTheme } = useTheme();
   const { density, setDensity } = useDensity();
@@ -854,18 +860,18 @@ function Switches() {
     () => true,
     () => false,
   );
-  const current = mounted ? (theme ?? "light") : "light";
+  const current = mounted ? (theme ?? "system") : "system";
 
   return (
     <div className="flex flex-wrap items-center gap-4">
       <Segmented label="Thème">
-        {(["light", "dark"] as const).map((value) => (
+        {THEMES.map(({ value, label }) => (
           <SegmentedButton
             key={value}
             pressed={current === value}
             onClick={() => setTheme(value)}
           >
-            {value === "light" ? "Clair" : "Sombre"}
+            {label}
           </SegmentedButton>
         ))}
       </Segmented>
