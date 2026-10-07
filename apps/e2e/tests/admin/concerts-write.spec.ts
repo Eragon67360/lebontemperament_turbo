@@ -1,18 +1,17 @@
 import { expect, test } from "@playwright/test";
 
 // P4 — safe-write: creates an E2E_-namespaced concert through the real admin
-// UI, verifies it renders, then deletes it through the UI. Because staging
-// shares the production DB, the row is briefly visible on the public site
-// (today's date is required for it to appear in the admin « À venir » list) —
+// UI, verifies it renders, then deletes it through the UI. The row is briefly
+// visible on the target site's public pages (today's date is required for it to appear in the admin « À venir » list) —
 // hence the unmistakable name. Orphans older than 24h are swept by
 // global-teardown.ts.
 //
-// Off by default: every environment writes to the production database, so
-// this spec only runs with E2E_ALLOW_WRITES=1, which nothing sets until
-// staging has its own database (#363).
+// Off by default: it writes to whichever database the target site uses, so
+// it only runs with E2E_ALLOW_WRITES=1. Set it only against staging, which
+// has its own database since #363; never against production.
 test.skip(
   process.env.E2E_ALLOW_WRITES !== "1",
-  "writes to the shared production database — set E2E_ALLOW_WRITES=1 to run (see #363)",
+  "writes to the target's database — set E2E_ALLOW_WRITES=1 to run, staging only (see #363)",
 );
 
 test("create and delete an E2E concert", async ({ page }) => {

@@ -162,8 +162,8 @@ jobs:
         working-directory: apps/e2e
         # Read-only run: E2E_ALLOW_WRITES is deliberately not set, so
         # concerts-write.spec.ts is skipped and global-teardown sweeps nothing
-        # (staging shares the production database, see #363). The job
-        # therefore needs no Supabase key.
+        # (enabling writes on staging's own database is a separate step, see
+        # #363). The job therefore needs no Supabase key.
         env:
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}

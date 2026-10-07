@@ -5,7 +5,7 @@ Mistakes and near-misses from running this way of working on the owner's project
 ## Production and settings
 
 - **Code first, settings after.** An auth setting and an email webhook were switched on in production before the code handling them was deployed: password sign-in broke for every member and no email went out. Every PR that needs a dashboard change lists the steps in order, after the deploy.
-- **Test environments must not inherit production's settings or data.** Test databases that copied production's configuration made the suite fail for reasons unrelated to the code. Here, where every environment _is_ production, the lesson is stronger: no writes from tests or experiments without the owner.
+- **Test environments must not inherit production's settings or data.** Test databases that copied production's configuration made the suite fail for reasons unrelated to the code. Here, staging's own database (`website-staging`, since 2026-10-07) holds fake data seeded on purpose, not a copy of production; still, no writes to production from tests or experiments without the owner.
 - **Verify settings through the API, but trust tested behaviour.** An API flag said one thing while the owner's real test showed another; the test was right. Report the discrepancy.
 - **Don't promise what the product can't do.** A privacy policy first promised emails the site had no way to send. Legal and help pages describe the product as it is.
 

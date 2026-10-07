@@ -37,7 +37,7 @@ Every commit in a worktree with `node_modules` runs `.husky/pre-commit`, which i
 
 - One package = one agent = one branch = one PR into `dev`. Group issues by the **files** they touch, and keep apps apart where possible (a website package, an admin package, a mobile package).
 - Shared hot spots get a single owner per batch: root `package.json` and `package-lock.json`, `turbo.json`, `packages/domain` (types, consts), each app's `app/globals.css` and `app/layout.tsx`, `apps/website/proxy.ts`, `version.json` and the apps' `package.json` versions, `.github/workflows/*`. Others touch them only minimally and say so in their report.
-- **Schema changes go through the owner**: there is no non-production database to try a migration on. One package at most per batch carries a migration, written backward compatible ([release](release.md#supabase)), and nothing that depends on it merges before the owner has applied it.
+- **Schema changes go through the owner**: try the migration on `website-staging` first ([supabase/staging](../../supabase/staging/README.md)); production gets it from the owner. One package at most per batch carries a migration, written backward compatible ([release](release.md#supabase)), and nothing that depends on it merges before the owner has applied it.
 - **The mobile app** is its own package: Flutter tooling, store releases and backward compatibility with installed versions make it a different rhythm.
 - Owner decisions don't block packages: build behind a flag (the `feature_flags` table and the website's `useFeatureFlag` exist; the mobile app doesn't read flags yet) or a placeholder (`TODO(owner)`), filled in when he answers.
 - Do last whatever rewrites many files (formatting, renames). Merge it with a merge commit.
@@ -67,7 +67,7 @@ then your issues with `gh issue view <n>`. If an issue's proposed fix is wrong, 
 ## Setup
 
 1. `git fetch -q origin && git switch -c <your-branch> origin/dev` in the worktree you were given.
-2. Copy the env files the lead names; `npm ci`. Every environment's database is production: read-only.
+2. Copy the env files the lead names; `npm ci`. Check which Supabase project the env files point at: production is read-only.
 
 ## Hard rules
 
