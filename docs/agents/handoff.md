@@ -44,7 +44,7 @@ This is for the next session, Claude or human. It picks up where the October 202
 
 - **Staging has its own database since 2026-10-07** (`website-staging`, fake data, #363): `dev.*`, `admin-dev.*` and PR previews use it. Production keys (old local `.env` files, scripts, the Supabase MCP on `website`) still reach real members. So:
   - no writes to production from tests, scripts or clicks;
-  - e2e write specs stay off until enabled for staging only (`E2E_ALLOW_WRITES`);
+  - e2e write specs run in the workflow only, against staging (`E2E_ALLOW_WRITES`); never set it locally against production;
   - **never publish screenshots of logged-in pages**;
   - production writes go through a single-purpose script, after the owner says go.
 - **Supabase default privileges** grant EXECUTE on new `public` functions to `anon` and `authenticated`. Always write `REVOKE ALL ON FUNCTION … FROM PUBLIC, anon, authenticated;` and grant only `service_role`. Check with `has_function_privilege` after applying.
