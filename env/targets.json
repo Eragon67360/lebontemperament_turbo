@@ -1,0 +1,61 @@
+{
+  "$comment": "Where each template in env/ is pushed. Read by scripts/env/. Names only, no values.",
+  "passCliVersion": "2.4.2",
+  "vercelTeamId": "team_5NFi3yBnYiFnHmMVJJXhd9m4",
+  "githubRepo": "Eragon67360/lebontemperament_turbo",
+  "$unmanaged": "Names the code reads that are deliberately left out of the templates, with why.",
+  "unmanaged": {
+    "ROSTER_SHEET_RANGE": "optional, the admin defaults to A:ZZ"
+  },
+  "targets": {
+    "website.production": {
+      "kind": "vercel",
+      "project": "lebontemperament",
+      "environments": ["production"],
+      "production": true,
+      "scan": ["apps/website"]
+    },
+    "website.dev": {
+      "kind": "vercel",
+      "project": "lebontemperament",
+      "environments": ["preview", "development"],
+      "production": false,
+      "scan": ["apps/website"]
+    },
+    "admin.production": {
+      "kind": "vercel",
+      "project": "lebontemperament-admin",
+      "environments": ["production"],
+      "production": true,
+      "scan": ["apps/admin"]
+    },
+    "admin.dev": {
+      "kind": "vercel",
+      "project": "lebontemperament-admin",
+      "environments": ["preview", "development"],
+      "production": false,
+      "scan": ["apps/admin"]
+    },
+    "github.repo": {
+      "kind": "github",
+      "production": true,
+      "$allowStagingItems": "the e2e suite runs against staging",
+      "allowStagingItems": ["E2E"]
+    },
+    "github.app-store": {
+      "kind": "github",
+      "environment": "app-store",
+      "production": true
+    },
+    "github.play-store": {
+      "kind": "github",
+      "environment": "play-store",
+      "production": true
+    }
+  },
+  "rules": {
+    "productionVault": "LBT Production",
+    "stagingVault": "LBT Staging",
+    "productionOnlyItems": ["Supabase", "Sites"]
+  }
+}
