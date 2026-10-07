@@ -48,7 +48,7 @@ class DriveFoldersService {
     return fallbackCatalog();
   }
 
-  /// The catalog built from `.env` (or the compiled-in defaults).
+  /// The catalog built from the `.env` folder IDs (empty when none is set).
   DriveFolderCatalog fallbackCatalog() {
     final folders = _fallbackFolders ?? AppConfig.fallbackDriveFolders;
     return DriveFolderCatalog(

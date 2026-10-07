@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
@@ -742,22 +741,6 @@ class _MembresGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.read(mainNavigationProvider.notifier);
 
-    Future<void> openDrive() async {
-      // The root folder is configured in `drive_folders`; the `.env` value is
-      // only the fallback.
-      final catalog = await ref.read(driveFolderCatalogProvider.future);
-      final uri = Uri.parse(catalog.rootUrl ?? AppConfig.driveFolderMain);
-      try {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } catch (_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Impossible d\'ouvrir le Drive.')),
-          );
-        }
-      }
-    }
-
     final tiles = <_Tile>[
       _Tile(
         Icons.library_music_outlined,
@@ -775,7 +758,6 @@ class _MembresGrid extends ConsumerWidget {
         'Administration',
         () => context.push('/administration'),
       ),
-      _Tile(Icons.folder_open_outlined, 'Drive', openDrive),
     ];
 
     return FadeInUp(

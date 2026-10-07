@@ -14,10 +14,6 @@ void main() {
       expect(folder.label, 'Adultes');
       expect(folder.folderId, 'folder-test-a');
       expect(folder.isRoot, isFalse);
-      expect(
-        folder.url,
-        'https://drive.google.com/drive/folders/folder-test-a',
-      );
     });
 
     test('rejects rows without a slug or a folder id', () {
@@ -43,7 +39,6 @@ void main() {
 
       expect(catalog.tabs.map((t) => t.slug), ['adultes', 'jeunes']);
       expect(catalog.root?.folderId, 'root-id');
-      expect(catalog.rootUrl, 'https://drive.google.com/drive/folders/root-id');
       expect(catalog.fromFallback, isFalse);
       expect(catalog.hasTabs, isTrue);
     });
@@ -53,7 +48,7 @@ void main() {
         {'slug': 'racine', 'label': 'Drive complet', 'folder_id': 'root-id'},
       ]);
       expect(catalog.hasTabs, isFalse);
-      expect(catalog.rootUrl, isNotNull);
+      expect(catalog.root, isNotNull);
     });
   });
 }

@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
-import 'package:lebontemperament/core/config/app_config.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
 import 'package:lebontemperament/core/widgets/stage.dart';
@@ -18,7 +17,6 @@ import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:lebontemperament/data/services/drive_service.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../onboarding/presentation/widgets/first_time_tip.dart';
@@ -645,10 +643,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     if (tabs.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: _buildEmpty(s, 'Aucun dossier disponible')),
-          _buildDriveLink(s, catalog),
-        ],
+        children: [Expanded(child: _buildEmpty(s, 'Aucun dossier disponible'))],
       );
     }
     final activeTab = tabs[_activeTabIndex.clamp(0, tabs.length - 1)];
@@ -678,7 +673,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
                     ? _buildError(s)
                     : _loading
                     ? _buildLoading(s)
-                    : _buildFileList(s, catalog),
+                    : _buildFileList(s),
               ),
               if (audio != null)
                 Positioned(
@@ -862,7 +857,7 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
     return player + 24;
   }
 
-  Widget _buildFileList(ColorScheme s, DriveFolderCatalog catalog) {
+  Widget _buildFileList(ColorScheme s) {
     final empty = _folders.isEmpty && _files.isEmpty;
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -899,12 +894,10 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
             padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
             child: Text(
               'Ce dossier contient plus de fichiers que l\'application ne '
-              'peut en afficher : ouvrez le Drive pour tout voir.',
+              'peut en afficher.',
               style: AppFonts.sans(fontSize: 14, color: s.onSurfaceVariant),
             ),
           ),
-        const SizedBox(height: 12),
-        _buildDriveLink(s, catalog),
       ],
     );
   }
@@ -947,46 +940,6 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       onCancelDownload: _cancelDownload,
       onPlay: isAudio ? () => _onAudioToggle(file) : null,
       onView: isPdf ? () => _showPdfViewer(context, file) : null,
-    );
-  }
-
-  Widget _buildDriveLink(ColorScheme s, DriveFolderCatalog catalog) {
-    final driveUrl = catalog.rootUrl ?? AppConfig.driveFolderMain;
-    return Semantics(
-      link: true,
-      child: StageCard(
-        semanticLabel: 'Accès direct au Drive',
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        onTap: () async {
-          final uri = Uri.parse(driveUrl);
-          try {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          } catch (_) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Impossible d\'ouvrir le Drive.')),
-              );
-            }
-          }
-        },
-        child: Row(
-          children: [
-            Icon(Icons.folder_open_rounded, color: s.primary, size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Accès direct au Drive',
-                style: AppFonts.sans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: s.onSurface,
-                ),
-              ),
-            ),
-            Icon(Icons.open_in_new_rounded, color: s.onSurfaceVariant),
-          ],
-        ),
-      ),
     );
   }
 }

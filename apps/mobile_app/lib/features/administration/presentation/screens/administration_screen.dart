@@ -266,7 +266,6 @@ class _ArchivesTab extends ConsumerWidget {
               labelBuilder: (e) => 'AG ${_formatPdfDate(e.date)}',
               onLaunchUrl: _launchUrl,
               onShowPdfSheet: _showPdfSheet,
-              driveLink: kDriveAgUrl,
             ),
             const SizedBox(height: 24),
             _ExpandablePdfArchiveSection(
@@ -288,7 +287,6 @@ class _ArchivesTab extends ConsumerWidget {
               labelBuilder: (e) => 'N°${e.date}',
               onLaunchUrl: _launchUrl,
               onShowPdfSheet: _showPdfSheet,
-              driveLink: kDrivePmUrl,
             ),
             const SizedBox(height: kFloatingNavBarBottomPadding),
           ],
@@ -345,7 +343,6 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
     return _ArchiveSection(
       title: 'Comptes-rendus CA',
       subtitle: 'Archives des réunions du conseil d\'administration',
-      driveLink: kDriveCaUrl,
       child: widget.caAsync.when(
         data: (minutes) {
           if (minutes.isEmpty) {
@@ -455,7 +452,6 @@ class _ExpandablePdfArchiveSection extends StatefulWidget {
   final String Function(PdfArchiveEntry) labelBuilder;
   final void Function(String) onLaunchUrl;
   final void Function(BuildContext, String, String) onShowPdfSheet;
-  final String? driveLink;
 
   const _ExpandablePdfArchiveSection({
     required this.title,
@@ -465,7 +461,6 @@ class _ExpandablePdfArchiveSection extends StatefulWidget {
     required this.labelBuilder,
     required this.onLaunchUrl,
     required this.onShowPdfSheet,
-    this.driveLink,
   });
 
   @override
@@ -490,7 +485,6 @@ class _ExpandablePdfArchiveSectionState
     return _ArchiveSection(
       title: widget.title,
       subtitle: widget.subtitle,
-      driveLink: widget.driveLink,
       child: LayoutBuilder(
         builder: (context, constraints) {
           const spacing = 8.0;
@@ -551,21 +545,12 @@ class _ArchiveSection extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget child;
-  final String? driveLink;
 
   const _ArchiveSection({
     required this.title,
     required this.subtitle,
     required this.child,
-    this.driveLink,
   });
-
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {}
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -616,50 +601,6 @@ class _ArchiveSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           child,
-          if (driveLink != null) ...[
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Semantics(
-                link: true,
-                label: 'Voir toutes les archives sur le Drive',
-                child: InkWell(
-                  onTap: () => _launchUrl(driveLink!),
-                  borderRadius: BorderRadius.circular(8),
-                  child: ConstrainedBox(
-                    // Was a bare GestureDetector ~20 dp tall; 48 dp target now.
-                    constraints: const BoxConstraints(minHeight: 48),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ExcludeSemantics(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.open_in_new,
-                              size: 16,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                'Voir toutes les archives',
-                                style: AppFonts.sans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );

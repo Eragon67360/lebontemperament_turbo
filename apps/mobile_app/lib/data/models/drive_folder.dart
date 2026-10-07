@@ -1,10 +1,7 @@
-/// Slug of the `drive_folders` row that is the "Accès direct au Drive" link,
-/// not a Partitions tab (mirrors `DRIVE_ROOT_SLUG` in `@repo/domain`).
+/// Slug of the `drive_folders` row for the Drive root, which is not a
+/// Partitions tab (mirrors `DRIVE_ROOT_SLUG` in `@repo/domain`). The app no
+/// longer links to it: members browse the files in the app only (#347).
 const String kDriveRootSlug = 'racine';
-
-/// Builds the public URL of a Drive folder.
-String driveFolderUrl(String folderId) =>
-    'https://drive.google.com/drive/folders/$folderId';
 
 /// A row of the `drive_folders` table: a Partitions tab (or the Drive root)
 /// and the Google Drive folder it points at. The admin can retarget a folder,
@@ -21,8 +18,6 @@ class DriveFolder {
   final String folderId;
 
   bool get isRoot => slug == kDriveRootSlug;
-
-  String get url => driveFolderUrl(folderId);
 
   /// Parses a row of `drive_folders`; returns null when a required column is
   /// missing or empty, so a half-edited row never becomes an unusable tab.
@@ -53,7 +48,7 @@ class DriveFolder {
 }
 
 /// The folders the Partitions screen shows: the tabs in display order and,
-/// when configured, the root folder behind "Accès direct au Drive".
+/// when configured, the root folder (kept apart from the tabs).
 class DriveFolderCatalog {
   const DriveFolderCatalog({
     required this.tabs,
@@ -92,7 +87,4 @@ class DriveFolderCatalog {
   final bool fromFallback;
 
   bool get hasTabs => tabs.isNotEmpty;
-
-  /// URL of the "Accès direct au Drive" link, or null when unknown.
-  String? get rootUrl => root?.url;
 }
