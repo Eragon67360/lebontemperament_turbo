@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/connectivity_provider.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../data/providers/my_groups_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../onboarding/presentation/widgets/first_time_tip.dart';
 import '../providers/rehearsal_filter_provider.dart';
@@ -77,7 +78,8 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
   @override
   Widget build(BuildContext context) {
     final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
-    final selectedFilter = ref.watch(rehearsalFilterProvider);
+    final selectedGroups = ref.watch(calendarGroupsProvider);
+    final myGroups = ref.watch(myRehearsalGroupsProvider);
     final filteredRehearsals = ref.watch(filteredRehearsalsProvider);
     final isOnline = ref.watch(isOnlineProvider).value ?? true;
     final theme = Theme.of(context);
@@ -102,15 +104,13 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
               ),
             ),
 
-            // --- 2. Group filter pills ---
+            // --- 2. Group filters (several at once) ---
             SliverToBoxAdapter(
               child: _FilterPills(
-                selectedFilter: selectedFilter,
-                onFilterSelected: (groupType) => ref
-                    .read(rehearsalFilterProvider.notifier)
-                    .setFilter(groupType),
-                onClearFilter: () =>
-                    ref.read(rehearsalFilterProvider.notifier).clearFilter(),
+                selected: selectedGroups,
+                mine: myGroups,
+                onChanged: ref.read(rehearsalFilterProvider.notifier).set,
+                onMine: ref.read(rehearsalFilterProvider.notifier).reset,
               ),
             ),
 
@@ -118,8 +118,8 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
               child: FirstTimeTip(
                 id: 'calendar_filter',
                 message:
-                    'Touchez un ensemble pour ne voir que ses répétitions, '
-                    'ou « Tous » pour toute la saison.',
+                    'Cliquez sur un ensemble pour afficher ou masquer ses '
+                    'répétitions. Vos ensembles sont cochés d’office.',
                 padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
               ),
             ),
@@ -147,7 +147,13 @@ class _RehearsalsScreenState extends ConsumerState<RehearsalsScreen> {
                 if (filteredRehearsals.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
-                    child: _EmptyState(isFilterActive: selectedFilter != null),
+                    child: selectedGroups.isEmpty
+                        ? const _EmptyState(noGroup: true)
+                        : _EmptyState(
+                            isFilterActive:
+                                selectedGroups.length <
+                                allRehearsalGroups.length,
+                          ),
                   );
                 }
                 final rows = _timelineRows(filteredRehearsals);
@@ -320,89 +326,173 @@ class _RehearsalsHeader extends StatelessWidget {
   }
 }
 
+/// The calendar's filters: one pill per group, several at once. A ticked
+/// pill shows that group's rehearsals; the line below says what is shown
+/// and offers the other way back (everything, or the member's ensembles).
 class _FilterPills extends StatelessWidget {
-  final GroupType? selectedFilter;
-  final void Function(GroupType?) onFilterSelected;
-  final VoidCallback onClearFilter;
+  final Set<GroupType> selected;
+  final Set<GroupType> mine;
+  final ValueChanged<Set<GroupType>> onChanged;
+  final VoidCallback onMine;
 
   const _FilterPills({
-    required this.selectedFilter,
-    required this.onFilterSelected,
-    required this.onClearFilter,
+    required this.selected,
+    required this.mine,
+    required this.onChanged,
+    required this.onMine,
   });
-
-  /// `null` is « Tous »: no filter.
-  static const _options = <GroupType?>[
-    null,
-    GroupType.orchestre,
-    GroupType.hommes,
-    GroupType.femmes,
-    GroupType.jeunesEnfants,
-    GroupType.choeurComplet,
-  ];
 
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-      child: Row(
-        children: _options.map((group) {
-          final label = group == null ? 'Tous' : groupLabel(group);
-          final isSelected = selectedFilter == group;
-          final shape = StadiumBorder(
-            side: BorderSide(
-              color: isSelected ? s.primary : s.outlineVariant,
-              width: isSelected ? 1.5 : 1,
-            ),
-          );
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Semantics(
-              button: true,
-              selected: isSelected,
-              child: Material(
-                color: Colors.transparent,
-                shape: shape,
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  customBorder: shape,
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    if (group == null) {
-                      onClearFilter();
-                    } else {
-                      onFilterSelected(group);
-                    }
-                  },
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 48),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 10,
-                      ),
-                      child: Center(
-                        widthFactor: 1,
-                        child: Text(
-                          label,
-                          style: AppFonts.sans(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: isSelected ? s.primary : s.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
+    final all = allRehearsalGroups.toSet();
+    final showsAll = selected.containsAll(all);
+    final showsMine =
+        selected.length == mine.length && selected.containsAll(mine);
+    final summary = showsMine && !showsAll
+        ? 'Vos ensembles'
+        : showsAll
+        ? 'Toute la saison'
+        : selected.isEmpty
+        ? 'Aucun ensemble affiché'
+        : 'Sélection personnalisée';
+    final (actionLabel, action) = !showsMine
+        ? ('Mes ensembles', onMine)
+        : (!showsAll ? ('Tout afficher', () => onChanged(all)) : (null, null));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Row(
+            children: [
+              for (final group in _ordered(mine))
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _FilterPill(
+                    key: ValueKey('calendar-filter-${group.name}'),
+                    group: group,
+                    selected: selected.contains(group),
+                    onTap: () => onChanged(
+                      selected.contains(group)
+                          ? ({...selected}..remove(group))
+                          : {...selected, group},
                     ),
                   ),
                 ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 2, 8, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  summary,
+                  style: AppFonts.sans(fontSize: 14, color: s.onSurfaceVariant),
+                ),
+              ),
+              if (actionLabel != null)
+                TextButton(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    action!();
+                  },
+                  style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                  child: Text(actionLabel),
+                )
+              else
+                const SizedBox(height: 48),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The member's own groups first, so the ticked pills are the ones on
+/// screen; the order follows their ensembles, not the ticks, so the pills
+/// never move under a finger.
+List<GroupType> _ordered(Set<GroupType> mine) => [
+  ...allRehearsalGroups.where(mine.contains),
+  ...allRehearsalGroups.where((g) => !mine.contains(g)),
+];
+
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    super.key,
+    required this.group,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final GroupType group;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final shape = StadiumBorder(
+      side: BorderSide(
+        color: selected ? s.primary : s.outlineVariant,
+        width: selected ? 1.5 : 1,
+      ),
+    );
+    return Semantics(
+      button: true,
+      checked: selected,
+      label: groupLabel(group),
+      child: ExcludeSemantics(
+        child: Material(
+          color: selected
+              ? s.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
+          shape: shape,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            customBorder: shape,
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onTap();
+            },
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 18, 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (selected)
+                      Icon(Icons.check_rounded, size: 18, color: s.primary)
+                    else
+                      SizedBox(
+                        width: 18,
+                        child: Center(
+                          child: GroupMark(color: groupColor(context, group)),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    Text(
+                      groupLabel(group),
+                      style: AppFonts.sans(
+                        fontSize: 14,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                        color: selected ? s.onSurface : s.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ),
       ),
     );
   }
@@ -666,7 +756,10 @@ class _LoadingState extends StatelessWidget {
 
 class _EmptyState extends StatelessWidget {
   final bool isFilterActive;
-  const _EmptyState({this.isFilterActive = false});
+
+  /// Every pill unticked: nothing to list until one is ticked again.
+  final bool noGroup;
+  const _EmptyState({this.isFilterActive = false, this.noGroup = false});
 
   @override
   Widget build(BuildContext context) {
@@ -686,7 +779,7 @@ class _EmptyState extends StatelessWidget {
                   border: Border.all(color: s.outlineVariant),
                 ),
                 child: Icon(
-                  isFilterActive
+                  isFilterActive || noGroup
                       ? Icons.filter_list_off_outlined
                       : Icons.music_off_outlined,
                   size: 48,
@@ -695,7 +788,11 @@ class _EmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                isFilterActive ? 'Aucun résultat' : 'Aucune répétition',
+                noGroup
+                    ? 'Aucun ensemble choisi'
+                    : isFilterActive
+                    ? 'Aucun résultat'
+                    : 'Aucune répétition',
                 textAlign: TextAlign.center,
                 style: AppFonts.display(
                   fontSize: 19,
@@ -705,7 +802,9 @@ class _EmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                isFilterActive
+                noGroup
+                    ? 'Cliquez sur un ensemble en haut de la liste pour voir ses répétitions.'
+                    : isFilterActive
                     ? 'Aucune répétition ne correspond à votre filtre. Essayez une autre sélection.'
                     : 'Les prochaines répétitions apparaîtront ici dès qu\'elles seront planifiées.',
                 textAlign: TextAlign.center,

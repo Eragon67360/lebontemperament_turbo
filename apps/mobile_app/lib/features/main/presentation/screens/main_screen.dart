@@ -16,7 +16,6 @@ import '../../../rehearsals/presentation/screens/rehearsals_screen.dart';
 import '../providers/main_navigation_provider.dart';
 import '../../../../features/notifications/presentation/providers/notification_scheduler_provider.dart';
 import '../../../onboarding/data/welcome_prefs.dart';
-import '../../../rehearsals/presentation/providers/rehearsal_filter_provider.dart';
 
 // --- Data moved outside the build method for performance ---
 
@@ -72,7 +71,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.initState();
     // Notification logic kept from original file
     _initializeNotifications();
-    _applyMyGroupAndWelcome();
+    _showWelcomeOnce();
     // Deep link: open specific tab (e.g. rehearsals = 2)
     if (widget.initialTabIndex != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -83,14 +82,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
   }
 
-  /// Opens the calendar on the member's ensemble (picked in the welcome
-  /// tour) and shows the tour once, after the first sign-in.
-  Future<void> _applyMyGroupAndWelcome() async {
-    final group = await WelcomePrefs.myGroup();
-    if (!mounted) return;
-    if (group != null && ref.read(rehearsalFilterProvider) == null) {
-      ref.read(rehearsalFilterProvider.notifier).setFilter(group);
-    }
+  /// Shows the welcome tour once, after the first sign-in.
+  Future<void> _showWelcomeOnce() async {
     final seen = await WelcomePrefs.tourSeen();
     if (!mounted || seen != false) return;
     context.push('/welcome');

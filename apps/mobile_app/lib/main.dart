@@ -13,8 +13,10 @@ import 'core/theme/theme_provider.dart';
 import 'data/services/notification_service.dart';
 import 'data/services/fcm_notification_handler.dart';
 import 'data/services/session_notifications.dart';
+import 'data/providers/my_groups_provider.dart';
 import 'data/providers/realtime_notifications_provider.dart';
 import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'features/onboarding/data/welcome_prefs.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -59,7 +61,16 @@ void main() async {
   // Liquid Glass tab bar on iOS 26 and later only (#549).
   await LiquidGlassSupport.init();
 
-  runApp(const ProviderScope(child: LeBonTemperamentApp()));
+  // Read before the first frame: the home screen shows only the member's
+  // ensembles from the start.
+  final myGroups = await WelcomePrefs.myGroups();
+
+  runApp(
+    ProviderScope(
+      overrides: [initialMyGroupsProvider.overrideWithValue(myGroups)],
+      child: const LeBonTemperamentApp(),
+    ),
+  );
 }
 
 class LeBonTemperamentApp extends ConsumerStatefulWidget {

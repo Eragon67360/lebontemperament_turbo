@@ -19,6 +19,7 @@ import '../services/drive_folders_service.dart';
 import '../services/drive_service.dart';
 import '../services/rehearsals_service.dart';
 import '../services/storage_service.dart';
+import 'my_groups_provider.dart';
 import 'realtime_notifications_provider.dart';
 
 // Storage service provider
@@ -248,16 +249,25 @@ AsyncValue<List<T>> _homeList<T>(
   );
 }
 
-/// The next 4 upcoming rehearsals for the home screen UI (the hero card and
-/// the « À suivre » row).
-final homeUpcomingRehearsalsProvider = Provider<AsyncValue<List<Rehearsal>>>((
+/// The upcoming rehearsals of the member's ensembles (with the full choir
+/// and « Tout le monde »): the home screen never shows another ensemble's.
+final myUpcomingRehearsalsProvider = Provider<AsyncValue<List<Rehearsal>>>((
   ref,
 ) {
+  final groups = ref.watch(myRehearsalGroupsProvider);
   return _homeList(
     ref.watch(upcomingRehearsalsProvider),
-    (items) => items.take(4).toList(),
+    (items) => items.where((r) => groups.contains(r.groupType)).toList(),
   );
 });
+
+/// The next 3 of them for the home screen: the hero and the « À suivre »
+/// rows.
+final homeUpcomingRehearsalsProvider = Provider<AsyncValue<List<Rehearsal>>>(
+  (ref) => ref
+      .watch(myUpcomingRehearsalsProvider)
+      .whenData((items) => items.take(3).toList()),
+);
 
 /// The next 2 upcoming concerts for the home screen UI.
 final homeUpcomingConcertsProvider = Provider<AsyncValue<List<Concert>>>((ref) {

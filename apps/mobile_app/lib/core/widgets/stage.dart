@@ -16,7 +16,8 @@ String groupLabel(GroupType group) => switch (group) {
   GroupType.femmes => 'Femmes',
   GroupType.jeunesEnfants => 'Jeunes/Enfants',
   GroupType.choeurComplet => 'Chœur complet',
-  GroupType.tous => 'Tous',
+  // The stored value stays « Tous » (website, admin, calendar sync).
+  GroupType.tous => 'Tout le monde',
 };
 
 Color groupColor(BuildContext context, GroupType group) {

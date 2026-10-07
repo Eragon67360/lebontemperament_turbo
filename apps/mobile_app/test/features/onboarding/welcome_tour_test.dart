@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
+import 'package:lebontemperament/data/providers/my_groups_provider.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/auth_provider.dart';
 import 'package:lebontemperament/features/onboarding/data/welcome_prefs.dart';
 import 'package:lebontemperament/features/onboarding/presentation/screens/welcome_tour_screen.dart';
 import 'package:lebontemperament/features/onboarding/presentation/widgets/first_time_tip.dart';
-import 'package:lebontemperament/features/rehearsals/presentation/providers/rehearsal_filter_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -69,9 +69,11 @@ void main() {
     await tester.tap(find.text('Faire la visite'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Quel est votre ensemble ?'), findsOneWidget);
+    expect(find.text('Quels sont vos ensembles ?'), findsOneWidget);
     expect(find.bySemanticsLabel('Étape 1 sur 6'), findsOneWidget);
     await tester.tap(find.text('Hommes'));
+    await tester.pump();
+    await tester.tap(find.text('Orchestre'));
     await tester.pump();
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
@@ -97,11 +99,17 @@ void main() {
 
     expect(find.text('Accueil de test'), findsOneWidget);
     expect(await WelcomePrefs.tourSeen(), isTrue);
-    expect(await WelcomePrefs.myGroup(), GroupType.hommes);
-    expect(container.read(rehearsalFilterProvider), GroupType.hommes);
+    expect(await WelcomePrefs.myGroups(), {
+      GroupType.hommes,
+      GroupType.orchestre,
+    });
+    expect(container.read(myGroupsProvider), {
+      GroupType.hommes,
+      GroupType.orchestre,
+    });
   });
 
-  testWidgets('« Plus tard » ends the tour without touching the filter', (
+  testWidgets('« Plus tard » ends the tour without touching the ensembles', (
     tester,
   ) async {
     final container = await pumpTour(tester);
@@ -111,8 +119,8 @@ void main() {
 
     expect(find.text('Accueil de test'), findsOneWidget);
     expect(await WelcomePrefs.tourSeen(), isTrue);
-    expect(await WelcomePrefs.myGroup(), isNull);
-    expect(container.read(rehearsalFilterProvider), isNull);
+    expect(await WelcomePrefs.myGroups(), isEmpty);
+    expect(container.read(myGroupsProvider), isEmpty);
   });
 
   testWidgets('every page fits at 2× text on a 360 dp phone', (tester) async {
@@ -161,5 +169,20 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await pumpTip();
     expect(find.text('Une astuce de test'), findsOneWidget);
+  });
+
+  test('a single ensemble chosen before 2.0.137 still counts', () async {
+    SharedPreferences.setMockInitialValues({
+      WelcomePrefs.myGroupKey: GroupType.femmes.name,
+    });
+    expect(await WelcomePrefs.myGroups(), {GroupType.femmes});
+
+    await WelcomePrefs.setMyGroups({GroupType.femmes, GroupType.jeunesEnfants});
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(WelcomePrefs.myGroupKey), isNull);
+    expect(await WelcomePrefs.myGroups(), {
+      GroupType.femmes,
+      GroupType.jeunesEnfants,
+    });
   });
 }

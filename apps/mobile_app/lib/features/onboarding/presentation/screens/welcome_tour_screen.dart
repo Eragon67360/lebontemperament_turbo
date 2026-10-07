@@ -8,12 +8,14 @@ import 'package:lebontemperament/core/widgets/stage.dart';
 import '../../../../data/models/rehearsal.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
-import '../../../rehearsals/presentation/providers/rehearsal_filter_provider.dart';
+import '../../../../data/providers/my_groups_provider.dart';
 import '../../data/welcome_prefs.dart';
+import '../widgets/my_groups_picker.dart';
 
 /// The welcome tour (« Portée »), shown once after the first sign-in and
-/// from Profil › Revoir la visite: a welcome, the member's ensemble (the
-/// calendar opens on it), one page per part of the app and the reminders.
+/// from Profil › Revoir la visite: a welcome, the member's ensembles (the
+/// home screen and the calendar follow them), one page per part of the app
+/// and the reminders.
 /// « Passer » is always there, and every page scrolls at large text sizes.
 class WelcomeTourScreen extends ConsumerStatefulWidget {
   const WelcomeTourScreen({super.key});
@@ -25,8 +27,8 @@ class WelcomeTourScreen extends ConsumerStatefulWidget {
 class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
   final _controller = PageController();
   int _page = 0;
-  GroupType? _group;
-  bool _groupLoaded = false;
+  Set<GroupType> _groups = const {};
+  bool _groupsLoaded = false;
 
   static const _pageCount = 7;
 
@@ -36,11 +38,11 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
   @override
   void initState() {
     super.initState();
-    WelcomePrefs.myGroup().then((g) {
+    WelcomePrefs.myGroups().then((g) {
       if (mounted) {
         setState(() {
-          _group = g;
-          _groupLoaded = true;
+          _groups = g;
+          _groupsLoaded = true;
         });
       }
     });
@@ -66,13 +68,13 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
     }
   }
 
-  /// Ends the tour: remembers it, applies the ensemble only when the member
-  /// went through that page, and goes back to where the tour was opened.
+  /// Ends the tour: remembers it, applies the ensembles only when the
+  /// member went through that page, and goes back to where the tour was
+  /// opened.
   Future<void> _finish({bool applyGroup = true}) async {
     await WelcomePrefs.markTourSeen();
-    if (applyGroup && _groupLoaded) {
-      await WelcomePrefs.setMyGroup(_group);
-      ref.read(rehearsalFilterProvider.notifier).setFilter(_group);
+    if (applyGroup && _groupsLoaded) {
+      await ref.read(myGroupsProvider.notifier).set(_groups);
     }
     if (!mounted) return;
     if (context.canPop()) {
@@ -91,10 +93,10 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
     final pages = <Widget>[
       _WelcomePage(firstName: firstName),
       _GroupPage(
-        selected: _group,
-        onSelected: (g) => setState(() {
-          _group = g;
-          _groupLoaded = true;
+        selected: _groups,
+        onChanged: (g) => setState(() {
+          _groups = g;
+          _groupsLoaded = true;
         }),
       ),
       const _SectionPage(
@@ -104,7 +106,7 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
         points: [
           (
             Icons.schedule_outlined,
-            'La prochaine répétition de votre ensemble, avec l’heure et le '
+            'La prochaine répétition de vos ensembles, avec l’heure et le '
                 'lieu.',
           ),
           (
@@ -114,8 +116,8 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
           ),
           (
             Icons.library_music_outlined,
-            'Le prochain concert et les raccourcis : partitions, membres, '
-                'Drive.',
+            'Les raccourcis (partitions, membres, administration), puis le '
+                'prochain concert.',
           ),
         ],
       ),
@@ -131,8 +133,8 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
           ),
           (
             Icons.filter_list_rounded,
-            'Touchez un ensemble en haut de la liste pour ne voir que ses '
-                'répétitions.',
+            'En haut de la liste, cliquez sur les ensembles à afficher : vos '
+                'ensembles sont cochés d’office.',
           ),
           (
             Icons.event_note_outlined,
@@ -357,6 +359,20 @@ class _Lead extends StatelessWidget {
   );
 }
 
+class _Hint extends StatelessWidget {
+  const _Hint(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: AppFonts.sans(
+      fontSize: 13,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
+  );
+}
+
 /// Five hairlines with the section's icon in a hairline circle on them, or
 /// four rising notes on the welcome page.
 class _StaffArt extends StatelessWidget {
@@ -492,123 +508,27 @@ class _WelcomePage extends StatelessWidget {
 }
 
 class _GroupPage extends StatelessWidget {
-  const _GroupPage({required this.selected, required this.onSelected});
-  final GroupType? selected;
-  final ValueChanged<GroupType?> onSelected;
-
-  static const _choices = <(GroupType?, String)>[
-    (GroupType.femmes, 'Sopranes et altos'),
-    (GroupType.hommes, 'Ténors et basses'),
-    (GroupType.orchestre, 'Musiciennes et musiciens'),
-    (GroupType.jeunesEnfants, 'Le groupe des jeunes'),
-    (null, 'Toute la saison, sans filtre'),
-  ];
+  const _GroupPage({required this.selected, required this.onChanged});
+  final Set<GroupType> selected;
+  final ValueChanged<Set<GroupType>> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final s = Theme.of(context).colorScheme;
     return _PageBody(
       children: [
         const SizedBox(height: 8),
-        const _Title('Quel est votre ensemble ?'),
+        const _Title('Quels sont vos ensembles ?'),
         const SizedBox(height: 12),
         const _Lead(
-          'Le calendrier s’ouvrira sur vos répétitions, avec celles du chœur '
-          'complet et de tout le monde. Vous pourrez toujours tout afficher.',
+          'Cochez-en autant que vous voulez. L’accueil et le calendrier '
+          'montreront leurs répétitions, avec celles du chœur complet et de '
+          'tout le monde. Rien de coché : vous verrez toute la saison.',
         ),
         const SizedBox(height: 20),
-        for (final (group, hint) in _choices)
-          _GroupChoice(
-            label: group == null ? 'Je verrai tout' : groupLabel(group),
-            hint: hint,
-            color: group == null ? s.outline : groupColor(context, group),
-            selected: selected == group,
-            onTap: () => onSelected(group),
-          ),
+        MyGroupsPicker(selected: selected, onChanged: onChanged),
+        const SizedBox(height: 12),
+        const _Hint('Modifiable à tout moment dans Profil › Mes ensembles.'),
       ],
-    );
-  }
-}
-
-class _GroupChoice extends StatelessWidget {
-  const _GroupChoice({
-    required this.label,
-    required this.hint,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String hint;
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = Theme.of(context).colorScheme;
-    return Semantics(
-      inMutuallyExclusiveGroup: true,
-      checked: selected,
-      button: true,
-      label: '$label, $hint',
-      child: ExcludeSemantics(
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onTap();
-          },
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 64),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: s.outlineVariant)),
-            ),
-            child: Row(
-              children: [
-                GroupMark(color: color, size: 10),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: AppFonts.sans(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
-                          color: s.onSurface,
-                        ),
-                      ),
-                      Text(
-                        hint,
-                        style: AppFonts.sans(
-                          fontSize: 13,
-                          color: s.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: selected ? s.primary : s.outline,
-                      width: selected ? 7 : 1.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

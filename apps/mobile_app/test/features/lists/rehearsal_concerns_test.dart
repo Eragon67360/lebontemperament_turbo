@@ -1,36 +1,48 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lebontemperament/data/models/rehearsal.dart';
-import 'package:lebontemperament/features/rehearsals/presentation/providers/rehearsal_filter_provider.dart';
+import 'package:lebontemperament/data/providers/my_groups_provider.dart';
 
 void main() {
-  test('a rehearsal for everyone shows under every filter', () {
-    for (final filter in GroupType.values) {
-      expect(rehearsalConcerns(GroupType.tous, filter), isTrue);
+  test('« Tout le monde » concerns every ensemble', () {
+    for (final g in memberGroups) {
+      expect(groupsConcerning({g}), contains(GroupType.tous));
     }
   });
 
-  test('the full choir concerns the men and the women', () {
+  test('the full choir concerns the men and the women only', () {
     expect(
-      rehearsalConcerns(GroupType.choeurComplet, GroupType.hommes),
-      isTrue,
+      groupsConcerning({GroupType.hommes}),
+      contains(GroupType.choeurComplet),
     );
     expect(
-      rehearsalConcerns(GroupType.choeurComplet, GroupType.femmes),
-      isTrue,
+      groupsConcerning({GroupType.femmes}),
+      contains(GroupType.choeurComplet),
     );
     expect(
-      rehearsalConcerns(GroupType.choeurComplet, GroupType.orchestre),
-      isFalse,
+      groupsConcerning({GroupType.orchestre}),
+      isNot(contains(GroupType.choeurComplet)),
     );
     expect(
-      rehearsalConcerns(GroupType.choeurComplet, GroupType.jeunesEnfants),
-      isFalse,
+      groupsConcerning({GroupType.jeunesEnfants}),
+      isNot(contains(GroupType.choeurComplet)),
     );
   });
 
-  test('other groups only show under their own filter', () {
-    expect(rehearsalConcerns(GroupType.hommes, GroupType.hommes), isTrue);
-    expect(rehearsalConcerns(GroupType.hommes, GroupType.femmes), isFalse);
-    expect(rehearsalConcerns(GroupType.orchestre, GroupType.tous), isFalse);
+  test('other ensembles stay out', () {
+    expect(groupsConcerning({GroupType.hommes}), {
+      GroupType.hommes,
+      GroupType.choeurComplet,
+      GroupType.tous,
+    });
+    expect(groupsConcerning({GroupType.orchestre, GroupType.jeunesEnfants}), {
+      GroupType.orchestre,
+      GroupType.jeunesEnfants,
+      GroupType.tous,
+    });
+  });
+
+  test('nothing chosen shows everything', () {
+    expect(groupsConcerning({}), allRehearsalGroups.toSet());
+    expect(allRehearsalGroups.toSet(), GroupType.values.toSet());
   });
 }

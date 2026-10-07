@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../../../data/models/concert.dart';
 import '../../../../data/models/rehearsal.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../data/providers/my_groups_provider.dart';
 import 'notification_settings_provider.dart';
 
 /// Runs an action at most once per [window], trailing: a call inside the
@@ -73,6 +74,12 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       concertsAsync.whenData((data) => concerts = data.items);
       rehearsalsAsync.whenData((data) => rehearsals = data.items);
 
+      // Reminders only for the member's ensembles, like the home screen.
+      final myGroups = ref.read(myRehearsalGroupsProvider);
+      rehearsals = rehearsals
+          .where((r) => myGroups.contains(r.groupType))
+          .toList();
+
       // Schedule notifications
       await notificationService.scheduleEventNotifications(
         concerts,
@@ -102,6 +109,7 @@ final autoScheduleNotificationsProvider = Provider<void>((ref) {
   final concertsAsync = ref.watch(realtimeConcertsProvider);
   final rehearsalsAsync = ref.watch(realtimeRehearsalsProvider);
   ref.watch(notificationSettingsProvider); // Rebuild when settings change
+  ref.watch(myRehearsalGroupsProvider); // and when the ensembles change
 
   // Schedule notifications when data is available and settings change
   if (concertsAsync.hasValue || rehearsalsAsync.hasValue) {
