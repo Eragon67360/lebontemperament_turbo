@@ -1,1 +1,1 @@
-Petites améliorations en coulisses pour une appli plus solide.
+Choisissez vos ensembles dans Profil › Mes ensembles : l'accueil, les rappels et le calendrier ne montrent plus que ce qui vous concerne, avec le Chœur complet et « Tout le monde ». Les filtres du calendrier se combinent, et l'accueil commence par vos prochaines répétitions. La connexion Google ne bloque plus avec Firefox. L'annuaire n'affiche plus que le nom, l'e-mail, la voix et la photo de chacun.
