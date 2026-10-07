@@ -14,6 +14,7 @@ import {
   parseDotenv,
   parseTemplate,
   planGithub,
+  readTemplate,
   planVercel,
   validateTarget,
 } from "./lib.mjs";
@@ -374,5 +375,31 @@ test("seed.mjs creates missing items through stdin, prints no value, and refuses
     );
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("push.mjs skips optional names left empty and still stops on required ones", () => {
+  const { entries } = readTemplate("website.dev");
+  const env = {
+    PATH: process.env.PATH,
+    HOME: mkdtempSync(join(tmpdir(), "lbt-opt-")),
+  };
+  for (const { name } of entries) env[name] = "x";
+  const run = (extra) =>
+    spawnSync(
+      process.execPath,
+      [join(ROOT, "scripts", "env", "push.mjs"), "website.dev"],
+      { encoding: "utf8", env: { ...env, ...extra } },
+    );
+  try {
+    // Optional name empty: gets past the value check, then stops on the missing token.
+    const optional = run({ REVALIDATE_SECRET: "" });
+    assert.equal(optional.status, 1);
+    assert.match(optional.stderr, /No Vercel token/);
+    const required = run({ SMTP_PASSWORD: "" });
+    assert.equal(required.status, 1);
+    assert.match(required.stderr, /SMTP_PASSWORD has no value/);
+  } finally {
+    rmSync(env.HOME, { recursive: true, force: true });
   }
 });
