@@ -2,15 +2,18 @@ import ConcertsClient from "@/components/concerts/ConcertsClient";
 import { JsonLd } from "@/components/JsonLd";
 import {
   CONCERT_COLUMNS,
+  CONCERT_EVENT_DATA_COLUMNS,
   EVENT_COLUMNS,
   REHEARSAL_COLUMNS,
   TOUR_COLUMNS,
   type PublicConcert,
+  type PublicConcertEventData,
   type PublicRehearsal,
   type PublicTour,
 } from "@/lib/publicConcerts";
 import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createPublicClient } from "@/utils/supabase/public";
+import { concertEventJsonLd } from "@repo/domain/seo/concertEvent";
 import { Event } from "@repo/domain/types/events";
 import type { Project } from "@repo/domain/types/projects";
 import { parisToday } from "@repo/domain/utils/parisDay";
@@ -50,28 +53,12 @@ export const metadata: Metadata = {
   },
 };
 
-// Generate structured data from actual upcoming agenda occurrences.
-function generateSchema(concerts: PublicConcert[]) {
-  const musicEvents = concerts.map((concert) => ({
-    "@type": "MusicEvent",
-    name: concert.name || `Concert à ${concert.place}`,
-    url:
-      concert.related_link ||
-      `${process.env.NEXT_PUBLIC_BASE_URL}/concerts#agenda`,
-    startDate: `${concert.date}T${concert.time}`,
-    description: concert.additional_informations || undefined,
-    location: {
-      "@type": "Place",
-      name: concert.place,
-    },
-    organizer: organizationRef(),
-    performer: organizationRef("MusicGroup"),
-    eventStatus: "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    image:
-      "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-  }));
+// One top-level MusicEvent per upcoming concert, as Google's event results
+// read them (#328); the page itself is a CollectionPage.
+const DEFAULT_EVENT_IMAGE =
+  "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png";
 
+function collectionSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -79,23 +66,31 @@ function generateSchema(concerts: PublicConcert[]) {
     description:
       "Prochains concerts et tournées de l'ensemble vocal et instrumental Le Bon Tempérament",
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/concerts`,
-    mainEntity: {
-      "@type": "ItemList",
-      numberOfItems: musicEvents.length,
-      itemListElement: musicEvents.map((concert, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        item: concert,
-      })),
-    },
     publisher: organizationRef(),
   };
 }
 
+function concertEventSchemas(concerts: AgendaConcert[], tours: PublicTour[]) {
+  const posterByTour = new Map(tours.map((t) => [t.id, t.tour_poster]));
+  return concerts.map((concert) =>
+    concertEventJsonLd(concert, {
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
+      organizer: organizationRef(),
+      performer: organizationRef("MusicGroup"),
+      defaultImage: DEFAULT_EVENT_IMAGE,
+      tourPoster: concert.tour_id ? posterByTour.get(concert.tour_id) : null,
+    }),
+  );
+}
+
 // --- Helper: Fetch All Data ---
+const AGENDA_CONCERT_COLUMNS =
+  `${CONCERT_COLUMNS}, ${CONCERT_EVENT_DATA_COLUMNS}` as const;
+type AgendaConcert = PublicConcert & PublicConcertEventData;
+
 type PageData = {
   projects: ReturnType<typeof transformProjectForFrontend>[];
-  concerts: PublicConcert[];
+  concerts: AgendaConcert[];
   tours: PublicTour[];
   events: Event[];
   rehearsals: PublicRehearsal[];
@@ -133,7 +128,7 @@ async function getPageData(): Promise<PageData> {
       // Concerts: Only future or today
       supabase
         .from("concerts")
-        .select(CONCERT_COLUMNS)
+        .select(AGENDA_CONCERT_COLUMNS)
         .gte("date", today)
         .order("date", { ascending: true }),
 
@@ -185,14 +180,12 @@ const ConcertsPage = async () => {
   // Fetch data on the server
   const { projects, concerts, tours, events, rehearsals } = await getPageData();
 
-  const collectionSchema = generateSchema(concerts);
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
-      />
+      <JsonLd data={collectionSchema()} />
+      {concertEventSchemas(concerts, tours).map((schema) => (
+        <JsonLd key={String(schema["@id"])} data={schema} />
+      ))}
       <JsonLd
         data={breadcrumbJsonLd([{ name: "Concerts", path: "/concerts" }])}
       />
