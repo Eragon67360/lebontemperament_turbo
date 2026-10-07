@@ -2,12 +2,6 @@
 
 import { AttentionDot, CountBadge } from "@/components/shell/NavBadge";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { useResetOnChange } from "@/hooks/useResetOnChange";
-import {
   activeNavHref,
   isSectionCurrent,
   navSectionForHref,
@@ -15,26 +9,15 @@ import {
   type NavSection,
 } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-
-/** A section row: icon, label, and the open section's description (B's `.nav-item`). */
-const sectionRowClassName = cn(
-  "flex min-h-11 w-full items-start gap-3 rounded-md px-3 py-2 text-left text-foreground",
-  "transition-colors hover:bg-surface-sunken motion-reduce:transition-none",
-);
-
-/** The teal left edge of the current entry. */
-const currentClassName =
-  "bg-primary-soft text-primary-text shadow-[inset_3px_0_0_var(--color-primary)] hover:bg-primary-soft";
 
 /**
- * The sidebar's tree: six sections, one open at a time (the one that owns
- * the current page opens by itself). The open section shows its one-line
- * description under the label; the others carry it as a tooltip, so a
- * monthly visitor can still tell what is behind a label before clicking.
+ * The sidebar's menu, « tout à plat » (Thomas's pick, 2026-10-07): every page
+ * is always visible, under its section's title, so nothing folds and nothing
+ * moves under the pointer. Accueil comes first; projects (Campagne 40 ans)
+ * come last under « Projets », one entry each, their pages inside the project.
+ * Section descriptions live on the home page, not here.
  */
 export function SidebarNav({
   sections,
@@ -51,148 +34,110 @@ export function SidebarNav({
   const activeHref = activeNavHref(sections, pathname);
   const activeSectionId = navSectionForHref(sections, activeHref)?.id;
 
-  const [openSectionId, setOpenSectionId] = useState(activeSectionId);
-  // Arriving on another section's page opens that section.
-  useResetOnChange([activeSectionId], () => setOpenSectionId(activeSectionId));
+  const pages = sections.filter((section) => section.href);
+  const titled = sections.filter(
+    (section) => !section.href && section.kind !== "project",
+  );
+  const projects = sections.filter((section) => section.kind === "project");
 
   return (
-    <nav aria-label={label}>
-      <ul className="flex flex-col gap-1">
-        {sections.map((section) => {
-          const isOpen = openSectionId === section.id;
-          const isCurrent = isSectionCurrent(section, activeHref);
-          const rowContent = (
-            <SectionRowContent
-              section={section}
-              showDescription={isOpen}
-              isCurrent={isCurrent}
+    <nav aria-label={label} className="flex flex-col">
+      <ul className="flex flex-col gap-0.5">
+        {pages.map((section) => (
+          <li key={section.id}>
+            <NavEntry
+              item={{
+                href: section.href!,
+                label: section.label,
+                icon: section.icon,
+              }}
+              isCurrent={isSectionCurrent(section, activeHref)}
+              onNavigate={onNavigate}
             />
-          );
-          // A section whose description is hidden keeps it as a tooltip and
-          // accessible description; the open one shows it in the row.
-          const rowTitle = isOpen ? undefined : section.description;
-
-          if (section.href) {
-            return (
-              <li key={section.id}>
-                <Link
-                  href={section.href}
-                  onClick={onNavigate}
-                  aria-current={isCurrent ? "page" : undefined}
-                  title={rowTitle}
-                  className={cn(
-                    sectionRowClassName,
-                    isCurrent && currentClassName,
-                  )}
-                >
-                  {rowContent}
-                </Link>
-              </li>
-            );
-          }
-
-          return (
-            <li key={section.id}>
-              <Collapsible
-                open={isOpen}
-                onOpenChange={(open) =>
-                  setOpenSectionId(open ? section.id : undefined)
-                }
-              >
-                <CollapsibleTrigger
-                  title={rowTitle}
-                  className={cn(sectionRowClassName, "group")}
-                >
-                  {rowContent}
-                  <ChevronDown
-                    className={cn(
-                      "text-foreground-faint mt-1 size-4 shrink-0 transition-transform motion-reduce:transition-none",
-                      "group-data-[state=open]:rotate-180",
-                    )}
-                    aria-hidden
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-0.5 mb-1.5 pl-8">
-                  {section.groups.map((group) => {
-                    const headingId = group.label
-                      ? `nav-group-${group.id}`
-                      : undefined;
-                    return (
-                      <div key={group.id}>
-                        {group.label && (
-                          <p
-                            id={headingId}
-                            className="text-note text-muted-foreground px-3 pt-2.5 pb-1 font-medium"
-                          >
-                            {group.label}
-                          </p>
-                        )}
-                        <ul
-                          aria-labelledby={headingId}
-                          className="flex flex-col gap-0.5"
-                        >
-                          {group.items.map((item) => (
-                            <li key={item.href}>
-                              <NavEntry
-                                item={item}
-                                isCurrent={item.href === activeHref}
-                                onNavigate={onNavigate}
-                              />
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })}
-                </CollapsibleContent>
-              </Collapsible>
-            </li>
-          );
-        })}
+          </li>
+        ))}
       </ul>
+
+      <NavRule />
+
+      <div className="flex flex-col gap-3">
+        {titled.map((section) => (
+          <NavBlock key={section.id} id={section.id} title={section.label}>
+            {section.groups
+              .flatMap((group) => group.items)
+              .map((item) => (
+                <li key={item.href}>
+                  <NavEntry
+                    item={item}
+                    isCurrent={item.href === activeHref}
+                    onNavigate={onNavigate}
+                  />
+                </li>
+              ))}
+          </NavBlock>
+        ))}
+      </div>
+
+      {projects.length > 0 && (
+        <>
+          <NavRule />
+          <NavBlock id="projects" title="Projets">
+            {projects.map((section) => {
+              const first = section.groups[0]?.items[0];
+              if (!first) return null;
+              return (
+                <li key={section.id}>
+                  <NavEntry
+                    item={{
+                      href: first.href,
+                      label: section.label,
+                      icon: section.icon,
+                    }}
+                    isCurrent={activeSectionId === section.id}
+                    onNavigate={onNavigate}
+                  />
+                </li>
+              );
+            })}
+          </NavBlock>
+        </>
+      )}
     </nav>
   );
 }
 
-/**
- * Icon, label and, for the open section only, its description in full: one
- * description at a time instead of six truncated ones (« Préparer et publier
- * l… »). Teal only when the section is itself the current page (Accueil).
- */
-export function SectionRowContent({
-  section,
-  showDescription,
-  isCurrent,
+/** The thin line between Accueil, the sections and the projects. */
+function NavRule() {
+  return <div aria-hidden className="bg-border mx-3 my-3 h-px" />;
+}
+
+/** A section: its title in small grey type, then its pages. */
+function NavBlock({
+  id,
+  title,
+  children,
 }: {
-  section: NavSection;
-  showDescription: boolean;
-  isCurrent: boolean;
+  id: string;
+  title: string;
+  children: React.ReactNode;
 }) {
-  const Icon = section.icon;
+  const headingId = `nav-title-${id}`;
   return (
-    <>
-      <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
-      <span className="min-w-0 flex-1">
-        <span className="text-body block truncate leading-6 font-medium">
-          {section.label}
-        </span>
-        {showDescription && (
-          <span
-            // Not cn(): tailwind-merge reads `text-note` as a colour and
-            // would drop it next to the text colour, leaving the row's 16 px.
-            className={`text-note block ${
-              isCurrent ? "text-primary-text" : "text-muted-foreground"
-            }`}
-          >
-            {section.description}
-          </span>
-        )}
-      </span>
-    </>
+    <div>
+      <p
+        id={headingId}
+        className="text-note text-muted-foreground px-3 pb-1 font-medium"
+      >
+        {title}
+      </p>
+      <ul aria-labelledby={headingId} className="flex flex-col gap-0.5">
+        {children}
+      </ul>
+    </div>
   );
 }
 
-/** A page link inside a section (B's `.nav-sub`). */
+/** One page: icon, label, and its badge when something waits there. */
 function NavEntry({
   item,
   isCurrent,
@@ -202,19 +147,29 @@ function NavEntry({
   isCurrent: boolean;
   onNavigate?: () => void;
 }) {
+  const Icon = item.icon;
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
       aria-current={isCurrent ? "page" : undefined}
       className={cn(
-        "flex min-h-10 items-center gap-2 rounded-sm px-3 py-1.5 text-[15px] leading-[22px] pointer-coarse:min-h-11",
+        "flex min-h-9 items-center gap-3 rounded-md px-3 py-1.5 text-[15px] leading-[22px] pointer-coarse:min-h-11",
         "transition-colors motion-reduce:transition-none",
         isCurrent
-          ? cn(currentClassName, "font-medium")
-          : "text-muted-foreground hover:bg-surface-sunken hover:text-foreground",
+          ? "bg-primary-soft text-primary-text font-semibold"
+          : "text-foreground hover:bg-surface-sunken font-medium",
       )}
     >
+      {Icon && (
+        <Icon
+          className={cn(
+            "size-5 shrink-0",
+            isCurrent ? "text-primary-text" : "text-muted-foreground",
+          )}
+          aria-hidden
+        />
+      )}
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
       {item.badge === "dot" ? (
         <AttentionDot />

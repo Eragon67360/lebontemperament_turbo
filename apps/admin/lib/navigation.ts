@@ -1,17 +1,27 @@
 import RouteNames from "@/utils/routes";
 import {
+  BookOpen,
   Cake,
   CalendarDays,
+  FileText,
+  Film,
+  FolderOpen,
   House,
   Landmark,
+  LifeBuoy,
   type LucideIcon,
+  Mail,
+  Music,
   Music2,
+  Ticket,
   Users,
 } from "lucide-react";
 
 export type NavItem = {
   href: string;
   label: string;
+  /** Shown before the label in the sidebar (every page of a titled section has one). */
+  icon?: LucideIcon;
   /** A number renders a count pill (hidden at 0); "dot" renders an attention dot. */
   badge?: number | "dot";
 };
@@ -31,6 +41,11 @@ export type NavSection = {
   icon: LucideIcon;
   /** A section that is itself a page (Accueil) links here and has no children. */
   href?: string;
+  /**
+   * A project (Campagne 40 ans) is one sidebar entry under « Projets »,
+   * leading to its first page; its own pages get an in-page navigation.
+   */
+  kind?: "project";
   groups: NavGroup[];
 };
 
@@ -67,6 +82,7 @@ export function buildNavSections({
       label: "Campagne 40 ans",
       description: "Préparer et publier la page des 40 ans",
       icon: Cake,
+      kind: "project",
       groups: [
         {
           id: "campaign-overview",
@@ -143,14 +159,17 @@ export function buildNavSections({
             {
               href: RouteNames.DASHBOARD.PUBLIC.PROCHAINS_CONCERTS,
               label: "Concerts et tournées",
+              icon: Ticket,
             },
             {
               href: RouteNames.DASHBOARD.PUBLIC.PROJETS.ROOT,
               label: "Histoires de concerts",
+              icon: BookOpen,
             },
             {
               href: RouteNames.DASHBOARD.PUBLIC.GALLERY.VIDEOS,
               label: "Vidéos",
+              icon: Film,
             },
           ],
         },
@@ -168,14 +187,17 @@ export function buildNavSections({
             {
               href: RouteNames.DASHBOARD.MEMBERS.TRAVAIL_ROOT,
               label: "Partitions et documents",
+              icon: FolderOpen,
             },
             {
               href: RouteNames.DASHBOARD.MEMBERS.REPETITIONS,
               label: "Répétitions",
+              icon: Music,
             },
             {
               href: RouteNames.DASHBOARD.MEMBERS.EVENEMENTS,
               label: "Événements",
+              icon: CalendarDays,
             },
           ],
         },
@@ -190,10 +212,15 @@ export function buildNavSections({
         {
           id: "members-pages",
           items: [
-            { href: RouteNames.DASHBOARD.ADMIN.USERS, label: "Membres" },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.USERS,
+              label: "Membres",
+              icon: Users,
+            },
             {
               href: RouteNames.DASHBOARD.ADMIN.GOOGLE_GROUPS,
               label: "Liste de diffusion",
+              icon: Mail,
             },
           ],
         },
@@ -213,6 +240,7 @@ export function buildNavSections({
             {
               href: RouteNames.DASHBOARD.ADMIN.CA,
               label: "Comptes rendus du CA",
+              icon: FileText,
             },
           ],
         },
@@ -226,6 +254,7 @@ export function buildNavSections({
       ?.groups[0]?.items.push({
         href: RouteNames.DASHBOARD.ADMIN.BUG_REPORTS,
         label: "Signalements",
+        icon: LifeBuoy,
         badge: unreadBugReports > 0 ? "dot" : undefined,
       });
   }
