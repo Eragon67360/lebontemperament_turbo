@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { MemberActionsMenu } from "@/components/users/MemberActionsMenu";
 import { MemberAvatar } from "@/components/users/MemberAvatar";
-import { MemberStatus, VoiceChips } from "@/components/users/MemberStatus";
+import { MemberStatus } from "@/components/users/MemberStatus";
 import type { User } from "@/types/user";
 import {
   lastSeenLabel,
@@ -95,7 +95,12 @@ export function MembersList({
                   </Link>
                 </TableCell>
                 <TableCell className="py-2">
-                  <VoiceChips voices={memberVoices(user)} />
+                  {memberVoices(user).join(", ") || (
+                    <span className="text-muted-foreground">
+                      <span aria-hidden>—</span>
+                      <span className="sr-only">Aucune voix</span>
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className="py-2">
                   <MemberStatus user={user} flag={flags.get(user.id)} />
