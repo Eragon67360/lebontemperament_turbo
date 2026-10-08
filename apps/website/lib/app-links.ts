@@ -19,12 +19,15 @@ export const APP_BUNDLE_ID = "com.lebontemperament.app";
 export const APPLE_TEAM_ID = "";
 
 /**
- * TODO(owner): SHA-256 fingerprints of the Android signing certificates, in
- * the colon-separated uppercase form Google Play shows (Play Console › Setup
- * › App signing: the app signing key, plus the upload key for debug builds
- * if wanted). Empty until known: the assetlinks route answers 404.
+ * SHA-256 fingerprint of the certificate Google Play signs the app with
+ * (Play App Signing), in the colon-separated uppercase form the Play Console
+ * shows. Read by the « app-signing-certificate » task of play-store.yml
+ * (2026-10-08, build 155). The upload key is left out: every installed copy
+ * comes from Google Play.
  */
-export const ANDROID_SHA256_FINGERPRINTS: readonly string[] = [];
+export const ANDROID_SHA256_FINGERPRINTS: readonly string[] = [
+  "8C:B7:87:8D:97:51:EC:27:1B:20:57:60:4F:AE:D8:AA:EF:35:C9:16:8D:5A:04:4F:E6:A9:FA:62:D4:B3:6E:F2",
+];
 
 /** Where the app is downloaded from. */
 export const APP_STORE_URL = "https://apps.apple.com/app/id6819682263";
