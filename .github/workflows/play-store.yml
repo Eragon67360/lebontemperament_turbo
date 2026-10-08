@@ -7,6 +7,8 @@ name: Play Store
 # - validate-listing  checks the repository's listing with Google (no change)
 # - publish-listing   publishes texts, icon, feature graphic and screenshots
 # - promote           moves an internal-track build to closed testing or production
+# - app-signing-certificate  prints the SHA-256 of Google Play's app signing
+#                     certificate, for the website's assetlinks.json (read-only)
 #
 # publish-listing and promote change the public store: they run in the
 # `play-store` environment, which waits for the owner's approval.
@@ -23,6 +25,7 @@ on:
           - validate-listing
           - publish-listing
           - promote
+          - app-signing-certificate
       track:
         description: "promote: where to (alpha = Closed testing; production needs Google's production access)"
         required: false
@@ -55,7 +58,7 @@ concurrency:
 jobs:
   read:
     name: ${{ inputs.task }}
-    if: inputs.task == 'download-listing' || inputs.task == 'validate-listing'
+    if: inputs.task == 'download-listing' || inputs.task == 'validate-listing' || inputs.task == 'app-signing-certificate'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -92,6 +95,9 @@ jobs:
       - name: Validate the repository's listing
         if: inputs.task == 'validate-listing'
         run: bundle exec fastlane android validate_listing
+      - name: Show the app signing certificate
+        if: inputs.task == 'app-signing-certificate'
+        run: bundle exec fastlane android app_signing
 
   write:
     name: ${{ inputs.task }}

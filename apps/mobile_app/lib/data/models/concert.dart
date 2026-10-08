@@ -1,3 +1,6 @@
+// freezed copies @JsonKey onto the generated fields, where it is valid.
+// ignore_for_file: invalid_annotation_target
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive/hive.dart';
 
@@ -32,6 +35,14 @@ class Concert with _$Concert {
     @HiveField(8) String? name,
     @HiveField(9) String? createdBy,
     @HiveField(10) String? affiche,
+    // Where and how to come, as the website shows them (public part, #593).
+    @HiveField(11) @JsonKey(name: 'venue_name') String? venueName,
+    @HiveField(12) @JsonKey(name: 'street_address') String? streetAddress,
+    @HiveField(13) @JsonKey(name: 'postal_code') String? postalCode,
+    @HiveField(14) String? city,
+    @HiveField(15) double? price,
+    @HiveField(16) @JsonKey(name: 'is_free') bool? isFree,
+    @HiveField(17) @JsonKey(name: 'related_link') String? relatedLink,
   }) = _Concert;
 
   factory Concert.fromJson(Map<String, dynamic> json) =>

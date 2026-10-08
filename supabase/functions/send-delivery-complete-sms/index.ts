@@ -1,9 +1,8 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireSuperadmin } from "../_shared/caller-auth.ts";
-
-// Contact for incomplete orders, set as a function secret (not in the public repo).
-const SUPPORT_PHONE = Deno.env.get("DELIVERY_SUPPORT_PHONE") ?? "";
+import { deliveryMessage } from "../_shared/delivery-messages.ts";
+import { pushToRecipient } from "../_shared/delivery-push.ts";
 
 serve(async (req) => {
   try {
@@ -28,62 +27,15 @@ serve(async (req) => {
       });
     }
 
-    const { data: recipient, error } = await supabaseAdmin
-      .from("delivery_recipients")
-      .select("phone_number, label")
-      .eq("id", recipientId)
-      .single();
+    // Since #593 « livrée » is a push only, to the phones linked in the app;
+    // the name is kept for installed driver apps.
+    const pushed = await pushToRecipient(
+      supabaseAdmin,
+      recipientId,
+      deliveryMessage("delivered", recipientId),
+    );
 
-    if (error) throw error;
-    if (!recipient) throw new Error("Recipient not found.");
-
-    if (!recipient.phone_number || recipient.phone_number.trim() === "") {
-      console.log(
-        `Recipient ${recipientId} has no phone number. Skipping SMS.`,
-      );
-      return new Response(
-        JSON.stringify({ message: "No phone number for recipient." }),
-        { headers: { "Content-Type": "application/json" } },
-      );
-    }
-
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
-    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN")!;
-    const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER")!;
-    const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
-    const twilioApiUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-    const basicAuth = "Basic " + btoa(`${accountSid}:${authToken}`);
-
-    const messageBody =
-      `Bonjour ${recipient.label}, votre commande a bien été livrée ! Merci pour votre confiance.\n\n` +
-      (SUPPORT_PHONE
-        ? `Si la commande devait être incomplète, nous en sommes désolés. N'hésitez pas à écrire à Félix au numéro suivant : ${SUPPORT_PHONE}.\n\n`
-        : "") +
-      `Si vous voulez en savoir plus sur nous, n'hésitez pas à visiter notre site à cette adresse : ${siteUrl}.\n\n` +
-      `- Félix & Thomas`;
-
-    const requestBody = new URLSearchParams({
-      To: recipient.phone_number,
-      From: twilioPhoneNumber,
-      Body: messageBody,
-    });
-
-    const response = await fetch(twilioApiUrl, {
-      method: "POST",
-      headers: {
-        Authorization: basicAuth,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: requestBody,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Twilio API Error:", errorData);
-      throw new Error(`Twilio API request failed: ${errorData.message}`);
-    }
-
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, pushed }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {

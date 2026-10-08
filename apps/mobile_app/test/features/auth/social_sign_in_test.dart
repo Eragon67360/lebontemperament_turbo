@@ -64,6 +64,15 @@ void main() {
     expect(find.byType(SignInWithAppleButton), findsNothing);
   });
 
+  testWidgets('the sign-in is the members\' space, with a way back to the '
+      'public part (#593)', (tester) async {
+    await pumpScreen(tester, const LoginScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Espace membres'), findsOneWidget);
+    expect(find.byTooltip('Retour'), findsOneWidget);
+  });
+
   testWidgets('iOS shows Google and Apple', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);

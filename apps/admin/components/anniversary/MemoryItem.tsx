@@ -52,10 +52,13 @@ export function MemoryItem({
             )}
           </div>
           <div className="text-note text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="inline-flex min-w-0 items-center gap-1">
-              <Mail className="size-3.5 shrink-0" aria-hidden />
-              <span className="truncate">{memory.email}</span>
-            </span>
+            {/* Erased once the memory is approved (privacy policy, #355). */}
+            {memory.email && (
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <Mail className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{memory.email}</span>
+              </span>
+            )}
             {memory.year && (
               <span className="inline-flex items-center gap-1">
                 <Calendar className="size-3.5 shrink-0" aria-hidden />

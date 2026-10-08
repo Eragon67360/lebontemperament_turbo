@@ -26,14 +26,6 @@ export const metadata: Metadata = {
     title: "Rejoindre Le Bon Tempérament - Ensemble vocal et instrumental",
     description:
       "Découvrez comment rejoindre l'ensemble vocal et instrumental Le Bon Tempérament à Saverne.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Le Bon Tempérament - Rejoignez-nous",
-      },
-    ],
   },
   alternates: {
     canonical: "/rejoindre",

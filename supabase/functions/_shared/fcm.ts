@@ -116,3 +116,47 @@ export async function sendToToken(
   console.error("FCM error:", res.status, text.slice(0, 500));
   return "failed";
 }
+
+/** Sends one notification to every device listening to an FCM topic (no
+ * token is known or stored). */
+export async function sendToTopic(
+  sa: ServiceAccount,
+  accessToken: string,
+  topic: string,
+  msg: TokenMessage,
+): Promise<boolean> {
+  const res = await fetch(
+    `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: {
+          topic,
+          notification: { title: msg.title, body: msg.body },
+          android: {
+            notification: {
+              channel_id: msg.channelId ?? "fcm_push",
+              tag: msg.tag,
+            },
+          },
+          apns: {
+            headers: { "apns-collapse-id": msg.tag.slice(0, 64) },
+            payload: { aps: { sound: "default" } },
+          },
+          data: msg.data,
+        },
+      }),
+    },
+  );
+  if (res.ok) return true;
+  console.error(
+    "FCM topic error:",
+    res.status,
+    (await res.text()).slice(0, 500),
+  );
+  return false;
+}

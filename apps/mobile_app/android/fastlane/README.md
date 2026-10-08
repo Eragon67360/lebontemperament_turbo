@@ -25,6 +25,10 @@ Actions → **Play Store** → Run workflow, then pick a task:
   repository before a first publish.
 - `validate-listing`: sends the repository's listing to Google for checking,
   then discards it. Changes nothing.
+- `app-signing-certificate`: prints the SHA-256 fingerprint of the
+  certificate Google Play signs the app with (for the current build in
+  `pubspec.yaml`), for `apps/website/lib/app-links.ts` (assetlinks.json, the
+  `/l/<code>` delivery links, #593). Read-only.
 - `publish-listing`: publishes the texts and screenshots. Images whose content
   didn't change are not sent again. Files absent here (icon, feature
   graphic) stay as they are on Google Play.

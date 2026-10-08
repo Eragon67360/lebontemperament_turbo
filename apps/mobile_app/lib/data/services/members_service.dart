@@ -10,16 +10,14 @@ class MembersService {
   final Logger _logger;
   SupabaseClient get _client => SupabaseConfig.client;
 
-  /// Fetches all members from the profiles table: only the columns the
-  /// directory shows (#350), never phones or addresses.
+  /// Fetches all members through member_directory(): id, name, email, voice
+  /// and photo only, sorted by name (#350). Members can't read other
+  /// members' rows in profiles directly.
   /// Uses profile_picture_url from profile; for Google auth users,
   /// avatar may also be in auth.users metadata (handled client-side if needed).
   Future<List<Member>> getMembers() async {
     try {
-      final response = await _client
-          .from('profiles')
-          .select('id, email, display_name, voice, profile_picture_url')
-          .order('display_name', ascending: true, nullsFirst: false);
+      final response = await _client.rpc('member_directory');
 
       final list = response as List<dynamic>;
       final members = <Member>[];

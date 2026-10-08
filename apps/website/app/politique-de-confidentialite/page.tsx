@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.1";
-const POLICY_UPDATED_ON = "6 octobre 2026";
+const POLICY_VERSION = "2.5";
+const POLICY_UPDATED_ON = "8 octobre 2026";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -25,14 +25,6 @@ export const metadata: Metadata = {
     locale: "fr_FR",
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/politique-de-confidentialite`,
     siteName: "Le Bon Tempérament",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Le Bon Tempérament",
-      },
-    ],
   },
   alternates: {
     canonical: "/politique-de-confidentialite",
@@ -201,13 +193,19 @@ const RETENTION: [what: string, howLong: string][] = [
     "pendant l’adhésion, puis 1 an au plus après sa fin",
   ],
   [
-    "Signalements de problèmes dans l’administration",
+    "Signalements de problèmes (tableau de bord et application), captures d’écran comprises",
     "1 an au plus après leur résolution",
   ],
+  ["Journaux des synchronisations (agenda, Google Drive)", "90 jours"],
   [
     "Données des destinataires d’une livraison",
     "supprimées 30 jours après la tournée",
   ],
+  [
+    "Identifiant de notification du téléphone qui suit une livraison dans l’application",
+    "effacé le lendemain de la tournée, quand le lien de suivi expire",
+  ],
+  ["Empreinte de l’adresse IP des essais de code infructueux", "24 heures"],
   ["Position du conducteur", "effacée à la fin de la tournée"],
   [
     "Reçus fiscaux des dons payés par Stripe",
@@ -581,7 +579,7 @@ export default function PrivacyPolicy() {
                 ],
                 [
                   "Conservation",
-                  "signalements : 1 an au plus après la résolution du problème",
+                  "signalements : 1 an au plus après la résolution du problème ; journaux des synchronisations de l’agenda et du Google Drive : 90 jours",
                 ],
               ]}
             />
@@ -589,12 +587,14 @@ export default function PrivacyPolicy() {
 
           <Section id="application-mobile">
             <p className={pClass}>
-              L’application Le Bon Tempérament permet aux membres de consulter
-              les concerts, répétitions, annonces, documents de travail et
-              l’annuaire, et de recevoir des notifications. Elle utilise le même
-              compte que l’espace membres : les traitements décrits plus haut
-              s’y appliquent. Elle ne contient ni publicité, ni outil de mesure
-              d’audience, ni outil de suivi des plantages.
+              L’application Le Bon Tempérament présente l’association à tous,
+              sans compte : prochains concerts, façon de nous rejoindre, liens
+              utiles. Les membres s’y connectent pour consulter les répétitions,
+              annonces, documents de travail et l’annuaire, et recevoir des
+              notifications, avec le même compte que l’espace membres : les
+              traitements décrits plus haut s’y appliquent. Elle ne contient ni
+              publicité, ni outil de mesure d’audience, ni outil de suivi des
+              plantages.
             </p>
             <ul className={ulClass}>
               <li className="mb-2">
@@ -607,10 +607,30 @@ export default function PrivacyPolicy() {
               <li className="mb-2">
                 <strong>Notifications</strong> : les annonces de répétitions,
                 d’événements et de concerts sont envoyées à tous les membres par
-                Firebase Cloud Messaging (Google), sans que l’association
-                enregistre d’identifiant de votre appareil ; les rappels sont
-                programmés sur votre appareil. Vous pouvez les désactiver dans
-                l’application ou dans les réglages du téléphone.
+                Firebase Cloud Messaging (Google). Pour vous envoyer les
+                réponses à vos signalements, l’application enregistre avec votre
+                compte l’identifiant de notification de votre téléphone, effacé
+                lorsque vous vous déconnectez ou qu’il n’est plus valide. Les
+                rappels sont programmés sur votre appareil. Vous pouvez
+                désactiver les notifications dans l’application ou dans les
+                réglages du téléphone.
+              </li>
+              <li className="mb-2">
+                <strong>Annonces de concerts sans compte</strong> : si le
+                réglage « Prochains concerts » de la page « À propos » est
+                activé (il l’est par défaut), votre téléphone s’abonne aux
+                annonces de concerts de Firebase Cloud Messaging (Google) et
+                reçoit l’annonce de chaque concert et un rappel deux jours
+                avant. Nous n’enregistrons rien sur vous ni sur votre téléphone
+                ; désactivez le réglage pour vous désabonner.
+              </li>
+              <li className="mb-2">
+                <strong>Signalements</strong> : vous pouvez nous signaler un
+                problème depuis l’application, avec jusqu’à trois captures
+                d’écran. Le message, les captures et la version de l’application
+                et du système de votre téléphone sont lus par les responsables
+                de l’application, qui vous répondent dans l’application, et
+                conservés 1&nbsp;an au plus après la résolution du problème.
               </li>
               <li className="mb-2">
                 <strong>Localisation</strong> : demandée uniquement aux
@@ -634,20 +654,22 @@ export default function PrivacyPolicy() {
 
           <Section id="livraisons">
             <p className={pClass}>
-              Lors de ses tournées de livraison, l’association prévient les
-              destinataires par SMS et leur permet de suivre l’arrivée du
-              livreur grâce à un lien personnel.
+              Avant une tournée de livraison, l’association envoie à chaque
+              destinataire un SMS d’invitation avec la date de livraison, un
+              lien personnel pour suivre l’arrivée du livreur et un code
+              personnel, qui permet de suivre la livraison dans l’application Le
+              Bon Tempérament sans créer de compte.
             </p>
             <Processing
               title="Destinataires des livraisons"
               facts={[
                 [
                   "Données",
-                  "nom, adresse postale, numéro de téléphone, position de l’adresse sur la carte, créneau et heure de livraison, lien de suivi personnel",
+                  "nom, adresse postale, numéro de téléphone, position de l’adresse sur la carte, créneau et heure de livraison, lien de suivi et code personnels",
                 ],
                 [
                   "Finalité",
-                  "organiser la tournée (ordre de passage, itinéraire, heure d’arrivée estimée) et vous envoyer des SMS : départ de la tournée avec votre lien de suivi, arrivée imminente, livraison effectuée",
+                  "organiser la tournée (ordre de passage, itinéraire, heure d’arrivée estimée) et vous envoyer au plus deux SMS : l’invitation, avec la date de livraison, votre lien de suivi et votre code, puis, le jour de la livraison et seulement si vous ne suivez pas la livraison dans l’application, l’annonce de notre arrivée dans quelques minutes",
                 ],
                 [
                   "Base légale",
@@ -655,7 +677,7 @@ export default function PrivacyPolicy() {
                 ],
                 [
                   "Conservation",
-                  "vos données sont supprimées 30 jours après la tournée ; le lien de suivi expire de lui-même (24 heures par défaut)",
+                  "vos données sont supprimées 30 jours après la tournée ; le lien de suivi et le code expirent d’eux-mêmes le lendemain de la livraison",
                 ],
                 [
                   "Destinataires",
@@ -672,6 +694,36 @@ export default function PrivacyPolicy() {
               sont envoyées au serveur d’itinéraires de FOSSGIS pour tracer le
               trajet.
             </p>
+
+            <Processing
+              title="Suivi de la livraison dans l’application"
+              facts={[
+                [
+                  "Fonctionnement",
+                  "le code personnel du SMS, saisi dans l’application (ou le lien du SMS touché avec l’application installée), relie votre téléphone à cette livraison, sans aucun compte",
+                ],
+                [
+                  "Données",
+                  "l’identifiant de notification de votre téléphone (Firebase Cloud Messaging), enregistré avec la livraison ; pour limiter les essais de codes au hasard, une empreinte (hachage) de l’adresse IP de chaque essai infructueux, dont l’adresse elle-même ne peut pas être retrouvée",
+                ],
+                [
+                  "Finalité",
+                  "vous envoyer les notifications du jour de la livraison : départ de la tournée, votre tour qui approche, arrivée dans quelques minutes, livraison effectuée ; protéger les livraisons contre la recherche de codes",
+                ],
+                [
+                  "Base légale",
+                  "l’exécution de la livraison convenue avec vous (article 6.1.b du RGPD) pour les notifications ; l’intérêt légitime de l’association à sécuriser le service (article 6.1.f du RGPD) pour l’empreinte des essais",
+                ],
+                [
+                  "Conservation",
+                  "l’identifiant de notification est effacé le lendemain de la tournée, quand le lien de suivi expire ; l’empreinte des essais infructueux est conservée 24 heures ; vous pouvez aussi retirer la livraison de l’application à tout moment, ce qui détache votre téléphone",
+                ],
+                [
+                  "Destinataires",
+                  "Supabase et Google (Firebase Cloud Messaging) en tant que sous-traitants",
+                ],
+              ]}
+            />
 
             <Processing
               title="Position des conducteurs"

@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "2.0.138",
+  "version": "2.0.139",
   "type": "module",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "tsx lib/anniversaryMemories.test.ts && tsx lib/publicColumns.test.ts && tsx lib/anniversaryProgramme.test.ts && tsx lib/contact.test.ts",
+    "test": "tsx lib/anniversaryMemories.test.ts && tsx lib/publicColumns.test.ts && tsx lib/anniversaryProgramme.test.ts && tsx lib/contact.test.ts && tsx lib/og/text.test.ts && tsx lib/deliveryCode.test.ts",
     "clean": "if exist node_modules rmdir /s /q node_modules && if exist .next rmdir /s /q .next",
     "clean:install": "npm run clean && npm install"
   },

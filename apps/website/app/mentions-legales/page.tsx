@@ -36,14 +36,6 @@ export const metadata: Metadata = {
     locale: "fr_FR",
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/mentions-legales`,
     siteName: "Le Bon Tempérament",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Le Bon Tempérament",
-      },
-    ],
   },
   alternates: {
     canonical: "/mentions-legales",

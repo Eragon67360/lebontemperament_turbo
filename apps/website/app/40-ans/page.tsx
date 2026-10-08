@@ -38,14 +38,6 @@ export const metadata: Metadata = {
     title: "40 ans du Bon Tempérament - Célébration",
     description:
       "Célébrons les 40 ans du Bon Tempérament ! Découvrez notre histoire, nos souvenirs et témoignages.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/home-og.png",
-        width: 1200,
-        height: 630,
-        alt: "40 ans du Bon Tempérament",
-      },
-    ],
   },
   alternates: {
     canonical: "/40-ans",

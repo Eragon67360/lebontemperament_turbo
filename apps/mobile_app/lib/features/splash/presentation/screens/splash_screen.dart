@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 
+import '../../../../core/config/app_router.dart';
 import '../../../../data/services/fcm_notification_handler.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notification_settings_provider.dart';
@@ -81,10 +82,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       return;
     }
     // The explanatory notification screen is shown once; after that a
-    // signed-out start goes straight to the login.
+    // signed-out start goes straight to the public part (#593).
     final answered = await NotificationPermissionPrompt.wasAnswered();
     if (!mounted) return;
-    context.go(answered ? '/login' : '/permissions');
+    if (answered) {
+      context.go(AppRouter.publicHome);
+      // A concert announcement tapped while the app was closed.
+      FcmNotificationHandler.onHomeReached();
+    } else {
+      context.go(AppRouter.permissions);
+    }
   }
 
   @override

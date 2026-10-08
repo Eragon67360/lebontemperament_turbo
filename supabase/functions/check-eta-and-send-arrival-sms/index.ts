@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalSecret } from "../_shared/caller-auth.ts";
+import { deliveryMessage } from "../_shared/delivery-messages.ts";
+import { arrivalSms } from "../_shared/delivery-sms.ts";
+import { sendSms } from "../_shared/twilio.ts";
+import {
+  linkedDeviceCounts,
+  pushToRecipient,
+} from "../_shared/delivery-push.ts";
 
 const OSRM_BASE = "https://router.project-osrm.org/route/v1/driving";
 const ETA_THRESHOLD_SECONDS = 300; // 5 minutes
@@ -18,7 +25,7 @@ interface RecipientRow {
   longitude: number | null;
   phone_number: string | null;
   label: string;
-  public_token: string;
+  code: string;
   eta_arrival_sms_sent_at: string | null;
 }
 
@@ -77,12 +84,7 @@ serve(async (req) => {
       );
     }
 
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
-    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN")!;
-    const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER")!;
-    const siteUrl = Deno.env.get("SITE_URL")!;
-    const twilioApiUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-    const basicAuth = "Basic " + btoa(`${accountSid}:${authToken}`);
+    const siteUrl = Deno.env.get("SITE_URL");
 
     let sentCount = 0;
 
@@ -90,7 +92,7 @@ serve(async (req) => {
       const { data: recipient, error: recipientError } = await supabaseAdmin
         .from("delivery_recipients")
         .select(
-          "id, latitude, longitude, phone_number, label, public_token, eta_arrival_sms_sent_at",
+          "id, latitude, longitude, phone_number, label, code, eta_arrival_sms_sent_at",
         )
         .eq("id", d.current_recipient_id)
         .single();
@@ -98,15 +100,19 @@ serve(async (req) => {
       if (recipientError || !recipient) continue;
 
       const r = recipient as RecipientRow;
+      const hasPhone = !!r.phone_number?.trim();
 
       if (
         r.eta_arrival_sms_sent_at != null ||
         r.latitude == null ||
-        r.longitude == null ||
-        !r.phone_number?.trim()
+        r.longitude == null
       ) {
         continue;
       }
+      // Nobody to tell: no phone number and no phone linked in the app.
+      const linked =
+        (await linkedDeviceCounts(supabaseAdmin, [r.id])).get(r.id) ?? 0;
+      if (!hasPhone && linked === 0) continue;
 
       const durationSeconds = await fetchOSRMDuration(
         d.longitude,
@@ -119,40 +125,37 @@ serve(async (req) => {
         continue;
       }
 
-      const trackingUrl = `${siteUrl.replace(/\/$/, "")}/track?token=${r.public_token}`;
-      const messageBody =
-        `Bonjour ${r.label}, votre livraison arrive dans environ 5 minutes ! Préparez-vous à recevoir votre colis.\n\n` +
-        `Suivez-la en direct : ${trackingUrl}\n\n` +
-        "- Félix & Thomas";
+      // #593: phones linked in the app get a push, and nothing else. The
+      // SMS is the fallback for people who never opened the delivery in the
+      // app (or whose linked phones no longer receive pushes).
+      const pushed =
+        linked > 0
+          ? await pushToRecipient(
+              supabaseAdmin,
+              r.id,
+              deliveryMessage("arriving", r.id),
+            )
+          : 0;
 
-      const requestBody = new URLSearchParams({
-        To: r.phone_number,
-        From: twilioPhoneNumber,
-        Body: messageBody,
-      });
-
-      const twilioRes = await fetch(twilioApiUrl, {
-        method: "POST",
-        headers: {
-          Authorization: basicAuth,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: requestBody,
-      });
-
-      if (!twilioRes.ok) {
-        const errorData = await twilioRes.json();
-        console.error("Twilio API Error for recipient", r.id, errorData);
-        continue;
+      let smsSent = false;
+      if (pushed === 0 && hasPhone) {
+        smsSent = await sendSms(
+          r.phone_number!,
+          arrivalSms({ label: r.label, code: r.code, siteUrl }),
+        );
+        if (smsSent) {
+          sentCount++;
+          console.log(`Sent 5-min-away SMS to recipient ${r.id}`);
+        }
       }
 
-      await supabaseAdmin
-        .from("delivery_recipients")
-        .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
-        .eq("id", r.id);
-
-      sentCount++;
-      console.log(`Sent 5-min-away SMS to recipient ${r.id}`);
+      // Once told, never again; a failed SMS is retried on the next run.
+      if (pushed > 0 || smsSent) {
+        await supabaseAdmin
+          .from("delivery_recipients")
+          .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
+          .eq("id", r.id);
+      }
     }
 
     return new Response(JSON.stringify({ success: true, sentCount }), {

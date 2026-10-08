@@ -80,8 +80,54 @@ def manual_internal_groups
   names.empty? ? nil : names
 end
 
+# Adds a build to « BT - Testeurs » and submits it for Apple's beta review
+# when it needs one (the first build of each version does; later builds of
+# the same version are usually approved at once). nil sends the newest build.
+def send_to_members(key, build_number)
+  # pilot skips a group it can't find without saying so: fail instead.
+  app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+  group_names = app.get_beta_groups.map(&:name)
+  unless group_names.include?(MEMBERS_GROUP)
+    UI.user_error!("TestFlight group « #{MEMBERS_GROUP} » not found (groups: #{group_names.join(', ')})")
+  end
+  upload_to_testflight(
+    api_key: key,
+    distribute_only: true,
+    # With no .ipa to read it from, pilot would ask for the platform and fail in CI.
+    app_platform: "ios",
+    build_number: build_number,
+    # fr-FR is the app's primary language: pilot creates the texts when
+    # they don't exist yet ("default" only fills existing languages).
+    localized_app_info: { "fr-FR" => BETA_APP_INFO, "default" => BETA_APP_INFO },
+    localized_build_info: { "fr-FR" => { whats_new: File.read(WHAT_TO_TEST).strip } },
+    # Only the notes: pilot leaves the contact and sign-in fields as set
+    # in App Store Connect.
+    beta_app_review_info: { notes: BETA_REVIEW_NOTES },
+    distribute_external: true,
+    groups: [MEMBERS_GROUP],
+    submit_beta_review: true,
+    notify_external_testers: true
+  )
+end
+
+# TestFlight states (App Store Connect API) in plain words.
+EXTERNAL_STATES = {
+  "PROCESSING" => "processing",
+  "PROCESSING_EXCEPTION" => "processing failed",
+  "MISSING_EXPORT_COMPLIANCE" => "export compliance question unanswered",
+  "IN_EXPORT_COMPLIANCE_REVIEW" => "export compliance in review",
+  "READY_FOR_BETA_SUBMISSION" => "never sent to beta review",
+  "WAITING_FOR_BETA_REVIEW" => "waiting for beta review",
+  "IN_BETA_REVIEW" => "in beta review",
+  "BETA_REJECTED" => "rejected by beta review",
+  "BETA_APPROVED" => "approved by beta review",
+  "READY_FOR_BETA_TESTING" => "ready for external testers",
+  "IN_BETA_TESTING" => "testable by external testers",
+  "EXPIRED" => "expired"
+}.freeze
+
 platform :ios do
-  desc "Archive the app (after `flutter build ios --no-codesign`), sign it for the App Store and upload it to TestFlight."
+  desc "Archive the app (after `flutter build ios --no-codesign`), sign it for the App Store, upload it to TestFlight and send it to members (SEND_TO_MEMBERS=false: internal testers only)."
   lane :beta do
     key = api_key
     # Team and automatic signing set on the project for this run (not as
@@ -116,6 +162,74 @@ platform :ios do
       distribute_external: false,
       submit_beta_review: false
     )
+
+    # Members get the build in the same run, so it never waits at « Ready
+    # to Submit » for a second approval. SEND_TO_MEMBERS=false keeps it for
+    # internal testers only.
+    if ENV["SEND_TO_MEMBERS"] != "false"
+      # Ruby in a lane runs from fastlane/, actions from ios/: take the .ipa
+      # path build_app recorded (absolute).
+      build_number = FastlaneCore::IpaFileAnalyser.fetch_app_build(lane_context[SharedValues::IPA_OUTPUT_PATH])
+      begin
+        send_to_members(key, build_number)
+      rescue StandardError => e
+        UI.error("Build #{build_number} is on TestFlight, but sending it to members failed. " \
+                 "Fix the cause, then run « Send the latest build to members » (no new upload needed).")
+        raise e
+      end
+    end
+  end
+
+  desc "List the latest TestFlight builds with Apple's state for each and the groups that have them. Read-only."
+  lane :status do
+    api_key
+    app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+    UI.user_error!("App not found in App Store Connect") unless app
+
+    # Group names only: no testers, no public link (the workflow logs are public).
+    groups_by_build = Hash.new { |h, k| h[k] = [] }
+    app.get_beta_groups.each do |group|
+      Spaceship::ConnectAPI.get_builds_for_beta_group(group_id: group.id).all_pages.flat_map(&:to_models).each do |build|
+        groups_by_build[build.id] << group.name
+      end
+    end
+
+    builds = Spaceship::ConnectAPI::Build.all(app_id: app.id, platform: "IOS", limit: 20)
+    UI.user_error!("No build in App Store Connect") if builds.empty?
+    builds.first(20).each do |build|
+      detail = build.build_beta_detail
+      external = detail&.external_build_state
+      groups = groups_by_build[build.id]
+      UI.message(
+        "#{build.app_version} (#{build.version}), uploaded #{build.uploaded_date.to_s[0, 10]}: " \
+        "members #{EXTERNAL_STATES.fetch(external, external || 'unknown')}" \
+        "#{build.expired ? '' : ", expires #{build.expiration_date.to_s[0, 10]}"}; " \
+        "groups: #{groups.empty? ? 'none' : groups.join(', ')}"
+      )
+    end
+  end
+
+  desc "Turn on Associated Domains for the app's identifier (delivery links /l/<code>, #593) and write the App ID (prefix.bundle id) to APP_LINKS_OUT for the website's apple-app-site-association. Changes nothing else."
+  lane :app_links do
+    api_key
+    identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+    bundle_id = Spaceship::ConnectAPI::BundleId.find(identifier)
+    UI.user_error!("Identifier #{identifier} not found") unless bundle_id
+
+    type = Spaceship::ConnectAPI::BundleIdCapability::Type::ASSOCIATED_DOMAINS
+    if bundle_id.get_capabilities.any? { |c| c.is_type?(type) }
+      UI.message("Associated Domains: already on")
+    else
+      bundle_id.create_capability(type)
+      UI.success("Associated Domains: turned on")
+    end
+
+    # The prefix equals the team ID, which GitHub masks in the logs: it goes
+    # to a file the workflow uploads as an artifact (it is public anyway,
+    # served by the website).
+    out = env!("APP_LINKS_OUT")
+    File.write(out, "#{bundle_id.seed_id}.#{identifier}\n")
+    UI.message("App ID written to #{File.basename(out)}")
   end
 
   desc "Fill the App Store page of the version being prepared: texts, screenshots, age rating, build and review details. Never submits it."
@@ -188,33 +302,8 @@ platform :ios do
     UI.success("Build #{build.version} attached to version #{build.app_version}")
   end
 
-  desc "Send the latest TestFlight build to the members' external group and submit it for Apple's beta review."
+  desc "Send the latest TestFlight build (or BUILD_NUMBER) to the members' external group and submit it for Apple's beta review."
   lane :members do
-    key = api_key
-    # pilot skips a group it can't find without saying so: fail instead.
-    app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
-    group_names = app.get_beta_groups.map(&:name)
-    unless group_names.include?(MEMBERS_GROUP)
-      UI.user_error!("TestFlight group « #{MEMBERS_GROUP} » not found (groups: #{group_names.join(', ')})")
-    end
-    upload_to_testflight(
-      api_key: key,
-      distribute_only: true,
-      # With no .ipa to read it from, pilot would ask for the platform and fail in CI.
-      app_platform: "ios",
-      # Latest uploaded build unless BUILD_NUMBER picks one.
-      build_number: ENV["BUILD_NUMBER"].to_s.strip.empty? ? nil : ENV["BUILD_NUMBER"],
-      # fr-FR is the app's primary language: pilot creates the texts when
-      # they don't exist yet ("default" only fills existing languages).
-      localized_app_info: { "fr-FR" => BETA_APP_INFO, "default" => BETA_APP_INFO },
-      localized_build_info: { "fr-FR" => { whats_new: File.read(WHAT_TO_TEST).strip } },
-      # Only the notes: pilot leaves the contact and sign-in fields as set
-      # in App Store Connect.
-      beta_app_review_info: { notes: BETA_REVIEW_NOTES },
-      distribute_external: true,
-      groups: [MEMBERS_GROUP],
-      submit_beta_review: true,
-      notify_external_testers: true
-    )
+    send_to_members(api_key, ENV["BUILD_NUMBER"].to_s.strip.empty? ? nil : ENV["BUILD_NUMBER"])
   end
 end

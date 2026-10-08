@@ -21,6 +21,18 @@ def current_version_code
   build.to_i
 end
 
+# The hex of a 32-byte SHA-256 digest given as hex or base64, or nil.
+def signing_hash_hex(hash)
+  compact = hash.to_s.strip.delete(": ")
+  return compact.downcase if compact.match?(/\A\h{64}\z/)
+  padded = compact.tr("-_", "+/")
+  padded += "=" * ((4 - padded.length % 4) % 4)
+  raw = padded.unpack1("m0")
+  raw.bytesize == 32 ? raw.unpack1("H*") : nil
+rescue ArgumentError
+  nil
+end
+
 platform :android do
   desc "Download the current store listing (texts, images, screenshots) into the metadata folder. Read-only."
   lane :download_listing do
@@ -65,6 +77,35 @@ platform :android do
       skip_upload_screenshots: true,
       validate_only: options[:validate_only] == true || options[:validate_only].to_s == "true"
     )
+  end
+
+  desc "Print the SHA-256 fingerprints of the certificates Google Play signs the app with, for the website's /.well-known/assetlinks.json (delivery links, #593). Read-only."
+  lane :app_signing do
+    require "google/apis/androidpublisher_v3"
+    require "googleauth"
+    require "stringio"
+
+    json = ENV["PLAY_STORE_JSON_KEY"].to_s
+    UI.user_error!("PLAY_STORE_JSON_KEY is not set") if json.strip.empty?
+    service = Google::Apis::AndroidpublisherV3::AndroidPublisherService.new
+    service.authorization = Google::Auth::ServiceAccountCredentials.make_creds(
+      json_key_io: StringIO.new(json),
+      scope: "https://www.googleapis.com/auth/androidpublisher"
+    )
+    package = CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
+    version_code = current_version_code
+    apks = service.list_generatedapks(package, version_code).generated_apks || []
+    UI.user_error!("No generated APKs for build #{version_code}") if apks.empty?
+    fingerprints = apks.map(&:certificate_sha256_hash).compact.uniq.map do |hash|
+      # Printed as AA:BB:… like the console. Google answers hex (with or
+      # without colons) or base64 (standard or URL-safe) of the raw digest.
+      hex = signing_hash_hex(hash)
+      unless hex
+        UI.user_error!("Unexpected certificate hash format (#{hash.length} characters: #{hash.gsub(/[A-Za-z0-9]/, "x")})")
+      end
+      hex.upcase.scan(/../).join(":")
+    end
+    fingerprints.each { |f| UI.message("App signing certificate SHA-256 (build #{version_code}): #{f}") }
   end
 
   private_lane :upload_listing do |options|

@@ -1,6 +1,8 @@
 /// A recipient on a delivery with optional preferred time.
 /// [publicToken] is used for per-recipient shareable links; [deliveredAt] when set means delivered.
 /// [address], [latitude], [longitude] are used for route display (Point B).
+/// [code] is the 8-character delivery code (no dash) behind
+/// `/l/<code>`; [invitedAt] is when the invitation SMS went out (#593).
 class DeliveryRecipient {
   final String id;
   final String deliveryId;
@@ -13,6 +15,8 @@ class DeliveryRecipient {
   final double? latitude;
   final double? longitude;
   final String? phoneNumber;
+  final String? code;
+  final DateTime? invitedAt;
 
   const DeliveryRecipient({
     required this.id,
@@ -26,6 +30,8 @@ class DeliveryRecipient {
     this.latitude,
     this.longitude,
     this.phoneNumber,
+    this.code,
+    this.invitedAt,
   });
 
   factory DeliveryRecipient.fromJson(Map<String, dynamic> json) {
@@ -45,6 +51,10 @@ class DeliveryRecipient {
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       phoneNumber: json['phone_number'] as String?,
+      code: json['code'] as String?,
+      invitedAt: json['invited_at'] != null
+          ? DateTime.parse(json['invited_at'] as String)
+          : null,
     );
   }
 
@@ -61,6 +71,8 @@ class DeliveryRecipient {
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (phoneNumber != null) 'phone_number': phoneNumber,
+      if (code != null) 'code': code,
+      if (invitedAt != null) 'invited_at': invitedAt!.toIso8601String(),
     };
   }
 
@@ -76,6 +88,8 @@ class DeliveryRecipient {
     double? latitude,
     double? longitude,
     String? phoneNumber,
+    String? code,
+    DateTime? invitedAt,
   }) {
     return DeliveryRecipient(
       id: id ?? this.id,
@@ -89,6 +103,8 @@ class DeliveryRecipient {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      code: code ?? this.code,
+      invitedAt: invitedAt ?? this.invitedAt,
     );
   }
 }

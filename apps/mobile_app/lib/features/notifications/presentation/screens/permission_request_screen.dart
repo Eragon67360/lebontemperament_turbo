@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/config/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../data/services/fcm_notification_handler.dart';
 import '../providers/notification_settings_provider.dart';
 
 class PermissionRequestScreen extends ConsumerStatefulWidget {
@@ -80,8 +82,10 @@ class _PermissionRequestScreenState
     if (mounted) _navigateToLogin();
   }
 
+  /// Signed out, so on to the public part; members sign in from there.
   void _navigateToLogin() {
-    context.go('/login');
+    context.go(AppRouter.publicHome);
+    FcmNotificationHandler.onHomeReached();
   }
 
   @override
@@ -130,7 +134,9 @@ class _PermissionRequestScreenState
 
                   // Description
                   Text(
-                    'Activez les notifications pour ne manquer aucun concert ou répétition. Nous vous enverrons des rappels personnalisables.',
+                    'Activez les notifications pour ne manquer aucun de nos '
+                    'concerts. Les membres reçoivent aussi leurs rappels de '
+                    'répétitions.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -150,19 +156,15 @@ class _PermissionRequestScreenState
                         _buildFeatureItem(
                           icon: Icons.music_note,
                           title: 'Concerts',
-                          description: 'Rappels pour tous vos concerts',
+                          description:
+                              'Chaque concert annoncé, et un rappel deux '
+                              'jours avant',
                         ),
                         const SizedBox(height: 16),
                         _buildFeatureItem(
                           icon: Icons.repeat,
                           title: 'Répétitions',
-                          description: 'Rappels pour vos répétitions',
-                        ),
-                        const SizedBox(height: 16),
-                        _buildFeatureItem(
-                          icon: Icons.schedule,
-                          title: 'Rappels personnalisables',
-                          description: '15 min, 1h, 1 jour avant...',
+                          description: 'Pour les membres : vos rappels',
                         ),
                       ],
                     ),

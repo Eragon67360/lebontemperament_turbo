@@ -26,21 +26,44 @@ file on `main`, GitHub's rule). Each run waits for approval on the
 2. archives and signs it for the App Store (`fastlane ios beta`). Signing is
    automatic: Xcode uses the API key to create or reuse the distribution
    certificate and the provisioning profile in the developer account;
-3. uploads it to TestFlight and sets the « À tester » text.
+3. uploads it to TestFlight and sets the « À tester » text;
+4. sends it to members: it sets the TestFlight test information
+   (description, feedback email, privacy policy URL, reviewer notes), adds
+   the build to « BT - Testeurs » and submits it for Apple's beta review when
+   it needs one. Members are notified once Apple approves it.
 
 Internal testers (App Store Connect users) get every build: each upload is
 also added to the internal groups that don't take new builds automatically,
 and the log lists every internal group with its number of testers. Members are
-external testers in the « BT - Testeurs » group, which they join through its public
-link. A build reaches them only when the owner sends it, like a Play
-promotion: Actions → **iOS TestFlight** → Run workflow → **Send the latest
-build to members** (`fastlane ios members`). That run sets the TestFlight
-test information (description, feedback email, privacy policy URL, reviewer
-notes), adds the newest build to « BT - Testeurs » and submits it for Apple's beta
-review; members are notified once Apple approves it. The reviewer's contact
-details and sign-in account are typed by the owner in App Store Connect
-(TestFlight → Test Information → Beta App Review Information) and are never
-stored in this repository.
+external testers in the « BT - Testeurs » group, which they join through its
+public link. The reviewer's contact details and sign-in account are typed by
+the owner in App Store Connect (TestFlight → Test Information → Beta App
+Review Information) and are never stored in this repository.
+
+Apple reviews the **first build of each version** (`x.y.z`) before external
+testers get it; later builds of the same version are usually approved at
+once. Only one build per version can be in review at a time, and at most six
+submissions a day. A build that is never submitted stays at « Ready to
+Submit » and members never see it: that is why members get each upload in
+the same run.
+
+Other choices under Actions → **iOS TestFlight** → Run workflow:
+
+- **Build and upload for internal testers only**: steps 1 to 3, members
+  don't get it (a test build for the owner).
+- **Send the latest build to members** (`fastlane ios members`): step 4
+  alone, for the newest build (or `BUILD_NUMBER`). Use it to retry when
+  step 4 failed after the upload, or to send a build uploaded for internal
+  testers only.
+- **Show the TestFlight status** (`fastlane ios status`, read-only): the
+  latest builds with Apple's state for members (never sent to review,
+  waiting for review, approved, testable, expired…), their expiry date and
+  the TestFlight groups that have them. Group names only: the log is public.
+- **Set up delivery links** (`fastlane ios app_links`): turns on Associated
+  Domains for `com.lebontemperament.app` (the `/l/<code>` delivery links open
+  the app, #593) if it is off, and attaches the App ID (`TEAMID.com.lebontemperament.app`)
+  to the run as the `app-links` artifact, for `apps/website/lib/app-links.ts`.
+  The team ID is masked in the logs, hence the artifact.
 
 ## The App Store page
 

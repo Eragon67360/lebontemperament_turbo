@@ -17,6 +17,10 @@ const FloatingAnniversaryButton = dynamic(
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isTrackPage = pathname?.startsWith("/track");
+  // `/l/<code>` is the delivery link of the SMS (#593): the same tracking
+  // view as `/track`, without the site's navigation and footer. It may stack
+  // a card above the delivery, so it scrolls instead of clipping.
+  const isDeliveryLinkPage = pathname?.startsWith("/l/");
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
 
@@ -24,6 +28,10 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="h-dvh min-h-dvh w-full overflow-hidden">{children}</div>
     );
+  }
+
+  if (isDeliveryLinkPage) {
+    return <div className="min-h-dvh w-full">{children}</div>;
   }
 
   // Landmarks at the top level: navigation and footer are siblings of <main>,

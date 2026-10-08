@@ -28,13 +28,20 @@ class ConcertAdapter extends TypeAdapter<Concert> {
       name: fields[8] as String?,
       createdBy: fields[9] as String?,
       affiche: fields[10] as String?,
+      venueName: fields[11] as String?,
+      streetAddress: fields[12] as String?,
+      postalCode: fields[13] as String?,
+      city: fields[14] as String?,
+      price: fields[15] as double?,
+      isFree: fields[16] as bool?,
+      relatedLink: fields[17] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Concert obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -56,7 +63,21 @@ class ConcertAdapter extends TypeAdapter<Concert> {
       ..writeByte(9)
       ..write(obj.createdBy)
       ..writeByte(10)
-      ..write(obj.affiche);
+      ..write(obj.affiche)
+      ..writeByte(11)
+      ..write(obj.venueName)
+      ..writeByte(12)
+      ..write(obj.streetAddress)
+      ..writeByte(13)
+      ..write(obj.postalCode)
+      ..writeByte(14)
+      ..write(obj.city)
+      ..writeByte(15)
+      ..write(obj.price)
+      ..writeByte(16)
+      ..write(obj.isFree)
+      ..writeByte(17)
+      ..write(obj.relatedLink);
   }
 
   @override
@@ -87,6 +108,13 @@ _$ConcertImpl _$$ConcertImplFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String?,
       createdBy: json['createdBy'] as String?,
       affiche: json['affiche'] as String?,
+      venueName: json['venue_name'] as String?,
+      streetAddress: json['street_address'] as String?,
+      postalCode: json['postal_code'] as String?,
+      city: json['city'] as String?,
+      price: (json['price'] as num?)?.toDouble(),
+      isFree: json['is_free'] as bool?,
+      relatedLink: json['related_link'] as String?,
     );
 
 Map<String, dynamic> _$$ConcertImplToJson(_$ConcertImpl instance) =>
@@ -102,6 +130,13 @@ Map<String, dynamic> _$$ConcertImplToJson(_$ConcertImpl instance) =>
       'name': instance.name,
       'createdBy': instance.createdBy,
       'affiche': instance.affiche,
+      'venue_name': instance.venueName,
+      'street_address': instance.streetAddress,
+      'postal_code': instance.postalCode,
+      'city': instance.city,
+      'price': instance.price,
+      'is_free': instance.isFree,
+      'related_link': instance.relatedLink,
     };
 
 const _$ContextEnumMap = {
