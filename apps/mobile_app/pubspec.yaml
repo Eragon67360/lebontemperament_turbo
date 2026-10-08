@@ -65,6 +65,8 @@ dependencies:
   geolocator: ^12.0.0
   geocoding: ^3.0.0
   share_plus: ^10.1.4
+  # Screenshots attached to a signalement (system photo picker).
+  image_picker: ^1.2.2
 
   # Liquid Glass tab bar on iOS 26 and later (shader drawn by Flutter).
   cupertino_native_better: ^1.6.0

@@ -20,6 +20,7 @@ import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/notifications/presentation/screens/permission_request_screen.dart';
 import '../../features/onboarding/presentation/screens/welcome_tour_screen.dart';
 import '../../features/profile/presentation/screens/developer_mode_screen.dart';
+import '../../features/reports/presentation/screens/report_conversation_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 
 // Global auth state listener
@@ -47,6 +48,7 @@ class AppRouter {
   static const String eventDetail = '/events/:id';
   static const String concertDetail = '/concerts/:id';
   static const String rehearsals = '/rehearsals';
+  static const String reportDetail = '/reports/:id';
   static const String driverTracking = '/driver-tracking';
   static const String developer = '/developer';
   // The name for the new sub-route
@@ -153,6 +155,15 @@ class AppRouter {
                   ConcertDetailScreen(concertId: concertId),
             );
           },
+        ),
+
+        // A signalement's conversation (push « Réponse à votre signalement »,
+        // « Nouveau signalement »).
+        GoRoute(
+          path: reportDetail,
+          name: 'reportDetail',
+          builder: (context, state) =>
+              ReportConversationScreen(reportId: state.pathParameters['id']!),
         ),
 
         // Rehearsals list (for notification deep link; no detail screen yet)

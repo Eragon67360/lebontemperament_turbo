@@ -47,6 +47,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pour joindre une capture d’écran à un signalement, si vous le souhaitez.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Votre position est partagée en temps réel avec les clients lors du suivi de livraison.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

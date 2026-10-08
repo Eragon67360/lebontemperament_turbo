@@ -25,7 +25,7 @@ State lives in `ops_alerts`, one row per alert:
 
 ## Who receives it
 
-Only phones in `push_devices` whose owner's profile is `superadmin` at send time. The app registers its FCM token after sign-in with `register_push_device(p_token, p_platform)` (`'android'` or `'ios'`) and removes it on sign-out with `unregister_push_device(p_token)`. For any role other than superadmin, `register_push_device` stores nothing and returns `false`. Tokens FCM reports as unregistered are deleted at send time.
+Only phones in `push_devices` whose owner's profile is `superadmin` at send time. The app registers its FCM token after sign-in with `register_push_device(p_token, p_platform)` (`'android'` or `'ios'`) and removes it on sign-out with `unregister_push_device(p_token)`. Since migration `20261008090000` every member's phone is registered (for the replies to their signalements, see `notify-bug-report`); this function still selects superadmins' phones only. Tokens FCM reports as unregistered are deleted at send time.
 
 The push carries `data: { type: "alert", key, state }` (`state` is `fire`, `remind` or `resolve`). The app's current tap handler ignores unknown types, so a tap simply opens the app.
 

@@ -2,6 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/models/rehearsal.dart';
 
+/// The Profil tip about « Signaler un problème », for members who saw the
+/// tour before it said so. Finishing the tour marks it seen.
+const kReportProblemTipId = 'report_problem';
+
 /// What the welcome tour remembers on this phone: whether it was seen, the
 /// ensembles the member picked (the home screen, the calendar and the
 /// reminders follow them) and the one-time tips already dismissed.

@@ -99,6 +99,8 @@ void main() {
 
     expect(find.text('Accueil de test'), findsOneWidget);
     expect(await WelcomePrefs.tourSeen(), isTrue);
+    // The tour told about signalements: no Profil tip about them later.
+    expect(await WelcomePrefs.tipSeen(kReportProblemTipId), isTrue);
     expect(await WelcomePrefs.myGroups(), {
       GroupType.hommes,
       GroupType.orchestre,

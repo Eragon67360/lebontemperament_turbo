@@ -73,6 +73,8 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
   /// opened.
   Future<void> _finish({bool applyGroup = true}) async {
     await WelcomePrefs.markTourSeen();
+    // The tour's last section page already tells about signalements.
+    await WelcomePrefs.markTipSeen(kReportProblemTipId);
     if (applyGroup && _groupsLoaded) {
       await ref.read(myGroupsProvider.notifier).set(_groups);
     }
@@ -179,6 +181,12 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
           (
             Icons.person_outline,
             'Profil : thème clair ou sombre, notifications, aide.',
+          ),
+          (
+            Icons.flag_outlined,
+            'Un souci dans l’application ? Profil › « Signaler un problème », '
+                'avec une capture d’écran si vous voulez : on vous répond ici, '
+                'avec une notification.',
           ),
         ],
       ),
