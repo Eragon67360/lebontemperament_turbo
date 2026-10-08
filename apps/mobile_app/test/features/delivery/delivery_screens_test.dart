@@ -233,7 +233,10 @@ void main() {
         tester,
         tracking: () => trackingJson(recipientScheduledAt: null),
       );
-      expect(find.text('La date vous sera confirmée par SMS.'), findsOneWidget);
+      expect(
+        find.text('Nous vous prévenons ici dès que la tournée commence.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('next: « Vous êtes les prochains ! », with a delay line', (
