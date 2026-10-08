@@ -8,6 +8,9 @@ import '../../../../core/theme/app_fonts.dart';
 import '../../../../core/widgets/fade_in_up.dart';
 import '../../../../core/widgets/stage.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../delivery/data/delivery_pass.dart';
+import '../../../delivery/presentation/providers/delivery_providers.dart';
+import '../../../delivery/presentation/screens/delivery_screen.dart';
 import '../../data/public_content.dart';
 import '../providers/public_navigation_provider.dart';
 import '../widgets/public_widgets.dart';
@@ -40,6 +43,7 @@ class PublicHomeScreen extends ConsumerWidget {
                   delegate: SliverChildListDelegate(const [
                     FadeInUp(delay: 100, child: _Header()),
                     SizedBox(height: 28),
+                    _DeliverySection(),
                     FadeInUp(delay: 200, child: _NextConcertSection()),
                     SizedBox(height: 28),
                     FadeInUp(delay: 300, child: _JoinCard()),
@@ -124,6 +128,85 @@ extension on Widget {
     excludeSemantics: true,
     child: this,
   );
+}
+
+/// « Votre livraison » (#593): only on a phone that holds a delivery pass,
+/// so visitors without a code never hear of deliveries.
+class _DeliverySection extends ConsumerWidget {
+  const _DeliverySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final passes = ref.watch(deliveryPassesProvider).value ?? const [];
+    if (passes.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final pass in passes) ...[
+          FadeInUp(delay: 150, child: _DeliveryCard(pass: pass)),
+          const SizedBox(height: 12),
+        ],
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _DeliveryCard extends StatelessWidget {
+  const _DeliveryCard({required this.pass});
+
+  final DeliveryPass pass;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final greeting = pass.label.isEmpty ? 'Bonjour' : 'Bonjour ${pass.label}';
+    return StageCard(
+      selected: true,
+      onTap: () => context.push(deliveryPath(pass.recipientId)),
+      semanticLabel: 'Votre livraison. $greeting, suivre la livraison',
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.local_shipping_outlined, color: scheme.onPrimary),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Votre livraison',
+                  style: AppFonts.display(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$greeting · suivre la livraison',
+                  style: AppFonts.sans(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+        ],
+      ),
+    );
+  }
 }
 
 class _NextConcertSection extends ConsumerWidget {

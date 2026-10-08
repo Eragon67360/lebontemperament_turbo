@@ -12,6 +12,9 @@ import '../../features/auth/data/services/auth_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/concerts/presentation/screens/concert_detail_screen.dart';
+import '../../features/delivery/presentation/screens/delivery_code_screen.dart';
+import '../../features/delivery/presentation/screens/delivery_link_screen.dart';
+import '../../features/delivery/presentation/screens/delivery_screen.dart';
 import '../../features/driver_tracking/presentation/screens/delivery_history_screen.dart';
 import '../../features/driver_tracking/presentation/screens/driver_tracking_screen.dart';
 import '../../features/driver_tracking/presentation/screens/recipient_details_screen.dart';
@@ -49,6 +52,12 @@ class AppRouter {
   /// The public part, for everyone who is not signed in (#593).
   static const String publicHome = '/public';
   static const String welcome = '/welcome';
+
+  /// Deliveries (#593): the link from the SMS, the typed code, and a pass.
+  /// Open to visitors and members alike; nothing in the menus leads here.
+  static const String deliveryLink = '/l/:code';
+  static const String deliveryCode = '/delivery/code';
+  static const String deliveryDetail = '/delivery/:recipientId';
   static const String eventDetail = '/events/:id';
   static const String concertDetail = '/concerts/:id';
   static const String rehearsals = '/rehearsals';
@@ -59,8 +68,8 @@ class AppRouter {
   static const String driverTrackingRecipient = 'driverTrackingRecipient';
 
   /// Where a location leads: visitors get the public part and the pages it
-  /// links to (a concert, the sign-in); a member is never shown the public
-  /// part or the sign-in.
+  /// links to (a concert, the sign-in, a delivery); a member is never shown
+  /// the public part or the sign-in, and keeps the delivery pages.
   static String? redirectFor({
     required bool isAuthenticated,
     required String location,
@@ -70,7 +79,9 @@ class AppRouter {
         location == permissions ||
         location == login ||
         location == publicHome ||
-        location.startsWith('/concerts/');
+        location.startsWith('/concerts/') ||
+        location.startsWith('/l/') ||
+        location.startsWith('/delivery/');
     if (!isAuthenticated && !isPublic) return publicHome;
     if (isAuthenticated && (location == login || location == publicHome)) {
       return main;
@@ -167,6 +178,26 @@ class AppRouter {
                   ConcertDetailScreen(concertId: concertId),
             );
           },
+        ),
+
+        // Deliveries (#593). The typed-code route comes before the pass
+        // route, which would otherwise swallow « code » as an id.
+        GoRoute(
+          path: deliveryLink,
+          name: 'deliveryLink',
+          builder: (context, state) =>
+              DeliveryLinkScreen(code: state.pathParameters['code']!),
+        ),
+        GoRoute(
+          path: deliveryCode,
+          name: 'deliveryCode',
+          builder: (context, state) => const DeliveryCodeScreen(),
+        ),
+        GoRoute(
+          path: deliveryDetail,
+          name: 'deliveryDetail',
+          builder: (context, state) =>
+              DeliveryScreen(recipientId: state.pathParameters['recipientId']!),
         ),
 
         // A signalement's conversation (push « Réponse à votre signalement »,
