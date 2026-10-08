@@ -18,7 +18,7 @@ The work is done by two SQL functions (migration `20261008130000_delivery_codes_
 
 ## Pushes on the delivery day
 
-`start-delivery-round`, `send-delivery-sms`, `check-eta-and-send-arrival-sms` and `send-delivery-complete-sms` also push to the linked phones (`_shared/delivery-push.ts`, texts in `_shared/delivery-messages.ts`): « Notre tournée a commencé : passage prévu entre 9 h 15 et 9 h 45. », « Vous êtes les prochains… », « Nous arrivons dans environ 5 minutes. », « Livrée ! Merci pour votre commande. ». The SMS are unchanged for now (#593 part 3 trims them). Data `{ type: "delivery", id: <recipient_id> }`: a tap opens the delivery in the app.
+`start-delivery-round`, `send-delivery-sms`, `check-eta-and-send-arrival-sms` and `send-delivery-complete-sms` also push to the linked phones (`_shared/delivery-push.ts`, texts in `_shared/delivery-messages.ts`): « Notre tournée a commencé : passage prévu entre 9 h 15 et 9 h 45. », « Vous êtes les prochains… », « Nous arrivons dans environ 5 minutes. », « Livrée ! Merci pour votre commande. ». Since #593 part 3 these steps are pushes only; the only SMS are the invitation (`send-delivery-invitations`) and the « 5 minutes » fallback for recipients without a linked phone. Data `{ type: "delivery", id: <recipient_id> }`: a tap opens the delivery in the app.
 
 ## Retention
 
