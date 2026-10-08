@@ -16,6 +16,7 @@ import {
   Music2,
   Ticket,
   Users,
+  Vote,
 } from "lucide-react";
 
 export type NavItem = {
@@ -231,8 +232,8 @@ export function buildNavSections({
       id: "association",
       label: "Association",
       description: isSuperAdmin
-        ? "Documents, comptes rendus du CA et signalements"
-        : "Documents et comptes rendus du CA",
+        ? "Documents, AG, comptes rendus du CA et signalements"
+        : "Documents, AG et comptes rendus du CA",
       icon: Landmark,
       groups: [
         {
@@ -242,6 +243,11 @@ export function buildNavSections({
               href: RouteNames.DASHBOARD.ADMIN.DOCUMENTS,
               label: "Documents de l’association",
               icon: Files,
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ASSEMBLIES,
+              label: "Assemblée générale",
+              icon: Vote,
             },
             {
               href: RouteNames.DASHBOARD.ADMIN.CA,

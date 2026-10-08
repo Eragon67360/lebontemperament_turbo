@@ -1,4 +1,5 @@
 import HomeContent from "@/components/HomeContent";
+import { getCurrentAssembly } from "@/lib/generalAssemblies";
 import type { ConcertProject } from "@/types/projects";
 import { createPublicClient } from "@/utils/supabase/public";
 import {
@@ -8,9 +9,9 @@ import {
 } from "@repo/domain/utils/projects";
 import { Metadata } from "next";
 
-// The concert-story teaser is the page's only data (anon key, no cookies):
-// prerendered, served from the cache for five minutes or until the admin's
-// story edit calls /api/revalidate.
+// The concert-story teaser and the general assembly announcement are the
+// page's only data (anon key, no cookies): prerendered, served from the cache
+// for five minutes or until an admin edit calls /api/revalidate.
 export const revalidate = 300;
 
 export const metadata: Metadata = {
@@ -57,11 +58,20 @@ async function getLatestStories(): Promise<ConcertProject[] | undefined> {
   }
 }
 
+// The newest published AG; the button shows until its day (HomeContent).
+async function getAssemblyHeldAt(): Promise<string | null> {
+  const assembly = await getCurrentAssembly(createPublicClient());
+  return assembly?.heldAt ?? null;
+}
+
 const Home = async () => {
-  const stories = await getLatestStories();
+  const [stories, assemblyHeldAt] = await Promise.all([
+    getLatestStories(),
+    getAssemblyHeldAt(),
+  ]);
   return (
     <>
-      <HomeContent stories={stories} />
+      <HomeContent stories={stories} assemblyHeldAt={assemblyHeldAt} />
     </>
   );
 };

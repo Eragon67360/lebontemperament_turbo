@@ -22,6 +22,8 @@ export const WEBSITE_PATHS = {
   concerts: "/concerts",
   concertStories: { path: "/concerts/[slug]", type: "page" },
   gallery: "/galerie",
+  /** The general assembly page (newest published AG). */
+  generalAssembly: "/ag",
   sitemap: "/sitemap.xml",
   /** The root layout: every page (feature flags are read there). */
   everything: { path: "/", type: "layout" },
@@ -46,6 +48,8 @@ export const REVALIDATE = {
       WEBSITE_PATHS.sitemap,
     ],
   },
+  /** general assemblies: their page and the home page's announcement */
+  assemblies: { paths: [WEBSITE_PATHS.generalAssembly, WEBSITE_PATHS.home] },
   /** YouTube links */
   videos: { paths: [WEBSITE_PATHS.gallery] },
   /** feature flags are read in the root layout: everything, plus the sitemap */
