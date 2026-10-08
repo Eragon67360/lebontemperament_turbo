@@ -6,6 +6,7 @@ import {
   type UserRole,
 } from "@/utils/access";
 import { checkAuthorization } from "@/utils/auth";
+import { removeMemberFiles } from "@/utils/members/memberFiles";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { inviteStatusOf, listAllAuthUsers } from "@/utils/users/authUsers";
 import { NextResponse } from "next/server";
@@ -206,6 +207,10 @@ export async function DELETE(request: Request) {
         { status: decision.status },
       );
     }
+
+    // Storage files first: the database rows go with the account, files
+    // don't (#354).
+    await removeMemberFiles(supabaseAdmin, userId);
 
     const { error: deleteError } =
       await supabaseAdmin.auth.admin.deleteUser(userId);

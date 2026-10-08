@@ -19,6 +19,7 @@ const RouteNames = {
   },
   MEMBRES: {
     ROOT: "/membres",
+    MES_DONNEES: "/membres/mes-donnees",
   },
   AG_2026: "/ag-2026",
   ERROR: "/error",
