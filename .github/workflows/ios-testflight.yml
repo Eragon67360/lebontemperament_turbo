@@ -1,12 +1,14 @@
 name: iOS TestFlight
 
-# Builds the iPhone app, signs it for the App Store and uploads it to
-# TestFlight (fastlane, apps/mobile_app/ios/fastlane). Runs on each release
-# to main that touches the app, like the Android build, or by hand from
-# Actions. Run by hand with "Send the latest build to members", it instead
-# adds the newest TestFlight build to the members' external group and
-# submits it for Apple's beta review; with "Update the App Store page", it
-# fills the App Store version being prepared (texts, screenshots, age rating,
+# Builds the iPhone app, signs it for the App Store, uploads it to
+# TestFlight and sends it to the members' external group, submitting it for
+# Apple's beta review when it needs one (fastlane, apps/mobile_app/ios/fastlane).
+# Runs on each release to main that touches the app, like the Android build,
+# or by hand from Actions. By hand, "Build and upload for internal testers
+# only" skips the members; "Send the latest build to members" only does that
+# step (to retry it); "Show the TestFlight status" lists the latest builds
+# with Apple's state for each, read-only; "Update the App Store page" fills
+# the App Store version being prepared (texts, screenshots, age rating,
 # build) without submitting it. See apps/mobile_app/ios/fastlane/README.md.
 #
 # It changes App Store Connect, so the job runs in the `app-store`
@@ -28,7 +30,9 @@ on:
         default: Build and upload
         options:
           - Build and upload
+          - Build and upload for internal testers only
           - Send the latest build to members
+          - Show the TestFlight status
           - Update the App Store page
 
 permissions:
@@ -46,8 +50,9 @@ jobs:
     timeout-minutes: 90
     environment: app-store
     env:
-      # Only "Build and upload" (and a push to main) builds the app.
-      BUILD: ${{ !inputs.action || inputs.action == 'Build and upload' }}
+      # Only the two "Build and upload" choices (and a push to main) build the app.
+      BUILD: ${{ !inputs.action || startsWith(inputs.action, 'Build and upload') }}
+      SEND_TO_MEMBERS: ${{ inputs.action != 'Build and upload for internal testers only' }}
       ACTION: ${{ inputs.action || 'Build and upload' }}
       # Same fixed production website as the Android build.
       SITE_URL: https://www.lebontemperament.com
@@ -124,7 +129,7 @@ jobs:
           bundler-cache: true
           working-directory: apps/mobile_app/ios
 
-      - name: Run fastlane (upload, send to members, or App Store page)
+      - name: Run fastlane (upload, send to members, status, or App Store page)
         working-directory: apps/mobile_app/ios
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -137,6 +142,7 @@ jobs:
           trap 'rm -f "$ASC_KEY_PATH"' EXIT
           case "$ACTION" in
             "Send the latest build to members") bundle exec fastlane ios members ;;
+            "Show the TestFlight status") bundle exec fastlane ios status ;;
             "Update the App Store page") bundle exec fastlane ios store ;;
             *) bundle exec fastlane ios beta ;;
           esac
