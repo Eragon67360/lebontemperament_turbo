@@ -47,6 +47,7 @@ test.describe("members-only routes refuse anonymous callers", () => {
     `/api/drive/files?folderID=${FAKE_DRIVE_ID}`,
     `/api/drive/file?fileId=${FAKE_DRIVE_ID}`,
     "/api/membres",
+    "/api/membres/mes-donnees",
     "/api/cas",
     "/api/rehearsals",
   ]) {
@@ -65,6 +66,16 @@ test.describe("members-only routes refuse anonymous callers", () => {
       expect(response.status()).toBe(401);
     });
   }
+});
+
+// #354: a deletion request needs the member's own session.
+test("POST /api/membres/demande-suppression without a session is 401", async ({
+  request,
+}) => {
+  const response = await request.post("/api/membres/demande-suppression", {
+    data: { message: "test" },
+  });
+  expect(response.status()).toBe(401);
 });
 
 test.describe("POST /api/revalidate is secret-protected", () => {
