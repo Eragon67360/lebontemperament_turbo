@@ -13,6 +13,10 @@ import type { ConcertProject } from "@/types/projects";
 import RouteNames from "@/utils/routes";
 import { RoundedSize } from "@/utils/types";
 import { Button } from "@heroui/react";
+import {
+  assemblyShortDateLabel,
+  isAssemblyUpcoming,
+} from "@repo/domain/utils/generalAssemblies";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
@@ -34,25 +38,28 @@ const NEAR_VIEW_MARGIN = "0px 0px 1000px 0px";
 // Temporary CTAs, decided in the browser only: the server HTML never shows
 // them, so server and client render identically (as the old mount effects did).
 const CALENDAR_CTA_DEADLINE = new Date("2026-01-15").getTime();
-const AG_CTA_DEADLINE = new Date("2026-03-31").getTime();
 const isBeforeCalendarDeadline = () => Date.now() < CALENDAR_CTA_DEADLINE;
-const isBeforeAGDeadline = () => Date.now() < AG_CTA_DEADLINE;
 
 type HomeContentProps = {
   /** Latest concert stories, loaded by the page on the server. */
   stories?: ConcertProject[];
+  /** Start of the newest published general assembly (admin), if any. */
+  assemblyHeldAt?: string | null;
 };
 
-const HomeContent = ({ stories }: HomeContentProps) => {
+const HomeContent = ({ stories, assemblyHeldAt }: HomeContentProps) => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
   // Must render identically on server and client: measure in the effect below.
   const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
 
-  // Calendar button before January 15, 2026; AG button before March 31, 2026.
+  // Calendar button before January 15, 2026; AG button until the AG's day.
   const showCalendarButton = useClientValue(isBeforeCalendarDeadline, false);
-  const showAGButton = useClientValue(isBeforeAGDeadline, false);
+  const showAGButton = useClientValue(
+    () => (assemblyHeldAt ? isAssemblyUpcoming(assemblyHeldAt) : false),
+    false,
+  );
 
   // Refs for each section
   const projectsRef = useRef(null);
@@ -213,8 +220,8 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                 </m.div>
               )}
 
-              {/* AG 2026 CTA - Temporary until March 31, 2026 */}
-              {showAGButton && (
+              {/* General assembly CTA, until the day of the AG */}
+              {showAGButton && assemblyHeldAt && (
                 <m.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -225,10 +232,11 @@ const HomeContent = ({ stories }: HomeContentProps) => {
                     size="lg"
                     variant="outline"
                     className="border-white/50 text-white hover:bg-white/10"
-                    aria-label="Informations Assemblée Générale 2026"
-                    href="/ag-2026"
+                    aria-label="Informations sur l'Assemblée Générale"
+                    href={RouteNames.AG}
                   >
-                    Assemblée Générale – 14 mars 2026
+                    Assemblée Générale –{" "}
+                    {assemblyShortDateLabel(assemblyHeldAt)}
                     <IoIosArrowRoundForward
                       className="-mr-1 ml-2 h-3 w-3 lg:h-5 lg:w-5"
                       aria-hidden="true"

@@ -1308,6 +1308,75 @@ export type Database = {
           },
         ];
       };
+      general_assemblies: {
+        Row: {
+          afterwards: string | null;
+          agenda: string | null;
+          convocation_document_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          held_at: string;
+          id: string;
+          place: string;
+          practical_note: string | null;
+          proxy_document_id: string | null;
+          reminders: string | null;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+          voting_rights: string | null;
+        };
+        Insert: {
+          afterwards?: string | null;
+          agenda?: string | null;
+          convocation_document_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          held_at: string;
+          id?: string;
+          place: string;
+          practical_note?: string | null;
+          proxy_document_id?: string | null;
+          reminders?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          voting_rights?: string | null;
+        };
+        Update: {
+          afterwards?: string | null;
+          agenda?: string | null;
+          convocation_document_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          held_at?: string;
+          id?: string;
+          place?: string;
+          practical_note?: string | null;
+          proxy_document_id?: string | null;
+          reminders?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          voting_rights?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "general_assemblies_convocation_document_id_fkey";
+            columns: ["convocation_document_id"];
+            isOneToOne: false;
+            referencedRelation: "site_documents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "general_assemblies_proxy_document_id_fkey";
+            columns: ["proxy_document_id"];
+            isOneToOne: false;
+            referencedRelation: "site_documents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       groups: {
         Row: {
           created_at: string | null;

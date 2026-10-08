@@ -9,7 +9,7 @@ The words the association, its members and the code use. Use them in issues, cod
 - **Membre** (`profiles`): a person with an account. Has a role, groups, a voice (`voice`), a profile picture, and shows in the member directory.
 - **Rôle** (`user_role`): `user` (member), `admin`, `superadmin`.
 - **CA** (`cas`): a board meeting (_conseil d'administration_) record: title, date, attached file (minutes).
-- **AG**: the general assembly (_assemblée générale_); `/ag-2026` is its page.
+- **AG**: the general assembly (_assemblée générale_); `/ag` shows the newest one, edited in the admin (Association › Assemblée générale); `/ag-2026` redirects there.
 
 ## Music and calendar
 

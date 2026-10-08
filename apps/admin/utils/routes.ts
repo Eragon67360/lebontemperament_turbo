@@ -14,6 +14,7 @@ const RouteNames = {
       USERS_SYNC: "/dashboard/admin/users/sync",
       CA: "/dashboard/admin/ca",
       DOCUMENTS: "/dashboard/admin/documents",
+      ASSEMBLIES: "/dashboard/admin/assemblies",
       GOOGLE_GROUPS: "/dashboard/admin/google-groups",
       ANNIVERSARY: {
         ROOT: "/dashboard/admin/anniversary",

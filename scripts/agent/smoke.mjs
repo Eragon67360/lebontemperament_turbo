@@ -108,7 +108,7 @@ await check("website track (noindex)", `${base}/track`, [200], {
 await check("website auth/login (noindex)", `${base}/auth/login`, [200], {
   noindex: true,
 });
-await check("website ag-2026 (noindex)", `${base}/ag-2026`, [200], {
+await check("website ag (noindex)", `${base}/ag`, [200], {
   noindex: true,
 });
 await check("website sitemap", `${base}/sitemap.xml`, [200]);

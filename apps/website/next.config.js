@@ -76,6 +76,12 @@ const nextConfig = {
         destination: "/mentions-legales",
         permanent: true,
       },
+      {
+        // The general assembly page is now edited in the admin each year.
+        source: "/ag-2026",
+        destination: "/ag",
+        permanent: true,
+      },
     ];
   },
   images: {

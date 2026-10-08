@@ -44,7 +44,10 @@ for (const href of OLD_NAV_HREFS) {
   assert.ok(hrefs.includes(href), `${href} has no nav entry any more`);
 }
 // Added since: « Documents de l'association » (2026-10-08).
-const NEW_NAV_HREFS = ["/dashboard/admin/documents"];
+const NEW_NAV_HREFS = [
+  "/dashboard/admin/documents",
+  "/dashboard/admin/assemblies",
+];
 for (const href of NEW_NAV_HREFS) {
   assert.ok(hrefs.includes(href), `${href} has no nav entry`);
 }
