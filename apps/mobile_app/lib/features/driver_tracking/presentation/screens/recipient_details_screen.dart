@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Required for Clipboard
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart'; // Required for pop
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:intl/intl.dart';
@@ -11,7 +12,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/app_config.dart'; // Required for site URL
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
+import '../../data/delivery_invitations.dart';
 import '../providers/driver_tracking_provider.dart';
+import '../widgets/invitation_widgets.dart';
 
 class RecipientDetailsScreen extends ConsumerWidget {
   final Delivery delivery;
@@ -105,6 +108,44 @@ class RecipientDetailsScreen extends ConsumerWidget {
     }
   }
 
+  /// « Renvoyer l’invitation »: one SMS to this recipient, also when they
+  /// were invited already (lost SMS, new number). Asks first.
+  Future<void> _sendInvitation(
+    BuildContext context,
+    WidgetRef ref,
+    Delivery delivery,
+    DeliveryRecipient recipient,
+  ) async {
+    final scheduledAt = delivery.scheduledAt;
+    if (scheduledAt == null) {
+      await explainInvitationNeedsDate(context, canPickHere: false);
+      return;
+    }
+    final day = utcToParisWallClock(scheduledAt);
+    final again = recipient.invitedAt != null;
+    final ok = await confirmInvitationSend(
+      context,
+      title: again ? 'Renvoyer l’invitation' : 'Envoyer l’invitation',
+      question:
+          '${again ? 'Renvoyer' : 'Envoyer'} l’invitation par SMS à '
+          '${recipient.label} (${recipient.phoneNumber?.trim()})\u00a0?',
+      preview: invitationPreviewText(
+        name: recipient.label,
+        deliveryDayParis: day,
+        code: recipient.code,
+      ),
+      confirmLabel: again ? 'Renvoyer' : 'Envoyer',
+    );
+    if (!ok || !context.mounted) return;
+    final result = await ref
+        .read(driverTrackingProvider.notifier)
+        .sendInvitations(recipientIds: [recipient.id]);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(result.message)));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(driverTrackingProvider);
@@ -124,6 +165,9 @@ class RecipientDetailsScreen extends ConsumerWidget {
         (currentRecipient.address != null &&
             currentRecipient.address!.isNotEmpty);
     final canShare = currentRecipient.publicToken != null;
+    final invitation = invitationStatusLabel(currentRecipient);
+    final canInvite = hasInvitationPhone(currentRecipient) && !isDelivered;
+    final code = currentRecipient.code;
 
     String statusLabel;
     Color statusColor;
@@ -208,6 +252,41 @@ class RecipientDetailsScreen extends ConsumerWidget {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (invitation != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      invitation,
+                      style: AppFonts.sans(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (code != null && code.isNotEmpty) ...[
+                    const Divider(height: 32),
+                    Text(
+                      'Code de suivi',
+                      style: AppFonts.sans(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    SelectableText(
+                      displayDeliveryCode(code),
+                      // Regular weight: the only Fira Code face bundled.
+                      style: GoogleFonts.firaCode(
+                        fontSize: 18,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'À saisir dans l’application, ou via le lien '
+                      '${deliveryInvitationLink(code)}',
+                      style: AppFonts.sans(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                   if (isDelivered) ...[
                     const Divider(height: 32),
                     Text(
@@ -289,6 +368,24 @@ class RecipientDetailsScreen extends ConsumerWidget {
             isSecondary: true,
             onPressed: onEdit,
           ),
+          if (canInvite) ...[
+            const SizedBox(height: 12),
+            _ActionButton(
+              label: currentRecipient.invitedAt != null
+                  ? 'Renvoyer l’invitation'
+                  : 'Envoyer l’invitation',
+              icon: Icons.sms_outlined,
+              isSecondary: true,
+              onPressed: state.isActionLoading
+                  ? null
+                  : () => _sendInvitation(
+                      context,
+                      ref,
+                      currentDelivery,
+                      currentRecipient,
+                    ),
+            ),
+          ],
           const SizedBox(height: 12),
           _ActionButton(
             label: 'Copier le lien de suivi',

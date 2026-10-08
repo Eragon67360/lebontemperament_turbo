@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.4";
+const POLICY_VERSION = "2.5";
 const POLICY_UPDATED_ON = "8 octobre 2026";
 
 export const metadata: Metadata = {
@@ -654,9 +654,9 @@ export default function PrivacyPolicy() {
 
           <Section id="livraisons">
             <p className={pClass}>
-              Lors de ses tournées de livraison, l’association prévient les
-              destinataires par SMS et leur permet de suivre l’arrivée du
-              livreur grâce à un lien personnel. Le SMS porte aussi un code
+              Avant une tournée de livraison, l’association envoie à chaque
+              destinataire un SMS d’invitation avec la date de livraison, un
+              lien personnel pour suivre l’arrivée du livreur et un code
               personnel, qui permet de suivre la livraison dans l’application Le
               Bon Tempérament sans créer de compte.
             </p>
@@ -669,7 +669,7 @@ export default function PrivacyPolicy() {
                 ],
                 [
                   "Finalité",
-                  "organiser la tournée (ordre de passage, itinéraire, heure d’arrivée estimée) et vous envoyer des SMS : départ de la tournée avec votre lien de suivi et votre code, arrivée imminente, livraison effectuée",
+                  "organiser la tournée (ordre de passage, itinéraire, heure d’arrivée estimée) et vous envoyer au plus deux SMS : l’invitation, avec la date de livraison, votre lien de suivi et votre code, puis, le jour de la livraison et seulement si vous ne suivez pas la livraison dans l’application, l’annonce de notre arrivée dans quelques minutes",
                 ],
                 [
                   "Base légale",
@@ -677,7 +677,7 @@ export default function PrivacyPolicy() {
                 ],
                 [
                   "Conservation",
-                  "vos données sont supprimées 30 jours après la tournée ; le lien de suivi expire de lui-même (24 heures par défaut)",
+                  "vos données sont supprimées 30 jours après la tournée ; le lien de suivi et le code expirent d’eux-mêmes le lendemain de la livraison",
                 ],
                 [
                   "Destinataires",

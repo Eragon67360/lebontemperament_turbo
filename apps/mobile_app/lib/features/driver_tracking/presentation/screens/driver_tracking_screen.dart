@@ -21,7 +21,9 @@ import '../../../../core/config/app_config.dart';
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
+import '../../data/delivery_invitations.dart';
 import '../providers/driver_tracking_provider.dart';
+import '../widgets/invitation_widgets.dart';
 
 /// Recipient ids in their new order after a drag in a ReorderableListView,
 /// whose [newIndex] counts the dragged item as still in place.
@@ -37,17 +39,7 @@ List<String> reorderedRecipientIds(
   return newOrder.map((r) => r.id).toList();
 }
 
-DateTime _utcToParis(DateTime utc) {
-  final paris = tz.getLocation('Europe/Paris');
-  final inParis = tz.TZDateTime.from(utc, paris);
-  return DateTime(
-    inParis.year,
-    inParis.month,
-    inParis.day,
-    inParis.hour,
-    inParis.minute,
-  );
-}
+DateTime _utcToParis(DateTime utc) => utcToParisWallClock(utc);
 
 class DriverTrackingScreen extends ConsumerWidget {
   const DriverTrackingScreen({super.key});
@@ -239,6 +231,46 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
     }
   }
 
+  /// « Envoyer les invitations (N) »: the date first (it is in the SMS),
+  /// then a confirmation with the text, then the edge function.
+  Future<void> _sendInvitations() async {
+    final notifier = ref.read(driverTrackingProvider.notifier);
+    if (ref.read(driverTrackingProvider).delivery?.scheduledAt == null) {
+      final pick = await explainInvitationNeedsDate(context, canPickHere: true);
+      if (!pick || !mounted) return;
+      await _pickScheduledTimeRange(context);
+      if (!mounted) return;
+    }
+    final state = ref.read(driverTrackingProvider);
+    final scheduledAt = state.delivery?.scheduledAt;
+    final toInvite = recipientsToInvite(state.recipients);
+    if (scheduledAt == null || toInvite.isEmpty) return;
+
+    final day = _utcToParis(scheduledAt);
+    final first = toInvite.first;
+    final ok = await confirmInvitationSend(
+      context,
+      title: 'Envoyer les invitations',
+      question: invitationConfirmQuestion(
+        count: toInvite.length,
+        deliveryDayParis: day,
+      ),
+      preview: invitationPreviewText(
+        name: first.label,
+        deliveryDayParis: day,
+        code: first.code,
+      ),
+      confirmLabel: 'Envoyer',
+    );
+    if (!ok || !mounted) return;
+
+    final result = await notifier.sendInvitations();
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(result.message)));
+  }
+
   Future<void> _confirmResetToken() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -359,6 +391,11 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
                         ),
                       ),
                       const SizedBox(height: 12),
+                      SendInvitationsButton(
+                        recipients: state.recipients,
+                        isBusy: state.isActionLoading,
+                        onPressed: _sendInvitations,
+                      ),
                       FadeInUp(
                         delay: 500,
                         child: _RecipientsCard(
@@ -552,7 +589,7 @@ class _ActionButtons extends ConsumerWidget {
   const _ActionButtons({required this.state});
 
   Future<void> _onStartDelivery(BuildContext context, WidgetRef ref) async {
-    // Request location permission BEFORE showing the SMS dialog, so the system
+    // Request location permission BEFORE showing the dialog, so the system
     // permission prompt can appear (it won't show when a modal is already open).
     final hasPermission = await ref
         .read(driverTrackingProvider.notifier)
@@ -563,8 +600,18 @@ class _ActionButtons extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Démarrer la livraison'),
-        content: const Text(
-          'Envoyer un SMS à tous les destinataires pour les prévenir du début de la tournée ?',
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Prévenir les destinataires que la tournée commence\u00a0?'),
+            SizedBox(height: 12),
+            Text(
+              'Les personnes qui suivent la livraison dans l’application '
+              'reçoivent une notification.',
+              style: TextStyle(fontSize: 13),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -581,7 +628,7 @@ class _ActionButtons extends ConsumerWidget {
     if (ok != null && context.mounted) {
       await ref
           .read(driverTrackingProvider.notifier)
-          .startDeliveryRound(sendSms: ok);
+          .startDeliveryRound(notifyRecipients: ok);
     }
   }
 
@@ -598,7 +645,7 @@ class _ActionButtons extends ConsumerWidget {
       children: [
         if (state.isTrackingInterrupted)
           // The round is still open in the database: resuming restarts the
-          // GPS stream without a second start-of-round SMS.
+          // GPS stream without a second start-of-round notification.
           FilledButton.icon(
             onPressed: state.isActionLoading
                 ? null
@@ -774,6 +821,7 @@ class _RecipientTile extends ConsumerWidget {
     }
 
     final subtitle = recipient.address ?? 'Aucune adresse';
+    final invitation = invitationStatusLabel(recipient);
 
     return ListTile(
       key: key,
@@ -817,12 +865,28 @@ class _RecipientTile extends ConsumerWidget {
           ),
         ],
       ),
-      subtitle: Text(
-        subtitle,
-        style: AppFonts.sans(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontSize: 13,
-        ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            subtitle,
+            style: AppFonts.sans(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
+          ),
+          if (invitation != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                invitation,
+                style: AppFonts.sans(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+        ],
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
     );
@@ -1190,7 +1254,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'Téléphone (pour SMS)',
+                labelText: 'Téléphone (pour l’invitation par SMS)',
                 hintText: 'Format international (ex. : +336…)',
                 border: OutlineInputBorder(),
               ),

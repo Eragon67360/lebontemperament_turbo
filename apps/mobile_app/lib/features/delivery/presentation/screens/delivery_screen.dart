@@ -337,7 +337,7 @@ class _Greeting extends StatelessWidget {
     DeliveryStage.planned => (
       icon: Icons.event_outlined,
       title: 'Livraison prévue',
-      detail: window ?? 'La date vous sera confirmée par SMS.',
+      detail: window ?? 'Nous vous prévenons ici dès que la tournée commence.',
     ),
   };
 }

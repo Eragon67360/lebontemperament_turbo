@@ -11,9 +11,6 @@ interface RecipientRow {
   latitude: number;
   longitude: number;
   sort_order: number;
-  phone_number: string | null;
-  label: string;
-  public_token: string;
   delivered_at: string | null;
 }
 
@@ -40,31 +37,6 @@ async function fetchOSRMLegDurations(
   } catch {
     return null;
   }
-}
-
-/** Format time in Europe/Paris timezone as HH:MM */
-function formatTimeHHMMParis(date: Date): string {
-  return date.toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Europe/Paris",
-  });
-}
-
-/**
- * Round to nearest 15 min, then return a 30-min window (rounded ±15 min).
- * e.g. 09:29 → 09:15 – 09:45
- */
-function getRoundedTimeRange(scheduledAt: Date): { start: Date; end: Date } {
-  const quarterMs = 15 * 60 * 1000;
-  const rounded = new Date(
-    Math.round(scheduledAt.getTime() / quarterMs) * quarterMs,
-  );
-  return {
-    start: new Date(rounded.getTime() - 15 * 60 * 1000),
-    end: new Date(rounded.getTime() + 15 * 60 * 1000),
-  };
 }
 
 serve(async (req) => {
@@ -99,9 +71,7 @@ serve(async (req) => {
 
     const { data: recipients, error } = await supabaseAdmin
       .from("delivery_recipients")
-      .select(
-        "id, latitude, longitude, sort_order, phone_number, label, public_token, delivered_at",
-      )
+      .select("id, latitude, longitude, sort_order, delivered_at")
       .eq("delivery_id", deliveryId)
       .order("sort_order");
 
@@ -161,7 +131,8 @@ serve(async (req) => {
         .eq("delivery_id", deliveryId);
     }
 
-    // Phones linked in the app get a push, with the same window as the SMS.
+    // « sendSms » now means: tell the recipients, by push to the phones
+    // linked in the app (#593). The name stays for installed driver apps.
     let pushSentCount = 0;
     if (sendSms) {
       for (const { id, scheduledAt } of scheduledAts) {
@@ -176,59 +147,13 @@ serve(async (req) => {
       }
     }
 
-    let smsSentCount = 0;
-    if (sendSms) {
-      const siteUrl = Deno.env.get("SITE_URL") ?? "";
-      const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
-      const authToken = Deno.env.get("TWILIO_AUTH_TOKEN")!;
-      const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER")!;
-      const twilioApiUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-      const basicAuth = "Basic " + btoa(`${accountSid}:${authToken}`);
-      const baseUrl = siteUrl.replace(/\/$/, "");
-
-      for (const { id, scheduledAt } of scheduledAts) {
-        const recipient = withCoords.find((r) => r.id === id);
-        if (!recipient?.phone_number?.trim()) continue;
-        if (recipient.delivered_at != null) continue; // Skip already delivered
-
-        const scheduledDate = new Date(scheduledAt);
-        const { start: startRange, end: endRange } =
-          getRoundedTimeRange(scheduledDate);
-        const startStr = formatTimeHHMMParis(startRange);
-        const endStr = formatTimeHHMMParis(endRange);
-        const trackingUrl = `${baseUrl}/track?token=${recipient.public_token}`;
-
-        const messageBody = `Bonjour ${recipient.label}, notre tournée de livraison (fromages et saucissons) a commencé.\n\n Passage prévu entre ${startStr} et ${endStr}. Suivez en direct : ${trackingUrl}.\n\n - Félix & Thomas`;
-
-        const requestBody = new URLSearchParams({
-          To: recipient.phone_number,
-          From: twilioPhoneNumber,
-          Body: messageBody,
-        });
-
-        const twilioRes = await fetch(twilioApiUrl, {
-          method: "POST",
-          headers: {
-            Authorization: basicAuth,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: requestBody,
-        });
-
-        if (twilioRes.ok) {
-          smsSentCount++;
-        } else {
-          const errData = await twilioRes.json();
-          console.error("Twilio SMS failed for recipient", id, errData);
-        }
-      }
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
         scheduledCount: scheduledAts.length,
-        smsSentCount,
+        // Since #593 the start of the round is a push only; installed driver
+        // apps still read this field.
+        smsSentCount: 0,
         pushSentCount,
       }),
       { headers: { "Content-Type": "application/json" } },

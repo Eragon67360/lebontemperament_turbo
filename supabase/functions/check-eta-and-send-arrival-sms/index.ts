@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalSecret } from "../_shared/caller-auth.ts";
 import { deliveryMessage } from "../_shared/delivery-messages.ts";
+import { arrivalSms } from "../_shared/delivery-sms.ts";
+import { sendSms } from "../_shared/twilio.ts";
 import {
   linkedDeviceCounts,
   pushToRecipient,
@@ -23,7 +25,7 @@ interface RecipientRow {
   longitude: number | null;
   phone_number: string | null;
   label: string;
-  public_token: string;
+  code: string;
   eta_arrival_sms_sent_at: string | null;
 }
 
@@ -82,12 +84,7 @@ serve(async (req) => {
       );
     }
 
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
-    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN")!;
-    const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER")!;
-    const siteUrl = Deno.env.get("SITE_URL")!;
-    const twilioApiUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-    const basicAuth = "Basic " + btoa(`${accountSid}:${authToken}`);
+    const siteUrl = Deno.env.get("SITE_URL");
 
     let sentCount = 0;
 
@@ -95,7 +92,7 @@ serve(async (req) => {
       const { data: recipient, error: recipientError } = await supabaseAdmin
         .from("delivery_recipients")
         .select(
-          "id, latitude, longitude, phone_number, label, public_token, eta_arrival_sms_sent_at",
+          "id, latitude, longitude, phone_number, label, code, eta_arrival_sms_sent_at",
         )
         .eq("id", d.current_recipient_id)
         .single();
@@ -128,7 +125,9 @@ serve(async (req) => {
         continue;
       }
 
-      // Phones linked in the app get a push; the SMS is unchanged.
+      // #593: phones linked in the app get a push, and nothing else. The
+      // SMS is the fallback for people who never opened the delivery in the
+      // app (or whose linked phones no longer receive pushes).
       const pushed =
         linked > 0
           ? await pushToRecipient(
@@ -138,57 +137,25 @@ serve(async (req) => {
             )
           : 0;
 
-      if (!hasPhone) {
-        if (pushed > 0) {
-          await supabaseAdmin
-            .from("delivery_recipients")
-            .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
-            .eq("id", r.id);
+      let smsSent = false;
+      if (pushed === 0 && hasPhone) {
+        smsSent = await sendSms(
+          r.phone_number!,
+          arrivalSms({ label: r.label, code: r.code, siteUrl }),
+        );
+        if (smsSent) {
+          sentCount++;
+          console.log(`Sent 5-min-away SMS to recipient ${r.id}`);
         }
-        continue;
       }
 
-      const trackingUrl = `${siteUrl.replace(/\/$/, "")}/track?token=${r.public_token}`;
-      const messageBody =
-        `Bonjour ${r.label}, votre livraison arrive dans environ 5 minutes ! Préparez-vous à recevoir votre colis.\n\n` +
-        `Suivez-la en direct : ${trackingUrl}\n\n` +
-        "- Félix & Thomas";
-
-      const requestBody = new URLSearchParams({
-        To: r.phone_number!,
-        From: twilioPhoneNumber,
-        Body: messageBody,
-      });
-
-      const twilioRes = await fetch(twilioApiUrl, {
-        method: "POST",
-        headers: {
-          Authorization: basicAuth,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: requestBody,
-      });
-
-      if (!twilioRes.ok) {
-        const errorData = await twilioRes.json();
-        console.error("Twilio API Error for recipient", r.id, errorData);
-        // Marked anyway when the push went out, so it isn't sent every minute.
-        if (pushed > 0) {
-          await supabaseAdmin
-            .from("delivery_recipients")
-            .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
-            .eq("id", r.id);
-        }
-        continue;
+      // Once told, never again; a failed SMS is retried on the next run.
+      if (pushed > 0 || smsSent) {
+        await supabaseAdmin
+          .from("delivery_recipients")
+          .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
+          .eq("id", r.id);
       }
-
-      await supabaseAdmin
-        .from("delivery_recipients")
-        .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
-        .eq("id", r.id);
-
-      sentCount++;
-      console.log(`Sent 5-min-away SMS to recipient ${r.id}`);
     }
 
     return new Response(JSON.stringify({ success: true, sentCount }), {
