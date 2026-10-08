@@ -3,8 +3,11 @@ import { JsonLd } from "@/components/JsonLd";
 import { ConcertProject } from "@/types/projects";
 import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createPublicClient } from "@/utils/supabase/public";
-import type { Project } from "@repo/domain/types/projects";
-import { transformProjectForFrontend } from "@repo/domain/utils/projects";
+import {
+  PROJECT_STORY_COLUMNS,
+  transformProjectForFrontend,
+  type ProjectStory,
+} from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -34,15 +37,17 @@ export async function generateStaticParams() {
 }
 
 // One query per render for both generateMetadata and the page (React cache).
-const fetchProject = cache(async (slug: string): Promise<Project | null> => {
-  const supabase = createPublicClient();
-  const { data: dbProject } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  return (dbProject as Project | null) ?? null;
-});
+const fetchProject = cache(
+  async (slug: string): Promise<ProjectStory | null> => {
+    const supabase = createPublicClient();
+    const { data: dbProject } = await supabase
+      .from("projects")
+      .select(PROJECT_STORY_COLUMNS)
+      .eq("slug", slug)
+      .maybeSingle();
+    return (dbProject as ProjectStory | null) ?? null;
+  },
+);
 
 export async function generateMetadata({
   params,
@@ -51,7 +56,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
-  let dbProject: Project | null = null;
+  let dbProject: ProjectStory | null = null;
   try {
     dbProject = await fetchProject(slug);
   } catch (error) {
@@ -182,7 +187,7 @@ export default async function ConcertPage({
 }) {
   const { slug } = await params;
 
-  let dbProject: Project | null = null;
+  let dbProject: ProjectStory | null = null;
   try {
     dbProject = await fetchProject(slug);
   } catch (error) {
@@ -205,12 +210,12 @@ export default async function ConcertPage({
     // Fetch all projects for related projects
     const { data: allDbProjects } = await supabase
       .from("projects")
-      .select("*")
+      .select(PROJECT_STORY_COLUMNS)
       .order("display_order", { ascending: false })
       .order("date", { ascending: false });
 
     const allProjects = allDbProjects
-      ? allDbProjects.map((p: Project) => transformProjectForFrontend(p))
+      ? allDbProjects.map((p: ProjectStory) => transformProjectForFrontend(p))
       : [];
 
     // Find related projects

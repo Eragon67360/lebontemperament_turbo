@@ -1,3 +1,4 @@
+import { ANNIVERSARY_TIMELINE_EVENT_COLUMNS } from "@/lib/columns";
 import {
   parsePatchBody,
   readJson,
@@ -18,7 +19,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_timeline_events")
-      .select("*")
+      .select(ANNIVERSARY_TIMELINE_EVENT_COLUMNS)
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("anniversary_timeline_events")
       .insert(body)
-      .select()
+      .select(ANNIVERSARY_TIMELINE_EVENT_COLUMNS)
       .single();
 
     if (error) {
@@ -108,7 +109,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_timeline_events")
       .update(updates)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_TIMELINE_EVENT_COLUMNS)
       .single();
 
     if (error) {

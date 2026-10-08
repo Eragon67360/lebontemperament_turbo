@@ -2,8 +2,11 @@
 // The `projects` table name is retained for backward compatibility.
 // Read-only: stories are written from the admin app.
 import { createClient } from "@/utils/supabase/server";
-import type { Project } from "@repo/domain/types/projects";
-import { transformProjectForFrontend } from "@repo/domain/utils/projects";
+import {
+  PROJECT_STORY_COLUMNS,
+  transformProjectForFrontend,
+  type ProjectStory,
+} from "@repo/domain/utils/projects";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -12,13 +15,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
 
-    let projects: Project | Project[] | null;
+    let projects: ProjectStory | ProjectStory[] | null;
     let error;
 
     if (slug) {
       const { data, error: queryError } = await supabase
         .from("projects")
-        .select("*")
+        .select(PROJECT_STORY_COLUMNS)
         .eq("slug", slug)
         .maybeSingle();
       projects = data;
@@ -26,7 +29,7 @@ export async function GET(request: Request) {
     } else {
       const { data, error: queryError } = await supabase
         .from("projects")
-        .select("*")
+        .select(PROJECT_STORY_COLUMNS)
         .order("display_order", { ascending: false })
         .order("date", { ascending: false });
       projects = data;
@@ -41,8 +44,8 @@ export async function GET(request: Request) {
 
     // Transform database records into the public concert-story format.
     const transformedProjects = Array.isArray(projects)
-      ? projects.map((p: Project) => transformProjectForFrontend(p))
-      : [transformProjectForFrontend(projects as Project)];
+      ? projects.map((p: ProjectStory) => transformProjectForFrontend(p))
+      : [transformProjectForFrontend(projects as ProjectStory)];
 
     return NextResponse.json(
       Array.isArray(projects) ? transformedProjects : transformedProjects[0],

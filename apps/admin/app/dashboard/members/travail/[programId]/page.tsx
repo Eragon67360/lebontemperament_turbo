@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/data-state";
+import { GROUP_COLUMNS, PROGRAM_COLUMNS } from "@/lib/columns";
 import type { WorkGroup } from "@/types/work";
 import { isLegacyProgramId } from "@/utils/drive/tree";
 import RouteNames from "@/utils/routes";
@@ -40,8 +41,12 @@ async function LegacyProgramPage({ programId }: { programId: string }) {
 
   const [{ data: program }, { data: groups, error: groupsError }] =
     await Promise.all([
-      supabase.from("programs").select("*").eq("id", programId).single(),
-      supabase.from("groups").select("*").order("order_index"),
+      supabase
+        .from("programs")
+        .select(PROGRAM_COLUMNS)
+        .eq("id", programId)
+        .single(),
+      supabase.from("groups").select(GROUP_COLUMNS).order("order_index"),
     ]);
 
   // A missing program is a bad URL, not a rendering problem: let the app's

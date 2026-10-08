@@ -1,5 +1,6 @@
 // app/api/videos/route.ts
 
+import { VIDEO_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import {
   REVALIDATE,
@@ -22,7 +23,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("youtube_links")
-      .select("*")
+      .select(VIDEO_COLUMNS)
       .order("display_order", { ascending: true });
 
     if (error) throw error;

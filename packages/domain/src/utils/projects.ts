@@ -1,6 +1,37 @@
 import type { Project } from "../types/projects";
 
-export function transformProjectForFrontend(dbProject: Project) {
+/**
+ * What a public concert story is built from: every field
+ * `transformProjectForFrontend` reads. Row timestamps and `display_order`
+ * (used to sort, not to show) stay in the database.
+ */
+export const PROJECT_STORY_COLUMNS =
+  "id, name, sub_name, slug, date, image, explanation, banniere, banniere_photographer_name, banniere_photographer_url, image2, image2_photographer_name, image2_photographer_url, image3, image3_photographer_name, image3_photographer_url, text1, text2, author_name, press_articles";
+export type ProjectStory = Pick<
+  Project,
+  | "id"
+  | "name"
+  | "sub_name"
+  | "slug"
+  | "date"
+  | "image"
+  | "explanation"
+  | "banniere"
+  | "banniere_photographer_name"
+  | "banniere_photographer_url"
+  | "image2"
+  | "image2_photographer_name"
+  | "image2_photographer_url"
+  | "image3"
+  | "image3_photographer_name"
+  | "image3_photographer_url"
+  | "text1"
+  | "text2"
+  | "author_name"
+  | "press_articles"
+>;
+
+export function transformProjectForFrontend(dbProject: ProjectStory) {
   // `projects` is the legacy storage name for public concert stories.
   return {
     id: dbProject.id,

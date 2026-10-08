@@ -1,4 +1,5 @@
 import { cloudinary } from "@/lib/cloudinary";
+import { ANNIVERSARY_AUDIO_MEMORY_COLUMNS } from "@/lib/columns";
 import {
   audioMemoryPatchSchema,
   parsePatchBody,
@@ -19,7 +20,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_audio_memories")
-      .select("*")
+      .select(ANNIVERSARY_AUDIO_MEMORY_COLUMNS)
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("anniversary_audio_memories")
       .insert(body)
-      .select()
+      .select(ANNIVERSARY_AUDIO_MEMORY_COLUMNS)
       .single();
 
     if (error) {
@@ -109,7 +110,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_audio_memories")
       .update(updates)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_AUDIO_MEMORY_COLUMNS)
       .single();
 
     if (error) {

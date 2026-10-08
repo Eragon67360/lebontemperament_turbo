@@ -1,4 +1,5 @@
 import { cloudinary } from "@/lib/cloudinary";
+import { ANNIVERSARY_VIDEO_COLUMNS } from "@/lib/columns";
 import {
   parsePatchBody,
   readJson,
@@ -19,7 +20,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_videos")
-      .select("*")
+      .select(ANNIVERSARY_VIDEO_COLUMNS)
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("anniversary_videos")
       .insert(body)
-      .select()
+      .select(ANNIVERSARY_VIDEO_COLUMNS)
       .single();
 
     if (error) {
@@ -113,7 +114,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_videos")
       .update(updates)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_VIDEO_COLUMNS)
       .single();
 
     if (error) {

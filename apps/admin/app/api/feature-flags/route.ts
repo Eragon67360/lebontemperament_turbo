@@ -1,4 +1,5 @@
 // app/api/feature-flags/route.ts
+import { FEATURE_FLAG_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import {
   REVALIDATE,
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
       // Fetch single feature flag
       const { data, error } = await supabase
         .from("feature_flags")
-        .select("*")
+        .select(FEATURE_FLAG_COLUMNS)
         .eq("flag_key", flagKey)
         .single();
 
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
       // Fetch all feature flags
       const { data, error } = await supabase
         .from("feature_flags")
-        .select("*")
+        .select(FEATURE_FLAG_COLUMNS)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -87,7 +88,7 @@ export async function PATCH(request: Request) {
       .from("feature_flags")
       .update({ is_enabled })
       .eq("flag_key", flag_key)
-      .select()
+      .select(FEATURE_FLAG_COLUMNS)
       .single();
 
     if (error) {

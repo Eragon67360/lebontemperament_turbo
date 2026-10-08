@@ -1,4 +1,5 @@
 // app/api/folders/route.ts
+import { FOLDER_COLUMNS } from "@/lib/columns";
 import { CreateFolderDTO } from "@/types/files";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
 
   const query = supabase
     .from("folders")
-    .select("*")
+    .select(FOLDER_COLUMNS)
     .eq("program_id", programId)
     .eq("group_id", groupId)
     .order("name");
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("folders")
     .insert([{ ...folder, path }])
-    .select()
+    .select(FOLDER_COLUMNS)
     .single();
 
   if (error) {

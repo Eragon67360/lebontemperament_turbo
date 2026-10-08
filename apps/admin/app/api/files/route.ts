@@ -1,4 +1,5 @@
 // app/api/files/route.ts
+import { FILE_COLUMNS } from "@/lib/columns";
 import { CreateFileDTO } from "@/types/files";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from("files")
-    .select("*")
+    .select(FILE_COLUMNS)
     .eq("program_id", programId)
     .eq("group_id", groupId)
     .order("name");
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("files")
     .insert([{ ...file, uploaded_by: authCheck?.user?.id }])
-    .select()
+    .select(FILE_COLUMNS)
     .single();
 
   if (error) {

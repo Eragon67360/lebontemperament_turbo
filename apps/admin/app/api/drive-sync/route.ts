@@ -4,6 +4,7 @@
 // it (owner decision, #433): the route checks the session, then forwards the
 // caller's access token to the function, which verifies it again through
 // Supabase Auth. The admin app never holds the functions' internal secret.
+import { DRIVE_SYNC_RUN_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import { parseSyncMode } from "@/utils/driveSync";
 import { createClient } from "@/utils/supabase/server";
@@ -60,7 +61,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("drive_sync_runs")
-      .select("*")
+      .select(DRIVE_SYNC_RUN_COLUMNS)
       .order("started_at", { ascending: false })
       .limit(RUNS_SHOWN);
 
