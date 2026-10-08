@@ -136,6 +136,19 @@ class SupabaseBugReportsService implements BugReportsService {
         .select(BugMessage.select)
         .eq('bug_report_id', reportId)
         .order('created_at', ascending: true);
+    // Members read only their own row in profiles (#350), so the embedded
+    // sender is empty for anyone else (an admin answering). Their name comes
+    // from member_directory() instead.
+    if (rows.any((row) => row['sender'] == null)) {
+      final directory = await _db.rpc('member_directory') as List<dynamic>;
+      final byId = {
+        for (final m in directory.whereType<Map<String, dynamic>>())
+          m['id'] as String: m,
+      };
+      for (final row in rows) {
+        row['sender'] ??= byId[row['sender_id']];
+      }
+    }
     return rows.map(BugMessage.fromJson).toList();
   }
 
