@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireSuperadmin } from "../_shared/caller-auth.ts";
 import { deliveryMessage } from "../_shared/delivery-messages.ts";
 import { pushToRecipient } from "../_shared/delivery-push.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 const OSRM_ROUTE_BASE = "https://router.project-osrm.org/route/v1/driving";
 
@@ -47,7 +48,7 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      requireServiceKey(),
     );
 
     // Only the delivery driver (a superadmin) runs delivery rounds.

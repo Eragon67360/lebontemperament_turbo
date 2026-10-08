@@ -8,6 +8,7 @@ import {
   linkedDeviceCounts,
   pushToRecipient,
 } from "../_shared/delivery-push.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 const OSRM_BASE = "https://router.project-osrm.org/route/v1/driving";
 const ETA_THRESHOLD_SECONDS = 300; // 5 minutes
@@ -65,7 +66,7 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      requireServiceKey(),
     );
 
     const { data: deliveries, error: deliveriesError } = await supabaseAdmin

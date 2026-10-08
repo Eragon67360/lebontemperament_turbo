@@ -16,6 +16,7 @@ import type {
   SyncMode,
   SyncStats,
 } from "./types.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 const EXTRACT_CONCURRENCY = 4;
 const WRITE_BATCH_SIZE = 20;
@@ -193,10 +194,7 @@ serve(async (req) => {
       return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
     }
 
-    supabase = createClient(
-      requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
-    );
+    supabase = createClient(requireEnv("SUPABASE_URL"), requireServiceKey());
 
     const serviceAccountJson = requireEnv("GOOGLE_SERVICE_ACCOUNT_JSON");
     const calendarId = requireEnv("GOOGLE_CALENDAR_ID");

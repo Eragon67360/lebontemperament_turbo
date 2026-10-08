@@ -29,6 +29,7 @@ import {
   type Plan,
   type Report,
 } from "./plan.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -147,7 +148,7 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(
       requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+      requireServiceKey(),
       { auth: { persistSession: false } },
     );
 

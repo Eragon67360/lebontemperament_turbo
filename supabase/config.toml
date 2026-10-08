@@ -283,6 +283,37 @@ verify_jwt = false
 [functions.redeem-delivery-code]
 verify_jwt = false
 
+# Called by pg_cron and the database triggers (#570, owner's go 2026-10-08).
+# The gateway's JWT check only understands the legacy JWT keys, so it would
+# refuse the publishable key the database sends once the Vault secret
+# `anon_key` holds it. Each of these refuses any caller without the internal
+# secret (`x-internal-secret`) before doing anything; the last two also accept
+# a signed-in admin's session (supabase/functions/_shared/caller-auth.ts).
+# The driver's functions, always called with a member's session, keep the check.
+[functions.check-eta-and-send-arrival-sms]
+verify_jwt = false
+
+[functions.check-ops-alerts]
+verify_jwt = false
+
+[functions.notify-bug-report]
+verify_jwt = false
+
+[functions.notify-public-concerts]
+verify_jwt = false
+
+[functions.purge-bug-screenshots]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.generate-concert-event-data]
+verify_jwt = false
+
+[functions.sync-drive-index]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Configure one of the supported request policies: `oneshot`, `per_worker`.
