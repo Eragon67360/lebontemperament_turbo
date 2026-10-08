@@ -82,6 +82,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Flutter 3.47 turns Swift Package Manager on by default. Under it,
+  # cupertino_native_better pulls SVGKit (iOS 12) with CocoaLumberjack
+  # (iOS 15), which Xcode refuses; the app stays on CocoaPods until that is
+  # sorted (#400).
+  config:
+    enable-swift-package-manager: false
   assets:
     - .env
     # Bundled so google_fonts never fetches them from Google's servers at
