@@ -19,6 +19,8 @@ interface FileUploadProps {
   currentImageUrl?: string | null;
   currentPDFUrl?: string | null;
   mode?: "image" | "pdf";
+  /** Largest PDF accepted (default 5 MB, the /api/upload limit). */
+  maxPdfMegabytes?: number;
 }
 
 export function FileUpload({
@@ -27,6 +29,7 @@ export function FileUpload({
   currentImageUrl,
   currentPDFUrl,
   mode,
+  maxPdfMegabytes = 5,
 }: FileUploadProps) {
   const [preview, setPreview] = useState<string | null>(
     currentImageUrl || null,
@@ -53,8 +56,10 @@ export function FileUpload({
           toast.error("Seuls les fichiers PDF sont acceptés");
           return;
         }
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error("La taille du fichier ne doit pas dépasser 5MB");
+        if (file.size > maxPdfMegabytes * 1024 * 1024) {
+          toast.error(
+            `La taille du fichier ne doit pas dépasser ${maxPdfMegabytes} Mo`,
+          );
           return;
         }
         setPreview(null);
@@ -78,7 +83,7 @@ export function FileUpload({
 
       return () => URL.revokeObjectURL(objectUrl);
     },
-    [onFileSelect, mode],
+    [onFileSelect, mode, maxPdfMegabytes],
   );
 
   const acceptedFiles: Record<string, string[]> =
@@ -130,7 +135,7 @@ export function FileUpload({
             </p>
             <p className="text-xs">
               {mode === "pdf"
-                ? "PDF (max. 5MB)"
+                ? `PDF, ${maxPdfMegabytes} Mo maximum`
                 : "JPG, PNG, GIF, WebP ou AVIF, 5 Mo maximum"}
             </p>
           </div>

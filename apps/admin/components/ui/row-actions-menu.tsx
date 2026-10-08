@@ -30,8 +30,12 @@ export interface RowActionsMenuProps {
   name: string;
   /** Overrides « {name} » in the accessible names, e.g. « le témoignage de Lucie ». */
   subject?: string;
-  /** Opens the row's confirmation (`DeleteConfirmDialog`); never deletes directly. */
-  onDelete: () => void;
+  /**
+   * Opens the row's confirmation (`DeleteConfirmDialog`); never deletes
+   * directly. Without it the menu has no « Supprimer… » (a list where only
+   * some roles delete).
+   */
+  onDelete?: () => void;
   /** The row's own write is running: the menu waits. */
   disabled?: boolean;
   /** The list's other real actions (`DropdownMenuItem`s), above a separator and « Supprimer… ». */
@@ -75,7 +79,11 @@ export function RowActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" collisionPadding={16}>
         {children}
-        {React.Children.toArray(children).length > 0 && <DropdownMenuSeparator />}
+        {onDelete && React.Children.toArray(children).length > 0 && (
+          <DropdownMenuSeparator />
+        )}
+        {onDelete && (
+          <>
         {/* Deferred so the menu has closed before the dialog takes the
             focus and the pointer-events lock (as in the account menu). */}
         <DropdownMenuItem
@@ -86,6 +94,8 @@ export function RowActionsMenu({
           <Trash2 aria-hidden />
           Supprimer…
         </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
