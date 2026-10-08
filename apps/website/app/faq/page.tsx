@@ -19,14 +19,6 @@ export const metadata: Metadata = {
     title: "Questions fréquentes - Le Bon Tempérament",
     description:
       "Trouvez les réponses aux questions les plus fréquentes sur Le Bon Tempérament.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Le Bon Tempérament - Questions fréquentes",
-      },
-    ],
   },
   alternates: {
     canonical: "/faq",

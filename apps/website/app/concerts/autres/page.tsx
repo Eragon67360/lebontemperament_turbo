@@ -18,14 +18,6 @@ export const metadata: Metadata = {
     title: "CDs - Le Bon Tempérament",
     description:
       "Découvrez nos CDs de musique classique et baroque. Enregistrements de qualité de l'ensemble Le Bon Tempérament.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-        width: 1200,
-        height: 630,
-        alt: "CDs Le Bon Tempérament - Musique classique et baroque",
-      },
-    ],
   },
   alternates: {
     canonical: "/concerts/autres",
