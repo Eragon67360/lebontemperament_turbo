@@ -8,7 +8,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "db:types": "sh scripts/db-types.sh",
-    "test": "tsx src/utils/youtube.test.ts && tsx src/utils/drive.test.ts && tsx src/utils/driveScope.test.ts && tsx src/utils/driveDownload.test.ts && tsx src/utils/bearer.test.ts && tsx src/utils/html.test.ts && tsx src/utils/newsletter.test.ts && tsx src/utils/formAbuse.test.ts && tsx src/utils/parisDay.test.ts && tsx src/roster/roster.test.ts && tsx src/seo/concertEvent.test.ts && tsx src/utils/documents.test.ts && tsx src/utils/generalAssemblies.test.ts && tsx src/utils/supabaseErrors.test.ts && tsx src/utils/announcements.test.ts",
+    "test": "tsx src/utils/youtube.test.ts && tsx src/utils/drive.test.ts && tsx src/utils/driveScope.test.ts && tsx src/utils/driveDownload.test.ts && tsx src/utils/bearer.test.ts && tsx src/utils/html.test.ts && tsx src/utils/newsletter.test.ts && tsx src/utils/formAbuse.test.ts && tsx src/utils/parisDay.test.ts && tsx src/roster/roster.test.ts && tsx src/seo/concertEvent.test.ts && tsx src/utils/documents.test.ts && tsx src/utils/generalAssemblies.test.ts && tsx src/utils/supabaseErrors.test.ts && tsx src/utils/announcements.test.ts && tsx src/utils/joiningContent.test.ts",
     "depcheck": "npx --yes depcheck@1.4.7"
   },
   "devDependencies": {

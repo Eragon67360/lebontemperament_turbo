@@ -38,6 +38,7 @@ const RouteNames = {
     PUBLIC: {
       PROCHAINS_CONCERTS: "/dashboard/public/concerts/prochains-concerts",
       ANNONCES: "/dashboard/public/annonces",
+      REJOINDRE_FAQ: "/dashboard/public/rejoindre-faq",
       PROJETS: {
         ROOT: "/dashboard/public/concerts/projets",
       },

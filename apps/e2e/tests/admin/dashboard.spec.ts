@@ -20,6 +20,7 @@ const DASHBOARD_VIEWS = [
   "/dashboard/admin/documents",
   "/dashboard/admin/assemblies",
   "/dashboard/public/annonces",
+  "/dashboard/public/rejoindre-faq",
   "/dashboard/admin/anniversary",
   "/dashboard/admin/anniversary/hero",
   "/dashboard/admin/anniversary/hero-stats",

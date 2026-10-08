@@ -1156,6 +1156,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      faq_items: {
+        Row: {
+          answer: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          link_href: string | null;
+          link_label: string | null;
+          question: string;
+          sort_order: number;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          answer: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          link_href?: string | null;
+          link_label?: string | null;
+          question: string;
+          sort_order?: number;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          answer?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          link_href?: string | null;
+          link_label?: string | null;
+          question?: string;
+          sort_order?: number;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
       feature_flags: {
         Row: {
           created_at: string | null;
@@ -1407,6 +1449,51 @@ export type Database = {
           order_index?: number;
           slug?: string;
           type?: string;
+        };
+        Relationships: [];
+      };
+      joining_slots: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          day: string;
+          group_name: string;
+          id: string;
+          place: string;
+          rhythm: string;
+          sort_order: number;
+          status: string;
+          time_label: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          day: string;
+          group_name: string;
+          id?: string;
+          place: string;
+          rhythm: string;
+          sort_order?: number;
+          status?: string;
+          time_label: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          day?: string;
+          group_name?: string;
+          id?: string;
+          place?: string;
+          rhythm?: string;
+          sort_order?: number;
+          status?: string;
+          time_label?: string;
+          updated_at?: string;
+          updated_by?: string | null;
         };
         Relationships: [];
       };

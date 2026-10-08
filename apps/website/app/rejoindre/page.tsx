@@ -1,7 +1,8 @@
 import { JsonLd } from "@/components/JsonLd";
 import { CONTACT_EMAIL, CONTACT_FORM_PATH } from "@/lib/contact";
-import { JOINING_FACTS, REHEARSAL_SLOTS } from "@/lib/joining";
+import { JOINING_FACTS, listRehearsalSlots } from "@/lib/joining";
 import { breadcrumbJsonLd } from "@/utils/seo";
+import { createPublicClient } from "@/utils/supabase/public";
 import { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -65,7 +66,12 @@ const howToSchema = {
   })),
 };
 
-export default function RejoindrePage() {
+// The rehearsal times come from the admin (lib/joining.ts): prerendered,
+// refreshed every five minutes or when an admin saves (/api/revalidate).
+export const revalidate = 300;
+
+export default async function RejoindrePage() {
+  const slots = await listRehearsalSlots(createPublicClient());
   return (
     <>
       <script
@@ -252,9 +258,9 @@ export default function RejoindrePage() {
             </h2>
             <div className="space-y-4 text-base leading-relaxed">
               <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {REHEARSAL_SLOTS.map((slot) => (
+                {slots.map((slot) => (
                   <li
-                    key={slot.group}
+                    key={`${slot.group}-${slot.day}`}
                     className="border-separator bg-background rounded-lg border p-4"
                   >
                     <h3 className="text-foreground mb-2 font-semibold">
