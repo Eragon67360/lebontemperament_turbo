@@ -1701,6 +1701,10 @@ export type Database = {
         Args: { p_report_id: string };
         Returns: undefined;
       };
+      redeem_delivery_code: {
+        Args: { p_client: string; p_code: string };
+        Returns: Json;
+      };
       rehearsals_sync_write: {
         Args: {
           p_delete_ids: string[];
