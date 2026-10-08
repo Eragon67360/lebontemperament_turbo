@@ -284,7 +284,7 @@ export type Database = {
       anniversary_memories: {
         Row: {
           created_at: string | null;
-          email: string;
+          email: string | null;
           id: string;
           is_approved: boolean | null;
           is_featured: boolean | null;
@@ -295,7 +295,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
-          email: string;
+          email?: string | null;
           id?: string;
           is_approved?: boolean | null;
           is_featured?: boolean | null;
@@ -306,7 +306,7 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
-          email?: string;
+          email?: string | null;
           id?: string;
           is_approved?: boolean | null;
           is_featured?: boolean | null;
@@ -530,6 +530,7 @@ export type Database = {
           id: string;
           is_read: boolean | null;
           reported_by: string;
+          resolved_at: string | null;
           screenshot_paths: string[];
           source: string;
           status: string | null;
@@ -542,6 +543,7 @@ export type Database = {
           id?: string;
           is_read?: boolean | null;
           reported_by: string;
+          resolved_at?: string | null;
           screenshot_paths?: string[];
           source?: string;
           status?: string | null;
@@ -554,6 +556,7 @@ export type Database = {
           id?: string;
           is_read?: boolean | null;
           reported_by?: string;
+          resolved_at?: string | null;
           screenshot_paths?: string[];
           source?: string;
           status?: string | null;
