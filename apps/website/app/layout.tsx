@@ -75,23 +75,11 @@ export const metadata: Metadata = {
     title: "Le Bon Tempérament - Ensemble vocal et instrumental à Saverne",
     description:
       "Le Bon Tempérament est un ensemble vocal et instrumental renommé à Saverne, France. Rejoignez-nous pour des concerts captivants, opéras et plus encore.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Le Bon Tempérament - Ensemble vocal et instrumental",
-      },
-    ],
   },
+  // Only the card type: X takes each page's own title, description and
+  // image from its Open Graph tags (opengraph-image.tsx files).
   twitter: {
     card: "summary_large_image",
-    title: "Le Bon Tempérament - Ensemble vocal et instrumental à Saverne",
-    description:
-      "Le Bon Tempérament est un ensemble vocal et instrumental renommé à Saverne, France.",
-    images: [
-      "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
-    ],
   },
   robots: {
     index: true,

@@ -17,14 +17,6 @@ export const metadata: Metadata = {
     title: "Assemblée Générale 2026 - Le Bon Tempérament",
     description:
       "L'Assemblée Générale du Bon Tempérament aura lieu le samedi 14 mars 2026 à 19h au Freihof à Wangen.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Assemblée Générale 2026 - Le Bon Tempérament",
-      },
-    ],
   },
   alternates: {
     canonical: "/ag-2026",

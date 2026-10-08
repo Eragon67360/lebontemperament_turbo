@@ -17,14 +17,6 @@ export const metadata: Metadata = {
     title: "Faire un don - Le Bon Tempérament",
     description:
       "Soutenez Le Bon Tempérament par un don. Reçu fiscal envoyé par email.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/default-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Le Bon Tempérament - Faire un don",
-      },
-    ],
   },
   alternates: {
     canonical: "/don",
