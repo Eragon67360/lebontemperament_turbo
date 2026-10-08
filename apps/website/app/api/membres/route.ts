@@ -19,11 +19,9 @@ export async function GET() {
     const supabaseAdmin = createAdminClient();
 
     // Members see each other's name, email, voice and photo only (owner
-    // decision on #350): phones and postal address stay in the admin.
-    const { data: profiles, error } = await supabase
-      .from("profiles")
-      .select("id, email, display_name, voice, profile_picture_url")
-      .order("display_name", { ascending: true, nullsFirst: false });
+    // decision on #350): member_directory() returns just those, sorted by
+    // name. Phones and postal address stay in the admin.
+    const { data: profiles, error } = await supabase.rpc("member_directory");
 
     if (error) {
       console.error("Error fetching members:", error);
