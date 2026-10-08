@@ -1689,6 +1689,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_announcements: {
+        Row: {
+          body: string | null;
+          created_at: string;
+          created_by: string | null;
+          ends_on: string | null;
+          id: string;
+          link_label: string | null;
+          link_url: string;
+          placement: string;
+          sort_order: number;
+          starts_on: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          body?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          ends_on?: string | null;
+          id?: string;
+          link_label?: string | null;
+          link_url: string;
+          placement: string;
+          sort_order?: number;
+          starts_on?: string | null;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          body?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          ends_on?: string | null;
+          id?: string;
+          link_label?: string | null;
+          link_url?: string;
+          placement?: string;
+          sort_order?: number;
+          starts_on?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
       site_documents: {
         Row: {
           archived_at: string | null;

@@ -1,4 +1,5 @@
 import HomeContent from "@/components/HomeContent";
+import { listAnnouncements } from "@/lib/announcements";
 import { getCurrentAssembly } from "@/lib/generalAssemblies";
 import type { ConcertProject } from "@/types/projects";
 import { createPublicClient } from "@/utils/supabase/public";
@@ -9,8 +10,8 @@ import {
 } from "@repo/domain/utils/projects";
 import { Metadata } from "next";
 
-// The concert-story teaser and the general assembly announcement are the
-// page's only data (anon key, no cookies): prerendered, served from the cache
+// The concert-story teaser, the general assembly and the announcements are
+// the page's only data (anon key, no cookies): prerendered, served from the cache
 // for five minutes or until an admin edit calls /api/revalidate.
 export const revalidate = 300;
 
@@ -65,13 +66,18 @@ async function getAssemblyHeldAt(): Promise<string | null> {
 }
 
 const Home = async () => {
-  const [stories, assemblyHeldAt] = await Promise.all([
+  const [stories, assemblyHeldAt, announcements] = await Promise.all([
     getLatestStories(),
     getAssemblyHeldAt(),
+    listAnnouncements(createPublicClient(), "home"),
   ]);
   return (
     <>
-      <HomeContent stories={stories} assemblyHeldAt={assemblyHeldAt} />
+      <HomeContent
+        stories={stories}
+        assemblyHeldAt={assemblyHeldAt}
+        announcements={announcements}
+      />
     </>
   );
 };
