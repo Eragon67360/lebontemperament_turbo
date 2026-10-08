@@ -4,6 +4,7 @@ import {
   Cake,
   CalendarDays,
   FileText,
+  Files,
   Film,
   FolderOpen,
   House,
@@ -230,13 +231,18 @@ export function buildNavSections({
       id: "association",
       label: "Association",
       description: isSuperAdmin
-        ? "Comptes rendus du CA et signalements"
-        : "Comptes rendus du conseil d’administration",
+        ? "Documents, comptes rendus du CA et signalements"
+        : "Documents et comptes rendus du CA",
       icon: Landmark,
       groups: [
         {
           id: "association-pages",
           items: [
+            {
+              href: RouteNames.DASHBOARD.ADMIN.DOCUMENTS,
+              label: "Documents de l’association",
+              icon: Files,
+            },
             {
               href: RouteNames.DASHBOARD.ADMIN.CA,
               label: "Comptes rendus du CA",

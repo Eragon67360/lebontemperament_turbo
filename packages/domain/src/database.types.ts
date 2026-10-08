@@ -682,6 +682,36 @@ export type Database = {
           },
         ];
       };
+      content_revisions: {
+        Row: {
+          changed_at: string;
+          changed_by: string | null;
+          id: number;
+          old_row: Json;
+          operation: string;
+          row_id: string;
+          table_name: string;
+        };
+        Insert: {
+          changed_at?: string;
+          changed_by?: string | null;
+          id?: number;
+          old_row: Json;
+          operation: string;
+          row_id: string;
+          table_name: string;
+        };
+        Update: {
+          changed_at?: string;
+          changed_by?: string | null;
+          id?: number;
+          old_row?: Json;
+          operation?: string;
+          row_id?: string;
+          table_name?: string;
+        };
+        Relationships: [];
+      };
       deliveries: {
         Row: {
           created_at: string | null;
@@ -809,6 +839,36 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      document_collections: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          label: string;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          label: string;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          label?: string;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       donation_receipt_seq: {
         Row: {
@@ -1560,6 +1620,74 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_documents: {
+        Row: {
+          archived_at: string | null;
+          collection_id: string;
+          created_at: string;
+          created_by: string | null;
+          date_precision: string | null;
+          document_date: string | null;
+          file_name: string;
+          id: string;
+          mime_type: string;
+          size_bytes: number | null;
+          sort_order: number;
+          status: string;
+          storage_key: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          visibility: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          collection_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          date_precision?: string | null;
+          document_date?: string | null;
+          file_name: string;
+          id?: string;
+          mime_type?: string;
+          size_bytes?: number | null;
+          sort_order?: number;
+          status?: string;
+          storage_key: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          visibility?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          collection_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          date_precision?: string | null;
+          document_date?: string | null;
+          file_name?: string;
+          id?: string;
+          mime_type?: string;
+          size_bytes?: number | null;
+          sort_order?: number;
+          status?: string;
+          storage_key?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_documents_collection_id_fkey";
+            columns: ["collection_id"];
+            isOneToOne: false;
+            referencedRelation: "document_collections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tours: {
         Row: {
           context: string;
@@ -1733,6 +1861,10 @@ export type Database = {
           p_upserts: Json;
         };
         Returns: Json;
+      };
+      site_document_object: {
+        Args: { p_collection: string; p_file_name: string };
+        Returns: string;
       };
     };
     Enums: {

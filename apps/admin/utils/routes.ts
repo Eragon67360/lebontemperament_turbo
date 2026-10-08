@@ -13,6 +13,7 @@ const RouteNames = {
       USER: (id: string) => `/dashboard/admin/users/${encodeURIComponent(id)}`,
       USERS_SYNC: "/dashboard/admin/users/sync",
       CA: "/dashboard/admin/ca",
+      DOCUMENTS: "/dashboard/admin/documents",
       GOOGLE_GROUPS: "/dashboard/admin/google-groups",
       ANNIVERSARY: {
         ROOT: "/dashboard/admin/anniversary",

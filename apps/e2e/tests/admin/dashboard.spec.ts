@@ -17,6 +17,7 @@ const DASHBOARD_VIEWS = [
   "/dashboard/admin/users/sync",
   "/dashboard/admin/google-groups",
   "/dashboard/admin/ca",
+  "/dashboard/admin/documents",
   "/dashboard/admin/anniversary",
   "/dashboard/admin/anniversary/hero",
   "/dashboard/admin/anniversary/hero-stats",

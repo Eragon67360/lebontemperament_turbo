@@ -2,7 +2,7 @@
 import CAMinutesList from "@/components/CAMinutesList";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { LinkButton } from "@/components/LinkButton";
-import PdfList from "@/components/PdfList";
+import { DocumentArchives } from "@/components/membres/DocumentArchives";
 import { RoundedSize } from "@/utils/types";
 import { Link } from "@heroui/react";
 import { motion } from "motion/react";
@@ -61,94 +61,7 @@ const ArchivesSection = () => (
       </div>
     </motion.div>
 
-    {/* AG Section */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="group relative overflow-hidden rounded-xl"
-    >
-      <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-        <div className="flex items-start gap-3 p-4 md:p-6">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            className="bg-primary/10 rounded-lg p-2"
-          >
-            <MdOpenInNew className="text-primary h-5 w-5" />
-          </motion.div>
-          <div className="flex-1">
-            <h3 className="from-primary via-foreground mb-1 bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent">
-              Comptes-rendus AG
-            </h3>
-            <p className="text-foreground/60 text-sm">
-              Archives des assemblées générales
-            </p>
-          </div>
-        </div>
-        <div className="px-4 pb-4 md:px-6 md:pb-6">
-          <PdfList jsonFileName="pdf_filesAG" context={"AG"} />
-        </div>
-      </div>
-    </motion.div>
-
-    {/* Gazettes Section */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="group relative overflow-hidden rounded-xl"
-    >
-      <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-        <div className="flex items-start gap-3 p-4 md:p-6">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            className="bg-primary/10 rounded-lg p-2"
-          >
-            <MdOpenInNew className="text-primary h-5 w-5" />
-          </motion.div>
-          <div className="flex-1">
-            <h3 className="from-primary via-foreground mb-1 bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent">
-              Gazettes
-            </h3>
-            <p className="text-foreground/60 text-sm">Archives des gazettes</p>
-          </div>
-        </div>
-        <div className="px-4 pb-4 md:px-6 md:pb-6">
-          <PdfList jsonFileName="pdf_filesGazettes" context={"Gazettes"} />
-        </div>
-      </div>
-    </motion.div>
-
-    {/* Pêle-Mêle Section */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
-      className="group relative overflow-hidden rounded-xl"
-    >
-      <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-        <div className="flex items-start gap-3 p-4 md:p-6">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            className="bg-primary/10 rounded-lg p-2"
-          >
-            <MdOpenInNew className="text-primary h-5 w-5" />
-          </motion.div>
-          <div className="flex-1">
-            <h3 className="from-primary via-foreground mb-1 bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent">
-              Pêle-Mêle
-            </h3>
-            <p className="text-foreground/60 text-sm">Archives diverses</p>
-          </div>
-        </div>
-        <div className="px-4 pb-4 md:px-6 md:pb-6">
-          <PdfList jsonFileName="pdf_filesPM" context={"PM"} />
-        </div>
-      </div>
-    </motion.div>
+    <DocumentArchives />
   </div>
 );
 

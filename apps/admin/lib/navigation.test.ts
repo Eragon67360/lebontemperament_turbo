@@ -43,7 +43,16 @@ const hrefs = flattenNavItems(superadmin).map((item) => item.href);
 for (const href of OLD_NAV_HREFS) {
   assert.ok(hrefs.includes(href), `${href} has no nav entry any more`);
 }
-assert.equal(hrefs.length, 22, "no unknown route was added to the nav");
+// Added since: « Documents de l'association » (2026-10-08).
+const NEW_NAV_HREFS = ["/dashboard/admin/documents"];
+for (const href of NEW_NAV_HREFS) {
+  assert.ok(hrefs.includes(href), `${href} has no nav entry`);
+}
+assert.equal(
+  hrefs.length,
+  OLD_NAV_HREFS.length + NEW_NAV_HREFS.length,
+  "no unknown route was added to the nav",
+);
 assert.equal(new Set(hrefs).size, hrefs.length, "each route appears once");
 
 // The six sections of the approved IA, in order, each with a description.
