@@ -1,4 +1,5 @@
 // app/api/drive-folders/route.ts
+import { DRIVE_FOLDER_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { extractDriveFolderId } from "@repo/domain/utils/drive";
@@ -15,7 +16,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("drive_folders")
-      .select("*")
+      .select(DRIVE_FOLDER_COLUMNS)
       .order("display_order");
 
     if (error) {
@@ -72,7 +73,7 @@ export async function PATCH(request: Request) {
           : {}),
       })
       .eq("id", id)
-      .select()
+      .select(DRIVE_FOLDER_COLUMNS)
       .single();
 
     if (error) {

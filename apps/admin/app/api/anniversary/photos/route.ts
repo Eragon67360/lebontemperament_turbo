@@ -1,4 +1,5 @@
 import { cloudinary } from "@/lib/cloudinary";
+import { ANNIVERSARY_PHOTO_COLUMNS } from "@/lib/columns";
 import {
   parsePatchBody,
   photoPatchSchema,
@@ -19,7 +20,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_photos")
-      .select("*")
+      .select(ANNIVERSARY_PHOTO_COLUMNS)
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("anniversary_photos")
       .insert(body)
-      .select()
+      .select(ANNIVERSARY_PHOTO_COLUMNS)
       .single();
 
     if (error) {
@@ -106,7 +107,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_photos")
       .update(updates)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_PHOTO_COLUMNS)
       .single();
 
     if (error) {

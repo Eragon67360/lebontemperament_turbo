@@ -116,14 +116,14 @@ class BackgroundNotificationService {
         iOS: iosSettings,
       );
 
-      await notifications.initialize(initializationSettings);
+      await notifications.initialize(settings: initializationSettings);
 
       // Show the notification
       await notifications.show(
-        _generateNotificationId(payload),
-        title,
-        body,
-        NotificationDetails(
+        id: _generateNotificationId(payload),
+        title: title,
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             channelId,
             _getChannelName(channelId),

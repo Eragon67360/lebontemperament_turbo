@@ -1,5 +1,6 @@
 // app/api/projects/[id]/route.ts
 import { cloudinary } from "@/lib/cloudinary";
+import { PROJECT_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import {
   REVALIDATE,
@@ -25,7 +26,7 @@ export async function GET(
     const { id } = await params;
     const { data: project, error } = await supabase
       .from("projects")
-      .select("*")
+      .select(PROJECT_COLUMNS)
       .eq("id", id)
       .single();
 
@@ -66,7 +67,7 @@ export async function PUT(
       .from("projects")
       .update(json)
       .eq("id", id)
-      .select()
+      .select(PROJECT_COLUMNS)
       .single();
 
     if (error) throw error;

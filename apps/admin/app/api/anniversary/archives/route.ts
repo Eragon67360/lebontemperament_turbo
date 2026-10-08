@@ -1,4 +1,5 @@
 import { cloudinary } from "@/lib/cloudinary";
+import { ANNIVERSARY_ARCHIVE_COLUMNS } from "@/lib/columns";
 import {
   archivePatchSchema,
   parsePatchBody,
@@ -19,7 +20,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_archives")
-      .select("*")
+      .select(ANNIVERSARY_ARCHIVE_COLUMNS)
       .order("year", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("anniversary_archives")
       .insert(body)
-      .select()
+      .select(ANNIVERSARY_ARCHIVE_COLUMNS)
       .single();
 
     if (error) {
@@ -134,7 +135,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_archives")
       .update(updates)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_ARCHIVE_COLUMNS)
       .single();
 
     if (error) {

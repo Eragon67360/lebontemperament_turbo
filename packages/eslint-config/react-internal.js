@@ -21,7 +21,8 @@ export const config = [
         ...globals.browser,
       },
     },
-    settings: { react: { version: "detect" } },
+    // Not "detect": see next.js (eslint-plugin-react vs ESLint 10).
+    settings: { react: { version: "19" } },
     rules: {
       ...pluginReact.configs.flat.recommended.rules,
       // React scope no longer necessary with new JSX transform.

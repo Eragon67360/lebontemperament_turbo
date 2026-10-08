@@ -18,13 +18,13 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    // 8.9.1+: flutter_web_auth_2 (Google sign-in) pulls androidx.browser 1.9.0,
-    // which refuses older Android Gradle plugins.
-    id("com.android.application") version "8.9.1" apply false
+    // Flutter 3.47 refuses Android Gradle plugins older than 8.11.1 and
+    // flutter_local_notifications 22 compiles against API 36 (#400).
+    id("com.android.application") version "8.13.0" apply false
     // START: FlutterFire Configuration
     id("com.google.gms.google-services") version("4.3.15") apply false
     // END: FlutterFire Configuration
-    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    id("org.jetbrains.kotlin.android") version "2.3.20" apply false
 }
 
 include(":app")

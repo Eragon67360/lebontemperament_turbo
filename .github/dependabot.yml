@@ -28,13 +28,6 @@ updates:
       # doesn't support TypeScript 7 yet (the apps type-check with 7 already).
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
-      # eslint-plugin-react 7.37.5 (the latest) supports ESLint up to 9 and
-      # crashes on 10 (`context.getFilename` was removed). Lift both once it
-      # supports 10 (#400).
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@eslint/js"
-        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "chore(deps)"
 

@@ -2,7 +2,6 @@
 // ignore_for_file: invalid_annotation_target
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hive/hive.dart';
 
 part 'concert.freezed.dart';
 part 'concert.g.dart';
@@ -19,30 +18,27 @@ enum Context {
 }
 
 @freezed
-@HiveType(typeId: 5)
 class Concert with _$Concert {
   const factory Concert({
-    @HiveField(0) required String id,
-    @HiveField(1) String? createdAt,
-    @HiveField(2) String? updatedAt,
-    @HiveField(3) required String place,
-    @HiveField(4) required String date,
-    @HiveField(5) required String time,
-    @HiveField(6) required Context context,
-    @HiveField(7)
-    @JsonKey(name: 'additional_informations')
-    String? additionalInformations,
-    @HiveField(8) String? name,
-    @HiveField(9) String? createdBy,
-    @HiveField(10) String? affiche,
+    required String id,
+    String? createdAt,
+    String? updatedAt,
+    required String place,
+    required String date,
+    required String time,
+    required Context context,
+    @JsonKey(name: 'additional_informations') String? additionalInformations,
+    String? name,
+    String? createdBy,
+    String? affiche,
     // Where and how to come, as the website shows them (public part, #593).
-    @HiveField(11) @JsonKey(name: 'venue_name') String? venueName,
-    @HiveField(12) @JsonKey(name: 'street_address') String? streetAddress,
-    @HiveField(13) @JsonKey(name: 'postal_code') String? postalCode,
-    @HiveField(14) String? city,
-    @HiveField(15) double? price,
-    @HiveField(16) @JsonKey(name: 'is_free') bool? isFree,
-    @HiveField(17) @JsonKey(name: 'related_link') String? relatedLink,
+    @JsonKey(name: 'venue_name') String? venueName,
+    @JsonKey(name: 'street_address') String? streetAddress,
+    @JsonKey(name: 'postal_code') String? postalCode,
+    String? city,
+    double? price,
+    @JsonKey(name: 'is_free') bool? isFree,
+    @JsonKey(name: 'related_link') String? relatedLink,
   }) = _Concert;
 
   factory Concert.fromJson(Map<String, dynamic> json) =>

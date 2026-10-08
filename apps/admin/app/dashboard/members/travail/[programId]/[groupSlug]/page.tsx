@@ -1,6 +1,7 @@
 import { FileExplorer } from "@/components/FileExplorer";
 import { PageShell } from "@/components/layouts/PageShell";
 import { DriveGroupView } from "@/components/travail/DriveIndexViews";
+import { GROUP_COLUMNS, PROGRAM_COLUMNS } from "@/lib/columns";
 import { isLegacyProgramId } from "@/utils/drive/tree";
 import { createClient } from "@/utils/supabase/server";
 import { isDriveId } from "@repo/domain/utils/driveScope";
@@ -34,8 +35,16 @@ async function LegacyGroupPage({
   const supabase = await createClient();
 
   const [{ data: program }, { data: group }] = await Promise.all([
-    supabase.from("programs").select("*").eq("id", programId).single(),
-    supabase.from("groups").select("*").eq("slug", groupSlug).single(),
+    supabase
+      .from("programs")
+      .select(PROGRAM_COLUMNS)
+      .eq("id", programId)
+      .single(),
+    supabase
+      .from("groups")
+      .select(GROUP_COLUMNS)
+      .eq("slug", groupSlug)
+      .single(),
   ]);
 
   if (!program || !group) notFound();

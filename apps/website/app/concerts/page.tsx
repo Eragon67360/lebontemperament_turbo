@@ -15,9 +15,12 @@ import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createPublicClient } from "@/utils/supabase/public";
 import { concertEventJsonLd } from "@repo/domain/seo/concertEvent";
 import { Event } from "@repo/domain/types/events";
-import type { Project } from "@repo/domain/types/projects";
 import { parisToday } from "@repo/domain/utils/parisDay";
-import { transformProjectForFrontend } from "@repo/domain/utils/projects";
+import {
+  PROJECT_STORY_COLUMNS,
+  transformProjectForFrontend,
+  type ProjectStory,
+} from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 
 // Public data only (anon key, no cookies): prerendered and served from the
@@ -108,11 +111,11 @@ async function getPageData(): Promise<PageData> {
       { data: events },
       { data: rehearsals },
     ] = await Promise.all([
-      // Projects: ordered by display_order then date (every column: the
-      // story view-model is built by transformProjectForFrontend)
+      // Projects: ordered by display_order then date (the story view-model
+      // is built by transformProjectForFrontend from PROJECT_STORY_COLUMNS)
       supabase
         .from("projects")
-        .select("*")
+        .select(PROJECT_STORY_COLUMNS)
         .order("display_order", { ascending: false })
         .order("date", { ascending: false }),
 
@@ -147,7 +150,7 @@ async function getPageData(): Promise<PageData> {
     ]);
 
     // Transform projects using the utility
-    const projects = (dbProjects || []).map((p: Project) =>
+    const projects = (dbProjects || []).map((p: ProjectStory) =>
       transformProjectForFrontend(p),
     );
 

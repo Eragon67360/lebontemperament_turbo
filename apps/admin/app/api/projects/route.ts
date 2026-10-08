@@ -1,4 +1,5 @@
 // app/api/projects/route.ts
+import { PROJECT_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import {
   REVALIDATE,
@@ -21,7 +22,7 @@ export async function GET() {
 
     const { data: projects, error } = await supabase
       .from("projects")
-      .select("*")
+      .select(PROJECT_COLUMNS)
       .order("display_order", { ascending: true });
 
     if (error) throw error;
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("projects")
       .insert(json)
-      .select()
+      .select(PROJECT_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -99,7 +100,7 @@ export async function PUT(request: Request) {
       .from("projects")
       .update(json)
       .eq("id", projectId)
-      .select();
+      .select(PROJECT_COLUMNS);
 
     if (error) throw error;
 

@@ -1,3 +1,4 @@
+import { TOUR_COLUMNS } from "@/lib/columns";
 import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { tourCreateSchema, tourPatchSchema } from "@/utils/concerts/apiSchemas";
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
           is_active: tour.is_active ?? true,
         },
       ])
-      .select()
+      .select(TOUR_COLUMNS)
       .single();
 
     if (tourError) throw tourError;
@@ -129,7 +130,7 @@ export async function PATCH(request: Request) {
     .from("tours")
     .update(updateData)
     .eq("id", id)
-    .select()
+    .select(TOUR_COLUMNS)
     .single();
 
   if (error) {

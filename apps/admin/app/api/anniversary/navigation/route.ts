@@ -1,3 +1,4 @@
+import { ANNIVERSARY_NAVIGATION_CARD_COLUMNS } from "@/lib/columns";
 import {
   navigationCardPatchSchema,
   parsePatchBody,
@@ -18,7 +19,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_navigation_cards")
-      .select("*")
+      .select(ANNIVERSARY_NAVIGATION_CARD_COLUMNS)
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("anniversary_navigation_cards")
       .insert(body)
-      .select()
+      .select(ANNIVERSARY_NAVIGATION_CARD_COLUMNS)
       .single();
 
     if (error) {
@@ -108,7 +109,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_navigation_cards")
       .update(updates)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_NAVIGATION_CARD_COLUMNS)
       .single();
 
     if (error) {
