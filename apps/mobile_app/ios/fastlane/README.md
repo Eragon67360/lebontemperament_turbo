@@ -59,6 +59,11 @@ Other choices under Actions → **iOS TestFlight** → Run workflow:
   latest builds with Apple's state for members (never sent to review,
   waiting for review, approved, testable, expired…), their expiry date and
   the TestFlight groups that have them. Group names only: the log is public.
+- **Set up delivery links** (`fastlane ios app_links`): turns on Associated
+  Domains for `com.lebontemperament.app` (the `/l/<code>` delivery links open
+  the app, #593) if it is off, and attaches the App ID (`TEAMID.com.lebontemperament.app`)
+  to the run as the `app-links` artifact, for `apps/website/lib/app-links.ts`.
+  The team ID is masked in the logs, hence the artifact.
 
 ## The App Store page
 
