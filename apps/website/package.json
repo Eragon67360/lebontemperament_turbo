@@ -9,9 +9,10 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "tsx lib/anniversaryMemories.test.ts && tsx lib/publicColumns.test.ts && tsx lib/anniversaryProgramme.test.ts && tsx lib/contact.test.ts && tsx lib/og/text.test.ts && tsx lib/deliveryCode.test.ts && tsx lib/media.test.ts && tsx lib/memberData.test.ts && tsx lib/deletionRequest.test.ts",
+    "test": "tsx lib/anniversaryMemories.test.ts && tsx lib/publicColumns.test.ts && tsx lib/anniversaryProgramme.test.ts && tsx lib/contact.test.ts && tsx lib/og/text.test.ts && tsx lib/deliveryCode.test.ts && tsx lib/media.test.ts && tsx lib/memberData.test.ts && tsx lib/deletionRequest.test.ts && tsx lib/memberDirectory.test.ts",
     "clean": "if exist node_modules rmdir /s /q node_modules && if exist .next rmdir /s /q .next",
-    "clean:install": "npm run clean && npm install"
+    "clean:install": "npm run clean && npm install",
+    "depcheck": "npx --yes depcheck@1.4.7"
   },
   "dependencies": {
     "@fullcalendar/google-calendar": "^7.1.0",
@@ -58,7 +59,6 @@
     "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "dotenv": "^18.0.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2"
   },

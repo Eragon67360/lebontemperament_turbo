@@ -6,7 +6,7 @@
 // fingerprint and to take the values it writes from the server's own diff.
 
 import { createAdminClient } from "@/utils/supabase/admin";
-import { inviteStatusOf, listAllAuthUsers } from "@/utils/users/authUsers";
+import { inviteStatusOf, listAuthSummaries } from "@/utils/users/authUsers";
 import { diffRoster } from "@repo/domain/roster/diff";
 import { rosterFingerprint } from "@repo/domain/roster/fingerprint";
 import { DEFAULT_KNOWN_VOICES } from "@repo/domain/roster/normalize";
@@ -81,7 +81,7 @@ export async function loadProfilesForDiff(
     supabaseAdmin
       .from("profiles")
       .select("id, email, display_name, role, address, home_phone, voice"),
-    listAllAuthUsers(supabaseAdmin),
+    listAuthSummaries(supabaseAdmin),
   ]);
   if (error) throw error;
   const authById = new Map(authUsers.map((user) => [user.id, user]));

@@ -16,7 +16,8 @@
     "env:push": "node scripts/env/cli.mjs",
     "env:seed": "node scripts/env/seed.mjs",
     "test:env": "node --test scripts/env/lib.test.mjs",
-    "prepare": "node -e \"if (!process.env.CI && !process.env.VERCEL) { require('child_process').execSync('husky', { stdio: 'inherit' }) }\""
+    "prepare": "node -e \"if (!process.env.CI && !process.env.VERCEL) { require('child_process').execSync('husky', { stdio: 'inherit' }) }\"",
+    "depcheck": "npx --yes depcheck@1.4.7 && npm run depcheck --workspaces --if-present"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.117.2",
