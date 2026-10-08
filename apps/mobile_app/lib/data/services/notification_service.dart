@@ -13,6 +13,9 @@ import '../models/concert.dart';
 import '../models/rehearsal.dart';
 import '../models/event.dart';
 
+/// Android channel of the signalement pushes (same id as the server's).
+const bugReportsChannelId = 'bug_reports';
+
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -140,6 +143,17 @@ class NotificationService {
           'new_concerts',
           'Nouveaux concerts',
           description: 'Notifications pour les nouveaux concerts',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+          showBadge: true,
+        ),
+        const AndroidNotificationChannel(
+          bugReportsChannelId,
+          'Signalements',
+          description:
+              'Réponses à vos signalements (et, pour les responsables, '
+              'les nouveaux signalements)',
           importance: Importance.max,
           enableVibration: true,
           playSound: true,
@@ -289,6 +303,8 @@ class NotificationService {
     int? id,
   }) async {
     if (!_isInitialized) return;
+    // Signalements have their own channel (« report_<id> » payloads).
+    final report = payload.startsWith('report_');
     final notificationId =
         id ?? (payload.hashCode.abs() % 2147483647).clamp(1000000, 2147483646);
     try {
@@ -298,9 +314,11 @@ class NotificationService {
         body,
         NotificationDetails(
           android: AndroidNotificationDetails(
-            'fcm_push',
-            'Notifications push',
-            channelDescription: 'Notifications envoyées par le serveur (FCM)',
+            report ? bugReportsChannelId : 'fcm_push',
+            report ? 'Signalements' : 'Notifications push',
+            channelDescription: report
+                ? 'Réponses à vos signalements'
+                : 'Notifications envoyées par le serveur (FCM)',
             importance: Importance.max,
             priority: Priority.max,
             showWhen: true,

@@ -23,8 +23,11 @@ import 'package:lebontemperament/data/services/feature_flags_service.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/auth_provider.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/profile_role_provider.dart';
 import 'package:lebontemperament/features/profile/presentation/screens/about_screen.dart';
+import 'package:lebontemperament/features/reports/providers/bug_reports_providers.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'fake_bug_reports_service.dart';
 
 /// Fixtures: obviously fake values only (no real member, place or ID).
 const kTestConcert = Concert(
@@ -146,6 +149,7 @@ List<Override> offlineOverrides({
   AsyncValue<List<Concert>> homeConcerts = const AsyncData([kTestConcert]),
   DriveService? drive,
   DriveFolderCatalog? catalog,
+  FakeBugReportsService? bugReports,
 }) => [
   authStateProvider.overrideWith((ref) => const Stream<AuthState>.empty()),
   // The real provider falls back to the Supabase client, absent here.
@@ -169,6 +173,10 @@ List<Override> offlineOverrides({
     (ref) async => catalog ?? kTestCatalog,
   ),
   driveServiceProvider.overrideWithValue(drive ?? FakeDriveService()),
+  // Signalements: an empty fake unless a test passes its own.
+  bugReportsServiceProvider.overrideWithValue(
+    bugReports ?? FakeBugReportsService(),
+  ),
   packageInfoProvider.overrideWith(
     (ref) async => PackageInfo(
       appName: 'Le Bon Tempérament',
@@ -198,6 +206,7 @@ Future<void> pumpScreen(
   AsyncValue<List<Concert>> homeConcerts = const AsyncData([kTestConcert]),
   Stream<bool>? onlineStream,
   DriveService? drive,
+  FakeBugReportsService? bugReports,
   List<Override> overrides = const [],
 }) async {
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -219,6 +228,7 @@ Future<void> pumpScreen(
           homeConcerts: homeConcerts,
           onlineStream: onlineStream,
           drive: drive,
+          bugReports: bugReports,
         ),
         ...overrides,
       ],
