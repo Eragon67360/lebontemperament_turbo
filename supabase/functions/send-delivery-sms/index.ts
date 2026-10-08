@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireSuperadmin } from "../_shared/caller-auth.ts";
+import { deliveryMessage } from "../_shared/delivery-messages.ts";
+import { pushToRecipient } from "../_shared/delivery-push.ts";
 
 serve(async (req) => {
   try {
@@ -33,6 +35,13 @@ serve(async (req) => {
 
     if (error) throw error;
     if (!recipient) throw new Error("Recipient not found.");
+
+    // Phones linked in the app get a push; the SMS is unchanged.
+    await pushToRecipient(
+      supabaseAdmin,
+      recipientId,
+      deliveryMessage("next", recipientId),
+    );
 
     if (!recipient.phone_number || recipient.phone_number.trim() === "") {
       console.log(
