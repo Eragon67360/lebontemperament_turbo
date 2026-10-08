@@ -12,7 +12,10 @@ test("the home shows « À faire » and « À venir » and links to existing pag
   await page.goto("/dashboard");
 
   const main = page.getByRole("main");
-  await expect(main.getByRole("heading", { level: 1 })).toHaveText(/^Bonjour/);
+  // « Bonsoir » from 18 h in the browser's time zone (#585).
+  await expect(main.getByRole("heading", { level: 1 })).toHaveText(
+    /^Bon(jour|soir) /,
+  );
   // The count badge joins the name once loaded: « À faire 3 tâches ».
   await expect(
     main.getByRole("heading", { level: 2, name: /^À faire( \d+ tâches?)?$/ }),
