@@ -30,6 +30,10 @@ const noop = () => {};
     }),
   );
   assert.match(html, /Répétition générale/);
+  // The programme-style date block, with the grey rule of everything but concerts.
+  assert.match(html, /data-slot="date-block"[^>]*border-border-strong/);
+  assert.match(html, />6<\/span>/);
+  assert.match(html, />oct\.<\/span>/);
   assert.match(html, /Choeur complet/);
   assert.match(html, /Mardi 6 octobre 2026/);
   assert.match(html, /20 h – 22 h/);

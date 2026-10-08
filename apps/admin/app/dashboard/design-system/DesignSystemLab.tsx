@@ -6,6 +6,7 @@ import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialo
 import { PageHeader } from "@/components/layouts/PageHeader";
 import { PageShell } from "@/components/layouts/PageShell";
 import { AttentionDot, CountBadge } from "@/components/shell/NavBadge";
+import { SearchButton } from "@/components/shell/SearchButton";
 import { SidebarNav } from "@/components/shell/SidebarNav";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -112,6 +113,7 @@ import { DENSITIES, type Density } from "@/lib/density";
 import { buildNavSections } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import {
+  CalendarOff,
   Info,
   Loader2,
   Mail,
@@ -688,6 +690,16 @@ export function DesignSystemLab() {
                   Entre terre et ciel
                 </span>
               </span>
+              <span className="flex items-center gap-3">
+                <DateBlock date={null} icon={CalendarOff} tone="primary" />
+                <span className="text-[15px] font-medium">Sans date</span>
+              </span>
+            </Row>
+            <Row label="Recherche ⌘K : bouton du menu (avec le raccourci) et bouton d’en-tête (téléphone, tablette)">
+              <div className="w-64">
+                <SearchButton onClick={() => {}} />
+              </div>
+              <SearchButton variant="icon" onClick={() => {}} />
             </Row>
             <Row label="Avatar">
               <Avatar>

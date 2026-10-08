@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { dateBlockParts } from "@/utils/dateBlock";
+import type { LucideIcon } from "lucide-react";
 
 const SIZES = {
   sm: {
@@ -21,21 +22,26 @@ const SIZES = {
  * « Prochain concert »). The rule is `border-border-strong`, or the brand
  * teal with `tone="primary"` (concerts).
  *
+ * Without a date (`date` null: a row whose date is missing) the block shows
+ * `icon` in the same footprint, so the rows of a list keep their alignment.
+ *
  * Decorative (`aria-hidden`): the row or card says the date in words.
  */
 export function DateBlock({
   date,
+  icon: Icon,
   size = "sm",
   tone = "neutral",
   className,
 }: {
-  date: Date;
+  date: Date | null;
+  icon?: LucideIcon;
   size?: "sm" | "lg";
   tone?: "neutral" | "primary";
   className?: string;
 }) {
-  const { day, month } = dateBlockParts(date);
   const s = SIZES[size];
+  const parts = date ? dateBlockParts(date) : null;
   return (
     <span
       aria-hidden
@@ -47,19 +53,25 @@ export function DateBlock({
         className,
       )}
     >
-      <span
-        className={cn("text-foreground font-semibold tabular-nums", s.day)}
-      >
-        {day}
-      </span>
-      <span
-        className={cn(
-          "text-muted-foreground font-semibold tracking-[0.1em] uppercase",
-          s.month,
-        )}
-      >
-        {month}
-      </span>
+      {parts ? (
+        <>
+          <span
+            className={cn("text-foreground font-semibold tabular-nums", s.day)}
+          >
+            {parts.day}
+          </span>
+          <span
+            className={cn(
+              "text-muted-foreground font-semibold tracking-[0.1em] uppercase",
+              s.month,
+            )}
+          >
+            {parts.month}
+          </span>
+        </>
+      ) : (
+        Icon && <Icon className="text-foreground-faint size-6" />
+      )}
     </span>
   );
 }

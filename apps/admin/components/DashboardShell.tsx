@@ -6,6 +6,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { AccountMenu } from "@/components/shell/AccountMenu";
 import { AppHeader } from "@/components/shell/AppHeader";
 import { AppSidebar } from "@/components/shell/AppSidebar";
+import { CommandPalette } from "@/components/shell/CommandPalette";
 import { ShellDialogsProvider } from "@/components/shell/ShellDialogs";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useMyBugReports } from "@/hooks/useMyBugReports";
@@ -27,6 +28,7 @@ interface DashboardShellProps {
 export function DashboardShell({ children }: DashboardShellProps) {
   const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
   const [bugReportDialogOpen, setBugReportDialogOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const { data: profile } = useCurrentProfile();
   const { data: unreadBugReports = 0 } = useUnreadBugReports();
@@ -66,6 +68,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         <aside className="border-border bg-sidebar hidden w-[280px] shrink-0 border-r lg:flex lg:flex-col">
           <AppSidebar
             sections={sections}
+            onOpenSearch={() => setSearchOpen(true)}
             account={
               <AccountMenu
                 placement="sidebar"
@@ -83,6 +86,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
             unreadMessages={unreadMessages}
             onOpenMessages={() => setMessagesDialogOpen(true)}
             onOpenBugReport={() => setBugReportDialogOpen(true)}
+            onOpenSearch={() => setSearchOpen(true)}
           />
           <main
             id="main"
@@ -97,6 +101,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
           </main>
         </div>
       </div>
+
+      <CommandPalette
+        sections={sections}
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+      />
 
       {/* Dialogs outside the header and the drawer so they don't unmount with them. */}
       <MessagesDialog

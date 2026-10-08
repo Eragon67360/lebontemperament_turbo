@@ -1,6 +1,7 @@
 "use client";
 
 import { BrandMark } from "@/components/shell/BrandMark";
+import { SearchButton } from "@/components/shell/SearchButton";
 import { SidebarNav } from "@/components/shell/SidebarNav";
 import type { NavSection } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -18,11 +19,14 @@ import Link from "next/link";
 export function AppSidebar({
   sections,
   onNavigate,
+  onOpenSearch,
   inDrawer = false,
   account,
 }: {
   sections: NavSection[];
   onNavigate?: () => void;
+  /** Opens the ⌘K search; the button sits under the brand. */
+  onOpenSearch: () => void;
   inDrawer?: boolean;
   account?: React.ReactNode;
 }) {
@@ -51,9 +55,18 @@ export function AppSidebar({
         </Link>
       </div>
 
+      <div className="shrink-0 px-3 pt-3">
+        <SearchButton
+          onClick={() => {
+            onNavigate?.();
+            onOpenSearch();
+          }}
+        />
+      </div>
+
       {/* The public-site link sits at the foot when there is room and scrolls
           with the menu on short screens, so it never hides « Projets ». */}
-      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pt-4 pb-3">
         <SidebarNav sections={sections} onNavigate={onNavigate} />
 
         <div className="mt-auto pt-4">
