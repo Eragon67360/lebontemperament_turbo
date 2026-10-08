@@ -81,7 +81,7 @@ class NotificationService {
 
       // Initialize with callback to track when notifications are triggered and handle tap
       final initialized = await _notifications.initialize(
-        initSettings,
+        settings: initSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           _logger.i('🔔 Notification received: ${response.payload}');
           _logger.i('🔔 Notification ID: ${response.id}');
@@ -309,10 +309,10 @@ class NotificationService {
         id ?? (payload.hashCode.abs() % 2147483647).clamp(1000000, 2147483646);
     try {
       await _notifications.show(
-        notificationId,
-        title,
-        body,
-        NotificationDetails(
+        id: notificationId,
+        title: title,
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             report ? bugReportsChannelId : 'fcm_push',
             report ? 'Signalements' : 'Notifications push',
@@ -559,11 +559,11 @@ class NotificationService {
       // minutes late in Doze, which needs no SCHEDULE_EXACT_ALARM permission
       // and no Play Console declaration.
       await _notifications.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduledDate, tz.local),
-        const NotificationDetails(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'event_reminders',
             'Rappels d\'événements',
@@ -586,8 +586,6 @@ class NotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: payload,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.wallClockTime,
       );
 
       _logger.i(
@@ -734,7 +732,7 @@ class NotificationService {
     try {
       final pending = await _notifications.pendingNotificationRequests();
       for (final request in pending) {
-        await _notifications.cancel(request.id);
+        await _notifications.cancel(id: request.id);
       }
       _logger.i('Cancelled ${pending.length} pending notifications');
     } catch (e) {
@@ -757,8 +755,8 @@ class NotificationService {
           notificationTime,
         );
 
-        await _notifications.cancel(concertId);
-        await _notifications.cancel(rehearsalId);
+        await _notifications.cancel(id: concertId);
+        await _notifications.cancel(id: rehearsalId);
       }
 
       _logger.i('Cancelled notifications for event: $eventId');
@@ -844,10 +842,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Nouvelle répétition ajoutée',
-        notificationBody,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Nouvelle répétition ajoutée',
+        body: notificationBody,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_rehearsals',
             'Nouvelles répétitions',
@@ -916,10 +914,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Nouvel événement ajouté',
-        notificationBody,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Nouvel événement ajouté',
+        body: notificationBody,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_events',
             'Nouveaux événements',
@@ -988,10 +986,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Nouveau concert ajouté',
-        notificationBody,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Nouveau concert ajouté',
+        body: notificationBody,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_concerts',
             'Nouveaux concerts',
@@ -1042,10 +1040,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Répétition modifiée',
-        body,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Répétition modifiée',
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_rehearsals',
             'Nouvelles répétitions',
@@ -1091,10 +1089,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Répétition supprimée',
-        body,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Répétition supprimée',
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_rehearsals',
             'Nouvelles répétitions',
@@ -1140,10 +1138,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Événement modifié',
-        body,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Événement modifié',
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_events',
             'Nouveaux événements',
@@ -1189,10 +1187,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Événement supprimé',
-        body,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Événement supprimé',
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_events',
             'Nouveaux événements',
@@ -1238,10 +1236,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Concert modifié',
-        body,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Concert modifié',
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_concerts',
             'Nouveaux concerts',
@@ -1287,10 +1285,10 @@ class NotificationService {
       );
 
       await _notifications.show(
-        notificationId,
-        'Concert supprimé',
-        body,
-        NotificationDetails(
+        id: notificationId,
+        title: 'Concert supprimé',
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'new_concerts',
             'Nouveaux concerts',
@@ -1528,10 +1526,11 @@ class NotificationService {
       }
 
       await _notifications.show(
-        999999,
-        'Test Notification',
-        'This is a test notification to verify permissions are working. Tap to test callback.',
-        const NotificationDetails(
+        id: 999999,
+        title: 'Test Notification',
+        body:
+            'This is a test notification to verify permissions are working. Tap to test callback.',
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'test_channel',
             'Test Notifications',
@@ -1566,10 +1565,10 @@ class NotificationService {
       }
 
       await _notifications.show(
-        888001,
-        'Répétition à venir',
-        'Répétition test dans 15 minutes',
-        const NotificationDetails(
+        id: 888001,
+        title: 'Répétition à venir',
+        body: 'Répétition test dans 15 minutes',
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'event_reminders',
             'Rappels d\'événements',
@@ -1611,10 +1610,10 @@ class NotificationService {
       }
 
       await _notifications.show(
-        888002,
-        'Concert à venir',
-        'Concert test dans 1 heure',
-        const NotificationDetails(
+        id: 888002,
+        title: 'Concert à venir',
+        body: 'Concert test dans 1 heure',
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'event_reminders',
             'Rappels d\'événements',
@@ -1667,11 +1666,12 @@ class NotificationService {
       final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
 
       await _notifications.zonedSchedule(
-        testNotificationId,
-        'Test Scheduled Notification',
-        'This is a test scheduled notification - scheduled for 10 seconds from now.',
-        tzScheduledTime,
-        const NotificationDetails(
+        id: testNotificationId,
+        title: 'Test Scheduled Notification',
+        body:
+            'This is a test scheduled notification - scheduled for 10 seconds from now.',
+        scheduledDate: tzScheduledTime,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'test_scheduled_channel',
             'Test Scheduled Notifications',
@@ -1693,8 +1693,6 @@ class NotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: 'test_scheduled_$testNotificationId',
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.wallClockTime,
       );
 
       _logger.i(
@@ -1734,10 +1732,11 @@ class NotificationService {
       Timer(const Duration(seconds: 10), () async {
         try {
           await _notifications.show(
-            testNotificationId,
-            'Test Scheduled Notification (Timer)',
-            'This is a test scheduled notification - fired after 10 seconds using timer.',
-            const NotificationDetails(
+            id: testNotificationId,
+            title: 'Test Scheduled Notification (Timer)',
+            body:
+                'This is a test scheduled notification - fired after 10 seconds using timer.',
+            notificationDetails: const NotificationDetails(
               android: AndroidNotificationDetails(
                 'test_scheduled_channel',
                 'Test Scheduled Notifications',

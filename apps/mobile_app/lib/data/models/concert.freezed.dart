@@ -20,47 +20,29 @@ Concert _$ConcertFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Concert {
-  @HiveField(0)
   String get id => throw _privateConstructorUsedError;
-  @HiveField(1)
   String? get createdAt => throw _privateConstructorUsedError;
-  @HiveField(2)
   String? get updatedAt => throw _privateConstructorUsedError;
-  @HiveField(3)
   String get place => throw _privateConstructorUsedError;
-  @HiveField(4)
   String get date => throw _privateConstructorUsedError;
-  @HiveField(5)
   String get time => throw _privateConstructorUsedError;
-  @HiveField(6)
   Context get context => throw _privateConstructorUsedError;
-  @HiveField(7)
   @JsonKey(name: 'additional_informations')
   String? get additionalInformations => throw _privateConstructorUsedError;
-  @HiveField(8)
   String? get name => throw _privateConstructorUsedError;
-  @HiveField(9)
   String? get createdBy => throw _privateConstructorUsedError;
-  @HiveField(10)
   String? get affiche =>
       throw _privateConstructorUsedError; // Where and how to come, as the website shows them (public part, #593).
-  @HiveField(11)
   @JsonKey(name: 'venue_name')
   String? get venueName => throw _privateConstructorUsedError;
-  @HiveField(12)
   @JsonKey(name: 'street_address')
   String? get streetAddress => throw _privateConstructorUsedError;
-  @HiveField(13)
   @JsonKey(name: 'postal_code')
   String? get postalCode => throw _privateConstructorUsedError;
-  @HiveField(14)
   String? get city => throw _privateConstructorUsedError;
-  @HiveField(15)
   double? get price => throw _privateConstructorUsedError;
-  @HiveField(16)
   @JsonKey(name: 'is_free')
   bool? get isFree => throw _privateConstructorUsedError;
-  @HiveField(17)
   @JsonKey(name: 'related_link')
   String? get relatedLink => throw _privateConstructorUsedError;
 
@@ -75,26 +57,24 @@ abstract class $ConcertCopyWith<$Res> {
       _$ConcertCopyWithImpl<$Res, Concert>;
   @useResult
   $Res call(
-      {@HiveField(0) String id,
-      @HiveField(1) String? createdAt,
-      @HiveField(2) String? updatedAt,
-      @HiveField(3) String place,
-      @HiveField(4) String date,
-      @HiveField(5) String time,
-      @HiveField(6) Context context,
-      @HiveField(7)
-      @JsonKey(name: 'additional_informations')
-      String? additionalInformations,
-      @HiveField(8) String? name,
-      @HiveField(9) String? createdBy,
-      @HiveField(10) String? affiche,
-      @HiveField(11) @JsonKey(name: 'venue_name') String? venueName,
-      @HiveField(12) @JsonKey(name: 'street_address') String? streetAddress,
-      @HiveField(13) @JsonKey(name: 'postal_code') String? postalCode,
-      @HiveField(14) String? city,
-      @HiveField(15) double? price,
-      @HiveField(16) @JsonKey(name: 'is_free') bool? isFree,
-      @HiveField(17) @JsonKey(name: 'related_link') String? relatedLink});
+      {String id,
+      String? createdAt,
+      String? updatedAt,
+      String place,
+      String date,
+      String time,
+      Context context,
+      @JsonKey(name: 'additional_informations') String? additionalInformations,
+      String? name,
+      String? createdBy,
+      String? affiche,
+      @JsonKey(name: 'venue_name') String? venueName,
+      @JsonKey(name: 'street_address') String? streetAddress,
+      @JsonKey(name: 'postal_code') String? postalCode,
+      String? city,
+      double? price,
+      @JsonKey(name: 'is_free') bool? isFree,
+      @JsonKey(name: 'related_link') String? relatedLink});
 }
 
 /// @nodoc
@@ -214,26 +194,24 @@ abstract class _$$ConcertImplCopyWith<$Res> implements $ConcertCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {@HiveField(0) String id,
-      @HiveField(1) String? createdAt,
-      @HiveField(2) String? updatedAt,
-      @HiveField(3) String place,
-      @HiveField(4) String date,
-      @HiveField(5) String time,
-      @HiveField(6) Context context,
-      @HiveField(7)
-      @JsonKey(name: 'additional_informations')
-      String? additionalInformations,
-      @HiveField(8) String? name,
-      @HiveField(9) String? createdBy,
-      @HiveField(10) String? affiche,
-      @HiveField(11) @JsonKey(name: 'venue_name') String? venueName,
-      @HiveField(12) @JsonKey(name: 'street_address') String? streetAddress,
-      @HiveField(13) @JsonKey(name: 'postal_code') String? postalCode,
-      @HiveField(14) String? city,
-      @HiveField(15) double? price,
-      @HiveField(16) @JsonKey(name: 'is_free') bool? isFree,
-      @HiveField(17) @JsonKey(name: 'related_link') String? relatedLink});
+      {String id,
+      String? createdAt,
+      String? updatedAt,
+      String place,
+      String date,
+      String time,
+      Context context,
+      @JsonKey(name: 'additional_informations') String? additionalInformations,
+      String? name,
+      String? createdBy,
+      String? affiche,
+      @JsonKey(name: 'venue_name') String? venueName,
+      @JsonKey(name: 'street_address') String? streetAddress,
+      @JsonKey(name: 'postal_code') String? postalCode,
+      String? city,
+      double? price,
+      @JsonKey(name: 'is_free') bool? isFree,
+      @JsonKey(name: 'related_link') String? relatedLink});
 }
 
 /// @nodoc
@@ -347,89 +325,69 @@ class __$$ConcertImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$ConcertImpl implements _Concert {
   const _$ConcertImpl(
-      {@HiveField(0) required this.id,
-      @HiveField(1) this.createdAt,
-      @HiveField(2) this.updatedAt,
-      @HiveField(3) required this.place,
-      @HiveField(4) required this.date,
-      @HiveField(5) required this.time,
-      @HiveField(6) required this.context,
-      @HiveField(7)
-      @JsonKey(name: 'additional_informations')
-      this.additionalInformations,
-      @HiveField(8) this.name,
-      @HiveField(9) this.createdBy,
-      @HiveField(10) this.affiche,
-      @HiveField(11) @JsonKey(name: 'venue_name') this.venueName,
-      @HiveField(12) @JsonKey(name: 'street_address') this.streetAddress,
-      @HiveField(13) @JsonKey(name: 'postal_code') this.postalCode,
-      @HiveField(14) this.city,
-      @HiveField(15) this.price,
-      @HiveField(16) @JsonKey(name: 'is_free') this.isFree,
-      @HiveField(17) @JsonKey(name: 'related_link') this.relatedLink});
+      {required this.id,
+      this.createdAt,
+      this.updatedAt,
+      required this.place,
+      required this.date,
+      required this.time,
+      required this.context,
+      @JsonKey(name: 'additional_informations') this.additionalInformations,
+      this.name,
+      this.createdBy,
+      this.affiche,
+      @JsonKey(name: 'venue_name') this.venueName,
+      @JsonKey(name: 'street_address') this.streetAddress,
+      @JsonKey(name: 'postal_code') this.postalCode,
+      this.city,
+      this.price,
+      @JsonKey(name: 'is_free') this.isFree,
+      @JsonKey(name: 'related_link') this.relatedLink});
 
   factory _$ConcertImpl.fromJson(Map<String, dynamic> json) =>
       _$$ConcertImplFromJson(json);
 
   @override
-  @HiveField(0)
   final String id;
   @override
-  @HiveField(1)
   final String? createdAt;
   @override
-  @HiveField(2)
   final String? updatedAt;
   @override
-  @HiveField(3)
   final String place;
   @override
-  @HiveField(4)
   final String date;
   @override
-  @HiveField(5)
   final String time;
   @override
-  @HiveField(6)
   final Context context;
   @override
-  @HiveField(7)
   @JsonKey(name: 'additional_informations')
   final String? additionalInformations;
   @override
-  @HiveField(8)
   final String? name;
   @override
-  @HiveField(9)
   final String? createdBy;
   @override
-  @HiveField(10)
   final String? affiche;
 // Where and how to come, as the website shows them (public part, #593).
   @override
-  @HiveField(11)
   @JsonKey(name: 'venue_name')
   final String? venueName;
   @override
-  @HiveField(12)
   @JsonKey(name: 'street_address')
   final String? streetAddress;
   @override
-  @HiveField(13)
   @JsonKey(name: 'postal_code')
   final String? postalCode;
   @override
-  @HiveField(14)
   final String? city;
   @override
-  @HiveField(15)
   final double? price;
   @override
-  @HiveField(16)
   @JsonKey(name: 'is_free')
   final bool? isFree;
   @override
-  @HiveField(17)
   @JsonKey(name: 'related_link')
   final String? relatedLink;
 
@@ -510,91 +468,69 @@ class _$ConcertImpl implements _Concert {
 
 abstract class _Concert implements Concert {
   const factory _Concert(
-      {@HiveField(0) required final String id,
-      @HiveField(1) final String? createdAt,
-      @HiveField(2) final String? updatedAt,
-      @HiveField(3) required final String place,
-      @HiveField(4) required final String date,
-      @HiveField(5) required final String time,
-      @HiveField(6) required final Context context,
-      @HiveField(7)
-      @JsonKey(name: 'additional_informations')
-      final String? additionalInformations,
-      @HiveField(8) final String? name,
-      @HiveField(9) final String? createdBy,
-      @HiveField(10) final String? affiche,
-      @HiveField(11) @JsonKey(name: 'venue_name') final String? venueName,
-      @HiveField(12)
-      @JsonKey(name: 'street_address')
-      final String? streetAddress,
-      @HiveField(13) @JsonKey(name: 'postal_code') final String? postalCode,
-      @HiveField(14) final String? city,
-      @HiveField(15) final double? price,
-      @HiveField(16) @JsonKey(name: 'is_free') final bool? isFree,
-      @HiveField(17)
-      @JsonKey(name: 'related_link')
-      final String? relatedLink}) = _$ConcertImpl;
+          {required final String id,
+          final String? createdAt,
+          final String? updatedAt,
+          required final String place,
+          required final String date,
+          required final String time,
+          required final Context context,
+          @JsonKey(name: 'additional_informations')
+          final String? additionalInformations,
+          final String? name,
+          final String? createdBy,
+          final String? affiche,
+          @JsonKey(name: 'venue_name') final String? venueName,
+          @JsonKey(name: 'street_address') final String? streetAddress,
+          @JsonKey(name: 'postal_code') final String? postalCode,
+          final String? city,
+          final double? price,
+          @JsonKey(name: 'is_free') final bool? isFree,
+          @JsonKey(name: 'related_link') final String? relatedLink}) =
+      _$ConcertImpl;
 
   factory _Concert.fromJson(Map<String, dynamic> json) = _$ConcertImpl.fromJson;
 
   @override
-  @HiveField(0)
   String get id;
   @override
-  @HiveField(1)
   String? get createdAt;
   @override
-  @HiveField(2)
   String? get updatedAt;
   @override
-  @HiveField(3)
   String get place;
   @override
-  @HiveField(4)
   String get date;
   @override
-  @HiveField(5)
   String get time;
   @override
-  @HiveField(6)
   Context get context;
   @override
-  @HiveField(7)
   @JsonKey(name: 'additional_informations')
   String? get additionalInformations;
   @override
-  @HiveField(8)
   String? get name;
   @override
-  @HiveField(9)
   String? get createdBy;
   @override
-  @HiveField(10)
   String? get affiche;
   @override // Where and how to come, as the website shows them (public part, #593).
-  @HiveField(11)
   @JsonKey(name: 'venue_name')
   String? get venueName;
   @override
-  @HiveField(12)
   @JsonKey(name: 'street_address')
   String? get streetAddress;
   @override
-  @HiveField(13)
   @JsonKey(name: 'postal_code')
   String? get postalCode;
   @override
-  @HiveField(14)
   String? get city;
   @override
-  @HiveField(15)
   double? get price;
   @override
-  @HiveField(16)
   @JsonKey(name: 'is_free')
   bool? get isFree;
   @override
-  @HiveField(17)
   @JsonKey(name: 'related_link')
   String? get relatedLink;
   @override

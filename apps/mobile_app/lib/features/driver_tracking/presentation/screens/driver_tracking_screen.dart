@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geocoding/geocoding.dart' show locationFromAddress;
+import 'package:geocoding/geocoding.dart' show Geocoding;
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
@@ -1102,7 +1102,8 @@ class _SessionDetailsCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: () => Share.share(url),
+                  onPressed: () =>
+                      SharePlus.instance.share(ShareParams(text: url)),
                   child: const Text('Partager'),
                 ),
               ),
@@ -1177,7 +1178,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     if (addressStr.isNotEmpty) {
       setState(() => _isGeocoding = true);
       try {
-        final locations = await locationFromAddress(addressStr);
+        final locations = await Geocoding().locationFromAddress(addressStr);
         if (locations.isNotEmpty && mounted) {
           savedAddress = addressStr;
           savedLatitude = locations.first.latitude;

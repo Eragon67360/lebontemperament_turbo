@@ -1,6 +1,6 @@
 /// A list served by a data service, with where it came from.
 ///
-/// The services keep a Hive copy of every list they fetch, and fall back to it
+/// The services keep an offline copy of every list they fetch, and fall back to it
 /// when the network call fails. Before #361 that fallback was invisible: a
 /// member in a tunnel saw last week's rehearsals as if they were fresh, and a
 /// member with an empty cache saw "no rehearsals" instead of an error. The
