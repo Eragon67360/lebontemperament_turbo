@@ -39,14 +39,6 @@ export const metadata: Metadata = {
     title: "Agenda des concerts - Le Bon Tempérament",
     description:
       "Prochains concerts, tournées et rendez-vous publics du Bon Tempérament.",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-        width: 800,
-        height: 600,
-        alt: "Agenda des concerts du Bon Tempérament",
-      },
-    ],
   },
   alternates: {
     canonical: "/concerts",
@@ -55,8 +47,7 @@ export const metadata: Metadata = {
 
 // One top-level MusicEvent per upcoming concert, as Google's event results
 // read them (#328); the page itself is a CollectionPage.
-const DEFAULT_EVENT_IMAGE =
-  "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png";
+const DEFAULT_EVENT_IMAGE = `${process.env.NEXT_PUBLIC_BASE_URL}/opengraph-image`;
 
 function collectionSchema() {
   return {

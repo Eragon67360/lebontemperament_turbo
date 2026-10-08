@@ -77,16 +77,6 @@ export async function generateMetadata({
       siteName: "Le Bon Tempérament",
       title: `${fullName} - Le Bon Tempérament`,
       description: `${project?.explanation || ""}`,
-      images: [
-        {
-          url: project.banniere?.url
-            ? `https://res.cloudinary.com/dlt2j3dld/image/upload/${project.banniere.url}`
-            : "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
-          width: 1200,
-          height: 630,
-          alt: `${fullName} - Le Bon Tempérament`,
-        },
-      ],
     },
     alternates: {
       canonical: `/concerts/${slug}`,
@@ -116,7 +106,7 @@ function generateArticleSchema(project: ConcertProject, slug: string) {
     },
     image: project.banniere?.url
       ? `https://res.cloudinary.com/dlt2j3dld/image/upload/${project.banniere.url}`
-      : "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/og/concerts-og.png",
+      : `${articleUrl}/opengraph-image`,
     inLanguage: "fr-FR",
     keywords:
       "musique classique, opéra, baroque, concert, Saverne, Alsace, Le Bon Tempérament",
