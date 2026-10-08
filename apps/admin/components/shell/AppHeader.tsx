@@ -3,6 +3,7 @@
 import { PageTrail } from "@/components/layouts/PageHeader";
 import { AccountMenu } from "@/components/shell/AccountMenu";
 import { AppSidebar } from "@/components/shell/AppSidebar";
+import { SearchButton } from "@/components/shell/SearchButton";
 import { useShellTrail } from "@/components/shell/useShellTrail";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +22,8 @@ import { useState } from "react";
 
 /**
  * The sticky header: on phones the menu button that opens the sidebar as a
- * drawer, then « Vous êtes ici » (parent › page on phones), then the account
- * menu below `lg` (above it, the account is in the sidebar). The page
+ * drawer, then « Vous êtes ici » (parent › page on phones), then the search
+ * and the account menu below `lg` (above it, both are in the sidebar). The page
  * scrolls underneath it.
  */
 export function AppHeader({
@@ -30,9 +31,11 @@ export function AppHeader({
   unreadMessages,
   onOpenMessages,
   onOpenBugReport,
+  onOpenSearch,
 }: {
   sections: NavSection[];
   unreadMessages: number;
+  onOpenSearch: () => void;
   onOpenMessages: () => void;
   onOpenBugReport: () => void;
 }) {
@@ -70,14 +73,16 @@ export function AppHeader({
             sections={sections}
             inDrawer
             onNavigate={() => setDrawerOpen(false)}
+            onOpenSearch={onOpenSearch}
           />
         </SheetContent>
       </Sheet>
 
       <PageTrail items={trail} className="min-w-0 flex-1" />
 
-      {/* From lg the account sits at the foot of the sidebar. */}
+      {/* From lg the search button and the account sit in the sidebar. */}
       <div className="ml-auto flex shrink-0 items-center lg:hidden">
+        <SearchButton variant="icon" onClick={onOpenSearch} />
         <AccountMenu
           unreadMessages={unreadMessages}
           onOpenMessages={onOpenMessages}

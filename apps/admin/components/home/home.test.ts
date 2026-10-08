@@ -2,7 +2,7 @@
 // what the admin reads, where the links go, which button is the primary.
 import { buildHomeTasks } from "@/utils/home/tasks";
 import { mergeUpcoming } from "@/utils/home/upcoming";
-import { Cake } from "lucide-react";
+import { Cake, CalendarOff } from "lucide-react";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -130,6 +130,16 @@ assert.equal(firstNameOf(""), "");
   assert.match(lg, /text-\[44px\]/);
   assert.match(lg, /text-\[14px\]/);
   assert.match(lg, /border-r-2 [^"]*border-primary(?=[\s"])/);
+}
+
+// --- DateBlock without a date: the icon keeps the footprint ---
+{
+  const html = renderToStaticMarkup(
+    createElement(DateBlock, { date: null, icon: CalendarOff }),
+  );
+  assert.match(html, /data-slot="date-block"/);
+  assert.match(html, /<svg/);
+  assert.doesNotMatch(html, /tabular-nums/);
 }
 
 // --- NextConcertCard: poster, programme block, title, meta, two actions ---

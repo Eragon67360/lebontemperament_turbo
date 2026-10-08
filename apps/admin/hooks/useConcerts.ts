@@ -5,9 +5,10 @@ import {
 } from "@repo/domain/types/concerts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export function useConcerts() {
+export function useConcerts(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["concerts"],
+    enabled: options?.enabled,
     queryFn: async () => {
       const response = await fetch("/api/prochains-concerts");
       if (!response.ok) throw new Error("Failed to fetch concerts");

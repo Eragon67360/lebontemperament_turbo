@@ -105,6 +105,10 @@ const noop = () => {};
       onDelete: noop,
     }),
   );
+  // The programme-style date block, with the teal rule of concerts.
+  assert.match(html, /data-slot="date-block"[^>]*border-primary/);
+  assert.match(html, />21<\/span>/);
+  assert.match(html, />nov\.<\/span>/);
   assert.match(html, /Modifier<span class="sr-only"> « Requiem »/);
   assert.match(html, /Plus d(&#x27;|')actions pour « Requiem »/);
   assert.match(html, /aria-haspopup="menu"/);

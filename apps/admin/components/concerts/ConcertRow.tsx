@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DateBlock } from "@/components/ui/date-block";
 import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -14,7 +15,14 @@ import {
 import type { Concert } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Clock, ExternalLink, MapPin, Music2, Pencil } from "lucide-react";
+import {
+  CalendarOff,
+  Clock,
+  ExternalLink,
+  MapPin,
+  Music2,
+  Pencil,
+} from "lucide-react";
 import Image from "next/image";
 
 /**
@@ -41,23 +49,7 @@ export function ConcertRow({
   return (
     <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
       <div className="flex shrink-0 items-center gap-4">
-        <div
-          className="bg-primary-soft text-primary-text grid size-14 shrink-0 place-items-center rounded-md"
-          aria-hidden
-        >
-          {date ? (
-            <span className="flex flex-col items-center leading-none">
-              <span className="text-xl font-semibold">
-                {format(date, "d", { locale: fr })}
-              </span>
-              <span className="text-note mt-0.5 uppercase">
-                {format(date, "MMM", { locale: fr })}
-              </span>
-            </span>
-          ) : (
-            <Music2 className="size-6" />
-          )}
-        </div>
+        <DateBlock date={date} icon={CalendarOff} tone="primary" />
         <div className="bg-surface-sunken relative h-14 w-10 shrink-0 overflow-hidden rounded-sm">
           {concert.affiche ? (
             <Image
