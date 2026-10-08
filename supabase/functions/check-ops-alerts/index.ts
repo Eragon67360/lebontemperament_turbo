@@ -39,6 +39,7 @@ import {
   type SiteProbe,
   type StoredAlert,
 } from "./checks.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 const WINDOW_MINUTES = 30;
 const PROBE_TIMEOUT_MS = 10_000;
@@ -159,7 +160,7 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(
       requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+      requireServiceKey(),
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 

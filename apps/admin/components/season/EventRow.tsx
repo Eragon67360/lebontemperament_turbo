@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DateBlock } from "@/components/ui/date-block";
 import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -12,10 +13,8 @@ import {
   parseIsoDate,
 } from "@/utils/season/schedule";
 import type { Event } from "@repo/domain/types/events";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import {
-  CalendarDays,
+  CalendarOff,
   Clock,
   ExternalLink,
   MapPin,
@@ -46,24 +45,8 @@ export function EventRow({
     : event.responsible_name;
 
   return (
-    <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
-      <div
-        className="bg-primary-soft text-primary-text grid size-14 shrink-0 place-items-center rounded-md"
-        aria-hidden
-      >
-        {date ? (
-          <span className="flex flex-col items-center leading-none">
-            <span className="text-xl font-semibold">
-              {format(date, "d", { locale: fr })}
-            </span>
-            <span className="text-note mt-0.5 uppercase">
-              {format(date, "MMM", { locale: fr })}
-            </span>
-          </span>
-        ) : (
-          <CalendarDays className="size-6" />
-        )}
-      </div>
+    <Card className="flex items-start gap-4 p-4">
+      <DateBlock date={date} icon={CalendarOff} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="min-w-0 space-y-1">

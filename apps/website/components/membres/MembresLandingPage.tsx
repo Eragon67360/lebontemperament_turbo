@@ -13,6 +13,7 @@ import {
   IoLogoWhatsapp,
   IoMusicalNotesOutline,
   IoPeopleOutline,
+  IoShieldCheckmarkOutline,
   IoTicketOutline,
 } from "react-icons/io5";
 
@@ -152,6 +153,13 @@ export const MembresLandingPage = () => {
         href: "/membres/administration",
         target: "_self" as const,
         icon: IoDocumentTextOutline,
+      },
+      {
+        title: "Mes données",
+        description: "Télécharger mes données, supprimer mon compte",
+        href: "/membres/mes-donnees",
+        target: "_self" as const,
+        icon: IoShieldCheckmarkOutline,
       },
     ],
     [],

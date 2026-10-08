@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.117.2",
-    "@types/node": "^24.19.0",
+    "@types/node": "^24.19.1",
     "eslint": "^9.39.5",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
@@ -28,7 +28,7 @@
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tsx": "^4.23.15",
-    "turbo": "^2.11.5",
+    "turbo": "^2.11.6",
     "typescript": "5.9.3"
   },
   "engines": {

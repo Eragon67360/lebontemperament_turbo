@@ -6,6 +6,7 @@ import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.share
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BrandMark } from "./BrandMark";
+import { SearchButton } from "./SearchButton";
 import { SidebarNav } from "./SidebarNav";
 
 const sections = buildNavSections({ isSuperAdmin: true });
@@ -87,6 +88,18 @@ function visibleCount(html: string, text: string) {
   assert.match(html, /d="M9 3v7a3 3 0 0 0 6 0V3"/);
   assert.match(html, /d="M12 13v8"/);
   assert.doesNotMatch(html, /#[0-9a-f]{3,6}\b/i, "no raw colour in the mark");
+}
+
+// --- The search button: a named button, the shortcut only once the browser says so ---
+{
+  const sidebar = renderToStaticMarkup(<SearchButton onClick={() => {}} />);
+  assert.match(sidebar, /^<button type="button"/);
+  assert.match(sidebar, />Rechercher<\/span>/);
+  assert.doesNotMatch(sidebar, /<kbd/, "no shortcut hint before hydration");
+  const icon = renderToStaticMarkup(
+    <SearchButton variant="icon" onClick={() => {}} />,
+  );
+  assert.match(icon, /<span class="sr-only">Rechercher<\/span>/);
 }
 
 console.log("shell: ok");

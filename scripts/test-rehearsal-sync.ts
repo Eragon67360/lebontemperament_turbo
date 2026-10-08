@@ -83,9 +83,15 @@ async function invokeSync(mode: "test" | "dry-run"): Promise<any> {
     `${config.supabaseUrl}/functions/v1/sync-rehearsals-from-calendar?mode=${mode}`,
     {
       method: "POST",
+      // The publishable key (`sb_publishable_…`) goes on `apikey` only:
+      // Supabase refuses it as a Bearer token (#570). A legacy anon key (a
+      // JWT) also goes on `Authorization`, as before.
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${config.anon}`,
+        apikey: config.anon,
+        ...(config.anon.startsWith("eyJ")
+          ? { Authorization: `Bearer ${config.anon}` }
+          : {}),
         "x-sync-secret": config.secret,
       },
       body: "{}",

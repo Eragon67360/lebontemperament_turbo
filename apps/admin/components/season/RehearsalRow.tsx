@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DateBlock } from "@/components/ui/date-block";
 import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -10,9 +11,7 @@ import {
   timeRangeFr,
 } from "@/utils/season/schedule";
 import type { Rehearsal } from "@repo/domain/types/rehearsals";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Clock, MapPin, Music, Pencil } from "lucide-react";
+import { CalendarOff, Clock, MapPin, Pencil } from "lucide-react";
 
 /**
  * One rehearsal of the « À venir » or « Passées » list: date block, name,
@@ -33,24 +32,8 @@ export function RehearsalRow({
   const hours = timeRangeFr(rehearsal.start_time, rehearsal.end_time);
 
   return (
-    <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
-      <div
-        className="bg-primary-soft text-primary-text grid size-14 shrink-0 place-items-center rounded-md"
-        aria-hidden
-      >
-        {date ? (
-          <span className="flex flex-col items-center leading-none">
-            <span className="text-xl font-semibold">
-              {format(date, "d", { locale: fr })}
-            </span>
-            <span className="text-note mt-0.5 uppercase">
-              {format(date, "MMM", { locale: fr })}
-            </span>
-          </span>
-        ) : (
-          <Music className="size-6" />
-        )}
-      </div>
+    <Card className="flex items-start gap-4 p-4">
+      <DateBlock date={date} icon={CalendarOff} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="min-w-0 space-y-1">

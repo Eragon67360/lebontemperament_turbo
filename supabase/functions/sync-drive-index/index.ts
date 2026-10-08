@@ -31,6 +31,7 @@ import {
   type RunDiff,
 } from "./plan.ts";
 import type { Database } from "./types.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 type SyncMode = "dry_run" | "apply";
 type Trigger = "cron" | "admin";
@@ -134,7 +135,7 @@ serve(async (req) => {
   try {
     supabase = createClient<Database>(
       requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+      requireServiceKey(),
     );
   } catch (error) {
     log("fatal", {
