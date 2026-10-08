@@ -1,51 +1,50 @@
 "use client";
 
+import type { ListedCollection } from "@/lib/siteDocuments";
 import { Button, Spinner } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { IoIosArrowRoundForward } from "react-icons/io";
 
+type Programme = { title: string; dateLabel: string | null; href: string };
+
+/** Until a programme is managed in the admin (or if the list can't load). */
+const FALLBACK: Programme = {
+  title: "Entre Terre et Ciel",
+  dateLabel: "2025",
+  href: "/pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf",
+};
+
+/**
+ * The concert programme the QR codes point to: the newest document of the
+ * « Programmes de concert » collection, managed in the admin
+ * (« Documents de l'association »).
+ */
+async function currentProgramme(): Promise<Programme> {
+  try {
+    const response = await fetch("/api/documents");
+    if (!response.ok) return FALLBACK;
+    const { collections } = (await response.json()) as {
+      collections: ListedCollection[];
+    };
+    const latest = collections.find((c) => c.slug === "programmes")
+      ?.documents[0];
+    return latest ?? FALLBACK;
+  } catch {
+    return FALLBACK;
+  }
+}
+
+const fileNameOf = (href: string) =>
+  decodeURIComponent(href.split("/").pop() || "programme.pdf");
+
 export default function DownloadPage() {
+  const [programme, setProgramme] = useState<Programme | null>(null);
   const [downloadStarted, setDownloadStarted] = useState(false);
   const [downloadError, setDownloadError] = useState(false);
 
-  useEffect(() => {
-    // Automatically start download when page loads
-    const startDownload = async () => {
-      try {
-        const response = await fetch(
-          "/pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf",
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch file");
-        }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "Entre_Terre_et_Ciel_2025.pdf";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        setDownloadStarted(true);
-      } catch (error) {
-        console.error("Download failed:", error);
-        setDownloadError(true);
-      }
-    };
-
-    // Small delay to ensure page is fully loaded
-    const timer = setTimeout(startDownload, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleManualDownload = async () => {
+  const download = async (target: Programme) => {
     try {
-      const response = await fetch(
-        "/pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf",
-      );
+      const response = await fetch(target.href);
       if (!response.ok) {
         throw new Error("Failed to fetch file");
       }
@@ -54,17 +53,39 @@ export default function DownloadPage() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "Entre_Ciel_et_Terre_2025.pdf";
+      link.download = fileNameOf(target.href);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
+      setDownloadError(false);
       setDownloadStarted(true);
     } catch (error) {
       console.error("Download failed:", error);
       setDownloadError(true);
     }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    // Small delay to ensure page is fully loaded
+    const timer = setTimeout(async () => {
+      const target = await currentProgramme();
+      if (cancelled) return;
+      setProgramme(target);
+      await download(target);
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const handleManualDownload = async () => {
+    const target = programme ?? (await currentProgramme());
+    setProgramme(target);
+    await download(target);
   };
 
   return (
@@ -79,10 +100,12 @@ export default function DownloadPage() {
             id="download-title"
             className="text-primary-400 dark:text-primary text-title mb-4 leading-none font-light"
           >
-            Entre Terre et Ciel
+            {programme?.title ?? "Programme du concert"}
           </h1>
           <p className="mb-8 text-base font-light text-gray-500 md:text-lg lg:text-xl">
-            Programme 2025
+            {programme?.dateLabel
+              ? `Programme ${programme.dateLabel}`
+              : "Programme"}
           </p>
 
           {/* Status Messages */}

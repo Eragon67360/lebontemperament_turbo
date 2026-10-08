@@ -353,7 +353,7 @@ FROM (VALUES
   ('textes', 'Statuts du Bon Tempérament', 'Statuts_Le_Bon_Temperament.pdf', 'pdf/Statuts_Le_Bon_Temperament.pdf', NULL, NULL, 'members', 3, 29507),
   ('textes', 'Règlement intérieur', 'reglement.pdf', 'pdf/reglement.pdf', NULL, NULL, 'members', 2, 9453),
   ('textes', 'Charte du Bon Tempérament', 'charte_BT.pdf', 'pdf/charte_BT.pdf', NULL, NULL, 'members', 1, 41488),
-  ('programmes', 'Programme « Entre Terre et Ciel » (2025)', 'Entre_Terre_et_Ciel_2025.pdf', 'pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf', '2025-01-01'::date, 'year', 'public', 0, 432874)
+  ('programmes', 'Entre Terre et Ciel', 'Entre_Terre_et_Ciel_2025.pdf', 'pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf', '2025-01-01'::date, 'year', 'public', 0, 432874)
 ) AS v (collection, title, file_name, storage_key, document_date, date_precision, visibility, sort_order, size_bytes)
 JOIN public.document_collections c ON c.slug = v.collection
 ON CONFLICT (storage_key) DO NOTHING;

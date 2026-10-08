@@ -136,6 +136,20 @@ export function legacyCollections(): ListedCollection[] {
       ),
     },
     {
+      slug: "programmes",
+      label: "Programmes de concert",
+      description: "Les programmes distribués aux concerts",
+      documents: [
+        {
+          id: "Programmes/Entre_Terre_et_Ciel_2025.pdf",
+          title: "Entre Terre et Ciel",
+          dateLabel: "2025",
+          visibility: "public",
+          href: "/pdf/Programmes/Entre_Terre_et_Ciel_2025.pdf",
+        },
+      ],
+    },
+    {
       slug: "pele-mele",
       label: "Pêle-Mêle",
       description: "Archives diverses",

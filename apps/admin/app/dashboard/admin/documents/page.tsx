@@ -351,6 +351,12 @@ export default function DocumentsPage() {
                         : `${items.length} documents en ligne`}
                   </p>
                 </div>
+                {collection.slug === "programmes" && (
+                  <p className="text-note text-muted-foreground">
+                    Le plus récent est celui que propose la page
+                    lebontemperament.com/download (le QR code des concerts).
+                  </p>
+                )}
                 {items.length === 0 ? (
                   <EmptyState
                     icon={FileText}
