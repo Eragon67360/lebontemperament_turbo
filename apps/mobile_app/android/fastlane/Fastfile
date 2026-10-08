@@ -21,6 +21,18 @@ def current_version_code
   build.to_i
 end
 
+# The hex of a 32-byte SHA-256 digest given as hex or base64, or nil.
+def signing_hash_hex(hash)
+  compact = hash.to_s.strip.delete(": ")
+  return compact.downcase if compact.match?(/\A\h{64}\z/)
+  padded = compact.tr("-_", "+/")
+  padded += "=" * ((4 - padded.length % 4) % 4)
+  raw = padded.unpack1("m0")
+  raw.bytesize == 32 ? raw.unpack1("H*") : nil
+rescue ArgumentError
+  nil
+end
+
 platform :android do
   desc "Download the current store listing (texts, images, screenshots) into the metadata folder. Read-only."
   lane :download_listing do
@@ -85,8 +97,12 @@ platform :android do
     apks = service.list_generatedapks(package, version_code).generated_apks || []
     UI.user_error!("No generated APKs for build #{version_code}") if apks.empty?
     fingerprints = apks.map(&:certificate_sha256_hash).compact.uniq.map do |hash|
-      # Hex, or base64 of the raw digest: printed as AA:BB:… like the console.
-      hex = hash.match?(/\A\h{64}\z/) ? hash : hash.unpack1("m0").unpack1("H*")
+      # Printed as AA:BB:… like the console. Google answers hex (with or
+      # without colons) or base64 (standard or URL-safe) of the raw digest.
+      hex = signing_hash_hex(hash)
+      unless hex
+        UI.user_error!("Unexpected certificate hash format (#{hash.length} characters: #{hash.gsub(/[A-Za-z0-9]/, "x")})")
+      end
       hex.upcase.scan(/../).join(":")
     end
     fingerprints.each { |f| UI.message("App signing certificate SHA-256 (build #{version_code}): #{f}") }
