@@ -278,6 +278,11 @@ enabled = false
 [functions.sync-rehearsals-from-calendar]
 verify_jwt = false
 
+# Public by design (#593): visitors' apps call it without a session, and the
+# gateway's JWT check would refuse the new publishable keys (#570).
+[functions.redeem-delivery-code]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Configure one of the supported request policies: `oneshot`, `per_worker`.

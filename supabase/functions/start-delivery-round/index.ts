@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireSuperadmin } from "../_shared/caller-auth.ts";
+import { deliveryMessage } from "../_shared/delivery-messages.ts";
+import { pushToRecipient } from "../_shared/delivery-push.ts";
 
 const OSRM_ROUTE_BASE = "https://router.project-osrm.org/route/v1/driving";
 
@@ -159,6 +161,21 @@ serve(async (req) => {
         .eq("delivery_id", deliveryId);
     }
 
+    // Phones linked in the app get a push, with the same window as the SMS.
+    let pushSentCount = 0;
+    if (sendSms) {
+      for (const { id, scheduledAt } of scheduledAts) {
+        const recipient = withCoords.find((r) => r.id === id);
+        if (recipient?.delivered_at != null) continue;
+        const sent = await pushToRecipient(
+          supabaseAdmin,
+          id,
+          deliveryMessage("started", id, new Date(scheduledAt)),
+        );
+        if (sent > 0) pushSentCount++;
+      }
+    }
+
     let smsSentCount = 0;
     if (sendSms) {
       const siteUrl = Deno.env.get("SITE_URL") ?? "";
@@ -212,6 +229,7 @@ serve(async (req) => {
         success: true,
         scheduledCount: scheduledAts.length,
         smsSentCount,
+        pushSentCount,
       }),
       { headers: { "Content-Type": "application/json" } },
     );

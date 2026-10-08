@@ -108,7 +108,7 @@ class FcmNotificationHandler {
       if (message != null) {
         _logger.i('[FCM] getInitialMessage: ${message.data}');
         _openFromLaunch(
-          _pathFromTypeAndId(
+          pathFor(
             message.data['type']?.toString() ?? '',
             message.data['id']?.toString() ?? '',
           ),
@@ -151,7 +151,7 @@ class FcmNotificationHandler {
   static void _navigateFromFcmData(Map<String, dynamic> data) {
     final type = data['type']?.toString() ?? '';
     final id = data['id']?.toString() ?? '';
-    final path = _pathFromTypeAndId(type, id);
+    final path = pathFor(type, id);
     if (path != null) _navigateTo(path);
   }
 
@@ -166,10 +166,12 @@ class FcmNotificationHandler {
     if (parts.length < 2) return null;
     final type = parts[0];
     final id = parts.sublist(1).join('_');
-    return _pathFromTypeAndId(type, id);
+    return pathFor(type, id);
   }
 
-  static String? _pathFromTypeAndId(String type, String id) {
+  /// The screen a push's data `type` and `id` open, or null when the app has
+  /// none for it (`delivery` carries the recipient id, #593).
+  static String? pathFor(String type, String id) {
     switch (type) {
       case 'rehearsal':
         return id.isNotEmpty ? AppRouter.rehearsals : null;
@@ -179,6 +181,8 @@ class FcmNotificationHandler {
         return id.isNotEmpty ? '/events/$id' : null;
       case 'report':
         return id.isNotEmpty ? '/reports/$id' : null;
+      case 'delivery':
+        return id.isNotEmpty ? '/delivery/$id' : null;
       default:
         return null;
     }

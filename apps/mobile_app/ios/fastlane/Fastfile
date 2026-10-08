@@ -209,6 +209,29 @@ platform :ios do
     end
   end
 
+  desc "Turn on Associated Domains for the app's identifier (delivery links /l/<code>, #593) and write the App ID (prefix.bundle id) to APP_LINKS_OUT for the website's apple-app-site-association. Changes nothing else."
+  lane :app_links do
+    api_key
+    identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+    bundle_id = Spaceship::ConnectAPI::BundleId.find(identifier)
+    UI.user_error!("Identifier #{identifier} not found") unless bundle_id
+
+    type = Spaceship::ConnectAPI::BundleIdCapability::Type::ASSOCIATED_DOMAINS
+    if bundle_id.get_capabilities.any? { |c| c.is_type?(type) }
+      UI.message("Associated Domains: already on")
+    else
+      bundle_id.create_capability(type)
+      UI.success("Associated Domains: turned on")
+    end
+
+    # The prefix equals the team ID, which GitHub masks in the logs: it goes
+    # to a file the workflow uploads as an artifact (it is public anyway,
+    # served by the website).
+    out = env!("APP_LINKS_OUT")
+    File.write(out, "#{bundle_id.seed_id}.#{identifier}\n")
+    UI.message("App ID written to #{File.basename(out)}")
+  end
+
   desc "Fill the App Store page of the version being prepared: texts, screenshots, age rating, build and review details. Never submits it."
   lane :store do
     key = api_key

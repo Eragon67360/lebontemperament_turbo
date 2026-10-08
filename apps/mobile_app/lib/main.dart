@@ -15,6 +15,7 @@ import 'data/services/fcm_notification_handler.dart';
 import 'data/services/session_notifications.dart';
 import 'data/providers/my_groups_provider.dart';
 import 'data/providers/realtime_notifications_provider.dart';
+import 'features/delivery/presentation/providers/delivery_providers.dart';
 import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
 import 'features/onboarding/data/welcome_prefs.dart';
 import 'firebase_options.dart';
@@ -93,6 +94,8 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
     // see SessionNotifications in main()).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FcmNotificationHandler.setupForegroundListeners();
+      // Delivery passes follow the FCM token when it rotates (#593).
+      ref.read(deliveryServiceProvider).bindTokenRefreshes();
     });
 
     // Start real-time subscription for list updates (always, regardless of settings)

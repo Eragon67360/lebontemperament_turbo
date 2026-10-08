@@ -9,7 +9,10 @@ name: iOS TestFlight
 # step (to retry it); "Show the TestFlight status" lists the latest builds
 # with Apple's state for each, read-only; "Update the App Store page" fills
 # the App Store version being prepared (texts, screenshots, age rating,
-# build) without submitting it. See apps/mobile_app/ios/fastlane/README.md.
+# build) without submitting it; "Set up delivery links" turns on Associated
+# Domains for the app's identifier and saves its App ID as an artifact for
+# the website's apple-app-site-association (#593). See
+# apps/mobile_app/ios/fastlane/README.md.
 #
 # It changes App Store Connect, so the job runs in the `app-store`
 # environment, which holds the API key and waits for the owner's approval.
@@ -34,6 +37,7 @@ on:
           - Send the latest build to members
           - Show the TestFlight status
           - Update the App Store page
+          - Set up delivery links
 
 permissions:
   contents: read
@@ -144,5 +148,16 @@ jobs:
             "Send the latest build to members") bundle exec fastlane ios members ;;
             "Show the TestFlight status") bundle exec fastlane ios status ;;
             "Update the App Store page") bundle exec fastlane ios store ;;
+            "Set up delivery links") APP_LINKS_OUT="$RUNNER_TEMP/app-links/app-id.txt" && mkdir -p "$RUNNER_TEMP/app-links" && export APP_LINKS_OUT && bundle exec fastlane ios app_links ;;
             *) bundle exec fastlane ios beta ;;
           esac
+
+      # The App ID prefix is the team ID, which GitHub masks in the logs.
+      - name: Upload the App ID
+        if: env.ACTION == 'Set up delivery links'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: app-links
+          path: ${{ runner.temp }}/app-links/app-id.txt
+          retention-days: 7
+          if-no-files-found: error

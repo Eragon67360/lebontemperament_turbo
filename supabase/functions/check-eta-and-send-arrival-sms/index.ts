@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalSecret } from "../_shared/caller-auth.ts";
+import { deliveryMessage } from "../_shared/delivery-messages.ts";
+import {
+  linkedDeviceCounts,
+  pushToRecipient,
+} from "../_shared/delivery-push.ts";
 
 const OSRM_BASE = "https://router.project-osrm.org/route/v1/driving";
 const ETA_THRESHOLD_SECONDS = 300; // 5 minutes
@@ -98,15 +103,19 @@ serve(async (req) => {
       if (recipientError || !recipient) continue;
 
       const r = recipient as RecipientRow;
+      const hasPhone = !!r.phone_number?.trim();
 
       if (
         r.eta_arrival_sms_sent_at != null ||
         r.latitude == null ||
-        r.longitude == null ||
-        !r.phone_number?.trim()
+        r.longitude == null
       ) {
         continue;
       }
+      // Nobody to tell: no phone number and no phone linked in the app.
+      const linked =
+        (await linkedDeviceCounts(supabaseAdmin, [r.id])).get(r.id) ?? 0;
+      if (!hasPhone && linked === 0) continue;
 
       const durationSeconds = await fetchOSRMDuration(
         d.longitude,
@@ -119,6 +128,26 @@ serve(async (req) => {
         continue;
       }
 
+      // Phones linked in the app get a push; the SMS is unchanged.
+      const pushed =
+        linked > 0
+          ? await pushToRecipient(
+              supabaseAdmin,
+              r.id,
+              deliveryMessage("arriving", r.id),
+            )
+          : 0;
+
+      if (!hasPhone) {
+        if (pushed > 0) {
+          await supabaseAdmin
+            .from("delivery_recipients")
+            .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
+            .eq("id", r.id);
+        }
+        continue;
+      }
+
       const trackingUrl = `${siteUrl.replace(/\/$/, "")}/track?token=${r.public_token}`;
       const messageBody =
         `Bonjour ${r.label}, votre livraison arrive dans environ 5 minutes ! Préparez-vous à recevoir votre colis.\n\n` +
@@ -126,7 +155,7 @@ serve(async (req) => {
         "- Félix & Thomas";
 
       const requestBody = new URLSearchParams({
-        To: r.phone_number,
+        To: r.phone_number!,
         From: twilioPhoneNumber,
         Body: messageBody,
       });
@@ -143,6 +172,13 @@ serve(async (req) => {
       if (!twilioRes.ok) {
         const errorData = await twilioRes.json();
         console.error("Twilio API Error for recipient", r.id, errorData);
+        // Marked anyway when the push went out, so it isn't sent every minute.
+        if (pushed > 0) {
+          await supabaseAdmin
+            .from("delivery_recipients")
+            .update({ eta_arrival_sms_sent_at: new Date().toISOString() })
+            .eq("id", r.id);
+        }
         continue;
       }
 

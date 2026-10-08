@@ -135,6 +135,19 @@ class PublicAboutScreen extends ConsumerWidget {
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  // Deliveries (#593) stay out of the menus: one quiet line
+                  // for the people who got a code by SMS.
+                  Center(
+                    child: TextButton(
+                      onPressed: () => context.push(AppRouter.deliveryCode),
+                      style: TextButton.styleFrom(
+                        foregroundColor: scheme.onSurfaceVariant,
+                        textStyle: AppFonts.sans(fontSize: 13),
+                      ),
+                      child: const Text('J’ai un code'),
+                    ),
+                  ),
                 ]),
               ),
             ),

@@ -68,6 +68,20 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Delivery links (#593): https://www.lebontemperament.com/l/<code>
+                 opens the app on that delivery once the website serves
+                 /.well-known/assetlinks.json for this package. Flutter hands
+                 the path to the router (deep linking is on by default since
+                 Flutter 3.27; no flutter_deeplinking_enabled meta-data needed). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="www.lebontemperament.com" />
+                <data android:host="lebontemperament.com" />
+                <data android:pathPrefix="/l/" />
+            </intent-filter>
         </activity>
 
         <!-- « Continuer avec Google »: Supabase sends the browser back to

@@ -754,6 +754,7 @@ export type Database = {
       delivery_recipients: {
         Row: {
           address: string | null;
+          code: string;
           delivered_at: string | null;
           delivery_id: string;
           eta_arrival_sms_sent_at: string | null;
@@ -768,6 +769,7 @@ export type Database = {
         };
         Insert: {
           address?: string | null;
+          code?: string;
           delivered_at?: string | null;
           delivery_id: string;
           eta_arrival_sms_sent_at?: string | null;
@@ -782,6 +784,7 @@ export type Database = {
         };
         Update: {
           address?: string | null;
+          code?: string;
           delivered_at?: string | null;
           delivery_id?: string;
           eta_arrival_sms_sent_at?: string | null;
@@ -1700,6 +1703,15 @@ export type Database = {
       mark_bug_report_read: {
         Args: { p_report_id: string };
         Returns: undefined;
+      };
+      redeem_delivery_code: {
+        Args: {
+          p_client: string;
+          p_code: string;
+          p_fcm_token?: string;
+          p_platform?: string;
+        };
+        Returns: Json;
       };
       rehearsals_sync_write: {
         Args: {

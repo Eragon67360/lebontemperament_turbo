@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.3";
+const POLICY_VERSION = "2.4";
 const POLICY_UPDATED_ON = "8 octobre 2026";
 
 export const metadata: Metadata = {
@@ -201,6 +201,11 @@ const RETENTION: [what: string, howLong: string][] = [
     "Données des destinataires d’une livraison",
     "supprimées 30 jours après la tournée",
   ],
+  [
+    "Identifiant de notification du téléphone qui suit une livraison dans l’application",
+    "effacé le lendemain de la tournée, quand le lien de suivi expire",
+  ],
+  ["Empreinte de l’adresse IP des essais de code infructueux", "24 heures"],
   ["Position du conducteur", "effacée à la fin de la tournée"],
   [
     "Reçus fiscaux des dons payés par Stripe",
@@ -651,18 +656,20 @@ export default function PrivacyPolicy() {
             <p className={pClass}>
               Lors de ses tournées de livraison, l’association prévient les
               destinataires par SMS et leur permet de suivre l’arrivée du
-              livreur grâce à un lien personnel.
+              livreur grâce à un lien personnel. Le SMS porte aussi un code
+              personnel, qui permet de suivre la livraison dans l’application Le
+              Bon Tempérament sans créer de compte.
             </p>
             <Processing
               title="Destinataires des livraisons"
               facts={[
                 [
                   "Données",
-                  "nom, adresse postale, numéro de téléphone, position de l’adresse sur la carte, créneau et heure de livraison, lien de suivi personnel",
+                  "nom, adresse postale, numéro de téléphone, position de l’adresse sur la carte, créneau et heure de livraison, lien de suivi et code personnels",
                 ],
                 [
                   "Finalité",
-                  "organiser la tournée (ordre de passage, itinéraire, heure d’arrivée estimée) et vous envoyer des SMS : départ de la tournée avec votre lien de suivi, arrivée imminente, livraison effectuée",
+                  "organiser la tournée (ordre de passage, itinéraire, heure d’arrivée estimée) et vous envoyer des SMS : départ de la tournée avec votre lien de suivi et votre code, arrivée imminente, livraison effectuée",
                 ],
                 [
                   "Base légale",
@@ -687,6 +694,36 @@ export default function PrivacyPolicy() {
               sont envoyées au serveur d’itinéraires de FOSSGIS pour tracer le
               trajet.
             </p>
+
+            <Processing
+              title="Suivi de la livraison dans l’application"
+              facts={[
+                [
+                  "Fonctionnement",
+                  "le code personnel du SMS, saisi dans l’application (ou le lien du SMS touché avec l’application installée), relie votre téléphone à cette livraison, sans aucun compte",
+                ],
+                [
+                  "Données",
+                  "l’identifiant de notification de votre téléphone (Firebase Cloud Messaging), enregistré avec la livraison ; pour limiter les essais de codes au hasard, une empreinte (hachage) de l’adresse IP de chaque essai infructueux, dont l’adresse elle-même ne peut pas être retrouvée",
+                ],
+                [
+                  "Finalité",
+                  "vous envoyer les notifications du jour de la livraison : départ de la tournée, votre tour qui approche, arrivée dans quelques minutes, livraison effectuée ; protéger les livraisons contre la recherche de codes",
+                ],
+                [
+                  "Base légale",
+                  "l’exécution de la livraison convenue avec vous (article 6.1.b du RGPD) pour les notifications ; l’intérêt légitime de l’association à sécuriser le service (article 6.1.f du RGPD) pour l’empreinte des essais",
+                ],
+                [
+                  "Conservation",
+                  "l’identifiant de notification est effacé le lendemain de la tournée, quand le lien de suivi expire ; l’empreinte des essais infructueux est conservée 24 heures ; vous pouvez aussi retirer la livraison de l’application à tout moment, ce qui détache votre téléphone",
+                ],
+                [
+                  "Destinataires",
+                  "Supabase et Google (Firebase Cloud Messaging) en tant que sous-traitants",
+                ],
+              ]}
+            />
 
             <Processing
               title="Position des conducteurs"
