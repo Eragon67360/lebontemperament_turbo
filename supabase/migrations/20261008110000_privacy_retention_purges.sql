@@ -34,8 +34,9 @@
 --    deployed, pg_net records a 404 once a day and reports with screenshots
 --    simply wait.
 --
--- First run on production (counted 2026-10-08): 3 memory e-mails erased by
--- the migration itself; no signalement or sync log is old enough yet.
+-- First run on production (counted 2026-10-08): the migration erases 3
+-- memory e-mails; the first nightly purge deletes 17 rehearsal sync logs
+-- (June-July 2026) and no signalement (none is resolved yet).
 --
 -- Rollback:
 --   SELECT cron.unschedule('purge-expired-records');
