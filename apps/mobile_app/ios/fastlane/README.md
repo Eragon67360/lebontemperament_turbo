@@ -25,7 +25,11 @@ file on `main`, GitHub's rule). Each run waits for approval on the
 1. builds the Flutter app without signing (`flutter build ios --no-codesign`);
 2. archives and signs it for the App Store (`fastlane ios beta`). Signing is
    automatic: Xcode uses the API key to create or reuse the distribution
-   certificate and the provisioning profile in the developer account;
+   certificate and the provisioning profile in the developer account. Each
+   fresh runner also makes an « Apple Development » certificate, and Apple
+   caps how many an account holds, so the lane first revokes the ones
+   earlier runs left (« Created via API »; certificates made in Xcode on a
+   Mac and distribution certificates stay);
 3. uploads it to TestFlight and sets the « À tester » text;
 4. sends it to members: it sets the TestFlight test information
    (description, feedback email, privacy policy URL, reviewer notes), adds
