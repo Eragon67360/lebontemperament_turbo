@@ -1707,6 +1707,16 @@ export type Database = {
         Args: { p_report_id: string };
         Returns: undefined;
       };
+      member_directory: {
+        Args: never;
+        Returns: {
+          display_name: string;
+          email: string;
+          id: string;
+          profile_picture_url: string;
+          voice: string;
+        }[];
+      };
       redeem_delivery_code: {
         Args: {
           p_client: string;
