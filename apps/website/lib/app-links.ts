@@ -13,10 +13,11 @@
 export const APP_BUNDLE_ID = "com.lebontemperament.app";
 
 /**
- * TODO(owner): the Apple Developer Team ID (10 characters, App Store Connect
- * › Membership details). Empty until it is known: the AASA route answers 404.
+ * The Apple Developer Team ID, which is also the app's App ID prefix
+ * (checked by the « Set up delivery links » action of ios-testflight.yml,
+ * 2026-10-08, which also turned on Associated Domains for the app).
  */
-export const APPLE_TEAM_ID = "";
+export const APPLE_TEAM_ID = "2Y57C77BK4";
 
 /**
  * SHA-256 fingerprint of the certificate Google Play signs the app with
