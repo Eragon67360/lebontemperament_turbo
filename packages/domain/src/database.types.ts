@@ -1849,6 +1849,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      auth_user_summaries: {
+        Args: never;
+        Returns: {
+          avatar_url: string | null;
+          confirmed_at: string | null;
+          email_confirmed_at: string | null;
+          id: string;
+          invited_at: string | null;
+          last_sign_in_at: string | null;
+        }[];
+      };
       concert_event_data_write: {
         Args: {
           p_city: string;
@@ -1903,6 +1914,17 @@ export type Database = {
       mark_bug_report_read: {
         Args: { p_report_id: string };
         Returns: undefined;
+      };
+      member_directory_with_avatars: {
+        Args: never;
+        Returns: {
+          auth_avatar_url: string | null;
+          display_name: string;
+          email: string;
+          id: string;
+          profile_picture_url: string;
+          voice: string;
+        }[];
       };
       member_directory: {
         Args: never;

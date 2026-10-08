@@ -1,7 +1,7 @@
 // app/api/membres/route.ts
+import { loadMemberDirectory } from "@/lib/memberDirectory";
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -19,9 +19,11 @@ export async function GET() {
     const supabaseAdmin = createAdminClient();
 
     // Members see each other's name, email, voice and photo only (owner
-    // decision on #350): member_directory() returns just those, sorted by
-    // name. Phones and postal address stay in the admin.
-    const { data: profiles, error } = await supabase.rpc("member_directory");
+    // decision on #350). Phones and postal address stay in the admin.
+    const { rows: profiles, error } = await loadMemberDirectory(
+      supabase,
+      supabaseAdmin,
+    );
 
     if (error) {
       console.error("Error fetching members:", error);
@@ -31,59 +33,13 @@ export async function GET() {
       );
     }
 
-    if (!profiles) {
-      return NextResponse.json([], { status: 200 });
-    }
-
-    // Function to get all auth users with pagination
-    const getAllAuthUsers = async () => {
-      let allUsers: User[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const {
-          data: { users },
-          error,
-        } = await supabaseAdmin.auth.admin.listUsers({
-          page: page,
-          perPage: 50,
-        });
-
-        if (error) {
-          console.error(`Error fetching users page ${page}:`, error);
-          // Continue without Google avatars if we can't fetch auth users
-          break;
-        }
-
-        if (!users || users.length === 0) {
-          hasMore = false;
-        } else {
-          allUsers = [...allUsers, ...users];
-          page++;
-        }
-      }
-
-      return allUsers;
-    };
-
-    // Fetch auth users to get Google avatars
-    const authUsers = await getAllAuthUsers().catch((error) => {
-      console.error("Error fetching auth users:", error);
-      return [];
-    });
-
     // Transform profiles to match the expected Member interface
     const members = profiles
       .filter((profile) => profile.email) // Only include profiles with email
       .map((profile) => {
-        // Find matching auth user to get Google avatar
-        const authUser = authUsers.find((au) => au.id === profile.id);
-        const googleAvatar = authUser?.user_metadata?.avatar_url;
-
         // Prioritize: profile_picture_url > Google avatar > undefined
         const photoUrl =
-          profile.profile_picture_url || googleAvatar || undefined;
+          profile.profile_picture_url || profile.auth_avatar_url || undefined;
 
         return {
           "NOM Prénom":
