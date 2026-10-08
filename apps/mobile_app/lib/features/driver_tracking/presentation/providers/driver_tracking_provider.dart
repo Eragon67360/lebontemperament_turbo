@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../../data/services/delivery_service.dart';
+import '../../data/delivery_invitations.dart';
 
 /// Current position (lat, lng) for display.
 class TrackingPosition {
@@ -250,20 +251,22 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         state = state.copyWith(delivery: updated, error: null);
       }
 
-      // --- Trigger the Edge Function to send the SMS (await to prevent double-tap) ---
-      _logger.i('Attempting to trigger SMS for recipient $recipientId');
+      // --- Tell the recipient they are next: a push to the phones that
+      // follow the delivery in the app (no SMS since #593). Awaited to
+      // prevent a double tap. ---
+      _logger.i('Sending the « next » notification for recipient $recipientId');
       final response = await Supabase.instance.client.functions.invoke(
         'send-delivery-sms',
         body: {'recipientId': recipientId},
       );
       if (response.status != 200) {
         _logger.w(
-          'SMS function invocation failed with status: ${response.status}',
+          'Next-recipient notification failed with status: ${response.status}',
           error: response.data,
         );
       } else {
         _logger.i(
-          'SMS function invoked successfully for recipient $recipientId',
+          'Next-recipient notification sent for recipient $recipientId',
         );
       }
     } catch (e) {
@@ -274,6 +277,45 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     } finally {
       state = state.copyWith(isActionLoading: false);
     }
+  }
+
+  /// Sends the invitation SMS (#593): to every recipient of the delivery
+  /// with a phone number, not delivered and never invited, or, with
+  /// [recipientIds], to those only (also when already invited: « Renvoyer
+  /// l’invitation »). Refreshes the recipients so their invitation dates
+  /// show. The server checks the role, the date and the numbers.
+  Future<InvitationSendResult> sendInvitations({
+    List<String>? recipientIds,
+  }) async {
+    final delivery = state.delivery;
+    if (delivery == null) {
+      return const InvitationSendResult(error: 'no_delivery');
+    }
+    state = state.copyWith(isActionLoading: true, error: null);
+    InvitationSendResult result;
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        kSendDeliveryInvitationsFunction,
+        body: {'deliveryId': delivery.id, 'recipientIds': ?recipientIds},
+      );
+      result = InvitationSendResult.fromResponse(
+        response.status,
+        response.data,
+      );
+    } on FunctionException catch (e) {
+      // Non-2xx answers (400 no_date, 403) arrive here with their body.
+      result = InvitationSendResult.fromResponse(e.status, e.details);
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier sendInvitations', error: e);
+      result = const InvitationSendResult(error: 'unreachable');
+    }
+    if (result.error != null) {
+      _logger.w('send-delivery-invitations failed: ${result.error}');
+    }
+    // Some SMS may have gone out even when others failed: reload either way.
+    await loadRecipients();
+    state = state.copyWith(isActionLoading: false);
+    return result;
   }
 
   /// Revert current recipient to pending (clears current_recipient_id).
@@ -388,7 +430,8 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   }
 
   /// Mark a recipient as delivered (also clears current_recipient_id on delivery).
-  /// Triggers the send-delivery-complete-sms edge function to notify the recipient.
+  /// Triggers the send-delivery-complete-sms edge function, which notifies
+  /// the recipient by push (the name stays for installed apps; no SMS).
   Future<void> markRecipientDelivered(String recipientId) async {
     final delivery = state.delivery;
     if (delivery == null) return;
@@ -403,20 +446,18 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
           error: null,
         );
 
-        // Trigger SMS to thank the recipient (await to prevent double-tap)
+        // Push « livrée » to the recipient (await to prevent double-tap)
         final response = await Supabase.instance.client.functions.invoke(
           'send-delivery-complete-sms',
           body: {'recipientId': recipientId},
         );
         if (response.status != 200) {
           _logger.w(
-            'Delivery complete SMS function failed with status: ${response.status}',
+            'Delivered notification failed with status: ${response.status}',
             error: response.data,
           );
         } else {
-          _logger.i(
-            'Delivery complete SMS sent successfully for recipient $recipientId',
-          );
+          _logger.i('Delivered notification sent for recipient $recipientId');
         }
       }
     } catch (e) {
@@ -449,8 +490,11 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     return true;
   }
 
-  /// Start the delivery round: get position, call start-delivery-round (scheduled_at + optional SMS), then start tracking.
-  Future<void> startDeliveryRound({required bool sendSms}) async {
+  /// Start the delivery round: get position, call start-delivery-round
+  /// (scheduled_at + optional « tournée commencée » notification), then
+  /// start tracking. [notifyRecipients] goes to the function as `sendSms`,
+  /// the name installed apps use; the server sends pushes only (#593).
+  Future<void> startDeliveryRound({required bool notifyRecipients}) async {
     final delivery = state.delivery;
     if (delivery == null) {
       state = state.copyWith(error: 'Aucune livraison. Rechargez la page.');
@@ -471,7 +515,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
           'deliveryId': delivery.id,
           'startLat': position.latitude,
           'startLng': position.longitude,
-          'sendSms': sendSms,
+          'sendSms': notifyRecipients,
         },
       );
 
