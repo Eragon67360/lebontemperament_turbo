@@ -26,6 +26,9 @@ class _Recorder {
   bool failSubscribe = false;
   bool failRegister = false;
   String? token = 'fcm-test-token';
+
+  /// The visitor's « Prochains concerts » switch (on by default).
+  bool publicWanted = true;
   final refreshes = StreamController<String>.broadcast();
 
   late final SessionNotifications notifications = SessionNotifications(
@@ -43,6 +46,7 @@ class _Recorder {
       calls.add('register:$token');
     },
     unregisterDevice: (token) async => calls.add('unregister:$token'),
+    publicConcertsWanted: () async => publicWanted,
     logger: Logger(level: Level.off),
   );
 }
@@ -54,17 +58,29 @@ void main() {
       AuthChangeEvent.initialSession,
       _fakeSession(),
     );
-    expect(signedIn.calls, ['subscribe:all_users', 'register:fcm-test-token']);
+    expect(signedIn.calls, [
+      'unsubscribe:public_concerts',
+      'subscribe:all_users',
+      'register:fcm-test-token',
+    ]);
 
+    // A visitor listens to the public concert topic instead (#593).
     final signedOut = _Recorder();
     await signedOut.notifications.handle(AuthChangeEvent.initialSession, null);
-    expect(signedOut.calls, ['unsubscribe:all_users']);
+    expect(signedOut.calls, [
+      'unsubscribe:all_users',
+      'subscribe:public_concerts',
+    ]);
   });
 
   test('subscribes and registers the phone on sign-in', () async {
     final r = _Recorder();
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-    expect(r.calls, ['subscribe:all_users', 'register:fcm-test-token']);
+    expect(r.calls, [
+      'unsubscribe:public_concerts',
+      'subscribe:all_users',
+      'register:fcm-test-token',
+    ]);
   });
 
   test(
@@ -72,14 +88,14 @@ void main() {
     () async {
       final r = _Recorder()..token = null;
       await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-      expect(r.calls, ['subscribe:all_users']);
+      expect(r.calls, ['unsubscribe:public_concerts', 'subscribe:all_users']);
     },
   );
 
   test('a failing registration does not block the sign-in steps', () async {
     final r = _Recorder()..failRegister = true;
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-    expect(r.calls, ['subscribe:all_users']);
+    expect(r.calls, ['unsubscribe:public_concerts', 'subscribe:all_users']);
   });
 
   test('beforeSignOut unregisters the current token', () async {
@@ -116,14 +132,17 @@ void main() {
     await r.notifications.dispose();
   });
 
-  test(
-    'on sign-out: unsubscribes, deletes the token, clears the cache',
-    () async {
-      final r = _Recorder();
-      await r.notifications.handle(AuthChangeEvent.signedOut, null);
-      expect(r.calls, ['unsubscribe:all_users', 'deleteToken', 'clearCache']);
-    },
-  );
+  test('on sign-out: unsubscribes, deletes the token, clears the cache, '
+      'then listens to the public concerts like any visitor', () async {
+    final r = _Recorder();
+    await r.notifications.handle(AuthChangeEvent.signedOut, null);
+    expect(r.calls, [
+      'unsubscribe:all_users',
+      'deleteToken',
+      'clearCache',
+      'subscribe:public_concerts',
+    ]);
+  });
 
   test('ignores token refreshes and profile updates', () async {
     final r = _Recorder();
@@ -138,7 +157,7 @@ void main() {
   test('a failing step does not block the others', () async {
     final r = _Recorder()..failSubscribe = true;
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-    expect(r.calls, ['register:fcm-test-token']);
+    expect(r.calls, ['unsubscribe:public_concerts', 'register:fcm-test-token']);
     r.calls.clear();
     await r.notifications.handle(AuthChangeEvent.signedOut, null);
     expect(r.calls, ['unsubscribe:all_users', 'deleteToken', 'clearCache']);
@@ -153,24 +172,57 @@ void main() {
       currentSession: null,
       authStateChanges: controller.stream,
     );
-    await Future<void>.delayed(Duration.zero);
-    expect(r.calls, ['unsubscribe:all_users']);
+    await pumpEventQueue();
+    expect(r.calls, ['unsubscribe:all_users', 'subscribe:public_concerts']);
 
     // The stream's own initialSession is ignored (already applied above).
     controller.add(const AuthState(AuthChangeEvent.initialSession, null));
     controller.add(AuthState(AuthChangeEvent.signedIn, _fakeSession()));
     controller.add(const AuthState(AuthChangeEvent.signedOut, null));
-    await Future<void>.delayed(Duration.zero);
-    await Future<void>.delayed(Duration.zero);
+    await pumpEventQueue();
 
     expect(r.calls, [
       'unsubscribe:all_users',
+      'subscribe:public_concerts',
+      'unsubscribe:public_concerts',
       'subscribe:all_users',
       'register:fcm-test-token',
       'unsubscribe:all_users',
       'deleteToken',
       'clearCache',
+      'subscribe:public_concerts',
     ]);
     await r.notifications.dispose();
+  });
+
+  group('« Prochains concerts » (#593)', () {
+    test('switched off: the visitor leaves the public topic', () async {
+      final r = _Recorder()..publicWanted = false;
+      await r.notifications.handle(AuthChangeEvent.initialSession, null);
+      expect(r.calls, ['unsubscribe:all_users', 'unsubscribe:public_concerts']);
+    });
+
+    test('the switch applies at once for a visitor', () async {
+      final r = _Recorder();
+      await r.notifications.handle(AuthChangeEvent.initialSession, null);
+      r.calls.clear();
+      r.publicWanted = false;
+      await r.notifications.publicConcertsChanged();
+      expect(r.calls, ['unsubscribe:public_concerts']);
+      r.publicWanted = true;
+      await r.notifications.publicConcertsChanged();
+      expect(r.calls, [
+        'unsubscribe:public_concerts',
+        'subscribe:public_concerts',
+      ]);
+    });
+
+    test('a member stays off the public topic whatever the switch', () async {
+      final r = _Recorder();
+      await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
+      r.calls.clear();
+      await r.notifications.publicConcertsChanged();
+      expect(r.calls, isEmpty);
+    });
   });
 }

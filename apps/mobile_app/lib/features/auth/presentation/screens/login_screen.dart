@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lebontemperament/core/config/app_router.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -20,6 +22,16 @@ bool get showAppleSignIn =>
 /// a typo (no « @ », no domain). Long TLDs and « + » tags are valid.
 bool isValidEmail(String value) =>
     RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$').hasMatch(value.trim());
+
+/// Back to where the visitor came from, or to the public home when the
+/// sign-in was the first screen (a session that ended).
+void leaveLogin(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(AppRouter.publicHome);
+  }
+}
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
@@ -54,6 +66,17 @@ class LoginScreen extends ConsumerWidget {
                     FadeInUp(delay: 200, child: _LoginForm()),
                   ],
                 ),
+              ),
+            ),
+          ),
+          // Back to the public part (#593).
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                tooltip: 'Retour',
+                onPressed: () => leaveLogin(context),
               ),
             ),
           ),
@@ -93,7 +116,7 @@ class _LoginHeader extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         Text(
-          'Bienvenue',
+          'Espace membres',
           style: AppFonts.sans(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -102,7 +125,8 @@ class _LoginHeader extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Connectez-vous pour continuer',
+          'Connectez-vous avec le compte donné à l’association',
+          textAlign: TextAlign.center,
           style: AppFonts.sans(
             fontSize: 16,
             color: theme.colorScheme.onSurfaceVariant,
@@ -169,6 +193,16 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
     try {
       await signIn();
       // Navigation is handled by the auth state listener in the router
+    } on SignInException catch (e) {
+      if (!mounted) return;
+      if (e.failure == SignInFailure.notMember) {
+        // Not a member: back to the public part, which is for them (#593).
+        final messenger = ScaffoldMessenger.of(context);
+        leaveLogin(context);
+        messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      } else {
+        _showErrorSnackBar(e.message);
+      }
     } catch (e) {
       if (mounted) {
         _showErrorSnackBar(
