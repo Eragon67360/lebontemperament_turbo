@@ -56,7 +56,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
-  let dbProject: ProjectStory | null = null;
+  let dbProject: ProjectStory | null;
   try {
     dbProject = await fetchProject(slug);
   } catch (error) {
@@ -187,7 +187,7 @@ export default async function ConcertPage({
 }) {
   const { slug } = await params;
 
-  let dbProject: ProjectStory | null = null;
+  let dbProject: ProjectStory | null;
   try {
     dbProject = await fetchProject(slug);
   } catch (error) {
