@@ -759,6 +759,7 @@ export type Database = {
           delivery_id: string;
           eta_arrival_sms_sent_at: string | null;
           id: string;
+          invited_at: string | null;
           label: string;
           latitude: number | null;
           longitude: number | null;
@@ -774,6 +775,7 @@ export type Database = {
           delivery_id: string;
           eta_arrival_sms_sent_at?: string | null;
           id?: string;
+          invited_at?: string | null;
           label: string;
           latitude?: number | null;
           longitude?: number | null;
@@ -789,6 +791,7 @@ export type Database = {
           delivery_id?: string;
           eta_arrival_sms_sent_at?: string | null;
           id?: string;
+          invited_at?: string | null;
           label?: string;
           latitude?: number | null;
           longitude?: number | null;
