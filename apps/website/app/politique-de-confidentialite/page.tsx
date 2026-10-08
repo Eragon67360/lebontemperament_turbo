@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.1";
-const POLICY_UPDATED_ON = "6 octobre 2026";
+const POLICY_VERSION = "2.2";
+const POLICY_UPDATED_ON = "8 octobre 2026";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -201,9 +201,10 @@ const RETENTION: [what: string, howLong: string][] = [
     "pendant l’adhésion, puis 1 an au plus après sa fin",
   ],
   [
-    "Signalements de problèmes dans l’administration",
+    "Signalements de problèmes (tableau de bord et application), captures d’écran comprises",
     "1 an au plus après leur résolution",
   ],
+  ["Journaux des synchronisations (agenda, Google Drive)", "90 jours"],
   [
     "Données des destinataires d’une livraison",
     "supprimées 30 jours après la tournée",
@@ -581,7 +582,7 @@ export default function PrivacyPolicy() {
                 ],
                 [
                   "Conservation",
-                  "signalements : 1 an au plus après la résolution du problème",
+                  "signalements : 1 an au plus après la résolution du problème ; journaux des synchronisations de l’agenda et du Google Drive : 90 jours",
                 ],
               ]}
             />
@@ -607,10 +608,21 @@ export default function PrivacyPolicy() {
               <li className="mb-2">
                 <strong>Notifications</strong> : les annonces de répétitions,
                 d’événements et de concerts sont envoyées à tous les membres par
-                Firebase Cloud Messaging (Google), sans que l’association
-                enregistre d’identifiant de votre appareil ; les rappels sont
-                programmés sur votre appareil. Vous pouvez les désactiver dans
-                l’application ou dans les réglages du téléphone.
+                Firebase Cloud Messaging (Google). Pour vous envoyer les
+                réponses à vos signalements, l’application enregistre avec votre
+                compte l’identifiant de notification de votre téléphone, effacé
+                lorsque vous vous déconnectez ou qu’il n’est plus valide. Les
+                rappels sont programmés sur votre appareil. Vous pouvez
+                désactiver les notifications dans l’application ou dans les
+                réglages du téléphone.
+              </li>
+              <li className="mb-2">
+                <strong>Signalements</strong> : vous pouvez nous signaler un
+                problème depuis l’application, avec jusqu’à trois captures
+                d’écran. Le message, les captures et la version de l’application
+                et du système de votre téléphone sont lus par les responsables
+                de l’application, qui vous répondent dans l’application, et
+                conservés 1&nbsp;an au plus après la résolution du problème.
               </li>
               <li className="mb-2">
                 <strong>Localisation</strong> : demandée uniquement aux
