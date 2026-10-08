@@ -19,5 +19,8 @@
     "globals": "^17.13.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.0"
+  },
+  "scripts": {
+    "depcheck": "npx --yes depcheck@1.4.7"
   }
 }

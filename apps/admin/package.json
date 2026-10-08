@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "node scripts/run-tests.mjs"
+    "test": "node scripts/run-tests.mjs",
+    "depcheck": "npx --yes depcheck@1.4.7"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
