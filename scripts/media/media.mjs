@@ -3,7 +3,7 @@
 // Supabase Storage bucket `site-media`, and checks the result.
 //
 //   node scripts/media/media.mjs manifest [--commit <sha>]   rebuild the manifest from git (no network)
-//   node scripts/media/media.mjs upload [--apply] [--env-file <path>]
+//   node scripts/media/media.mjs upload [--apply] [--env-file <path> | --env-root <checkout>]
 //   node scripts/media/media.mjs verify                       HEAD every public URL (read-only)
 //   node scripts/media/media.mjs redirects <siteUrl>          follow every old URL on a deployed site (read-only)
 //
@@ -14,9 +14,10 @@
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseEnv } from "node:util";
 
 const root = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -125,9 +126,42 @@ const readManifest = () => JSON.parse(readFileSync(manifestPath, "utf8"));
 const publicUrl = (m, f) =>
   `${m.baseUrl}/${f.key.split("/").map(encodeURIComponent).join("/")}`;
 
+/**
+ * Looks in the usual env files under <dir> for the one that points at the
+ * production project and holds a service key, and loads it. Prints the file
+ * name only, never a value.
+ */
+function loadProductionEnv(dir, m) {
+  const host = new URL(m.baseUrl).host;
+  const candidates = [
+    "apps/admin/.env.local",
+    "apps/admin/.env",
+    "apps/website/.env.local",
+    "apps/website/.env",
+    ".env.local",
+    ".env",
+  ];
+  for (const rel of candidates) {
+    const file = path.join(dir, rel);
+    if (!existsSync(file)) continue;
+    const env = parseEnv(readFileSync(file, "utf8"));
+    const url = env.NEXT_PUBLIC_SUPABASE_URL ?? env.SUPABASE_URL ?? "";
+    if (url.includes(host) && env.SUPABASE_SERVICE_ROLE_KEY) {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = url;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+      console.log(`Using production keys from ${rel}`);
+      return;
+    }
+  }
+  throw new Error(
+    `No env file under ${dir} has the production URL (${host}) and SUPABASE_SERVICE_ROLE_KEY`,
+  );
+}
+
 async function upload() {
   const m = readManifest();
   if (has("--env-file")) process.loadEnvFile(flag("--env-file"));
+  else if (has("--env-root")) loadProductionEnv(flag("--env-root"), m);
   const url = (
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
     process.env.SUPABASE_URL ??
@@ -280,7 +314,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const run = { manifest: buildManifest, upload, verify, redirects }[command];
   if (!run) {
     console.error(
-      "Usage: media.mjs manifest --commit <sha> | upload [--apply] [--env-file f] | verify | redirects <siteUrl>",
+      "Usage: media.mjs manifest --commit <sha> | upload [--apply] [--env-file f | --env-root dir] | verify | redirects <siteUrl>",
     );
     process.exit(2);
   }
