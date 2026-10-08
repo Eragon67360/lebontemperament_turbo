@@ -42,8 +42,8 @@ export function storyFacts(project: Project): string[] {
 
 /**
  * One concert story of the list: thumbnail, name and subtitle, date and
- * what it contains, « Prévisualiser », « Modifier », « Supprimer », and
- * the order controls.
+ * what it contains, « Prévisualiser », « Modifier », the « Plus
+ * d'actions » menu (« Supprimer… ») and the order controls.
  */
 export function ProjectRow({
   project,

@@ -46,8 +46,12 @@ export function DataState({
   return <>{children}</>;
 }
 
-/** Wraps a skeleton so assistive tech hears "loading" instead of nothing. */
-function LoadingRegion({
+/**
+ * Wraps a skeleton so assistive tech hears "loading" instead of nothing.
+ * Exported for a skeleton shaped like one specific card (the home's
+ * « Prochain concert »); lists and grids use the skeletons below.
+ */
+export function LoadingRegion({
   label = "Chargement…",
   className,
   children,

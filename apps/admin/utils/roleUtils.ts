@@ -1,3 +1,4 @@
+import { ROLE_LABELS } from "@/utils/members/list";
 // utils/roleUtils.ts
 export function getRoleBadgeVariant(role: "user" | "admin" | "superadmin") {
   switch (role) {
@@ -13,14 +14,5 @@ export function getRoleBadgeVariant(role: "user" | "admin" | "superadmin") {
 }
 
 export function getRoleLabel(role: "user" | "admin" | "superadmin") {
-  switch (role) {
-    case "superadmin":
-      return "Super Admin";
-    case "admin":
-      return "Administrateur";
-    case "user":
-      return "Utilisateur";
-    default:
-      return role;
-  }
+  return ROLE_LABELS[role] ?? role;
 }

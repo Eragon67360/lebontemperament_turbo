@@ -10,7 +10,7 @@ interface PageShellProps {
   className?: string;
   contentClassName?: string;
   title?: string;
-  description?: string;
+  description?: ReactNode;
   headerAction?: ReactNode;
   /**
    * Fill the content area and let the page scroll its own regions, instead of

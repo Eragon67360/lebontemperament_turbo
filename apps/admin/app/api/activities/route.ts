@@ -3,6 +3,8 @@ import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(request: Request) {
   const authCheck = await checkAuthorization();
   if (!authCheck.authorized) {
@@ -21,7 +23,13 @@ export async function GET(request: Request) {
       ? 15
       : Math.min(Math.max(requested, 1), 100);
 
-    const { data, error } = await supabase
+    // `targetId`: the history of one account (the member page).
+    const targetId = searchParams.get("targetId");
+    if (targetId !== null && !UUID.test(targetId)) {
+      return NextResponse.json({ error: "targetId invalide" }, { status: 400 });
+    }
+
+    let query = supabase
       .from("activities")
       .select(
         `
@@ -34,7 +42,9 @@ export async function GET(request: Request) {
       )
       .order("created_at", { ascending: false })
       .limit(limit);
+    if (targetId) query = query.eq("target_id", targetId);
 
+    const { data, error } = await query;
     if (error) throw error;
 
     return NextResponse.json(data);

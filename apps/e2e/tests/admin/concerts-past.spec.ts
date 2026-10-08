@@ -61,10 +61,11 @@ test("the « Passés » tab lists past concerts or its empty state", async ({
   });
   const count = await rows.count();
   if (count > 0) {
-    // Past concerts are correctable: each row has « Modifier » and « Supprimer ».
+    // Past concerts are correctable: each row has « Modifier » and the
+    // « Plus d'actions » menu holding « Supprimer… ».
     await expect(rows.first()).toBeVisible();
     await expect(
-      concerts.getByRole("button", { name: /^Supprimer « / }).first(),
+      concerts.getByRole("button", { name: /^Plus d'actions pour « / }).first(),
     ).toBeVisible();
   } else {
     await expect(empty).toBeVisible();

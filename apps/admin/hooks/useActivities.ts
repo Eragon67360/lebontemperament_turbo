@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-interface Activity {
+export interface Activity {
   id: string;
   type: string;
   user_id: string;
@@ -23,5 +23,20 @@ export function useActivities(limit = 15) {
       if (!response.ok) throw new Error("Failed to fetch activities");
       return response.json() as Promise<Activity[]>;
     },
+  });
+}
+
+/** What happened to one account (invitation, creation, role changes), newest first. */
+export function useMemberActivity(profileId: string | undefined) {
+  return useQuery({
+    queryKey: ["activities", "target", profileId],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/activities?limit=20&targetId=${encodeURIComponent(profileId!)}`,
+      );
+      if (!response.ok) throw new Error("Failed to fetch activities");
+      return response.json() as Promise<Activity[]>;
+    },
+    enabled: !!profileId,
   });
 }

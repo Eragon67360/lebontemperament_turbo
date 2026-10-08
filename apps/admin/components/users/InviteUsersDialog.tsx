@@ -429,7 +429,7 @@ export function InviteUserDialog({
           {invitations.map((invitation, index) => (
             <div
               key={index}
-              className="flex items-start gap-2 rounded-lg border border-gray-100 p-3 sm:items-center sm:border-0 sm:p-0"
+              className="border-border flex items-start gap-2 rounded-lg border p-3 sm:items-center sm:border-0 sm:p-0"
             >
               <div className="flex-grow space-y-2 sm:space-y-0">
                 {/* Mobile: Stacked layout */}
@@ -437,7 +437,7 @@ export function InviteUserDialog({
                   <div>
                     <Label
                       htmlFor={`displayName-${index}`}
-                      className="text-xs text-gray-600"
+                      className="text-note text-muted-foreground"
                     >
                       Nom complet
                     </Label>
@@ -462,7 +462,7 @@ export function InviteUserDialog({
                   <div>
                     <Label
                       htmlFor={`email-${index}`}
-                      className="text-xs text-gray-600"
+                      className="text-note text-muted-foreground"
                     >
                       Email
                     </Label>
@@ -560,10 +560,10 @@ export function InviteUserDialog({
                   </Button>
                 )}
                 {invitation.status === "sending" && (
-                  <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
+                  <RefreshCw className="text-info h-4 w-4 animate-spin" />
                 )}
                 {invitation.status === "sent" && (
-                  <Check className="h-4 w-4 text-green-500" />
+                  <Check className="text-success h-4 w-4" />
                 )}
                 {invitation.status === "error" && (
                   <Button
@@ -572,7 +572,7 @@ export function InviteUserDialog({
                     className="h-8 w-8"
                     onClick={() => resendInvitation(index)}
                   >
-                    <RefreshCw className="h-4 w-4 text-red-500" />
+                    <RefreshCw className="text-danger h-4 w-4" />
                   </Button>
                 )}
               </div>

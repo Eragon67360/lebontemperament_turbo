@@ -26,8 +26,8 @@ import {
 /**
  * One video of the public gallery: YouTube's own thumbnail (a plain,
  * lazy image, no player on the list), the play link opening YouTube in a
- * new tab, title, composer, date, venue and soloists, then « Modifier »
- * and « Supprimer » with the order controls.
+ * new tab, title, composer, date, venue and soloists, then « Modifier »,
+ * the « Plus d'actions » menu (« Supprimer… ») and the order controls.
  */
 export function VideoRow({
   video,

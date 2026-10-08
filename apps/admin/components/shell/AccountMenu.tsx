@@ -22,24 +22,37 @@ import { getRoleLabel } from "@/utils/roleUtils";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, LifeBuoy, LogOut, Mail } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronsUpDown,
+  LifeBuoy,
+  LogOut,
+  Mail,
+} from "lucide-react";
+import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 /**
- * The header's account menu (direction B): who is signed in, Messages with
- * its unread count (also pinned to the avatar), Signaler un problème, the
- * list density, Se déconnecter. Both dialogs are mounted by the shell, outside
- * this menu, so they survive the menu closing.
+ * The account menu (direction B): who is signed in, Messages with its unread
+ * count (also pinned to the avatar), Signaler un problème, the theme, the
+ * list density, Se déconnecter. Both dialogs are mounted by the shell,
+ * outside this menu, so they survive the menu closing.
+ *
+ * `placement="sidebar"` sits at the foot of the desktop menu: a full row
+ * with the e-mail, opening beside the sidebar. The header keeps the compact
+ * one for phones and tablets, where the sidebar is a drawer.
  */
 export function AccountMenu({
   unreadMessages,
   onOpenMessages,
   onOpenBugReport,
+  placement = "header",
 }: {
   unreadMessages: number;
   onOpenMessages: () => void;
   onOpenBugReport: () => void;
+  placement?: "header" | "sidebar";
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -48,6 +61,13 @@ export function AccountMenu({
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
   const { data: profile } = useCurrentProfile();
   const { density, setDensity } = useDensity();
+  const { theme, setTheme } = useTheme();
+  // next-themes only knows the stored choice after hydration.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -66,7 +86,17 @@ export function AccountMenu({
     }
   };
 
+  const inSidebar = placement === "sidebar";
+
   if (isLoadingUser || !user) {
+    if (inSidebar) {
+      return (
+        <div className="flex h-14 items-center gap-3 px-2" aria-hidden>
+          <Skeleton className="size-10 rounded-full" />
+          <Skeleton className="h-3.5 w-32" />
+        </div>
+      );
+    }
     return (
       <div className="flex h-11 items-center gap-2 px-1.5" aria-hidden>
         <Skeleton className="size-9 rounded-full" />
@@ -84,46 +114,77 @@ export function AccountMenu({
       ? `, ${unreadMessages} message${unreadMessages > 1 ? "s" : ""} non lu${unreadMessages > 1 ? "s" : ""}`
       : "";
 
+  const avatar = (size: string) => (
+    <span className="relative shrink-0">
+      <Avatar className={size}>
+        <AvatarImage
+          src={
+            profile?.profile_picture_url ||
+            user.user_metadata?.avatar_url ||
+            undefined
+          }
+          alt=""
+        />
+        <AvatarFallback className="text-[13px] tracking-wide">
+          {initials(name, user.email)}
+        </AvatarFallback>
+      </Avatar>
+      <CountBadge
+        count={unreadMessages}
+        size="sm"
+        className="absolute -top-1 -right-1"
+        aria-hidden
+      />
+    </span>
+  );
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-11 gap-2 rounded-md pr-2 pl-1.5"
-          aria-label={`Compte de ${name}${unreadLabel}`}
-        >
-          <span className="relative">
-            <Avatar className="size-9">
-              <AvatarImage
-                src={
-                  profile?.profile_picture_url ||
-                  user.user_metadata?.avatar_url ||
-                  undefined
-                }
-                alt=""
-              />
-              <AvatarFallback className="text-[13px] tracking-wide">
-                {initials(name, user.email)}
-              </AvatarFallback>
-            </Avatar>
-            <CountBadge
-              count={unreadMessages}
-              size="sm"
-              className="absolute -top-1 -right-1"
+        {inSidebar ? (
+          <Button
+            variant="ghost"
+            className="h-auto w-full justify-start gap-3 rounded-md px-2 py-2 text-left"
+            aria-label={`Compte de ${name}${unreadLabel}`}
+          >
+            {avatar("size-10")}
+            <span className="min-w-0 flex-1 leading-tight">
+              <span className="text-foreground block truncate text-[15px] font-medium">
+                {name}
+              </span>
+              <span className="text-note text-muted-foreground block truncate font-normal">
+                {user.email}
+              </span>
+            </span>
+            <ChevronsUpDown
+              className="text-muted-foreground size-4 shrink-0"
               aria-hidden
             />
-          </span>
-          <span className="text-foreground max-w-[16ch] truncate text-[15px] font-medium max-lg:hidden">
-            {name}
-          </span>
-          <ChevronDown
-            className="text-muted-foreground size-4 max-lg:hidden"
-            aria-hidden
-          />
-        </Button>
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            className="h-11 gap-2 rounded-md pr-2 pl-1.5"
+            aria-label={`Compte de ${name}${unreadLabel}`}
+          >
+            {avatar("size-9")}
+            <span className="text-foreground max-w-[16ch] truncate text-[15px] font-medium max-lg:hidden">
+              {name}
+            </span>
+            <ChevronDown
+              className="text-muted-foreground size-4 max-lg:hidden"
+              aria-hidden
+            />
+          </Button>
+        )}
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-72">
+      <DropdownMenuContent
+        align="end"
+        side={inSidebar ? "right" : "bottom"}
+        sideOffset={inSidebar ? 12 : 4}
+        className="w-72"
+      >
         <div className="px-3 pt-2 pb-3">
           <p className="text-foreground truncate font-medium">{name}</p>
           <p className="text-detail text-muted-foreground truncate">
@@ -143,6 +204,18 @@ export function AccountMenu({
           <LifeBuoy aria-hidden />
           Signaler un problème
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Thème</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={mounted ? (theme ?? "system") : "system"}
+          onValueChange={setTheme}
+        >
+          <DropdownMenuRadioItem value="system">
+            Comme l’appareil
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="light">Clair</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">Sombre</DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Densité des listes</DropdownMenuLabel>
         <DropdownMenuRadioGroup

@@ -177,6 +177,8 @@ class FcmNotificationHandler {
         return id.isNotEmpty ? '/concerts/$id' : null;
       case 'event':
         return id.isNotEmpty ? '/events/$id' : null;
+      case 'report':
+        return id.isNotEmpty ? '/reports/$id' : null;
       default:
         return null;
     }

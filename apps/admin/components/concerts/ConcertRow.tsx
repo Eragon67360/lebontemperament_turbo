@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   concertTitle,
@@ -13,20 +14,14 @@ import {
 import type { Concert } from "@repo/domain/types/concerts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import {
-  Clock,
-  ExternalLink,
-  MapPin,
-  Music2,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { Clock, ExternalLink, MapPin, Music2, Pencil } from "lucide-react";
 import Image from "next/image";
 
 /**
  * One concert of the « À venir » or « Passés » list: date block, poster,
  * title, type and tour chips, place and time, an excerpt of the public
- * information, then « Modifier » and « Supprimer ».
+ * information, then « Modifier » and the « Plus d'actions » menu
+ * (« Supprimer… »).
  */
 export function ConcertRow({
   concert,
@@ -118,7 +113,7 @@ export function ConcertRow({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {concert.related_link && (
             <Button variant="outline" size="sm" asChild>
               <a href={concert.related_link} target="_blank" rel="noreferrer">
@@ -133,16 +128,7 @@ export function ConcertRow({
             Modifier
             <span className="sr-only"> « {title} »</span>
           </Button>
-          <Button
-            type="button"
-            variant="destructive-outline"
-            size="sm"
-            onClick={onDelete}
-          >
-            <Trash2 aria-hidden />
-            Supprimer
-            <span className="sr-only"> « {title} »</span>
-          </Button>
+          <RowActionsMenu name={title} onDelete={onDelete} />
         </div>
       </div>
     </Card>

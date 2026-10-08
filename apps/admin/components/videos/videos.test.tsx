@@ -60,7 +60,10 @@ const render = (v: typeof video) =>
   assert.doesNotMatch(html, />Visible</);
   // The row's actions name the video.
   assert.match(html, /Modifier<span class="sr-only"> « Requiem »/);
-  assert.match(html, /Supprimer<span class="sr-only"> « Requiem »/);
+  // « Supprimer… » lives in the « Plus d'actions » menu, not on the row.
+  assert.match(html, /Plus d(&#x27;|')actions pour « Requiem »/);
+  assert.doesNotMatch(html, />Supprimer</);
+  assert.doesNotMatch(html, /border-danger/);
 }
 
 // --- An unreadable link is said, not hidden ---

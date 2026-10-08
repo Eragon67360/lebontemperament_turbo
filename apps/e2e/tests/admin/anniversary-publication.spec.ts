@@ -27,11 +27,13 @@ test("publishing the 40 ans page asks for a check and can be cancelled", async (
 
   // The checklist has one row per section, computed by the readiness route.
   await expect(page.getByText(/sections? prêtes? sur 10/)).toBeVisible();
+  // A checklist row reads « Chronologie : <state>. … »; the campaign's own
+  // menu above the page also has a « Chronologie » item (#592).
   await expect(
     page
       .getByRole("main")
       .getByRole("listitem")
-      .filter({ hasText: "Chronologie" }),
+      .filter({ hasText: /^Chronologie : / }),
   ).toBeVisible();
 
   // Whatever the current state, the opposite action opens the dialog.

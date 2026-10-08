@@ -15,6 +15,10 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
 import '../../../onboarding/data/welcome_prefs.dart';
+import '../../../onboarding/presentation/widgets/first_time_tip.dart';
+import '../../../reports/presentation/screens/report_problem_screen.dart';
+import '../../../reports/presentation/screens/reports_list_screen.dart';
+import '../../../reports/providers/bug_reports_providers.dart';
 import 'about_screen.dart';
 import 'my_groups_screen.dart';
 import 'support_contact_screen.dart';
@@ -151,8 +155,37 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // --- 3. Superadmin Section (Conditional) ---
-                  if (isSuperadminAsync.value == true) ...[/* ... */],
+                  // --- 3. Superadmins: the members' signalements ---
+                  if (isSuperadminAsync.value == true) ...[
+                    const SizedBox(height: 32),
+                    const FadeInUp(
+                      delay: 350,
+                      child: _SectionTitle(title: 'Responsable'),
+                    ),
+                    const SizedBox(height: 12),
+                    FadeInUp(
+                      delay: 380,
+                      child: _SettingsGroup(
+                        children: [
+                          _SettingsTile(
+                            icon: Icons.inbox_outlined,
+                            title: 'Signalements reçus',
+                            subtitle: switch (ref.watch(inboxUnreadProvider)) {
+                              AsyncData(value: 0) => 'Tout est lu',
+                              AsyncData(value: 1) => '1 nouveau',
+                              AsyncData(:final value) => '$value nouveaux',
+                              _ => 'Les problèmes signalés par les membres',
+                            },
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ReportsInboxScreen(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   // --- 3. Support ---
                   const SizedBox(height: 32),
@@ -161,10 +194,47 @@ class ProfileScreen extends ConsumerWidget {
                     child: _SectionTitle(title: 'Support'),
                   ),
                   const SizedBox(height: 12),
+                  // Members who saw the tour before signalements existed
+                  // learn about them here, once.
+                  const FirstTimeTip(
+                    id: kReportProblemTipId,
+                    message:
+                        'Un souci dans l’application ? « Signaler un problème » '
+                        'nous l’envoie, avec une capture d’écran si vous '
+                        'voulez. La réponse arrive en notification.',
+                    padding: EdgeInsets.only(bottom: 12),
+                  ),
                   FadeInUp(
                     delay: 500,
                     child: _SettingsGroup(
                       children: [
+                        _SettingsTile(
+                          icon: Icons.flag_outlined,
+                          title: 'Signaler un problème',
+                          subtitle: 'Avec une capture d’écran si besoin',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ReportProblemScreen(),
+                            ),
+                          ),
+                        ),
+                        _SettingsTile(
+                          icon: Icons.forum_outlined,
+                          title: 'Mes signalements',
+                          subtitle: switch (ref.watch(
+                            myUnreadRepliesProvider,
+                          )) {
+                            AsyncData(value: 1) => '1 nouvelle réponse',
+                            AsyncData(:final value) when value > 1 =>
+                              '$value nouvelles réponses',
+                            _ => 'Suivre vos signalements et les réponses',
+                          },
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const MyReportsScreen(),
+                            ),
+                          ),
+                        ),
                         _SettingsTile(
                           icon: Icons.help_outline_rounded,
                           title: 'Aide & Contact',

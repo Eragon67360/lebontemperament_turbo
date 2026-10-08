@@ -1,37 +1,30 @@
 "use client";
 
+import { BrandMark } from "@/components/shell/BrandMark";
 import { SidebarNav } from "@/components/shell/SidebarNav";
 import type { NavSection } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { WEBSITE_URL } from "@/lib/website";
 import RouteNames from "@/utils/routes";
 import { ExternalLink } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
-const WEBSITE_URL =
-  process.env.NEXT_PUBLIC_WEBSITE_URL || "https://www.lebontemperament.com";
-
-function websiteHost() {
-  try {
-    return new URL(WEBSITE_URL).host.replace(/^www\./, "");
-  } catch {
-    return WEBSITE_URL;
-  }
-}
-
 /**
- * Direction B's 280 px sidebar: brand, the navigation tree, and the way to
- * the public site. Rendered in the desktop column and inside the mobile
- * drawer (`inDrawer` leaves room for the drawer's close button).
+ * Direction B's 280 px sidebar: brand, the menu, the way to the public site
+ * and, on desktop, the account (`account`). Rendered in the desktop column
+ * and inside the mobile drawer (`inDrawer` leaves room for the drawer's
+ * close button; the header keeps the account there).
  */
 export function AppSidebar({
   sections,
   onNavigate,
   inDrawer = false,
+  account,
 }: {
   sections: NavSection[];
   onNavigate?: () => void;
   inDrawer?: boolean;
+  account?: React.ReactNode;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -46,15 +39,7 @@ export function AppSidebar({
           onClick={onNavigate}
           className="flex min-w-0 items-center gap-3 rounded-sm"
         >
-          <span className="bg-primary-soft flex size-9 shrink-0 items-center justify-center rounded-full">
-            <Image
-              src="/picto.svg"
-              alt=""
-              width={20}
-              height={20}
-              className="size-5"
-            />
-          </span>
+          <BrandMark />
           <span className="min-w-0 leading-tight">
             <span className="text-foreground block truncate text-[15px] font-semibold">
               Le Bon Tempérament
@@ -66,28 +51,30 @@ export function AppSidebar({
         </Link>
       </div>
 
-      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3 py-4">
+      {/* The public-site link sits at the foot when there is room and scrolls
+          with the menu on short screens, so it never hides « Projets ». */}
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
         <SidebarNav sections={sections} onNavigate={onNavigate} />
+
+        <div className="mt-auto pt-4">
+          <a
+            href={WEBSITE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-muted-foreground hover:bg-surface-sunken hover:text-foreground flex min-h-9 items-center gap-3 rounded-md px-3 py-1.5 text-[15px] leading-[22px] font-medium transition-colors motion-reduce:transition-none pointer-coarse:min-h-11"
+          >
+            <ExternalLink className="size-5 shrink-0" aria-hidden />
+            Voir le site public
+            <span className="sr-only"> (nouvel onglet)</span>
+          </a>
+        </div>
       </div>
 
-      <div className="border-border shrink-0 border-t p-3">
-        <a
-          href={WEBSITE_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="text-foreground hover:bg-surface-sunken flex min-h-11 items-start gap-3 rounded-md px-3 py-2 transition-colors motion-reduce:transition-none"
-        >
-          <ExternalLink className="mt-0.5 size-5 shrink-0" aria-hidden />
-          <span className="min-w-0 flex-1">
-            <span className="text-body block leading-6 font-medium">
-              Voir le site public
-            </span>
-            <span className="text-note text-muted-foreground block">
-              {websiteHost()}, dans un nouvel onglet
-            </span>
-          </span>
-        </a>
-      </div>
+      {account && (
+        <div className="border-border shrink-0 border-t px-3 py-2">
+          {account}
+        </div>
+      )}
     </div>
   );
 }

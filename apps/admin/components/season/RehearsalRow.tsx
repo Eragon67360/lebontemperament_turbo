@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   formatLongDateFr,
@@ -11,12 +12,13 @@ import {
 import type { Rehearsal } from "@repo/domain/types/rehearsals";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Clock, MapPin, Music, Pencil, Trash2 } from "lucide-react";
+import { Clock, MapPin, Music, Pencil } from "lucide-react";
 
 /**
  * One rehearsal of the « À venir » or « Passées » list: date block, name,
  * group chip, « Google Agenda » when the row came from the calendar sync,
- * day, hours and place, then « Modifier » and « Supprimer ».
+ * day, hours and place, then « Modifier » and the « Plus d'actions »
+ * menu (« Supprimer… »).
  */
 export function RehearsalRow({
   rehearsal,
@@ -82,22 +84,13 @@ export function RehearsalRow({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onEdit}>
             <Pencil aria-hidden />
             Modifier
             <span className="sr-only"> « {rehearsal.name} »</span>
           </Button>
-          <Button
-            type="button"
-            variant="destructive-outline"
-            size="sm"
-            onClick={onDelete}
-          >
-            <Trash2 aria-hidden />
-            Supprimer
-            <span className="sr-only"> « {rehearsal.name} »</span>
-          </Button>
+          <RowActionsMenu name={rehearsal.name} onDelete={onDelete} />
         </div>
       </div>
     </Card>

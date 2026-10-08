@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { Tour } from "@/types/tours";
 import {
@@ -10,20 +11,13 @@ import {
   excerpt,
   tourPeriodLabel,
 } from "@/utils/concerts/schedule";
-import {
-  CalendarDays,
-  ListChecks,
-  Music2,
-  Pencil,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { CalendarDays, ListChecks, Music2, Pencil, Users } from "lucide-react";
 import Image from "next/image";
 
 /**
  * One tour of the list: poster thumbnail, name, type chip, period (or
  * « Dates à préciser »), concert count, then « Gérer les concerts »,
- * « Modifier » and « Supprimer ».
+ * « Modifier » and the « Plus d'actions » menu (« Supprimer… »).
  */
 export function TourRow({
   tour,
@@ -91,7 +85,7 @@ export function TourRow({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             variant="outline"
@@ -107,16 +101,7 @@ export function TourRow({
             Modifier
             <span className="sr-only"> « {tour.name} »</span>
           </Button>
-          <Button
-            type="button"
-            variant="destructive-outline"
-            size="sm"
-            onClick={onDelete}
-          >
-            <Trash2 aria-hidden />
-            Supprimer
-            <span className="sr-only"> « {tour.name} »</span>
-          </Button>
+          <RowActionsMenu name={tour.name} onDelete={onDelete} />
         </div>
       </div>
     </Card>
