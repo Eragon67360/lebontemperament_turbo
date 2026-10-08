@@ -259,7 +259,7 @@ export async function POST(request: Request) {
         is_approved: false, // Requires admin approval
         is_featured: false,
       })
-      .select()
+      .select("id")
       .single();
 
     if (error) {

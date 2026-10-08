@@ -1,3 +1,4 @@
+import { CONCERT_COLUMNS } from "@/lib/columns";
 import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import {
@@ -42,7 +43,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("concerts")
-    .select("*")
+    .select(CONCERT_COLUMNS)
     .order("date", { ascending: true });
 
   if (error) {
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     const { data: newConcert, error: concertError } = await supabase
       .from("concerts")
       .insert([{ ...concert, created_by: authCheck?.user?.id }])
-      .select()
+      .select(CONCERT_COLUMNS)
       .single();
 
     if (concertError) throw concertError;
@@ -147,7 +148,7 @@ export async function PATCH(request: Request) {
     .from("concerts")
     .update(updateData)
     .eq("id", id)
-    .select()
+    .select(CONCERT_COLUMNS)
     .single();
 
   if (error) {

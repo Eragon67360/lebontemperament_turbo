@@ -22,7 +22,9 @@ export const nextJsConfig = [
         ...globals.serviceworker,
       },
     },
-    settings: { react: { version: "detect" } },
+    // Not "detect": eslint-plugin-react 7.37 still calls context.getFilename(),
+    // removed in ESLint 10. Keep this in step with the apps' react major.
+    settings: { react: { version: "19" } },
     rules: {
       ...pluginReact.configs.flat.recommended.rules,
       // React scope no longer necessary with new JSX transform.

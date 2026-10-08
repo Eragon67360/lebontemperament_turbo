@@ -1,4 +1,5 @@
 // app/api/files/[id]/route.ts
+import { FILE_COLUMNS } from "@/lib/columns";
 import { UpdateFileDTO } from "@/types/files";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
@@ -24,7 +25,7 @@ export async function PATCH(
     .from("files")
     .update(updates)
     .eq("id", id)
-    .select()
+    .select(FILE_COLUMNS)
     .single();
 
   if (error) {

@@ -1,8 +1,11 @@
 import HomeContent from "@/components/HomeContent";
 import type { ConcertProject } from "@/types/projects";
 import { createPublicClient } from "@/utils/supabase/public";
-import type { Project } from "@repo/domain/types/projects";
-import { transformProjectForFrontend } from "@repo/domain/utils/projects";
+import {
+  PROJECT_STORY_COLUMNS,
+  transformProjectForFrontend,
+  type ProjectStory,
+} from "@repo/domain/utils/projects";
 import { Metadata } from "next";
 
 // The concert-story teaser is the page's only data (anon key, no cookies):
@@ -38,12 +41,14 @@ async function getLatestStories(): Promise<ConcertProject[] | undefined> {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("projects")
-      .select("*")
+      .select(PROJECT_STORY_COLUMNS)
       .order("display_order", { ascending: false })
       .order("date", { ascending: false })
       .limit(4);
     if (error) throw error;
-    return (data || []).map((p: Project) => transformProjectForFrontend(p));
+    return (data || []).map((p: ProjectStory) =>
+      transformProjectForFrontend(p),
+    );
   } catch (error) {
     // Unreachable database (CI builds with placeholder credentials): the
     // teaser loads in the browser as before; ISR fills it in afterwards.

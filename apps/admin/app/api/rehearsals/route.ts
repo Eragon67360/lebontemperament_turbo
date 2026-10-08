@@ -1,4 +1,5 @@
 // app/api/rehearsals/route.ts
+import { REHEARSAL_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import type { TablesInsert } from "@repo/domain/database.types";
@@ -26,7 +27,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("rehearsals")
-      .select("*")
+      .select(REHEARSAL_COLUMNS)
       .order("date", { ascending: true });
 
     if (error) throw error;
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
       const { data, error } = await supabase
         .from("rehearsals")
         .insert(rehearsals)
-        .select();
+        .select(REHEARSAL_COLUMNS);
 
       if (error) throw error;
 
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
       const { data, error } = await supabase
         .from("rehearsals")
         .insert([{ name, place, date, start_time, end_time, group_type }])
-        .select()
+        .select(REHEARSAL_COLUMNS)
         .single();
 
       if (error) throw error;

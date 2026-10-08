@@ -1,3 +1,4 @@
+import { ANNIVERSARY_HERO_STAT_COLUMNS } from "@/lib/columns";
 import {
   heroStatPatchSchema,
   parsePatchBody,
@@ -19,7 +20,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("anniversary_hero_stats")
-    .select("*")
+    .select(ANNIVERSARY_HERO_STAT_COLUMNS)
     .order("display_order", { ascending: true });
 
   if (error) {
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
         display_order: body.display_order || 0,
         is_visible: body.is_visible !== undefined ? body.is_visible : true,
       })
-      .select()
+      .select(ANNIVERSARY_HERO_STAT_COLUMNS)
       .single();
 
     if (error) {
@@ -100,7 +101,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_hero_stats")
       .update(updateData)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_HERO_STAT_COLUMNS)
       .single();
 
     if (error) {

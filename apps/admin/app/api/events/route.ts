@@ -1,3 +1,4 @@
+import { EVENT_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import {
   REVALIDATE,
@@ -20,7 +21,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("events")
-    .select("*")
+    .select(EVENT_COLUMNS)
     .order("date_from", { ascending: true });
 
   if (error) {

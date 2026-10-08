@@ -23,7 +23,7 @@ export async function GET() {
 
   const isSuperAdmin = profile?.role === "superadmin";
 
-  let bugReportIds: string[] = [];
+  let bugReportIds: string[];
 
   if (isSuperAdmin) {
     // For superadmins: get all bug reports where they have sent or received messages

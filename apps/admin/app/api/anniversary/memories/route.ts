@@ -1,3 +1,4 @@
+import { ANNIVERSARY_MEMORY_COLUMNS } from "@/lib/columns";
 import {
   memoryPatchSchema,
   parsePatchBody,
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     let query = supabase
       .from("anniversary_memories")
-      .select("*")
+      .select(ANNIVERSARY_MEMORY_COLUMNS)
       .order("created_at", { ascending: false });
 
     // Filter by approval status
@@ -74,7 +75,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_memories")
       .update(updates)
       .eq("id", id)
-      .select()
+      .select(ANNIVERSARY_MEMORY_COLUMNS)
       .single();
 
     if (error) {

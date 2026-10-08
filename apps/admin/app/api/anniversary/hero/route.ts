@@ -1,3 +1,4 @@
+import { ANNIVERSARY_HERO_COLUMNS } from "@/lib/columns";
 import {
   heroPatchSchema,
   parsePatchBody,
@@ -18,7 +19,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_hero")
-      .select("*")
+      .select(ANNIVERSARY_HERO_COLUMNS)
       .single();
 
     if (error) {
@@ -78,7 +79,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_hero")
       .update(body)
       .eq("id", existingRow.id)
-      .select()
+      .select(ANNIVERSARY_HERO_COLUMNS)
       .single();
 
     if (error) {

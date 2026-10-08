@@ -1,3 +1,4 @@
+import { ANNIVERSARY_FORM_CONFIG_COLUMNS } from "@/lib/columns";
 import {
   formConfigPatchSchema,
   parsePatchBody,
@@ -18,7 +19,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("anniversary_form_config")
-      .select("*")
+      .select(ANNIVERSARY_FORM_CONFIG_COLUMNS)
       .single();
 
     if (error) {
@@ -81,7 +82,7 @@ export async function PATCH(request: Request) {
       .from("anniversary_form_config")
       .update(body)
       .eq("id", existingRow.id)
-      .select()
+      .select(ANNIVERSARY_FORM_CONFIG_COLUMNS)
       .single();
 
     if (error) {
