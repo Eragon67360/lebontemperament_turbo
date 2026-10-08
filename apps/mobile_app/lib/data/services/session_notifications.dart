@@ -75,7 +75,7 @@ class SessionNotifications {
   StreamSubscription<String>? _refreshSubscription;
   bool _signedIn = false;
 
-  /// Wires the real FCM, Firebase and Hive dependencies.
+  /// Wires the real FCM, Firebase and offline-cache dependencies.
   factory SessionNotifications.production() {
     return SessionNotifications(
       subscribe: FcmNotificationHandler.subscribeToTopic,

@@ -25,6 +25,7 @@ String supportErrorMessage(Object error) {
     case DioExceptionType.connectionTimeout:
     case DioExceptionType.sendTimeout:
     case DioExceptionType.receiveTimeout:
+    case DioExceptionType.transformTimeout:
       return 'Le serveur met trop de temps à répondre. Réessayez.';
     case DioExceptionType.connectionError:
       return 'Pas de connexion. Vérifiez votre réseau et réessayez.';

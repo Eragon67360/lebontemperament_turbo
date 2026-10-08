@@ -20,27 +20,18 @@ Rehearsal _$RehearsalFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Rehearsal {
-  @HiveField(0)
   String get id => throw _privateConstructorUsedError;
-  @HiveField(1)
   String? get name => throw _privateConstructorUsedError;
-  @HiveField(2)
   String? get place => throw _privateConstructorUsedError;
-  @HiveField(3)
   String? get date => throw _privateConstructorUsedError;
-  @HiveField(4)
   @JsonKey(name: 'start_time')
   String? get startTime => throw _privateConstructorUsedError;
-  @HiveField(5)
   @JsonKey(name: 'end_time')
   String? get endTime => throw _privateConstructorUsedError;
-  @HiveField(6)
   @JsonKey(name: 'group_type')
   GroupType get groupType => throw _privateConstructorUsedError;
-  @HiveField(7)
   @JsonKey(name: 'created_at')
   String? get createdAt => throw _privateConstructorUsedError;
-  @HiveField(8)
   @JsonKey(name: 'updated_at')
   String? get updatedAt => throw _privateConstructorUsedError;
 
@@ -56,15 +47,15 @@ abstract class $RehearsalCopyWith<$Res> {
       _$RehearsalCopyWithImpl<$Res, Rehearsal>;
   @useResult
   $Res call(
-      {@HiveField(0) String id,
-      @HiveField(1) String? name,
-      @HiveField(2) String? place,
-      @HiveField(3) String? date,
-      @HiveField(4) @JsonKey(name: 'start_time') String? startTime,
-      @HiveField(5) @JsonKey(name: 'end_time') String? endTime,
-      @HiveField(6) @JsonKey(name: 'group_type') GroupType groupType,
-      @HiveField(7) @JsonKey(name: 'created_at') String? createdAt,
-      @HiveField(8) @JsonKey(name: 'updated_at') String? updatedAt});
+      {String id,
+      String? name,
+      String? place,
+      String? date,
+      @JsonKey(name: 'start_time') String? startTime,
+      @JsonKey(name: 'end_time') String? endTime,
+      @JsonKey(name: 'group_type') GroupType groupType,
+      @JsonKey(name: 'created_at') String? createdAt,
+      @JsonKey(name: 'updated_at') String? updatedAt});
 }
 
 /// @nodoc
@@ -140,15 +131,15 @@ abstract class _$$RehearsalImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {@HiveField(0) String id,
-      @HiveField(1) String? name,
-      @HiveField(2) String? place,
-      @HiveField(3) String? date,
-      @HiveField(4) @JsonKey(name: 'start_time') String? startTime,
-      @HiveField(5) @JsonKey(name: 'end_time') String? endTime,
-      @HiveField(6) @JsonKey(name: 'group_type') GroupType groupType,
-      @HiveField(7) @JsonKey(name: 'created_at') String? createdAt,
-      @HiveField(8) @JsonKey(name: 'updated_at') String? updatedAt});
+      {String id,
+      String? name,
+      String? place,
+      String? date,
+      @JsonKey(name: 'start_time') String? startTime,
+      @JsonKey(name: 'end_time') String? endTime,
+      @JsonKey(name: 'group_type') GroupType groupType,
+      @JsonKey(name: 'created_at') String? createdAt,
+      @JsonKey(name: 'updated_at') String? updatedAt});
 }
 
 /// @nodoc
@@ -217,49 +208,40 @@ class __$$RehearsalImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$RehearsalImpl implements _Rehearsal {
   const _$RehearsalImpl(
-      {@HiveField(0) required this.id,
-      @HiveField(1) this.name,
-      @HiveField(2) this.place,
-      @HiveField(3) this.date,
-      @HiveField(4) @JsonKey(name: 'start_time') this.startTime,
-      @HiveField(5) @JsonKey(name: 'end_time') this.endTime,
-      @HiveField(6) @JsonKey(name: 'group_type') required this.groupType,
-      @HiveField(7) @JsonKey(name: 'created_at') this.createdAt,
-      @HiveField(8) @JsonKey(name: 'updated_at') this.updatedAt});
+      {required this.id,
+      this.name,
+      this.place,
+      this.date,
+      @JsonKey(name: 'start_time') this.startTime,
+      @JsonKey(name: 'end_time') this.endTime,
+      @JsonKey(name: 'group_type') required this.groupType,
+      @JsonKey(name: 'created_at') this.createdAt,
+      @JsonKey(name: 'updated_at') this.updatedAt});
 
   factory _$RehearsalImpl.fromJson(Map<String, dynamic> json) =>
       _$$RehearsalImplFromJson(json);
 
   @override
-  @HiveField(0)
   final String id;
   @override
-  @HiveField(1)
   final String? name;
   @override
-  @HiveField(2)
   final String? place;
   @override
-  @HiveField(3)
   final String? date;
   @override
-  @HiveField(4)
   @JsonKey(name: 'start_time')
   final String? startTime;
   @override
-  @HiveField(5)
   @JsonKey(name: 'end_time')
   final String? endTime;
   @override
-  @HiveField(6)
   @JsonKey(name: 'group_type')
   final GroupType groupType;
   @override
-  @HiveField(7)
   @JsonKey(name: 'created_at')
   final String? createdAt;
   @override
-  @HiveField(8)
   @JsonKey(name: 'updated_at')
   final String? updatedAt;
 
@@ -309,52 +291,40 @@ class _$RehearsalImpl implements _Rehearsal {
 
 abstract class _Rehearsal implements Rehearsal {
   const factory _Rehearsal(
-          {@HiveField(0) required final String id,
-          @HiveField(1) final String? name,
-          @HiveField(2) final String? place,
-          @HiveField(3) final String? date,
-          @HiveField(4) @JsonKey(name: 'start_time') final String? startTime,
-          @HiveField(5) @JsonKey(name: 'end_time') final String? endTime,
-          @HiveField(6)
-          @JsonKey(name: 'group_type')
-          required final GroupType groupType,
-          @HiveField(7) @JsonKey(name: 'created_at') final String? createdAt,
-          @HiveField(8) @JsonKey(name: 'updated_at') final String? updatedAt}) =
-      _$RehearsalImpl;
+      {required final String id,
+      final String? name,
+      final String? place,
+      final String? date,
+      @JsonKey(name: 'start_time') final String? startTime,
+      @JsonKey(name: 'end_time') final String? endTime,
+      @JsonKey(name: 'group_type') required final GroupType groupType,
+      @JsonKey(name: 'created_at') final String? createdAt,
+      @JsonKey(name: 'updated_at') final String? updatedAt}) = _$RehearsalImpl;
 
   factory _Rehearsal.fromJson(Map<String, dynamic> json) =
       _$RehearsalImpl.fromJson;
 
   @override
-  @HiveField(0)
   String get id;
   @override
-  @HiveField(1)
   String? get name;
   @override
-  @HiveField(2)
   String? get place;
   @override
-  @HiveField(3)
   String? get date;
   @override
-  @HiveField(4)
   @JsonKey(name: 'start_time')
   String? get startTime;
   @override
-  @HiveField(5)
   @JsonKey(name: 'end_time')
   String? get endTime;
   @override
-  @HiveField(6)
   @JsonKey(name: 'group_type')
   GroupType get groupType;
   @override
-  @HiveField(7)
   @JsonKey(name: 'created_at')
   String? get createdAt;
   @override
-  @HiveField(8)
   @JsonKey(name: 'updated_at')
   String? get updatedAt;
   @override

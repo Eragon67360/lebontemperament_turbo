@@ -1,31 +1,49 @@
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:logger/logger.dart';
+import 'dart:convert';
 
-import '../models/user.dart';
+import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/event.dart';
 import '../models/concert.dart';
 import '../models/rehearsal.dart';
 
+/// The offline copy of the lists the app fetches (events, concerts,
+/// rehearsals), so a member without network still sees the last ones.
+///
+/// Each list is one JSON object in shared preferences, keyed by row id in the
+/// order the server sent them. Until #362 this lived in Hive boxes; the old
+/// box files stay on the device and are no longer read.
 class StorageService {
   final Logger _logger;
-  Box<User>? _usersBox;
-  Box<Event>? _eventsBox;
-  Box<Concert>? _concertsBox;
-  Box<Rehearsal>? _rehearsalsBox;
-  bool _isInitialized = false;
+  SharedPreferences? _prefs;
+
+  final _events = _CachedCollection<Event>(
+    key: 'offline_cache.events',
+    fromJson: Event.fromJson,
+    toJson: (e) => e.toJson(),
+    idOf: (e) => e.id,
+  );
+  final _concerts = _CachedCollection<Concert>(
+    key: 'offline_cache.concerts',
+    fromJson: Concert.fromJson,
+    toJson: (c) => c.toJson(),
+    idOf: (c) => c.id,
+  );
+  final _rehearsals = _CachedCollection<Rehearsal>(
+    key: 'offline_cache.rehearsals',
+    fromJson: Rehearsal.fromJson,
+    toJson: (r) => r.toJson(),
+    idOf: (r) => r.id,
+  );
 
   StorageService({required Logger logger}) : _logger = logger;
 
   // Initialize storage
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_prefs != null) return;
 
     try {
-      _usersBox = Hive.box<User>('users');
-      _eventsBox = Hive.box<Event>('events');
-      _concertsBox = Hive.box<Concert>('concerts');
-      _rehearsalsBox = Hive.box<Rehearsal>('rehearsals');
-      _isInitialized = true;
+      _prefs = await SharedPreferences.getInstance();
       _logger.i('Storage service initialized');
     } catch (e) {
       _logger.e('Error initializing storage service: $e');
@@ -34,57 +52,18 @@ class StorageService {
   }
 
   // Check if storage is initialized
-  bool get isInitialized => _isInitialized;
+  bool get isInitialized => _prefs != null;
 
   // Ensure storage is initialized
-  Future<void> _ensureInitialized() async {
-    if (!_isInitialized) {
-      await initialize();
-    }
-  }
-
-  // Users storage
-  Future<void> saveUser(User user) async {
-    await _ensureInitialized();
-    try {
-      await _usersBox!.put(user.id, user);
-      _logger.i('Saved user: ${user.id}');
-    } catch (e) {
-      _logger.e('Error saving user: $e');
-      rethrow;
-    }
-  }
-
-  User? getUser(String id) {
-    if (!_isInitialized || _usersBox == null) {
-      _logger.w('Storage not initialized, returning null');
-      return null;
-    }
-    try {
-      return _usersBox!.get(id);
-    } catch (e) {
-      _logger.e('Error getting user: $e');
-      return null;
-    }
-  }
-
-  Future<void> deleteUser(String id) async {
-    await _ensureInitialized();
-    try {
-      await _usersBox!.delete(id);
-      _logger.i('Deleted user: $id');
-    } catch (e) {
-      _logger.e('Error deleting user: $e');
-      rethrow;
-    }
+  Future<SharedPreferences> _ensureInitialized() async {
+    await initialize();
+    return _prefs!;
   }
 
   // Events storage
   Future<void> saveEvents(List<Event> events) async {
-    await _ensureInitialized();
     try {
-      await _eventsBox!.clear();
-      await _eventsBox!.addAll(events);
+      await _events.replaceAll(await _ensureInitialized(), events);
       _logger.i('Saved ${events.length} events to local storage');
     } catch (e) {
       _logger.e('Error saving events: $e');
@@ -92,23 +71,11 @@ class StorageService {
     }
   }
 
-  List<Event> getEvents() {
-    if (!_isInitialized || _eventsBox == null) {
-      _logger.w('Storage not initialized, returning empty list');
-      return [];
-    }
-    try {
-      return _eventsBox!.values.toList();
-    } catch (e) {
-      _logger.e('Error getting events: $e');
-      return [];
-    }
-  }
+  List<Event> getEvents() => _readAll(_events, 'events');
 
   Future<void> saveEvent(Event event) async {
-    await _ensureInitialized();
     try {
-      await _eventsBox!.put(event.id, event);
+      await _events.put(await _ensureInitialized(), event);
       _logger.i('Saved event: ${event.title}');
     } catch (e) {
       _logger.e('Error saving event: $e');
@@ -116,23 +83,11 @@ class StorageService {
     }
   }
 
-  Event? getEvent(String id) {
-    if (!_isInitialized || _eventsBox == null) {
-      _logger.w('Storage not initialized, returning null');
-      return null;
-    }
-    try {
-      return _eventsBox!.get(id);
-    } catch (e) {
-      _logger.e('Error getting event: $e');
-      return null;
-    }
-  }
+  Event? getEvent(String id) => _readOne(_events, id, 'event');
 
   Future<void> deleteEvent(String id) async {
-    await _ensureInitialized();
     try {
-      await _eventsBox!.delete(id);
+      await _events.delete(await _ensureInitialized(), id);
       _logger.i('Deleted event: $id');
     } catch (e) {
       _logger.e('Error deleting event: $e');
@@ -142,10 +97,8 @@ class StorageService {
 
   // Concerts storage
   Future<void> saveConcerts(List<Concert> concerts) async {
-    await _ensureInitialized();
     try {
-      await _concertsBox!.clear();
-      await _concertsBox!.addAll(concerts);
+      await _concerts.replaceAll(await _ensureInitialized(), concerts);
       _logger.i('Saved ${concerts.length} concerts to local storage');
     } catch (e) {
       _logger.e('Error saving concerts: $e');
@@ -153,23 +106,11 @@ class StorageService {
     }
   }
 
-  List<Concert> getConcerts() {
-    if (!_isInitialized || _concertsBox == null) {
-      _logger.w('Storage not initialized, returning empty list');
-      return [];
-    }
-    try {
-      return _concertsBox!.values.toList();
-    } catch (e) {
-      _logger.e('Error getting concerts: $e');
-      return [];
-    }
-  }
+  List<Concert> getConcerts() => _readAll(_concerts, 'concerts');
 
   Future<void> saveConcert(Concert concert) async {
-    await _ensureInitialized();
     try {
-      await _concertsBox!.put(concert.id, concert);
+      await _concerts.put(await _ensureInitialized(), concert);
       _logger.i('Saved concert: ${concert.name}');
     } catch (e) {
       _logger.e('Error saving concert: $e');
@@ -177,23 +118,11 @@ class StorageService {
     }
   }
 
-  Concert? getConcert(String id) {
-    if (!_isInitialized || _concertsBox == null) {
-      _logger.w('Storage not initialized, returning null');
-      return null;
-    }
-    try {
-      return _concertsBox!.get(id);
-    } catch (e) {
-      _logger.e('Error getting concert: $e');
-      return null;
-    }
-  }
+  Concert? getConcert(String id) => _readOne(_concerts, id, 'concert');
 
   Future<void> deleteConcert(String id) async {
-    await _ensureInitialized();
     try {
-      await _concertsBox!.delete(id);
+      await _concerts.delete(await _ensureInitialized(), id);
       _logger.i('Deleted concert: $id');
     } catch (e) {
       _logger.e('Error deleting concert: $e');
@@ -203,10 +132,8 @@ class StorageService {
 
   // Rehearsals storage
   Future<void> saveRehearsals(List<Rehearsal> rehearsals) async {
-    await _ensureInitialized();
     try {
-      await _rehearsalsBox!.clear();
-      await _rehearsalsBox!.addAll(rehearsals);
+      await _rehearsals.replaceAll(await _ensureInitialized(), rehearsals);
       _logger.i('Saved ${rehearsals.length} rehearsals to local storage');
     } catch (e) {
       _logger.e('Error saving rehearsals: $e');
@@ -214,23 +141,11 @@ class StorageService {
     }
   }
 
-  List<Rehearsal> getRehearsals() {
-    if (!_isInitialized || _rehearsalsBox == null) {
-      _logger.w('Storage not initialized, returning empty list');
-      return [];
-    }
-    try {
-      return _rehearsalsBox!.values.toList();
-    } catch (e) {
-      _logger.e('Error getting rehearsals: $e');
-      return [];
-    }
-  }
+  List<Rehearsal> getRehearsals() => _readAll(_rehearsals, 'rehearsals');
 
   Future<void> saveRehearsal(Rehearsal rehearsal) async {
-    await _ensureInitialized();
     try {
-      await _rehearsalsBox!.put(rehearsal.id, rehearsal);
+      await _rehearsals.put(await _ensureInitialized(), rehearsal);
       _logger.i('Saved rehearsal: ${rehearsal.name}');
     } catch (e) {
       _logger.e('Error saving rehearsal: $e');
@@ -238,23 +153,11 @@ class StorageService {
     }
   }
 
-  Rehearsal? getRehearsal(String id) {
-    if (!_isInitialized || _rehearsalsBox == null) {
-      _logger.w('Storage not initialized, returning null');
-      return null;
-    }
-    try {
-      return _rehearsalsBox!.get(id);
-    } catch (e) {
-      _logger.e('Error getting rehearsal: $e');
-      return null;
-    }
-  }
+  Rehearsal? getRehearsal(String id) => _readOne(_rehearsals, id, 'rehearsal');
 
   Future<void> deleteRehearsal(String id) async {
-    await _ensureInitialized();
     try {
-      await _rehearsalsBox!.delete(id);
+      await _rehearsals.delete(await _ensureInitialized(), id);
       _logger.i('Deleted rehearsal: $id');
     } catch (e) {
       _logger.e('Error deleting rehearsal: $e');
@@ -264,12 +167,11 @@ class StorageService {
 
   // Clear all data
   Future<void> clearAll() async {
-    await _ensureInitialized();
     try {
-      await _usersBox!.clear();
-      await _eventsBox!.clear();
-      await _concertsBox!.clear();
-      await _rehearsalsBox!.clear();
+      final prefs = await _ensureInitialized();
+      for (final collection in [_events, _concerts, _rehearsals]) {
+        await collection.clear(prefs);
+      }
       _logger.i('Cleared all local storage');
     } catch (e) {
       _logger.e('Error clearing storage: $e');
@@ -279,20 +181,86 @@ class StorageService {
 
   // Get storage statistics
   Map<String, int> getStorageStats() {
-    if (!_isInitialized) {
-      return {
-        'users': 0,
-        'events': 0,
-        'concerts': 0,
-        'rehearsals': 0,
-      };
-    }
-
+    final prefs = _prefs;
     return {
-      'users': _usersBox?.length ?? 0,
-      'events': _eventsBox?.length ?? 0,
-      'concerts': _concertsBox?.length ?? 0,
-      'rehearsals': _rehearsalsBox?.length ?? 0,
+      'events': prefs == null ? 0 : _events.length(prefs),
+      'concerts': prefs == null ? 0 : _concerts.length(prefs),
+      'rehearsals': prefs == null ? 0 : _rehearsals.length(prefs),
     };
   }
+
+  List<T> _readAll<T>(_CachedCollection<T> collection, String label) {
+    final prefs = _prefs;
+    if (prefs == null) {
+      _logger.w('Storage not initialized, returning empty list');
+      return [];
+    }
+    try {
+      return collection.values(prefs);
+    } catch (e) {
+      _logger.e('Error getting $label: $e');
+      return [];
+    }
+  }
+
+  T? _readOne<T>(_CachedCollection<T> collection, String id, String label) {
+    final prefs = _prefs;
+    if (prefs == null) {
+      _logger.w('Storage not initialized, returning null');
+      return null;
+    }
+    try {
+      return collection.get(prefs, id);
+    } catch (e) {
+      _logger.e('Error getting $label: $e');
+      return null;
+    }
+  }
+}
+
+/// One cached list: a JSON object of row id → row, in insertion order.
+class _CachedCollection<T> {
+  final String key;
+  final T Function(Map<String, dynamic>) fromJson;
+  final Map<String, dynamic> Function(T) toJson;
+  final String Function(T) idOf;
+
+  _CachedCollection({
+    required this.key,
+    required this.fromJson,
+    required this.toJson,
+    required this.idOf,
+  });
+
+  Map<String, dynamic> _rows(SharedPreferences prefs) {
+    final raw = prefs.getString(key);
+    if (raw == null) return {};
+    return (jsonDecode(raw) as Map).cast<String, dynamic>();
+  }
+
+  Future<void> _write(SharedPreferences prefs, Map<String, dynamic> rows) =>
+      prefs.setString(key, jsonEncode(rows));
+
+  T _decode(Object? row) => fromJson((row as Map).cast<String, dynamic>());
+
+  List<T> values(SharedPreferences prefs) =>
+      _rows(prefs).values.map(_decode).toList();
+
+  T? get(SharedPreferences prefs, String id) {
+    final row = _rows(prefs)[id];
+    return row == null ? null : _decode(row);
+  }
+
+  int length(SharedPreferences prefs) => _rows(prefs).length;
+
+  Future<void> replaceAll(SharedPreferences prefs, List<T> items) =>
+      _write(prefs, {for (final item in items) idOf(item): toJson(item)});
+
+  Future<void> put(SharedPreferences prefs, T item) =>
+      _write(prefs, _rows(prefs)..[idOf(item)] = toJson(item));
+
+  Future<void> delete(SharedPreferences prefs, String id) =>
+      _write(prefs, _rows(prefs)..remove(id));
+
+  Future<void> clear(SharedPreferences prefs) => prefs.remove(key);
 }
