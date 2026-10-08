@@ -4,37 +4,67 @@ import { validConsent } from "@/components/cookies/consent";
 import { useHydrated } from "@/hooks/useClientValue";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
+import {
+  type Announcement,
+  LEGACY_DONATION_ANNOUNCEMENT,
+} from "@/lib/announcements";
 import { Link, Tooltip } from "@heroui/react";
+import {
+  isAnnouncementLive,
+  isExternalLink,
+  LEGACY_DONATION_ANNOUNCEMENT_ID,
+} from "@repo/domain/utils/announcements";
 import { AnimatePresence, m } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaHeart, FaTimes } from "react-icons/fa";
 
-// Bump the version to re-announce a future campaign to everyone.
-const STORAGE_KEY = "lbt.donation-campaign-showcase.v1";
 const SHOW_DELAY_MS = 1500;
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
-const TITLE = "Nouvelle campagne de dons";
-const BODY =
-  "Notre nouvelle campagne est ouverte. Découvrez à quoi peut servir chaque don — avec quelques coulisses du BT.";
+// One « already seen » key per campaign (admin › Site public › Annonces), so
+// a new campaign shows again. The campaign that was hard-coded before keeps
+// its old key.
+const storageKey = (id: string) =>
+  id === LEGACY_DONATION_ANNOUNCEMENT_ID
+    ? "lbt.donation-campaign-showcase.v1"
+    : `lbt.donation-campaign-showcase.${id}`;
 
-const markSeen = () => {
+const markSeen = (id: string) => {
   try {
-    localStorage.setItem(STORAGE_KEY, "1");
+    localStorage.setItem(storageKey(id), "1");
   } catch {
     // Storage blocked (private mode, quota): the showcase may reappear later.
   }
 };
 
-const hasBeenSeen = () => {
+const hasBeenSeen = (id: string) => {
   try {
-    return localStorage.getItem(STORAGE_KEY) !== null;
+    return localStorage.getItem(storageKey(id)) !== null;
   } catch {
     // Treat an unreadable store as "seen" so we never nag on every page view.
     return true;
   }
+};
+
+// Fetched once per visit (the response is the same for everyone and cached
+// by the CDN). Unreachable: the campaign that was hard-coded before.
+let campaignRequest: Promise<Announcement | null> | null = null;
+const loadCampaign = () => {
+  campaignRequest ??= fetch("/api/announcements")
+    .then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json() as Promise<{ donation_popover?: Announcement[] }>;
+    })
+    .then(
+      (data) =>
+        (data.donation_popover ?? []).find((a) =>
+          isAnnouncementLive({ starts_on: a.startsOn, ends_on: a.endsOn }),
+        ) ?? null,
+    )
+    .catch(() => LEGACY_DONATION_ANNOUNCEMENT);
+  return campaignRequest;
 };
 
 const consentResolved = () => {
@@ -51,6 +81,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
   const heartRef = useRef<HTMLSpanElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
+  const [campaign, setCampaign] = useState<Announcement | null>(null);
   // The portal needs `document`: only after hydration.
   const isMounted = useHydrated();
   // The navbar is a 64px scroll container, so the card cannot live inside it.
@@ -79,33 +110,40 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
   }, []);
 
   useEffect(() => {
-    if (hasBeenSeen()) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let scheduleShow: (() => void) | undefined;
 
-    // Landing on the donation page is discovery enough.
-    if (pathname === "/don") {
-      markSeen();
-      return;
-    }
+    loadCampaign().then((current) => {
+      if (cancelled || !current || hasBeenSeen(current.id)) return;
+      setCampaign(current);
 
-    let timer: ReturnType<typeof setTimeout>;
-    const scheduleShow = () => {
-      timer = setTimeout(() => {
-        setIsOpen(true);
-        setIsPulsing(true);
-        // Mark on show, not on dismiss: seen once is seen for good.
-        markSeen();
-      }, SHOW_DELAY_MS);
-    };
+      // Landing on the donation page is discovery enough.
+      if (pathname === "/don") {
+        markSeen(current.id);
+        return;
+      }
 
-    // Never compete with the cookie consent dialog for a first-time visitor.
-    if (consentResolved()) {
-      scheduleShow();
-      return () => clearTimeout(timer);
-    }
+      scheduleShow = () => {
+        timer = setTimeout(() => {
+          setIsOpen(true);
+          setIsPulsing(true);
+          // Mark on show, not on dismiss: seen once is seen for good.
+          markSeen(current.id);
+        }, SHOW_DELAY_MS);
+      };
 
-    window.addEventListener("cc:onConsent", scheduleShow, { once: true });
+      // Never compete with the cookie consent dialog for a first-time visitor.
+      if (consentResolved()) scheduleShow();
+      else
+        window.addEventListener("cc:onConsent", scheduleShow, { once: true });
+    });
+
     return () => {
-      window.removeEventListener("cc:onConsent", scheduleShow);
+      cancelled = true;
+      if (scheduleShow) {
+        window.removeEventListener("cc:onConsent", scheduleShow);
+      }
       clearTimeout(timer);
     };
   }, [pathname]);
@@ -145,7 +183,11 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
         },
       };
 
-  const card = (
+  const title = campaign?.title ?? "";
+  const body = campaign?.body ?? "";
+  const external = campaign ? isExternalLink(campaign.linkUrl) : false;
+
+  const card = campaign && (
     <>
       <div className="mb-2 flex items-start gap-2">
         <FaHeart
@@ -153,7 +195,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
           aria-hidden="true"
           className="text-primary mt-0.5 shrink-0"
         />
-        <p className="text-foreground grow text-sm font-semibold">{TITLE}</p>
+        <p className="text-foreground grow text-sm font-semibold">{title}</p>
         <button
           type="button"
           onClick={dismiss}
@@ -163,13 +205,16 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
           <FaTimes size={12} aria-hidden="true" />
         </button>
       </div>
-      <p className="text-muted mb-3 text-xs leading-relaxed">{BODY}</p>
+      {body && (
+        <p className="text-muted mb-3 text-xs leading-relaxed">{body}</p>
+      )}
       <Link
-        href="/don"
+        href={campaign.linkUrl}
         onPress={dismiss}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         className="bg-primary-solid hover:bg-primary-solid-hover inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-colors"
       >
-        Découvrir
+        {campaign.linkLabel ?? "Découvrir"}
       </Link>
     </>
   );
@@ -178,7 +223,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
     <>
       {/* Announce once, politely, without moving focus. */}
       <p role="status" aria-live="polite" className="sr-only">
-        {isOpen ? `${TITLE}. ${BODY}` : ""}
+        {isOpen && campaign ? [title, body].filter(Boolean).join(". ") : ""}
       </p>
 
       <div className="hidden items-center lg:flex">
@@ -214,7 +259,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
       {isMounted &&
         createPortal(
           <AnimatePresence>
-            {isOpen && (
+            {isOpen && campaign && (
               <>
                 {/* Desktop: anchored under the heart, with a caret pointing at it. */}
                 {anchor && (
@@ -222,7 +267,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
                     key="desktop"
                     {...cardMotion}
                     role="region"
-                    aria-label={TITLE}
+                    aria-label={title}
                     style={{ top: anchor.top, right: anchor.right }}
                     className="border-default-200 bg-content1 fixed z-50 hidden w-72 origin-top-right rounded-xl border p-4 shadow-lg lg:block"
                   >
@@ -239,7 +284,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
                   key="mobile"
                   {...cardMotion}
                   role="region"
-                  aria-label={TITLE}
+                  aria-label={title}
                   className="border-default-200 bg-content1 fixed top-20 right-3 left-3 z-50 mx-auto max-w-sm origin-top rounded-xl border p-4 shadow-lg lg:hidden"
                 >
                   {card}
