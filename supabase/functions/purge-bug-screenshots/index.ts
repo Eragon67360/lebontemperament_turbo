@@ -14,6 +14,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { requireInternalSecret } from "../_shared/caller-auth.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 const BUCKET = "bug-screenshots";
 const RETENTION_DAYS = 365;
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(
       requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+      requireServiceKey(),
       { auth: { persistSession: false } },
     );
 

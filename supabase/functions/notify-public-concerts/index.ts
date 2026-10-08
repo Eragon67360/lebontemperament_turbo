@@ -19,6 +19,7 @@ import {
   sendToTopic,
 } from "../_shared/fcm.ts";
 import { type ConcertRow, parisToday, plan } from "./plan.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 const TOPIC = "public_concerts";
 
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(
       requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+      requireServiceKey(),
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 
