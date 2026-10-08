@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.2";
+const POLICY_VERSION = "2.3";
 const POLICY_UPDATED_ON = "8 octobre 2026";
 
 export const metadata: Metadata = {
@@ -590,12 +590,14 @@ export default function PrivacyPolicy() {
 
           <Section id="application-mobile">
             <p className={pClass}>
-              L’application Le Bon Tempérament permet aux membres de consulter
-              les concerts, répétitions, annonces, documents de travail et
-              l’annuaire, et de recevoir des notifications. Elle utilise le même
-              compte que l’espace membres : les traitements décrits plus haut
-              s’y appliquent. Elle ne contient ni publicité, ni outil de mesure
-              d’audience, ni outil de suivi des plantages.
+              L’application Le Bon Tempérament présente l’association à tous,
+              sans compte : prochains concerts, façon de nous rejoindre, liens
+              utiles. Les membres s’y connectent pour consulter les répétitions,
+              annonces, documents de travail et l’annuaire, et recevoir des
+              notifications, avec le même compte que l’espace membres : les
+              traitements décrits plus haut s’y appliquent. Elle ne contient ni
+              publicité, ni outil de mesure d’audience, ni outil de suivi des
+              plantages.
             </p>
             <ul className={ulClass}>
               <li className="mb-2">
@@ -615,6 +617,15 @@ export default function PrivacyPolicy() {
                 rappels sont programmés sur votre appareil. Vous pouvez
                 désactiver les notifications dans l’application ou dans les
                 réglages du téléphone.
+              </li>
+              <li className="mb-2">
+                <strong>Annonces de concerts sans compte</strong> : si le
+                réglage « Prochains concerts » de la page « À propos » est
+                activé (il l’est par défaut), votre téléphone s’abonne aux
+                annonces de concerts de Firebase Cloud Messaging (Google) et
+                reçoit l’annonce de chaque concert et un rappel deux jours
+                avant. Nous n’enregistrons rien sur vous ni sur votre téléphone
+                ; désactivez le réglage pour vous désabonner.
               </li>
               <li className="mb-2">
                 <strong>Signalements</strong> : vous pouvez nous signaler un
