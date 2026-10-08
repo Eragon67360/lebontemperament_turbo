@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../../../../data/models/concert.dart';
 import '../../../../data/providers/data_providers.dart';
 import '../../../../core/utils/text_scale.dart';
+import '../../../public/presentation/widgets/public_widgets.dart';
 
 class ConcertDetailScreen extends ConsumerStatefulWidget {
   final String concertId;
@@ -63,6 +64,10 @@ class _ConcertDetailScreenState extends ConsumerState<ConcertDetailScreen> {
                       FadeInUp(
                         delay: 100,
                         child: _ConcertInfoCard(concert: concert),
+                      ),
+                      FadeInUp(
+                        delay: 150,
+                        child: _ConcertActions(concert: concert),
                       ),
                       const SizedBox(height: 32),
                       const FadeInUp(
@@ -342,8 +347,20 @@ class _ConcertInfoCard extends StatelessWidget {
           _InfoRow(
             icon: Icons.location_on_outlined,
             title: 'Lieu',
-            subtitle: concert.place.isNotEmpty ? concert.place : 'Non spécifié',
+            subtitle: concertAddress(concert) ?? 'Non spécifié',
           ),
+          if (concertEntry(concert) case final entry?) ...[
+            Divider(
+              height: 24,
+              thickness: 0.5,
+              color: theme.colorScheme.outline.withValues(alpha: 0.5),
+            ),
+            _InfoRow(
+              icon: Icons.confirmation_number_outlined,
+              title: 'Entrée',
+              subtitle: entry,
+            ),
+          ],
           Divider(
             height: 24,
             thickness: 0.5,
@@ -354,6 +371,83 @@ class _ConcertInfoCard extends StatelessWidget {
             title: 'Contexte',
             subtitle: _getContextText(concert.context),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The venue, its street and its town on separate lines when the concert
+/// has them, else the free-text place; null when nothing is known.
+String? concertAddress(Concert concert) {
+  final venue = concert.venueName?.trim() ?? '';
+  final town = [
+    concert.postalCode?.trim() ?? '',
+    concert.city?.trim() ?? '',
+  ].where((s) => s.isNotEmpty).join(' ');
+  final lines = [
+    venue.isNotEmpty ? venue : concert.place.trim(),
+    concert.streetAddress?.trim() ?? '',
+    town,
+  ].where((s) => s.isNotEmpty).toList();
+  return lines.isEmpty ? null : lines.join('\n');
+}
+
+/// « Entrée libre », « 15 € » or « 12,50 € »; null when the concert says
+/// nothing about it.
+String? concertEntry(Concert concert) {
+  if (concert.isFree == true) return 'Entrée libre';
+  final price = concert.price;
+  if (price == null || price <= 0) return null;
+  final amount = price == price.roundToDouble()
+      ? price.toStringAsFixed(0)
+      : price.toStringAsFixed(2).replaceAll('.', ',');
+  return '$amount €';
+}
+
+/// A maps search for the concert's address, or null without one.
+Uri? concertDirectionsUri(Concert concert) {
+  final query = [
+    concert.venueName?.trim() ?? '',
+    concert.streetAddress?.trim() ?? '',
+    concert.postalCode?.trim() ?? '',
+    concert.city?.trim() ?? '',
+  ].where((s) => s.isNotEmpty).join(' ');
+  final q = query.isNotEmpty ? query : concert.place.trim();
+  if (q.isEmpty) return null;
+  return Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': q});
+}
+
+/// « Billets et infos » (the concert's link) and « Itinéraire ».
+class _ConcertActions extends StatelessWidget {
+  const _ConcertActions({required this.concert});
+
+  final Concert concert;
+
+  @override
+  Widget build(BuildContext context) {
+    final link = concert.relatedLink?.trim() ?? '';
+    final directions = concertDirectionsUri(concert);
+    final hasLink = Uri.tryParse(link)?.hasScheme ?? false;
+    if (!hasLink && directions == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          if (hasLink)
+            FilledButton.icon(
+              onPressed: () => openExternal(context, link),
+              icon: const Icon(Icons.confirmation_number_outlined),
+              label: const Text('Billets et infos'),
+            ),
+          if (directions != null)
+            OutlinedButton.icon(
+              onPressed: () => openExternal(context, directions.toString()),
+              icon: const Icon(Icons.directions_outlined),
+              label: const Text('Itinéraire'),
+            ),
         ],
       ),
     );

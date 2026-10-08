@@ -20,6 +20,7 @@ import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/notifications/presentation/screens/permission_request_screen.dart';
 import '../../features/onboarding/presentation/screens/welcome_tour_screen.dart';
 import '../../features/profile/presentation/screens/developer_mode_screen.dart';
+import '../../features/public/presentation/screens/public_shell_screen.dart';
 import '../../features/reports/presentation/screens/report_conversation_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 
@@ -44,6 +45,9 @@ class AppRouter {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String main = '/main';
+
+  /// The public part, for everyone who is not signed in (#593).
+  static const String publicHome = '/public';
   static const String welcome = '/welcome';
   static const String eventDetail = '/events/:id';
   static const String concertDetail = '/concerts/:id';
@@ -54,6 +58,26 @@ class AppRouter {
   // The name for the new sub-route
   static const String driverTrackingRecipient = 'driverTrackingRecipient';
 
+  /// Where a location leads: visitors get the public part and the pages it
+  /// links to (a concert, the sign-in); a member is never shown the public
+  /// part or the sign-in.
+  static String? redirectFor({
+    required bool isAuthenticated,
+    required String location,
+  }) {
+    final isPublic =
+        location == splash ||
+        location == permissions ||
+        location == login ||
+        location == publicHome ||
+        location.startsWith('/concerts/');
+    if (!isAuthenticated && !isPublic) return publicHome;
+    if (isAuthenticated && (location == login || location == publicHome)) {
+      return main;
+    }
+    return null;
+  }
+
   static GoRouter createRouter() {
     return GoRouter(
       navigatorKey: navigatorKey,
@@ -61,30 +85,10 @@ class AppRouter {
       // never shows through them (iOS 26 glass bar, #549).
       observers: [CNTabBarRouteObserver()],
       initialLocation: splash,
-      redirect: (context, state) {
-        // Use the auth service directly to check authentication state
-        final authService = AuthService();
-        final isAuthenticated = authService.isAuthenticated;
-        final isGoingToLogin = state.matchedLocation == login;
-        final isGoingToSplash = state.matchedLocation == splash;
-        final isGoingToPermissions = state.matchedLocation == permissions;
-
-        // If user is not authenticated and not going to login, splash, or permissions, redirect to login
-        if (!isAuthenticated &&
-            !isGoingToLogin &&
-            !isGoingToSplash &&
-            !isGoingToPermissions) {
-          return login;
-        }
-
-        // If user is authenticated and going to login, redirect to main
-        if (isAuthenticated && isGoingToLogin) {
-          return main;
-        }
-
-        // No redirect needed
-        return null;
-      },
+      redirect: (context, state) => redirectFor(
+        isAuthenticated: AuthService().isAuthenticated,
+        location: state.matchedLocation,
+      ),
       refreshListenable: AuthStateListener(),
       routes: [
         // Splash Screen
@@ -117,6 +121,14 @@ class AppRouter {
           builder: (context, state) => const SignupScreen(),
         ),
 
+        // Public part (signed out): Accueil, Concerts, Nous rejoindre,
+        // À propos.
+        GoRoute(
+          path: publicHome,
+          name: 'public',
+          builder: (context, state) => const PublicShellScreen(),
+        ),
+
         // Main App Route (protected) - contains bottom navigation
         GoRoute(
           path: main,
@@ -144,7 +156,7 @@ class AppRouter {
           },
         ),
 
-        // Concert Detail Route (protected)
+        // Concert Detail Route (members and visitors: concerts are public)
         GoRoute(
           path: concertDetail,
           name: 'concertDetail',

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/dependency_injection.dart';
 import '../../core/config/supabase_config.dart';
+import '../../features/public/data/public_concert_notifications.dart';
 import 'fcm_notification_handler.dart';
 import 'storage_service.dart';
 
@@ -15,15 +16,18 @@ import 'storage_service.dart';
 /// - with a session (app start, sign-in): subscribed to the `all_users` topic,
 ///   and the phone's FCM token registered with `register_push_device`, again
 ///   whenever FCM rotates it. The server keeps it only for superadmins, who
-///   get the production alerts on it (#364);
-/// - without a session at app start: unsubscribed (devices that subscribed
-///   while signed out with older builds stop receiving pushes);
+///   get the production alerts on it (#364). A member gets concerts through
+///   `all_users`, so the public concert topic is left;
+/// - without a session at app start: unsubscribed from `all_users` (devices
+///   that subscribed while signed out with older builds stop receiving
+///   pushes), and subscribed to [publicTopic] while the visitor keeps
+///   « Prochains concerts » on (#593);
 /// - just before an explicit sign-out ([beforeSignOut], while the session can
 ///   still call the server): the token unregistered;
 /// - on sign-out (explicit, or a session Supabase could no longer refresh):
-///   unsubscribed, the FCM token deleted, the local cache cleared. A deleted
-///   token that was still registered is dropped by the server at its next
-///   send.
+///   unsubscribed, the FCM token deleted, the local cache cleared, then back
+///   on [publicTopic] like any visitor. A deleted token that was still
+///   registered is dropped by the server at its next send.
 class SessionNotifications {
   SessionNotifications({
     required Future<void> Function(String topic) subscribe,
@@ -34,8 +38,10 @@ class SessionNotifications {
     required Stream<String> tokenRefreshes,
     required Future<void> Function(String token) registerDevice,
     required Future<void> Function(String token) unregisterDevice,
+    Future<bool> Function()? publicConcertsWanted,
     Logger? logger,
-  }) : _subscribe = subscribe,
+  }) : _publicConcertsWanted = publicConcertsWanted ?? _never,
+       _subscribe = subscribe,
        _unsubscribe = unsubscribe,
        _deleteToken = deleteToken,
        _clearCache = clearCache,
@@ -48,6 +54,12 @@ class SessionNotifications {
   /// The FCM topic the server sends internal notifications to.
   static const String topic = 'all_users';
 
+  /// The FCM topic of the concert announcements for visitors (#593): no
+  /// token or personal data is stored for them.
+  static const String publicTopic = 'public_concerts';
+
+  static Future<bool> _never() async => false;
+
   final Future<void> Function(String topic) _subscribe;
   final Future<void> Function(String topic) _unsubscribe;
   final Future<void> Function() _deleteToken;
@@ -56,6 +68,7 @@ class SessionNotifications {
   final Stream<String> _tokenRefreshes;
   final Future<void> Function(String token) _registerDevice;
   final Future<void> Function(String token) _unregisterDevice;
+  final Future<bool> Function() _publicConcertsWanted;
   final Logger _logger;
 
   StreamSubscription<AuthState>? _subscription;
@@ -86,6 +99,7 @@ class SessionNotifications {
           params: {'p_token': token},
         );
       },
+      publicConcertsWanted: PublicConcertNotifications.isEnabled,
     );
   }
 
@@ -143,6 +157,24 @@ class SessionNotifications {
 
   static const Duration unregisterTimeout = Duration(seconds: 5);
 
+  /// Applies the visitor's « Prochains concerts » switch. A member's phone
+  /// stays off the public topic whatever the switch says.
+  Future<void> publicConcertsChanged() {
+    final done = _queue.then((_) async {
+      if (!_signedIn) await _applyPublicTopic();
+    });
+    _queue = done;
+    return done;
+  }
+
+  Future<void> _applyPublicTopic() async {
+    final wanted = await _publicConcertsWanted().catchError((_) => false);
+    await _run(
+      wanted ? 'subscribePublic' : 'unsubscribePublic',
+      () => wanted ? _subscribe(publicTopic) : _unsubscribe(publicTopic),
+    );
+  }
+
   /// Reacts to one auth event. Each step is independent: a failing step is
   /// logged and the others still run.
   Future<void> handle(AuthChangeEvent event, Session? session) async {
@@ -153,6 +185,7 @@ class SessionNotifications {
         } else {
           _signedIn = false;
           await _run('unsubscribe', () => _unsubscribe(topic));
+          await _applyPublicTopic();
         }
       case AuthChangeEvent.signedIn:
         await _signIn();
@@ -161,6 +194,7 @@ class SessionNotifications {
         await _run('unsubscribe', () => _unsubscribe(topic));
         await _run('deleteToken', _deleteToken);
         await _run('clearCache', _clearCache);
+        await _applyPublicTopic();
       case AuthChangeEvent.tokenRefreshed:
       case AuthChangeEvent.userUpdated:
       case AuthChangeEvent.passwordRecovery:
@@ -173,6 +207,7 @@ class SessionNotifications {
 
   Future<void> _signIn() async {
     _signedIn = true;
+    await _run('unsubscribePublic', () => _unsubscribe(publicTopic));
     await _run('subscribe', () => _subscribe(topic));
     await _run('registerDevice', () async {
       final token = await _readToken();

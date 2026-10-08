@@ -27,8 +27,9 @@ class SignInException implements Exception {
   String get message => switch (failure) {
     SignInFailure.invalidCredentials => 'E-mail ou mot de passe incorrect.',
     SignInFailure.notMember =>
-      'Ce compte n\'est relié à aucun membre. Utilisez l\'adresse e-mail '
-          'que vous avez donnée à l\'association.',
+      'Ce compte n\'est relié à aucun membre : l\'espace membres est '
+          'réservé aux membres de l\'association, avec l\'adresse e-mail '
+          'qu\'ils lui ont donnée. Le reste de l\'appli est à vous !',
     SignInFailure.network =>
       'Pas de connexion. Vérifiez votre réseau et réessayez.',
     SignInFailure.server =>

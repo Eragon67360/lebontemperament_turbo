@@ -270,7 +270,17 @@ final homeUpcomingRehearsalsProvider = Provider<AsyncValue<List<Rehearsal>>>(
 );
 
 /// The next 2 upcoming concerts for the home screen UI.
-final homeUpcomingConcertsProvider = Provider<AsyncValue<List<Concert>>>((ref) {
+final homeUpcomingConcertsProvider = Provider<AsyncValue<List<Concert>>>(
+  (ref) => ref
+      .watch(sortedUpcomingConcertsProvider)
+      .whenData((items) => items.take(2).toList()),
+);
+
+/// Every upcoming concert, soonest first (the public « Concerts » tab and
+/// the home screens).
+final sortedUpcomingConcertsProvider = Provider<AsyncValue<List<Concert>>>((
+  ref,
+) {
   // Sorted here: the upcoming provider keeps the server order.
   return _homeList(ref.watch(upcomingConcertsProvider), (items) {
     final sortedConcerts = List<Concert>.from(items);
@@ -281,7 +291,7 @@ final homeUpcomingConcertsProvider = Provider<AsyncValue<List<Concert>>>((ref) {
       if (dateComparison != 0) return dateComparison;
       return a.time.compareTo(b.time);
     });
-    return sortedConcerts.take(2).toList();
+    return sortedConcerts;
   });
 });
 
