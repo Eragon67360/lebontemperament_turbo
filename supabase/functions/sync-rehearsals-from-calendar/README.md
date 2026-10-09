@@ -4,7 +4,7 @@ This Edge Function syncs future Google Calendar events into `public.rehearsals`.
 
 ## Modes
 
-- `?mode=cron`: production sync, `timeMin = now`, no upper bound. The pg_cron job runs it at 07:00 and 19:00 Europe/Paris.
+- `?mode=cron`: production sync, `timeMin = now`, no upper bound. The pg_cron job runs it at the top of every hour from 07:00 to 22:00 Europe/Paris (migration `20261009160000_rehearsal_sync_hourly.sql`); a run only re-reads the events Google changed since the last one.
 - `&silence=1` (any mode): no push notification for this run, e.g. for a one-off backfill.
 - `?mode=test`: 60-day window, real writes, push notifications silenced.
 - `?mode=dry-run`: 60-day window, no rehearsal writes, returns a diff plan.
@@ -116,7 +116,7 @@ Needs, once, outside the code: the calendar shared with the service account (`cl
 
 ### Admin-panel edits reach Google (phase 2)
 
-Decided 2026-10-09: an admin who edits a synced rehearsal in the admin panel sees the change in Google Calendar at the **next sync** (07:00 or 19:00), not at save time. Needs `CALENDAR_WRITEBACK=1` (or `?writeback=plan` to preview) and the migration `20261009150000_rehearsal_calendar_synced_at.sql` applied **before** the function is deployed (the function selects the new columns).
+Decided 2026-10-09: an admin who edits a synced rehearsal in the admin panel sees the change in Google Calendar at the **next sync** (within the hour, 07:00 to 22:00 Paris), not at save time. Needs `CALENDAR_WRITEBACK=1` (or `?writeback=plan` to preview) and the migration `20261009150000_rehearsal_calendar_synced_at.sql` applied **before** the function is deployed (the function selects the new columns).
 
 - The migration adds `rehearsals.calendar_synced_at`: when the sync last wrote or confirmed the row. The table's trigger sets `updated_at = now()` on every update, so a row whose `updated_at` is later than `calendar_synced_at` was edited by hand (`editedByHand`).
 - The edit wins only while Google has not changed since: if the event's `updated` is not later than the row's `updated_at` (`adminEditIsNewest`), the run keeps the database values and writes `locationFromRow` (address, or place, then room) into the event's `location`. If someone edited the event in Google afterwards, the calendar is the newer word and the normal calendar → database sync applies.
@@ -128,4 +128,4 @@ Decided 2026-10-09: an admin who edits a synced rehearsal in the admin panel see
 
 ### Rolling it out
 
-Order: 1) apply the migration `20261009130000_rehearsal_address_room.sql`, 2) deploy the function, 3) run `3-backfill-future-rehearsals.sql`: it sets `google_updated_at = null` on the future synced rehearsals (the sync skips events whose `updated` did not change) and calls the function once with `?mode=cron&silence=1`, so the rows that gain a more precise place (« Nordheim » → « Salle des fêtes, Nordheim ») do not each send « Répétition modifiée ». Without `silence=1` the 07:00 or 19:00 run would notify everyone once per changed rehearsal. The migration alone makes the sync quiet only when name, place, date, hours and group are unchanged (an address or room change).
+Order: 1) apply the migration `20261009130000_rehearsal_address_room.sql`, 2) deploy the function, 3) run `3-backfill-future-rehearsals.sql`: it sets `google_updated_at = null` on the future synced rehearsals (the sync skips events whose `updated` did not change) and calls the function once with `?mode=cron&silence=1`, so the rows that gain a more precise place (« Nordheim » → « Salle des fêtes, Nordheim ») do not each send « Répétition modifiée ». Without `silence=1` the next hourly run would notify everyone once per changed rehearsal. The migration alone makes the sync quiet only when name, place, date, hours and group are unchanged (an address or room change).
