@@ -44,12 +44,14 @@ abstract class Rehearsal with _$Rehearsal {
 }
 
 extension RehearsalWhere on Rehearsal {
-  /// « Conservatoire de Strasbourg · Salle 12 », or the place alone.
+  /// « Conservatoire de Strasbourg · Salle 12 », or the place alone. The
+  /// dot sticks to the place and the room never splits (« Salle / 12 »), so
+  /// a long line breaks before the room, not inside it.
   String? get placeWithRoom {
     final p = place?.trim() ?? '';
-    final r = room?.trim() ?? '';
+    final r = (room?.trim() ?? '').replaceAll(' ', '\u00A0');
     if (p.isEmpty) return r.isEmpty ? null : r;
-    return r.isEmpty ? p : '$p · $r';
+    return r.isEmpty ? p : '$p\u00A0· $r';
   }
 
   /// What « Itinéraire » searches: the full address, else the place. Never
