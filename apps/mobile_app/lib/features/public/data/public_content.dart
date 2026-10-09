@@ -78,6 +78,8 @@ class RehearsalSlot {
   final String rhythm;
 }
 
+/// The built-in times, shown until (or when) the website's `GET /api/joining`
+/// can't be read; admins edit the published ones.
 const List<RehearsalSlot> kRehearsalSlots = [
   RehearsalSlot(
     group: 'Pupitres de femmes',

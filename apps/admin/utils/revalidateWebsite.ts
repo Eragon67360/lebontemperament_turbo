@@ -29,6 +29,8 @@ export const WEBSITE_PATHS = {
   joining: "/rejoindre",
   /** Announcements read by the navigation's donation card. */
   announcementsApi: "/api/announcements",
+  /** Rehearsal times read by the app's « Nous rejoindre » screen. */
+  joiningApi: "/api/joining",
   sitemap: "/sitemap.xml",
   /** The root layout: every page (feature flags are read there). */
   everything: { path: "/", type: "layout" },
@@ -61,8 +63,8 @@ export const REVALIDATE = {
   },
   /** FAQ questions */
   faq: { paths: [WEBSITE_PATHS.faq] },
-  /** rehearsal times on the joining page */
-  joiningSlots: { paths: [WEBSITE_PATHS.joining] },
+  /** rehearsal times on the joining page and the app's copy */
+  joiningSlots: { paths: [WEBSITE_PATHS.joining, WEBSITE_PATHS.joiningApi] },
   /** YouTube links */
   videos: { paths: [WEBSITE_PATHS.gallery] },
   /** feature flags are read in the root layout: everything, plus the sitemap */
