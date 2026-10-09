@@ -4,7 +4,8 @@ This Edge Function syncs future Google Calendar events into `public.rehearsals`.
 
 ## Modes
 
-- `?mode=cron`: production sync, `timeMin = now`, no upper bound.
+- `?mode=cron`: production sync, `timeMin = now`, no upper bound. The pg_cron job runs it at 07:00 and 19:00 Europe/Paris.
+- `&silence=1` (any mode): no push notification for this run, e.g. for a one-off backfill.
 - `?mode=test`: 60-day window, real writes, push notifications silenced.
 - `?mode=dry-run`: 60-day window, no rehearsal writes, returns a diff plan.
 
@@ -95,4 +96,4 @@ What admins should write in Google Agenda: in `location`, the village or, better
 
 ### Rolling it out
 
-Order: 1) apply the migration `20261009130000_rehearsal_address_room.sql`, 2) deploy the function, 3) set `google_updated_at = null` on the future synced rehearsals so the next hourly run reads them again (the sync skips events whose `updated` did not change). The migration makes the sync quiet when a row's name, place, date, hours and group did not change, so filling addresses sends no « Répétition modifiée » push.
+Order: 1) apply the migration `20261009130000_rehearsal_address_room.sql`, 2) deploy the function, 3) run `3-backfill-future-rehearsals.sql`: it sets `google_updated_at = null` on the future synced rehearsals (the sync skips events whose `updated` did not change) and calls the function once with `?mode=cron&silence=1`, so the rows that gain a more precise place (« Nordheim » → « Salle des fêtes, Nordheim ») do not each send « Répétition modifiée ». Without `silence=1` the 07:00 or 19:00 run would notify everyone once per changed rehearsal. The migration alone makes the sync quiet only when name, place, date, hours and group are unchanged (an address or room change).
