@@ -307,6 +307,8 @@ serve(async (req) => {
           end_time: times.end_time,
           name: extracted.name,
           place: extracted.place,
+          address: extracted.address || null,
+          room: extracted.room || null,
           group_type: extracted.group_type,
           event_id: event.id,
           google_updated_at: event.updated,

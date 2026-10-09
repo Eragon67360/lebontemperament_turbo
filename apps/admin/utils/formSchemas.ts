@@ -104,6 +104,10 @@ export const rehearsalFormSchema = z
     }),
     date: z.date({ error: "La date est requise" }),
     place: requiredString("Le lieu est requis"),
+    /** Optional: the full postal address the app's « Itinéraire » opens. */
+    address: z.string().trim().default(""),
+    /** Optional: the room inside the building, never sent to the maps app. */
+    room: z.string().trim().default(""),
     start_time: requiredTime("L'heure de début est requise"),
     end_time: requiredTime("L'heure de fin est requise"),
     /** Creation only: one séance every `repeat_interval` weeks until `repeat_until`. */

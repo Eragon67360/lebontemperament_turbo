@@ -134,6 +134,8 @@ assert.equal(todayIso(new Date(2026, 9, 4, 0, 30)), "2026-10-04");
     {
       name: "Répétition générale",
       place: "Salle des fêtes",
+      address: null,
+      room: null,
       start_time: "19:00",
       end_time: "21:30",
       group_type: "Tous",
@@ -151,13 +153,32 @@ assert.equal(todayIso(new Date(2026, 9, 4, 0, 30)), "2026-10-04");
     ["2026-10-06", "2026-10-20", "2026-11-03"],
   );
   assert.deepEqual(Object.keys(repeated[0]!).sort(), [
+    "address",
     "date",
     "end_time",
     "group_type",
     "name",
     "place",
+    "room",
     "start_time",
   ]);
+  // Filled in, they are saved trimmed; the maps app never sees the room.
+  const withAddress = toRehearsalPayloads(
+    rehearsalFormSchema.parse({
+      name: "Répétition orchestre",
+      group_type: "Orchestre",
+      date: new Date(2026, 9, 6),
+      place: "Conservatoire de Strasbourg",
+      address: " 1 place Dauphine, 67000 Strasbourg ",
+      room: " Salle 12 ",
+      start_time: "19:00",
+      end_time: "21:30",
+      repeat: false,
+      repeat_interval: "1",
+    }),
+  );
+  assert.equal(withAddress[0]!.address, "1 place Dauphine, 67000 Strasbourg");
+  assert.equal(withAddress[0]!.room, "Salle 12");
 }
 {
   const base = {

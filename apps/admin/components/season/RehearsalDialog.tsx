@@ -39,6 +39,8 @@ const LABELS = {
   group_type: { label: "Groupe concerné", id: "rehearsal-group" },
   date: { label: "Date", id: "rehearsal-date" },
   place: { label: "Lieu", id: "rehearsal-place" },
+  address: { label: "Adresse complète", id: "rehearsal-address" },
+  room: { label: "Salle", id: "rehearsal-room" },
   start_time: { label: "Début", id: "rehearsal-start" },
   end_time: { label: "Fin", id: "rehearsal-end" },
   repeat: { label: "Répéter la séance", id: "rehearsal-repeat" },
@@ -58,6 +60,8 @@ const defaults = (rehearsal?: Rehearsal | null): RehearsalFormInput => ({
     (rehearsal?.date ? parseIsoDate(rehearsal.date) : null) ??
     (undefined as never),
   place: rehearsal?.place ?? "",
+  address: rehearsal?.address ?? "",
+  room: rehearsal?.room ?? "",
   // The column is a `time`: "19:00:00" from the base, "19:00" from the input.
   start_time: rehearsal?.start_time?.slice(0, 5) ?? "",
   end_time: rehearsal?.end_time?.slice(0, 5) ?? "",
@@ -207,6 +211,22 @@ export function RehearsalDialog({
               placeholder="Salle paroissiale, Barr"
             />
           </div>
+          <TextField
+            control={form.control}
+            name="address"
+            id={LABELS.address.id}
+            label={LABELS.address.label}
+            placeholder="1 place Dauphine, 67000 Strasbourg"
+            hint="Numéro, rue, code postal et commune : le bouton « Itinéraire » de l'application s'ouvre dessus. Sans adresse, il cherche le lieu."
+          />
+          <TextField
+            control={form.control}
+            name="room"
+            id={LABELS.room.id}
+            label={LABELS.room.label}
+            placeholder="Salle 12"
+            hint="Pour un bâtiment à plusieurs salles. Les membres la voient avec la répétition, elle n'est pas envoyée à la carte."
+          />
           <div className="grid gap-5 sm:grid-cols-2">
             <TextField
               control={form.control}

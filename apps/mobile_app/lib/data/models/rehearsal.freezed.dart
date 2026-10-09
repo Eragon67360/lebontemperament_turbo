@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Rehearsal {
 
- String get id; String? get name; String? get place; String? get date;@JsonKey(name: 'start_time') String? get startTime;@JsonKey(name: 'end_time') String? get endTime;@JsonKey(name: 'group_type') GroupType get groupType;@JsonKey(name: 'created_at') String? get createdAt;@JsonKey(name: 'updated_at') String? get updatedAt;
+ String get id; String? get name; String? get place; String? get address; String? get room; String? get date;@JsonKey(name: 'start_time') String? get startTime;@JsonKey(name: 'end_time') String? get endTime;@JsonKey(name: 'group_type') GroupType get groupType;@JsonKey(name: 'created_at') String? get createdAt;@JsonKey(name: 'updated_at') String? get updatedAt;
 /// Create a copy of Rehearsal
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $RehearsalCopyWith<Rehearsal> get copyWith => _$RehearsalCopyWithImpl<Rehearsal>
 @override
 bool operator ==(Object other) {
   final _this = this as Rehearsal;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Rehearsal&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.place, _this.place) || other.place == _this.place)&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.startTime, _this.startTime) || other.startTime == _this.startTime)&&(identical(other.endTime, _this.endTime) || other.endTime == _this.endTime)&&(identical(other.groupType, _this.groupType) || other.groupType == _this.groupType)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Rehearsal&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.place, _this.place) || other.place == _this.place)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.room, _this.room) || other.room == _this.room)&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.startTime, _this.startTime) || other.startTime == _this.startTime)&&(identical(other.endTime, _this.endTime) || other.endTime == _this.endTime)&&(identical(other.groupType, _this.groupType) || other.groupType == _this.groupType)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Rehearsal;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.place,_this.date,_this.startTime,_this.endTime,_this.groupType,_this.createdAt,_this.updatedAt);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.place,_this.address,_this.room,_this.date,_this.startTime,_this.endTime,_this.groupType,_this.createdAt,_this.updatedAt);
 }
 
 @override
 String toString() {
   final _this = this as Rehearsal;
-  return 'Rehearsal(id: ${_this.id}, name: ${_this.name}, place: ${_this.place}, date: ${_this.date}, startTime: ${_this.startTime}, endTime: ${_this.endTime}, groupType: ${_this.groupType}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt})';
+  return 'Rehearsal(id: ${_this.id}, name: ${_this.name}, place: ${_this.place}, address: ${_this.address}, room: ${_this.room}, date: ${_this.date}, startTime: ${_this.startTime}, endTime: ${_this.endTime}, groupType: ${_this.groupType}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $RehearsalCopyWith<$Res>  {
   factory $RehearsalCopyWith(Rehearsal value, $Res Function(Rehearsal) _then) = _$RehearsalCopyWithImpl;
 @useResult
 $Res call({
- String id, String? name, String? place, String? date,@JsonKey(name: 'start_time') String? startTime,@JsonKey(name: 'end_time') String? endTime,@JsonKey(name: 'group_type') GroupType groupType,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
+ String id, String? name, String? place, String? address, String? room, String? date,@JsonKey(name: 'start_time') String? startTime,@JsonKey(name: 'end_time') String? endTime,@JsonKey(name: 'group_type') GroupType groupType,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
 });
 
 
@@ -71,11 +71,13 @@ class _$RehearsalCopyWithImpl<$Res>
 
 /// Create a copy of Rehearsal
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = freezed,Object? place = freezed,Object? date = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? groupType = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = freezed,Object? place = freezed,Object? address = freezed,Object? room = freezed,Object? date = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? groupType = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(Rehearsal(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,place: freezed == place ? _self.place : place // ignore: cast_nullable_to_non_nullable
+as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,room: freezed == room ? _self.room : room // ignore: cast_nullable_to_non_nullable
 as String?,date: freezed == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String?,startTime: freezed == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as String?,endTime: freezed == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
@@ -167,10 +169,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? name,  String? place,  String? date, @JsonKey(name: 'start_time')  String? startTime, @JsonKey(name: 'end_time')  String? endTime, @JsonKey(name: 'group_type')  GroupType groupType, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? name,  String? place,  String? address,  String? room,  String? date, @JsonKey(name: 'start_time')  String? startTime, @JsonKey(name: 'end_time')  String? endTime, @JsonKey(name: 'group_type')  GroupType groupType, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Rehearsal() when $default != null:
-return $default(_that.id,_that.name,_that.place,_that.date,_that.startTime,_that.endTime,_that.groupType,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.place,_that.address,_that.room,_that.date,_that.startTime,_that.endTime,_that.groupType,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -188,10 +190,10 @@ return $default(_that.id,_that.name,_that.place,_that.date,_that.startTime,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? name,  String? place,  String? date, @JsonKey(name: 'start_time')  String? startTime, @JsonKey(name: 'end_time')  String? endTime, @JsonKey(name: 'group_type')  GroupType groupType, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? name,  String? place,  String? address,  String? room,  String? date, @JsonKey(name: 'start_time')  String? startTime, @JsonKey(name: 'end_time')  String? endTime, @JsonKey(name: 'group_type')  GroupType groupType, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Rehearsal():
-return $default(_that.id,_that.name,_that.place,_that.date,_that.startTime,_that.endTime,_that.groupType,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.place,_that.address,_that.room,_that.date,_that.startTime,_that.endTime,_that.groupType,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +210,10 @@ return $default(_that.id,_that.name,_that.place,_that.date,_that.startTime,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? name,  String? place,  String? date, @JsonKey(name: 'start_time')  String? startTime, @JsonKey(name: 'end_time')  String? endTime, @JsonKey(name: 'group_type')  GroupType groupType, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? name,  String? place,  String? address,  String? room,  String? date, @JsonKey(name: 'start_time')  String? startTime, @JsonKey(name: 'end_time')  String? endTime, @JsonKey(name: 'group_type')  GroupType groupType, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Rehearsal() when $default != null:
-return $default(_that.id,_that.name,_that.place,_that.date,_that.startTime,_that.endTime,_that.groupType,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.place,_that.address,_that.room,_that.date,_that.startTime,_that.endTime,_that.groupType,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -223,12 +225,14 @@ return $default(_that.id,_that.name,_that.place,_that.date,_that.startTime,_that
 @JsonSerializable()
 
 class _Rehearsal implements Rehearsal {
-  const _Rehearsal({required this.id, this.name, this.place, this.date, @JsonKey(name: 'start_time') this.startTime, @JsonKey(name: 'end_time') this.endTime, @JsonKey(name: 'group_type') required this.groupType, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _Rehearsal({required this.id, this.name, this.place, this.address, this.room, this.date, @JsonKey(name: 'start_time') this.startTime, @JsonKey(name: 'end_time') this.endTime, @JsonKey(name: 'group_type') required this.groupType, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
   factory _Rehearsal.fromJson(Map<String, dynamic> json) => _$RehearsalFromJson(json);
 
 @override final  String id;
 @override final  String? name;
 @override final  String? place;
+@override final  String? address;
+@override final  String? room;
 @override final  String? date;
 @override@JsonKey(name: 'start_time') final  String? startTime;
 @override@JsonKey(name: 'end_time') final  String? endTime;
@@ -249,18 +253,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Rehearsal&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.place, place) || other.place == place)&&(identical(other.date, date) || other.date == date)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.groupType, groupType) || other.groupType == groupType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Rehearsal&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.place, place) || other.place == place)&&(identical(other.address, address) || other.address == address)&&(identical(other.room, room) || other.room == room)&&(identical(other.date, date) || other.date == date)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.groupType, groupType) || other.groupType == groupType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,place,date,startTime,endTime,groupType,createdAt,updatedAt);
+    return Object.hash(runtimeType,id,name,place,address,room,date,startTime,endTime,groupType,createdAt,updatedAt);
 }
 
 @override
 String toString() {
-    return 'Rehearsal(id: $id, name: $name, place: $place, date: $date, startTime: $startTime, endTime: $endTime, groupType: $groupType, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Rehearsal(id: $id, name: $name, place: $place, address: $address, room: $room, date: $date, startTime: $startTime, endTime: $endTime, groupType: $groupType, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -271,7 +275,7 @@ abstract mixin class _$RehearsalCopyWith<$Res> implements $RehearsalCopyWith<$Re
   factory _$RehearsalCopyWith(_Rehearsal value, $Res Function(_Rehearsal) _then) = __$RehearsalCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? name, String? place, String? date,@JsonKey(name: 'start_time') String? startTime,@JsonKey(name: 'end_time') String? endTime,@JsonKey(name: 'group_type') GroupType groupType,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
+ String id, String? name, String? place, String? address, String? room, String? date,@JsonKey(name: 'start_time') String? startTime,@JsonKey(name: 'end_time') String? endTime,@JsonKey(name: 'group_type') GroupType groupType,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
 });
 
 
@@ -288,11 +292,13 @@ class __$RehearsalCopyWithImpl<$Res>
 
 /// Create a copy of Rehearsal
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = freezed,Object? place = freezed,Object? date = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? groupType = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = freezed,Object? place = freezed,Object? address = freezed,Object? room = freezed,Object? date = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? groupType = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_Rehearsal(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,place: freezed == place ? _self.place : place // ignore: cast_nullable_to_non_nullable
+as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,room: freezed == room ? _self.room : room // ignore: cast_nullable_to_non_nullable
 as String?,date: freezed == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String?,startTime: freezed == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as String?,endTime: freezed == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable

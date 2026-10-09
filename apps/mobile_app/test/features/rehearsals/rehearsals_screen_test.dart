@@ -33,6 +33,16 @@ List<Rehearsal> _rows() => [
     startTime: '19:30:00',
     groupType: GroupType.orchestre,
   ),
+  Rehearsal(
+    id: 'rehearsal-test-c',
+    name: 'Répétition test conservatoire',
+    place: 'Conservatoire de test',
+    address: '1 place de l’Exemple, 99999 Testville',
+    room: 'Salle 12',
+    date: _day(5),
+    startTime: '19:30:00',
+    groupType: GroupType.orchestre,
+  ),
 ];
 
 Finder _pill(GroupType group) =>
@@ -59,6 +69,12 @@ void main() {
     expect(find.text('Demain'), findsOneWidget);
     expect(find.text('20 h – 22 h · Salle de test'), findsOneWidget);
     expect(find.text('19 h 30 · Salle de test'), findsOneWidget);
+    // The room reads with the place; the address stays out of the list.
+    expect(
+      find.text('19 h 30 · Conservatoire de test · Salle 12'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('place de l’Exemple'), findsNothing);
     expect(find.byTooltip('Calendrier complet'), findsOneWidget);
     expect(find.byTooltip('Déconnexion'), findsOneWidget);
   });
