@@ -166,6 +166,16 @@ export const editUserFormSchema = z.object({
 });
 export type EditUserFormValues = z.output<typeof editUserFormSchema>;
 
+/** « Changer l'e-mail » on a member's page (superadmins). */
+export const changeEmailFormSchema = z.object({
+  email: z
+    .string({ error: "La nouvelle adresse est requise" })
+    .trim()
+    .min(1, "La nouvelle adresse est requise")
+    .pipe(z.email("Format d'email invalide")),
+});
+export type ChangeEmailFormValues = z.output<typeof changeEmailFormSchema>;
+
 /** One row of the invitation list (InviteUsersDialog). */
 export const invitationEntrySchema = z.object({
   email: z.email("Format d'email invalide"),

@@ -25,6 +25,7 @@ import { useUsers } from "@/hooks/useUsers";
 import type { User } from "@/types/user";
 import {
   deletionBlocker,
+  emailChangeBlocker,
   FIELD_NAMES,
   firstNameOf,
   formatDayFr,
@@ -122,6 +123,8 @@ export default function MemberPage() {
         <div className="flex min-w-0 flex-col gap-6">
           <ContactCard
             user={user}
+            emailBlocker={emailChangeBlocker(actor)}
+            onEmail={() => dialogs.openEmail(user)}
             onRename={() => dialogs.openRename(user)}
             onPhoto={() => dialogs.openPhoto(user)}
           />
@@ -373,10 +376,15 @@ function DifferenceRow({ change }: { change: FieldChange }) {
 
 function ContactCard({
   user,
+  emailBlocker,
+  onEmail,
   onRename,
   onPhoto,
 }: {
   user: User;
+  /** Why this admin cannot change the email, or null when they can. */
+  emailBlocker: string | null;
+  onEmail: () => void;
   onRename: () => void;
   onPhoto: () => void;
 }) {
@@ -399,6 +407,17 @@ function ContactCard({
           <span className="text-note text-muted-foreground">
             Sert à se connecter
           </span>
+          {emailBlocker ? (
+            <ProvenanceNote icon={Shield}>{emailBlocker}</ProvenanceNote>
+          ) : (
+            <Button
+              variant="link"
+              className="h-auto self-start p-0"
+              onClick={onEmail}
+            >
+              Changer l’e-mail…
+            </Button>
+          )}
         </Fact>
         <Fact label="Nom affiché">
           <span>{memberName(user)}</span>

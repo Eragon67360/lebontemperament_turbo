@@ -1,12 +1,14 @@
 "use client";
 
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
+import { ChangeEmailDialog } from "@/components/users/ChangeEmailDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
 import { RoleDialog } from "@/components/users/RoleDialog";
 import {
   useDeleteUser,
   useUpdateUserDisplayName,
+  useUpdateUserEmail,
   useUpdateUserRole,
 } from "@/hooks/useUsers";
 import type { User } from "@/types/user";
@@ -15,8 +17,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 /**
- * The dialogs a member can be the subject of (role, name, photo, permanent
- * deletion), shared by the list's « ⋯ » menu and the member page. Each one
+ * The dialogs a member can be the subject of (role, name, sign-in email,
+ * photo, permanent deletion), shared by the list's « ⋯ » menu and the member page. Each one
  * names the person; the API checks every rule again.
  */
 export function useMemberDialogs({
@@ -28,6 +30,7 @@ export function useMemberDialogs({
 }) {
   const [roleUser, setRoleUser] = useState<User | null>(null);
   const [renameUser, setRenameUser] = useState<User | null>(null);
+  const [emailUser, setEmailUser] = useState<User | null>(null);
   const [photoUser, setPhotoUser] = useState<User | null>(null);
   // Kept while the dialog closes, so its text never empties.
   const [deleting, setDeleting] = useState<User | null>(null);
@@ -35,6 +38,7 @@ export function useMemberDialogs({
 
   const updateRole = useUpdateUserRole();
   const updateName = useUpdateUserDisplayName();
+  const updateEmail = useUpdateUserEmail();
   const deleteUser = useDeleteUser();
 
   const saveRole = async (user: User, role: Role) => {
@@ -62,6 +66,16 @@ export function useMemberDialogs({
         description: error instanceof Error ? error.message : undefined,
       });
     }
+  };
+
+  // Errors stay in the dialog (it shows the API's reason, e.g. a taken address).
+  const saveEmail = async (user: User, email: string) => {
+    const { email: saved } = await updateEmail.mutateAsync({
+      userId: user.id,
+      email,
+    });
+    toast.success(`${memberName(user)} se connecte désormais avec ${saved}`);
+    setEmailUser(null);
   };
 
   const confirmDelete = async () => {
@@ -96,6 +110,12 @@ export function useMemberDialogs({
         onClose={() => setRenameUser(null)}
         onSubmit={saveName}
       />
+      <ChangeEmailDialog
+        user={emailUser}
+        onOpenChange={(open) => !open && setEmailUser(null)}
+        onSubmit={saveEmail}
+        isPending={updateEmail.isPending}
+      />
       <ProfilePictureDialog
         userId={photoUser?.id || ""}
         currentAvatar={photoUser?.avatar}
@@ -123,6 +143,7 @@ export function useMemberDialogs({
   return {
     openRole: setRoleUser,
     openRename: setRenameUser,
+    openEmail: setEmailUser,
     openPhoto: setPhotoUser,
     openDelete: (user: User) => {
       setDeleting(user);

@@ -148,6 +148,33 @@ export function useUpdateUserDisplayName() {
   });
 }
 
+// UPDATE a member's sign-in email (superadmins; the API checks it)
+export function useUpdateUserEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { userId: string; email: string }) => {
+      const response = await fetch("/api/users/email", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || "L'adresse n'a pas été changée");
+      }
+
+      return response.json() as Promise<{ email: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      // A superadmin may change their own address.
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
+  });
+}
+
 // INVITE users (one request, batched server-side)
 export interface InvitationResult {
   email: string;

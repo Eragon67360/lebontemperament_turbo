@@ -130,3 +130,19 @@ export function decideUserDeletion(actor: Actor, target: Target): Decision {
   }
   return { allowed: true };
 }
+
+/**
+ * Sign-in email change (PATCH /api/users/email): applied at once, with no
+ * confirmation sent to either address, so whoever sets it can take over the
+ * account: superadmins only. A superadmin may change their own.
+ */
+export function decideEmailChange(actor: Actor): Decision {
+  if (!isAdminRole(actor.role)) return deny(403, "Non autorisé");
+  if (actor.role !== "superadmin") {
+    return deny(
+      403,
+      "Seul un super administrateur peut changer l'email d'un compte",
+    );
+  }
+  return { allowed: true };
+}
