@@ -279,8 +279,12 @@ serve(async (req) => {
 
     const now = new Date();
     const timeMin = now.toISOString();
+    // The write-back plan previews the real run, which has no limit: every
+    // future event. Other test runs stay on the next 60 days.
     const timeMaxDate =
-      mode === "test" || mode === "dry-run" ? addDays(now, 60) : undefined;
+      (mode === "test" || mode === "dry-run") && writeback.kind !== "plan"
+        ? addDays(now, 60)
+        : undefined;
     const timeMax = timeMaxDate?.toISOString();
     const parisToday = getParisToday(now);
     const parisTimeMax = timeMaxDate ? getParisToday(timeMaxDate) : undefined;
@@ -584,8 +588,12 @@ serve(async (req) => {
     }
 
     const hasSuccessfulRun = await hasSuccessfulRealRun(supabase);
+    // A one-event write-back try is manual: it never notifies members.
     const silencePush =
-      mode === "test" || !hasSuccessfulRun || wantsSilence(req);
+      mode === "test" ||
+      !hasSuccessfulRun ||
+      wantsSilence(req) ||
+      writeback.kind === "event";
     log("write_start", {
       mode,
       upserts: upserts.length,

@@ -106,11 +106,11 @@ Off by default. When on, the sync also writes the place it settled on into the e
 
 Switches:
 
-| What                                       | How                                                                                                                                      |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan only (nothing written, nothing saved) | `?mode=dry-run&writeback=plan`: re-reads every event of the next 60 days and returns `writebacks: [{event_id, date, summary, from, to}]` |
-| One real try                               | `?mode=cron&writeback_event=<google event id>`: re-reads that event even if unchanged and writes only its location                       |
-| Scheduled runs                             | secret `CALENDAR_WRITEBACK=1` on the function                                                                                            |
+| What                                       | How                                                                                                                                           |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan only (nothing written, nothing saved) | `?mode=dry-run&writeback=plan`: re-reads every future event (no 60-day limit) and returns `writebacks: [{event_id, date, summary, from, to}]` |
+| One real try                               | `?mode=cron&writeback_event=<google event id>`: re-reads that event even if unchanged and writes only its location (never notifies members)   |
+| Scheduled runs                             | secret `CALENDAR_WRITEBACK=1` on the function                                                                                                 |
 
 Needs, once, outside the code: the calendar shared with the service account (`client_email` of `GOOGLE_SERVICE_ACCOUNT_JSON`) with « Make changes to events » instead of « See all event details ». The code then asks Google for the `calendar.events` scope for the write only; reads keep using `calendar.readonly`. Never run it from staging or a test against the real calendar: Google is shared.
 
