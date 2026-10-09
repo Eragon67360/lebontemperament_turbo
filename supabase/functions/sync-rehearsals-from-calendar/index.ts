@@ -6,6 +6,7 @@ import { addDays, getParisToday, isAllDayEvent } from "./datetime.ts";
 import { fetchCalendarEvents, patchEventLocations } from "./google-calendar.ts";
 import { extractRehearsalFields } from "./llm-extract.ts";
 import {
+  addressToFill,
   adminEditIsNewest,
   locationFromRow,
   sameLocation,
@@ -703,6 +704,44 @@ serve(async (req) => {
             event_id: edit.event.id,
             google_updated_at: updatedByEvent.get(edit.event.id) ?? null,
           }));
+        // A known place typed in the admin has no address in the database
+        // (the 2.0.140 form lacks the field): fill it, silently, so
+        // « Itinéraire » opens the real address. The same call stamps the row.
+        const fills: RehearsalUpsert[] = [];
+        for (const edit of adminEdits) {
+          const filled = marks.some((mark) => mark.event_id === edit.event.id)
+            ? addressToFill(edit.row)
+            : null;
+          if (!filled) continue;
+          fills.push({
+            name: edit.row.name,
+            place: edit.row.place,
+            address: filled,
+            room: edit.row.room ?? null,
+            date: edit.row.date,
+            start_time: edit.row.start_time,
+            end_time: edit.row.end_time,
+            group_type: edit.row.group_type,
+            event_id: edit.event.id,
+            google_updated_at:
+              updatedByEvent.get(edit.event.id) ??
+              edit.row.google_updated_at ??
+              edit.event.updated,
+          });
+        }
+        if (fills.length > 0) {
+          const { error: fillError } = await supabase.rpc(
+            "rehearsals_sync_write",
+            { p_upserts: fills, p_delete_ids: [], p_silence_push: true },
+          );
+          if (fillError) {
+            stats.errors.push({
+              phase: "write",
+              message: `Filling known addresses: ${fillError.message}`,
+            });
+            log("fill_failed", { message: fillError.message });
+          }
+        }
         const { error: markError } = await supabase.rpc(
           "rehearsals_mark_calendar_synced",
           { p_marks: marks },

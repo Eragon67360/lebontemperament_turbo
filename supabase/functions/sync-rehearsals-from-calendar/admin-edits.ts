@@ -45,6 +45,25 @@ export function adminEditIsNewest(
   );
 }
 
+function knownPlaceFor(place: string) {
+  return KNOWN_PLACES.find(
+    (candidate) => fold(candidate.place) === fold(place.trim()),
+  );
+}
+
+/**
+ * The address the database should hold for a row whose place is a known place
+ * but whose address is missing or another one's (the 2.0.140 admin form has no
+ * address field); `null` when nothing needs filling.
+ */
+export function addressToFill(
+  row: Pick<RehearsalRow, "place" | "address">,
+): string | null {
+  const known = knownPlaceFor(row.place);
+  if (!known) return null;
+  return fold(row.address ?? "") === fold(known.address) ? null : known.address;
+}
+
 /**
  * What the Google event's `location` should say for this row, or `null` when
  * the row cannot be trusted to name one place (nothing is written then).
@@ -52,12 +71,13 @@ export function adminEditIsNewest(
  * The admin form of release 2.0.140 changes `place` and leaves `address`
  * alone, so an edited row can carry the address of the place it used to be:
  *
- * - the place is a known place: its own address, whatever the row holds;
+ * - the place is a known place: its own address, whatever the row holds
+ *   (even none);
  * - the address names the place (« Le Freihof, 45 rue… » for « Freihof,
  *   Wangen »): the address;
  * - the address is a known place's address but the place is another one: the
  *   address is stale, the place alone is written;
- * - no address: the place;
+ * - no address (an unknown place): the place;
  * - any other address (a street for a place that does not name it): the
  *   place then the address when Google does not say that street yet (typed
  *   with the place), `null` when it does (it may be the old place's).
@@ -74,18 +94,16 @@ export function locationFromRow(
   const room = (row.room ?? "").trim();
 
   let base: string;
+  const known = knownPlaceFor(place);
   if (place === PLACEHOLDER_PLACE || !place) {
     return "";
+  } else if (known) {
+    base = known.address;
   } else if (!address) {
     base = place;
   } else {
-    const known = KNOWN_PLACES.find(
-      (candidate) => fold(candidate.place) === fold(place),
-    );
     const shortName = fold(place.split(",")[0]);
-    if (known) {
-      base = known.address;
-    } else if (shortName && fold(address).includes(shortName)) {
+    if (shortName && fold(address).includes(shortName)) {
       base = address;
     } else if (
       KNOWN_PLACES.some(
