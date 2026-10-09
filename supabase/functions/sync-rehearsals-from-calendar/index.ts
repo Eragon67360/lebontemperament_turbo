@@ -3,8 +3,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { chunk, mapSettledWithConcurrency } from "./concurrency.ts";
 import { addDays, getParisToday, isAllDayEvent } from "./datetime.ts";
-import { fetchCalendarEvents } from "./google-calendar.ts";
+import { fetchCalendarEvents, patchEventLocations } from "./google-calendar.ts";
 import { extractRehearsalFields } from "./llm-extract.ts";
+import { calendarLocation } from "./place-rules.ts";
 import {
   resolveRehearsalTimes,
   type ResolvedRehearsalTimes,
@@ -58,6 +59,50 @@ function getMode(req: Request): SyncMode {
 /** `?silence=1`: no push at all, for a one-off backfill (needs the secret). */
 function wantsSilence(req: Request): boolean {
   return new URL(req.url).searchParams.get("silence") === "1";
+}
+
+/**
+ * Writing the known places back into Google Calendar:
+ * - off by default;
+ * - `CALENDAR_WRITEBACK=1` turns it on for the scheduled runs;
+ * - `?mode=dry-run&writeback=plan` re-reads every event and only lists what
+ *   would be written (nothing is written, in Google or in the database);
+ * - `?writeback_event=<google event id>` writes that one event (re-read even if
+ *   unchanged) whatever the setting, for the first real try.
+ */
+type Writeback =
+  | { kind: "off" }
+  | { kind: "plan" }
+  | { kind: "all" }
+  | { kind: "event"; eventId: string };
+
+function getWriteback(req: Request, mode: SyncMode): Writeback {
+  const params = new URL(req.url).searchParams;
+  if (params.get("writeback") === "plan") {
+    if (mode !== "dry-run") {
+      throw new Error("writeback=plan only works with mode=dry-run.");
+    }
+    return { kind: "plan" };
+  }
+  const eventId = params.get("writeback_event");
+  if (eventId) {
+    if (mode !== "cron") {
+      throw new Error("writeback_event only works with mode=cron.");
+    }
+    return { kind: "event", eventId };
+  }
+  if (mode === "cron" && Deno.env.get("CALENDAR_WRITEBACK") === "1") {
+    return { kind: "all" };
+  }
+  return { kind: "off" };
+}
+
+interface PlannedWriteback {
+  event_id: string;
+  date: string;
+  summary: string;
+  from: string;
+  to: string;
 }
 
 function requireEnv(name: string): string {
@@ -149,6 +194,7 @@ function responsePayload(
   syncLogId: string | null,
   sample: RehearsalUpsert[],
   plan?: { upserts: number; deletes: number },
+  writebacks?: PlannedWriteback[],
 ) {
   return {
     mode,
@@ -164,6 +210,7 @@ function responsePayload(
     errors: stats.errors,
     sample: mode === "cron" ? undefined : sample.slice(0, 3),
     plan,
+    writebacks,
     sync_log_id: syncLogId,
   };
 }
@@ -191,7 +238,12 @@ serve(async (req) => {
 
   try {
     mode = getMode(req);
-    log("request_received", { mode, method: req.method });
+    const writeback = getWriteback(req, mode);
+    log("request_received", {
+      mode,
+      method: req.method,
+      writeback: writeback.kind,
+    });
 
     const syncSecret = requireEnv("SYNC_CRON_SECRET");
     if (req.headers.get("x-sync-secret") !== syncSecret) {
@@ -262,6 +314,7 @@ serve(async (req) => {
     log("db_synced_loaded", { count: dbSynced.length });
 
     const upserts: RehearsalUpsert[] = [];
+    const plannedWritebacks: PlannedWriteback[] = [];
     const reclassifiedDeleteIds: string[] = [];
     let skippedCancelled = 0;
     let skippedUnchanged = 0;
@@ -278,6 +331,8 @@ serve(async (req) => {
           upsert: RehearsalUpsert;
           times: ResolvedRehearsalTimes;
           existing: boolean;
+          /** The location to write into the Google event, if it differs. */
+          writeLocation: string | null;
         };
 
     // Cheap checks stay sequential; only events needing the LLM go in the pool.
@@ -287,7 +342,12 @@ serve(async (req) => {
       if (event.status === "cancelled") return { kind: "cancelled" };
 
       const existing = dbByEventId.get(event.id);
-      if (!hasGoogleUpdate(existing, event)) return { kind: "unchanged" };
+      const forced =
+        writeback.kind === "plan" ||
+        (writeback.kind === "event" && writeback.eventId === event.id);
+      if (!forced && !hasGoogleUpdate(existing, event)) {
+        return { kind: "unchanged" };
+      }
 
       const extracted = await extractRehearsalFields(openAiKey, event);
 
@@ -306,6 +366,8 @@ serve(async (req) => {
         kind: "upsert",
         times,
         existing: Boolean(existing),
+        writeLocation:
+          writeback.kind === "off" ? null : calendarLocation(event, extracted),
         upsert: {
           date: times.date,
           start_time: times.start_time,
@@ -386,6 +448,15 @@ serve(async (req) => {
           break;
         case "upsert":
           upserts.push(outcome.upsert);
+          if (outcome.writeLocation) {
+            plannedWritebacks.push({
+              event_id: event.id,
+              date: outcome.times.date,
+              summary: event.summary ?? "",
+              from: event.location ?? "",
+              to: outcome.writeLocation,
+            });
+          }
           log("event_queued", {
             event_id: event.id,
             group_type: outcome.upsert.group_type,
@@ -435,10 +506,15 @@ serve(async (req) => {
       );
 
       return jsonResponse(
-        responsePayload(mode, false, stats, null, upserts, {
-          upserts: upserts.length,
-          deletes: deleteIds.length,
-        }),
+        responsePayload(
+          mode,
+          false,
+          stats,
+          null,
+          upserts,
+          { upserts: upserts.length, deletes: deleteIds.length },
+          writeback.kind === "plan" ? plannedWritebacks : undefined,
+        ),
       );
     }
 
@@ -506,6 +582,39 @@ serve(async (req) => {
       );
     }
 
+    // The database already holds the settled place; now the calendar says the
+    // same. A failure here is recorded and does not undo anything.
+    const writebackDone: PlannedWriteback[] = [];
+    if (writeback.kind === "all" || writeback.kind === "event") {
+      const wanted = plannedWritebacks.filter(
+        (item) =>
+          writeback.kind === "all" || item.event_id === writeback.eventId,
+      );
+      const results = await patchEventLocations({
+        calendarId,
+        serviceAccountJson,
+        patches: wanted.map((item) => ({
+          eventId: item.event_id,
+          location: item.to,
+        })),
+      });
+      results.forEach((result, index) => {
+        if (result.ok) {
+          writebackDone.push(wanted[index]);
+        } else {
+          stats.errors.push({
+            event_id: result.eventId,
+            phase: "writeback",
+            message: result.message ?? "Google refused the location update.",
+          });
+        }
+      });
+      log("writeback_done", {
+        asked: wanted.length,
+        written: writebackDone.length,
+      });
+    }
+
     const finalStatus = stats.errors.length > 0 ? "partial" : "success";
     await finalizeSyncLog(supabase, logId, stats, finalStatus);
 
@@ -524,7 +633,17 @@ serve(async (req) => {
       }),
     );
 
-    return jsonResponse(responsePayload(mode, true, stats, logId, upserts));
+    return jsonResponse(
+      responsePayload(
+        mode,
+        true,
+        stats,
+        logId,
+        upserts,
+        undefined,
+        writeback.kind === "off" ? undefined : writebackDone,
+      ),
+    );
   } catch (error) {
     stats.errors.push({
       phase: "google",

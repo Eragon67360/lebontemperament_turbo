@@ -3,6 +3,8 @@ import { importPKCS8, SignJWT } from "npm:jose@5.2.0";
 import type { GoogleCalendarEvent } from "./types.ts";
 
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+// Only asked for when the location write-back runs.
+const CALENDAR_WRITE_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 const DEFAULT_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const EVENTS_BASE = "https://www.googleapis.com/calendar/v3/calendars";
 
@@ -61,13 +63,16 @@ function parseServiceAccount(rawJson: string): ServiceAccount {
   };
 }
 
-async function getAccessToken(serviceAccountJson: string): Promise<string> {
+async function getAccessToken(
+  serviceAccountJson: string,
+  scope: string = CALENDAR_SCOPE,
+): Promise<string> {
   const serviceAccount = parseServiceAccount(serviceAccountJson);
   logGoogle("token_request", { client_email: serviceAccount.client_email });
   const privateKey = await importPKCS8(serviceAccount.private_key, "RS256");
   const tokenUri = serviceAccount.token_uri ?? DEFAULT_TOKEN_URI;
 
-  const assertion = await new SignJWT({ scope: CALENDAR_SCOPE })
+  const assertion = await new SignJWT({ scope })
     .setProtectedHeader({ alg: "RS256", typ: "JWT" })
     .setIssuer(serviceAccount.client_email)
     .setAudience(tokenUri)
@@ -160,4 +165,74 @@ export async function fetchCalendarEvents({
   });
 
   return withId;
+}
+
+export interface LocationPatch {
+  eventId: string;
+  location: string;
+}
+
+export interface LocationPatchResult {
+  eventId: string;
+  ok: boolean;
+  message?: string;
+}
+
+interface PatchLocationsOptions {
+  calendarId: string;
+  serviceAccountJson: string;
+  patches: LocationPatch[];
+}
+
+/**
+ * Writes `location` into the given events, one by one, without telling anyone
+ * (`sendUpdates=none`). A failure on one event never stops the others; the
+ * service account needs « Make changes to events » on the calendar.
+ */
+export async function patchEventLocations({
+  calendarId,
+  serviceAccountJson,
+  patches,
+}: PatchLocationsOptions): Promise<LocationPatchResult[]> {
+  if (patches.length === 0) return [];
+  const accessToken = await getAccessToken(
+    serviceAccountJson,
+    CALENDAR_WRITE_SCOPE,
+  );
+  const results: LocationPatchResult[] = [];
+
+  for (const patch of patches) {
+    try {
+      const response = await fetch(
+        `${EVENTS_BASE}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(patch.eventId)}?sendUpdates=none`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ location: patch.location }),
+        },
+      );
+      if (response.ok) {
+        logGoogle("location_patched", { event_id: patch.eventId });
+        results.push({ eventId: patch.eventId, ok: true });
+      } else {
+        const body = (await response
+          .json()
+          .catch(() => ({}))) as EventsResponse;
+        const message = `${response.status} ${body.error?.message ?? response.statusText}`;
+        logGoogle("location_patch_failed", {
+          event_id: patch.eventId,
+          message,
+        });
+        results.push({ eventId: patch.eventId, ok: false, message });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logGoogle("location_patch_failed", { event_id: patch.eventId, message });
+      results.push({ eventId: patch.eventId, ok: false, message });
+    }
+  }
+  return results;
 }

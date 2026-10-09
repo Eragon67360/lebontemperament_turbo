@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import {
   applyPlaceRules,
+  calendarLocation,
   findRoom,
   matchKnownPlace,
   removeRoom,
@@ -183,3 +184,83 @@ Deno.test(
     );
   },
 );
+
+Deno.test(
+  "the known place written back into the calendar is recognised again",
+  () => {
+    const written = {
+      ...base,
+      summary: "Répétition orchestre",
+      location:
+        "Conservatoire de Strasbourg, 1 place Dauphine, 67000 Strasbourg, Salle 12",
+    };
+    const settled = applyPlaceRules(
+      written,
+      answer({
+        place: "Conservatoire",
+        address: "1 place Dauphine",
+        group_type: "Orchestre",
+      }),
+    );
+    assertEquals(settled.place, "Conservatoire de Strasbourg");
+    assertEquals(settled.room, "Salle 12");
+    // Nothing left to write: the calendar already says it.
+    assertEquals(calendarLocation(written, settled), null);
+  },
+);
+
+Deno.test("the calendar location is only written for a known place", () => {
+  const sunday = { ...base, summary: "Dimanche BT" };
+  const settled = applyPlaceRules(
+    sunday,
+    answer({
+      name: "Dimanche BT",
+      place: "À confirmer",
+      group_type: "Choeur complet",
+    }),
+  );
+  assertEquals(
+    calendarLocation(sunday, settled),
+    "Salle des fêtes, 31A rue des Vignes, 67520 Wangen",
+  );
+
+  // Village only: the full address replaces it; the room comes along.
+  const village = {
+    ...base,
+    location: "Nordheim",
+    summary: "Répétition femmes",
+  };
+  assertEquals(
+    calendarLocation(village, applyPlaceRules(village, answer())),
+    "Salle des fêtes, place de la Mairie, 67520 Nordheim",
+  );
+  const withRoom = {
+    ...base,
+    location: "Conservatoire de Strasbourg, salle 12",
+    summary: "Répétition orchestre",
+  };
+  assertEquals(
+    calendarLocation(
+      withRoom,
+      applyPlaceRules(withRoom, answer({ group_type: "Orchestre" })),
+    ),
+    "Conservatoire de Strasbourg, 1 place Dauphine, 67000 Strasbourg, Salle 12",
+  );
+
+  // Never for an admin's own address, an unknown place, an extra with no
+  // place, or something that is not a rehearsal.
+  const own = { ...base, location: "3 rue des Lilas, 67520 Nordheim" };
+  assertEquals(calendarLocation(own, applyPlaceRules(own, answer())), null);
+  const extra = { ...base, summary: "Répétition extra" };
+  assertEquals(
+    calendarLocation(
+      extra,
+      applyPlaceRules(
+        extra,
+        answer({ place: "À confirmer", group_type: "Choeur complet" }),
+      ),
+    ),
+    null,
+  );
+  assertEquals(calendarLocation(sunday, answer({ is_rehearsal: false })), null);
+});

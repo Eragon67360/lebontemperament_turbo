@@ -95,6 +95,27 @@ How they are settled (`place-rules.ts`, after the AI answered):
 
 What admins should write in Google Agenda: in `location`, the village or, better, the complete address (`1 place Dauphine, 67000 Strasbourg`); the room goes in the same field after it (`Conservatoire de Strasbourg, salle 12`) or in the description.
 
+### Writing the known places back into Google Calendar
+
+Off by default. When on, the sync also writes the place it settled on into the event's `location`, so the calendar says what the app says and the next run does not rewrite it:
+
+- only for a **known place** (`KNOWN_PLACES`): the complete address, then the room (`Conservatoire de Strasbourg, 1 place Dauphine, 67000 Strasbourg, Salle 12`). A « Dimanche BT » with no location gets the Wangen salle des fêtes; a village alone (`Nordheim`, `Wangen`) becomes the full address of the place for that group;
+- never an admin's own full address, an unknown place, or an extra rehearsal with no place (those stay empty or « À confirmer » for the admins);
+- only for events the run re-reads (new or changed in Google, or after `3-backfill-future-rehearsals.sql`); the write itself changes the event's `updated`, so the next run re-reads it once, finds the same result and changes nothing (the address written back is recognised as that known place);
+- `sendUpdates=none`: Google tells nobody. A failed write is recorded as a `writeback` error (the run is « partial ») and is not retried until the event is re-read.
+
+Switches:
+
+| What                                       | How                                                                                                                                      |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan only (nothing written, nothing saved) | `?mode=dry-run&writeback=plan`: re-reads every event of the next 60 days and returns `writebacks: [{event_id, date, summary, from, to}]` |
+| One real try                               | `?mode=cron&writeback_event=<google event id>`: re-reads that event even if unchanged and writes only its location                       |
+| Scheduled runs                             | secret `CALENDAR_WRITEBACK=1` on the function                                                                                            |
+
+Needs, once, outside the code: the calendar shared with the service account (`client_email` of `GOOGLE_SERVICE_ACCOUNT_JSON`) with « Make changes to events » instead of « See all event details ». The code then asks Google for the `calendar.events` scope for the write only; reads keep using `calendar.readonly`. Never run it from staging or a test against the real calendar: Google is shared.
+
+Not built yet (phase 2): edits made in the admin panel are to reach Google at the next sync (decided 2026-10-09), not at save time; today the sync still overwrites them from the calendar.
+
 ### Rolling it out
 
 Order: 1) apply the migration `20261009130000_rehearsal_address_room.sql`, 2) deploy the function, 3) run `3-backfill-future-rehearsals.sql`: it sets `google_updated_at = null` on the future synced rehearsals (the sync skips events whose `updated` did not change) and calls the function once with `?mode=cron&silence=1`, so the rows that gain a more precise place (« Nordheim » → « Salle des fêtes, Nordheim ») do not each send « Répétition modifiée ». Without `silence=1` the 07:00 or 19:00 run would notify everyone once per changed rehearsal. The migration alone makes the sync quiet only when name, place, date, hours and group are unchanged (an address or room change).
