@@ -400,7 +400,7 @@ serve(async (req) => {
         stats.errors.push({
           event_id: event.id,
           phase: "extract",
-          message,
+          message: `« ${event.summary ?? "sans titre"} » (${startISO(event).slice(0, 10)}): ${message}`,
         });
         log("event_error", { event_id: event.id, phase: "extract", message });
         return;

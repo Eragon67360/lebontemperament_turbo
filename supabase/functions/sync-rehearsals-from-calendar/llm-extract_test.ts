@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { applyGroupRules, extractRehearsalFields } from "./llm-extract.ts";
+import { LlmExtractionSchema } from "./types.ts";
 
 const event = {
   id: "evt_test",
@@ -164,6 +165,18 @@ Deno.test("an ambiguous « Répétition extra » is the full choir", () => {
     ).group_type,
     "Hommes",
   );
+});
+
+Deno.test("an empty place from the AI becomes « À confirmer »", () => {
+  const parsed = LlmExtractionSchema.parse({
+    is_rehearsal: true,
+    name: "Répétition orchestre",
+    place: "  ",
+    address: "",
+    room: "Salle 12",
+    group_type: "Orchestre",
+  });
+  assertEquals(parsed.place, "À confirmer");
 });
 
 Deno.test(
