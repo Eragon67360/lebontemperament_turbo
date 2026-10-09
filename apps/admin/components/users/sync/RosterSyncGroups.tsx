@@ -268,6 +268,18 @@ export function ToSettleGroup({ items }: { items: ToSettle[] }) {
                   </li>
                 )}
               </ul>
+              {item.kind === "email_changed" && item.profile && (
+                <Button asChild variant="link" className="h-auto min-h-11 px-0">
+                  <Link
+                    href={RouteNames.DASHBOARD.ADMIN.USER(
+                      item.profile.profileId,
+                    )}
+                  >
+                    Ouvrir la fiche de {item.profile.displayName} pour changer
+                    son e-mail
+                  </Link>
+                </Button>
+              )}
             </li>
           ))}
         </ul>

@@ -3,6 +3,7 @@ import type { RosterReview } from "@repo/domain/roster/types";
 import assert from "node:assert/strict";
 import {
   deletionBlocker,
+  emailChangeBlocker,
   filterMembers,
   firstNameOf,
   formatDayFr,
@@ -211,5 +212,7 @@ assert.equal(
 );
 assert.match(deletionBlocker(boss, { id: "boss" }) ?? "", /propre/);
 assert.equal(deletionBlocker(boss, { id: "x" }), null);
+assert.match(emailChangeBlocker(me) ?? "", /super-administrateur/);
+assert.equal(emailChangeBlocker(boss), null);
 
 console.log("members/list: ok");

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   decideAccess,
+  decideEmailChange,
   decideRoleChange,
   decideUserCreation,
   decideUserDeletion,
@@ -107,5 +108,13 @@ assert.equal(status(decideUserDeletion(admin, admin)), 403);
 assert.equal(status(decideUserDeletion(superadmin, otherSuperadmin)), 200);
 assert.equal(status(decideUserDeletion(superadmin, superadmin)), 403);
 assert.equal(status(decideUserDeletion(member, otherAdmin)), 403);
+
+// --- Sign-in email change (PATCH /api/users/email): superadmins only ---
+{
+  const id = "33333333-3333-4333-8333-333333333333";
+  assert.equal(status(decideEmailChange({ id, role: "superadmin" })), 200);
+  assert.equal(status(decideEmailChange({ id, role: "admin" })), 403);
+  assert.equal(status(decideEmailChange({ id, role: "user" })), 403);
+}
 
 console.log("access.test.ts: all assertions passed");

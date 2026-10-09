@@ -55,6 +55,19 @@ test.describe("admin API, anonymous", () => {
   }
 });
 
+// The sign-in email change can take over an account: it must refuse an
+// anonymous caller before reading the body (no account matches NO_ID anyway).
+test("PATCH /api/users/email answers 401 to an anonymous visitor", async ({
+  request,
+}) => {
+  const response = await request.patch("/api/users/email", {
+    data: { userId: NO_ID, email: "nobody@example.org" },
+    maxRedirects: 0,
+  });
+  expect(response.status()).toBe(401);
+  expect(await response.json()).toEqual({ error: expect.any(String) });
+});
+
 test.describe("admin pages, anonymous", () => {
   for (const path of [
     "/dashboard",
