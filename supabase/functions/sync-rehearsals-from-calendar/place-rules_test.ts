@@ -130,3 +130,56 @@ Deno.test("a concert is returned untouched", () => {
     concert,
   );
 });
+
+Deno.test(
+  "a « Dimanche BT » without a location is at the Wangen salle des fêtes",
+  () => {
+    const sunday = { ...base, summary: "Dimanche BT" };
+    assertEquals(
+      matchKnownPlace(sunday, "Choeur complet")?.address,
+      "Salle des fêtes, 31A rue des Vignes, 67520 Wangen",
+    );
+    const result = applyPlaceRules(
+      sunday,
+      answer({
+        name: "Dimanche BT",
+        place: "À confirmer",
+        group_type: "Choeur complet",
+      }),
+    );
+    assertEquals(result.place, "Salle des fêtes, Wangen");
+  },
+);
+
+Deno.test(
+  "an elsewhere « Dimanche BT » and an extra rehearsal are left alone",
+  () => {
+    // Another named place, or a full address: the admin's choice stands.
+    assertEquals(
+      matchKnownPlace(
+        { ...base, summary: "Dimanche BT", location: "Église Saint-Pierre" },
+        "Choeur complet",
+      ),
+      null,
+    );
+    assertEquals(
+      matchKnownPlace(
+        {
+          ...base,
+          summary: "Dimanche BT",
+          location: "Reinacker, 67440 Reutenbourg, France",
+        },
+        "Choeur complet",
+      ),
+      null,
+    );
+    // An extra rehearsal with no place stays « À confirmer » for the admins.
+    assertEquals(
+      matchKnownPlace(
+        { ...base, summary: "Répétition extra" },
+        "Choeur complet",
+      ),
+      null,
+    );
+  },
+);

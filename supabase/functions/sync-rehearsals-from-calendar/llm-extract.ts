@@ -249,13 +249,22 @@ function isTimeout(error: unknown): boolean {
 
 /**
  * A « Dimanche BT » is the full choir's rehearsal day, not the orchestra's:
- * always « Choeur complet », whatever the LLM answered.
+ * always « Choeur complet », whatever the LLM answered. A « Répétition extra »
+ * is the full choir's too, unless the title names another group (then the
+ * LLM's answer stands; it only turns the ambiguous « Tous » into the choir).
  */
 export function applyGroupRules(
   event: GoogleCalendarEvent,
   result: LlmExtraction,
 ): LlmExtraction {
   if (result.is_rehearsal && /\bdimanche\s+bt\b/i.test(event.summary ?? "")) {
+    return { ...result, group_type: "Choeur complet" };
+  }
+  if (
+    result.is_rehearsal &&
+    result.group_type === "Tous" &&
+    /\bextra\b/i.test(event.summary ?? "")
+  ) {
     return { ...result, group_type: "Choeur complet" };
   }
   return result;
