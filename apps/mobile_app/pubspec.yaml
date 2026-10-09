@@ -46,7 +46,7 @@ dependencies:
   flutter_dotenv: ^6.0.1
   get_it: ^9.3.0
   json_annotation: ^4.9.0
-  freezed_annotation: ^2.4.1
+  freezed_annotation: ^3.1.0
   uuid: ^4.6.0
 
   # Firebase (FCM push notifications)
@@ -77,7 +77,7 @@ dev_dependencies:
 
   # Code Generation (Aligned versions for compatibility)
   build_runner: ^2.4.10
-  freezed: ^2.5.2
+  freezed: ^3.1.0
   json_serializable: ^6.8.0
 
 flutter:
