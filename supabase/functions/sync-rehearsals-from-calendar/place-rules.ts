@@ -115,7 +115,13 @@ export function matchKnownPlace(
   group: GroupType,
 ): KnownPlace | null {
   const location = removeRoom(event.location ?? "");
-  if (hasStreetNumber(location)) return null;
+  if (hasStreetNumber(location)) {
+    // Our own address written back into the calendar is still that place.
+    return (
+      KNOWN_PLACES.find((known) => fold(known.address) === fold(location)) ??
+      null
+    );
+  }
 
   const text = fold(
     [event.summary, location, event.description].filter(Boolean).join(" "),
@@ -160,4 +166,28 @@ export function applyPlaceRules(
     return { ...settled, place: known.place, address: known.address };
   }
   return settled;
+}
+
+/**
+ * The text the sync writes into the Google event's `location` so the calendar
+ * says what the app says, or null to leave the event alone. Only a known place
+ * is ever written (the complete address, then the room if there is one): an
+ * admin's own full address, an unknown place and an extra rehearsal with no
+ * place are never touched.
+ */
+export function calendarLocation(
+  event: GoogleCalendarEvent,
+  result: LlmExtraction,
+): string | null {
+  if (!result.is_rehearsal) return null;
+  const known = KNOWN_PLACES.find(
+    (candidate) =>
+      candidate.place === result.place && candidate.address === result.address,
+  );
+  if (!known) return null;
+
+  const target = result.room
+    ? `${known.address}, ${result.room}`
+    : known.address;
+  return (event.location ?? "").trim() === target ? null : target;
 }
