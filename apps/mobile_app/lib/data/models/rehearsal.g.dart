@@ -6,20 +6,19 @@ part of 'rehearsal.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$RehearsalImpl _$$RehearsalImplFromJson(Map<String, dynamic> json) =>
-    _$RehearsalImpl(
-      id: json['id'] as String,
-      name: json['name'] as String?,
-      place: json['place'] as String?,
-      date: json['date'] as String?,
-      startTime: json['start_time'] as String?,
-      endTime: json['end_time'] as String?,
-      groupType: $enumDecode(_$GroupTypeEnumMap, json['group_type']),
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
-    );
+_Rehearsal _$RehearsalFromJson(Map<String, dynamic> json) => _Rehearsal(
+  id: json['id'] as String,
+  name: json['name'] as String?,
+  place: json['place'] as String?,
+  date: json['date'] as String?,
+  startTime: json['start_time'] as String?,
+  endTime: json['end_time'] as String?,
+  groupType: $enumDecode(_$GroupTypeEnumMap, json['group_type']),
+  createdAt: json['created_at'] as String?,
+  updatedAt: json['updated_at'] as String?,
+);
 
-Map<String, dynamic> _$$RehearsalImplToJson(_$RehearsalImpl instance) =>
+Map<String, dynamic> _$RehearsalToJson(_Rehearsal instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,

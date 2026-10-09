@@ -18,7 +18,7 @@ enum Context {
 }
 
 @freezed
-class Concert with _$Concert {
+abstract class Concert with _$Concert {
   const factory Concert({
     required String id,
     String? createdAt,

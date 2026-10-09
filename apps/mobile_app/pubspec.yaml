@@ -42,11 +42,11 @@ dependencies:
   # Utilities
   logger: ^2.8.0
   connectivity_plus: ^7.3.1
-  package_info_plus: ^9.0.1
+  package_info_plus: ^10.2.2
   flutter_dotenv: ^6.0.1
   get_it: ^9.3.0
-  json_annotation: ^4.9.0
-  freezed_annotation: ^2.4.1
+  json_annotation: ^4.12.0
+  freezed_annotation: ^3.1.0
   uuid: ^4.6.0
 
   # Firebase (FCM push notifications)
@@ -63,7 +63,7 @@ dependencies:
   pdfx: ^2.11.0
   geolocator: ^14.0.2
   geocoding: ^5.0.0
-  share_plus: ^12.0.2
+  share_plus: ^13.3.1
   # Screenshots attached to a signalement (system photo picker).
   image_picker: ^1.2.2
 
@@ -76,9 +76,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code Generation (Aligned versions for compatibility)
-  build_runner: ^2.4.10
-  freezed: ^2.5.2
-  json_serializable: ^6.8.0
+  build_runner: ^2.16.2
+  freezed: ^4.0.2
+  json_serializable: ^6.14.1
 
 flutter:
   uses-material-design: true

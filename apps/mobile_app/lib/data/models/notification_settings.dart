@@ -19,7 +19,7 @@ enum NotificationTime {
 }
 
 @freezed
-class NotificationSettings with _$NotificationSettings {
+abstract class NotificationSettings with _$NotificationSettings {
   const factory NotificationSettings({
     @Default(true) bool enabled,
     @Default([NotificationTime.oneDay, NotificationTime.fifteenMinutes])
