@@ -5,12 +5,11 @@ import type { GoogleCalendarEvent, GroupType, LlmExtraction } from "./types.ts";
  * village (« Nordheim »), which sends « Itinéraire » to the middle of the
  * village, so these rehearsals get their real address whatever the AI said.
  *
- * Sources (checked 2026-10-09; confirm with the association before relying on
- * a house number):
+ * Sources (checked 2026-10-09; the owner confirmed all four that day):
  * - Nordheim: nordheim.fr, « Salle des fêtes », place de la Mairie (no number
  *   published; the town hall is 8 place de la Mairie, 67520).
- * - Wangen salle des fêtes: jds.fr, « Salle polyvalente », rue des Vignes,
- *   67520 (no number published).
+ * - Wangen salle des fêtes: 31A rue des Vignes, 67520 (the owner; jds.fr lists
+ *   the « salle polyvalente » on rue des Vignes without a number).
  * - Freihof: Mappy, « Le Refuge Freihof », 45 rue des Vignerons, 67520 Wangen.
  * - Conservatoire: strasbourg.eu, 1 place Dauphine, Strasbourg.
  */
@@ -41,7 +40,7 @@ export const KNOWN_PLACES: readonly KnownPlace[] = [
     id: "wangen_salle_des_fetes",
     when: "Wangen, répétition du chœur complet (dimanche)",
     place: "Salle des fêtes, Wangen",
-    address: "Salle des fêtes, rue des Vignes, 67520 Wangen",
+    address: "Salle des fêtes, 31A rue des Vignes, 67520 Wangen",
     keyword: "wangen",
     groups: ["Choeur complet"],
   },

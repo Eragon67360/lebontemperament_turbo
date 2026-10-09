@@ -32,6 +32,10 @@ Deno.test("the three fixed places", () => {
     "Choeur complet",
   );
   assertEquals(wangenSunday?.place, "Salle des fêtes, Wangen");
+  assertEquals(
+    wangenSunday?.address,
+    "Salle des fêtes, 31A rue des Vignes, 67520 Wangen",
+  );
 
   const wangenSaturday = matchKnownPlace(
     { ...base, summary: "Répétition hommes à Wangen" },
