@@ -24,6 +24,9 @@ export const WEBSITE_PATHS = {
   gallery: "/galerie",
   /** The general assembly page (newest published AG). */
   generalAssembly: "/ag",
+  /** The FAQ and the joining page (rehearsal times). */
+  faq: "/faq",
+  joining: "/rejoindre",
   /** Announcements read by the navigation's donation card. */
   announcementsApi: "/api/announcements",
   sitemap: "/sitemap.xml",
@@ -56,6 +59,10 @@ export const REVALIDATE = {
   announcements: {
     paths: [WEBSITE_PATHS.home, WEBSITE_PATHS.announcementsApi],
   },
+  /** FAQ questions */
+  faq: { paths: [WEBSITE_PATHS.faq] },
+  /** rehearsal times on the joining page */
+  joiningSlots: { paths: [WEBSITE_PATHS.joining] },
   /** YouTube links */
   videos: { paths: [WEBSITE_PATHS.gallery] },
   /** feature flags are read in the root layout: everything, plus the sitemap */

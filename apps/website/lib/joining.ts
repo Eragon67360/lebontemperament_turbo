@@ -1,11 +1,16 @@
+import type { Database } from "@repo/domain/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 /**
  * Facts about joining the ensemble, given by the owner on 2026-10-06 (#334)
  * and checked against the rehearsals table (places, weekdays and times of the
  * 2026-2027 season). The Join page, the FAQ and llms.txt all read them, so
  * search and AI engines get one answer.
  *
- * When the rehearsal pattern changes, update this file: the agenda in the
- * members area stays the reference for exact dates.
+ * The rehearsal slots are now edited in the admin (`listRehearsalSlots`
+ * below; REHEARSAL_SLOTS is their fallback). When the facts change, update
+ * this file: the agenda in the members area stays the reference for exact
+ * dates.
  */
 
 export type RehearsalSlot = {
@@ -64,3 +69,30 @@ export const JOINING_FACTS = {
   anyTime:
     "Vous pouvez nous rejoindre à tout moment de l’année, il n’y a pas de date limite d’inscription.",
 } as const;
+
+/**
+ * The usual rehearsals shown on /rejoindre (public.joining_slots, managed in
+ * the admin under Concerts et site public › « Rejoindre et FAQ »), in the
+ * admin's order. Until the table exists, the list above.
+ */
+export async function listRehearsalSlots(
+  supabase: SupabaseClient<Database>,
+): Promise<readonly RehearsalSlot[]> {
+  const { data, error } = await supabase
+    .from("joining_slots")
+    .select("group_name, day, time_label, place, rhythm")
+    .eq("status", "published")
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Rehearsal slots unavailable:", error.message);
+    return REHEARSAL_SLOTS;
+  }
+  return data.map((row) => ({
+    group: row.group_name,
+    day: row.day,
+    time: row.time_label,
+    place: row.place,
+    rhythm: row.rhythm,
+  }));
+}
