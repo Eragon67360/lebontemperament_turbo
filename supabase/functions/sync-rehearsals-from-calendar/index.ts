@@ -55,6 +55,11 @@ function getMode(req: Request): SyncMode {
   throw new Error(`Unsupported mode: ${raw}`);
 }
 
+/** `?silence=1`: no push at all, for a one-off backfill (needs the secret). */
+function wantsSilence(req: Request): boolean {
+  return new URL(req.url).searchParams.get("silence") === "1";
+}
+
 function requireEnv(name: string): string {
   const value = Deno.env.get(name);
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
@@ -438,7 +443,8 @@ serve(async (req) => {
     }
 
     const hasSuccessfulRun = await hasSuccessfulRealRun(supabase);
-    const silencePush = mode === "test" || !hasSuccessfulRun;
+    const silencePush =
+      mode === "test" || !hasSuccessfulRun || wantsSilence(req);
     log("write_start", {
       mode,
       upserts: upserts.length,
