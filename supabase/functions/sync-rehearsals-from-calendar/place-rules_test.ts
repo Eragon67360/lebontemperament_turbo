@@ -264,3 +264,27 @@ Deno.test("the calendar location is only written for a known place", () => {
   );
   assertEquals(calendarLocation(sunday, answer({ is_rehearsal: false })), null);
 });
+
+Deno.test(
+  "a complete address of the admin's is not replaced by a known place the AI picked",
+  () => {
+    const reutenbourg = {
+      ...base,
+      summary: "Dimanche BT",
+      location: "Reinacker, 67440 Reutenbourg, France",
+    };
+    // The AI read « Dimanche BT » in its prompt and answered the Wangen hall.
+    const aiAnswer = answer({
+      name: "Dimanche BT",
+      place: "Salle des fêtes, Wangen",
+      address: "Salle des fêtes, 31A rue des Vignes, 67520 Wangen",
+      group_type: "Choeur complet",
+    });
+    const settled = applyPlaceRules(reutenbourg, aiAnswer);
+    assertEquals(settled.place, "Reinacker, 67440 Reutenbourg, France");
+    assertEquals(settled.address, "Reinacker, 67440 Reutenbourg, France");
+    // And nothing is written into Google, even for the unsettled answer.
+    assertEquals(calendarLocation(reutenbourg, aiAnswer), null);
+    assertEquals(calendarLocation(reutenbourg, settled), null);
+  },
+);

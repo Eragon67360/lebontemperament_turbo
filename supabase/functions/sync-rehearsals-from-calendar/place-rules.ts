@@ -165,13 +165,28 @@ export function applyPlaceRules(
   if (known) {
     return { ...settled, place: known.place, address: known.address };
   }
+
+  // The AI knows the usual places from its prompt and may pick one for an
+  // event whose own location is a complete address (« Reinacker, 67440
+  // Reutenbourg »): the admin's address stays.
+  const location = removeRoom(event.location ?? "");
+  if (
+    hasStreetNumber(location) &&
+    KNOWN_PLACES.some(
+      (candidate) =>
+        candidate.place === settled.place ||
+        candidate.address === settled.address,
+    )
+  ) {
+    return { ...settled, place: location, address: location };
+  }
   return settled;
 }
 
 /**
  * The text the sync writes into the Google event's `location` so the calendar
  * says what the app says, or null to leave the event alone. Only a known place
- * is ever written (the complete address, then the room if there is one): an
+ * the rules recognise in the event (see `matchKnownPlace`) is ever written (the complete address, then the room if there is one): an
  * admin's own full address, an unknown place and an extra rehearsal with no
  * place are never touched.
  */
@@ -180,11 +195,16 @@ export function calendarLocation(
   result: LlmExtraction,
 ): string | null {
   if (!result.is_rehearsal) return null;
-  const known = KNOWN_PLACES.find(
-    (candidate) =>
-      candidate.place === result.place && candidate.address === result.address,
-  );
-  if (!known) return null;
+  // From the rules, not from the AI's answer: an event whose location is a
+  // complete address of the admin's is never rewritten, whatever the AI said.
+  const known = matchKnownPlace(event, result.group_type);
+  if (
+    !known ||
+    known.place !== result.place ||
+    known.address !== result.address
+  ) {
+    return null;
+  }
 
   const target = result.room
     ? `${known.address}, ${result.room}`
