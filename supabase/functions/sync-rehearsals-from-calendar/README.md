@@ -114,7 +114,15 @@ Switches:
 
 Needs, once, outside the code: the calendar shared with the service account (`client_email` of `GOOGLE_SERVICE_ACCOUNT_JSON`) with « Make changes to events » instead of « See all event details ». The code then asks Google for the `calendar.events` scope for the write only; reads keep using `calendar.readonly`. Never run it from staging or a test against the real calendar: Google is shared.
 
-Not built yet (phase 2): edits made in the admin panel are to reach Google at the next sync (decided 2026-10-09), not at save time; today the sync still overwrites them from the calendar.
+### Admin-panel edits reach Google (phase 2)
+
+Decided 2026-10-09: an admin who edits a synced rehearsal in the admin panel sees the change in Google Calendar at the **next sync** (07:00 or 19:00), not at save time. Needs `CALENDAR_WRITEBACK=1` (or `?writeback=plan` to preview) and the migration `20261009150000_rehearsal_calendar_synced_at.sql` applied **before** the function is deployed (the function selects the new columns).
+
+- The migration adds `rehearsals.calendar_synced_at`: when the sync last wrote or confirmed the row. The table's trigger sets `updated_at = now()` on every update, so a row whose `updated_at` is later than `calendar_synced_at` was edited by hand (`editedByHand`).
+- The edit wins only while Google has not changed since: if the event's `updated` is not later than the row's `updated_at` (`adminEditIsNewest`), the run keeps the database values and writes `locationFromRow` (address, or place, then room) into the event's `location`. If someone edited the event in Google afterwards, the calendar is the newer word and the normal calendar → database sync applies.
+- After the write the run calls `rehearsals_mark_calendar_synced` (quiet: no push) with the event's new `updated`, so the next run does not take our own write for an edit made in Google.
+- Only place, address and room travel to Google; name, group and hours stay edited in Google Calendar. A row holding only « À confirmer » writes nothing.
+- A failed write is a `writeback` error (run « partial »); the edit stays pending and is tried again at the next run.
 
 ### Rolling it out
 

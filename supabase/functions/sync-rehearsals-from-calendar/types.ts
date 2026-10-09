@@ -58,6 +58,10 @@ export interface RehearsalRow {
   group_type: GroupType;
   event_id: string | null;
   google_updated_at: string | null;
+  address: string | null;
+  room: string | null;
+  updated_at: string;
+  calendar_synced_at: string | null;
 }
 
 export interface RehearsalUpsert {

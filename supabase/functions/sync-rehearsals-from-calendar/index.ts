@@ -5,6 +5,11 @@ import { chunk, mapSettledWithConcurrency } from "./concurrency.ts";
 import { addDays, getParisToday, isAllDayEvent } from "./datetime.ts";
 import { fetchCalendarEvents, patchEventLocations } from "./google-calendar.ts";
 import { extractRehearsalFields } from "./llm-extract.ts";
+import {
+  adminEditIsNewest,
+  locationFromRow,
+  sameLocation,
+} from "./admin-edits.ts";
 import { calendarLocation } from "./place-rules.ts";
 import {
   resolveRehearsalTimes,
@@ -103,6 +108,16 @@ interface PlannedWriteback {
   summary: string;
   from: string;
   to: string;
+  /** « calendar_rule »: a known place; « admin_edit »: an edit made in the admin panel. */
+  source: "calendar_rule" | "admin_edit";
+}
+
+/** A rehearsal edited in the admin panel since the sync last wrote it. */
+interface AdminEditPush {
+  event: GoogleCalendarEvent;
+  row: RehearsalRow;
+  location: string;
+  needsPatch: boolean;
 }
 
 function requireEnv(name: string): string {
@@ -293,7 +308,7 @@ serve(async (req) => {
     let syncedQuery = supabase
       .from("rehearsals")
       .select(
-        "id, name, place, date, start_time, end_time, group_type, event_id, google_updated_at",
+        "id, name, place, address, room, date, start_time, end_time, group_type, event_id, google_updated_at, updated_at, calendar_synced_at",
       )
       .not("event_id", "is", null)
       .gte("date", parisToday);
@@ -315,6 +330,8 @@ serve(async (req) => {
 
     const upserts: RehearsalUpsert[] = [];
     const plannedWritebacks: PlannedWriteback[] = [];
+    const adminEdits: AdminEditPush[] = [];
+    let skippedAdminEdit = 0;
     const reclassifiedDeleteIds: string[] = [];
     let skippedCancelled = 0;
     let skippedUnchanged = 0;
@@ -326,6 +343,7 @@ serve(async (req) => {
       | { kind: "unchanged" }
       | { kind: "non_rehearsal"; classifiedName: string; existingId?: string }
       | { kind: "all_day_no_rule" }
+      | { kind: "admin_edit"; row: RehearsalRow; location: string }
       | {
           kind: "upsert";
           upsert: RehearsalUpsert;
@@ -342,6 +360,19 @@ serve(async (req) => {
       if (event.status === "cancelled") return { kind: "cancelled" };
 
       const existing = dbByEventId.get(event.id);
+      // Edited in the admin panel and not newer in Google: the edit goes to
+      // the calendar, the calendar does not overwrite it.
+      if (
+        existing &&
+        (writeback.kind === "all" || writeback.kind === "plan") &&
+        adminEditIsNewest(existing, event)
+      ) {
+        return {
+          kind: "admin_edit",
+          row: existing,
+          location: locationFromRow(existing),
+        };
+      }
       const forced =
         writeback.kind === "plan" ||
         (writeback.kind === "event" && writeback.eventId === event.id);
@@ -431,6 +462,35 @@ serve(async (req) => {
             removes_existing: Boolean(outcome.existingId),
           });
           break;
+        case "admin_edit": {
+          stats.skipped++;
+          skippedAdminEdit++;
+          const needsPatch =
+            outcome.location !== "" &&
+            !sameLocation(outcome.location, event.location ?? "");
+          adminEdits.push({
+            event,
+            row: outcome.row,
+            location: outcome.location,
+            needsPatch,
+          });
+          if (needsPatch) {
+            plannedWritebacks.push({
+              event_id: event.id,
+              date: outcome.row.date,
+              summary: event.summary ?? "",
+              from: event.location ?? "",
+              to: outcome.location,
+              source: "admin_edit",
+            });
+          }
+          log("event_skipped", {
+            event_id: event.id,
+            reason: "edited_in_admin",
+            writes_location: needsPatch,
+          });
+          break;
+        }
         case "all_day_no_rule":
           stats.skipped++;
           skippedAllDayNoRule++;
@@ -455,6 +515,7 @@ serve(async (req) => {
               summary: event.summary ?? "",
               from: event.location ?? "",
               to: outcome.writeLocation,
+              source: "calendar_rule",
             });
           }
           log("event_queued", {
@@ -489,6 +550,7 @@ serve(async (req) => {
       skipped_unchanged: skippedUnchanged,
       skipped_non_rehearsal: skippedNonRehearsal,
       skipped_all_day_no_rule: skippedAllDayNoRule,
+      skipped_edited_in_admin: skippedAdminEdit,
       errors: stats.errors.length,
     });
 
@@ -598,9 +660,11 @@ serve(async (req) => {
           location: item.to,
         })),
       });
+      const updatedByEvent = new Map<string, string | undefined>();
       results.forEach((result, index) => {
         if (result.ok) {
           writebackDone.push(wanted[index]);
+          updatedByEvent.set(result.eventId, result.updated);
         } else {
           stats.errors.push({
             event_id: result.eventId,
@@ -613,6 +677,31 @@ serve(async (req) => {
         asked: wanted.length,
         written: writebackDone.length,
       });
+
+      // Admin edits are confirmed once Google has them (or already had them):
+      // stamp the rows so the same edit is not written again, and keep the
+      // event's new `updated` so our own write is not read back as a change.
+      if (writeback.kind === "all" && adminEdits.length > 0) {
+        const marks = adminEdits
+          .filter(
+            (edit) => !edit.needsPatch || updatedByEvent.has(edit.event.id),
+          )
+          .map((edit) => ({
+            event_id: edit.event.id,
+            google_updated_at: updatedByEvent.get(edit.event.id) ?? null,
+          }));
+        const { error: markError } = await supabase.rpc(
+          "rehearsals_mark_calendar_synced",
+          { p_marks: marks },
+        );
+        if (markError) {
+          stats.errors.push({
+            phase: "write",
+            message: `Marking admin edits as synced: ${markError.message}`,
+          });
+          log("mark_failed", { message: markError.message });
+        }
+      }
     }
 
     const finalStatus = stats.errors.length > 0 ? "partial" : "success";
