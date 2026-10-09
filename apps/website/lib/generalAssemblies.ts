@@ -67,8 +67,8 @@ function linkedDocument(row: LinkedDocument): AssemblyDocument | null {
 }
 
 /**
- * The newest published general assembly, `null` when none is published, or
- * the legacy 2026 AG when the table can't be read.
+ * The newest published general assembly, or the legacy 2026 AG while the
+ * table can't be read or holds no published assembly.
  */
 export async function getCurrentAssembly(
   supabase: SupabaseClient<Database>,
@@ -87,7 +87,7 @@ export async function getCurrentAssembly(
     console.error("General assembly unavailable, showing 2026:", error.message);
     return LEGACY_ASSEMBLY;
   }
-  if (!data) return null;
+  if (!data) return LEGACY_ASSEMBLY;
 
   return {
     heldAt: data.held_at,

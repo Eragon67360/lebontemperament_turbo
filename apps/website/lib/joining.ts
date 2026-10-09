@@ -73,7 +73,8 @@ export const JOINING_FACTS = {
 /**
  * The usual rehearsals shown on /rejoindre (public.joining_slots, managed in
  * the admin under Concerts et site public › « Rejoindre et FAQ »), in the
- * admin's order. Until the table exists, the list above.
+ * admin's order. While the table can't be read or holds no published slot,
+ * the list above.
  */
 export async function listRehearsalSlots(
   supabase: SupabaseClient<Database>,
@@ -88,6 +89,7 @@ export async function listRehearsalSlots(
     console.error("Rehearsal slots unavailable:", error.message);
     return REHEARSAL_SLOTS;
   }
+  if (data.length === 0) return REHEARSAL_SLOTS;
   return data.map((row) => ({
     group: row.group_name,
     day: row.day,
