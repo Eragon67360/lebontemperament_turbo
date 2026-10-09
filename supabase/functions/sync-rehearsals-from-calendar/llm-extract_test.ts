@@ -72,6 +72,8 @@ Deno.test("the request carries an abort signal", async () => {
             is_rehearsal: true,
             name: "Répétition Hommes",
             place: "Salle test",
+            address: "",
+            room: "",
             group_type: "Hommes",
           }),
         },
@@ -99,6 +101,8 @@ Deno.test("a timeout followed by a success still succeeds", async () => {
             is_rehearsal: false,
             name: "Concert",
             place: "Salle test",
+            address: "",
+            room: "",
             group_type: "Tous",
           }),
         },
@@ -132,9 +136,87 @@ Deno.test("a « Dimanche BT » is always the full choir", () => {
     is_rehearsal: true,
     name: "Dimanche BT",
     place: "Wangen",
+    address: "",
+    room: "",
     group_type: "Tous" as const,
   };
   assertEquals(applyGroupRules(dimanche, answer).group_type, "Choeur complet");
   // Other rehearsals keep the LLM's answer.
   assertEquals(applyGroupRules(event, answer).group_type, "Tous");
 });
+
+Deno.test(
+  "a village-only Nordheim women's rehearsal gets its real address",
+  async () => {
+    const nordheim = {
+      ...event,
+      summary: "Répétition femmes",
+      location: "Nordheim",
+    };
+    const answer = JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              is_rehearsal: true,
+              name: "Répétition femmes",
+              place: "Nordheim",
+              address: "",
+              room: "",
+              group_type: "Femmes",
+            }),
+          },
+        },
+      ],
+    });
+    const result = await withFetch(
+      () => Promise.resolve(new Response(answer, { status: 200 })),
+      () => extractRehearsalFields("test-key", nordheim),
+    );
+    assertEquals(result.place, "Salle des fêtes, Nordheim");
+    assertEquals(
+      result.address,
+      "Salle des fêtes, place de la Mairie, 67520 Nordheim",
+    );
+  },
+);
+
+Deno.test(
+  "the request asks for an address and a room, and lists the known places",
+  async () => {
+    let sent = "";
+    const answer = JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              is_rehearsal: false,
+              name: "Concert",
+              place: "Salle test",
+              address: "",
+              room: "",
+              group_type: "Tous",
+            }),
+          },
+        },
+      ],
+    });
+    await withFetch(
+      (_url, init) => {
+        sent = String(init?.body);
+        return Promise.resolve(new Response(answer, { status: 200 }));
+      },
+      () => extractRehearsalFields("test-key", event),
+    );
+    const body = JSON.parse(sent);
+    assertEquals(
+      body.response_format.json_schema.schema.required.includes("address"),
+      true,
+    );
+    assertEquals(
+      body.response_format.json_schema.schema.required.includes("room"),
+      true,
+    );
+    assertEquals(body.messages[0].content.includes("Freihof, Wangen"), true);
+  },
+);

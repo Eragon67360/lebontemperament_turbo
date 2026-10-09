@@ -61,7 +61,11 @@ export function RehearsalRow({
             {rehearsal.place && (
               <span className="inline-flex min-w-0 items-center gap-1">
                 <MapPin className="size-3.5 shrink-0" aria-hidden />
-                <span className="truncate">{rehearsal.place}</span>
+                <span className="truncate">
+                  {rehearsal.room
+                    ? `${rehearsal.place} · ${rehearsal.room}`
+                    : rehearsal.place}
+                </span>
               </span>
             )}
           </div>

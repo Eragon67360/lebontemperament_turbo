@@ -75,3 +75,24 @@ After the LLM confirms `is_rehearsal`, known patterns get fixed default times in
 Add new rules in `ALL_DAY_REHEARSAL_RULES` inside `rehearsal-times.ts`.
 All-day events classified as rehearsals but without a matching rule are skipped
 with `phase: "times"` in sync logs.
+
+## Address and room
+
+The event's `location` is the source. Each synced rehearsal gets:
+
+- `place`: the short name members read (« Salle des fêtes, Nordheim »);
+- `address`: the complete postal address the app's « Itinéraire » opens (null = it searches `place`);
+- `room`: the room inside the building (« Salle 12 »), shown with the rehearsal and **never** sent to the maps app.
+
+How they are settled (`place-rules.ts`, after the AI answered):
+
+1. A numbered room (« salle 12 », « Salle n° 104 », « salle B12 ») found in the location, description or summary moves to `room` and is removed from `place` and `address`. A named venue (« Salle des fêtes », « Salle Sainte-Cécile ») is not a room.
+2. **Known places** (`KNOWN_PLACES`, also listed in the AI prompt from the same table) override `place` and `address` when the event mentions the village and the AI found the group: Nordheim + Femmes, Wangen + Choeur complet (salle des fêtes), Wangen + Hommes (Freihof), and the Conservatoire de Strasbourg. Add a place by adding a row.
+3. A `location` that already holds a street number is a complete address typed by an admin: it is never overridden.
+4. Elsewhere the AI may fill `address` only for a well-known public venue; it must leave it empty rather than invent a number.
+
+What admins should write in Google Agenda: in `location`, the village or, better, the complete address (`1 place Dauphine, 67000 Strasbourg`); the room goes in the same field after it (`Conservatoire de Strasbourg, salle 12`) or in the description.
+
+### Rolling it out
+
+Order: 1) apply the migration `20261009130000_rehearsal_address_room.sql`, 2) deploy the function, 3) set `google_updated_at = null` on the future synced rehearsals so the next hourly run reads them again (the sync skips events whose `updated` did not change). The migration makes the sync quiet when a row's name, place, date, hours and group did not change, so filling addresses sends no « Répétition modifiée » push.

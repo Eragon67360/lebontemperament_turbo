@@ -368,7 +368,8 @@ class _NextRehearsalHero extends StatelessWidget {
       if (date != null) longDate(date),
       frenchTimeRange(rehearsal.startTime, rehearsal.endTime),
     ].where((s) => s.isNotEmpty).join(' · ');
-    final place = rehearsal.place;
+    final place = rehearsal.placeWithRoom;
+    final directions = rehearsal.directionsQuery;
 
     // No card: the next rehearsal sits on the page ground (« Portée »).
     final card = Semantics(
@@ -440,9 +441,9 @@ class _NextRehearsalHero extends StatelessWidget {
           spacing: 10,
           runSpacing: 10,
           children: [
-            if (place != null && place.isNotEmpty)
+            if (directions != null)
               OutlinedButton.icon(
-                onPressed: () => _openMaps(context, place),
+                onPressed: () => _openMaps(context, directions),
                 icon: const Icon(Icons.directions_outlined),
                 label: const Text('Itinéraire'),
               ),
@@ -551,7 +552,7 @@ class _RehearsalRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final date = DateTime.tryParse(rehearsal.date ?? '');
     final time = frenchTimeRange(rehearsal.startTime, rehearsal.endTime);
-    final place = rehearsal.place ?? 'Lieu non défini';
+    final place = rehearsal.placeWithRoom ?? 'Lieu non défini';
 
     return StageCard(
       onTap: onTap,

@@ -61,11 +61,21 @@ export async function PATCH(
     const json = await request.json();
 
     // Validate the request body here if needed
-    const { name, place, date, start_time, end_time, group_type } = json;
+    const { name, place, address, room, date, start_time, end_time } = json;
+    const { group_type } = json;
 
     const { data, error } = await supabase
       .from("rehearsals")
-      .update({ name, place, date, start_time, end_time, group_type })
+      .update({
+        name,
+        place,
+        address,
+        room,
+        date,
+        start_time,
+        end_time,
+        group_type,
+      })
       .eq("id", id)
       .select(REHEARSAL_COLUMNS)
       .single();

@@ -15,6 +15,10 @@ export const LlmExtractionSchema = z.object({
   is_rehearsal: z.boolean(),
   name: z.string().trim().min(1),
   place: z.string().trim().min(1),
+  // Complete postal address for the maps app; "" when unknown.
+  address: z.string().trim(),
+  // Room inside the building (« Salle 12 »); "" when none.
+  room: z.string().trim(),
   group_type: z.enum(GROUP_TYPES),
 });
 
@@ -54,6 +58,8 @@ export interface RehearsalRow {
 export interface RehearsalUpsert {
   name: string;
   place: string;
+  address: string | null;
+  room: string | null;
   date: string;
   start_time: string;
   end_time: string;

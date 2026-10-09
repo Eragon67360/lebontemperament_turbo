@@ -8,7 +8,14 @@ import { NextResponse } from "next/server";
 /** The fields a client may send for a rehearsal (bulk insert). */
 type RehearsalInput = Pick<
   TablesInsert<"rehearsals">,
-  "name" | "place" | "date" | "start_time" | "end_time" | "group_type"
+  | "name"
+  | "place"
+  | "address"
+  | "room"
+  | "date"
+  | "start_time"
+  | "end_time"
+  | "group_type"
 >;
 
 export async function GET() {
@@ -64,6 +71,8 @@ export async function POST(request: Request) {
       const rehearsals = json.map((item: RehearsalInput) => ({
         name: item.name,
         place: item.place,
+        address: item.address,
+        room: item.room,
         date: item.date,
         start_time: item.start_time,
         end_time: item.end_time,
@@ -80,11 +89,23 @@ export async function POST(request: Request) {
       return NextResponse.json(data, { status: 201 });
     } else {
       // Single insert
-      const { name, place, date, start_time, end_time, group_type } = json;
+      const { name, place, address, room, date, start_time, end_time } = json;
+      const { group_type } = json;
 
       const { data, error } = await supabase
         .from("rehearsals")
-        .insert([{ name, place, date, start_time, end_time, group_type }])
+        .insert([
+          {
+            name,
+            place,
+            address,
+            room,
+            date,
+            start_time,
+            end_time,
+            group_type,
+          },
+        ])
         .select(REHEARSAL_COLUMNS)
         .single();
 

@@ -194,7 +194,9 @@ const Calendrier = () => {
                           {rehearsal.name}
                         </h3>
                         <p className="text-foreground/60 text-sm md:text-base">
-                          {rehearsal.place}
+                          {rehearsal.room
+                            ? `${rehearsal.place} · ${rehearsal.room}`
+                            : rehearsal.place}
                         </p>
                       </div>
                       <span
