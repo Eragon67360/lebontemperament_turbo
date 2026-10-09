@@ -1,3 +1,4 @@
+import { KNOWN_PLACES } from "./place-rules.ts";
 import type { GoogleCalendarEvent, RehearsalRow } from "./types.ts";
 
 /** Two timestamps closer than this are the same database statement. */
@@ -45,30 +46,61 @@ export function adminEditIsNewest(
 }
 
 /**
- * What the Google event's `location` should say for this row: the address,
- * with the place's short name in front unless the address already names it,
- * then the room. Empty when the row only holds the placeholder.
+ * What the Google event's `location` should say for this row, or `null` when
+ * the row cannot be trusted to name one place (nothing is written then).
+ *
+ * The admin form of release 2.0.140 changes `place` and leaves `address`
+ * alone, so an edited row can carry the address of the place it used to be:
+ *
+ * - the place is a known place: its own address, whatever the row holds;
+ * - the address names the place (« Le Freihof, 45 rue… » for « Freihof,
+ *   Wangen »): the address;
+ * - the address is a known place's address but the place is another one: the
+ *   address is stale, the place alone is written;
+ * - no address: the place;
+ * - any other address (a street for a place that does not name it): the
+ *   place then the address when Google does not say that street yet (typed
+ *   with the place), `null` when it does (it may be the old place's).
+ *
+ * The room is added at the end. Empty when the row only holds the
+ * placeholder.
  */
 export function locationFromRow(
   row: Pick<RehearsalRow, "place" | "address" | "room">,
-): string {
+  currentLocation = "",
+): string | null {
   const place = row.place.trim();
   const address = (row.address ?? "").trim();
   const room = (row.room ?? "").trim();
 
-  let base = "";
-  if (address) {
-    // « Salle des fêtes, Nordheim » + « Salle des fêtes, place de la Mairie… »:
-    // the address already names the place, so it stands alone.
-    const shortName = fold(place.split(",")[0]);
-    base =
-      shortName && fold(address).includes(shortName)
-        ? address
-        : `${place}, ${address}`;
-  } else if (place && place !== PLACEHOLDER_PLACE) {
+  let base: string;
+  if (place === PLACEHOLDER_PLACE || !place) {
+    return "";
+  } else if (!address) {
     base = place;
+  } else {
+    const known = KNOWN_PLACES.find(
+      (candidate) => fold(candidate.place) === fold(place),
+    );
+    const shortName = fold(place.split(",")[0]);
+    if (known) {
+      base = known.address;
+    } else if (shortName && fold(address).includes(shortName)) {
+      base = address;
+    } else if (
+      KNOWN_PLACES.some(
+        (candidate) => fold(candidate.address) === fold(address),
+      )
+    ) {
+      base = place;
+    } else if (fold(currentLocation).includes(fold(address.split(",")[0]))) {
+      // Google already says this street: the address was not typed with the
+      // new place, so it may be the old place's.
+      return null;
+    } else {
+      base = `${place}, ${address}`;
+    }
   }
-  if (!base) return "";
   return room ? `${base}, ${room}` : base;
 }
 

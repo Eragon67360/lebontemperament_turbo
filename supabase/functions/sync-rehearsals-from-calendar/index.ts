@@ -116,7 +116,8 @@ interface PlannedWriteback {
 interface AdminEditPush {
   event: GoogleCalendarEvent;
   row: RehearsalRow;
-  location: string;
+  /** null: the row does not name one place reliably, nothing is written. */
+  location: string | null;
   needsPatch: boolean;
 }
 
@@ -278,8 +279,12 @@ serve(async (req) => {
 
     const now = new Date();
     const timeMin = now.toISOString();
+    // The write-back plan previews the real run, which has no limit: every
+    // future event. Other test runs stay on the next 60 days.
     const timeMaxDate =
-      mode === "test" || mode === "dry-run" ? addDays(now, 60) : undefined;
+      (mode === "test" || mode === "dry-run") && writeback.kind !== "plan"
+        ? addDays(now, 60)
+        : undefined;
     const timeMax = timeMaxDate?.toISOString();
     const parisToday = getParisToday(now);
     const parisTimeMax = timeMaxDate ? getParisToday(timeMaxDate) : undefined;
@@ -343,7 +348,7 @@ serve(async (req) => {
       | { kind: "unchanged" }
       | { kind: "non_rehearsal"; classifiedName: string; existingId?: string }
       | { kind: "all_day_no_rule" }
-      | { kind: "admin_edit"; row: RehearsalRow; location: string }
+      | { kind: "admin_edit"; row: RehearsalRow; location: string | null }
       | {
           kind: "upsert";
           upsert: RehearsalUpsert;
@@ -370,7 +375,7 @@ serve(async (req) => {
         return {
           kind: "admin_edit",
           row: existing,
-          location: locationFromRow(existing),
+          location: locationFromRow(existing, event.location ?? ""),
         };
       }
       const forced =
@@ -466,6 +471,7 @@ serve(async (req) => {
           stats.skipped++;
           skippedAdminEdit++;
           const needsPatch =
+            outcome.location !== null &&
             outcome.location !== "" &&
             !sameLocation(outcome.location, event.location ?? "");
           adminEdits.push({
@@ -480,7 +486,7 @@ serve(async (req) => {
               date: outcome.row.date,
               summary: event.summary ?? "",
               from: event.location ?? "",
-              to: outcome.location,
+              to: outcome.location ?? "",
               source: "admin_edit",
             });
           }
@@ -488,6 +494,7 @@ serve(async (req) => {
             event_id: event.id,
             reason: "edited_in_admin",
             writes_location: needsPatch,
+            ambiguous_address: outcome.location === null,
           });
           break;
         }
@@ -581,8 +588,12 @@ serve(async (req) => {
     }
 
     const hasSuccessfulRun = await hasSuccessfulRealRun(supabase);
+    // A one-event write-back try is manual: it never notifies members.
     const silencePush =
-      mode === "test" || !hasSuccessfulRun || wantsSilence(req);
+      mode === "test" ||
+      !hasSuccessfulRun ||
+      wantsSilence(req) ||
+      writeback.kind === "event";
     log("write_start", {
       mode,
       upserts: upserts.length,
@@ -684,7 +695,9 @@ serve(async (req) => {
       if (writeback.kind === "all" && adminEdits.length > 0) {
         const marks = adminEdits
           .filter(
-            (edit) => !edit.needsPatch || updatedByEvent.has(edit.event.id),
+            (edit) =>
+              edit.location !== null &&
+              (!edit.needsPatch || updatedByEvent.has(edit.event.id)),
           )
           .map((edit) => ({
             event_id: edit.event.id,

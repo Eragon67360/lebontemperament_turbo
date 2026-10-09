@@ -67,6 +67,7 @@ Deno.test("the location written for a row", () => {
   assertEquals(
     locationFromRow(
       row({ place: "Chez Marie", address: "3 rue des Lilas, 67520 Nordheim" }),
+      "Nordheim",
     ),
     "Chez Marie, 3 rue des Lilas, 67520 Nordheim",
   );
@@ -85,6 +86,44 @@ Deno.test("the location written for a row", () => {
   assertEquals(locationFromRow(row({ place: "À confirmer" })), "");
 });
 
+Deno.test("a stale address is never written", () => {
+  const nordheim = "Salle des fêtes, place de la Mairie, 67520 Nordheim";
+  // Place changed in the 2.0.140 form, address left from the old place:
+  // another known place gets its own address...
+  assertEquals(
+    locationFromRow(row({ place: "Freihof, Wangen", address: nordheim })),
+    "Le Freihof, 45 rue des Vignerons, 67520 Wangen",
+  );
+  // ...an unknown place gets the place alone, not « place, old address »...
+  assertEquals(
+    locationFromRow(row({ place: "Chez Simone", address: nordheim })),
+    "Chez Simone",
+  );
+  // ...and with a room, the room still follows.
+  assertEquals(
+    locationFromRow(
+      row({ place: "Chez Simone", address: nordheim, room: "Salle 3" }),
+    ),
+    "Chez Simone, Salle 3",
+  );
+  // A street Google does not say yet was typed with the place: written.
+  assertEquals(
+    locationFromRow(
+      row({ place: "Église Saint-Pierre", address: "12 rue X, 67000 Ville" }),
+      "Ville",
+    ),
+    "Église Saint-Pierre, 12 rue X, 67000 Ville",
+  );
+  // A street Google already says may be the old place's: not written.
+  assertEquals(
+    locationFromRow(
+      row({ place: "Chez Simone", address: "12 rue X, 67000 Ville" }),
+      "Salle paroissiale, 12 rue X, 67000 Ville",
+    ),
+    null,
+  );
+});
+
 Deno.test(
   "a known place's row says exactly what the calendar already says",
   () => {
@@ -92,7 +131,7 @@ Deno.test(
       const location = locationFromRow(
         row({ place: known.place, address: known.address }),
       );
-      assertEquals(sameLocation(location, known.address), true, known.id);
+      assertEquals(sameLocation(location ?? "", known.address), true, known.id);
     }
   },
 );

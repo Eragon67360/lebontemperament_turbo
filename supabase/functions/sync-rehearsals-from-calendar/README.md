@@ -106,11 +106,11 @@ Off by default. When on, the sync also writes the place it settled on into the e
 
 Switches:
 
-| What                                       | How                                                                                                                                      |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan only (nothing written, nothing saved) | `?mode=dry-run&writeback=plan`: re-reads every event of the next 60 days and returns `writebacks: [{event_id, date, summary, from, to}]` |
-| One real try                               | `?mode=cron&writeback_event=<google event id>`: re-reads that event even if unchanged and writes only its location                       |
-| Scheduled runs                             | secret `CALENDAR_WRITEBACK=1` on the function                                                                                            |
+| What                                       | How                                                                                                                                           |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan only (nothing written, nothing saved) | `?mode=dry-run&writeback=plan`: re-reads every future event (no 60-day limit) and returns `writebacks: [{event_id, date, summary, from, to}]` |
+| One real try                               | `?mode=cron&writeback_event=<google event id>`: re-reads that event even if unchanged and writes only its location (never notifies members)   |
+| Scheduled runs                             | secret `CALENDAR_WRITEBACK=1` on the function                                                                                                 |
 
 Needs, once, outside the code: the calendar shared with the service account (`client_email` of `GOOGLE_SERVICE_ACCOUNT_JSON`) with « Make changes to events » instead of « See all event details ». The code then asks Google for the `calendar.events` scope for the write only; reads keep using `calendar.readonly`. Never run it from staging or a test against the real calendar: Google is shared.
 
@@ -122,6 +122,7 @@ Decided 2026-10-09: an admin who edits a synced rehearsal in the admin panel see
 - The edit wins only while Google has not changed since: if the event's `updated` is not later than the row's `updated_at` (`adminEditIsNewest`), the run keeps the database values and writes `locationFromRow` (address, or place, then room) into the event's `location`. If someone edited the event in Google afterwards, the calendar is the newer word and the normal calendar → database sync applies.
 - After the write the run calls `rehearsals_mark_calendar_synced` (quiet: no push) with the event's new `updated`, so the next run does not take our own write for an edit made in Google.
 - Only place, address and room travel to Google; name, group and hours stay edited in Google Calendar. A row holding only « À confirmer » writes nothing.
+- The admin form of release 2.0.140 changes the place and leaves the address, so a stale address is never written (`locationFromRow`): a known place gets its own address; an address that is another known place's gives the place alone; a street Google already says, for a place that does not name it, writes nothing (the edit stays pending and is logged `ambiguous_address`); a street Google does not say yet is taken as typed with the place.
 - A failed write is a `writeback` error (run « partial »); the edit stays pending and is tried again at the next run.
 
 ### Rolling it out
