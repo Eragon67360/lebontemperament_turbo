@@ -4,8 +4,11 @@ on:
   schedule:
     # ~07:30 Europe/Paris (CEST). GitHub cron is UTC-only and may drift 5-30min.
     - cron: "30 5 * * *"
-  # Staging deploys from dev — re-test once Vercel reports the deployments ready.
-  deployment_status:
+  # Staging deploys from dev: re-test once Vercel reports the deployments
+  # ready. A push trigger (not deployment_status) so PR previews, production
+  # and Dependabot never start a run: one run per dev push, none elsewhere.
+  push:
+    branches: [dev]
   workflow_dispatch:
     inputs:
       project:
@@ -25,12 +28,12 @@ on:
         type: string
         default: ""
 
-# Deployment-triggered runs are per-commit and cancel superseded gate-waiters;
-# scheduled/dispatch runs share one group and are never cancelled mid-run
-# (could leave cleanup half-done against live staging).
+# Push runs are per-commit; scheduled/dispatch runs share one group. None is
+# cancelled mid-run (could leave cleanup half-done against live staging): a
+# push run whose commit is no longer the dev head skips itself in the gate.
 concurrency:
-  group: ${{ github.event_name == 'deployment_status' && format('e2e-deploy-{0}', github.event.deployment.sha) || 'e2e-daily' }}
-  cancel-in-progress: ${{ github.event_name == 'deployment_status' }}
+  group: ${{ github.event_name == 'push' && format('e2e-push-{0}', github.sha) || 'e2e-daily' }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -38,15 +41,15 @@ permissions:
   deployments: read
 
 jobs:
-  # Decides whether this event is worth a run. Vercel fires deployment_status
-  # for every PR preview too (environment "Preview – <project>", ref = commit
-  # SHA), so only a successful Preview deployment of the dev branch head
-  # passes. Everything else is skipped at job level: no red checks on PRs.
+  # Decides whether this event is worth a run. A push to dev runs once Vercel
+  # has deployed that commit; when turbo-ignore skipped both deployments
+  # (docs- or test-only commits) or dev moved on meanwhile, test and
+  # merge-report are skipped at job level.
   gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     outputs:
-      run: ${{ steps.decide.outputs.run }}
+      run: ${{ steps.decide.outputs.run == 'true' && (github.event_name != 'push' || steps.wait.outputs.deployed == 'true') && 'true' || 'false' }}
       ref: ${{ steps.decide.outputs.ref }}
       admin_url: ${{ steps.decide.outputs.admin_url }}
       preview: ${{ steps.decide.outputs.preview }}
@@ -59,7 +62,6 @@ jobs:
           REF_INPUT: ${{ inputs.ref }}
         with:
           script: |
-            const { owner, repo } = context.repo;
             core.setOutput('preview', 'false');
             const adminUrl = (process.env.ADMIN_URL_INPUT ?? '').trim();
             if (context.eventName === 'workflow_dispatch' && adminUrl) {
@@ -80,36 +82,24 @@ jobs:
               core.setOutput('preview', 'true');
               return;
             }
-            if (context.eventName !== 'deployment_status') {
+            if (context.eventName === 'push') {
               core.setOutput('run', 'true');
-              core.setOutput('ref', 'dev');
-              return;
-            }
-            const status = context.payload.deployment_status;
-            const deployment = context.payload.deployment;
-            const sha = deployment.sha;
-            const environment = deployment.environment ?? '';
-            if (status.state !== 'success' || !environment.startsWith('Preview')) {
-              core.notice(`Ignoring ${environment} deployment ${sha.slice(0, 7)} (${status.state}).`);
-              core.setOutput('run', 'false');
-              return;
-            }
-            const { data: branch } = await github.rest.repos.getBranch({ owner, repo, branch: 'dev' });
-            if (branch.commit.sha !== sha) {
-              core.notice(`Deployment ${sha.slice(0, 7)} is not the dev head (${branch.commit.sha.slice(0, 7)}): a PR preview or a stale deploy, skipping.`);
-              core.setOutput('run', 'false');
+              core.setOutput('ref', context.sha);
               return;
             }
             core.setOutput('run', 'true');
-            core.setOutput('ref', sha);
+            core.setOutput('ref', 'dev');
       - name: Wait for all Vercel deployments of this commit
-        if: steps.decide.outputs.run == 'true' && github.event_name == 'deployment_status'
+        id: wait
+        if: steps.decide.outputs.run == 'true' && github.event_name == 'push'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { owner, repo } = context.repo;
-            const sha = context.payload.deployment.sha;
-            const deadline = Date.now() + 10 * 60 * 1000;
+            const sha = context.sha;
+            const start = Date.now();
+            const deadline = start + 15 * 60 * 1000;
+            core.setOutput('deployed', 'false');
             while (Date.now() < deadline) {
               const { data: deployments } = await github.rest.repos.listDeployments({ owner, repo, sha });
               const states = [];
@@ -120,10 +110,23 @@ jobs:
                 states.push(`${d.environment}:${s[0]?.state ?? 'unknown'}`);
               }
               core.info(`deployments for ${sha.slice(0, 7)}: ${states.join(', ')}`);
+              // turbo-ignore skips create no deployment at all.
+              if (states.length === 0 && Date.now() - start > 5 * 60 * 1000) {
+                core.notice(`No Vercel deployment for ${sha.slice(0, 7)} (turbo-ignore skipped both apps): nothing to test.`);
+                return;
+              }
               // Vercel registers both projects' deployments within seconds of
               // the push, long before the first success event — so "all
               // current deployments succeeded" implies both apps.
-              if (states.length > 0 && states.every((s) => s.endsWith(':success'))) return;
+              if (states.length > 0 && states.every((s) => s.endsWith(':success'))) {
+                const { data: branch } = await github.rest.repos.getBranch({ owner, repo, branch: 'dev' });
+                if (branch.commit.sha !== sha) {
+                  core.notice(`dev moved on to ${branch.commit.sha.slice(0, 7)}: its own run tests staging.`);
+                  return;
+                }
+                core.setOutput('deployed', 'true');
+                return;
+              }
               if (states.some((s) => s.endsWith(':failure') || s.endsWith(':error'))) {
                 core.setFailed('A Vercel deployment failed for this commit.');
                 return;
@@ -145,7 +148,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Scheduled and manual runs test the dev branch (what staging serves);
-          # deployment runs test the exact commit Vercel deployed.
+          # push runs test the exact commit Vercel deployed.
           ref: ${{ needs.gate.outputs.ref }}
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -193,7 +196,7 @@ jobs:
   merge-report:
     needs: [gate, test]
     # Runs only when the tests actually ran (not when the gate skipped them or
-    # a superseding deployment cancelled them).
+    # a cancelled run stopped them).
     if: always() && needs.gate.outputs.preview != 'true' && contains(fromJSON('["success", "failure"]'), needs.test.result)
     runs-on: ubuntu-latest
     timeout-minutes: 15
