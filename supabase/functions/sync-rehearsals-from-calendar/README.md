@@ -123,6 +123,7 @@ Decided 2026-10-09: an admin who edits a synced rehearsal in the admin panel see
 - After the write the run calls `rehearsals_mark_calendar_synced` (quiet: no push) with the event's new `updated`, so the next run does not take our own write for an edit made in Google.
 - Only place, address and room travel to Google; name, group and hours stay edited in Google Calendar. A row holding only « À confirmer » writes nothing.
 - The admin form of release 2.0.140 changes the place and leaves the address, so a stale address is never written (`locationFromRow`): a known place gets its own address; an address that is another known place's gives the place alone; a street Google already says, for a place that does not name it, writes nothing (the edit stays pending and is logged `ambiguous_address`); a street Google does not say yet is taken as typed with the place.
+- A known place typed in the admin (« Freihof, Wangen ») gets its complete address in Google and, silently, in the database (`addressToFill`, through `rehearsals_sync_write`), because the 2.0.140 form has no address field.
 - A failed write is a `writeback` error (run « partial »); the edit stays pending and is tried again at the next run.
 
 ### Rolling it out

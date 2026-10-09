@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 
 import {
+  addressToFill,
   adminEditIsNewest,
   editedByHand,
   locationFromRow,
@@ -142,4 +143,34 @@ Deno.test("locations are compared without case, accents or spacing", () => {
     true,
   );
   assertEquals(sameLocation("Wangen", "Nordheim"), false);
+});
+
+Deno.test("a known place typed in the admin gets its full address", () => {
+  const freihof = "Le Freihof, 45 rue des Vignerons, 67520 Wangen";
+  // No address field in the 2.0.140 form: the place alone is enough.
+  assertEquals(
+    locationFromRow(row({ place: "Freihof, Wangen", address: null })),
+    freihof,
+  );
+  assertEquals(
+    addressToFill(row({ place: "Freihof, Wangen", address: null })),
+    freihof,
+  );
+  // A stale address of another place is replaced too.
+  assertEquals(
+    addressToFill(
+      row({
+        place: "Freihof, Wangen",
+        address: "Salle des fêtes, place de la Mairie, 67520 Nordheim",
+      }),
+    ),
+    freihof,
+  );
+  // Nothing to fill when the address is already the right one, or the place
+  // is not a known one.
+  assertEquals(
+    addressToFill(row({ place: "Freihof, Wangen", address: freihof })),
+    null,
+  );
+  assertEquals(addressToFill(row({ place: "Chez Simone" })), null);
 });
