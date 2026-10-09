@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/ui_constants.dart';
 import '../../../../core/theme/app_fonts.dart';
 import '../../../../core/widgets/stage.dart';
 import '../../data/public_content.dart';
+import '../providers/rehearsal_slots_provider.dart';
 import '../widgets/public_widgets.dart';
 
 /// « Nous rejoindre »: the joining facts of the website's /rejoindre page
-/// (#334), and two ways to write to us.
-class JoinScreen extends StatelessWidget {
+/// (#334), and two ways to write to us. The rehearsal times are the ones
+/// admins publish (#620), the built-in ones until they arrive.
+class JoinScreen extends ConsumerWidget {
   const JoinScreen({super.key});
 
   static final Uri _mailto = Uri(
@@ -18,8 +21,9 @@ class JoinScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final slots = ref.watch(rehearsalSlotsProvider).value ?? kRehearsalSlots;
     final bodyStyle = AppFonts.sans(
       fontSize: 15,
       height: 1.45,
@@ -63,7 +67,7 @@ class JoinScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  for (final slot in kRehearsalSlots)
+                  for (final slot in slots)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _SlotCard(slot: slot),

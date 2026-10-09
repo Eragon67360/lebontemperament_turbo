@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'dart:ui' as ui;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,9 +11,9 @@ import 'package:intl/intl.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/widgets/confirm_logout_dialog.dart';
 import 'package:lebontemperament/core/widgets/pdf_viewer_sheet.dart';
-import 'package:lebontemperament/data/constants/pdf_archives.dart';
 import 'package:lebontemperament/data/models/ca_minute.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
+import 'package:lebontemperament/data/services/site_documents_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -242,9 +244,14 @@ class _ArchivesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final caAsync = ref.watch(caMinutesProvider);
+    final documentsAsync = ref.watch(siteDocumentsProvider);
 
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(caMinutesProvider),
+      onRefresh: () async {
+        ref.invalidate(caMinutesProvider);
+        ref.invalidate(siteDocumentsProvider);
+        await ref.read(siteDocumentsProvider.future);
+      },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20),
@@ -257,37 +264,27 @@ class _ArchivesTab extends ConsumerWidget {
               onShowPdfSheet: _showPdfSheet,
               formatDate: _formatDate,
             ),
-            const SizedBox(height: 24),
-            _ExpandablePdfArchiveSection(
-              title: 'Comptes-rendus AG',
-              subtitle: 'Archives des assemblées générales',
-              entries: kAgPdfs,
-              pdfContext: 'AG',
-              labelBuilder: (e) => 'AG ${_formatPdfDate(e.date)}',
-              onLaunchUrl: _launchUrl,
-              onShowPdfSheet: _showPdfSheet,
-            ),
-            const SizedBox(height: 24),
-            _ExpandablePdfArchiveSection(
-              title: 'Gazettes',
-              subtitle: 'Archives des gazettes',
-              entries: kGazettesPdfs,
-              pdfContext: 'Gazettes',
-              labelBuilder: (e) =>
-                  e.title ?? 'Gazette ${_formatPdfDate(e.date)}',
-              onLaunchUrl: _launchUrl,
-              onShowPdfSheet: _showPdfSheet,
-            ),
-            const SizedBox(height: 24),
-            _ExpandablePdfArchiveSection(
-              title: 'Pêle-Mêle',
-              subtitle: 'Archives diverses',
-              entries: kPmPdfs,
-              pdfContext: 'PM',
-              labelBuilder: (e) => 'N°${e.date}',
-              onLaunchUrl: _launchUrl,
-              onShowPdfSheet: _showPdfSheet,
-            ),
+            // The documents admins publish (« Documents de l'association »),
+            // except the association's texts: the Règlement tab has them.
+            ...switch (documentsAsync) {
+              AsyncData(:final value) => [
+                for (final collection in value)
+                  if (collection.slug != 'textes') ...[
+                    const SizedBox(height: 24),
+                    _ExpandablePdfArchiveSection(
+                      key: ValueKey(collection.slug),
+                      title: collection.label,
+                      subtitle: collection.description,
+                      documents: collection.documents,
+                      onShowPdfSheet: _showPdfSheet,
+                    ),
+                  ],
+              ],
+              _ => const [
+                SizedBox(height: 32),
+                Center(child: CircularProgressIndicator()),
+              ],
+            },
             const SizedBox(height: kFloatingNavBarBottomPadding),
           ],
         ),
@@ -302,16 +299,6 @@ class _ArchivesTab extends ConsumerWidget {
     } catch (_) {
       return dateStr;
     }
-  }
-
-  String _formatPdfDate(String dateStr) {
-    if (dateStr.length == 4 && RegExp(r'^\d{4}$').hasMatch(dateStr)) {
-      return dateStr;
-    }
-    if (dateStr.length == 1) return dateStr;
-    final parts = dateStr.split('-');
-    if (parts.length == 3) return '${parts[0]}/${parts[1]}/${parts[2]}';
-    return dateStr;
   }
 }
 
@@ -446,20 +433,15 @@ class _CaArchiveSectionState extends ConsumerState<_CaArchiveSection> {
 
 class _ExpandablePdfArchiveSection extends StatefulWidget {
   final String title;
-  final String subtitle;
-  final List<PdfArchiveEntry> entries;
-  final String pdfContext;
-  final String Function(PdfArchiveEntry) labelBuilder;
-  final void Function(String) onLaunchUrl;
+  final String? subtitle;
+  final List<SiteDocument> documents;
   final void Function(BuildContext, String, String) onShowPdfSheet;
 
   const _ExpandablePdfArchiveSection({
+    super.key,
     required this.title,
     required this.subtitle,
-    required this.entries,
-    required this.pdfContext,
-    required this.labelBuilder,
-    required this.onLaunchUrl,
+    required this.documents,
     required this.onShowPdfSheet,
   });
 
@@ -475,7 +457,8 @@ class _ExpandablePdfArchiveSectionState
 
   @override
   Widget build(BuildContext context) {
-    final entries = sortedByDateDesc(widget.entries);
+    // Already newest first (the website and the built-in lists sort them).
+    final entries = widget.documents;
     final displayCount = _showAll
         ? entries.length
         : entries.length.clamp(0, _initialCount);
@@ -488,7 +471,7 @@ class _ExpandablePdfArchiveSectionState
       child: LayoutBuilder(
         builder: (context, constraints) {
           const spacing = 8.0;
-          final labels = displayed.map(widget.labelBuilder).toList();
+          final labels = displayed.map((d) => d.title).toList();
           final itemWidth = _computeItemWidth(
             constraints.maxWidth,
             labels,
@@ -500,15 +483,12 @@ class _ExpandablePdfArchiveSectionState
               Wrap(
                 spacing: spacing,
                 runSpacing: spacing,
-                children: displayed.map((e) {
-                  final url =
-                      '$kWebsiteBaseUrl/pdf/${widget.pdfContext}/${Uri.encodeComponent(e.name)}';
-                  final label = widget.labelBuilder(e);
+                children: displayed.map((d) {
                   return SizedBox(
                     width: itemWidth,
                     child: _PdfChip(
-                      label: label,
-                      url: url,
+                      label: d.title,
+                      url: d.url,
                       onShowPdfSheet: widget.onShowPdfSheet,
                     ),
                   );
@@ -543,7 +523,7 @@ class _ExpandablePdfArchiveSectionState
 
 class _ArchiveSection extends StatelessWidget {
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final Widget child;
 
   const _ArchiveSection({
@@ -587,13 +567,14 @@ class _ArchiveSection extends StatelessWidget {
                         color: theme.colorScheme.onSurface,
                       ),
                     ),
-                    Text(
-                      subtitle,
-                      style: AppFonts.sans(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurfaceVariant,
+                    if (subtitle case final subtitle?)
+                      Text(
+                        subtitle,
+                        style: AppFonts.sans(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),

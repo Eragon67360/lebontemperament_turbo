@@ -20,9 +20,12 @@ import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:lebontemperament/data/providers/feature_flags_provider.dart';
 import 'package:lebontemperament/data/services/drive_service.dart';
 import 'package:lebontemperament/data/services/feature_flags_service.dart';
+import 'package:lebontemperament/data/services/site_documents_service.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/auth_provider.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/profile_role_provider.dart';
 import 'package:lebontemperament/features/profile/presentation/screens/about_screen.dart';
+import 'package:lebontemperament/features/public/data/public_content.dart';
+import 'package:lebontemperament/features/public/presentation/providers/rehearsal_slots_provider.dart';
 import 'package:lebontemperament/features/reports/providers/bug_reports_providers.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -169,6 +172,11 @@ List<Override> offlineOverrides({
   ),
   isOnlineProvider.overrideWith((ref) => onlineStream ?? Stream.value(online)),
   caMinutesProvider.overrideWith((ref) async => const []),
+  // The website's documents and rehearsal times: the built-in ones.
+  siteDocumentsProvider.overrideWith(
+    (ref) async => legacyDocumentCollections(),
+  ),
+  rehearsalSlotsProvider.overrideWith((ref) async => kRehearsalSlots),
   driveFolderCatalogProvider.overrideWith(
     (ref) async => catalog ?? kTestCatalog,
   ),

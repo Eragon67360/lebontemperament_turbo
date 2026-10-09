@@ -18,6 +18,7 @@ import '../services/concerts_service.dart';
 import '../services/drive_folders_service.dart';
 import '../services/drive_service.dart';
 import '../services/rehearsals_service.dart';
+import '../services/site_documents_service.dart';
 import '../services/storage_service.dart';
 import 'my_groups_provider.dart';
 import 'realtime_notifications_provider.dart';
@@ -71,6 +72,18 @@ final driveFolderCatalogProvider = FutureProvider<DriveFolderCatalog>((
   ref,
 ) async {
   return ref.watch(driveFoldersServiceProvider).getCatalog();
+});
+
+final siteDocumentsServiceProvider = Provider<SiteDocumentsService>((ref) {
+  return SiteDocumentsService(logger: Logger());
+});
+
+/// « Documents de l'association » for the Archives tab. Never fails: the
+/// service falls back to the lists built into the app.
+final siteDocumentsProvider = FutureProvider<List<SiteDocumentCollection>>((
+  ref,
+) async {
+  return ref.watch(siteDocumentsServiceProvider).getCollections();
 });
 
 // CA minutes provider
