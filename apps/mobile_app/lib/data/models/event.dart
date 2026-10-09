@@ -20,7 +20,7 @@ enum EventType {
 }
 
 @freezed
-class Event with _$Event {
+abstract class Event with _$Event {
   const factory Event({
     required String id,
     String? title,

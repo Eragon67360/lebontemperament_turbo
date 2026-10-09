@@ -22,7 +22,7 @@ enum GroupType {
 }
 
 @freezed
-class Rehearsal with _$Rehearsal {
+abstract class Rehearsal with _$Rehearsal {
   const factory Rehearsal({
     required String id,
     String? name,

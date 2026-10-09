@@ -6,30 +6,31 @@ part of 'notification_settings.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$NotificationSettingsImpl _$$NotificationSettingsImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NotificationSettingsImpl(
-      enabled: json['enabled'] as bool? ?? true,
-      selectedTimes: (json['selectedTimes'] as List<dynamic>?)
-              ?.map((e) => $enumDecode(_$NotificationTimeEnumMap, e))
-              .toList() ??
-          const [NotificationTime.oneDay, NotificationTime.fifteenMinutes],
-      concertsEnabled: json['concertsEnabled'] as bool? ?? true,
-      rehearsalsEnabled: json['rehearsalsEnabled'] as bool? ?? true,
-      realtimeEnabled: json['realtimeEnabled'] as bool? ?? false,
-    );
+_NotificationSettings _$NotificationSettingsFromJson(
+  Map<String, dynamic> json,
+) => _NotificationSettings(
+  enabled: json['enabled'] as bool? ?? true,
+  selectedTimes:
+      (json['selectedTimes'] as List<dynamic>?)
+          ?.map((e) => $enumDecode(_$NotificationTimeEnumMap, e))
+          .toList() ??
+      const [NotificationTime.oneDay, NotificationTime.fifteenMinutes],
+  concertsEnabled: json['concertsEnabled'] as bool? ?? true,
+  rehearsalsEnabled: json['rehearsalsEnabled'] as bool? ?? true,
+  realtimeEnabled: json['realtimeEnabled'] as bool? ?? false,
+);
 
-Map<String, dynamic> _$$NotificationSettingsImplToJson(
-        _$NotificationSettingsImpl instance) =>
-    <String, dynamic>{
-      'enabled': instance.enabled,
-      'selectedTimes': instance.selectedTimes
-          .map((e) => _$NotificationTimeEnumMap[e]!)
-          .toList(),
-      'concertsEnabled': instance.concertsEnabled,
-      'rehearsalsEnabled': instance.rehearsalsEnabled,
-      'realtimeEnabled': instance.realtimeEnabled,
-    };
+Map<String, dynamic> _$NotificationSettingsToJson(
+  _NotificationSettings instance,
+) => <String, dynamic>{
+  'enabled': instance.enabled,
+  'selectedTimes': instance.selectedTimes
+      .map((e) => _$NotificationTimeEnumMap[e]!)
+      .toList(),
+  'concertsEnabled': instance.concertsEnabled,
+  'rehearsalsEnabled': instance.rehearsalsEnabled,
+  'realtimeEnabled': instance.realtimeEnabled,
+};
 
 const _$NotificationTimeEnumMap = {
   NotificationTime.twoDays: '2_days',
