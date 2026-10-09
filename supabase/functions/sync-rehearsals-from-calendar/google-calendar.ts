@@ -175,6 +175,8 @@ export interface LocationPatch {
 export interface LocationPatchResult {
   eventId: string;
   ok: boolean;
+  /** The event's new `updated`, so our own write is not read back as a change. */
+  updated?: string;
   message?: string;
 }
 
@@ -215,8 +217,15 @@ export async function patchEventLocations({
         },
       );
       if (response.ok) {
+        const written = (await response.json().catch(() => ({}))) as {
+          updated?: string;
+        };
         logGoogle("location_patched", { event_id: patch.eventId });
-        results.push({ eventId: patch.eventId, ok: true });
+        results.push({
+          eventId: patch.eventId,
+          ok: true,
+          updated: written.updated,
+        });
       } else {
         const body = (await response
           .json()
