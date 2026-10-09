@@ -32,7 +32,7 @@ Deno.test(
       const url = String(input);
       const body = init?.body ? String(init.body) : "";
       requests.push({ url, method: init?.method ?? "GET", body });
-      if (url.includes("oauth2.googleapis.com")) {
+      if (new URL(url).hostname === "oauth2.googleapis.com") {
         return Promise.resolve(
           new Response(
             JSON.stringify({ access_token: "tok", expires_in: 3600 }),
