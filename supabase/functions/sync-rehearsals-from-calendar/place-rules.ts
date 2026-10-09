@@ -25,6 +25,12 @@ export interface KnownPlace {
   keyword: string;
   /** The rehearsal's group; omitted = any group. */
   groups?: readonly GroupType[];
+  /**
+   * Word (folded) in the event title that also pins this place when the
+   * calendar gives no location at all (« Dimanche BT » is always at the Wangen
+   * salle des fêtes).
+   */
+  emptyLocationSummary?: string;
 }
 
 export const KNOWN_PLACES: readonly KnownPlace[] = [
@@ -38,11 +44,12 @@ export const KNOWN_PLACES: readonly KnownPlace[] = [
   },
   {
     id: "wangen_salle_des_fetes",
-    when: "Wangen, répétition du chœur complet (dimanche)",
+    when: "Wangen, répétition du chœur complet (dimanche); un « Dimanche BT » sans lieu y a toujours lieu",
     place: "Salle des fêtes, Wangen",
     address: "Salle des fêtes, 31A rue des Vignes, 67520 Wangen",
     keyword: "wangen",
     groups: ["Choeur complet"],
+    emptyLocationSummary: "dimanche bt",
   },
   {
     id: "wangen_freihof",
@@ -113,11 +120,15 @@ export function matchKnownPlace(
   const text = fold(
     [event.summary, location, event.description].filter(Boolean).join(" "),
   );
+  const summary = fold(event.summary ?? "");
   return (
     KNOWN_PLACES.find(
       (candidate) =>
-        text.includes(candidate.keyword) &&
-        (!candidate.groups || candidate.groups.includes(group)),
+        (!candidate.groups || candidate.groups.includes(group)) &&
+        (text.includes(candidate.keyword) ||
+          (location === "" &&
+            candidate.emptyLocationSummary !== undefined &&
+            summary.includes(candidate.emptyLocationSummary))),
     ) ?? null
   );
 }

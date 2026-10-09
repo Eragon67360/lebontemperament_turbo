@@ -145,6 +145,27 @@ Deno.test("a « Dimanche BT » is always the full choir", () => {
   assertEquals(applyGroupRules(event, answer).group_type, "Tous");
 });
 
+Deno.test("an ambiguous « Répétition extra » is the full choir", () => {
+  const extra = { ...event, summary: "Répétition extra" };
+  const answer = {
+    is_rehearsal: true,
+    name: "Répétition extra",
+    place: "À confirmer",
+    address: "",
+    room: "",
+    group_type: "Tous" as const,
+  };
+  assertEquals(applyGroupRules(extra, answer).group_type, "Choeur complet");
+  // A title that names another group keeps the LLM's answer.
+  assertEquals(
+    applyGroupRules(
+      { ...event, summary: "Répétition extra hommes" },
+      { ...answer, group_type: "Hommes" as const },
+    ).group_type,
+    "Hommes",
+  );
+});
+
 Deno.test(
   "a village-only Nordheim women's rehearsal gets its real address",
   async () => {
