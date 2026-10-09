@@ -580,7 +580,7 @@ class _RehearsalCard extends StatelessWidget {
     final title = rehearsal.name ?? 'Répétition sans titre';
     final time = frenchTimeRange(rehearsal.startTime, rehearsal.endTime);
     final timeText = time.isEmpty ? 'Heure non spécifiée' : time;
-    final place = rehearsal.place ?? 'Lieu non défini';
+    final place = rehearsal.placeWithRoom ?? 'Lieu non défini';
     final soon = (isNext && date != null) ? _soonLabel(date) : null;
     // At large text sizes the day column would leave the title too little
     // room on a small phone (« Répétitio / n »): the date goes above it.

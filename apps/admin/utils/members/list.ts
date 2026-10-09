@@ -320,3 +320,11 @@ export function deletionBlocker(actor: Actor, target: Pick<User, "id">) {
   }
   return null;
 }
+
+/** Why the sign-in email cannot be changed by this admin, or null when it can. */
+export function emailChangeBlocker(actor: Actor) {
+  if (actor.role !== "superadmin") {
+    return "Seul un super-administrateur peut changer l’e-mail de connexion.";
+  }
+  return null;
+}

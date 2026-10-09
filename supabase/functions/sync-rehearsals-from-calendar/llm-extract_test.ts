@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { applyGroupRules, extractRehearsalFields } from "./llm-extract.ts";
+import { LlmExtractionSchema } from "./types.ts";
 
 const event = {
   id: "evt_test",
@@ -72,6 +73,8 @@ Deno.test("the request carries an abort signal", async () => {
             is_rehearsal: true,
             name: "Répétition Hommes",
             place: "Salle test",
+            address: "",
+            room: "",
             group_type: "Hommes",
           }),
         },
@@ -99,6 +102,8 @@ Deno.test("a timeout followed by a success still succeeds", async () => {
             is_rehearsal: false,
             name: "Concert",
             place: "Salle test",
+            address: "",
+            room: "",
             group_type: "Tous",
           }),
         },
@@ -132,9 +137,120 @@ Deno.test("a « Dimanche BT » is always the full choir", () => {
     is_rehearsal: true,
     name: "Dimanche BT",
     place: "Wangen",
+    address: "",
+    room: "",
     group_type: "Tous" as const,
   };
   assertEquals(applyGroupRules(dimanche, answer).group_type, "Choeur complet");
   // Other rehearsals keep the LLM's answer.
   assertEquals(applyGroupRules(event, answer).group_type, "Tous");
 });
+
+Deno.test("an ambiguous « Répétition extra » is the full choir", () => {
+  const extra = { ...event, summary: "Répétition extra" };
+  const answer = {
+    is_rehearsal: true,
+    name: "Répétition extra",
+    place: "À confirmer",
+    address: "",
+    room: "",
+    group_type: "Tous" as const,
+  };
+  assertEquals(applyGroupRules(extra, answer).group_type, "Choeur complet");
+  // A title that names another group keeps the LLM's answer.
+  assertEquals(
+    applyGroupRules(
+      { ...event, summary: "Répétition extra hommes" },
+      { ...answer, group_type: "Hommes" as const },
+    ).group_type,
+    "Hommes",
+  );
+});
+
+Deno.test("an empty place from the AI becomes « À confirmer »", () => {
+  const parsed = LlmExtractionSchema.parse({
+    is_rehearsal: true,
+    name: "Répétition orchestre",
+    place: "  ",
+    address: "",
+    room: "Salle 12",
+    group_type: "Orchestre",
+  });
+  assertEquals(parsed.place, "À confirmer");
+});
+
+Deno.test(
+  "a village-only Nordheim women's rehearsal gets its real address",
+  async () => {
+    const nordheim = {
+      ...event,
+      summary: "Répétition femmes",
+      location: "Nordheim",
+    };
+    const answer = JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              is_rehearsal: true,
+              name: "Répétition femmes",
+              place: "Nordheim",
+              address: "",
+              room: "",
+              group_type: "Femmes",
+            }),
+          },
+        },
+      ],
+    });
+    const result = await withFetch(
+      () => Promise.resolve(new Response(answer, { status: 200 })),
+      () => extractRehearsalFields("test-key", nordheim),
+    );
+    assertEquals(result.place, "Salle des fêtes, Nordheim");
+    assertEquals(
+      result.address,
+      "Salle des fêtes, place de la Mairie, 67520 Nordheim",
+    );
+  },
+);
+
+Deno.test(
+  "the request asks for an address and a room, and lists the known places",
+  async () => {
+    let sent = "";
+    const answer = JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              is_rehearsal: false,
+              name: "Concert",
+              place: "Salle test",
+              address: "",
+              room: "",
+              group_type: "Tous",
+            }),
+          },
+        },
+      ],
+    });
+    await withFetch(
+      (_url, init) => {
+        sent = String(init?.body);
+        return Promise.resolve(new Response(answer, { status: 200 }));
+      },
+      () => extractRehearsalFields("test-key", event),
+    );
+    const body = JSON.parse(sent);
+    assertEquals(
+      body.response_format.json_schema.schema.required.includes("address"),
+      true,
+    );
+    assertEquals(
+      body.response_format.json_schema.schema.required.includes("room"),
+      true,
+    );
+    assertEquals(body.messages[0].content.includes("Freihof, Wangen"), true);
+  },
+);

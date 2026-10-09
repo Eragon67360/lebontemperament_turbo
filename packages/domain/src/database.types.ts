@@ -1736,6 +1736,7 @@ export type Database = {
       };
       rehearsals: {
         Row: {
+          address: string | null;
           created_at: string | null;
           date: string;
           end_time: string;
@@ -1745,10 +1746,12 @@ export type Database = {
           id: string;
           name: string;
           place: string;
+          room: string | null;
           start_time: string;
           updated_at: string | null;
         };
         Insert: {
+          address?: string | null;
           created_at?: string | null;
           date: string;
           end_time: string;
@@ -1758,10 +1761,12 @@ export type Database = {
           id?: string;
           name: string;
           place: string;
+          room?: string | null;
           start_time: string;
           updated_at?: string | null;
         };
         Update: {
+          address?: string | null;
           created_at?: string | null;
           date?: string;
           end_time?: string;
@@ -1771,6 +1776,7 @@ export type Database = {
           id?: string;
           name?: string;
           place?: string;
+          room?: string | null;
           start_time?: string;
           updated_at?: string | null;
         };

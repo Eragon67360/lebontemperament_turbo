@@ -49,7 +49,7 @@ export const EVENT_COLUMNS =
 
 /** Rehearsals. */
 export const REHEARSAL_COLUMNS =
-  "created_at, date, end_time, event_id, google_updated_at, group_type, id, name, place, start_time, updated_at";
+  "address, created_at, date, end_time, event_id, google_updated_at, group_type, id, name, place, room, start_time, updated_at";
 
 /** Drive roots by group. */
 export const DRIVE_FOLDER_COLUMNS =

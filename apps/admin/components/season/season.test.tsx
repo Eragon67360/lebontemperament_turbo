@@ -16,6 +16,8 @@ const noop = () => {};
         id: "r1",
         name: "Répétition générale",
         place: "Salle paroissiale, Barr",
+        address: null,
+        room: null,
         date: "2026-10-06",
         start_time: "20:00:00",
         end_time: "22:00:00",
@@ -53,7 +55,9 @@ const noop = () => {};
       rehearsal: {
         id: "r2",
         name: "Pupitre des femmes",
-        place: "Salle",
+        place: "Conservatoire de Strasbourg",
+        address: "1 place Dauphine, 67000 Strasbourg",
+        room: "Salle 12",
         date: "2026-10-07",
         start_time: "19:30:00",
         end_time: "21:00:00",
@@ -69,6 +73,9 @@ const noop = () => {};
   );
   assert.match(html, /Google Agenda/);
   assert.match(html, /19 h 30 – 21 h/);
+  // The room reads with the place; the address stays out of the row.
+  assert.match(html, /Conservatoire de Strasbourg · Salle 12/);
+  assert.doesNotMatch(html, /place Dauphine/);
 }
 
 // --- An event row: period, visibility, type, contact, link ---

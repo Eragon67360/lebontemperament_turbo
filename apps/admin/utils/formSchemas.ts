@@ -104,6 +104,10 @@ export const rehearsalFormSchema = z
     }),
     date: z.date({ error: "La date est requise" }),
     place: requiredString("Le lieu est requis"),
+    /** Optional: the full postal address the app's « Itinéraire » opens. */
+    address: z.string().trim().default(""),
+    /** Optional: the room inside the building, never sent to the maps app. */
+    room: z.string().trim().default(""),
     start_time: requiredTime("L'heure de début est requise"),
     end_time: requiredTime("L'heure de fin est requise"),
     /** Creation only: one séance every `repeat_interval` weeks until `repeat_until`. */
@@ -165,6 +169,16 @@ export const editUserFormSchema = z.object({
   display_name: z.string(),
 });
 export type EditUserFormValues = z.output<typeof editUserFormSchema>;
+
+/** « Changer l'e-mail » on a member's page (superadmins). */
+export const changeEmailFormSchema = z.object({
+  email: z
+    .string({ error: "La nouvelle adresse est requise" })
+    .trim()
+    .min(1, "La nouvelle adresse est requise")
+    .pipe(z.email("Format d'email invalide")),
+});
+export type ChangeEmailFormValues = z.output<typeof changeEmailFormSchema>;
 
 /** One row of the invitation list (InviteUsersDialog). */
 export const invitationEntrySchema = z.object({

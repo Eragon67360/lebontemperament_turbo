@@ -109,6 +109,8 @@ export function recurrenceDates(
 export type RehearsalPayload = {
   name: string;
   place: string;
+  address: string | null;
+  room: string | null;
   date: string;
   start_time: string;
   end_time: string;
@@ -116,8 +118,9 @@ export type RehearsalPayload = {
 };
 
 /**
- * The rows a saved rehearsal form writes: one `{ name, place, date,
- * start_time, end_time, group_type }` per date. A single date gives one row;
+ * The rows a saved rehearsal form writes: one `{ name, place, address, room,
+ * date, start_time, end_time, group_type }` per date (address and room are
+ * null when left empty). A single date gives one row;
  * a repeated séance gives one per occurrence (the route accepts both).
  */
 export function toRehearsalPayloads(
@@ -126,6 +129,8 @@ export function toRehearsalPayloads(
   const common = {
     name: values.name,
     place: values.place,
+    address: values.address || null,
+    room: values.room || null,
     start_time: values.start_time,
     end_time: values.end_time,
     group_type: values.group_type,

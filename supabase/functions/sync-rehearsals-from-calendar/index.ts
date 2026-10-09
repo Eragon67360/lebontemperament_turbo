@@ -3,8 +3,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { chunk, mapSettledWithConcurrency } from "./concurrency.ts";
 import { addDays, getParisToday, isAllDayEvent } from "./datetime.ts";
-import { fetchCalendarEvents } from "./google-calendar.ts";
+import { fetchCalendarEvents, patchEventLocations } from "./google-calendar.ts";
 import { extractRehearsalFields } from "./llm-extract.ts";
+import {
+  addressToFill,
+  adminEditIsNewest,
+  locationFromRow,
+  sameLocation,
+} from "./admin-edits.ts";
+import { calendarLocation } from "./place-rules.ts";
 import {
   resolveRehearsalTimes,
   type ResolvedRehearsalTimes,
@@ -53,6 +60,66 @@ function getMode(req: Request): SyncMode {
   const raw = new URL(req.url).searchParams.get("mode") ?? "cron";
   if (raw === "cron" || raw === "test" || raw === "dry-run") return raw;
   throw new Error(`Unsupported mode: ${raw}`);
+}
+
+/** `?silence=1`: no push at all, for a one-off backfill (needs the secret). */
+function wantsSilence(req: Request): boolean {
+  return new URL(req.url).searchParams.get("silence") === "1";
+}
+
+/**
+ * Writing the known places back into Google Calendar:
+ * - off by default;
+ * - `CALENDAR_WRITEBACK=1` turns it on for the scheduled runs;
+ * - `?mode=dry-run&writeback=plan` re-reads every event and only lists what
+ *   would be written (nothing is written, in Google or in the database);
+ * - `?writeback_event=<google event id>` writes that one event (re-read even if
+ *   unchanged) whatever the setting, for the first real try.
+ */
+type Writeback =
+  | { kind: "off" }
+  | { kind: "plan" }
+  | { kind: "all" }
+  | { kind: "event"; eventId: string };
+
+function getWriteback(req: Request, mode: SyncMode): Writeback {
+  const params = new URL(req.url).searchParams;
+  if (params.get("writeback") === "plan") {
+    if (mode !== "dry-run") {
+      throw new Error("writeback=plan only works with mode=dry-run.");
+    }
+    return { kind: "plan" };
+  }
+  const eventId = params.get("writeback_event");
+  if (eventId) {
+    if (mode !== "cron") {
+      throw new Error("writeback_event only works with mode=cron.");
+    }
+    return { kind: "event", eventId };
+  }
+  if (mode === "cron" && Deno.env.get("CALENDAR_WRITEBACK") === "1") {
+    return { kind: "all" };
+  }
+  return { kind: "off" };
+}
+
+interface PlannedWriteback {
+  event_id: string;
+  date: string;
+  summary: string;
+  from: string;
+  to: string;
+  /** « calendar_rule »: a known place; « admin_edit »: an edit made in the admin panel. */
+  source: "calendar_rule" | "admin_edit";
+}
+
+/** A rehearsal edited in the admin panel since the sync last wrote it. */
+interface AdminEditPush {
+  event: GoogleCalendarEvent;
+  row: RehearsalRow;
+  /** null: the row does not name one place reliably, nothing is written. */
+  location: string | null;
+  needsPatch: boolean;
 }
 
 function requireEnv(name: string): string {
@@ -144,6 +211,7 @@ function responsePayload(
   syncLogId: string | null,
   sample: RehearsalUpsert[],
   plan?: { upserts: number; deletes: number },
+  writebacks?: PlannedWriteback[],
 ) {
   return {
     mode,
@@ -159,6 +227,7 @@ function responsePayload(
     errors: stats.errors,
     sample: mode === "cron" ? undefined : sample.slice(0, 3),
     plan,
+    writebacks,
     sync_log_id: syncLogId,
   };
 }
@@ -186,7 +255,12 @@ serve(async (req) => {
 
   try {
     mode = getMode(req);
-    log("request_received", { mode, method: req.method });
+    const writeback = getWriteback(req, mode);
+    log("request_received", {
+      mode,
+      method: req.method,
+      writeback: writeback.kind,
+    });
 
     const syncSecret = requireEnv("SYNC_CRON_SECRET");
     if (req.headers.get("x-sync-secret") !== syncSecret) {
@@ -206,8 +280,12 @@ serve(async (req) => {
 
     const now = new Date();
     const timeMin = now.toISOString();
+    // The write-back plan previews the real run, which has no limit: every
+    // future event. Other test runs stay on the next 60 days.
     const timeMaxDate =
-      mode === "test" || mode === "dry-run" ? addDays(now, 60) : undefined;
+      (mode === "test" || mode === "dry-run") && writeback.kind !== "plan"
+        ? addDays(now, 60)
+        : undefined;
     const timeMax = timeMaxDate?.toISOString();
     const parisToday = getParisToday(now);
     const parisTimeMax = timeMaxDate ? getParisToday(timeMaxDate) : undefined;
@@ -236,7 +314,7 @@ serve(async (req) => {
     let syncedQuery = supabase
       .from("rehearsals")
       .select(
-        "id, name, place, date, start_time, end_time, group_type, event_id, google_updated_at",
+        "id, name, place, address, room, date, start_time, end_time, group_type, event_id, google_updated_at, updated_at, calendar_synced_at",
       )
       .not("event_id", "is", null)
       .gte("date", parisToday);
@@ -257,6 +335,9 @@ serve(async (req) => {
     log("db_synced_loaded", { count: dbSynced.length });
 
     const upserts: RehearsalUpsert[] = [];
+    const plannedWritebacks: PlannedWriteback[] = [];
+    const adminEdits: AdminEditPush[] = [];
+    let skippedAdminEdit = 0;
     const reclassifiedDeleteIds: string[] = [];
     let skippedCancelled = 0;
     let skippedUnchanged = 0;
@@ -268,11 +349,14 @@ serve(async (req) => {
       | { kind: "unchanged" }
       | { kind: "non_rehearsal"; classifiedName: string; existingId?: string }
       | { kind: "all_day_no_rule" }
+      | { kind: "admin_edit"; row: RehearsalRow; location: string | null }
       | {
           kind: "upsert";
           upsert: RehearsalUpsert;
           times: ResolvedRehearsalTimes;
           existing: boolean;
+          /** The location to write into the Google event, if it differs. */
+          writeLocation: string | null;
         };
 
     // Cheap checks stay sequential; only events needing the LLM go in the pool.
@@ -282,7 +366,25 @@ serve(async (req) => {
       if (event.status === "cancelled") return { kind: "cancelled" };
 
       const existing = dbByEventId.get(event.id);
-      if (!hasGoogleUpdate(existing, event)) return { kind: "unchanged" };
+      // Edited in the admin panel and not newer in Google: the edit goes to
+      // the calendar, the calendar does not overwrite it.
+      if (
+        existing &&
+        (writeback.kind === "all" || writeback.kind === "plan") &&
+        adminEditIsNewest(existing, event)
+      ) {
+        return {
+          kind: "admin_edit",
+          row: existing,
+          location: locationFromRow(existing, event.location ?? ""),
+        };
+      }
+      const forced =
+        writeback.kind === "plan" ||
+        (writeback.kind === "event" && writeback.eventId === event.id);
+      if (!forced && !hasGoogleUpdate(existing, event)) {
+        return { kind: "unchanged" };
+      }
 
       const extracted = await extractRehearsalFields(openAiKey, event);
 
@@ -301,12 +403,16 @@ serve(async (req) => {
         kind: "upsert",
         times,
         existing: Boolean(existing),
+        writeLocation:
+          writeback.kind === "off" ? null : calendarLocation(event, extracted),
         upsert: {
           date: times.date,
           start_time: times.start_time,
           end_time: times.end_time,
           name: extracted.name,
           place: extracted.place,
+          address: extracted.address || null,
+          room: extracted.room || null,
           group_type: extracted.group_type,
           event_id: event.id,
           google_updated_at: event.updated,
@@ -331,7 +437,7 @@ serve(async (req) => {
         stats.errors.push({
           event_id: event.id,
           phase: "extract",
-          message,
+          message: `« ${event.summary ?? "sans titre"} » (${startISO(event).slice(0, 10)}): ${message}`,
         });
         log("event_error", { event_id: event.id, phase: "extract", message });
         return;
@@ -362,6 +468,37 @@ serve(async (req) => {
             removes_existing: Boolean(outcome.existingId),
           });
           break;
+        case "admin_edit": {
+          stats.skipped++;
+          skippedAdminEdit++;
+          const needsPatch =
+            outcome.location !== null &&
+            outcome.location !== "" &&
+            !sameLocation(outcome.location, event.location ?? "");
+          adminEdits.push({
+            event,
+            row: outcome.row,
+            location: outcome.location,
+            needsPatch,
+          });
+          if (needsPatch) {
+            plannedWritebacks.push({
+              event_id: event.id,
+              date: outcome.row.date,
+              summary: event.summary ?? "",
+              from: event.location ?? "",
+              to: outcome.location ?? "",
+              source: "admin_edit",
+            });
+          }
+          log("event_skipped", {
+            event_id: event.id,
+            reason: "edited_in_admin",
+            writes_location: needsPatch,
+            ambiguous_address: outcome.location === null,
+          });
+          break;
+        }
         case "all_day_no_rule":
           stats.skipped++;
           skippedAllDayNoRule++;
@@ -379,6 +516,16 @@ serve(async (req) => {
           break;
         case "upsert":
           upserts.push(outcome.upsert);
+          if (outcome.writeLocation) {
+            plannedWritebacks.push({
+              event_id: event.id,
+              date: outcome.times.date,
+              summary: event.summary ?? "",
+              from: event.location ?? "",
+              to: outcome.writeLocation,
+              source: "calendar_rule",
+            });
+          }
           log("event_queued", {
             event_id: event.id,
             group_type: outcome.upsert.group_type,
@@ -411,6 +558,7 @@ serve(async (req) => {
       skipped_unchanged: skippedUnchanged,
       skipped_non_rehearsal: skippedNonRehearsal,
       skipped_all_day_no_rule: skippedAllDayNoRule,
+      skipped_edited_in_admin: skippedAdminEdit,
       errors: stats.errors.length,
     });
 
@@ -428,15 +576,25 @@ serve(async (req) => {
       );
 
       return jsonResponse(
-        responsePayload(mode, false, stats, null, upserts, {
-          upserts: upserts.length,
-          deletes: deleteIds.length,
-        }),
+        responsePayload(
+          mode,
+          false,
+          stats,
+          null,
+          upserts,
+          { upserts: upserts.length, deletes: deleteIds.length },
+          writeback.kind === "plan" ? plannedWritebacks : undefined,
+        ),
       );
     }
 
     const hasSuccessfulRun = await hasSuccessfulRealRun(supabase);
-    const silencePush = mode === "test" || !hasSuccessfulRun;
+    // A one-event write-back try is manual: it never notifies members.
+    const silencePush =
+      mode === "test" ||
+      !hasSuccessfulRun ||
+      wantsSilence(req) ||
+      writeback.kind === "event";
     log("write_start", {
       mode,
       upserts: upserts.length,
@@ -498,6 +656,106 @@ serve(async (req) => {
       );
     }
 
+    // The database already holds the settled place; now the calendar says the
+    // same. A failure here is recorded and does not undo anything.
+    const writebackDone: PlannedWriteback[] = [];
+    if (writeback.kind === "all" || writeback.kind === "event") {
+      const wanted = plannedWritebacks.filter(
+        (item) =>
+          writeback.kind === "all" || item.event_id === writeback.eventId,
+      );
+      const results = await patchEventLocations({
+        calendarId,
+        serviceAccountJson,
+        patches: wanted.map((item) => ({
+          eventId: item.event_id,
+          location: item.to,
+        })),
+      });
+      const updatedByEvent = new Map<string, string | undefined>();
+      results.forEach((result, index) => {
+        if (result.ok) {
+          writebackDone.push(wanted[index]);
+          updatedByEvent.set(result.eventId, result.updated);
+        } else {
+          stats.errors.push({
+            event_id: result.eventId,
+            phase: "writeback",
+            message: result.message ?? "Google refused the location update.",
+          });
+        }
+      });
+      log("writeback_done", {
+        asked: wanted.length,
+        written: writebackDone.length,
+      });
+
+      // Admin edits are confirmed once Google has them (or already had them):
+      // stamp the rows so the same edit is not written again, and keep the
+      // event's new `updated` so our own write is not read back as a change.
+      if (writeback.kind === "all" && adminEdits.length > 0) {
+        const marks = adminEdits
+          .filter(
+            (edit) =>
+              edit.location !== null &&
+              (!edit.needsPatch || updatedByEvent.has(edit.event.id)),
+          )
+          .map((edit) => ({
+            event_id: edit.event.id,
+            google_updated_at: updatedByEvent.get(edit.event.id) ?? null,
+          }));
+        // A known place typed in the admin has no address in the database
+        // (the 2.0.140 form lacks the field): fill it, silently, so
+        // « Itinéraire » opens the real address. The same call stamps the row.
+        const fills: RehearsalUpsert[] = [];
+        for (const edit of adminEdits) {
+          const filled = marks.some((mark) => mark.event_id === edit.event.id)
+            ? addressToFill(edit.row)
+            : null;
+          if (!filled) continue;
+          fills.push({
+            name: edit.row.name,
+            place: edit.row.place,
+            address: filled,
+            room: edit.row.room ?? null,
+            date: edit.row.date,
+            start_time: edit.row.start_time,
+            end_time: edit.row.end_time,
+            group_type: edit.row.group_type,
+            event_id: edit.event.id,
+            google_updated_at:
+              updatedByEvent.get(edit.event.id) ??
+              edit.row.google_updated_at ??
+              edit.event.updated,
+          });
+        }
+        if (fills.length > 0) {
+          const { error: fillError } = await supabase.rpc(
+            "rehearsals_sync_write",
+            { p_upserts: fills, p_delete_ids: [], p_silence_push: true },
+          );
+          if (fillError) {
+            stats.errors.push({
+              phase: "write",
+              message: `Filling known addresses: ${fillError.message}`,
+            });
+            log("fill_failed", { message: fillError.message });
+          }
+        }
+        const { error: markError } = await supabase.rpc(
+          "rehearsals_mark_calendar_synced",
+          { p_marks: marks },
+        );
+        if (markError) {
+          stats.errors.push({
+            phase: "write",
+            message: `Marking admin edits as synced: ${markError.message}`,
+          });
+          log("mark_failed", { message: markError.message });
+        }
+      }
+    }
+
     const finalStatus = stats.errors.length > 0 ? "partial" : "success";
     await finalizeSyncLog(supabase, logId, stats, finalStatus);
 
@@ -516,7 +774,17 @@ serve(async (req) => {
       }),
     );
 
-    return jsonResponse(responsePayload(mode, true, stats, logId, upserts));
+    return jsonResponse(
+      responsePayload(
+        mode,
+        true,
+        stats,
+        logId,
+        upserts,
+        undefined,
+        writeback.kind === "off" ? undefined : writebackDone,
+      ),
+    );
   } catch (error) {
     stats.errors.push({
       phase: "google",

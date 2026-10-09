@@ -14,7 +14,16 @@ export const LlmExtractionSchema = z.object({
   // sorties, réunions, etc. must be classified as false so they are skipped.
   is_rehearsal: z.boolean(),
   name: z.string().trim().min(1),
-  place: z.string().trim().min(1),
+  // An empty answer (e.g. the location was only a room number) must not drop
+  // the event: it becomes the placeholder the admins already know.
+  place: z
+    .string()
+    .trim()
+    .transform((value) => value || "À confirmer"),
+  // Complete postal address for the maps app; "" when unknown.
+  address: z.string().trim(),
+  // Room inside the building (« Salle 12 »); "" when none.
+  room: z.string().trim(),
   group_type: z.enum(GROUP_TYPES),
 });
 
@@ -49,11 +58,17 @@ export interface RehearsalRow {
   group_type: GroupType;
   event_id: string | null;
   google_updated_at: string | null;
+  address: string | null;
+  room: string | null;
+  updated_at: string;
+  calendar_synced_at: string | null;
 }
 
 export interface RehearsalUpsert {
   name: string;
   place: string;
+  address: string | null;
+  room: string | null;
   date: string;
   start_time: string;
   end_time: string;
@@ -64,7 +79,8 @@ export interface RehearsalUpsert {
 
 export interface SyncError {
   event_id?: string;
-  phase: "google" | "extract" | "times" | "write" | "log" | "auth";
+  phase:
+    "google" | "extract" | "times" | "write" | "log" | "auth" | "writeback";
   message: string;
 }
 
