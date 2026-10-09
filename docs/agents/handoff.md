@@ -50,7 +50,7 @@ This is for the next session, Claude or human. It picks up where the October 202
 - **Supabase default privileges** grant EXECUTE on new `public` functions to `anon` and `authenticated`. Always write `REVOKE ALL ON FUNCTION … FROM PUBLIC, anon, authenticated;` and grant only `service_role`. Check with `has_function_privilege` after applying.
 - **e2e locators** take `exact: true` and are scoped: `getByRole` matches names by substring, and B often shows a message twice (inline and in the error summary). Two specs failed on staging for this reason.
 - **Before merging a wave written without a session,** run the repo's logged-in admin specs against its preview (`scripts/agent/README.md`).
-- **`turbo-ignore` skips deployments** for docs- or test-only commits, so no e2e runs for them. Start the e2e workflow by hand (`gh workflow run e2e-daily.yml --ref dev -f project=all`) when the release head is such a commit.
+- **The e2e workflow runs daily only.** Before a release, start it by hand on the `dev` head once staging has deployed (`gh workflow run e2e-daily.yml --ref dev -f project=all`).
 - **CodeQL runs on release PRs** and has flagged test code and static docs (`docs/redesign/phase-1/*.html`). Read the annotations (`gh api …/check-runs/<id>/annotations`) and fix the code rather than dismissing.
 - **Mechanics:**
   - commits use `git -c core.hooksPath=/dev/null commit`;
