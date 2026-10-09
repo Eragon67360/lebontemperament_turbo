@@ -111,7 +111,10 @@ export const LEGACY_FAQ: readonly FaqItem[] = [
   },
 ];
 
-/** Published questions in the admin's order, or the legacy list. */
+/**
+ * Published questions in the admin's order, or the legacy list while the
+ * table can't be read or holds no published question.
+ */
 export async function listFaq(
   supabase: SupabaseClient<Database>,
 ): Promise<readonly FaqItem[]> {
@@ -125,6 +128,7 @@ export async function listFaq(
     console.error("FAQ unavailable, showing the built-in one:", error.message);
     return LEGACY_FAQ;
   }
+  if (data.length === 0) return LEGACY_FAQ;
   return data.map((row) => ({
     question: row.question,
     answer: row.answer,
