@@ -71,7 +71,7 @@ void main() {
     expect(find.text('19 h 30 · Salle de test'), findsOneWidget);
     // The room reads with the place; the address stays out of the list.
     expect(
-      find.text('19 h 30 · Conservatoire de test · Salle 12'),
+      find.text('19 h 30 · Conservatoire de test\u00A0· Salle\u00A012'),
       findsOneWidget,
     );
     expect(find.textContaining('place de l’Exemple'), findsNothing);

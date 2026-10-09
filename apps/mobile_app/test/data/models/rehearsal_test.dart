@@ -53,11 +53,11 @@ void main() {
   test('the room is shown next to the place', () {
     expect(
       _r(place: 'Conservatoire de Strasbourg', room: 'Salle 12').placeWithRoom,
-      'Conservatoire de Strasbourg · Salle 12',
+      'Conservatoire de Strasbourg\u00A0· Salle\u00A012',
     );
     expect(_r(place: 'Nordheim').placeWithRoom, 'Nordheim');
     expect(_r(place: 'Nordheim', room: ' ').placeWithRoom, 'Nordheim');
-    expect(_r(room: 'Salle 12').placeWithRoom, 'Salle 12');
+    expect(_r(room: 'Salle 12').placeWithRoom, 'Salle\u00A012');
     expect(_r().placeWithRoom, isNull);
   });
 }
