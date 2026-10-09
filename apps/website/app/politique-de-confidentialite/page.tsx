@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.5";
-const POLICY_UPDATED_ON = "8 octobre 2026";
+const POLICY_VERSION = "2.6";
+const POLICY_UPDATED_ON = "9 octobre 2026";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -646,8 +646,13 @@ export default function PrivacyPolicy() {
               <li className="mb-2">
                 <strong>Suppression du compte</strong> : le bouton « Supprimer
                 le compte » de l’application nous envoie une demande par e-mail
-                ; vous pouvez aussi écrire à <PrivacyMail />. Nous supprimons le
-                compte et le profil dans un délai d’un mois.
+                ; vous pouvez aussi la faire depuis la page « Mes données » de
+                l’espace membres du site, ou écrire à <PrivacyMail />. Nous
+                supprimons dans un délai d’un mois le compte, le profil, la
+                photo, les notifications, les signalements avec leurs captures
+                et les messages échangés à leur sujet ; ce que vous avez publié
+                pour l’association en tant qu’administrateur (concerts, comptes
+                rendus…) reste en ligne sans votre nom.
               </li>
             </ul>
           </Section>
@@ -922,6 +927,19 @@ export default function PrivacyPolicy() {
                 décès.
               </li>
             </ul>
+            <p className={pClass}>
+              Si vous êtes membre, la page{" "}
+              <Link href="/membres/mes-donnees" className={linkClass}>
+                « Mes données »
+              </Link>{" "}
+              de l’espace membres vous permet de télécharger à tout moment une
+              copie de vos données (un fichier JSON avec votre compte, votre
+              profil, vos notifications, vos signalements et, si vous
+              administrez le site, ce que vous y avez publié) et de demander la
+              suppression de votre compte. La demande nous parvient par e-mail ;
+              rien n’est supprimé avant que nous l’ayons traitée, dans un délai
+              d’un mois.
+            </p>
             <p className={pClass}>
               Pour exercer ces droits, écrivez-nous à <PrivacyMail /> ou par
               courrier au 3 Rue Clemenceau, 67700 Saverne. Nous répondons dans

@@ -3,7 +3,9 @@ import {
   BookOpen,
   Cake,
   CalendarDays,
+  CircleHelp,
   FileText,
+  Files,
   Film,
   FolderOpen,
   House,
@@ -11,10 +13,12 @@ import {
   LifeBuoy,
   type LucideIcon,
   Mail,
+  Megaphone,
   Music,
   Music2,
   Ticket,
   Users,
+  Vote,
 } from "lucide-react";
 
 export type NavItem = {
@@ -171,6 +175,16 @@ export function buildNavSections({
               label: "Vidéos",
               icon: Film,
             },
+            {
+              href: RouteNames.DASHBOARD.PUBLIC.ANNONCES,
+              label: "Annonces",
+              icon: Megaphone,
+            },
+            {
+              href: RouteNames.DASHBOARD.PUBLIC.REJOINDRE_FAQ,
+              label: "Rejoindre et FAQ",
+              icon: CircleHelp,
+            },
           ],
         },
       ],
@@ -230,13 +244,23 @@ export function buildNavSections({
       id: "association",
       label: "Association",
       description: isSuperAdmin
-        ? "Comptes rendus du CA et signalements"
-        : "Comptes rendus du conseil d’administration",
+        ? "Documents, AG, comptes rendus du CA et signalements"
+        : "Documents, AG et comptes rendus du CA",
       icon: Landmark,
       groups: [
         {
           id: "association-pages",
           items: [
+            {
+              href: RouteNames.DASHBOARD.ADMIN.DOCUMENTS,
+              label: "Documents de l’association",
+              icon: Files,
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.ASSEMBLIES,
+              label: "Assemblée générale",
+              icon: Vote,
+            },
             {
               href: RouteNames.DASHBOARD.ADMIN.CA,
               label: "Comptes rendus du CA",

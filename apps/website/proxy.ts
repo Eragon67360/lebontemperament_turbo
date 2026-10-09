@@ -13,8 +13,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - .well-known (app-link files read by Apple and Google, no session)
+     * - music/, pdf/, videos/ (redirects to the media bucket, no session)
      * Feel free to modify this pattern to include more paths.
      */
-    "/((?!_next/static|_next/image|favicon.ico|\\.well-known/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|\\.well-known/|music/|pdf/|videos/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

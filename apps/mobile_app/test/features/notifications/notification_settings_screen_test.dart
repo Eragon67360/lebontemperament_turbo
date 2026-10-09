@@ -1,3 +1,5 @@
+import 'dart:ui' show CheckedState, Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lebontemperament/features/notifications/presentation/screens/notification_settings_screen.dart';
@@ -45,7 +47,10 @@ void main() {
       var controls = 0;
       row.visitChildren((child) {
         final flags = child.flagsCollection;
-        if (flags.hasToggledState || flags.hasCheckedState) controls++;
+        if (flags.isToggled != Tristate.none ||
+            flags.isChecked != CheckedState.none) {
+          controls++;
+        }
         return true;
       });
       expect(controls, 1, reason: '« $label » must be read with its control');

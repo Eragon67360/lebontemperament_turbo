@@ -1,3 +1,4 @@
+import { CA_COLUMNS } from "@/lib/columns";
 import { UpdateCADTO } from "@/types/ca";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
@@ -20,7 +21,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("cas")
-    .select("*")
+    .select(CA_COLUMNS)
     .order("date_from", { ascending: false });
 
   if (error) {
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     const { data: newCA, error: caError } = await supabase
       .from("cas")
       .insert([{ ...caData, created_by: authCheck.user.id }])
-      .select()
+      .select(CA_COLUMNS)
       .single();
 
     if (caError) throw caError;
@@ -102,7 +103,7 @@ export async function PATCH(request: Request) {
     .from("cas")
     .update(updateData)
     .eq("id", id)
-    .select()
+    .select(CA_COLUMNS)
     .single();
 
   if (error) {

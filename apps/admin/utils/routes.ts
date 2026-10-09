@@ -13,6 +13,8 @@ const RouteNames = {
       USER: (id: string) => `/dashboard/admin/users/${encodeURIComponent(id)}`,
       USERS_SYNC: "/dashboard/admin/users/sync",
       CA: "/dashboard/admin/ca",
+      DOCUMENTS: "/dashboard/admin/documents",
+      ASSEMBLIES: "/dashboard/admin/assemblies",
       GOOGLE_GROUPS: "/dashboard/admin/google-groups",
       ANNIVERSARY: {
         ROOT: "/dashboard/admin/anniversary",
@@ -35,6 +37,8 @@ const RouteNames = {
     },
     PUBLIC: {
       PROCHAINS_CONCERTS: "/dashboard/public/concerts/prochains-concerts",
+      ANNONCES: "/dashboard/public/annonces",
+      REJOINDRE_FAQ: "/dashboard/public/rejoindre-faq",
       PROJETS: {
         ROOT: "/dashboard/public/concerts/projets",
       },

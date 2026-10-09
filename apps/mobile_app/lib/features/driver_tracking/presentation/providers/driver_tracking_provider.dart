@@ -505,8 +505,10 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
 
     try {
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 15),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
       );
 
       final response = await Supabase.instance.client.functions.invoke(
@@ -632,8 +634,10 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     void sendBackupPosition() async {
       try {
         final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 15),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 15),
+          ),
         );
         await onPosition(pos);
       } catch (e) {

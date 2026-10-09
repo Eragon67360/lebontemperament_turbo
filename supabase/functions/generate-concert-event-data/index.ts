@@ -14,6 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { requireInternalSecretOrAdmin } from "../_shared/caller-auth.ts";
 import { extractEventData, type ConcertInput } from "./extract.ts";
+import { findServiceKey } from "../_shared/supabase-keys.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -41,7 +42,7 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceKey = findServiceKey();
   const openAiKey = Deno.env.get("OPENAI_API_KEY");
   if (!supabaseUrl || !serviceKey || !openAiKey) {
     log("config_missing");

@@ -53,8 +53,8 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           # Pinned (same as ci.yml) so releases are reproducible; pubspec.lock
-          # resolves against Dart >=3.9 / Flutter >=3.35.
-          flutter-version: "3.35.7"
+          # requires Flutter >=3.47 (#400).
+          flutter-version: "3.47.6"
           channel: "stable"
           cache: true # Optimization: Cache Flutter Engine
 

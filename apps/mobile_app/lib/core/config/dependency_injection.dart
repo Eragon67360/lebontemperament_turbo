@@ -1,17 +1,9 @@
 import 'package:get_it/get_it.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 
 import '../../data/services/storage_service.dart';
 import '../../features/auth/data/services/auth_service.dart';
-import '../../data/models/user.dart' as app_user;
-import '../../data/models/event.dart';
-import '../../data/models/concert.dart';
-import '../../data/models/rehearsal.dart';
-import '../../data/models/event_type_adapter.dart';
-import '../../data/models/group_type_adapter.dart';
-import '../../data/models/context_adapter.dart';
 
 class DependencyInjection {
   static final GetIt _getIt = GetIt.instance;
@@ -19,27 +11,6 @@ class DependencyInjection {
   static GetIt get getIt => _getIt;
 
   static Future<void> init() async {
-    // Initialize Hive
-    await Hive.initFlutter();
-
-    // Register Hive adapters (typeId 2 was Announcement, removed in #362:
-    // keep it unused so old boxes on members' devices never decode wrongly)
-    Hive.registerAdapter(app_user.UserAdapter());
-    Hive.registerAdapter(EventAdapter());
-    Hive.registerAdapter(ConcertAdapter());
-    Hive.registerAdapter(RehearsalAdapter());
-
-    // Register enum adapters
-    Hive.registerAdapter(EventTypeAdapter());
-    Hive.registerAdapter(GroupTypeAdapter());
-    Hive.registerAdapter(ContextAdapter());
-
-    // Open Hive boxes
-    await Hive.openBox<app_user.User>('users');
-    await Hive.openBox<Event>('events');
-    await Hive.openBox<Concert>('concerts');
-    await Hive.openBox<Rehearsal>('rehearsals');
-
     // Initialize Logger
     _getIt.registerSingleton<Logger>(
       Logger(
@@ -98,7 +69,6 @@ class DependencyInjection {
   }
 
   static Future<void> dispose() async {
-    await Hive.close();
     await _getIt.reset();
   }
 }

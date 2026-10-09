@@ -21,10 +21,14 @@ for (const path of PUBLIC_PAGES) {
 }
 
 // P1 — an anonymous visit of the home page costs no Realtime connection and
-// at most one API call (the feature flag and the admin status are rendered
-// on the server; the concert-story teaser is server-rendered too, so the one
-// allowed call is the featured-videos bubble).
-test("the home page opens no websocket and at most one API call", async ({
+// only the API calls listed here, each once (the feature flag and the admin
+// status are rendered on the server; the concert-story teaser is
+// server-rendered too). The featured-videos bubble reads /api/videos; the
+// donation card in the navigation reads /api/announcements, which is
+// prerendered and served from the CDN.
+const HOME_API_CALLS = ["/api/videos", "/api/announcements"];
+
+test("the home page opens no websocket and only the expected API calls", async ({
   page,
 }) => {
   const websockets: string[] = [];
@@ -42,5 +46,8 @@ test("the home page opens no websocket and at most one API call", async ({
   ).toBeVisible();
 
   expect(websockets).toEqual([]);
-  expect(apiCalls.length, apiCalls.join(", ")).toBeLessThanOrEqual(1);
+  for (const path of apiCalls) {
+    expect(HOME_API_CALLS, apiCalls.join(", ")).toContain(path);
+  }
+  expect(new Set(apiCalls).size, apiCalls.join(", ")).toBe(apiCalls.length);
 });

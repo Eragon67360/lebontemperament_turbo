@@ -1,3 +1,4 @@
+import { REHEARSAL_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -19,7 +20,7 @@ export async function GET(
     const id = (await params).id;
     const { data, error } = await supabase
       .from("rehearsals")
-      .select("*")
+      .select(REHEARSAL_COLUMNS)
       .eq("id", id)
       .single();
 
@@ -66,7 +67,7 @@ export async function PATCH(
       .from("rehearsals")
       .update({ name, place, date, start_time, end_time, group_type })
       .eq("id", id)
-      .select()
+      .select(REHEARSAL_COLUMNS)
       .single();
 
     if (error) throw error;

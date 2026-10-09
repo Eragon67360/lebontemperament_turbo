@@ -480,10 +480,14 @@ class _PartitionsScreenState extends ConsumerState<PartitionsScreen> {
       final origin = box == null || !box.hasSize
           ? null
           : box.localToGlobal(Offset.zero) & box.size;
-      await Share.shareXFiles(
-        [XFile(tempFile.path, mimeType: download.contentType, name: name)],
-        subject: name,
-        sharePositionOrigin: origin,
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile(tempFile.path, mimeType: download.contentType, name: name),
+          ],
+          subject: name,
+          sharePositionOrigin: origin,
+        ),
       );
     } on DriveDownloadCancelled {
       // The member (or a closing screen) stopped it: nothing to say.

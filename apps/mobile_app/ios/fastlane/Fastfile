@@ -66,6 +66,26 @@ def signing_xcargs
   ].join(" ")
 end
 
+# Cloud signing creates a new « Apple Development » certificate on every
+# fresh runner, and Apple caps how many an account holds: once full, the
+# archive fails with « Your account has reached the maximum number of
+# certificates ». Before archiving, revoke the ones earlier runs made through
+# the API key (Apple names them « Created via API »). Certificates made in
+# Xcode on a Mac, and every distribution certificate, are left alone.
+# Revoking a development certificate doesn't touch TestFlight builds,
+# installed apps or push notifications. Logs counts only (public logs).
+def revoke_ci_development_certificates
+  types = Spaceship::ConnectAPI::Certificate::CertificateType
+  certificates = Spaceship::ConnectAPI::Certificate.all(
+    filter: { certificateType: [types::DEVELOPMENT, types::IOS_DEVELOPMENT].join(",") }
+  )
+  stale = certificates.select do |certificate|
+    [certificate.name, certificate.display_name].any? { |label| label.to_s.include?("Created via API") }
+  end
+  stale.each(&:delete!)
+  UI.message("Development certificates: #{certificates.size} found, #{stale.size} left by earlier cloud builds revoked")
+end
+
 # Names of the internal TestFlight groups without automatic distribution,
 # or nil when there are none. Logs every internal group with its tester
 # count (no names or emails: the workflow logs are public).
@@ -130,6 +150,7 @@ platform :ios do
   desc "Archive the app (after `flutter build ios --no-codesign`), sign it for the App Store, upload it to TestFlight and send it to members (SEND_TO_MEMBERS=false: internal testers only)."
   lane :beta do
     key = api_key
+    revoke_ci_development_certificates
     # Team and automatic signing set on the project for this run (not as
     # xcargs: gym passes xcargs to the export step too, where xcodebuild
     # refuses duplicate options).

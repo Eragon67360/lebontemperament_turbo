@@ -6,8 +6,9 @@ import {
   type UserRole,
 } from "@/utils/access";
 import { checkAuthorization } from "@/utils/auth";
+import { removeMemberFiles } from "@/utils/members/memberFiles";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { inviteStatusOf, listAllAuthUsers } from "@/utils/users/authUsers";
+import { inviteStatusOf, listAuthSummaries } from "@/utils/users/authUsers";
 import { NextResponse } from "next/server";
 
 const roleLabel = (role: UserRole) =>
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
     const [{ data: profiles, error: profilesError }, authUsersResult] =
       await Promise.all([
         query,
-        listAllAuthUsers(supabaseAdmin).catch((error) => {
+        listAuthSummaries(supabaseAdmin).catch((error) => {
           console.error("Error fetching auth users:", error);
           throw error;
         }),
@@ -53,17 +54,16 @@ export async function GET(request: Request) {
 
     if (profilesError) throw profilesError;
 
-    // Now authUsersResult contains ALL auth users
-    const authUsers = authUsersResult;
+    const authById = new Map(authUsersResult.map((au) => [au.id, au]));
 
     // Merge profiles with auth users data with more precise status checking
     const enrichedUsers = profiles?.map((profile) => {
-      const authUser = authUsers.find((au) => au.id === profile.id);
+      const authUser = authById.get(profile.id);
 
       const invite_status = inviteStatusOf(authUser);
 
       // Get avatar: prioritize profile_picture_url over Google avatar
-      const googleAvatar = authUser?.user_metadata?.avatar_url;
+      const googleAvatar = authUser?.avatar_url;
       const avatar = profile.profile_picture_url || googleAvatar || undefined;
 
       return {
@@ -206,6 +206,10 @@ export async function DELETE(request: Request) {
         { status: decision.status },
       );
     }
+
+    // Storage files first: the database rows go with the account, files
+    // don't (#354).
+    await removeMemberFiles(supabaseAdmin, userId);
 
     const { error: deleteError } =
       await supabaseAdmin.auth.admin.deleteUser(userId);

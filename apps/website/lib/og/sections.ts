@@ -104,12 +104,12 @@ export const OG_SECTIONS = {
     path: "/politique-de-confidentialite",
     alt: "Politique de confidentialité du Bon Tempérament",
   },
-  ag2026: {
+  ag: {
     label: "Vie de l’association",
-    title: "Assemblée générale 2026",
-    lines: ["Convocation et formulaire de procuration."],
-    path: "/ag-2026",
-    alt: "Assemblée générale 2026 du Bon Tempérament",
+    title: "Assemblée générale",
+    lines: ["Date, convocation et formulaire de procuration."],
+    path: "/ag",
+    alt: "Assemblée générale du Bon Tempérament",
   },
   membres: {
     label: "Espace membres",

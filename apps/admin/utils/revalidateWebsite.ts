@@ -22,6 +22,13 @@ export const WEBSITE_PATHS = {
   concerts: "/concerts",
   concertStories: { path: "/concerts/[slug]", type: "page" },
   gallery: "/galerie",
+  /** The general assembly page (newest published AG). */
+  generalAssembly: "/ag",
+  /** The FAQ and the joining page (rehearsal times). */
+  faq: "/faq",
+  joining: "/rejoindre",
+  /** Announcements read by the navigation's donation card. */
+  announcementsApi: "/api/announcements",
   sitemap: "/sitemap.xml",
   /** The root layout: every page (feature flags are read there). */
   everything: { path: "/", type: "layout" },
@@ -46,6 +53,16 @@ export const REVALIDATE = {
       WEBSITE_PATHS.sitemap,
     ],
   },
+  /** general assemblies: their page and the home page's announcement */
+  assemblies: { paths: [WEBSITE_PATHS.generalAssembly, WEBSITE_PATHS.home] },
+  /** announcements: the home buttons and the donation card's data */
+  announcements: {
+    paths: [WEBSITE_PATHS.home, WEBSITE_PATHS.announcementsApi],
+  },
+  /** FAQ questions */
+  faq: { paths: [WEBSITE_PATHS.faq] },
+  /** rehearsal times on the joining page */
+  joiningSlots: { paths: [WEBSITE_PATHS.joining] },
   /** YouTube links */
   videos: { paths: [WEBSITE_PATHS.gallery] },
   /** feature flags are read in the root layout: everything, plus the sitemap */

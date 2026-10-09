@@ -13,6 +13,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { callerIp, clientKey, httpStatus } from "./client.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const serviceKey = requireServiceKey();
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
     const body = (await req.json().catch(() => ({}))) as Record<
       string,

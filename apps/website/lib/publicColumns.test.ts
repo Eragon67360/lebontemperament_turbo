@@ -3,6 +3,7 @@
 // The public read routes select explicit column lists instead of `*`. These
 // checks keep the lists honest: no row metadata or author ids reach visitors,
 // and the 40-ans lists match the fields the page interfaces declare.
+import { PROJECT_STORY_COLUMNS } from "@repo/domain/utils/projects";
 import assert from "node:assert/strict";
 import {
   ANNIVERSARY_ARCHIVE_COLUMNS,
@@ -31,10 +32,14 @@ for (const [name, list] of Object.entries({
   TOUR_COLUMNS,
   PUBLIC_VIDEO_COLUMNS,
   MEMBER_REHEARSAL_COLUMNS,
+  PROJECT_STORY_COLUMNS,
 })) {
   const cols = columns(list);
   assert.ok(!cols.includes("created_by"), `${name} exposes created_by`);
   assert.ok(!cols.includes("*"), `${name} selects every column`);
+  if (name === "PROJECT_STORY_COLUMNS")
+    for (const meta of ["created_at", "updated_at", "display_order"])
+      assert.ok(!cols.includes(meta), `${name} exposes ${meta}`);
   assert.equal(new Set(cols).size, cols.length, `${name} repeats a column`);
 }
 

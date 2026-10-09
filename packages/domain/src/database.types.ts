@@ -682,6 +682,36 @@ export type Database = {
           },
         ];
       };
+      content_revisions: {
+        Row: {
+          changed_at: string;
+          changed_by: string | null;
+          id: number;
+          old_row: Json;
+          operation: string;
+          row_id: string;
+          table_name: string;
+        };
+        Insert: {
+          changed_at?: string;
+          changed_by?: string | null;
+          id?: number;
+          old_row: Json;
+          operation: string;
+          row_id: string;
+          table_name: string;
+        };
+        Update: {
+          changed_at?: string;
+          changed_by?: string | null;
+          id?: number;
+          old_row?: Json;
+          operation?: string;
+          row_id?: string;
+          table_name?: string;
+        };
+        Relationships: [];
+      };
       deliveries: {
         Row: {
           created_at: string | null;
@@ -809,6 +839,36 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      document_collections: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          label: string;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          label: string;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          label?: string;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       donation_receipt_seq: {
         Row: {
@@ -1096,6 +1156,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      faq_items: {
+        Row: {
+          answer: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          link_href: string | null;
+          link_label: string | null;
+          question: string;
+          sort_order: number;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          answer: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          link_href?: string | null;
+          link_label?: string | null;
+          question: string;
+          sort_order?: number;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          answer?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          link_href?: string | null;
+          link_label?: string | null;
+          question?: string;
+          sort_order?: number;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
       feature_flags: {
         Row: {
           created_at: string | null;
@@ -1248,6 +1350,75 @@ export type Database = {
           },
         ];
       };
+      general_assemblies: {
+        Row: {
+          afterwards: string | null;
+          agenda: string | null;
+          convocation_document_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          held_at: string;
+          id: string;
+          place: string;
+          practical_note: string | null;
+          proxy_document_id: string | null;
+          reminders: string | null;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+          voting_rights: string | null;
+        };
+        Insert: {
+          afterwards?: string | null;
+          agenda?: string | null;
+          convocation_document_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          held_at: string;
+          id?: string;
+          place: string;
+          practical_note?: string | null;
+          proxy_document_id?: string | null;
+          reminders?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          voting_rights?: string | null;
+        };
+        Update: {
+          afterwards?: string | null;
+          agenda?: string | null;
+          convocation_document_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          held_at?: string;
+          id?: string;
+          place?: string;
+          practical_note?: string | null;
+          proxy_document_id?: string | null;
+          reminders?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          voting_rights?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "general_assemblies_convocation_document_id_fkey";
+            columns: ["convocation_document_id"];
+            isOneToOne: false;
+            referencedRelation: "site_documents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "general_assemblies_proxy_document_id_fkey";
+            columns: ["proxy_document_id"];
+            isOneToOne: false;
+            referencedRelation: "site_documents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       groups: {
         Row: {
           created_at: string | null;
@@ -1278,6 +1449,51 @@ export type Database = {
           order_index?: number;
           slug?: string;
           type?: string;
+        };
+        Relationships: [];
+      };
+      joining_slots: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          day: string;
+          group_name: string;
+          id: string;
+          place: string;
+          rhythm: string;
+          sort_order: number;
+          status: string;
+          time_label: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          day: string;
+          group_name: string;
+          id?: string;
+          place: string;
+          rhythm: string;
+          sort_order?: number;
+          status?: string;
+          time_label: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          day?: string;
+          group_name?: string;
+          id?: string;
+          place?: string;
+          rhythm?: string;
+          sort_order?: number;
+          status?: string;
+          time_label?: string;
+          updated_at?: string;
+          updated_by?: string | null;
         };
         Relationships: [];
       };
@@ -1560,6 +1776,125 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_announcements: {
+        Row: {
+          body: string | null;
+          created_at: string;
+          created_by: string | null;
+          ends_on: string | null;
+          id: string;
+          link_label: string | null;
+          link_url: string;
+          placement: string;
+          sort_order: number;
+          starts_on: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          body?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          ends_on?: string | null;
+          id?: string;
+          link_label?: string | null;
+          link_url: string;
+          placement: string;
+          sort_order?: number;
+          starts_on?: string | null;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          body?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          ends_on?: string | null;
+          id?: string;
+          link_label?: string | null;
+          link_url?: string;
+          placement?: string;
+          sort_order?: number;
+          starts_on?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      site_documents: {
+        Row: {
+          archived_at: string | null;
+          collection_id: string;
+          created_at: string;
+          created_by: string | null;
+          date_precision: string | null;
+          document_date: string | null;
+          file_name: string;
+          id: string;
+          mime_type: string;
+          size_bytes: number | null;
+          sort_order: number;
+          status: string;
+          storage_key: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          visibility: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          collection_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          date_precision?: string | null;
+          document_date?: string | null;
+          file_name: string;
+          id?: string;
+          mime_type?: string;
+          size_bytes?: number | null;
+          sort_order?: number;
+          status?: string;
+          storage_key: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          visibility?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          collection_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          date_precision?: string | null;
+          document_date?: string | null;
+          file_name?: string;
+          id?: string;
+          mime_type?: string;
+          size_bytes?: number | null;
+          sort_order?: number;
+          status?: string;
+          storage_key?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_documents_collection_id_fkey";
+            columns: ["collection_id"];
+            isOneToOne: false;
+            referencedRelation: "document_collections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tours: {
         Row: {
           context: string;
@@ -1652,6 +1987,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      auth_user_summaries: {
+        Args: never;
+        Returns: {
+          avatar_url: string | null;
+          confirmed_at: string | null;
+          email_confirmed_at: string | null;
+          id: string;
+          invited_at: string | null;
+          last_sign_in_at: string | null;
+        }[];
+      };
       concert_event_data_write: {
         Args: {
           p_city: string;
@@ -1707,6 +2053,17 @@ export type Database = {
         Args: { p_report_id: string };
         Returns: undefined;
       };
+      member_directory_with_avatars: {
+        Args: never;
+        Returns: {
+          auth_avatar_url: string | null;
+          display_name: string;
+          email: string;
+          id: string;
+          profile_picture_url: string;
+          voice: string;
+        }[];
+      };
       member_directory: {
         Args: never;
         Returns: {
@@ -1733,6 +2090,10 @@ export type Database = {
           p_upserts: Json;
         };
         Returns: Json;
+      };
+      site_document_object: {
+        Args: { p_collection: string; p_file_name: string };
+        Returns: string;
       };
     };
     Enums: {

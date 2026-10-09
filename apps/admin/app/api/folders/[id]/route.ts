@@ -1,4 +1,5 @@
 // app/api/folders/[id]/route.ts
+import { FOLDER_COLUMNS } from "@/lib/columns";
 import { UpdateFolderDTO } from "@/types/files";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
@@ -25,7 +26,7 @@ export async function PATCH(
     .from("folders")
     .update(updates)
     .eq("id", id)
-    .select()
+    .select(FOLDER_COLUMNS)
     .single();
 
   if (error) {
@@ -53,7 +54,7 @@ export async function DELETE(
   try {
     const { data: folder, error: folderError } = await supabase
       .from("folders")
-      .select("*")
+      .select(FOLDER_COLUMNS)
       .eq("id", id)
       .single();
 

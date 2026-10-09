@@ -9,7 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { FaKey } from "react-icons/fa";
-import { IoLogOut } from "react-icons/io5";
+import { IoLogOut, IoShieldCheckmarkOutline } from "react-icons/io5";
 
 type UserProfile = {
   id: string;
@@ -131,6 +131,18 @@ const UserMenu = ({ user }: { user: User }) => {
               >
                 <FaKey className="mr-2 size-4" aria-hidden="true" />
                 Changer mon mot de passe
+              </Button>
+              <Button
+                variant="ghost"
+                onPress={() => router.push(RouteNames.MEMBRES.MES_DONNEES)}
+                className="flex w-full cursor-pointer items-center justify-start gap-1"
+                isDisabled={isPending}
+              >
+                <IoShieldCheckmarkOutline
+                  className="mr-2 size-4"
+                  aria-hidden="true"
+                />
+                Mes données
               </Button>
               <Button
                 variant="ghost"

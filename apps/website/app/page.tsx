@@ -1,13 +1,18 @@
 import HomeContent from "@/components/HomeContent";
+import { listAnnouncements } from "@/lib/announcements";
+import { getCurrentAssembly } from "@/lib/generalAssemblies";
 import type { ConcertProject } from "@/types/projects";
 import { createPublicClient } from "@/utils/supabase/public";
-import type { Project } from "@repo/domain/types/projects";
-import { transformProjectForFrontend } from "@repo/domain/utils/projects";
+import {
+  PROJECT_STORY_COLUMNS,
+  transformProjectForFrontend,
+  type ProjectStory,
+} from "@repo/domain/utils/projects";
 import { Metadata } from "next";
 
-// The concert-story teaser is the page's only data (anon key, no cookies):
-// prerendered, served from the cache for five minutes or until the admin's
-// story edit calls /api/revalidate.
+// The concert-story teaser, the general assembly and the announcements are
+// the page's only data (anon key, no cookies): prerendered, served from the cache
+// for five minutes or until an admin edit calls /api/revalidate.
 export const revalidate = 300;
 
 export const metadata: Metadata = {
@@ -38,12 +43,14 @@ async function getLatestStories(): Promise<ConcertProject[] | undefined> {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("projects")
-      .select("*")
+      .select(PROJECT_STORY_COLUMNS)
       .order("display_order", { ascending: false })
       .order("date", { ascending: false })
       .limit(4);
     if (error) throw error;
-    return (data || []).map((p: Project) => transformProjectForFrontend(p));
+    return (data || []).map((p: ProjectStory) =>
+      transformProjectForFrontend(p),
+    );
   } catch (error) {
     // Unreachable database (CI builds with placeholder credentials): the
     // teaser loads in the browser as before; ISR fills it in afterwards.
@@ -52,11 +59,25 @@ async function getLatestStories(): Promise<ConcertProject[] | undefined> {
   }
 }
 
+// The newest published AG; the button shows until its day (HomeContent).
+async function getAssemblyHeldAt(): Promise<string | null> {
+  const assembly = await getCurrentAssembly(createPublicClient());
+  return assembly?.heldAt ?? null;
+}
+
 const Home = async () => {
-  const stories = await getLatestStories();
+  const [stories, assemblyHeldAt, announcements] = await Promise.all([
+    getLatestStories(),
+    getAssemblyHeldAt(),
+    listAnnouncements(createPublicClient(), "home"),
+  ]);
   return (
     <>
-      <HomeContent stories={stories} />
+      <HomeContent
+        stories={stories}
+        assemblyHeldAt={assemblyHeldAt}
+        announcements={announcements}
+      />
     </>
   );
 };

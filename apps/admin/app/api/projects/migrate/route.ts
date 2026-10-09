@@ -1,3 +1,4 @@
+import { PROJECT_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -166,7 +167,7 @@ export async function POST() {
       const { data, error } = await supabase
         .from("projects")
         .insert(batch)
-        .select();
+        .select(PROJECT_COLUMNS);
 
       if (error) {
         errors.push(`Batch ${i / batchSize + 1}: ${error.message}`);

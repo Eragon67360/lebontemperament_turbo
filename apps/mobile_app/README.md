@@ -41,7 +41,7 @@ To test the feature:
 
 ### Prerequisites
 
-- Flutter SDK 3.8.1+
+- Flutter SDK 3.47+ (CI pins 3.47.6; Android Gradle plugin 8.13, Gradle 8.14, Kotlin 2.3)
 - Dart SDK
 - Supabase project with real-time enabled
 
@@ -80,9 +80,9 @@ Push notifications follow the session: the device subscribes to the `all_users` 
 
 At launch the app reads two rows of the `feature_flags` table (`lib/data/services/feature_flags_service.dart`); each one only adds a banner on the home screen, and a failed read (offline, RLS, missing rows) means "no flag", never a blocked app. Create the rows from the Supabase dashboard (SQL below is for reference; the owner runs it):
 
-| `flag_key`           | Effect when `is_enabled`                                                                          | Where the value goes                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `mobile_maintenance` | "Maintenance en cours" banner on the home screen                                                  | `is_enabled` only                                                                |
+| `flag_key`           | Effect when `is_enabled`                                                                           | Where the value goes                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `mobile_maintenance` | "Maintenance en cours" banner on the home screen                                                   | `is_enabled` only                                                                            |
 | `mobile_min_version` | "Mise à jour recommandée" banner when the installed version is older than the value (never blocks) | the version string (`2.1.0`) in the `description` column; the table has no other text column |
 
 ```sql
@@ -102,7 +102,7 @@ The login screen offers « Continuer avec Google » (Android and iOS) and « Con
 
 ### Offline states
 
-The rehearsals, concerts and events lists are cached in Hive. When the server cannot be reached they show the cached rows under a "Données hors ligne" banner; with nothing cached they show an error with a retry (worded "Vous êtes hors ligne" when `connectivity_plus` reports no network), and a fresh empty list shows the empty state. The lists reload by themselves when the network comes back.
+The rehearsals, concerts and events lists are cached as JSON in shared preferences (`lib/data/services/storage_service.dart`; Hive until #362). When the server cannot be reached they show the cached rows under a "Données hors ligne" banner; with nothing cached they show an error with a retry (worded "Vous êtes hors ligne" when `connectivity_plus` reports no network), and a fresh empty list shows the empty state. The lists reload by themselves when the network comes back.
 
 ## Architecture
 
@@ -119,5 +119,5 @@ The app follows a clean architecture pattern with:
 - **Navigation**: Go Router
 - **Database**: Supabase Flutter
 - **Notifications**: Flutter Local Notifications
-- **Storage**: Hive
+- **Storage**: shared_preferences (settings and the offline cache)
 - **Code Generation**: Freezed, JSON Serializable

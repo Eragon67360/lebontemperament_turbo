@@ -1,0 +1,9 @@
+{
+  "ignores": [
+    "@supabase/ssr",
+    "@tailwindcss/postcss",
+    "@types/node",
+    "server-only",
+    "tw-animate-css"
+  ]
+}
