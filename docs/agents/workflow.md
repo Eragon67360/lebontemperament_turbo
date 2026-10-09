@@ -16,7 +16,7 @@ issue (GitHub) ──► branch from origin/dev ──► PR into dev ──► 
 2. **Branch** from a fresh `origin/dev` in a worktree: `git fetch origin && git worktree add ../lbt-<topic> -b <type>/<topic> origin/dev`. Branch names in history: `feat/…`, `fix/…`, `bugfix/…`, `refactor/…`, `chore/…`, `ci/…`, `test/…`, `docs/…`.
 3. **Commits**: English Conventional Commits with a scope when one app is concerned (`feat(admin): …`, `fix(website): …`, `fix(domain): …`, `test(e2e): …`), one logical change each, body says why and links the issue (`Closes #12` / `Refs #12`). End each message with the attribution lines your harness provides.
 4. **PR into `dev`**: what changed, why, how it was verified (exact commands and results), owner steps if any. Vercel builds previews of both sites for the PR; those are the only automatic checks.
-5. **Merge into `dev`** yourself once the gates pass and the diff has been reviewed: `gh pr merge <n> --merge` (this repo uses **merge commits**). `dev` then deploys to staging, and the e2e suite runs against it.
+5. **Merge into `dev`** yourself once the gates pass and the diff has been reviewed: `gh pr merge <n> --merge` (this repo uses **merge commits**). `dev` then deploys to staging; the e2e suite runs against it every morning.
 6. **Release** `dev` → `main` when a coherent batch is ready: see [release.md](release.md). Merge it only after the owner's explicit go for that PR.
 
 Never use `--delete-branch` on a release PR (its head is `dev`).
