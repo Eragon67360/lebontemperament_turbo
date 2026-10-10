@@ -17,7 +17,6 @@ import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../widgets/concert_anniversaire_section.dart';
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
 import '../../../../core/utils/text_scale.dart';
 
@@ -364,27 +363,16 @@ class _ConcertsList extends StatelessWidget {
             kFloatingNavBarBottomPadding,
           ),
           sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                // Handle the Anniversaire Section at the end
-                if (index == concerts.length) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 8.0),
-                    child: ConcertAnniversaireSection(),
-                  );
-                }
-
-                final concert = concerts[index];
-                return FadeInUp(
-                  delay: 100 + (index * 50),
-                  child: _ConcertCard(
-                    concert: concert,
-                    isLast: index == concerts.length - 1,
-                  ),
-                );
-              },
-              childCount: concerts.length + 1, // +1 for AnniversaireSection
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final concert = concerts[index];
+              return FadeInUp(
+                delay: 100 + (index * 50),
+                child: _ConcertCard(
+                  concert: concert,
+                  isLast: index == concerts.length - 1,
+                ),
+              );
+            }, childCount: concerts.length),
           ),
         ),
       ],

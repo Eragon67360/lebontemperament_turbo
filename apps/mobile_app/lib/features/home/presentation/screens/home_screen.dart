@@ -20,10 +20,12 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
 import '../../../main/presentation/providers/main_navigation_provider.dart';
 
-/// Home (« Portée »), in three blocks that never mix: the member's
-/// rehearsals (the next one large, the week as a bar of music, the two
-/// after), the members' shortcuts, then the next concert under its own
-/// heading. Only the member's ensembles show (Profil › Mes ensembles).
+/// Home (« Portée »), in two worlds that never mix: first « Espace
+/// membres », the members' shortcuts on a tinted panel so they read as tools
+/// and show without scrolling; then the agenda on the page ground: the
+/// member's rehearsals (the next one large, the week as a bar of music, the
+/// two after) and the next concert under its own heading. Only the member's
+/// ensembles show (Profil › Mes ensembles).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -47,12 +49,11 @@ class HomeScreen extends ConsumerWidget {
                   _WelcomeHeader(),
                   SizedBox(height: 24),
                   _NoticesSection(),
-                  _RehearsalsSection(),
+                  _MembresPanel(),
                   SizedBox(height: 32),
-                  StageSectionHeader(title: 'Espace membres'),
-                  SizedBox(height: 12),
-                  _MembresGrid(),
+                  _RehearsalsSection(),
                   _ConcertSection(),
+                  _DeliveryModeCard(),
                   SizedBox(height: 32),
                   _InfoCard(),
                   SizedBox(height: 16),
@@ -212,7 +213,6 @@ class _RehearsalsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.read(mainNavigationProvider.notifier);
-    final isSuperadmin = ref.watch(isSuperadminProvider).value ?? false;
     final filtered = ref.watch(myGroupsProvider).isNotEmpty;
     final rehearsalsAsync = ref.watch(homeUpcomingRehearsalsProvider);
     final rehearsals = rehearsalsAsync.value ?? const <Rehearsal>[];
@@ -277,16 +277,28 @@ class _RehearsalsSection extends ConsumerWidget {
               const SizedBox(height: 10),
             ],
           ],
-          if (isSuperadmin) ...[
-            const SizedBox(height: 18),
-            _AdminActionCard(
-              icon: Icons.local_shipping_outlined,
-              title: 'Mode livraison',
-              subtitle: 'Suivi de position en temps réel',
-              onTap: () => context.push('/driver-tracking'),
-            ),
-          ],
         ],
+      ),
+    );
+  }
+}
+
+/// Superadmins only: the delivery tracking, after the agenda since it is
+/// neither a rehearsal nor a members' shortcut.
+class _DeliveryModeCard extends ConsumerWidget {
+  const _DeliveryModeCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSuperadmin = ref.watch(isSuperadminProvider).value ?? false;
+    if (!isSuperadmin) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: _AdminActionCard(
+        icon: Icons.local_shipping_outlined,
+        title: 'Mode livraison',
+        subtitle: 'Suivi de position en temps réel',
+        onTap: () => context.push('/driver-tracking'),
       ),
     );
   }
@@ -323,7 +335,7 @@ class _ConcertSection extends ConsumerWidget {
             AsyncData(value: final items) when items.isNotEmpty =>
               _NextConcertCard(
                 concert: items.first,
-                onTap: () => navigation.setTab(1),
+                onTap: () => context.push('/concerts/${items.first.id}'),
               ),
             AsyncData() => const _EmptyStateCard(
               message: 'Aucun concert à venir',
@@ -785,6 +797,50 @@ class _AdminActionCard extends StatelessWidget {
 
 // MARK: - Espace membres
 
+/// The members' shortcuts on a tinted panel, right under the greeting: a
+/// place of its own, not one more card in the agenda (a member's feedback,
+/// October 2026: the shortcuts read like the rehearsal rows and sat below
+/// the fold).
+class _MembresPanel extends StatelessWidget {
+  const _MembresPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return FadeInUp(
+      delay: 250,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        decoration: BoxDecoration(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Semantics(
+                header: true,
+                child: Text(
+                  'Espace membres',
+                  style: AppFonts.display(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const _MembresGrid(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MembresGrid extends ConsumerWidget {
   const _MembresGrid();
 
@@ -805,30 +861,27 @@ class _MembresGrid extends ConsumerWidget {
       ),
     ];
 
-    return FadeInUp(
-      delay: 350,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // One row of three, icon above the label, so the shortcuts stay
-          // near the top; a list when large text would make the labels wrap
-          // badly.
-          final scale = MediaQuery.textScalerOf(context).scale(1.0);
-          final columns = scale >= 1.3 ? 1 : 3;
-          const gap = 10.0;
-          final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
-          return Wrap(
-            spacing: gap,
-            runSpacing: gap,
-            children: [
-              for (final t in tiles)
-                SizedBox(
-                  width: width,
-                  child: _MembresTile(tile: t, stacked: columns > 1),
-                ),
-            ],
-          );
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // One row of three, icon above the label, so the shortcuts stay
+        // near the top; a list when large text would make the labels wrap
+        // badly.
+        final scale = MediaQuery.textScalerOf(context).scale(1.0);
+        final columns = scale >= 1.3 ? 1 : 3;
+        const gap = 10.0;
+        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final t in tiles)
+              SizedBox(
+                width: width,
+                child: _MembresTile(tile: t, stacked: columns > 1),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -865,6 +918,9 @@ class _MembresTile extends StatelessWidget {
     return StageCard(
       onTap: tile.onTap,
       semanticLabel: tile.title,
+      // Lifted off the tinted panel: white in light, the deepest ground in
+      // dark.
+      color: scheme.surfaceContainerLowest,
       padding: stacked
           ? const EdgeInsets.symmetric(horizontal: 6, vertical: 14)
           : const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
