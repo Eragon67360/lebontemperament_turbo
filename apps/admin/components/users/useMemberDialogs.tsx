@@ -5,11 +5,13 @@ import { ChangeEmailDialog } from "@/components/users/ChangeEmailDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { ProfilePictureDialog } from "@/components/users/ProfilePictureDialog";
 import { RoleDialog } from "@/components/users/RoleDialog";
+import { VoiceDialog } from "@/components/users/VoiceDialog";
 import {
   useDeleteUser,
   useUpdateUserDisplayName,
   useUpdateUserEmail,
   useUpdateUserRole,
+  useUpdateUserVoice,
 } from "@/hooks/useUsers";
 import type { User } from "@/types/user";
 import { memberName, ROLE_LABELS, type Role } from "@/utils/members/list";
@@ -17,8 +19,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 /**
- * The dialogs a member can be the subject of (role, name, sign-in email,
- * photo, permanent deletion), shared by the list's « ⋯ » menu and the member page. Each one
+ * The dialogs a member can be the subject of (role, name, voice, sign-in
+ * email, photo, permanent deletion), shared by the list's « ⋯ » menu and the member page. Each one
  * names the person; the API checks every rule again.
  */
 export function useMemberDialogs({
@@ -32,6 +34,7 @@ export function useMemberDialogs({
   const [renameUser, setRenameUser] = useState<User | null>(null);
   const [emailUser, setEmailUser] = useState<User | null>(null);
   const [photoUser, setPhotoUser] = useState<User | null>(null);
+  const [voiceUser, setVoiceUser] = useState<User | null>(null);
   // Kept while the dialog closes, so its text never empties.
   const [deleting, setDeleting] = useState<User | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -39,6 +42,7 @@ export function useMemberDialogs({
   const updateRole = useUpdateUserRole();
   const updateName = useUpdateUserDisplayName();
   const updateEmail = useUpdateUserEmail();
+  const updateVoice = useUpdateUserVoice();
   const deleteUser = useDeleteUser();
 
   const saveRole = async (user: User, role: Role) => {
@@ -63,6 +67,22 @@ export function useMemberDialogs({
       setRenameUser(null);
     } catch (error) {
       toast.error("Le nom n’a pas été enregistré", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    }
+  };
+
+  const saveVoice = async (user: User, voices: string[]) => {
+    try {
+      await updateVoice.mutateAsync({ userId: user.id, voices });
+      toast.success(
+        voices.length > 0
+          ? `Voix de ${memberName(user)} : ${voices.join(", ")}`
+          : `${memberName(user)} n’a plus de voix`,
+      );
+      setVoiceUser(null);
+    } catch (error) {
+      toast.error("La voix n’a pas été enregistrée", {
         description: error instanceof Error ? error.message : undefined,
       });
     }
@@ -110,6 +130,12 @@ export function useMemberDialogs({
         onClose={() => setRenameUser(null)}
         onSubmit={saveName}
       />
+      <VoiceDialog
+        user={voiceUser}
+        onOpenChange={(open) => !open && setVoiceUser(null)}
+        onConfirm={saveVoice}
+        isSaving={updateVoice.isPending}
+      />
       <ChangeEmailDialog
         user={emailUser}
         onOpenChange={(open) => !open && setEmailUser(null)}
@@ -143,6 +169,7 @@ export function useMemberDialogs({
   return {
     openRole: setRoleUser,
     openRename: setRenameUser,
+    openVoice: setVoiceUser,
     openEmail: setEmailUser,
     openPhoto: setPhotoUser,
     openDelete: (user: User) => {

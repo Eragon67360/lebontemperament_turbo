@@ -1,3 +1,4 @@
+import { ROSTER_REVIEW_KEY } from "@/hooks/useRosterSync";
 import type { User } from "@/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -144,6 +145,33 @@ export function useUpdateUserDisplayName() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       // Also invalidate current user in case they updated their own name
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
+  });
+}
+
+// UPDATE a member's voices (admins; an empty list clears them)
+export function useUpdateUserVoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { userId: string; voices: string[] }) => {
+      const response = await fetch("/api/users/voice", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || "La voix n'a pas été enregistrée");
+      }
+
+      return response.json() as Promise<{ voice: string | null }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      // The roster review compares voices: re-read it with the new value.
+      queryClient.invalidateQueries({ queryKey: ROSTER_REVIEW_KEY });
     },
   });
 }
