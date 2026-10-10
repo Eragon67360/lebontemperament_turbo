@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "tsx lib/anniversaryMemories.test.ts && tsx lib/publicColumns.test.ts && tsx lib/anniversaryProgramme.test.ts && tsx lib/contact.test.ts && tsx lib/og/text.test.ts && tsx lib/deliveryCode.test.ts && tsx lib/media.test.ts && tsx lib/memberData.test.ts && tsx lib/deletionRequest.test.ts && tsx lib/memberDirectory.test.ts && tsx lib/profilePhoto.test.ts",
+    "test": "tsx lib/anniversaryMemories.test.ts && tsx lib/publicColumns.test.ts && tsx lib/anniversaryProgramme.test.ts && tsx lib/contact.test.ts && tsx lib/og/text.test.ts && tsx lib/deliveryCode.test.ts && tsx lib/media.test.ts && tsx lib/memberData.test.ts && tsx lib/deletionRequest.test.ts && tsx lib/memberDirectory.test.ts && tsx lib/profilePhoto.test.ts && tsx lib/photoResize.test.ts",
     "clean": "if exist node_modules rmdir /s /q node_modules && if exist .next rmdir /s /q .next",
     "clean:install": "npm run clean && npm install",
     "depcheck": "npx --yes depcheck@1.4.7"
