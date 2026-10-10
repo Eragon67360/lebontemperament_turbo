@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { spawnSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Frame } from "./recorder.ts";
 import type { Narration } from "./voice.ts";
@@ -23,9 +23,19 @@ const VIDEO_CODEC = [
 ];
 const AUDIO_CODEC = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"];
 
+// Terminal sessions on a Mac don't always have Homebrew on their PATH.
+function tool(name: "ffmpeg" | "ffprobe") {
+  const override = process.env[name.toUpperCase()];
+  if (override) return override;
+  const brew = ["/opt/homebrew/bin", "/usr/local/bin"]
+    .map((dir) => `${dir}/${name}`)
+    .find((file) => existsSync(file));
+  return brew ?? name;
+}
+
 function ffmpeg(args: string[], cwd?: string) {
   const result = spawnSync(
-    "ffmpeg",
+    tool("ffmpeg"),
     ["-hide_banner", "-loglevel", "error", "-y", ...args],
     {
       cwd,
@@ -38,7 +48,7 @@ function ffmpeg(args: string[], cwd?: string) {
 }
 
 export function canBurnSubtitles() {
-  const result = spawnSync("ffmpeg", ["-hide_banner", "-filters"], {
+  const result = spawnSync(tool("ffmpeg"), ["-hide_banner", "-filters"], {
     encoding: "utf8",
   });
   return /\bsubtitles\b/.test(result.stdout ?? "");
@@ -242,7 +252,7 @@ export async function renderTitleCard(
 
 function probeDuration(file: string) {
   const result = spawnSync(
-    "ffprobe",
+    tool("ffprobe"),
     ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file],
     { encoding: "utf8" },
   );
