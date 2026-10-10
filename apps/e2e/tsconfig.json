@@ -2,6 +2,8 @@
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
     "noEmit": true,
+    // tour/ runs on Node's type stripping, which needs the .ts in imports.
+    "allowImportingTsExtensions": true,
     "types": ["node"]
   },
   "include": ["**/*.ts"]

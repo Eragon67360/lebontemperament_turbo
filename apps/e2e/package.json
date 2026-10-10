@@ -5,7 +5,8 @@
   "scripts": {
     "test:e2e": "playwright test",
     "check-types": "tsc --noEmit",
-    "depcheck": "npx --yes depcheck@1.4.7"
+    "depcheck": "npx --yes depcheck@1.4.7",
+    "tour": "node tour/run.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
