@@ -179,7 +179,13 @@ export function renderScene(options: {
     ? ["-i", options.narration.audioFile]
     : ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"];
   const delay = Math.round(options.leadIn * 1000);
-  const voiceEnd = options.narration.duration;
+  // ElevenLabs sometimes ends a take with a short stray sound that its
+  // timing counts as part of the closing punctuation: cut soon after the
+  // last letter, and never closer than 0.15 s to the end of the take.
+  const { text, charStarts, duration: take } = options.narration;
+  const lastLetter = text.search(/[\p{L}\p{N}][^\p{L}\p{N}]*$/u);
+  const wordEnd = charStarts[lastLetter + 1] ?? take;
+  const voiceEnd = Math.min(wordEnd + 0.25, take - 0.15);
   ffmpeg(
     [
       "-f",
@@ -192,8 +198,7 @@ export function renderScene(options: {
       "-filter:v",
       filters.join(","),
       "-filter:a",
-      // Cut right after the last word: a stray breath can follow it.
-      `atrim=end=${(voiceEnd + 0.15).toFixed(3)},afade=t=out:st=${(voiceEnd + 0.05).toFixed(3)}:d=0.1,adelay=${delay}|${delay},apad`,
+      `atrim=end=${voiceEnd.toFixed(3)},afade=t=out:st=${(voiceEnd - 0.08).toFixed(3)}:d=0.08,adelay=${delay}|${delay},apad`,
       "-t",
       duration.toFixed(3),
       ...VIDEO_CODEC,
