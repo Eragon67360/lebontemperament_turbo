@@ -543,27 +543,16 @@ export const shots: Record<string, Shot> = {
     route: "/dashboard/admin/anniversary/memories",
     run: async (d) => {
       const { page } = d;
+      // The tabs, not the testimonials: there may be none to show, and
+      // nothing is published during filming.
       await d.hover(
         page.getByRole("tab", { name: /En attente/ }),
         "« En attente »",
       );
-      // « Tous », so there is something to point at even with nothing
-      // waiting. Hover only: nothing is published during filming.
-      await d.click(page.getByRole("tab", { name: "Tous" }), "« Tous »");
       await d.cue("lisez, publiez");
-      await d.hover(
-        page.getByRole("button", {
-          name: /^(Publier|Retirer de la publication)/,
-        }),
-        "« Publier »",
-      );
+      await d.hover(page.getByRole("tab", { name: /Publiés/ }), "« Publiés »");
       await d.cue("à la une");
-      await d.hover(
-        page.getByRole("button", {
-          name: /^(Mettre à la une|Retirer de la une)/,
-        }),
-        "« Mettre à la une »",
-      );
+      await d.hover(page.getByRole("tab", { name: /Tous/ }), "« Tous »");
     },
   },
 

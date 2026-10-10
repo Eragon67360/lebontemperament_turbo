@@ -59,8 +59,8 @@ export const CURSOR_SCRIPT = `
 })();
 `;
 
-// Production only: blurs members' e-mails, phone numbers and postal
-// addresses before Chromium paints them. Names stay readable. Text is
+// Production only: blurs members' e-mails, phone numbers, postal addresses
+// and profile photos before Chromium paints them. Names stay readable. Text is
 // matched by pattern everywhere, and by field label on the member pages.
 export const MASK_SCRIPT = `
 (() => {
@@ -86,7 +86,7 @@ export const MASK_SCRIPT = `
   };
   const install = () => {
     const style = document.createElement("style");
-    style.textContent = ".tour-blur, #email, input[type=email] { filter: blur(6px) !important; }";
+    style.textContent = ".tour-blur, #email, input[type=email] { filter: blur(6px) !important; } img[src*='profile-pictures'], img[src*='profile_pictures'], img[src*='avatar'] { filter: blur(10px) !important; }";
     document.head.appendChild(style);
     scan(document.body);
     new MutationObserver((records) => {
