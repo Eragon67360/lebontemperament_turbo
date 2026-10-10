@@ -1,6 +1,7 @@
 "use client";
 
 import ChangePasswordModal from "@/components/ChangePasswordModal";
+import ProfilePhotoModal from "@/components/ProfilePhotoModal";
 import { useAuth } from "@/components/providers/AuthProvider";
 import RouteNames from "@/utils/routes";
 import { loadBrowserClient } from "@/utils/supabase/lazy";
@@ -8,7 +9,7 @@ import { Avatar, Button, Popover, toast } from "@heroui/react";
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { FaKey } from "react-icons/fa";
+import { FaCamera, FaKey } from "react-icons/fa";
 import { IoLogOut, IoShieldCheckmarkOutline } from "react-icons/io5";
 
 type UserProfile = {
@@ -27,6 +28,7 @@ const UserMenu = ({ user }: { user: User }) => {
   const { setUser } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -76,6 +78,12 @@ const UserMenu = ({ user }: { user: User }) => {
     });
   };
 
+  // The member's own photo first, then their Google avatar.
+  const photoUrl: string | null =
+    userProfile?.profile_picture_url || user.user_metadata?.avatar_url || null;
+  const initial =
+    userProfile?.display_name?.charAt(0) || user.email?.charAt(0) || "?";
+
   return (
     <>
       <div className="flex items-center gap-4">
@@ -86,10 +94,7 @@ const UserMenu = ({ user }: { user: User }) => {
           >
             <Avatar className="h-8 w-8 rounded-lg">
               <Avatar.Image
-                src={
-                  userProfile?.profile_picture_url ||
-                  user.user_metadata?.avatar_url
-                }
+                src={photoUrl ?? undefined}
                 alt={`Avatar de ${userProfile?.display_name || user.email}`}
               />
               <Avatar.Fallback>
@@ -105,7 +110,7 @@ const UserMenu = ({ user }: { user: User }) => {
               <div className="flex items-center justify-start gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <Avatar.Image
-                    src={user.user_metadata?.avatar_url}
+                    src={photoUrl ?? undefined}
                     alt={`Avatar de ${userProfile?.display_name || user.email}`}
                   />
                   <Avatar.Fallback>
@@ -122,6 +127,15 @@ const UserMenu = ({ user }: { user: User }) => {
                   </span>
                 </div>
               </div>
+              <Button
+                variant="ghost"
+                onPress={() => setIsPhotoModalOpen(true)}
+                className="flex w-full cursor-pointer items-center justify-start gap-1"
+                isDisabled={isPending || !userProfile}
+              >
+                <FaCamera className="mr-2 size-4" aria-hidden="true" />
+                Changer ma photo
+              </Button>
               <Button
                 variant="ghost"
                 onPress={() => setIsPasswordModalOpen(true)}
@@ -158,6 +172,19 @@ const UserMenu = ({ user }: { user: User }) => {
           </Popover.Content>
         </Popover>
       </div>
+
+      <ProfilePhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        currentUrl={photoUrl}
+        hasOwnPhoto={Boolean(userProfile?.profile_picture_url)}
+        initial={initial}
+        onChanged={(url) =>
+          setUserProfile((profile) =>
+            profile ? { ...profile, profile_picture_url: url } : profile,
+          )
+        }
+      />
 
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
