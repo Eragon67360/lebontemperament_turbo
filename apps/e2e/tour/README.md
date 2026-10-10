@@ -26,6 +26,14 @@ The run reads:
 - the staging login and Vercel bypass from `apps/e2e/.env.local`, like the e2e suite (`E2E_USER_EMAIL`, `E2E_USER_PASSWORD`, `VERCEL_AUTOMATION_BYPASS_SECRET`, optional `ADMIN_URL`). It refuses the production admin.
 - `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID` from `~/.config/lbt-admin-video/elevenlabs.env`, outside the repo. Optional `ELEVENLABS_MODEL` (default `eleven_multilingual_v2`).
 
+## On the production admin
+
+`--production` films the real admin with a throwaway **administrator** account (not super-admin), read from `~/.config/lbt-admin-video/prod-login.env` (`TOUR_EMAIL`, `TOUR_PASSWORD`). In that mode:
+
+- members' e-mails, phone numbers and postal addresses are blurred before they are painted (names stay readable);
+- every request that could write is refused, except signing in, server actions and Supabase read functions, which are logged; the run prints the list at the end;
+- delete the throwaway account once the video is done.
+
 At the end, the run lists every step it skipped because a button or heading was not found: fix the selector in `scenes.ts` or the data on staging, and re-run that chapter.
 
 Subtitles are burnt in when `ffmpeg` has libass (Homebrew's does); otherwise only the `.srt` file is written. `--no-subtitles` turns them off.

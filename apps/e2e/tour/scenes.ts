@@ -22,12 +22,12 @@ export const shots: Record<string, Shot> = {
       await d.pause(600);
       await d.type(
         page.locator("#email"),
-        process.env.E2E_USER_EMAIL ?? "",
+        process.env.TOUR_EMAIL ?? "",
         "e-mail field",
       );
       await d.type(
         page.locator("#password"),
-        process.env.E2E_USER_PASSWORD ?? "",
+        process.env.TOUR_PASSWORD ?? "",
         "password field",
       );
       await d.cue("Je vous fais faire le tour");
@@ -35,9 +35,11 @@ export const shots: Record<string, Shot> = {
         page.getByRole("button", { name: "Se connecter" }),
         "« Se connecter »",
       );
-      await page
-        .waitForURL("**/dashboard", { timeout: 20_000 })
-        .catch(() => {});
+      await page.waitForURL("**/dashboard", { timeout: 20_000 }).catch(() => {
+        throw new Error(
+          `Sign-in failed on ${new URL(page.url()).host}: check TOUR_EMAIL / TOUR_PASSWORD (or E2E_USER_* for staging).`,
+        );
+      });
       await page.waitForLoadState("networkidle").catch(() => {});
     },
   },
@@ -478,13 +480,19 @@ export const shots: Record<string, Shot> = {
   },
 
   "5.4": {
-    route: "/dashboard/admin/bug-reports",
+    // The page itself is super-admin only (and opening a report marks it
+    // read): the scene shows where reports come from instead.
+    route: "/dashboard/admin/ca",
     run: async (d) => {
       const { page } = d;
-      await d.cue("arrive ici");
+      await d.cue("« Signaler un problème »");
       await d.click(
-        page.getByRole("button", { name: "Voir les détails" }),
-        "« Voir les détails »",
+        page.getByRole("button", { name: /^Compte de/ }),
+        "account menu",
+      );
+      await d.hover(
+        page.getByRole("menuitem", { name: /Signaler un problème/ }),
+        "« Signaler un problème »",
       );
       await d.cue("Si vous ne voyez pas");
       await d.press("Escape");

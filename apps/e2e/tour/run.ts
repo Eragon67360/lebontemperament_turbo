@@ -1,6 +1,7 @@
 // Records the narrated admin tour: voices script-fr.md with ElevenLabs,
-// films each scene on admin-dev (fake data), and assembles the full video,
-// one clip per chapter, and subtitles. See README.md.
+// films each scene on admin-dev (fake data) or, with --production, on the
+// real admin with contacts blurred and every write blocked, and assembles
+// the full video, one clip per chapter, and subtitles. See README.md.
 import { chromium } from "@playwright/test";
 import dotenv from "dotenv";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
@@ -20,6 +21,7 @@ import {
   CURSOR_SCRIPT,
   Director,
   LEAD_IN,
+  MASK_SCRIPT,
   TAIL,
 } from "./lib/recorder.ts";
 import { readScript } from "./lib/script.ts";
@@ -42,6 +44,9 @@ const { values: args } = parseArgs({
     "no-subtitles": { type: "boolean", default: false },
     // Voice the script only (check the takes before filming).
     "voice-only": { type: "boolean", default: false },
+    // Film the real admin with the account in prod-login.env: members'
+    // contacts are blurred and every write request is blocked.
+    production: { type: "boolean", default: false },
     script: { type: "string", default: path.join(here, "script-fr.md") },
     out: {
       type: "string",
@@ -52,14 +57,18 @@ const { values: args } = parseArgs({
   },
 });
 
-// Same env files as the e2e suite (staging login, Vercel bypass), plus the
-// ElevenLabs key, which lives outside the repo.
-for (const file of [
-  path.join(here, "..", ".env.local"),
-  path.join(here, "..", ".env"),
-  path.join(here, "..", "..", "..", ".env.local"),
-  path.join(os.homedir(), ".config", "lbt-admin-video", "elevenlabs.env"),
-]) {
+const config = path.join(os.homedir(), ".config", "lbt-admin-video");
+// Production: the throwaway admin account, outside the repo. Staging: the
+// same env files as the e2e suite (staging login, Vercel bypass). Both: the
+// ElevenLabs key, outside the repo too. First file wins per key.
+const envFiles = args.production
+  ? [path.join(config, "prod-login.env")]
+  : [
+      path.join(here, "..", ".env.local"),
+      path.join(here, "..", ".env"),
+      path.join(here, "..", "..", "..", ".env.local"),
+    ];
+for (const file of [...envFiles, path.join(config, "elevenlabs.env")]) {
   if (!existsSync(file)) continue;
   for (const [key, value] of Object.entries(dotenv.parse(readFileSync(file)))) {
     if (value !== "" && process.env[key] === undefined)
@@ -67,13 +76,25 @@ for (const file of [
   }
 }
 
-const baseURL =
-  process.env.ADMIN_URL || "https://admin-dev.lebontemperament.com";
-if (/^https:\/\/admin\.lebontemperament\.com/.test(baseURL)) {
-  // Production shows real members: the tour is filmed on staging only.
-  throw new Error(
-    "ADMIN_URL points to the production admin. Film on admin-dev.",
-  );
+const PRODUCTION = "https://admin.lebontemperament.com";
+let baseURL: string;
+if (args.production) {
+  baseURL = PRODUCTION;
+  if (!process.env.TOUR_EMAIL || !process.env.TOUR_PASSWORD) {
+    throw new Error(
+      `TOUR_EMAIL and TOUR_PASSWORD are missing from ${path.join(config, "prod-login.env")}.`,
+    );
+  }
+} else {
+  baseURL = process.env.ADMIN_URL || "https://admin-dev.lebontemperament.com";
+  if (baseURL.startsWith(PRODUCTION)) {
+    // Real members: only through --production, which blurs and blocks.
+    throw new Error(
+      "ADMIN_URL points to the production admin. Use --production instead.",
+    );
+  }
+  process.env.TOUR_EMAIL ??= process.env.E2E_USER_EMAIL;
+  process.env.TOUR_PASSWORD ??= process.env.E2E_USER_PASSWORD;
 }
 
 const chapters = readScript(args.script!).filter(
@@ -130,7 +151,9 @@ if (args["voice-only"]) {
 // 2. Film and 3. assemble
 const size = { width: 1920, height: 1080 };
 const browser = await chromium.launch();
-const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+const bypass = args.production
+  ? undefined
+  : process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const context = await browser.newContext({
   viewport: { width: 1440, height: 810 },
   deviceScaleFactor: size.width / 1440,
@@ -142,6 +165,33 @@ const context = await browser.newContext({
     : undefined,
 });
 await context.addInitScript(CURSOR_SCRIPT);
+
+// On production, nothing the tour does may change real data: every request
+// that could write is refused and listed at the end. Signing in (Supabase
+// auth token) and Next.js server actions go through, logged, since the
+// admin also reads through them.
+const writes: string[] = [];
+if (args.production) {
+  await context.addInitScript(MASK_SCRIPT);
+  await context.route("**/*", (route) => {
+    const request = route.request();
+    const method = request.method();
+    if (["GET", "HEAD", "OPTIONS"].includes(method)) return route.continue();
+    const url = new URL(request.url());
+    const where = `${method} ${url.host}${url.pathname}`;
+    if (url.pathname.endsWith("/auth/v1/token")) return route.continue();
+    if (method === "POST" && request.headers()["next-action"]) {
+      writes.push(`allowed server action: ${where}`);
+      return route.continue();
+    }
+    if (method === "POST" && url.pathname.includes("/rest/v1/rpc/")) {
+      writes.push(`allowed read function: ${where}`);
+      return route.continue();
+    }
+    writes.push(`BLOCKED: ${where}`);
+    return route.abort("blockedbyclient");
+  });
+}
 const page = await context.newPage();
 const camera = new Camera(page, size);
 const director = new Director(page, baseURL);
@@ -155,8 +205,8 @@ if (!args["no-subtitles"] && !subtitles)
 // login scene is not part of this render.
 if (!scenes.some((s) => s.id === "0.1")) {
   await director.goto("/auth/login");
-  await page.locator("#email").fill(process.env.E2E_USER_EMAIL ?? "");
-  await page.locator("#password").fill(process.env.E2E_USER_PASSWORD ?? "");
+  await page.locator("#email").fill(process.env.TOUR_EMAIL ?? "");
+  await page.locator("#password").fill(process.env.TOUR_PASSWORD ?? "");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await page.waitForURL("**/dashboard", { timeout: 20_000 });
 }
@@ -245,6 +295,13 @@ join(fullPieces, full, workRoot, fullChapters);
 writeSrt(path.join(outDir, "presentation-admin.srt"), fullCues);
 
 console.log(`\nDone: ${full}`);
+if (args.production) {
+  console.log(
+    writes.length
+      ? `\nRequests other than reads during the run:\n${writes.map((w) => `  - ${w}`).join("\n")}`
+      : "\nNo write request during the run.",
+  );
+}
 if (director.warnings.length) {
   console.log(
     `\n${director.warnings.length} step(s) skipped, check these scenes:`,

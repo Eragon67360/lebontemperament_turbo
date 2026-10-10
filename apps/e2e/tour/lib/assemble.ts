@@ -158,7 +158,7 @@ export function renderScene(options: {
       subtitleCues(options.narration, options.leadIn),
     );
     filters.push(
-      "subtitles=scene.srt:force_style='FontName=Inter,FontSize=11,PrimaryColour=&H00FFFFFF,BackColour=&H99000000,BorderStyle=3,Outline=6,Shadow=0,MarginV=22'",
+      "subtitles=scene.srt:force_style='FontName=Inter,FontSize=11,PrimaryColour=&H00FFFFFF,OutlineColour=&H66000000,BorderStyle=3,Outline=6,Shadow=0,MarginV=22'",
     );
   }
 
@@ -166,6 +166,7 @@ export function renderScene(options: {
     ? ["-i", options.narration.audioFile]
     : ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"];
   const delay = Math.round(options.leadIn * 1000);
+  const voiceEnd = options.narration.duration;
   ffmpeg(
     [
       "-f",
@@ -178,7 +179,8 @@ export function renderScene(options: {
       "-filter:v",
       filters.join(","),
       "-filter:a",
-      `adelay=${delay}|${delay},apad`,
+      // Cut right after the last word: a stray breath can follow it.
+      `atrim=end=${(voiceEnd + 0.15).toFixed(3)},afade=t=out:st=${(voiceEnd + 0.05).toFixed(3)}:d=0.1,adelay=${delay}|${delay},apad`,
       "-t",
       duration.toFixed(3),
       ...VIDEO_CODEC,

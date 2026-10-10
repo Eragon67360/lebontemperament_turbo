@@ -125,7 +125,7 @@ Thomas: edit the **Voix** lines directly, or tell me what to change. Lines I'm u
 
 ### 5.4 Signalements
 
-**Écran** : « Signalements », un signalement avec captures, « Voir les détails », la conversation.
+**Écran** : le menu du compte, survol de « Signaler un problème » (la page « Signalements » n'est pas filmée : elle est réservée aux super-administrateurs).
 **Voix** : Dernière page, réservée aux super-administrateurs : les signalements. Tout ce que vous et les membres envoyez avec « Signaler un problème », depuis le site ou l'application, arrive ici, et on peut y répondre. Si vous ne voyez pas cette page, c'est normal.
 
 ## Chapitre 6 · La campagne des quarante ans

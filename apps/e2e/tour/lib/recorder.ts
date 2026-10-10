@@ -59,6 +59,51 @@ export const CURSOR_SCRIPT = `
 })();
 `;
 
+// Production only: blurs members' e-mails, phone numbers and postal
+// addresses before Chromium paints them. Names stay readable. Text is
+// matched by pattern everywhere, and by field label on the member pages.
+export const MASK_SCRIPT = `
+(() => {
+  const EMAIL = /[\\w.+-]+@[\\w-]+\\.[\\w.-]+/;
+  const PHONE = /(?:\\+33\\s?|\\b0)[1-9](?:[\\s.-]?\\d{2}){4}\\b/;
+  const STREET = /\\b\\d{1,4}\\s?(?:bis|ter)?,?\\s+(?:rue|avenue|av\\.|boulevard|bd|chemin|impasse|allée|place|route|quai|cours|faubourg|lotissement|square|sentier)\\b/i;
+  const LABELS = new Set(["E-mail", "Adresse", "Portable", "Fixe", "Téléphone", "Adresse e-mail"]);
+  const onMemberPages = () => location.pathname.startsWith("/dashboard/admin/users");
+  const blur = (el) => el && el.classList && el.classList.add("tour-blur");
+  const scan = (root) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const hits = [];
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const t = n.nodeValue || "";
+      if (EMAIL.test(t) || PHONE.test(t) || (onMemberPages() && STREET.test(t))) hits.push(n.parentElement);
+      const label = t.trim().replace(/\\s*:$/, "");
+      if (onMemberPages() && LABELS.has(label) && n.parentElement) {
+        const el = n.parentElement;
+        blur(el.nextElementSibling || (el.parentElement && el.parentElement.nextElementSibling));
+      }
+    }
+    hits.forEach(blur);
+  };
+  const install = () => {
+    const style = document.createElement("style");
+    style.textContent = ".tour-blur, #email, input[type=email] { filter: blur(6px) !important; }";
+    document.head.appendChild(style);
+    scan(document.body);
+    new MutationObserver((records) => {
+      for (const r of records) {
+        if (r.type === "characterData" && r.target.parentElement) scan(r.target.parentElement);
+        r.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) scan(node);
+          else if (node.nodeType === 3 && node.parentElement) scan(node.parentElement);
+        });
+      }
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  };
+  if (document.body) install();
+  else document.addEventListener("DOMContentLoaded", install);
+})();
+`;
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
