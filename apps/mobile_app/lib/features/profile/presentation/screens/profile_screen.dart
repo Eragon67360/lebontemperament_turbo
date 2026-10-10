@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,7 +18,10 @@ import '../../../onboarding/presentation/widgets/first_time_tip.dart';
 import '../../../reports/presentation/screens/report_problem_screen.dart';
 import '../../../reports/presentation/screens/reports_list_screen.dart';
 import '../../../reports/providers/bug_reports_providers.dart';
+import '../../data/password_service.dart';
+import '../widgets/profile_photo_editor.dart';
 import 'about_screen.dart';
+import 'change_password_screen.dart';
 import 'my_groups_screen.dart';
 import 'support_contact_screen.dart';
 import 'theme_settings_screen.dart';
@@ -74,6 +76,42 @@ class ProfileScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
+
+                  // --- Mon compte: photo and password, not the name ---
+                  const FadeInUp(
+                    delay: 60,
+                    child: _SectionTitle(title: 'Mon compte'),
+                  ),
+                  const SizedBox(height: 12),
+                  FadeInUp(
+                    delay: 100,
+                    child: _SettingsGroup(
+                      children: [
+                        _SettingsTile(
+                          icon: Icons.account_circle_outlined,
+                          title: 'Photo de profil',
+                          subtitle: 'Prendre, choisir ou retirer votre photo',
+                          onTap: () => editProfilePhoto(context),
+                        ),
+                        _SettingsTile(
+                          icon: Icons.lock_outline_rounded,
+                          title: 'Mot de passe',
+                          subtitle: ref.watch(accountHasPasswordProvider)
+                              ? 'Changer votre mot de passe'
+                              : 'Créer un mot de passe',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ChangePasswordScreen(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const FadeInUp(delay: 120, child: _NameNote()),
+
+                  const SizedBox(height: 32),
 
                   // --- 1. Général ---
                   const FadeInUp(
@@ -445,7 +483,6 @@ class _ProfileHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final displayName = ref.watch(displayNameProvider);
-    final photoUrl = ref.watch(profilePictureUrlProvider);
     final theme = Theme.of(context);
     final initials = _getInitials(displayName);
 
@@ -466,20 +503,7 @@ class _ProfileHeader extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipOval(
-              child: photoUrl != null && photoUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: photoUrl,
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) =>
-                          _buildInitialsAvatar(theme, initials),
-                      errorWidget: (_, __, ___) =>
-                          _buildInitialsAvatar(theme, initials),
-                    )
-                  : _buildInitialsAvatar(theme, initials),
-            ),
+            ProfilePhotoButton(initials: initials),
             const SizedBox(height: 16),
             Text(
               user?.email ?? '',
@@ -493,22 +517,23 @@ class _ProfileHeader extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildInitialsAvatar(ThemeData theme, String initials) {
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
+/// Why the name can't be edited here, and whom to ask.
+class _NameNote extends StatelessWidget {
+  const _NameNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
-        initials,
+        'Votre nom vient de la liste des membres de l’association. '
+        'Une erreur ? Écrivez-nous depuis « Aide & Contact ».',
         style: AppFonts.sans(
-          color: theme.colorScheme.onPrimary,
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
+          fontSize: 13,
+          height: 1.4,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );

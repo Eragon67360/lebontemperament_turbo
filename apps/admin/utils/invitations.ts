@@ -4,6 +4,8 @@
 // throttled batches. Shared by POST /api/invite-users and the roster sync's
 // apply route so both take the same path and the same pace.
 
+import { normalizeName } from "@repo/domain/roster/normalize";
+
 export const INVITE_BATCH_SIZE = 10;
 export const INVITE_BATCH_DELAY_MS = 1000;
 
@@ -91,7 +93,10 @@ export async function sendInvitations(
 
   for (const [index, batch] of batches.entries()) {
     const batchResults = await Promise.all(
-      batch.map(async ({ email, displayName }): Promise<InvitationResult> => {
+      batch.map(async (entry): Promise<InvitationResult> => {
+        const { email } = entry;
+        // One order everywhere: « Prénom NOM », whatever was typed.
+        const displayName = normalizeName(entry.displayName);
         try {
           const { data, error } = await client.auth.admin.inviteUserByEmail(
             email,

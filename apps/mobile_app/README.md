@@ -74,6 +74,8 @@ DRIVE_FOLDER_CAHIER_30_ANS=
 
 The Drive explorer, the file viewers and "Télécharger" (which fetches `/api/drive/file?download=1` into a temporary file and opens the share sheet) call the website's `/api/drive/*` with the member's Supabase access token (`Authorization: Bearer`), the same way the support form calls `/api/contact/mobile`.
 
+Profil › Photo de profil sends the member's photo (resized to 1024 px JPEG on the phone) to the website's `/api/profile/photo` the same way; the website checks the image and changes only the caller's own `profile_picture_url` (members have no write access to `profiles` or the bucket, so the name stays the association's). Profil › Mot de passe checks the current password by signing in again, then calls Supabase's `updateUser`.
+
 Push notifications follow the session: the device subscribes to the `all_users` topic when a member is signed in and unsubscribes, deletes its FCM token and clears the local cache on sign-out (`lib/data/services/session_notifications.dart`). Reminders use inexact Android alarms (no exact-alarm permission), and app data is excluded from Android backups and device transfers.
 
 ### Remote flags (kill switch)
