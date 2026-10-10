@@ -66,7 +66,10 @@ export const MASK_SCRIPT = `
 (() => {
   const EMAIL = /[\\w.+-]+@[\\w-]+\\.[\\w.-]+/;
   const PHONE = /(?:\\+33\\s?|\\b0)[1-9](?:[\\s.-]?\\d{2}){4}\\b/;
-  const STREET = /\\b\\d{1,4}\\s?(?:bis|ter)?,?\\s+(?:rue|avenue|av\\.|boulevard|bd|chemin|impasse|allée|place|route|quai|cours|faubourg|lotissement|square|sentier)\\b/i;
+  // « 2a rue … » too: a house number may end with a letter.
+  const STREET = /\\b\\d{1,4}\\s?(?:bis|ter|[a-z])?,?\\s+(?:rue|avenue|av\\.|boulevard|bd|chemin|impasse|allée|place|route|quai|cours|faubourg|lotissement|square|sentier)\\b/i;
+  // Safety net on the member pages: any text with a postcode and a town.
+  const POSTCODE = /\\b\\d{5}\\s+\\p{Lu}/u;
   const LABELS = new Set(["E-mail", "Adresse", "Portable", "Fixe", "Téléphone", "Adresse e-mail"]);
   const onMemberPages = () => location.pathname.startsWith("/dashboard/admin/users");
   const blur = (el) => el && el.classList && el.classList.add("tour-blur");
@@ -75,7 +78,7 @@ export const MASK_SCRIPT = `
     const hits = [];
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       const t = n.nodeValue || "";
-      if (EMAIL.test(t) || PHONE.test(t) || (onMemberPages() && STREET.test(t))) hits.push(n.parentElement);
+      if (EMAIL.test(t) || PHONE.test(t) || (onMemberPages() && (STREET.test(t) || POSTCODE.test(t)))) hits.push(n.parentElement);
       const label = t.trim().replace(/\\s*:$/, "");
       if (onMemberPages() && LABELS.has(label) && n.parentElement) {
         const el = n.parentElement;
