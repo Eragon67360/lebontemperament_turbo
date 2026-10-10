@@ -108,7 +108,7 @@ function AddUserForm({
                 <FormControl>
                   <Input
                     id="display_name"
-                    placeholder="John Doe"
+                    placeholder="Lucie BERNARD"
                     className="col-span-3"
                     {...field}
                   />

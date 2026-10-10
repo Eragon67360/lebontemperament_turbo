@@ -7,6 +7,7 @@ The words the association, its members and the code use. Use them in issues, cod
 - **Le Bon Tempérament**: a choir and orchestra association. Its public face is the website; its members use the members area and the mobile app; its board and admins use the admin dashboard.
 - **Groupe** (`group_type`): which ensemble something concerns: Orchestre, Chœur complet (`Choeur complet` in the data), Tous, Hommes, Femmes, Jeunes/Enfants. Rehearsals, events and work materials are scoped by group.
 - **Membre** (`profiles`): a person with an account. Has a role, groups, a voice (`voice`), a profile picture, and shows in the member directory.
+- **Nom** (`display_name`): one field, always written « Prénom NOM » (surname in capitals, last), e.g. « Lucie BERNARD ». The roster's « NOM Prénom » column, the admin's forms and invitations all store it in that order (`normalizeName` in `@repo/domain`).
 - **Rôle** (`user_role`): `user` (member), `admin`, `superadmin`.
 - **CA** (`cas`): a board meeting (_conseil d'administration_) record: title, date, attached file (minutes).
 - **AG**: the general assembly (_assemblée générale_); `/ag` shows the newest one, edited in the admin (Association › Assemblée générale); `/ag-2026` redirects there.

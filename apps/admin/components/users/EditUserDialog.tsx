@@ -94,7 +94,7 @@ function EditUserForm({
               <FormControl>
                 <Input
                   id="display_name"
-                  placeholder="Nom d'affichage"
+                  placeholder="Lucie BERNARD"
                   {...field}
                 />
               </FormControl>
