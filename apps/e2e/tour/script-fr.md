@@ -17,7 +17,7 @@ Thomas: edit the **Voix** lines directly, or tell me what to change. Lines I'm u
 
 ### 1.1 Accueil
 
-**Écran** : l'accueil. Zoom doux sur « Bonjour », puis la carte « Prochain concert », puis « À faire », puis « À venir ».
+**Écran** : l'accueil. Survol de « Bonjour », puis de la carte « Prochain concert », puis de « À faire ».
 **Voix** : Voici l'accueil. Il vous dit bonjour, ou bonsoir selon l'heure, et vous rappelle combien de jours il reste avant le prochain concert. Juste en dessous, « À faire » rassemble ce qui attend une décision de votre part : un témoignage à modérer, un message non lu, une synchronisation qui a échoué. Quand il n'y a rien, c'est écrit, et vous pouvez aller boire un café.
 
 ### 1.2 Que voulez-vous faire ?

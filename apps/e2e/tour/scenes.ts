@@ -52,15 +52,15 @@ export const shots: Record<string, Shot> = {
         page.getByRole("heading", { name: /^(Bonjour|Bonsoir)/ }),
         "greeting",
       );
+      await d.cue("combien de jours");
+      await d.hover(
+        page.getByRole("heading", { name: "Prochain concert" }),
+        "« Prochain concert »",
+      );
       await d.cue("Juste en dessous");
       await d.hover(
         page.getByRole("heading", { name: "À faire" }),
         "« À faire »",
-      );
-      await d.cue("Quand il n");
-      await d.hover(
-        page.getByRole("heading", { name: "À venir" }),
-        "« À venir »",
       );
     },
   },

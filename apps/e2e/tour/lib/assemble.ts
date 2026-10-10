@@ -75,7 +75,10 @@ export function subtitleCues(narration: Narration, offset: number) {
       const window = text.slice(from, from + 84);
       // Index just after the punctuation, so it stays on the line it ends.
       const after = (mark: string) => {
-        const i = window.lastIndexOf(mark);
+        let i = window.lastIndexOf(mark);
+        // Never split « … ? » between its question mark and closing quote.
+        while (i >= 0 && window[i + mark.length] === "»")
+          i = window.lastIndexOf(mark, i - 1);
         return i < 0 ? -1 : i + mark.trimEnd().length;
       };
       const sentence = Math.max(
@@ -168,7 +171,7 @@ export function renderScene(options: {
       subtitleCues(options.narration, options.leadIn),
     );
     filters.push(
-      "subtitles=scene.srt:force_style='FontName=Inter,FontSize=11,PrimaryColour=&H00FFFFFF,OutlineColour=&H66000000,BorderStyle=3,Outline=6,Shadow=0,MarginV=22'",
+      "subtitles=scene.srt:force_style='FontName=Inter,FontSize=11,PrimaryColour=&H00FFFFFF,OutlineColour=&H66000000,BorderStyle=3,Outline=3,Shadow=0,MarginV=22'",
     );
   }
 
