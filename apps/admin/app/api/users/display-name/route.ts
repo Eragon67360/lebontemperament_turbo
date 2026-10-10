@@ -1,6 +1,7 @@
 // app/api/users/display-name/route.ts
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { normalizeName } from "@repo/domain/roster/normalize";
 import { NextResponse } from "next/server";
 
 export async function PATCH(request: Request) {
@@ -11,14 +12,16 @@ export async function PATCH(request: Request) {
     }
     const supabaseAdmin = createAdminClient();
 
-    const { userId, display_name } = await request.json();
+    const { userId, display_name: typed } = await request.json();
 
-    if (!userId || display_name === undefined) {
+    if (!userId || typeof typed !== "string") {
       return NextResponse.json(
         { error: "ID utilisateur et nom d'affichage requis" },
         { status: 400 },
       );
     }
+    // One order everywhere: « Prénom NOM », whatever was typed.
+    const display_name = normalizeName(typed);
 
     const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,

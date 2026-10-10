@@ -13,6 +13,7 @@ import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { useInviteUsers } from "@/hooks/useUsers";
 import { InvitationProgress } from "@/types/user";
 import { firstIssueMessage, invitationEntrySchema } from "@/utils/formSchemas";
+import { normalizeName } from "@repo/domain/roster/normalize";
 import { Check, Plus, RefreshCw, Send, Upload, X } from "lucide-react";
 import Papa from "papaparse";
 import React, { useState } from "react";
@@ -339,11 +340,6 @@ export function InviteUserDialog({
     }
   };
 
-  const formatName = (fullName: string) => {
-    const [lastName, firstName] = fullName.split(" ").filter(Boolean);
-    return firstName && lastName ? `${firstName} ${lastName}` : fullName;
-  };
-
   const handleCSVImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -355,7 +351,7 @@ export function InviteUserDialog({
           .filter((row) => row["NOM Prénom"] && row["Adresse mail"])
           .map((row) => ({
             email: row["Adresse mail"].trim(),
-            displayName: formatName(row["NOM Prénom"].trim()),
+            displayName: normalizeName(row["NOM Prénom"]),
             role: "user" as const,
             status: "pending" as const,
           }));
@@ -444,7 +440,7 @@ export function InviteUserDialog({
                     <Input
                       id={`displayName-${index}`}
                       data-invitation-field={`displayName-${index}`}
-                      placeholder="Jean Dupont"
+                      placeholder="Lucie BERNARD"
                       value={invitation.displayName}
                       onChange={(e) =>
                         updateInvitation(index, "displayName", e.target.value)
@@ -502,7 +498,7 @@ export function InviteUserDialog({
                       id={`displayName-desktop-${index}`}
                       data-invitation-field={`displayName-${index}`}
                       aria-label="Nom complet"
-                      placeholder="Jean Dupont"
+                      placeholder="Lucie BERNARD"
                       value={invitation.displayName}
                       onChange={(e) =>
                         updateInvitation(index, "displayName", e.target.value)

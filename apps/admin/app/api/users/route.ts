@@ -9,6 +9,7 @@ import { checkAuthorization } from "@/utils/auth";
 import { removeMemberFiles } from "@/utils/members/memberFiles";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { inviteStatusOf, listAuthSummaries } from "@/utils/users/authUsers";
+import { normalizeName } from "@repo/domain/roster/normalize";
 import { NextResponse } from "next/server";
 
 const roleLabel = (role: UserRole) =>
@@ -110,6 +111,10 @@ export async function POST(request: Request) {
       );
     }
     const newRole = role as UserRole;
+    // One order everywhere: « Prénom NOM », whatever was typed.
+    const name =
+      (typeof display_name === "string" && normalizeName(display_name)) ||
+      email.split("@")[0];
 
     const supabaseAdmin = createAdminClient();
 
@@ -120,7 +125,7 @@ export async function POST(request: Request) {
         password,
         email_confirm: true,
         user_metadata: {
-          display_name: display_name || email.split("@")[0],
+          display_name: name,
         },
       });
 
@@ -132,7 +137,7 @@ export async function POST(request: Request) {
         .from("profiles")
         .update({
           role: newRole,
-          display_name: display_name || email.split("@")[0],
+          display_name: name,
         })
         .eq("id", authData.user.id);
 
@@ -144,9 +149,7 @@ export async function POST(request: Request) {
           user_id: auth.user.id, // ID of the admin who created the user
           target_id: authData.user.id, // ID of the created user
           title: "Nouveau membre",
-          description: `${
-            display_name || email.split("@")[0]
-          } a rejoint la plateforme`,
+          description: `${name} a rejoint la plateforme`,
           metadata: {
             created_user_id: authData.user.id,
             created_user_email: email,
