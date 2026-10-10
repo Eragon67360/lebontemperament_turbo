@@ -180,7 +180,7 @@ void main() {
       expect(find.text('Au moins 6 caractères.'), findsWidgets);
 
       await _fill(tester, 'Nouveau mot de passe', 'nouveau-mdp');
-      await _fill(tester, 'Confirmer le nouveau mot de passe', 'autre-mdp');
+      await _fill(tester, 'Confirmation du mot de passe', 'autre-mdp');
       await tester.tap(find.text('Enregistrer'));
       await tester.pumpAndSettle();
       expect(
@@ -204,7 +204,7 @@ void main() {
 
       await _fill(tester, 'Mot de passe actuel', 'ancien-mdp');
       await _fill(tester, 'Nouveau mot de passe', 'nouveau-mdp');
-      await _fill(tester, 'Confirmer le nouveau mot de passe', 'nouveau-mdp');
+      await _fill(tester, 'Confirmation du mot de passe', 'nouveau-mdp');
       await tester.tap(find.text('Enregistrer'));
       await tester.pumpAndSettle();
 
@@ -226,7 +226,7 @@ void main() {
 
       await _fill(tester, 'Mot de passe actuel', 'ancien-mdp');
       await _fill(tester, 'Nouveau mot de passe', 'nouveau-mdp');
-      await _fill(tester, 'Confirmer le nouveau mot de passe', 'nouveau-mdp');
+      await _fill(tester, 'Confirmation du mot de passe', 'nouveau-mdp');
       await tester.tap(find.text('Enregistrer'));
       await tester.pumpAndSettle();
 
@@ -251,7 +251,7 @@ void main() {
       expect(find.text('Mot de passe actuel'), findsNothing);
 
       await _fill(tester, 'Nouveau mot de passe', 'nouveau-mdp');
-      await _fill(tester, 'Confirmer le nouveau mot de passe', 'nouveau-mdp');
+      await _fill(tester, 'Confirmation du mot de passe', 'nouveau-mdp');
       await tester.tap(find.text('Enregistrer'));
       await tester.pumpAndSettle();
 

@@ -211,7 +211,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         onFieldSubmitted: (_) =>
                             _saving ? null : _save(service),
                         decoration: decoration.copyWith(
-                          labelText: 'Confirmer le nouveau mot de passe',
+                          labelText: 'Confirmation du mot de passe',
                         ),
                         validator: (value) =>
                             _next.text.length < kMinPasswordLength
