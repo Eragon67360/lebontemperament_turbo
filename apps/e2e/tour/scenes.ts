@@ -403,22 +403,6 @@ export const shots: Record<string, Shot> = {
     },
   },
 
-  "4.4": {
-    route: "/dashboard/admin/google-groups",
-    run: async (d) => {
-      const { page } = d;
-      await d.hover(
-        page.getByText("Adresses inscrites"),
-        "« Adresses inscrites »",
-      );
-      await d.cue("C'est une page");
-      await d.hover(
-        page.getByRole("button", { name: "Actualiser" }),
-        "« Actualiser »",
-      );
-    },
-  },
-
   "5.1": {
     route: "/dashboard/admin/documents",
     run: async (d) => {

@@ -38,7 +38,7 @@ Thomas: edit the **Voix** lines directly, or tell me what to change. Lines I'm u
 ### 1.5 Votre compte
 
 **Écran** : ouverture du menu du compte : « Messages », « Signaler un problème », « Thème », « Densité des listes ».
-**Voix** : En bas du menu, votre compte. Vous y choisissez le thème, clair ou sombre, et la densité des listes, si vous aimez voir beaucoup de lignes d'un coup. « Signaler un problème » m'envoie un message directement, et mes réponses arrivent dans « Messages ». Une idée, un bug, une phrase pas claire : n'hésitez pas.
+**Voix** : En bas du menu, votre compte. Vous y choisissez le thème, clair ou sombre, et la densité des listes, si vous aimez voir beaucoup de lignes d'un coup. « Signaler un problème » envoie un message directement à l'équipe, et ses réponses arrivent dans « Messages ». Une idée, un bug, une phrase pas claire : n'hésitez pas.
 
 ## Chapitre 2 · Concerts et site public
 
@@ -100,11 +100,6 @@ Thomas: edit the **Voix** lines directly, or tell me what to change. Lines I'm u
 
 **Écran** : clic sur « Synchroniser avec la liste », les étapes « Vérifier », « Choisir », « Appliquer », les groupes « Nouveaux », « Modifiés », « À régler ».
 **Voix** : Quand de nouveaux choristes arrivent, cliquez sur « Synchroniser avec la liste ». L'outil compare le tableau avec les comptes : les nouveaux, ceux qui ont changé, ceux qui sont à régler. Vous cochez ce que vous voulez, vous appliquez, et les nouveaux reçoivent leur invitation par e-mail. Aucun compte n'est supprimé, et le tableau Excel n'est jamais modifié.
-
-### 4.4 Liste de diffusion
-
-**Écran** : « Liste de diffusion », le choix du groupe, les chiffres.
-**Voix** : « Liste de diffusion » vous montre qui est inscrit à nos groupes d'e-mails Google. C'est une page de consultation : on regarde, on ne touche pas.
 
 ## Chapitre 5 · Association
 
