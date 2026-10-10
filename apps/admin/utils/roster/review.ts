@@ -5,6 +5,7 @@
 // GET route answers with `review`; the apply route re-runs it to check the
 // fingerprint and to take the values it writes from the server's own diff.
 
+import type { RosterRead } from "@/utils/roster/source";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { inviteStatusOf, listAuthSummaries } from "@/utils/users/authUsers";
 import { diffRoster } from "@repo/domain/roster/diff";
@@ -23,7 +24,7 @@ export const sha256Hex = (input: string): string =>
   createHash("sha256").update(input).digest("hex");
 
 export interface RosterReviewDeps {
-  fetchRosterRows: () => Promise<Record<string, string>[]>;
+  fetchRosterRows: () => Promise<RosterRead>;
   loadProfiles: () => Promise<ProfileForDiff[]>;
   knownVoices?: readonly string[];
 }
@@ -46,13 +47,14 @@ export async function buildRosterReview(
   deps: RosterReviewDeps,
 ): Promise<BuiltReview> {
   const knownVoices = deps.knownVoices ?? DEFAULT_KNOWN_VOICES;
-  const [rawRows, profiles] = await Promise.all([
+  const [read, profiles] = await Promise.all([
     deps.fetchRosterRows(),
     deps.loadProfiles(),
   ]);
-  const parsed = parseRoster(rawRows, {
+  const parsed = parseRoster(read.rows, {
     activeProfilesCount: profiles.length,
     knownVoices,
+    rowsAboveHeader: read.rowsAboveHeader,
   });
   // Nothing is compared on a roster that fails validation.
   const diff =

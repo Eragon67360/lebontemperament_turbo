@@ -14,11 +14,19 @@
 //   tab name (`Membres`) or `Membres!A:H` when the roster is not the first tab.
 //
 // The values grid is converted to the same row objects `Papa.parse(text,
-// { header: true })` produced from the CSV export: the first row gives the
+// { header: true })` produced from the CSV export: the header row gives the
 // keys as-is, missing trailing cells become "", fully empty rows are skipped,
 // duplicate headers get `_1`, `_2`… suffixes. Extra cells beyond the header
 // row are dropped (Papa put them under `__parsed_extra`, which nothing read).
+// The header row is the first row naming the required columns, usually the
+// first row; when a sort moved it down, the member rows above it are read too.
 
+import {
+  findHeaderRowIndex,
+  isValidEmail,
+  mapHeaders,
+  normalizeEmail,
+} from "@repo/domain/roster/normalize";
 import { createPrivateKey, createSign } from "node:crypto";
 
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
@@ -268,22 +276,39 @@ async function getAccessToken(account: ServiceAccount): Promise<string> {
   return body.access_token;
 }
 
+/** What `fetchRosterRows()` read from the sheet. */
+export interface RosterRead {
+  /** One object per member row, keyed by the header row. */
+  rows: Record<string, string>[];
+  /**
+   * Member rows (with a valid email) found above the header row, already in
+   * `rows`: the sheet was sorted with its header row.
+   */
+  rowsAboveHeader: number;
+}
+
 /**
  * Converts a Sheets `values` grid into the row objects `Papa.parse(text,
  * { header: true })` gave for the CSV export. Header cells are kept as-is
  * (accents, spaces, empty strings); downstream code matches on them. The
  * Sheets API never returns a byte-order mark, so there is none to strip.
+ *
+ * The header row is the first row naming the required columns (row 1 when
+ * none does, so validation reports what it read). Rows above it are kept
+ * only when they hold a valid email: members a sort moved above the header,
+ * not a title line.
  */
 export function rosterRowsFromGrid(
   values: ReadonlyArray<ReadonlyArray<unknown>> | undefined,
-): Record<string, string>[] {
-  if (!values || values.length === 0) return [];
+): RosterRead {
+  if (!values || values.length === 0) return { rows: [], rowsAboveHeader: 0 };
 
-  const [headerRow = [], ...dataRows] = values;
+  const grid = values.map((row) => row.map((cell) => toCell(cell)));
+  const headerIndex = Math.max(findHeaderRowIndex(grid), 0);
+  const headerRow = grid[headerIndex] ?? [];
   const counts = new Map<string, number>();
-  const used = new Set<string>(headerRow.map((cell) => toCell(cell)));
-  const headers = headerRow.map((cell) => {
-    const header = toCell(cell);
+  const used = new Set<string>(headerRow);
+  const headers = headerRow.map((header) => {
     const seen = counts.get(header) ?? 0;
     counts.set(header, seen + 1);
     if (seen === 0) return header;
@@ -297,17 +322,29 @@ export function rosterRowsFromGrid(
     return renamed;
   });
 
-  const rows: Record<string, string>[] = [];
-  for (const dataRow of dataRows) {
-    const cells = dataRow.map((cell) => toCell(cell));
-    if (cells.every((cell) => cell === "")) continue;
-    const row: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      row[header] = cells[index] ?? "";
-    });
-    rows.push(row);
-  }
-  return rows;
+  const toRows = (
+    cellRows: ReadonlyArray<ReadonlyArray<string>>,
+  ): Record<string, string>[] =>
+    cellRows
+      .filter((cells) => cells.some((cell) => cell !== ""))
+      .map((cells) => {
+        const row: Record<string, string> = {};
+        headers.forEach((header, index) => {
+          row[header] = cells[index] ?? "";
+        });
+        return row;
+      });
+
+  const emailHeader = mapHeaders(headers).columns.email;
+  const above = toRows(grid.slice(0, headerIndex)).filter(
+    (row) =>
+      emailHeader !== undefined &&
+      isValidEmail(normalizeEmail(row[emailHeader])),
+  );
+  return {
+    rows: [...above, ...toRows(grid.slice(headerIndex + 1))],
+    rowsAboveHeader: above.length,
+  };
 }
 
 function toCell(value: unknown): string {
@@ -325,7 +362,7 @@ interface ValuesResponse {
  * `userMessage` and an HTTP `status`) when the source is not configured, not
  * shared with the service account, missing, or unreachable.
  */
-export async function fetchRosterRows(): Promise<Record<string, string>[]> {
+export async function fetchRosterRows(): Promise<RosterRead> {
   const config = readConfig();
   const token = await getAccessToken(config.serviceAccount);
 
