@@ -24,6 +24,11 @@ export interface ParseRosterOptions {
   /** Profiles the admin currently has; the floor is half of it. */
   activeProfilesCount: number;
   knownVoices?: readonly string[];
+  /**
+   * Member rows the source found above the header row (a sheet sorted with
+   * its header): read as members, and the admin is told to fix the sheet.
+   */
+  rowsAboveHeader?: number;
 }
 
 export interface ParsedRoster extends RosterValidation {
@@ -66,6 +71,20 @@ export function parseRoster(
   const { columns, missing, absent, nameParts, surnameOnly } =
     mapHeaders(rawHeaders);
 
+  // The "headers" are a member's cells: the sheet has no header row at all.
+  // Listing them would only echo that member's details back.
+  if (
+    missing.length > 0 &&
+    rawHeaders.some((header) => isValidEmail(normalizeEmail(header)))
+  ) {
+    errors.push({
+      code: "no_header_row",
+      message:
+        "Ligne d'en-tête introuvable : aucune ligne du tableau ne porte les titres « NOM Prénom » et « Adresse mail », et la première ligne lue est celle d'un membre. Remettez la ligne des titres en haut du tableau, puis relisez-le.",
+    });
+    return { rows: [], errors, warnings, columns };
+  }
+
   for (const field of missing) {
     if (field === "name" && surnameOnly) {
       errors.push({
@@ -84,6 +103,14 @@ export function parseRoster(
   }
   if (missing.length > 0) {
     return { rows: [], errors, warnings, columns };
+  }
+
+  const above = options.rowsAboveHeader ?? 0;
+  if (above > 0) {
+    warnings.push({
+      code: "header_not_first",
+      message: `La ligne d'en-tête n'est plus la première ligne du tableau : il a sans doute été trié avec elle. ${plural(above, "ligne de membre placée au-dessus a", "lignes de membres placées au-dessus ont")} quand même été ${above > 1 ? "lues" : "lue"}. Remettez l'en-tête en première ligne dans le tableau.`,
+    });
   }
 
   for (const field of absent) {

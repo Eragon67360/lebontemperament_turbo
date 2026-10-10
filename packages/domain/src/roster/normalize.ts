@@ -139,6 +139,18 @@ export function mapHeaders(rawHeaders: readonly string[]): HeaderMapping {
   };
 }
 
+/**
+ * Index of the header row in a sheet's values grid: the first row whose cells
+ * name every required column (it is not always the first row: a sheet sorted
+ * A→Z with its header row selected moves the header among the members).
+ * -1 when no row does.
+ */
+export function findHeaderRowIndex(
+  grid: ReadonlyArray<ReadonlyArray<string>>,
+): number {
+  return grid.findIndex((row) => mapHeaders(row).missing.length === 0);
+}
+
 export function normalizeEmail(value: string | null | undefined): string {
   return normalizeText(value).toLowerCase();
 }

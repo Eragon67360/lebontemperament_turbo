@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { diffRoster, fieldChanges } from "./diff";
 import { rosterFingerprint } from "./fingerprint";
 import {
+  findHeaderRowIndex,
   isValidEmail,
   joinVoices,
   mapHeaders,
@@ -220,6 +221,27 @@ assert.deepEqual(splitVoices(""), []);
 assert.deepEqual(splitVoices(null), []);
 assert.equal(joinVoices(["Jeune", "Soprane"]), "Jeune & Soprane");
 
+// --- findHeaderRowIndex --------------------------------------------------------
+
+assert.equal(
+  findHeaderRowIndex([HEADERS, ["DUPONT Marie", "m@example.com"]]),
+  0,
+);
+assert.equal(
+  findHeaderRowIndex([
+    ["ARNAUD Léa", "lea@example.com"],
+    ["Nom", "Prénom", "Mail"],
+  ]),
+  1,
+  "two name columns count",
+);
+assert.equal(
+  findHeaderRowIndex([["ARNAUD Léa", "lea@example.com"], ["NOM Prénom"]]),
+  -1,
+  "a row without the email column is not the header",
+);
+assert.equal(findHeaderRowIndex([]), -1);
+
 // --- parseRoster: errors -----------------------------------------------------
 
 {
@@ -235,6 +257,35 @@ assert.equal(joinVoices(["Jeune", "Soprane"]), "Jeune & Soprane");
   assert.match(parsed.errors[0]!.message, /« Adresse mail » introuvable/);
   assert.match(parsed.errors[0]!.message, /« NOM Prénom », « Voix »/);
   assert.equal(parsed.rows.length, 0, "nothing is compared on a bad roster");
+}
+{
+  // No header row: row 1 is a member, so its cells became the "headers".
+  // One blocking error, and the member's details are not echoed back.
+  const parsed = parseRoster(
+    [{ "ARNAUD Léa": "PETIT Zoé", "lea@example.com": "zoe@example.com" }],
+    { activeProfilesCount: 1 },
+  );
+  assert.deepEqual(codes(parsed.errors), ["no_header_row"]);
+  assert.match(parsed.errors[0]!.message, /Ligne d'en-tête introuvable/);
+  assert.doesNotMatch(parsed.errors[0]!.message, /lea@example\.com|ARNAUD/);
+  assert.equal(parsed.rows.length, 0);
+}
+{
+  // Members found above the header row (a sorted sheet): read, with a warning.
+  const parsed = parseRoster(
+    [
+      row({ "NOM Prénom": "ARNAUD Léa", "Adresse mail": "lea@example.com" }),
+      row({ "NOM Prénom": "PETIT Zoé", "Adresse mail": "zoe@example.com" }),
+    ],
+    { activeProfilesCount: 2, rowsAboveHeader: 1 },
+  );
+  assert.deepEqual(codes(parsed.errors), []);
+  assert.ok(codes(parsed.warnings).includes("header_not_first"));
+  assert.match(
+    parsed.warnings.find((w) => w.code === "header_not_first")!.message,
+    /1 ligne de membre placée au-dessus a quand même été lue/,
+  );
+  assert.equal(parsed.rows.length, 2);
 }
 {
   // « Nom » + « Prénom » are combined as « Prénom NOM ».
