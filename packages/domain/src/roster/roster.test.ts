@@ -452,6 +452,32 @@ const rosterRow = (
   assert.deepEqual(changes, []);
 }
 
+{
+  // An account with no voice against a roster row « Orchestre » is a change
+  // (a missing, empty or blank voice alike), and the reverse is not.
+  const row = rosterRow({
+    rowId: "r1",
+    name: "Anne DUPONT",
+    voices: ["Orchestre"],
+  });
+  for (const voice of [null, "", "   "]) {
+    assert.deepEqual(
+      fieldChanges(
+        row,
+        profile({ id: "p1", display_name: "Anne DUPONT", voice }),
+      ),
+      [{ field: "voice", from: "", to: "Orchestre" }],
+    );
+  }
+  assert.deepEqual(
+    fieldChanges(
+      row,
+      profile({ id: "p1", display_name: "Anne DUPONT", voice: "orchestre" }),
+    ),
+    [],
+  );
+}
+
 // --- diffRoster --------------------------------------------------------------
 
 const PROFILES: ProfileForDiff[] = [

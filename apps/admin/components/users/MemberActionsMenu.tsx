@@ -18,6 +18,7 @@ import {
 import RouteNames from "@/utils/routes";
 import {
   Image as ImageIcon,
+  Mic,
   MoreHorizontal,
   Pencil,
   Shield,
@@ -31,6 +32,7 @@ interface MemberActionsMenuProps {
   actor: { id: string | null | undefined; role: Role | null | undefined };
   onRole: (user: User) => void;
   onRename: (user: User) => void;
+  onVoice: (user: User) => void;
   onPhoto: (user: User) => void;
   onDelete: (user: User) => void;
 }
@@ -49,6 +51,7 @@ export function MemberActionsMenu({
   actor,
   onRole,
   onRename,
+  onVoice,
   onPhoto,
   onDelete,
 }: MemberActionsMenuProps) {
@@ -88,6 +91,10 @@ export function MemberActionsMenu({
         <DropdownMenuItem onSelect={later(() => onRename(user))}>
           <Pencil aria-hidden />
           Modifier le nom affiché…
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={later(() => onVoice(user))}>
+          <Mic aria-hidden />
+          Modifier la voix…
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={later(() => onPhoto(user))}>
           <ImageIcon aria-hidden />
