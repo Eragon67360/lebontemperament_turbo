@@ -222,6 +222,20 @@ export class Director {
     await sleep(500);
   }
 
+  /** Closes the open dialog with « Annuler », or Escape, without saving. */
+  async cancel() {
+    const dialog = this.page
+      .getByRole("dialog")
+      .or(this.page.getByRole("alertdialog"))
+      .last();
+    const cancel = dialog.getByRole("button", { name: "Annuler" });
+    if (await cancel.isVisible().catch(() => false)) await this.click(cancel);
+    if (await dialog.isVisible().catch(() => false)) await this.press("Escape");
+    await dialog.waitFor({ state: "hidden", timeout: 3_000 }).catch(() => {
+      this.warn("a dialog stayed open");
+    });
+  }
+
   async scrollTo(target: Locator, what?: string) {
     try {
       await target.first().waitFor({ state: "attached", timeout: 5_000 });

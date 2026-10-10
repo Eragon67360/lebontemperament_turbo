@@ -54,7 +54,7 @@ export const shots: Record<string, Shot> = {
       );
       await d.cue("combien de jours");
       await d.hover(
-        page.getByRole("heading", { name: "Prochain concert" }),
+        page.getByRole("region", { name: "Prochain concert" }),
         "« Prochain concert »",
       );
       await d.cue("Juste en dessous");
@@ -164,23 +164,28 @@ export const shots: Record<string, Shot> = {
         "« Ajouter un concert »",
         300,
       );
+      // A concert's « Modifier », not a tour's: only concerts have the preview.
       await d.click(
-        page.getByRole("button", { name: "Modifier" }),
-        "first « Modifier »",
+        page
+          .getByRole("region", { name: "Concerts à venir" })
+          .getByRole("button", { name: /^Modifier/ }),
+        "a concert's « Modifier »",
       );
       await d.cue("l'aperçu");
       await d.hover(
-        page.getByText("Aperçu sur le site public"),
+        page
+          .getByRole("dialog")
+          .getByRole("heading", { name: "Aperçu sur le site public" }),
         "« Aperçu sur le site public »",
       );
       await d.cue("Attention");
-      await d.click(
-        page.getByRole("button", { name: "Annuler" }),
-        "« Annuler »",
-      );
+      await d.cancel();
       await d.cue("Les tournées");
+      // Only when a tour is coming up; otherwise its empty state.
       await d.hover(
-        page.getByRole("button", { name: "Gérer les concerts" }),
+        page
+          .getByRole("button", { name: /^Gérer les concerts/ })
+          .or(page.getByRole("button", { name: "Créer une tournée" })),
         "« Gérer les concerts »",
       );
     },
@@ -202,10 +207,7 @@ export const shots: Record<string, Shot> = {
         "« Supprimer… »",
       );
       await d.cue("Impossible");
-      await d.click(
-        page.getByRole("button", { name: "Annuler" }),
-        "« Annuler »",
-      );
+      await d.cancel();
     },
   },
 
@@ -384,12 +386,13 @@ export const shots: Record<string, Shot> = {
         "« Synchroniser avec la liste »",
       );
       await d.cue("les nouveaux, ceux");
+      // The group headings carry their count: « Nouveaux 3 ».
       await d.hover(
-        page.getByText("Nouveaux", { exact: true }),
+        page.getByRole("heading", { name: /^Nouveaux/ }),
         "« Nouveaux »",
       );
       await d.hover(
-        page.getByText("Modifiés", { exact: true }),
+        page.getByRole("heading", { name: /^Modifiés/ }),
         "« Modifiés »",
       );
       await d.cue("Vous cochez");
@@ -454,10 +457,7 @@ export const shots: Record<string, Shot> = {
         "« Publiée sur le site »",
       );
       await d.cue("publiez-la");
-      await d.click(
-        page.getByRole("button", { name: "Annuler" }),
-        "« Annuler »",
-      );
+      await d.cancel();
     },
   },
 
@@ -503,16 +503,19 @@ export const shots: Record<string, Shot> = {
     route: "/dashboard/admin/anniversary",
     run: async (d) => {
       const { page } = d;
+      // Each line shows its state as an icon; the word is for screen readers.
+      const line = (word: string) =>
+        page
+          .locator("li")
+          .filter({ hasText: `: ${word}.` })
+          .locator("svg")
+          .first();
       await d.cue("ce qui est prêt");
-      await d.hover(page.getByText("Prêt", { exact: true }), "« Prêt »", 300);
+      await d.hover(line("Prêt"), "a « Prêt » line", 300);
       await d.cue("ce qui est à vérifier");
-      await d.hover(
-        page.getByText("À vérifier", { exact: true }),
-        "« À vérifier »",
-        300,
-      );
+      await d.hover(line("À vérifier"), "an « À vérifier » line", 300);
       await d.cue("encore vide");
-      await d.hover(page.getByText("Vide", { exact: true }), "« Vide »", 300);
+      await d.hover(line("Vide"), "a « Vide » line", 300);
     },
   },
 
@@ -544,14 +547,21 @@ export const shots: Record<string, Shot> = {
         page.getByRole("tab", { name: /En attente/ }),
         "« En attente »",
       );
+      // « Tous », so there is something to point at even with nothing
+      // waiting. Hover only: nothing is published during filming.
+      await d.click(page.getByRole("tab", { name: "Tous" }), "« Tous »");
       await d.cue("lisez, publiez");
       await d.hover(
-        page.getByRole("button", { name: "Publier" }),
+        page.getByRole("button", {
+          name: /^(Publier|Retirer de la publication)/,
+        }),
         "« Publier »",
       );
       await d.cue("à la une");
       await d.hover(
-        page.getByRole("button", { name: /Mettre à la une/ }),
+        page.getByRole("button", {
+          name: /^(Mettre à la une|Retirer de la une)/,
+        }),
         "« Mettre à la une »",
       );
     },
@@ -572,10 +582,7 @@ export const shots: Record<string, Shot> = {
         "confirmation checkbox",
       );
       await d.cue("Et on peut la masquer");
-      await d.click(
-        page.getByRole("button", { name: "Annuler" }),
-        "« Annuler »",
-      );
+      await d.cancel();
     },
   },
 
