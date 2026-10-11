@@ -1,5 +1,6 @@
 import { EVENT_COLUMNS } from "@/lib/columns";
 import { checkAuthorization } from "@/utils/auth";
+import { removeEventFiles } from "@/utils/events/documents";
 import {
   REVALIDATE,
   revalidateWebsiteAfterResponse,
@@ -111,11 +112,23 @@ export async function DELETE(request: Request) {
     const supabase = await createClient();
     const { id } = await request.json();
 
+    // The event's files go with it (the rows cascade, the objects don't).
+    // Before the event_documents migration the read fails: nothing to remove.
+    const { data: files } = await supabase
+      .from("event_documents")
+      .select("storage_key")
+      .eq("event_id", id);
+
     const { error } = await supabase.from("events").delete().eq("id", id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await removeEventFiles(
+      supabase,
+      (files ?? []).map((file) => file.storage_key),
+    );
 
     revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ message: "Événement supprimé avec succès" });

@@ -1,6 +1,7 @@
 "use client";
 
 import CloudinaryImage from "@/components/CloudinaryImage";
+import { EventDocumentLinks } from "@/components/events/EventDocumentLinks";
 import { LinkButton } from "@/components/LinkButton";
 import type {
   PublicConcert as Concert,
@@ -10,7 +11,7 @@ import type {
 import { ConcertProject } from "@/types/projects";
 import { RoundedSize } from "@/utils/types";
 import { Button, Modal, Tooltip } from "@heroui/react";
-import { Event } from "@repo/domain/types/events";
+import type { Event, EventWithDocuments } from "@repo/domain/types/events";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
@@ -30,7 +31,7 @@ import {
 
 interface ConcertsClientProps {
   initialConcerts: Concert[];
-  initialEvents: Event[];
+  initialEvents: EventWithDocuments[];
   initialRehearsals: Rehearsal[];
   initialTours: Tour[];
   initialProjects: ConcertProject[];
@@ -667,6 +668,11 @@ const ConcertsClient = ({
                             {event.description}
                           </p>
                         )}
+                        <EventDocumentLinks
+                          documents={event.documents}
+                          eventTitle={event.title}
+                          className="mt-5"
+                        />
                         {event.link && (
                           <LinkButton
                             variant="ghost"

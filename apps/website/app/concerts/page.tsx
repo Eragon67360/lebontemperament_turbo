@@ -1,5 +1,6 @@
 import ConcertsClient from "@/components/concerts/ConcertsClient";
 import { JsonLd } from "@/components/JsonLd";
+import { withEventDocuments } from "@/lib/eventDocuments";
 import {
   CONCERT_COLUMNS,
   CONCERT_EVENT_DATA_COLUMNS,
@@ -14,7 +15,7 @@ import {
 import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
 import { createPublicClient } from "@/utils/supabase/public";
 import { concertEventJsonLd } from "@repo/domain/seo/concertEvent";
-import { Event } from "@repo/domain/types/events";
+import type { Event, EventWithDocuments } from "@repo/domain/types/events";
 import { parisToday } from "@repo/domain/utils/parisDay";
 import {
   PROJECT_STORY_COLUMNS,
@@ -86,7 +87,7 @@ type PageData = {
   projects: ReturnType<typeof transformProjectForFrontend>[];
   concerts: AgendaConcert[];
   tours: PublicTour[];
-  events: Event[];
+  events: EventWithDocuments[];
   rehearsals: PublicRehearsal[];
 };
 
@@ -158,7 +159,8 @@ async function getPageData(): Promise<PageData> {
       projects: projects,
       concerts: concerts || [],
       tours: tours || [],
-      events: (events || []) as Event[], // view-model: deliberate Event type; also narrows event_type from string to a 5-value union
+      // view-model: deliberate Event type; also narrows event_type from string to a 5-value union
+      events: await withEventDocuments(supabase, (events || []) as Event[]),
       rehearsals: rehearsals || [],
     };
   } catch (error) {

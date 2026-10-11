@@ -12,12 +12,13 @@ import {
   formatTimeFr,
   parseIsoDate,
 } from "@/utils/season/schedule";
-import type { Event } from "@repo/domain/types/events";
+import type { Event, EventDocument } from "@repo/domain/types/events";
 import {
   CalendarOff,
   Clock,
   ExternalLink,
   MapPin,
+  Paperclip,
   Pencil,
   User,
 } from "lucide-react";
@@ -25,16 +26,22 @@ import {
 /**
  * One event of the « À venir » or « Passés » list: date block, title, type
  * chip, « Public » or « Membres » visibility, period, time, place and the
- * person in charge, an excerpt of the description, then the link,
- * « Modifier » and the « Plus d'actions » menu (« Supprimer… »).
+ * person in charge, an excerpt of the description, the attached files,
+ * then the link, « Modifier », « Documents » and the « Plus d'actions » menu
+ * (« Supprimer… »).
  */
 export function EventRow({
   event,
+  documents,
   onEdit,
+  onDocuments,
   onDelete,
 }: {
   event: Event;
+  /** The event's files; the « Documents » button is hidden without `onDocuments`. */
+  documents: EventDocument[];
   onEdit: () => void;
+  onDocuments?: () => void;
   onDelete: () => void;
 }) {
   const date = parseIsoDate(event.date_from);
@@ -89,6 +96,14 @@ export function EventRow({
               {description}
             </p>
           )}
+          {documents.length > 0 && (
+            <p className="text-note text-muted-foreground inline-flex min-w-0 items-center gap-1">
+              <Paperclip className="size-3.5 shrink-0" aria-hidden />
+              <span className="truncate">
+                {documents.map((document) => document.label).join(" · ")}
+              </span>
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -109,6 +124,20 @@ export function EventRow({
             Modifier
             <span className="sr-only"> « {event.title} »</span>
           </Button>
+          {onDocuments && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onDocuments}
+            >
+              <Paperclip aria-hidden />
+              {documents.length > 0
+                ? `Documents (${documents.length})`
+                : "Joindre un document"}
+              <span className="sr-only"> à « {event.title} »</span>
+            </Button>
+          )}
           <RowActionsMenu name={event.title} onDelete={onDelete} />
         </div>
       </div>

@@ -98,6 +98,7 @@ const noop = () => {};
         created_at: "",
         updated_at: "",
       },
+      documents: [],
       onEdit: noop,
       onDelete: noop,
     }),
@@ -138,6 +139,7 @@ const noop = () => {};
         created_at: "",
         updated_at: "",
       },
+      documents: [],
       onEdit: noop,
       onDelete: noop,
     }),
@@ -147,6 +149,70 @@ const noop = () => {};
   assert.match(html, />Vente</);
   assert.doesNotMatch(html, /Ouvrir le lien/);
   assert.doesNotMatch(html, /\(\)/, "no empty parentheses without an e-mail");
+}
+
+// --- An event with files: their names on the row, « Documents (n) » ---
+{
+  const event = {
+    id: "e3",
+    title: "Vente de fromages",
+    date_from: "2026-11-21",
+    date_to: null,
+    time: "09:00:00",
+    location: "Wangen",
+    responsible_name: "Paul",
+    responsible_email: null,
+    event_type: "vente" as const,
+    description: null,
+    link: null,
+    is_public: true,
+    created_at: "",
+    updated_at: "",
+  };
+  const document = {
+    id: "d1",
+    event_id: "e3",
+    label: "Bulletin de réservation",
+    file_name: "Bulletin.pdf",
+    storage_key: "events/e3/x-Bulletin.pdf",
+    mime_type: "application/pdf",
+    size_bytes: 1000,
+    sort_order: 0,
+    created_at: "",
+  };
+  const withFiles = renderToStaticMarkup(
+    createElement(EventRow, {
+      event,
+      documents: [document, { ...document, id: "d2", label: "Tarifs" }],
+      onEdit: noop,
+      onDocuments: noop,
+      onDelete: noop,
+    }),
+  );
+  assert.match(withFiles, /Bulletin de réservation · Tarifs/);
+  assert.match(withFiles, /Documents \(2\)/);
+
+  const none = renderToStaticMarkup(
+    createElement(EventRow, {
+      event,
+      documents: [],
+      onEdit: noop,
+      onDocuments: noop,
+      onDelete: noop,
+    }),
+  );
+  assert.match(none, /Joindre un document/);
+
+  // Before the migration the page passes no onDocuments: no button.
+  const hidden = renderToStaticMarkup(
+    createElement(EventRow, {
+      event,
+      documents: [],
+      onEdit: noop,
+      onDelete: noop,
+    }),
+  );
+  assert.doesNotMatch(hidden, /Joindre un document|Documents \(/);
 }
 
 console.log("season components: all assertions passed");
