@@ -3,6 +3,8 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'event_document.dart';
+
 part 'event.freezed.dart';
 part 'event.g.dart';
 
@@ -36,6 +38,13 @@ abstract class Event with _$Event {
     @JsonKey(name: 'updated_at') String? updatedAt,
     String? link,
     @JsonKey(name: 'is_public') bool? isPublic,
+
+    /// Files attached in the admin, in display order. Not a column of
+    /// `events`: [EventsService] reads them from `event_documents` and adds
+    /// them, and the offline cache keeps them under this key.
+    @Default(<EventDocument>[])
+    @JsonKey(fromJson: eventDocumentsFromJson, toJson: eventDocumentsToJson)
+    List<EventDocument> documents,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);

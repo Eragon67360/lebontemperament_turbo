@@ -21,6 +21,9 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   updatedAt: json['updated_at'] as String?,
   link: json['link'] as String?,
   isPublic: json['is_public'] as bool?,
+  documents: json['documents'] == null
+      ? const <EventDocument>[]
+      : eventDocumentsFromJson(json['documents']),
 );
 
 Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
@@ -38,6 +41,7 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'updated_at': instance.updatedAt,
   'link': instance.link,
   'is_public': instance.isPublic,
+  'documents': eventDocumentsToJson(instance.documents),
 };
 
 const _$EventTypeEnumMap = {
