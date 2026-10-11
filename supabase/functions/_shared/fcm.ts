@@ -2,8 +2,8 @@
 // function secret FIREBASE_SERVICE_ACCOUNT_JSON.
 //
 // send-push-notification still carries its own copy of getAccessToken (it
-// sends to the `all_users` topic and is left as deployed); new functions use
-// this module.
+// sends to the members' topics, see its target.ts); new functions use this
+// module.
 import * as jose from "npm:jose@5.2.0";
 
 export interface ServiceAccount {

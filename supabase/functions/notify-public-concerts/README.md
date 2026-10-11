@@ -11,7 +11,7 @@ At most 3 pushes a day, soonest concert first; the rest waits for the next day. 
 
 ## Who receives it
 
-Phones with the app, nobody signed in, and « Prochains concerts » on in « À propos » (on by default). The app subscribes to the topic itself (`SessionNotifications`); nothing about visitors is stored. A member's phone leaves the topic at sign-in: members get every concert through `all_users` (`send-push-notification`). The push carries `data: { type: "concert", id }`, so a tap opens the concert's page.
+Phones with the app, nobody signed in, and « Prochains concerts » on in « À propos » (on by default). The app subscribes to the topic itself (`SessionNotifications`); nothing about visitors is stored. A member's phone leaves the topic at sign-in: members get every concert through `members` (`all_users` for apps up to 2.0.142; `send-push-notification`). The push carries `data: { type: "concert", id }`, so a tap opens the concert's page.
 
 ## Calling it by hand
 

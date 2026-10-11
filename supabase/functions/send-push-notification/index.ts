@@ -1,6 +1,7 @@
 import { serve as serveHttp } from "https://deno.land/std@0.177.0/http/server.ts";
 import * as jose from "npm:jose@5.2.0";
 import { requireInternalSecret } from "../_shared/caller-auth.ts";
+import { pushCondition } from "./target.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -148,7 +149,7 @@ serveHttp(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Only the database trigger may broadcast to every member's phone.
+  // Only the database trigger may broadcast to the members' phones.
   const refused = requireInternalSecret(req, corsHeaders);
   if (refused) return refused;
 
@@ -164,6 +165,9 @@ serveHttp(async (req) => {
     const table = (body.table as string) ?? "";
     const operation = (body.operation as string) ?? "INSERT";
     const record = (body.record as Record<string, unknown>) ?? {};
+    // Sent on UPDATE since 20261011190000: a rehearsal that changes group
+    // also tells the group it leaves.
+    const oldRecord = (body.old_record as Record<string, unknown>) ?? null;
 
     if (!table || !["rehearsals", "events", "concerts"].includes(table)) {
       return new Response(
@@ -197,11 +201,11 @@ serveHttp(async (req) => {
     const sa = JSON.parse(saJson) as ServiceAccount;
     const accessToken = await getAccessToken(sa);
 
-    const topic = "all_users";
+    const condition = pushCondition(table, record, oldRecord);
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
     const fcmBody = {
       message: {
-        topic,
+        condition,
         notification: { title, body: bodyText },
         // Background pushes are shown by the system: without a channel they
         // land in Android's "Miscellaneous" channel, silent and unranked.
