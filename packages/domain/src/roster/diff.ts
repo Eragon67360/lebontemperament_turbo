@@ -33,6 +33,10 @@ const absentOf = (profile: ProfileForDiff): AbsentMember => ({
   displayName: normalizeText(profile.display_name),
   role: profile.role ?? "user",
   status: profile.status,
+  ...(profile.created_at !== undefined && { createdAt: profile.created_at }),
+  ...(profile.last_sign_in_at !== undefined && {
+    lastSignInAt: profile.last_sign_in_at,
+  }),
 });
 
 const byName = (a: { displayName: string }, b: { displayName: string }) =>

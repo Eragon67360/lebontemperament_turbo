@@ -9,6 +9,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
+import { lastSeenLabel } from "@/utils/members/list";
 import { fieldLabel } from "@/utils/roster/apply";
 import RouteNames from "@/utils/routes";
 import type {
@@ -18,7 +20,7 @@ import type {
   ToSettle,
   ToSettleKind,
 } from "@repo/domain/roster/types";
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight, Info, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
@@ -295,8 +297,40 @@ const ROLE_LABELS: Record<string, string> = {
   superadmin: "super administrateur",
 };
 
-export function AbsentMembersGroup({ items }: { items: AbsentMember[] }) {
+export interface AbsentDeletion {
+  /** Profile ids ticked for deletion. */
+  selected: ReadonlySet<string>;
+  onChange: (next: Set<string>) => void;
+  /** Opens the confirmation; the page owns the dialog. */
+  onDelete: () => void;
+  /** The signed-in admin: their own account cannot be ticked. */
+  currentUserId: string | undefined;
+  disabled?: boolean;
+  /** Most accounts that may be ticked at once. */
+  max: number;
+}
+
+/**
+ * Accounts the roster no longer lists. A superadmin can tick some and delete
+ * them for good (`deletion`); everyone else only reads the list.
+ */
+export function AbsentMembersGroup({
+  items,
+  deletion,
+}: {
+  items: AbsentMember[];
+  deletion?: AbsentDeletion;
+}) {
   const [open, setOpen] = useState(false);
+
+  const tickable = deletion
+    ? items.filter((item) => item.profileId !== deletion.currentUserId)
+    : [];
+  const limit = deletion ? Math.min(deletion.max, tickable.length) : 0;
+  const selectedCount = deletion
+    ? tickable.filter((item) => deletion.selected.has(item.profileId)).length
+    : 0;
+  const atCap = deletion !== undefined && selectedCount >= deletion.max;
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} asChild>
@@ -317,6 +351,9 @@ export function AbsentMembersGroup({ items }: { items: AbsentMember[] }) {
             >
               Absents de la liste
               <Badge variant="secondary">{items.length}</Badge>
+              {selectedCount > 0 && (
+                <Badge variant="danger">{selectedCount} à supprimer</Badge>
+              )}
             </span>
           </Button>
         </CollapsibleTrigger>
@@ -327,41 +364,127 @@ export function AbsentMembersGroup({ items }: { items: AbsentMember[] }) {
             <AlertDescription>
               Comptes du site dont l&apos;email n&apos;apparaît plus dans le
               tableau, quel que soit leur statut. La désactivation arrive
-              bientôt ; pour supprimer un compte, ouvrez-le depuis la page des
-              utilisateurs.
+              bientôt.{" "}
+              {deletion
+                ? "Pour supprimer définitivement des comptes (par exemple les personnes parties depuis plus d'un an), cochez-les : une relecture détaillée vous est demandée avant la suppression."
+                : "Seul un super administrateur peut supprimer des comptes."}
             </AlertDescription>
           </Alert>
+          {deletion && items.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+                <Checkbox
+                  checked={
+                    limit > 0 && selectedCount >= limit
+                      ? true
+                      : selectedCount > 0
+                        ? "indeterminate"
+                        : false
+                  }
+                  disabled={deletion.disabled || limit === 0}
+                  onCheckedChange={(value) =>
+                    deletion.onChange(
+                      value === true
+                        ? new Set(
+                            tickable.slice(0, limit).map((i) => i.profileId),
+                          )
+                        : new Set(),
+                    )
+                  }
+                />
+                Tout sélectionner
+              </label>
+              <Button
+                type="button"
+                variant="destructive-outline"
+                className="min-h-11"
+                onClick={deletion.onDelete}
+                disabled={deletion.disabled || selectedCount === 0}
+              >
+                <Trash2 aria-hidden />
+                {selectedCount > 0
+                  ? `Supprimer la sélection (${selectedCount})…`
+                  : "Supprimer la sélection…"}
+              </Button>
+            </div>
+          )}
+          {deletion && tickable.length > deletion.max && (
+            <p className="text-sm font-medium" role="note">
+              {deletion.max} comptes au plus par suppression : supprimez, puis
+              recommencez.
+            </p>
+          )}
           {items.length === 0 ? (
             <p className="text-muted-foreground rounded-md border border-dashed px-3 py-3 text-sm">
               Tous les comptes figurent dans le tableau.
             </p>
           ) : (
             <ul className="divide-y rounded-md border">
-              {items.map((item) => (
-                <li
-                  key={item.profileId}
-                  className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-medium">
-                      {item.displayName || <em>sans nom</em>}
+              {items.map((item) => {
+                const isMe =
+                  deletion !== undefined &&
+                  item.profileId === deletion.currentUserId;
+                const checked = deletion?.selected.has(item.profileId) ?? false;
+                const body = (
+                  <>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-medium">
+                        {item.displayName || <em>sans nom</em>}
+                      </span>
+                      <span className="text-muted-foreground block break-all">
+                        {item.email}
+                      </span>
+                      <span className="text-muted-foreground text-note block">
+                        Dernière connexion : {lastSeenLabel(item.lastSignInAt)}
+                      </span>
                     </span>
-                    <span className="text-muted-foreground block break-all">
-                      {item.email}
-                    </span>
-                  </span>
-                  {ROLE_LABELS[item.role] && (
-                    <Badge variant="outline">{ROLE_LABELS[item.role]}</Badge>
-                  )}
-                  <Badge
-                    variant={
-                      item.status === "approuvé" ? "secondary" : "outline"
-                    }
-                  >
-                    {item.status}
-                  </Badge>
-                </li>
-              ))}
+                    {isMe && <Badge variant="outline">Votre compte</Badge>}
+                    {ROLE_LABELS[item.role] && (
+                      <Badge variant="outline">{ROLE_LABELS[item.role]}</Badge>
+                    )}
+                    <Badge
+                      variant={
+                        item.status === "approuvé" ? "secondary" : "outline"
+                      }
+                    >
+                      {item.status}
+                    </Badge>
+                  </>
+                );
+                return (
+                  <li key={item.profileId}>
+                    {deletion ? (
+                      <label
+                        className={cn(
+                          "flex min-h-11 items-start gap-3 px-3 py-2 text-sm",
+                          isMe ? "cursor-not-allowed" : "cursor-pointer",
+                        )}
+                      >
+                        <Checkbox
+                          className="mt-1"
+                          checked={checked}
+                          disabled={
+                            deletion.disabled || isMe || (!checked && atCap)
+                          }
+                          onCheckedChange={(value) => {
+                            const next = new Set(deletion.selected);
+                            if (value === true) next.add(item.profileId);
+                            else next.delete(item.profileId);
+                            deletion.onChange(next);
+                          }}
+                        />
+                        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                          {body}
+                        </span>
+                      </label>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm">
+                        {body}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
           <Button asChild variant="link" className="h-auto min-h-11 px-0">

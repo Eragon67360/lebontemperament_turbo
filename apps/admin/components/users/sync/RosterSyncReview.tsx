@@ -14,14 +14,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { ErrorState, ListSkeleton } from "@/components/ui/data-state";
+import { useCurrentProfile } from "@/hooks/useCurrentProfile";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   RosterChangedError,
   useApplyRosterSync,
+  useDeleteAbsentAccounts,
   useRosterReview,
   type ApplyResponse,
+  type BulkDeleteResponse,
 } from "@/hooks/useRosterSync";
 import { cn } from "@/lib/utils";
 import { MAX_APPLY_INVITES, type ApplyRequest } from "@/utils/roster/apply";
+import { MAX_BULK_DELETIONS } from "@/utils/roster/bulkDelete";
 import RouteNames from "@/utils/routes";
 import type { RosterReview } from "@repo/domain/roster/types";
 import {
@@ -34,6 +39,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { BulkDeleteDialog } from "./BulkDeleteDialog";
 import {
   AbsentMembersGroup,
   ChangedMembersGroup,
@@ -50,6 +56,8 @@ interface Selection {
   fingerprint: string;
   invites: ReadonlySet<string>;
   updates: ReadonlySet<string>;
+  /** Accounts ticked under « Absents de la liste » for deletion. */
+  deletions: ReadonlySet<string>;
 }
 
 const plural = (n: number, one: string, many: string) =>
@@ -68,9 +76,18 @@ export function describeSelection(invites: number, updates: number): string {
 export function RosterSyncReview() {
   const review = useRosterReview();
   const apply = useApplyRosterSync();
+  const deleteAccounts = useDeleteAbsentAccounts();
+  const { data: currentUser } = useCurrentUser();
+  const { data: currentProfile } = useCurrentProfile();
+  // Deleting an account is for superadmins (the server checks it again).
+  const canDelete = currentProfile?.role === "superadmin";
   const [selection, setSelection] = useState<Selection | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [outcome, setOutcome] = useState<ApplyResponse | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteOutcome, setDeleteOutcome] = useState<BulkDeleteResponse | null>(
+    null,
+  );
 
   const data = review.data;
   const fingerprint = data?.fingerprint;
@@ -78,10 +95,22 @@ export function RosterSyncReview() {
     selection && selection.fingerprint === fingerprint ? selection : null;
   const invites = current?.invites ?? EMPTY_SET;
   const updates = current?.updates ?? EMPTY_SET;
+  // Only accounts the review still lists as absent can stay ticked.
+  const absents = data?.groups.absents ?? [];
+  const deletions = new Set(
+    absents
+      .map((account) => account.profileId)
+      .filter((id) => current?.deletions.has(id)),
+  );
+  const accountsToDelete = absents.filter((account) =>
+    deletions.has(account.profileId),
+  );
 
-  const select = (next: Partial<Pick<Selection, "invites" | "updates">>) => {
+  const select = (
+    next: Partial<Pick<Selection, "invites" | "updates" | "deletions">>,
+  ) => {
     if (!fingerprint) return;
-    setSelection({ fingerprint, invites, updates, ...next });
+    setSelection({ fingerprint, invites, updates, deletions, ...next });
   };
   // At most 100 invitations per apply (the server refuses more): keep the
   // first ones in the group's order.
@@ -96,10 +125,11 @@ export function RosterSyncReview() {
 
   const hasErrors = (data?.validation.errors.length ?? 0) > 0;
   const step = !data || review.isError || hasErrors ? 0 : outcome ? 2 : 1;
-  const busy = review.isFetching || apply.isPending;
+  const busy = review.isFetching || apply.isPending || deleteAccounts.isPending;
 
   const reread = () => {
     setOutcome(null);
+    setDeleteOutcome(null);
     setSelection(null);
     void review.refetch();
   };
@@ -138,6 +168,35 @@ export function RosterSyncReview() {
       if (error instanceof RosterChangedError) setSelection(null);
       toast.error(
         error instanceof Error ? error.message : "L'application a échoué",
+      );
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!data) return;
+    try {
+      const response = await deleteAccounts.mutateAsync({
+        fingerprint: data.fingerprint,
+        ids: accountsToDelete.map((account) => account.profileId),
+      });
+      setDeleteOpen(false);
+      select({ deletions: new Set() });
+      setDeleteOutcome(response);
+      if (response.summary.failed === 0) {
+        toast.success(
+          `${plural(response.summary.done, "compte supprimé", "comptes supprimés")}.`,
+        );
+      } else {
+        toast.warning(
+          `${plural(response.summary.done, "compte supprimé", "comptes supprimés")}, ${plural(response.summary.failed, "échec", "échecs")}.`,
+        );
+      }
+    } catch (error) {
+      setDeleteOpen(false);
+      // A 409 already triggered a re-read; the stale selection is dropped.
+      if (error instanceof RosterChangedError) setSelection(null);
+      toast.error(
+        error instanceof Error ? error.message : "La suppression a échoué",
       );
     }
   };
@@ -216,7 +275,27 @@ export function RosterSyncReview() {
                   disabled={busy}
                 />
                 <ToSettleGroup items={data.groups.aRegler} />
-                <AbsentMembersGroup items={data.groups.absents} />
+                {deleteOutcome && (
+                  <DeleteOutcome
+                    outcome={deleteOutcome}
+                    onDismiss={() => setDeleteOutcome(null)}
+                  />
+                )}
+                <AbsentMembersGroup
+                  items={data.groups.absents}
+                  deletion={
+                    canDelete
+                      ? {
+                          selected: deletions,
+                          onChange: (next) => select({ deletions: next }),
+                          onDelete: () => setDeleteOpen(true),
+                          currentUserId: currentUser?.id,
+                          disabled: busy,
+                          max: MAX_BULK_DELETIONS,
+                        }
+                      : undefined
+                  }
+                />
               </div>
               <div className="bg-card sticky bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 shadow-sm">
                 <p className="text-sm" aria-live="polite">
@@ -267,6 +346,13 @@ export function RosterSyncReview() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <BulkDeleteDialog
+        open={deleteOpen && accountsToDelete.length > 0}
+        onOpenChange={setDeleteOpen}
+        accounts={accountsToDelete}
+        onConfirm={handleDelete}
+        isPending={deleteAccounts.isPending}
+      />
     </PageShell>
   );
 }
@@ -443,6 +529,80 @@ function ApplyOutcome({
       >
         <RefreshCw aria-hidden />
         Relire le tableau
+      </Button>
+    </section>
+  );
+}
+
+function DeleteOutcome({
+  outcome,
+  onDismiss,
+}: {
+  outcome: BulkDeleteResponse;
+  onDismiss: () => void;
+}) {
+  const { results, summary } = outcome;
+  const failed = results.filter((r) => r.status === "failed");
+  const done = results.filter((r) => r.status === "done");
+
+  return (
+    <section aria-labelledby="roster-delete-result" className="space-y-3">
+      <Alert variant={summary.failed > 0 ? "destructive" : "default"}>
+        {summary.failed > 0 ? (
+          <AlertTriangle className="h-4 w-4" aria-hidden />
+        ) : (
+          <Check className="h-4 w-4" aria-hidden />
+        )}
+        <AlertTitle id="roster-delete-result">
+          {summary.failed > 0
+            ? `${plural(summary.done, "compte supprimé", "comptes supprimés")}, ${plural(summary.failed, "échec", "échecs")}`
+            : `${plural(summary.done, "compte supprimé", "comptes supprimés")}`}
+        </AlertTitle>
+        <AlertDescription>
+          Le détail de chaque compte est ci-dessous. Les comptes en échec sont
+          conservés.
+        </AlertDescription>
+      </Alert>
+      <ul className="divide-y rounded-md border text-sm">
+        {[...failed, ...done].map((result) => (
+          <li
+            key={result.id}
+            className="flex flex-wrap items-start gap-x-3 gap-y-1 px-3 py-2"
+          >
+            <span className="mt-0.5 shrink-0">
+              {result.status === "done" ? (
+                <>
+                  <Check className="text-primary-600 h-4 w-4" aria-hidden />
+                  <span className="sr-only">Supprimé :</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle
+                    className="text-destructive h-4 w-4"
+                    aria-hidden
+                  />
+                  <span className="sr-only">Échec :</span>
+                </>
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block break-words">{result.label}</span>
+              {result.reason && (
+                <span className="text-destructive block text-xs">
+                  {result.reason}
+                </span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <Button
+        type="button"
+        variant="outline"
+        className="min-h-11"
+        onClick={onDismiss}
+      >
+        Fermer ce résumé
       </Button>
     </section>
   );
