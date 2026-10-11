@@ -102,6 +102,15 @@ test.describe("POST /api/revalidate is secret-protected", () => {
   });
 });
 
+test("signed out, /api/events lists public events only", async ({
+  request,
+}) => {
+  const response = await request.get("/api/events");
+  expect(response.status()).toBe(200);
+  const events = (await response.json()) as { is_public: boolean }[];
+  expect(events.filter((event) => !event.is_public)).toEqual([]);
+});
+
 test("the CD catalogue renders without calling an API", async ({ page }) => {
   const apiCalls: string[] = [];
   page.on("request", (request) => {
