@@ -23,7 +23,7 @@ import '../../../main/presentation/providers/main_navigation_provider.dart';
 /// Home (« Portée »), in two worlds that never mix: first « Espace
 /// membres », the members' shortcuts on a tinted panel so they read as tools
 /// and show without scrolling; then the agenda on the page ground: the
-/// member's rehearsals (the next one large, the week as a bar of music, the
+/// member's rehearsals (the next one large, the next 7 days as a bar of music, the
 /// two after) and the next concert under its own heading. Only the member's
 /// ensembles show (Profil › Mes ensembles).
 class HomeScreen extends ConsumerWidget {
@@ -250,13 +250,13 @@ class _RehearsalsSection extends ConsumerWidget {
           },
           if (rehearsalsAsync is AsyncData) ...[
             const SizedBox(height: 28),
-            const StageSectionHeader(title: 'Cette semaine'),
+            const StageSectionHeader(title: 'Les 7 prochains jours'),
             const SizedBox(height: 8),
             WeekStaff(rehearsals: weekRehearsals),
             if (weekIsEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                'Pas de répétition cette semaine.',
+                'Pas de répétition dans les 7 prochains jours.',
                 style: AppFonts.sans(
                   fontSize: 14,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
