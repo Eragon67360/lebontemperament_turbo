@@ -2,7 +2,7 @@ import { MembresLandingPage } from "@/components/membres/MembresLandingPage";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Membres",
+  title: "Espace membres",
   description:
     "Accédez à l'espace Membres du Bon Tempérament, accédez à de multiples ressources comme des partitions, des gazettes, etc... ",
   keywords: "Espace membres, gazette, travail, règlement, drive",
@@ -15,11 +15,7 @@ export const metadata: Metadata = {
 };
 
 const Membres = () => {
-  return (
-    <div className="container m-auto flex w-full flex-col overflow-x-hidden px-0 md:px-2">
-      <MembresLandingPage />
-    </div>
-  );
+  return <MembresLandingPage />;
 };
 
 export default Membres;
