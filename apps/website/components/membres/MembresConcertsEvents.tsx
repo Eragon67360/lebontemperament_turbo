@@ -1,8 +1,9 @@
 "use client";
 
+import { EventDocumentLinks } from "@/components/events/EventDocumentLinks";
 import MusicList from "@/components/MusicList";
 import type { PublicConcert } from "@/lib/publicConcerts";
-import { Event } from "@repo/domain/types/events";
+import type { Event, EventWithDocuments } from "@repo/domain/types/events";
 import { format, isAfter, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEffect, useState } from "react";
@@ -56,7 +57,7 @@ const Detail = ({
 
 const MembresConcertsEvents = () => {
   const [concerts, setConcerts] = useState<PublicConcert[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventWithDocuments[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -238,6 +239,12 @@ const MembresConcertsEvents = () => {
                 {event.description && (
                   <p className="text-muted">{event.description}</p>
                 )}
+
+                <EventDocumentLinks
+                  documents={event.documents ?? []}
+                  eventTitle={event.title}
+                  large
+                />
 
                 {(event.responsible_email || event.link) && (
                   <div className="mt-auto flex flex-col items-start gap-1">

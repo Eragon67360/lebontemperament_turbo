@@ -10,10 +10,13 @@ export function EventDocumentLinks({
   documents,
   eventTitle,
   className = "",
+  large = false,
 }: {
   documents: EventDocumentLink[];
   eventTitle: string;
   className?: string;
+  /** Members area: 18 px names and 16 px details, like the rest of its text. */
+  large?: boolean;
 }) {
   if (documents.length === 0) return null;
   return (
@@ -40,10 +43,14 @@ export function EventDocumentLinks({
                 aria-hidden="true"
               />
               <span className="min-w-0 grow">
-                <span className="text-foreground block text-sm font-medium break-words">
+                <span
+                  className={`text-foreground block font-medium break-words ${large ? "text-lg" : "text-sm"}`}
+                >
                   {document.label}
                 </span>
-                <span className="text-muted block text-xs">
+                <span
+                  className={`text-muted block ${large ? "text-base" : "text-xs"}`}
+                >
                   {meta}
                   {opens && <span className="sr-only"> (nouvel onglet)</span>}
                 </span>
