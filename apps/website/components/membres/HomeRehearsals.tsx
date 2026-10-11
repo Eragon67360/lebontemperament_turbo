@@ -4,6 +4,7 @@ import { useMemberRehearsals } from "@/hooks/useMemberRehearsals";
 import {
   formatTimeRange,
   formatTimeSpan,
+  hasDirections,
   mapsUrl,
   parseLocalDate,
   placeLine,
@@ -120,9 +121,9 @@ function NextRehearsalCard({ rehearsal }: { rehearsal: MemberRehearsal }) {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {rehearsal.place && (
+        {hasDirections(rehearsal) && (
           <MembersLinkButton
-            href={mapsUrl(rehearsal.place)}
+            href={mapsUrl(rehearsal)}
             external
             className="w-full sm:w-auto"
           >

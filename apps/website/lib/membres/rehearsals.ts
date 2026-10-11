@@ -72,12 +72,28 @@ export function whenLabel(date: Date, today: Date = new Date()): string {
   return `Dans ${days} jours`;
 }
 
-/** The place on one line: « Salle des fêtes, salle 2 ». */
+/**
+ * The place on one line: « Salle des fêtes, 31A rue des Vignes, 67520
+ * Wangen » or « Conservatoire de Strasbourg, Salle 12 ».
+ */
 export function placeLine(rehearsal: MemberRehearsal): string {
-  return [rehearsal.place, rehearsal.room].filter(Boolean).join(", ");
+  return [rehearsal.place, rehearsal.room, rehearsal.address]
+    .filter(Boolean)
+    .join(", ");
 }
 
-/** A Google Maps search for the rehearsal place, to open in a new tab. */
-export function mapsUrl(place: string): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
+/** Whether a map search can help: not for a place still « À confirmer ». */
+export function hasDirections(rehearsal: MemberRehearsal): boolean {
+  if (rehearsal.address) return true;
+  return !!rehearsal.place && !/confirmer/i.test(rehearsal.place);
+}
+
+/**
+ * A Google Maps search for the rehearsal, to open in a new tab: the place
+ * name and its street address together, so « Salle des fêtes » alone never
+ * lands in the wrong village.
+ */
+export function mapsUrl(rehearsal: MemberRehearsal): string {
+  const query = [rehearsal.place, rehearsal.address].filter(Boolean).join(", ");
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }

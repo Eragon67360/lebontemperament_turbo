@@ -8,7 +8,10 @@ export interface Member {
 
 /** Lower case without accents, to compare and sort « Élise » with « elise ». */
 export function normalize(text: string): string {
-  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 const isUpperWord = (word: string) =>
