@@ -34,6 +34,8 @@ export interface RosterRow {
 export type RosterIssueCode =
   | "empty"
   | "missing_header"
+  | "no_header_row"
+  | "header_not_first"
   | "too_few_rows"
   | "optional_header_missing"
   | "duplicate_email"

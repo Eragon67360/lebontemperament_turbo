@@ -1105,6 +1105,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      event_documents: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          event_id: string;
+          file_name: string;
+          id: string;
+          label: string;
+          mime_type: string;
+          size_bytes: number | null;
+          sort_order: number;
+          storage_key: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          event_id: string;
+          file_name: string;
+          id?: string;
+          label: string;
+          mime_type: string;
+          size_bytes?: number | null;
+          sort_order?: number;
+          storage_key: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          event_id?: string;
+          file_name?: string;
+          id?: string;
+          label?: string;
+          mime_type?: string;
+          size_bytes?: number | null;
+          sort_order?: number;
+          storage_key?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_documents_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       events: {
         Row: {
           created_at: string | null;

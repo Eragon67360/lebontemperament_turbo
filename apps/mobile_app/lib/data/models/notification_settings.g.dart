@@ -18,6 +18,7 @@ _NotificationSettings _$NotificationSettingsFromJson(
   concertsEnabled: json['concertsEnabled'] as bool? ?? true,
   rehearsalsEnabled: json['rehearsalsEnabled'] as bool? ?? true,
   realtimeEnabled: json['realtimeEnabled'] as bool? ?? false,
+  rehearsalChangesEnabled: json['rehearsalChangesEnabled'] as bool? ?? true,
 );
 
 Map<String, dynamic> _$NotificationSettingsToJson(
@@ -30,6 +31,7 @@ Map<String, dynamic> _$NotificationSettingsToJson(
   'concertsEnabled': instance.concertsEnabled,
   'rehearsalsEnabled': instance.rehearsalsEnabled,
   'realtimeEnabled': instance.realtimeEnabled,
+  'rehearsalChangesEnabled': instance.rehearsalChangesEnabled,
 };
 
 const _$NotificationTimeEnumMap = {

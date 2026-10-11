@@ -12,7 +12,8 @@ class MobileFlags {
   final bool maintenance;
 
   /// `mobile_min_version.description` while that row `is_enabled`, e.g.
-  /// `2.1.0`. Null when the row is absent, disabled or not a version.
+  /// `2.1.0` or `2.0.142+159`. Null when the row is absent, disabled or not
+  /// a version.
   final String? minVersion;
 
   const MobileFlags({this.maintenance = false, this.minVersion});
@@ -96,4 +97,33 @@ bool isVersionBelow(String current, String minimum) {
     if (x != y) return x < y;
   }
   return false;
+}
+
+/// The build number of `2.0.142+159` (159); null without one.
+int? parseBuildNumber(String version) {
+  final plus = version.indexOf('+');
+  if (plus < 0) return null;
+  return int.tryParse(version.substring(plus + 1).trim());
+}
+
+/// True when the installed app ([version], [buildNumber]) is older than
+/// [minimum]. A minimum with a build number (`2.0.142+159`) compares build
+/// numbers: they are shared by Android and iOS and always go up, while the
+/// iOS version stays frozen at an older one until the store launch (3.0.0).
+/// A plain minimum (`2.1.0`) compares versions.
+bool isInstalledBelow(String version, String buildNumber, String minimum) {
+  final minimumBuild = parseBuildNumber(minimum);
+  final installedBuild = int.tryParse(buildNumber.trim());
+  if (minimumBuild != null && installedBuild != null) {
+    return installedBuild < minimumBuild;
+  }
+  return isVersionBelow(version, minimum);
+}
+
+/// [minimum] as the about screen writes versions: `2.0.142 (build 159)`.
+String displayVersion(String minimum) {
+  final plus = minimum.indexOf('+');
+  if (plus < 0) return minimum.trim();
+  final build = minimum.substring(plus + 1).trim();
+  return '${minimum.substring(0, plus).trim()} (build $build)';
 }

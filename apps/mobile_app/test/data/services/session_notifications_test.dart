@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lebontemperament/data/models/rehearsal.dart';
 import 'package:lebontemperament/data/services/session_notifications.dart';
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -29,6 +30,13 @@ class _Recorder {
 
   /// The visitor's « Prochains concerts » switch (on by default).
   bool publicWanted = true;
+
+  /// The rehearsal groups concerning the member: a woman of the choir.
+  Set<GroupType> groups = {
+    GroupType.femmes,
+    GroupType.choeurComplet,
+    GroupType.tous,
+  };
   final refreshes = StreamController<String>.broadcast();
 
   late final SessionNotifications notifications = SessionNotifications(
@@ -47,9 +55,35 @@ class _Recorder {
     },
     unregisterDevice: (token) async => calls.add('unregister:$token'),
     publicConcertsWanted: () async => publicWanted,
+    rehearsalGroups: () async => groups,
     logger: Logger(level: Level.off),
   );
 }
+
+/// The member topics of a woman of the choir, then leaving the topic older
+/// apps listened to for everything.
+const _womanTopics = [
+  'subscribe:members',
+  'unsubscribe:rehearsals_orchestre',
+  'unsubscribe:rehearsals_hommes',
+  'subscribe:rehearsals_femmes',
+  'unsubscribe:rehearsals_jeunesEnfants',
+  'subscribe:rehearsals_choeurComplet',
+  'subscribe:rehearsals_tous',
+  'unsubscribe:all_users',
+];
+
+/// Leaving every member topic.
+const _leaveMemberTopics = [
+  'unsubscribe:all_users',
+  'unsubscribe:members',
+  'unsubscribe:rehearsals_orchestre',
+  'unsubscribe:rehearsals_hommes',
+  'unsubscribe:rehearsals_femmes',
+  'unsubscribe:rehearsals_jeunesEnfants',
+  'unsubscribe:rehearsals_choeurComplet',
+  'unsubscribe:rehearsals_tous',
+];
 
 void main() {
   test('subscribes at app start only when a session exists', () async {
@@ -60,7 +94,7 @@ void main() {
     );
     expect(signedIn.calls, [
       'unsubscribe:public_concerts',
-      'subscribe:all_users',
+      ..._womanTopics,
       'register:fcm-test-token',
     ]);
 
@@ -68,7 +102,7 @@ void main() {
     final signedOut = _Recorder();
     await signedOut.notifications.handle(AuthChangeEvent.initialSession, null);
     expect(signedOut.calls, [
-      'unsubscribe:all_users',
+      ..._leaveMemberTopics,
       'subscribe:public_concerts',
     ]);
   });
@@ -78,7 +112,7 @@ void main() {
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
     expect(r.calls, [
       'unsubscribe:public_concerts',
-      'subscribe:all_users',
+      ..._womanTopics,
       'register:fcm-test-token',
     ]);
   });
@@ -88,14 +122,14 @@ void main() {
     () async {
       final r = _Recorder()..token = null;
       await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-      expect(r.calls, ['unsubscribe:public_concerts', 'subscribe:all_users']);
+      expect(r.calls, ['unsubscribe:public_concerts', ..._womanTopics]);
     },
   );
 
   test('a failing registration does not block the sign-in steps', () async {
     final r = _Recorder()..failRegister = true;
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-    expect(r.calls, ['unsubscribe:public_concerts', 'subscribe:all_users']);
+    expect(r.calls, ['unsubscribe:public_concerts', ..._womanTopics]);
   });
 
   test('beforeSignOut unregisters the current token', () async {
@@ -137,7 +171,7 @@ void main() {
     final r = _Recorder();
     await r.notifications.handle(AuthChangeEvent.signedOut, null);
     expect(r.calls, [
-      'unsubscribe:all_users',
+      ..._leaveMemberTopics,
       'deleteToken',
       'clearCache',
       'subscribe:public_concerts',
@@ -157,10 +191,18 @@ void main() {
   test('a failing step does not block the others', () async {
     final r = _Recorder()..failSubscribe = true;
     await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
-    expect(r.calls, ['unsubscribe:public_concerts', 'register:fcm-test-token']);
+    // Without its new topics, the phone stays on the one older apps use,
+    // which still brings every push.
+    expect(r.calls, [
+      'unsubscribe:public_concerts',
+      'unsubscribe:rehearsals_orchestre',
+      'unsubscribe:rehearsals_hommes',
+      'unsubscribe:rehearsals_jeunesEnfants',
+      'register:fcm-test-token',
+    ]);
     r.calls.clear();
     await r.notifications.handle(AuthChangeEvent.signedOut, null);
-    expect(r.calls, ['unsubscribe:all_users', 'deleteToken', 'clearCache']);
+    expect(r.calls, [..._leaveMemberTopics, 'deleteToken', 'clearCache']);
   });
 
   test('bind applies the current session, then follows the stream', () async {
@@ -173,7 +215,7 @@ void main() {
       authStateChanges: controller.stream,
     );
     await pumpEventQueue();
-    expect(r.calls, ['unsubscribe:all_users', 'subscribe:public_concerts']);
+    expect(r.calls, [..._leaveMemberTopics, 'subscribe:public_concerts']);
 
     // The stream's own initialSession is ignored (already applied above).
     controller.add(const AuthState(AuthChangeEvent.initialSession, null));
@@ -182,12 +224,12 @@ void main() {
     await pumpEventQueue();
 
     expect(r.calls, [
-      'unsubscribe:all_users',
+      ..._leaveMemberTopics,
       'subscribe:public_concerts',
       'unsubscribe:public_concerts',
-      'subscribe:all_users',
+      ..._womanTopics,
       'register:fcm-test-token',
-      'unsubscribe:all_users',
+      ..._leaveMemberTopics,
       'deleteToken',
       'clearCache',
       'subscribe:public_concerts',
@@ -195,11 +237,77 @@ void main() {
     await r.notifications.dispose();
   });
 
+  group('rehearsal groups', () {
+    test('a change of ensembles moves the phone to their topics', () async {
+      final r = _Recorder();
+      await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
+      r.calls.clear();
+      await r.notifications.rehearsalGroupsChanged({
+        GroupType.hommes,
+        GroupType.choeurComplet,
+        GroupType.tous,
+      });
+      expect(r.calls, [
+        'subscribe:members',
+        'unsubscribe:rehearsals_orchestre',
+        'subscribe:rehearsals_hommes',
+        'unsubscribe:rehearsals_femmes',
+        'unsubscribe:rehearsals_jeunesEnfants',
+        'subscribe:rehearsals_choeurComplet',
+        'subscribe:rehearsals_tous',
+        'unsubscribe:all_users',
+      ]);
+    });
+
+    test('the latest ensembles are kept for the next sign-in', () async {
+      final r = _Recorder();
+      await r.notifications.rehearsalGroupsChanged({GroupType.orchestre});
+      expect(r.calls, isEmpty, reason: 'a visitor has no rehearsal topic');
+      await r.notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
+      expect(r.calls, [
+        'unsubscribe:public_concerts',
+        'subscribe:members',
+        'subscribe:rehearsals_orchestre',
+        'unsubscribe:rehearsals_hommes',
+        'unsubscribe:rehearsals_femmes',
+        'unsubscribe:rehearsals_jeunesEnfants',
+        'unsubscribe:rehearsals_choeurComplet',
+        'unsubscribe:rehearsals_tous',
+        'unsubscribe:all_users',
+        'register:fcm-test-token',
+      ]);
+    });
+
+    test('unreadable ensembles mean every rehearsal', () async {
+      final calls = <String>[];
+      final notifications = SessionNotifications(
+        subscribe: (topic) async => calls.add('subscribe:$topic'),
+        unsubscribe: (topic) async => calls.add('unsubscribe:$topic'),
+        deleteToken: () async {},
+        clearCache: () async {},
+        readToken: () async => null,
+        tokenRefreshes: const Stream.empty(),
+        registerDevice: (_) async {},
+        unregisterDevice: (_) async {},
+        rehearsalGroups: () async => throw Exception('no preferences'),
+        logger: Logger(level: Level.off),
+      );
+      await notifications.handle(AuthChangeEvent.signedIn, _fakeSession());
+      expect(calls, [
+        'unsubscribe:public_concerts',
+        'subscribe:members',
+        for (final g in GroupType.values)
+          'subscribe:${SessionNotifications.rehearsalTopic(g)}',
+        'unsubscribe:all_users',
+      ]);
+    });
+  });
+
   group('« Prochains concerts » (#593)', () {
     test('switched off: the visitor leaves the public topic', () async {
       final r = _Recorder()..publicWanted = false;
       await r.notifications.handle(AuthChangeEvent.initialSession, null);
-      expect(r.calls, ['unsubscribe:all_users', 'unsubscribe:public_concerts']);
+      expect(r.calls, [..._leaveMemberTopics, 'unsubscribe:public_concerts']);
     });
 
     test('the switch applies at once for a visitor', () async {

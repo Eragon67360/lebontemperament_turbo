@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 const AudioplayerPage = () => {
   return (
-    <Suspense fallback={<div>Chargement du lecteur en cours...</div>}>
+    <Suspense fallback={<p role="status">Chargement du lecteur en cours…</p>}>
       <AudioPlayer />
     </Suspense>
   );

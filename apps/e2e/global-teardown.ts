@@ -35,4 +35,16 @@ export default async function globalTeardown() {
   } else if (count) {
     console.log(`[e2e] Swept ${count} orphaned E2E_ row(s).`);
   }
+
+  // Events from event-documents-write.spec.ts (their files' rows cascade).
+  const events = await supabase
+    .from("events")
+    .delete({ count: "exact" })
+    .like("title", "E2E\\_%")
+    .lt("created_at", cutoff);
+  if (events.error) {
+    console.warn(`[e2e] Event orphan sweep failed: ${events.error.message}`);
+  } else if (events.count) {
+    console.log(`[e2e] Swept ${events.count} orphaned E2E_ event(s).`);
+  }
 }

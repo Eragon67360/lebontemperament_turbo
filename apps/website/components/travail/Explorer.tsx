@@ -1,10 +1,14 @@
 "use client";
+import { membersButtonClass } from "@/components/membres/MembersButton";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { DriveFile } from "@/utils/types";
-import { Button } from "@heroui/react";
 import { FC, useEffect, useState } from "react";
 import { FaFile, FaFolder, FaMusic, FaRegFilePdf } from "react-icons/fa";
-import { IoArrowBack, IoMusicalNotes } from "react-icons/io5";
+import {
+  IoArrowBack,
+  IoDownloadOutline,
+  IoMusicalNotes,
+} from "react-icons/io5";
 import { toast } from "sonner";
 
 interface ExplorerProps {
@@ -132,39 +136,43 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   const renderFileIcon = (mimeType: string) => {
     switch (mimeType) {
       case "application/pdf":
-        return <FaRegFilePdf className="text-red-500 dark:text-red-400" />;
+        return <FaRegFilePdf className="text-red-700 dark:text-red-300" />;
       case "audio/mpeg":
       case "audio/wav":
-        return <FaMusic className="text-blue-500 dark:text-blue-400" />;
+        return <FaMusic className="text-blue-700 dark:text-blue-300" />;
       case "application/x-musescore":
-        return (
-          <IoMusicalNotes className="text-purple-500 dark:text-purple-400" />
-        );
+        return <IoMusicalNotes className="text-primary-text" />;
       default:
         return <FaFile className="text-muted" />;
     }
   };
 
+  const rowClass =
+    "border-members-line bg-members-band flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left";
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-7">
       {/* Navigation */}
       {folderStack.length > 1 && (
-        <button
-          onClick={handleBackClick}
-          className="text-muted hover:text-foreground flex items-center gap-2 px-3 py-2 text-sm transition-colors"
-        >
-          <IoArrowBack className="h-4 w-4" />
-          <span>Retour</span>
-        </button>
+        <div>
+          <button
+            type="button"
+            onClick={handleBackClick}
+            className={membersButtonClass("outline", "", "md")}
+          >
+            <IoArrowBack aria-hidden="true" className="h-5 w-5" />
+            Retour au dossier précédent
+          </button>
+        </div>
       )}
 
       {/* Folders Section */}
-      <div className="space-y-4">
-        <h3 className="text-muted text-sm font-medium">Dossiers</h3>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xl font-extrabold">Dossiers</h3>
         {loading ? (
-          <div className="animate-pulse space-y-2">
+          <div className="animate-pulse space-y-2" aria-busy="true">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-surface-secondary h-12 rounded-lg" />
+              <div key={i} className="bg-primary/10 h-14 rounded-xl" />
             ))}
           </div>
         ) : (
@@ -173,12 +181,16 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((folder) => (
                 <button
+                  type="button"
                   key={folder.id}
                   onClick={() => handleFolderClick(folder.id!)}
-                  className="bg-content2 hover:bg-content3 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+                  className={`${rowClass} hover:bg-primary/10 transition-colors`}
                 >
-                  <FaFolder className="h-5 w-5 text-blue-400 dark:text-blue-300" />
-                  <span className="text-foreground truncate text-sm font-medium">
+                  <FaFolder
+                    aria-hidden="true"
+                    className="text-primary-text h-5 w-5 shrink-0"
+                  />
+                  <span className="text-foreground min-w-0 font-bold break-words">
                     {folder.name}
                   </span>
                 </button>
@@ -188,35 +200,35 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       </div>
 
       {/* Files Section */}
-      <div className="space-y-4">
-        <h3 className="text-muted text-sm font-medium">Fichiers</h3>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xl font-extrabold">Fichiers</h3>
         {loading ? (
-          <div className="animate-pulse space-y-2">
+          <div className="animate-pulse space-y-2" aria-busy="true">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-surface-secondary h-12 rounded-lg" />
+              <div key={i} className="bg-primary/10 h-14 rounded-xl" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2">
             {individualFiles
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((file) => (
-                <div
-                  key={file.id}
-                  className="group bg-content2 hover:bg-content3 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
-                >
-                  <div className="h-5 w-5">{renderFileIcon(file.mimeType)}</div>
-                  <span className="text-foreground flex-1 truncate text-sm font-medium">
+                <div key={file.id} className={`${rowClass} flex-wrap`}>
+                  <div aria-hidden="true" className="h-5 w-5 shrink-0">
+                    {renderFileIcon(file.mimeType)}
+                  </div>
+                  <span className="text-foreground min-w-0 flex-[1_1_200px] font-bold break-words">
                     {file.name}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onPress={() => downloadDriveFile(file)}
-                    className="cursor-pointer"
+                  <button
+                    type="button"
+                    onClick={() => downloadDriveFile(file)}
+                    aria-label={`Télécharger ${file.name}`}
+                    className={membersButtonClass("outlineTeal", "", "md")}
                   >
+                    <IoDownloadOutline aria-hidden="true" className="h-5 w-5" />
                     Télécharger
-                  </Button>
+                  </button>
                 </div>
               ))}
           </div>
@@ -225,9 +237,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Empty States */}
       {!loading && folders.length === 0 && individualFiles.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="text-muted text-sm">Ce dossier est vide</p>
-        </div>
+        <p className="text-muted py-6 text-center">Ce dossier est vide.</p>
       )}
     </div>
   );

@@ -1,49 +1,63 @@
 "use client";
 
+import { EventDocumentLinks } from "@/components/events/EventDocumentLinks";
 import MusicList from "@/components/MusicList";
 import type { PublicConcert } from "@/lib/publicConcerts";
-import { Event } from "@repo/domain/types/events";
+import type { Event, EventWithDocuments } from "@repo/domain/types/events";
 import { format, isAfter, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
-import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { IoCalendarClear, IoLocationSharp, IoTime } from "react-icons/io5";
-import { MdOpenInNew } from "react-icons/md";
+import {
+  IoCalendarClearOutline,
+  IoLocationOutline,
+  IoOpenOutline,
+  IoTimeOutline,
+} from "react-icons/io5";
+import { MembersCard } from "./MembersCard";
+import { TONES, type Tone } from "./tones";
 
-const SectionTitle = ({
-  subtitle,
-  title,
-}: {
-  subtitle: string;
-  title: string;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    className="mb-6"
+const SectionTitle = ({ id, title }: { id: string; title: string }) => (
+  <h2
+    id={id}
+    className="text-foreground mb-5 text-2xl font-extrabold sm:text-3xl"
   >
-    <p className="text-foreground/60 text-sm md:text-base">{subtitle}</p>
-    <h2 className="from-primary via-foreground mt-1 bg-gradient-to-r to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl">
-      {title}
-    </h2>
-  </motion.div>
+    {title}
+  </h2>
 );
 
 const LoadingCard = () => (
-  <div className="bg-surface-secondary/80 animate-pulse rounded-xl p-4 backdrop-blur-sm md:p-6">
-    <div className="bg-surface-tertiary/80 mb-4 h-6 w-3/4 rounded-lg"></div>
+  <MembersCard className="animate-pulse p-5 sm:p-6">
+    <div className="bg-primary/10 mb-4 h-6 w-3/4 rounded-lg"></div>
     <div className="space-y-3">
-      <div className="bg-surface-tertiary/80 h-4 w-1/2 rounded-lg"></div>
-      <div className="bg-surface-tertiary/80 h-4 w-2/3 rounded-lg"></div>
-      <div className="bg-surface-tertiary/80 h-4 w-3/4 rounded-lg"></div>
+      <div className="bg-primary/10 h-5 w-1/2 rounded-lg"></div>
+      <div className="bg-primary/10 h-5 w-2/3 rounded-lg"></div>
+      <div className="bg-primary/10 h-5 w-3/4 rounded-lg"></div>
     </div>
+  </MembersCard>
+);
+
+const EmptyCard = ({ children }: { children: string }) => (
+  <MembersCard className="p-6 sm:p-8">
+    <p>{children}</p>
+  </MembersCard>
+);
+
+const Detail = ({
+  icon: Icon,
+  children,
+}: {
+  icon: React.ElementType;
+  children: React.ReactNode;
+}) => (
+  <div className="flex items-start gap-3">
+    <Icon aria-hidden="true" className="text-primary mt-1 h-5 w-5 shrink-0" />
+    <span className="min-w-0 break-words">{children}</span>
   </div>
 );
 
 const MembresConcertsEvents = () => {
   const [concerts, setConcerts] = useState<PublicConcert[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventWithDocuments[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -118,216 +132,164 @@ const MembresConcertsEvents = () => {
     return types[type as keyof typeof types] || type;
   };
   const getEventTypeColor = (type: string) => {
-    const colors = {
-      concert:
-        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-      repetition:
-        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-      sejour:
-        "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
-      vente:
-        "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-      autre: "bg-surface-secondary text-muted",
+    const colors: Record<string, Tone> = {
+      concert: "blue",
+      repetition: "green",
+      sejour: "amber",
+      vente: "rose",
+      autre: "slate",
     };
-    return (
-      colors[type as keyof typeof colors] || "bg-surface-secondary text-muted"
-    );
+    return TONES[colors[type] ?? "slate"];
   };
 
   return (
-    <div className="container mx-auto flex w-full flex-col space-y-8 px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">
+    <div className="flex flex-col gap-12">
       {/* Concerts Section */}
-      <motion.section
-        id="concerts"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="rounded-xl"
-      >
-        <SectionTitle subtitle="Agenda" title="Prochains concerts" />
+      <section id="concerts" aria-labelledby="concerts-title">
+        <SectionTitle id="concerts-title" title="Prochains concerts" />
         {!loading && concerts.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-foreground/60 bg-surface-secondary/80 rounded-xl py-12 text-center backdrop-blur-sm"
-          >
-            Aucun concert à venir pour le moment.
-          </motion.div>
+          <EmptyCard>Aucun concert à venir pour le moment.</EmptyCard>
         )}
         {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
               <LoadingCard key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {concerts.map((concert, index) => (
-              <motion.div
+              <MembersCard
+                as="article"
                 key={index}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="group relative overflow-hidden rounded-xl"
+                className="flex flex-col gap-4 p-5 sm:p-6"
               >
-                <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-                <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
-                  <h3 className="text-foreground mb-4 text-lg font-bold">
-                    {concert.name ||
-                      `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
-                  </h3>
+                <h3 className="text-[21px] leading-snug font-extrabold">
+                  {concert.name ||
+                    `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
+                </h3>
 
-                  <div className="text-foreground/70 space-y-3 text-sm md:text-base">
-                    <div className="flex items-center gap-3">
-                      <IoCalendarClear className="text-primary h-5 w-5" />
-                      <span>
-                        {format(new Date(concert.date), "dd MMM yyyy", {
-                          locale: fr,
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <IoTime className="text-primary h-5 w-5" />
-                      <span>{concert.time.slice(0, 5).replace(":", "h")}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <IoLocationSharp className="text-primary h-5 w-5" />
-                      <span>{concert.place}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <span className="from-primary/20 text-primary-text inline-block rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-semibold md:text-sm">
-                      {concert.context === "orchestre_et_choeur"
-                        ? "Orchestre et Chœur"
-                        : concert.context.charAt(0).toUpperCase() +
-                          concert.context.slice(1)}
-                    </span>
-                  </div>
+                <div className="flex flex-col gap-2.5">
+                  <Detail icon={IoCalendarClearOutline}>
+                    {format(new Date(concert.date), "dd MMM yyyy", {
+                      locale: fr,
+                    })}
+                  </Detail>
+                  <Detail icon={IoTimeOutline}>
+                    {concert.time.slice(0, 5).replace(":", "h")}
+                  </Detail>
+                  <Detail icon={IoLocationOutline}>{concert.place}</Detail>
                 </div>
-              </motion.div>
+
+                <span
+                  className={`mt-auto self-start rounded-lg px-3 py-1 text-base font-bold ${TONES.teal}`}
+                >
+                  {concert.context === "orchestre_et_choeur"
+                    ? "Orchestre et Chœur"
+                    : concert.context.charAt(0).toUpperCase() +
+                      concert.context.slice(1)}
+                </span>
+              </MembersCard>
             ))}
           </div>
         )}
-      </motion.section>
+      </section>
 
       {/* Events Section */}
-      <motion.section
-        id="evenements"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="rounded-xl"
-      >
-        <SectionTitle subtitle="Calendrier" title="Événements à venir" />
+      <section id="evenements" aria-labelledby="evenements-title">
+        <SectionTitle id="evenements-title" title="Événements à venir" />
         {!loading && events.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-foreground/60 bg-surface-secondary/80 rounded-xl py-12 text-center backdrop-blur-sm"
-          >
-            Aucun événement à venir pour le moment.
-          </motion.div>
+          <EmptyCard>Aucun événement à venir pour le moment.</EmptyCard>
         )}
         {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
               <LoadingCard key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event, index) => (
-              <motion.div
+              <MembersCard
+                as="article"
                 key={index}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="group relative overflow-hidden rounded-xl"
+                className="flex flex-col gap-4 p-5 sm:p-6"
               >
-                <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-                <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6">
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <h3 className="text-foreground flex-1 text-lg font-bold">
-                      {event.title}
-                    </h3>
-                    <span
-                      className={`rounded-lg px-2 py-1 text-xs font-medium whitespace-nowrap ${getEventTypeColor(event.event_type)}`}
-                    >
-                      {getEventTypeLabel(event.event_type)}
-                    </span>
-                  </div>
+                <div className="flex flex-col items-start gap-2">
+                  <span
+                    className={`rounded-lg px-3 py-1 text-base font-bold ${getEventTypeColor(event.event_type)}`}
+                  >
+                    {getEventTypeLabel(event.event_type)}
+                  </span>
+                  <h3 className="text-[21px] leading-snug font-extrabold">
+                    {event.title}
+                  </h3>
+                </div>
 
-                  <div className="text-foreground/70 space-y-3 text-sm md:text-base">
-                    <div className="flex items-center gap-3">
-                      <IoCalendarClear className="text-primary h-5 w-5" />
-                      <span>{formatEventDate(event)}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <IoTime className="text-primary h-5 w-5" />
-                      <span>{event.time.slice(0, 5).replace(":", "h")}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <IoLocationSharp className="text-primary h-5 w-5" />
-                      <span>{event.location}</span>
-                    </div>
-                  </div>
+                <div className="flex flex-col gap-2.5">
+                  <Detail icon={IoCalendarClearOutline}>
+                    {formatEventDate(event)}
+                  </Detail>
+                  <Detail icon={IoTimeOutline}>
+                    {event.time.slice(0, 5).replace(":", "h")}
+                  </Detail>
+                  <Detail icon={IoLocationOutline}>{event.location}</Detail>
+                </div>
 
-                  {event.description && (
-                    <p className="text-foreground/60 mt-3 text-sm">
-                      {event.description}
-                    </p>
-                  )}
+                {event.description && (
+                  <p className="text-muted">{event.description}</p>
+                )}
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                <EventDocumentLinks
+                  documents={event.documents ?? []}
+                  eventTitle={event.title}
+                  large
+                />
+
+                {(event.responsible_email || event.link) && (
+                  <div className="mt-auto flex flex-col items-start gap-1">
                     {event.responsible_email && (
-                      <span className="bg-surface-secondary/80 text-foreground/70 rounded-lg px-3 py-1.5 text-xs">
-                        Contact:{" "}
+                      <p>
+                        Contact :{" "}
                         <a
                           href={`mailto:${event.responsible_email}`}
-                          className="text-primary-text font-medium hover:underline"
+                          className="text-primary-text font-bold underline underline-offset-2 hover:no-underline"
                         >
                           {event.responsible_name || event.responsible_email}
                         </a>
-                      </span>
+                      </p>
                     )}
                     {event.link && (
                       <a
                         href={event.link}
                         target="_blank"
                         rel="noreferrer"
-                        className="from-primary/20 hover:from-primary/30 text-primary-text flex items-center gap-1 rounded-lg bg-gradient-to-r to-purple-500/20 px-3 py-1.5 text-xs font-medium transition-all hover:to-purple-500/30"
+                        className="text-primary-text inline-flex min-h-12 items-center gap-2 font-bold underline underline-offset-2 hover:no-underline"
                       >
-                        <span>Infos</span> <MdOpenInNew className="h-3 w-3" />
+                        Plus d’infos
+                        <IoOpenOutline aria-hidden="true" className="h-5 w-5" />
+                        <span className="sr-only">(nouvel onglet)</span>
                       </a>
                     )}
                   </div>
-                </div>
-              </motion.div>
+                )}
+              </MembersCard>
             ))}
           </div>
         )}
-      </motion.section>
+      </section>
 
       {/* Anniversary Concert Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        className="group relative overflow-hidden rounded-xl"
-      >
-        <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 p-4 backdrop-blur-sm transition-all duration-300 md:p-6 lg:p-8">
-          <SectionTitle subtitle="Archives" title="Concert Anniversaire" />
-          <p className="text-foreground/70 mb-6 text-sm md:text-base">
+      <section aria-labelledby="anniversaire-title">
+        <MembersCard className="p-5 sm:p-8">
+          <SectionTitle id="anniversaire-title" title="Concert anniversaire" />
+          <p className="text-muted mb-6">
             Enregistrement du concert anniversaire pour les 20 ans du Bon
-            Tempérament
+            Tempérament.
           </p>
           <MusicList />
-        </div>
-      </motion.section>
+        </MembersCard>
+      </section>
     </div>
   );
 };

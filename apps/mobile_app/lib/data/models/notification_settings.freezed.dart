@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$NotificationSettings {
 
- bool get enabled; List<NotificationTime> get selectedTimes; bool get concertsEnabled; bool get rehearsalsEnabled; bool get realtimeEnabled;
+ bool get enabled; List<NotificationTime> get selectedTimes; bool get concertsEnabled; bool get rehearsalsEnabled; bool get realtimeEnabled; bool get rehearsalChangesEnabled;
 /// Create a copy of NotificationSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $NotificationSettingsCopyWith<NotificationSettings> get copyWith => _$Notificati
 @override
 bool operator ==(Object other) {
   final _this = this as NotificationSettings;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationSettings&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&const DeepCollectionEquality().equals(other.selectedTimes, _this.selectedTimes)&&(identical(other.concertsEnabled, _this.concertsEnabled) || other.concertsEnabled == _this.concertsEnabled)&&(identical(other.rehearsalsEnabled, _this.rehearsalsEnabled) || other.rehearsalsEnabled == _this.rehearsalsEnabled)&&(identical(other.realtimeEnabled, _this.realtimeEnabled) || other.realtimeEnabled == _this.realtimeEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationSettings&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&const DeepCollectionEquality().equals(other.selectedTimes, _this.selectedTimes)&&(identical(other.concertsEnabled, _this.concertsEnabled) || other.concertsEnabled == _this.concertsEnabled)&&(identical(other.rehearsalsEnabled, _this.rehearsalsEnabled) || other.rehearsalsEnabled == _this.rehearsalsEnabled)&&(identical(other.realtimeEnabled, _this.realtimeEnabled) || other.realtimeEnabled == _this.realtimeEnabled)&&(identical(other.rehearsalChangesEnabled, _this.rehearsalChangesEnabled) || other.rehearsalChangesEnabled == _this.rehearsalChangesEnabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as NotificationSettings;
-  return Object.hash(runtimeType,_this.enabled,const DeepCollectionEquality().hash(_this.selectedTimes),_this.concertsEnabled,_this.rehearsalsEnabled,_this.realtimeEnabled);
+  return Object.hash(runtimeType,_this.enabled,const DeepCollectionEquality().hash(_this.selectedTimes),_this.concertsEnabled,_this.rehearsalsEnabled,_this.realtimeEnabled,_this.rehearsalChangesEnabled);
 }
 
 @override
 String toString() {
   final _this = this as NotificationSettings;
-  return 'NotificationSettings(enabled: ${_this.enabled}, selectedTimes: ${_this.selectedTimes}, concertsEnabled: ${_this.concertsEnabled}, rehearsalsEnabled: ${_this.rehearsalsEnabled}, realtimeEnabled: ${_this.realtimeEnabled})';
+  return 'NotificationSettings(enabled: ${_this.enabled}, selectedTimes: ${_this.selectedTimes}, concertsEnabled: ${_this.concertsEnabled}, rehearsalsEnabled: ${_this.rehearsalsEnabled}, realtimeEnabled: ${_this.realtimeEnabled}, rehearsalChangesEnabled: ${_this.rehearsalChangesEnabled})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $NotificationSettingsCopyWith<$Res>  {
   factory $NotificationSettingsCopyWith(NotificationSettings value, $Res Function(NotificationSettings) _then) = _$NotificationSettingsCopyWithImpl;
 @useResult
 $Res call({
- bool enabled, List<NotificationTime> selectedTimes, bool concertsEnabled, bool rehearsalsEnabled, bool realtimeEnabled
+ bool enabled, List<NotificationTime> selectedTimes, bool concertsEnabled, bool rehearsalsEnabled, bool realtimeEnabled, bool rehearsalChangesEnabled
 });
 
 
@@ -71,13 +71,14 @@ class _$NotificationSettingsCopyWithImpl<$Res>
 
 /// Create a copy of NotificationSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? enabled = null,Object? selectedTimes = null,Object? concertsEnabled = null,Object? rehearsalsEnabled = null,Object? realtimeEnabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? enabled = null,Object? selectedTimes = null,Object? concertsEnabled = null,Object? rehearsalsEnabled = null,Object? realtimeEnabled = null,Object? rehearsalChangesEnabled = null,}) {
   return _then(NotificationSettings(
 enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
 as bool,selectedTimes: null == selectedTimes ? _self.selectedTimes : selectedTimes // ignore: cast_nullable_to_non_nullable
 as List<NotificationTime>,concertsEnabled: null == concertsEnabled ? _self.concertsEnabled : concertsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,rehearsalsEnabled: null == rehearsalsEnabled ? _self.rehearsalsEnabled : rehearsalsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,realtimeEnabled: null == realtimeEnabled ? _self.realtimeEnabled : realtimeEnabled // ignore: cast_nullable_to_non_nullable
+as bool,rehearsalChangesEnabled: null == rehearsalChangesEnabled ? _self.rehearsalChangesEnabled : rehearsalChangesEnabled // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -163,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool enabled,  List<NotificationTime> selectedTimes,  bool concertsEnabled,  bool rehearsalsEnabled,  bool realtimeEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool enabled,  List<NotificationTime> selectedTimes,  bool concertsEnabled,  bool rehearsalsEnabled,  bool realtimeEnabled,  bool rehearsalChangesEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NotificationSettings() when $default != null:
-return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.rehearsalsEnabled,_that.realtimeEnabled);case _:
+return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.rehearsalsEnabled,_that.realtimeEnabled,_that.rehearsalChangesEnabled);case _:
   return orElse();
 
 }
@@ -184,10 +185,10 @@ return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.re
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool enabled,  List<NotificationTime> selectedTimes,  bool concertsEnabled,  bool rehearsalsEnabled,  bool realtimeEnabled)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool enabled,  List<NotificationTime> selectedTimes,  bool concertsEnabled,  bool rehearsalsEnabled,  bool realtimeEnabled,  bool rehearsalChangesEnabled)  $default,) {final _that = this;
 switch (_that) {
 case _NotificationSettings():
-return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.rehearsalsEnabled,_that.realtimeEnabled);case _:
+return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.rehearsalsEnabled,_that.realtimeEnabled,_that.rehearsalChangesEnabled);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +205,10 @@ return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.re
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool enabled,  List<NotificationTime> selectedTimes,  bool concertsEnabled,  bool rehearsalsEnabled,  bool realtimeEnabled)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool enabled,  List<NotificationTime> selectedTimes,  bool concertsEnabled,  bool rehearsalsEnabled,  bool realtimeEnabled,  bool rehearsalChangesEnabled)?  $default,) {final _that = this;
 switch (_that) {
 case _NotificationSettings() when $default != null:
-return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.rehearsalsEnabled,_that.realtimeEnabled);case _:
+return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.rehearsalsEnabled,_that.realtimeEnabled,_that.rehearsalChangesEnabled);case _:
   return null;
 
 }
@@ -219,7 +220,7 @@ return $default(_that.enabled,_that.selectedTimes,_that.concertsEnabled,_that.re
 @JsonSerializable()
 
 class _NotificationSettings implements NotificationSettings {
-  const _NotificationSettings({this.enabled = true,  List<NotificationTime> selectedTimes = const [NotificationTime.oneDay, NotificationTime.fifteenMinutes], this.concertsEnabled = true, this.rehearsalsEnabled = true, this.realtimeEnabled = false}): _selectedTimes = selectedTimes;
+  const _NotificationSettings({this.enabled = true,  List<NotificationTime> selectedTimes = const [NotificationTime.oneDay, NotificationTime.fifteenMinutes], this.concertsEnabled = true, this.rehearsalsEnabled = true, this.realtimeEnabled = false, this.rehearsalChangesEnabled = true}): _selectedTimes = selectedTimes;
   factory _NotificationSettings.fromJson(Map<String, dynamic> json) => _$NotificationSettingsFromJson(json);
 
 @override@JsonKey() final  bool enabled;
@@ -233,6 +234,7 @@ class _NotificationSettings implements NotificationSettings {
 @override@JsonKey() final  bool concertsEnabled;
 @override@JsonKey() final  bool rehearsalsEnabled;
 @override@JsonKey() final  bool realtimeEnabled;
+@override@JsonKey() final  bool rehearsalChangesEnabled;
 
 /// Create a copy of NotificationSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -247,18 +249,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotificationSettings&&(identical(other.enabled, enabled) || other.enabled == enabled)&&const DeepCollectionEquality().equals(other.selectedTimes, _selectedTimes)&&(identical(other.concertsEnabled, concertsEnabled) || other.concertsEnabled == concertsEnabled)&&(identical(other.rehearsalsEnabled, rehearsalsEnabled) || other.rehearsalsEnabled == rehearsalsEnabled)&&(identical(other.realtimeEnabled, realtimeEnabled) || other.realtimeEnabled == realtimeEnabled));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotificationSettings&&(identical(other.enabled, enabled) || other.enabled == enabled)&&const DeepCollectionEquality().equals(other.selectedTimes, _selectedTimes)&&(identical(other.concertsEnabled, concertsEnabled) || other.concertsEnabled == concertsEnabled)&&(identical(other.rehearsalsEnabled, rehearsalsEnabled) || other.rehearsalsEnabled == rehearsalsEnabled)&&(identical(other.realtimeEnabled, realtimeEnabled) || other.realtimeEnabled == realtimeEnabled)&&(identical(other.rehearsalChangesEnabled, rehearsalChangesEnabled) || other.rehearsalChangesEnabled == rehearsalChangesEnabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,enabled,const DeepCollectionEquality().hash(_selectedTimes),concertsEnabled,rehearsalsEnabled,realtimeEnabled);
+    return Object.hash(runtimeType,enabled,const DeepCollectionEquality().hash(_selectedTimes),concertsEnabled,rehearsalsEnabled,realtimeEnabled,rehearsalChangesEnabled);
 }
 
 @override
 String toString() {
-    return 'NotificationSettings(enabled: $enabled, selectedTimes: $selectedTimes, concertsEnabled: $concertsEnabled, rehearsalsEnabled: $rehearsalsEnabled, realtimeEnabled: $realtimeEnabled)';
+    return 'NotificationSettings(enabled: $enabled, selectedTimes: $selectedTimes, concertsEnabled: $concertsEnabled, rehearsalsEnabled: $rehearsalsEnabled, realtimeEnabled: $realtimeEnabled, rehearsalChangesEnabled: $rehearsalChangesEnabled)';
 }
 
 
@@ -269,7 +271,7 @@ abstract mixin class _$NotificationSettingsCopyWith<$Res> implements $Notificati
   factory _$NotificationSettingsCopyWith(_NotificationSettings value, $Res Function(_NotificationSettings) _then) = __$NotificationSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- bool enabled, List<NotificationTime> selectedTimes, bool concertsEnabled, bool rehearsalsEnabled, bool realtimeEnabled
+ bool enabled, List<NotificationTime> selectedTimes, bool concertsEnabled, bool rehearsalsEnabled, bool realtimeEnabled, bool rehearsalChangesEnabled
 });
 
 
@@ -286,13 +288,14 @@ class __$NotificationSettingsCopyWithImpl<$Res>
 
 /// Create a copy of NotificationSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? enabled = null,Object? selectedTimes = null,Object? concertsEnabled = null,Object? rehearsalsEnabled = null,Object? realtimeEnabled = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? enabled = null,Object? selectedTimes = null,Object? concertsEnabled = null,Object? rehearsalsEnabled = null,Object? realtimeEnabled = null,Object? rehearsalChangesEnabled = null,}) {
   return _then(_NotificationSettings(
 enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
 as bool,selectedTimes: null == selectedTimes ? _self._selectedTimes : selectedTimes // ignore: cast_nullable_to_non_nullable
 as List<NotificationTime>,concertsEnabled: null == concertsEnabled ? _self.concertsEnabled : concertsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,rehearsalsEnabled: null == rehearsalsEnabled ? _self.rehearsalsEnabled : rehearsalsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,realtimeEnabled: null == realtimeEnabled ? _self.realtimeEnabled : realtimeEnabled // ignore: cast_nullable_to_non_nullable
+as bool,rehearsalChangesEnabled: null == rehearsalChangesEnabled ? _self.rehearsalChangesEnabled : rehearsalChangesEnabled // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

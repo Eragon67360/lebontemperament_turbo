@@ -1,9 +1,10 @@
 "use client";
 
+import { membersButtonClass } from "@/components/membres/MembersButton";
 import { CA } from "@repo/domain/types/ca";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { FaRegFilePdf } from "react-icons/fa6";
+import { IoDocumentTextOutline } from "react-icons/io5";
 
 const CAMinutesList: React.FC = () => {
   const [caMinutes, setCaMinutes] = useState<CA[]>([]);
@@ -43,35 +44,39 @@ const CAMinutesList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="mt-2 flex flex-wrap gap-6 md:mt-4 lg:mt-8">
-        <p className="text-muted text-sm">Chargement...</p>
-      </div>
+      <p role="status" className="text-muted">
+        Chargement…
+      </p>
     );
   }
 
   if (caMinutes.length === 0) {
     return (
-      <div className="mt-2 flex flex-wrap gap-6 md:mt-4 lg:mt-8">
-        <p className="text-muted text-sm">Aucun compte-rendu disponible</p>
-      </div>
+      <p className="text-muted">
+        Aucun compte-rendu disponible pour l’instant.
+      </p>
     );
   }
 
   return (
-    <div className="mt-2 flex flex-wrap gap-6">
+    <ul className="flex flex-wrap gap-3">
       {caMinutes.map((minute) => (
-        <Link
-          href={minute.file_url || "#"}
-          key={minute.id}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-primary-solid hover:bg-primary-solid-hover flex items-center gap-4 rounded-lg p-2 text-xs text-white md:text-sm lg:p-4"
-        >
-          <FaRegFilePdf />
-          <span>CA du {formatDate(minute.date_from)}</span>
-        </Link>
+        <li key={minute.id}>
+          <Link
+            href={minute.file_url || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={membersButtonClass("solid", "text-base", "md")}
+          >
+            <IoDocumentTextOutline aria-hidden="true" className="h-5 w-5" />
+            <span>
+              CA du {formatDate(minute.date_from)}
+              <span className="sr-only"> (PDF, nouvel onglet)</span>
+            </span>
+          </Link>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 };
 

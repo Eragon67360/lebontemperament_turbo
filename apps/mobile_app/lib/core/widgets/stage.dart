@@ -363,10 +363,11 @@ class _ForkPainter extends CustomPainter {
 
 // MARK: - Week staff
 
-/// The current week as one bar of music (« Portée »): five hairlines, a day
-/// per column, and a note head in the group's colour on each day with a
-/// rehearsal. Today is the dashed line. The whole thing is read out as one
-/// sentence, so screen readers get the list, not the drawing.
+/// The next 7 days as one bar of music (« Portée »): five hairlines, a day
+/// per column starting today, and a note head in the group's colour on each
+/// day with a rehearsal. Today, the first column, is the dashed line. The
+/// whole thing is read out as one sentence, so screen readers get the list,
+/// not the drawing.
 class WeekStaff extends StatelessWidget {
   const WeekStaff({super.key, required this.rehearsals, this.now});
 
@@ -385,18 +386,18 @@ class WeekStaff extends StatelessWidget {
     GroupType.jeunesEnfants => 4,
   };
 
-  /// Monday of the week holding [day].
-  static DateTime weekStart(DateTime day) {
-    final d = DateTime(day.year, day.month, day.day);
-    return d.subtract(Duration(days: d.weekday - 1));
-  }
+  /// The calendar day of [day], without the time.
+  static DateTime windowStart(DateTime day) =>
+      DateTime(day.year, day.month, day.day);
 
-  /// The rehearsals falling in [day]'s week, as (weekday index 0–6, group).
+  /// The rehearsals falling in the 7 days from [day] (included), as
+  /// (column index 0–6, group). Past days and anything after day 7 are left
+  /// out.
   static List<(int, GroupType)> notesFor(
     List<Rehearsal> rehearsals,
     DateTime day,
   ) {
-    final start = weekStart(day);
+    final start = windowStart(day);
     final notes = <(int, GroupType)>[];
     for (final r in rehearsals) {
       final date = DateTime.tryParse(r.date ?? '');
@@ -416,15 +417,15 @@ class WeekStaff extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     final today = now ?? DateTime.now();
-    final start = weekStart(today);
-    final todayIndex = today.weekday - 1;
+    final start = windowStart(today);
+    const todayIndex = 0;
     final notes = notesFor(rehearsals, today);
     final days = [for (var i = 0; i < 7; i++) start.add(Duration(days: i))];
     final busy = {for (final n in notes) n.$1};
 
     final spoken = notes.isEmpty
-        ? 'Cette semaine : aucune répétition'
-        : 'Cette semaine : ${[for (final n in notes) '${longDate(days[n.$1])}, ${groupLabel(n.$2)}'].join(' ; ')}';
+        ? 'Les 7 prochains jours : aucune répétition'
+        : 'Les 7 prochains jours : ${[for (final n in notes) '${longDate(days[n.$1])}, ${groupLabel(n.$2)}'].join(' ; ')}';
 
     return Semantics(
       label: spoken,

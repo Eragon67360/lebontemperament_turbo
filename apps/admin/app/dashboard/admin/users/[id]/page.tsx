@@ -126,6 +126,7 @@ export default function MemberPage() {
             emailBlocker={emailChangeBlocker(actor)}
             onEmail={() => dialogs.openEmail(user)}
             onRename={() => dialogs.openRename(user)}
+            onVoice={() => dialogs.openVoice(user)}
             onPhoto={() => dialogs.openPhoto(user)}
           />
           <HistoryCard user={user} />
@@ -379,6 +380,7 @@ function ContactCard({
   emailBlocker,
   onEmail,
   onRename,
+  onVoice,
   onPhoto,
 }: {
   user: User;
@@ -386,6 +388,7 @@ function ContactCard({
   emailBlocker: string | null;
   onEmail: () => void;
   onRename: () => void;
+  onVoice: () => void;
   onPhoto: () => void;
 }) {
   const name = firstNameOf(user);
@@ -394,7 +397,7 @@ function ContactCard({
     <SectionCard
       id="contact"
       title="Coordonnées"
-      intro={`La liste des membres gère le nom, l’adresse, le fixe et la voix ; ${name} gère son portable et sa photo.`}
+      intro={`La liste des membres gère le nom, l’adresse et le fixe ; la voix se règle ici ou dans la liste ; ${name} gère son portable et sa photo.`}
     >
       <dl className="divide-border grid grid-cols-1 divide-y sm:grid-cols-[9rem_minmax(0,1fr)] sm:divide-y-0">
         <Fact label="E-mail">
@@ -448,7 +451,16 @@ function ContactCard({
         </Fact>
         <Fact label="Voix">
           <VoiceChips voices={memberVoices(user)} />
-          <ProvenanceNote>{fromRoster}</ProvenanceNote>
+          <ProvenanceNote>
+            Modifiable ici · la liste des membres peut la remplacer
+          </ProvenanceNote>
+          <Button
+            variant="link"
+            className="h-auto self-start p-0"
+            onClick={onVoice}
+          >
+            Modifier la voix…
+          </Button>
         </Fact>
         <Fact label="Photo">
           <span>{user.avatar ? "Une photo est en place" : "Pas de photo"}</span>
@@ -471,9 +483,10 @@ function ContactCard({
         </summary>
         <p className="text-muted-foreground text-detail mt-1 max-w-[64ch]">
           La liste des membres de l’association fait référence pour le nom,
-          l’adresse, le téléphone fixe et la voix. Corrigez-la dans le fichier,
-          puis lancez « Synchroniser avec la liste » : la fiche suivra. Cela
-          évite deux versions de la même information.
+          l’adresse, le téléphone fixe et la voix. Pour la voix, vous pouvez
+          aussi la régler ici ; pour le reste, corrigez-la dans le fichier, puis
+          lancez « Synchroniser avec la liste » : la fiche suivra. Cela évite
+          deux versions de la même information.
         </p>
       </details>
     </SectionCard>

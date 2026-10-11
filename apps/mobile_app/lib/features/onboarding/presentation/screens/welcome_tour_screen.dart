@@ -113,7 +113,7 @@ class _WelcomeTourScreenState extends ConsumerState<WelcomeTourScreen> {
           ),
           (
             Icons.directions_outlined,
-            'L’itinéraire en un geste, et votre semaine dessinée sur une '
+            'L’itinéraire en un geste, et vos 7 prochains jours dessinés sur une '
                 'portée.',
           ),
           (

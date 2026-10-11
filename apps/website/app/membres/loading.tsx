@@ -1,8 +1,8 @@
 // app/membres/loading.tsx
 export default function Loading() {
   return (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="text-foreground animate-pulse">Chargement...</div>
-    </div>
+    <p role="status" className="text-muted py-16 text-center">
+      Chargement…
+    </p>
   );
 }

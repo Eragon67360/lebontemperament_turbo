@@ -24,11 +24,12 @@ const EMPTY_ROW = Object.fromEntries(HEADERS.map((h) => [h, ""]));
 
 // --- Grid → rows (the shape Papa.parse(text, { header: true }) produced) ---
 
-assert.deepEqual(rosterRowsFromGrid(undefined), []);
-assert.deepEqual(rosterRowsFromGrid([]), []);
-assert.deepEqual(rosterRowsFromGrid([HEADERS]), [], "header only: no rows");
+const NONE = { rows: [], rowsAboveHeader: 0 };
+assert.deepEqual(rosterRowsFromGrid(undefined), NONE);
+assert.deepEqual(rosterRowsFromGrid([]), NONE);
+assert.deepEqual(rosterRowsFromGrid([HEADERS]), NONE, "header only: no rows");
 
-const rows = rosterRowsFromGrid([
+const { rows } = rosterRowsFromGrid([
   HEADERS,
   ["DUPONT Marie", "marie@example.com", "1 rue Test", "", "0600000000", "Alto"],
   ["MARTIN Paul", "paul@example.com"], // short row: trailing cells missing
@@ -64,7 +65,7 @@ assert.deepEqual(Object.keys(rows[3]!), HEADERS, "extra cells are dropped");
 
 // Headers are keys as-is: BOM, accents, surrounding spaces, empty header.
 // Duplicates get Papa's `_1`, `_2` suffixes.
-const odd = rosterRowsFromGrid([
+const { rows: odd } = rosterRowsFromGrid([
   ["﻿NOM Prénom", " Voix ", "", "Voix", "Voix", "Voix_1"],
   ["a", "b", "c", "d", "e", "f"],
 ]);
@@ -82,9 +83,52 @@ assert.deepEqual(
   rosterRowsFromGrid([
     ["n", "b"],
     [42, true],
-  ]),
+  ]).rows,
   [{ n: "42", b: "true" }],
 );
+
+// A sheet sorted A→Z with its header row selected: the header lands among
+// the members. It is still found, and the members above it are read too.
+const sorted = rosterRowsFromGrid([
+  ["ARNAUD Léa", "lea@example.com", "", "", "", "Alto"],
+  ["BERNARD Hugo", "hugo@example.com"],
+  [],
+  HEADERS,
+  ["PETIT Zoé", "zoe@example.com", "", "", "", "Soprane"],
+]);
+assert.equal(sorted.rowsAboveHeader, 2);
+assert.deepEqual(
+  sorted.rows.map((row) => row["NOM Prénom"]),
+  ["ARNAUD Léa", "BERNARD Hugo", "PETIT Zoé"],
+);
+assert.deepEqual(sorted.rows[1], {
+  ...EMPTY_ROW,
+  "NOM Prénom": "BERNARD Hugo",
+  "Adresse mail": "hugo@example.com",
+});
+
+// A title line above the header is not a member.
+const titled = rosterRowsFromGrid([
+  ["Membres 2026-2027"],
+  ["", "mise à jour : voir le bureau"],
+  HEADERS,
+  ["PETIT Zoé", "zoe@example.com"],
+]);
+assert.equal(titled.rowsAboveHeader, 0);
+assert.deepEqual(
+  titled.rows.map((row) => row["NOM Prénom"]),
+  ["PETIT Zoé"],
+);
+
+// No header row at all: row 1 stays the header, validation reports it.
+const headless = rosterRowsFromGrid([
+  ["ARNAUD Léa", "lea@example.com"],
+  ["PETIT Zoé", "zoe@example.com"],
+]);
+assert.equal(headless.rowsAboveHeader, 0);
+assert.deepEqual(headless.rows, [
+  { "ARNAUD Léa": "PETIT Zoé", "lea@example.com": "zoe@example.com" },
+]);
 
 // --- The private read: token request, sheet request, errors ---
 
@@ -181,7 +225,8 @@ async function main() {
   configure();
   mockFetch((url) => (url === TOKEN_URI ? tokenOk() : json({ values: grid })));
   const read = await fetchRosterRows();
-  assert.deepEqual(read, [
+  assert.equal(read.rowsAboveHeader, 0);
+  assert.deepEqual(read.rows, [
     {
       ...EMPTY_ROW,
       "NOM Prénom": "DUPONT Marie",
@@ -260,7 +305,7 @@ async function main() {
   // No values at all (empty sheet) is an empty roster, not an error.
   configure();
   mockFetch((url) => (url === TOKEN_URI ? tokenOk() : json({})));
-  assert.deepEqual(await fetchRosterRows(), []);
+  assert.deepEqual(await fetchRosterRows(), NONE);
 
   // Error mapping. 401/403: not shared; the cached token is dropped so the
   // next read requests a fresh one.

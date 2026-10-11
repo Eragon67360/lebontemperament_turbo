@@ -177,7 +177,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
                         : _ConcertsList(result: concerts, isOnline: isOnline),
                     loading: () =>
                         _buildScrollableContent(context, const _LoadingState()),
-                    error: (_, __) => _buildScrollableContent(
+                    error: (_, _) => _buildScrollableContent(
                       context,
                       _ErrorState(onRetry: _onRefresh, isOnline: isOnline),
                     ),
@@ -204,7 +204,7 @@ class _ConcertsEventsScreenState extends ConsumerState<ConcertsEventsScreen>
                         : _EventsList(result: events, isOnline: isOnline),
                     loading: () =>
                         _buildScrollableContent(context, const _LoadingState()),
-                    error: (_, __) => _buildScrollableContent(
+                    error: (_, _) => _buildScrollableContent(
                       context,
                       _ErrorState(onRetry: _onRefresh, isOnline: isOnline),
                     ),
@@ -682,8 +682,18 @@ class _EventCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    // The hint takes the free space (ellipsis only when
+                    // there is truly none left); a Spacer would halve it.
+                    if (event.documents.isNotEmpty)
+                      Expanded(
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: _DocumentsHint(count: event.documents.length),
+                        ),
+                      )
+                    else
+                      const Spacer(),
                     Text(
                       'Voir les détails',
                       style: AppFonts.sans(
@@ -704,6 +714,44 @@ class _EventCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// « 2 documents » with a paperclip: the event has files to open.
+class _DocumentsHint extends StatelessWidget {
+  final int count;
+
+  const _DocumentsHint({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.attach_file_rounded,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              count > 1 ? '$count documents' : '1 document',
+              style: AppFonts.sans(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

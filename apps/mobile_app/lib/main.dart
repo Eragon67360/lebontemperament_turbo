@@ -17,6 +17,7 @@ import 'data/providers/my_groups_provider.dart';
 import 'data/providers/realtime_notifications_provider.dart';
 import 'features/delivery/presentation/providers/delivery_providers.dart';
 import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'features/notifications/presentation/providers/notification_settings_provider.dart';
 import 'features/onboarding/data/welcome_prefs.dart';
 import 'firebase_options.dart';
 
@@ -38,8 +39,8 @@ void main() async {
   // Initialize notification service (local + display for FCM)
   await NotificationService().initialize();
 
-  // Push notifications follow the session: subscribed to the topic and the
-  // phone registered for alerts only while a member is signed in;
+  // Push notifications follow the session: subscribed to the member topics
+  // and the phone registered for alerts only while a member is signed in;
   // unsubscribed, token deleted and cache cleared on sign-out (#358, #364).
   final auth = SupabaseConfig.client.auth;
   final sessionNotifications = SessionNotifications.production()
@@ -96,6 +97,14 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
       FcmNotificationHandler.setupForegroundListeners();
       // Delivery passes follow the FCM token when it rotates (#593).
       ref.read(deliveryServiceProvider).bindTokenRefreshes();
+    });
+
+    // Rehearsal pushes follow the member's ensembles (Profil › Mes ensembles)
+    // and the « Changements de l'agenda › Répétitions » switch.
+    ref.listenManual(rehearsalPushGroupsProvider, (_, groups) {
+      DependencyInjection.getIt<SessionNotifications>().rehearsalGroupsChanged(
+        groups,
+      );
     });
 
     // Start real-time subscription for list updates (always, regardless of settings)

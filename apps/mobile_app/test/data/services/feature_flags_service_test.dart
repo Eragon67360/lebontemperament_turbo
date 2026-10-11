@@ -106,5 +106,25 @@ void main() {
       expect(isVersionBelow('garbage', '2.0.0'), isFalse);
       expect(isVersionBelow('2.0.0', 'garbage'), isFalse);
     });
+
+    test('isInstalledBelow compares builds when the minimum has one', () {
+      // The iOS version stays frozen at 2.0.140 while builds go up.
+      expect(isInstalledBelow('2.0.140', '160', '2.0.142+159'), isFalse);
+      expect(isInstalledBelow('2.0.140', '157', '2.0.142+159'), isTrue);
+      expect(isInstalledBelow('2.0.142', '159', '2.0.142+159'), isFalse);
+      // A plain minimum still compares versions.
+      expect(isInstalledBelow('2.0.140', '160', '2.0.139'), isFalse);
+      expect(isInstalledBelow('2.0.140', '160', '2.0.142'), isTrue);
+      // An unreadable installed build falls back to the version.
+      expect(isInstalledBelow('2.0.143', '', '2.0.142+159'), isFalse);
+      expect(isInstalledBelow('2.0.141', 'x', '2.0.142+159'), isTrue);
+    });
+
+    test('displayVersion writes the build like the about screen', () {
+      expect(displayVersion('2.0.142+159'), '2.0.142 (build 159)');
+      expect(displayVersion('2.1.0'), '2.1.0');
+      expect(parseBuildNumber('2.0.142+159'), 159);
+      expect(parseBuildNumber('2.1.0'), isNull);
+    });
   });
 }

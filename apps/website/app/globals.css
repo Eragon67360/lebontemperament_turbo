@@ -56,6 +56,13 @@
   --primary-solid: #156c71;
   --primary-solid-hover: #105155;
   --primary-text: var(--primary-600);
+  /* Members area surfaces (/membres): a calm off-white page with white cards
+     and fine lines. Dark values follow the site's teal-tinted dark palette. */
+  --members-page: #f3f7f7;
+  --members-card: #ffffff;
+  --members-band: #f3f7f7;
+  --members-line: #dce5e5;
+  --members-line-strong: #c2cccc;
 }
 
 .dark {
@@ -83,6 +90,11 @@
   --primary-900: #082123;
   /* Small teal text follows the dark scale (#26a5ad), not `--primary` */
   --primary-text: var(--primary-500);
+  --members-page: #0d1616;
+  --members-card: #1a2c2c;
+  --members-band: #142323;
+  --members-line: #2c4343;
+  --members-line-strong: #4a6767;
 }
 
 /* High contrast accessibility. Kept outside @layer base: the brand tokens
@@ -100,6 +112,8 @@
     --primary-solid-hover: #000000;
     --color-primary: #000000;
     --color-border: #000000;
+    --members-line: #000000;
+    --members-line-strong: #000000;
   }
 
   .dark {
@@ -112,6 +126,8 @@
     --primary-solid-hover: #ffffff;
     --color-primary: #ffffff;
     --color-border: #ffffff;
+    --members-line: #ffffff;
+    --members-line-strong: #ffffff;
   }
 }
 
@@ -130,6 +146,11 @@
   --color-primary-solid: var(--primary-solid);
   --color-primary-solid-hover: var(--primary-solid-hover);
   --color-primary-text: var(--primary-text);
+  --color-members-page: var(--members-page);
+  --color-members-card: var(--members-card);
+  --color-members-band: var(--members-band);
+  --color-members-line: var(--members-line);
+  --color-members-line-strong: var(--members-line-strong);
 }
 
 /* ==========================================================================

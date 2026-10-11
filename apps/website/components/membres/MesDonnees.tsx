@@ -2,6 +2,7 @@
 
 import { PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
 import { DELETION_NOTE_MAX_LENGTH } from "@/lib/deletionRequest";
+import { membersFont } from "@/lib/membres/font";
 import {
   Button,
   Label,
@@ -18,9 +19,11 @@ import {
   IoDownloadOutline,
   IoTrashOutline,
 } from "react-icons/io5";
+import { MembersCard } from "./MembersCard";
+import { PageHeader } from "./PageHeader";
 
 const linkClass =
-  "text-primary-text font-medium underline underline-offset-2 hover:no-underline";
+  "text-primary-text font-bold underline underline-offset-2 hover:no-underline";
 
 function Panel({
   icon,
@@ -33,23 +36,24 @@ function Panel({
 }) {
   const id = `mes-donnees-${title.toLowerCase().replace(/[^a-z]+/g, "-")}`;
   return (
-    <section
+    <MembersCard
+      as="section"
       aria-labelledby={id}
-      className="bg-background border-primary/10 flex flex-col gap-4 rounded-xl border p-5 md:p-6"
+      className="flex flex-col gap-4 p-5 sm:p-7"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3.5">
         <div
-          className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+          className="bg-primary/10 text-primary-text flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]"
           aria-hidden="true"
         >
           {icon}
         </div>
-        <h2 id={id} className="text-foreground text-lg font-bold">
+        <h2 id={id} className="text-foreground text-[22px] font-extrabold">
           {title}
         </h2>
       </div>
       {children}
-    </section>
+    </MembersCard>
   );
 }
 
@@ -91,10 +95,10 @@ function DownloadPanel() {
 
   return (
     <Panel
-      icon={<IoDownloadOutline className="h-5 w-5" />}
+      icon={<IoDownloadOutline className="h-6 w-6" />}
       title="Télécharger mes données"
     >
-      <p className="text-foreground/70 text-sm leading-relaxed">
+      <p className="text-muted leading-relaxed">
         Un fichier JSON avec tout ce que la base de l’association contient sur
         votre compte : votre profil (nom, pupitre, coordonnées, photo), votre
         compte (e-mail, modes de connexion, dates), les téléphones qui reçoivent
@@ -103,7 +107,13 @@ function DownloadPanel() {
         Seules vos propres données y figurent.
       </p>
       <div>
-        <Button variant="primary" onPress={download} isPending={isLoading}>
+        <Button
+          variant="primary"
+          size="lg"
+          className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+          onPress={download}
+          isPending={isLoading}
+        >
           <IoDownloadOutline className="size-4" aria-hidden="true" />
           {isLoading ? "Préparation du fichier…" : "Télécharger mes données"}
         </Button>
@@ -115,10 +125,10 @@ function DownloadPanel() {
 function CorrectPanel() {
   return (
     <Panel
-      icon={<IoCreateOutline className="h-5 w-5" />}
+      icon={<IoCreateOutline className="h-6 w-6" />}
       title="Corriger mes informations"
     >
-      <p className="text-foreground/70 text-sm leading-relaxed">
+      <p className="text-muted leading-relaxed">
         Une information est fausse ou a changé (nom, pupitre, coordonnées,
         photo) ? Écrivez à{" "}
         <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className={linkClass}>
@@ -161,16 +171,16 @@ function DeletionPanel() {
 
   return (
     <Panel
-      icon={<IoTrashOutline className="h-5 w-5" />}
+      icon={<IoTrashOutline className="h-6 w-6" />}
       title="Supprimer mon compte"
     >
       {isSent ? (
         <p
           role="status"
-          className="text-foreground flex items-start gap-2 text-sm leading-relaxed"
+          className="text-foreground flex items-start gap-2 leading-relaxed"
         >
           <IoCheckmarkCircle
-            className="text-primary mt-0.5 size-5 shrink-0"
+            className="text-primary-text mt-0.5 size-6 shrink-0"
             aria-hidden="true"
           />
           <span>
@@ -181,7 +191,7 @@ function DeletionPanel() {
         </p>
       ) : (
         <>
-          <p className="text-foreground/70 text-sm leading-relaxed">
+          <p className="text-muted leading-relaxed">
             Votre demande part vers l’association, qui supprime votre compte de
             l’espace membres et de l’application, votre profil, vos
             notifications et vos signalements dans un délai d’un mois, puis vous
@@ -191,7 +201,12 @@ function DeletionPanel() {
             autre affaire : dites-nous dans le message si vous la quittez aussi.
           </p>
           <div>
-            <Button variant="danger-soft" onPress={() => setIsOpen(true)}>
+            <Button
+              variant="danger-soft"
+              size="lg"
+              className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+              onPress={() => setIsOpen(true)}
+            >
               <IoTrashOutline className="size-4" aria-hidden="true" />
               Demander la suppression de mon compte
             </Button>
@@ -206,7 +221,7 @@ function DeletionPanel() {
             if (!open && !isSending) setIsOpen(false);
           }}
         >
-          <Modal.Container>
+          <Modal.Container className={membersFont.className}>
             <Modal.Dialog>
               <Modal.CloseTrigger aria-label="Fermer" />
               <Modal.Header>
@@ -216,7 +231,7 @@ function DeletionPanel() {
               </Modal.Header>
               <Modal.Body>
                 <div className="flex flex-col gap-4">
-                  <p className="text-foreground/70 text-sm leading-relaxed">
+                  <p className="text-muted leading-relaxed">
                     L’association reçoit votre demande et supprime votre compte
                     dans un délai d’un mois. Pensez à{" "}
                     <strong>télécharger vos données</strong> avant si vous
@@ -236,12 +251,20 @@ function DeletionPanel() {
               <Modal.Footer>
                 <Button
                   variant="ghost"
+                  size="lg"
+                  className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
                   onPress={() => setIsOpen(false)}
                   isDisabled={isSending}
                 >
                   Annuler
                 </Button>
-                <Button variant="danger" onPress={send} isPending={isSending}>
+                <Button
+                  variant="danger"
+                  size="lg"
+                  className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+                  onPress={send}
+                  isPending={isSending}
+                >
                   {isSending ? "Envoi…" : "Envoyer la demande"}
                 </Button>
               </Modal.Footer>
@@ -253,26 +276,27 @@ function DeletionPanel() {
   );
 }
 
-/** « Mes données » in the members area (#354). */
+/** « Mon compte » (data download, correction, deletion) in the members area (#354). */
 export function MesDonnees() {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-8 pb-24 md:py-12">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-primary-text text-2xl font-bold md:text-3xl">
-          Mes données personnelles
-        </h1>
-        <p className="text-foreground/70 text-sm leading-relaxed md:text-base">
-          Récupérez une copie de ce que l’association enregistre sur vous, ou
-          demandez la suppression de votre compte. Le détail figure dans la{" "}
-          <Link
-            href="/politique-de-confidentialite#droits"
-            className={linkClass}
-          >
-            politique de confidentialité
-          </Link>
-          .
-        </p>
-      </header>
+    <div className="flex max-w-3xl flex-col gap-6">
+      <PageHeader
+        current="Mon compte"
+        title="Mon compte"
+        intro={
+          <>
+            Récupérez une copie de ce que l’association enregistre sur vous, ou
+            demandez la suppression de votre compte. Le détail figure dans la{" "}
+            <Link
+              href="/politique-de-confidentialite#droits"
+              className={linkClass}
+            >
+              politique de confidentialité
+            </Link>
+            .
+          </>
+        }
+      />
       <DownloadPanel />
       <CorrectPanel />
       <DeletionPanel />

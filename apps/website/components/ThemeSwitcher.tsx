@@ -17,7 +17,14 @@ import { FiMonitor, FiMoon, FiSun } from "react-icons/fi";
  * - Accessible keyboard navigation
  * - Prevents hydration mismatch
  */
-export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
+export function ThemeSwitcher({
+  isLight = false,
+  large = false,
+}: {
+  isLight?: boolean;
+  /** 48 px buttons with bigger icons (the members area's footer). */
+  large?: boolean;
+}) {
   // Prevent hydration mismatch - the theme is only known in the browser
   const mounted = useHydrated();
   const { theme, setTheme } = useTheme();
@@ -26,17 +33,22 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
     return (
       <div className="flex items-center gap-0.5 rounded-md bg-transparent p-0.5">
         {/* Skeleton placeholder */}
-        <div className="bg-surface-secondary h-7 w-7 animate-pulse rounded-sm" />
-        <div className="bg-surface-secondary h-7 w-7 animate-pulse rounded-sm" />
-        <div className="bg-surface-secondary h-7 w-7 animate-pulse rounded-sm" />
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className={`bg-surface-secondary animate-pulse rounded-sm ${large ? "h-12 w-12" : "h-7 w-7"}`}
+          />
+        ))}
       </div>
     );
   }
 
   // Dynamic classes based on isLight prop
+  const sizeClasses = large ? "min-w-12 h-12 w-12" : "min-w-7 h-7 w-7";
   const buttonBaseClasses = isLight
-    ? "min-w-7 h-7 w-7 p-0 data-[hovered=true]:bg-white/20"
-    : "min-w-7 h-7 w-7 p-0 data-[hovered=true]:bg-surface-secondary";
+    ? `${sizeClasses} p-0 data-[hovered=true]:bg-white/20`
+    : `${sizeClasses} p-0 data-[hovered=true]:bg-surface-secondary`;
+  const iconSize = large ? "h-5 w-5" : "h-3.5 w-3.5";
 
   // v2 parity: selected theme button was variant="flat" color="primary"
   // (teal-600 tint bg in both modes, primary-600 icon)
@@ -56,7 +68,7 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
         onPress={() => setTheme("light")}
         aria-label="Passer au thème clair"
       >
-        <FiSun className={`h-3.5 w-3.5 ${iconClasses}`} />
+        <FiSun className={`${iconSize} ${iconClasses}`} />
       </Button>
 
       {/* Dark Theme Button */}
@@ -68,7 +80,7 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
         onPress={() => setTheme("dark")}
         aria-label="Passer au thème sombre"
       >
-        <FiMoon className={`h-3.5 w-3.5 ${iconClasses}`} />
+        <FiMoon className={`${iconSize} ${iconClasses}`} />
       </Button>
 
       {/* System Theme Button */}
@@ -80,7 +92,7 @@ export function ThemeSwitcher({ isLight = false }: { isLight?: boolean }) {
         onPress={() => setTheme("system")}
         aria-label="Utiliser le thème du système"
       >
-        <FiMonitor className={`h-3.5 w-3.5 ${iconClasses}`} />
+        <FiMonitor className={`${iconSize} ${iconClasses}`} />
       </Button>
     </div>
   );

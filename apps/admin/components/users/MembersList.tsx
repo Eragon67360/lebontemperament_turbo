@@ -31,6 +31,7 @@ export interface MembersListProps {
   actor: { id: string | null | undefined; role: Role | null | undefined };
   onRole: (user: User) => void;
   onRename: (user: User) => void;
+  onVoice: (user: User) => void;
   onPhoto: (user: User) => void;
   onDelete: (user: User) => void;
   /** Injected so renders are stable in tests. */

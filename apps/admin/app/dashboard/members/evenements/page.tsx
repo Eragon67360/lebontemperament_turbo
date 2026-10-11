@@ -3,6 +3,7 @@
 import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
 import { PageShell } from "@/components/layouts/PageShell";
 import { EventDialog } from "@/components/season/EventDialog";
+import { EventDocumentsDialog } from "@/components/season/EventDocumentsDialog";
 import { EventRow } from "@/components/season/EventRow";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,10 @@ import {
   ListSkeleton,
 } from "@/components/ui/data-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  EventDocumentsNotInstalled,
+  useEventDocuments,
+} from "@/hooks/useEventDocuments";
 import {
   useCreateEvent,
   useDeleteEvent,
@@ -24,7 +29,7 @@ import {
   todayIso,
   toEventPayload,
 } from "@/utils/season/schedule";
-import type { Event } from "@repo/domain/types/events";
+import type { Event, EventDocument } from "@repo/domain/types/events";
 import { CalendarDays, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -36,6 +41,22 @@ export default function EvenementsPage() {
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
+  const documentsQuery = useEventDocuments();
+  // Before the event_documents migration the « Documents » button stays hidden.
+  const documentsAvailable = !(
+    documentsQuery.error instanceof EventDocumentsNotInstalled
+  );
+  const documentsByEvent = useMemo(() => {
+    const byEvent = new Map<string, EventDocument[]>();
+    for (const document of documentsQuery.data ?? []) {
+      const list = byEvent.get(document.event_id) ?? [];
+      list.push(document);
+      byEvent.set(document.event_id, list);
+    }
+    return byEvent;
+  }, [documentsQuery.data]);
+  const [documentsFor, setDocumentsFor] = useState<Event | null>(null);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
 
   const [tab, setTab] = useState<Period>("upcoming");
   const [dialog, setDialog] = useState<{ open: boolean; event: Event | null }>({
@@ -138,7 +159,16 @@ export default function EvenementsPage() {
               <li key={event.id} className="list-none">
                 <EventRow
                   event={event}
+                  documents={documentsByEvent.get(event.id) ?? []}
                   onEdit={() => setDialog({ open: true, event })}
+                  onDocuments={
+                    documentsAvailable
+                      ? () => {
+                          setDocumentsFor(event);
+                          setDocumentsOpen(true);
+                        }
+                      : undefined
+                  }
                   onDelete={() => {
                     setDeleting(event);
                     setConfirmOpen(true);
@@ -185,6 +215,15 @@ export default function EvenementsPage() {
         isPending={createEvent.isPending || updateEvent.isPending}
       />
 
+      <EventDocumentsDialog
+        open={documentsOpen}
+        onOpenChange={setDocumentsOpen}
+        event={documentsFor}
+        documents={
+          documentsFor ? (documentsByEvent.get(documentsFor.id) ?? []) : []
+        }
+      />
+
       <DeleteConfirmDialog
         open={confirmOpen}
         onOpenChange={(open) => {
@@ -194,8 +233,12 @@ export default function EvenementsPage() {
         title={`Supprimer « ${deleting?.title ?? ""} » ?`}
         description={`${
           deleting?.is_public
-            ? "L'événement disparaît de l'agenda des membres et du site public."
-            : "L'événement disparaît de l'agenda des membres."
+            ? "L'événement disparaît de l'agenda des membres et du site public"
+            : "L'événement disparaît de l'agenda des membres"
+        }${
+          deleting && (documentsByEvent.get(deleting.id)?.length ?? 0) > 0
+            ? ", avec ses documents."
+            : "."
         } Cette action ne peut pas être annulée.`}
         isLoading={isDeleting}
       />

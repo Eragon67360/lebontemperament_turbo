@@ -344,6 +344,7 @@ export default function UsersPage() {
                   actor={actor}
                   onRole={dialogs.openRole}
                   onRename={dialogs.openRename}
+                  onVoice={dialogs.openVoice}
                   onPhoto={dialogs.openPhoto}
                   onDelete={dialogs.openDelete}
                 />

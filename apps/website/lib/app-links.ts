@@ -32,6 +32,8 @@ export const ANDROID_SHA256_FINGERPRINTS: readonly string[] = [
 
 /** Where the app is downloaded from. */
 export const APP_STORE_URL = "https://apps.apple.com/app/id6819682263";
+/** Public TestFlight link offered to members until the App Store release. */
+export const TESTFLIGHT_URL = "https://testflight.apple.com/join/9VNtFzWU";
 export const GOOGLE_PLAY_URL = `https://play.google.com/store/apps/details?id=${APP_BUNDLE_ID}`;
 
 /** The paths the app claims (`/l/<code>` delivery links only). */
