@@ -67,6 +67,9 @@ export interface ProfileForDiff {
   home_phone: string | null;
   voice: string | null;
   status: "en attente" | "approuvé";
+  /** ISO timestamps, for the review of accounts to delete (not used by the diff). */
+  created_at?: string | null;
+  last_sign_in_at?: string | null;
 }
 
 /** The fields the roster owns (owner decision, #433). */
@@ -107,6 +110,9 @@ export interface AbsentMember {
   displayName: string;
   role: string;
   status: ProfileForDiff["status"];
+  /** ISO timestamps; absent when the profile did not carry them. */
+  createdAt?: string | null;
+  lastSignInAt?: string | null;
 }
 
 export interface RowSummary {

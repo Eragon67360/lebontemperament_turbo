@@ -82,7 +82,9 @@ export async function loadProfilesForDiff(
   const [{ data: profiles, error }, authUsers] = await Promise.all([
     supabaseAdmin
       .from("profiles")
-      .select("id, email, display_name, role, address, home_phone, voice"),
+      .select(
+        "id, email, display_name, role, address, home_phone, voice, created_at",
+      ),
     listAuthSummaries(supabaseAdmin),
   ]);
   if (error) throw error;
@@ -90,5 +92,6 @@ export async function loadProfilesForDiff(
   return (profiles ?? []).map((profile) => ({
     ...profile,
     status: inviteStatusOf(authById.get(profile.id)),
+    last_sign_in_at: authById.get(profile.id)?.last_sign_in_at ?? null,
   }));
 }
