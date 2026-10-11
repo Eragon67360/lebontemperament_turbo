@@ -62,3 +62,18 @@ export async function removeMemberFiles(
     console.error("[users] Bug screenshots not removed:", error);
   }
 }
+
+/**
+ * Deletes a member's account for good: their Storage files first (the
+ * database rows go with the account, files don't), then the Auth user, which
+ * cascades to the profile and the rest (#354). Throws when the Auth user
+ * cannot be deleted. Shared by the single and the bulk deletion.
+ */
+export async function deleteMemberAccount(
+  db: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  await removeMemberFiles(db, userId);
+  const { error } = await db.auth.admin.deleteUser(userId);
+  if (error) throw error;
+}

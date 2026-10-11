@@ -1,0 +1,41 @@
+name: Mailing list check
+
+# Weekly comparison of the mailing lists enabled in the admin (« Liste de
+# diffusion ») with the member roster, on production. The admin route does
+# the work and records the counts; check-ops-alerts pushes the superadmins
+# when a list has differences, when the comparison fails, or when it stops
+# running. A list is compared at most once every 6 days by this route, so
+# the second slot only runs when GitHub dropped the first one.
+#
+# Secret (optional): CRON_SECRET, the same value as the admin's CRON_SECRET
+# environment variable. Once the admin has it, calls without it are refused.
+
+on:
+  schedule:
+    # Monday ~07:17 Europe/Paris (summer time), then Tuesday as a fallback.
+    # Off the hour on purpose: GitHub drops scheduled runs at busy times.
+    - cron: "17 5 * * 1"
+    - cron: "17 5 * * 2"
+  workflow_dispatch:
+
+concurrency:
+  group: mailing-list-check
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Compare the lists with the roster
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          auth=()
+          if [ -n "$CRON_SECRET" ]; then
+            auth=(-H "Authorization: Bearer $CRON_SECRET")
+          fi
+          curl --fail-with-body -sS --max-time 90 -X POST "${auth[@]}" \
+            https://admin.lebontemperament.com/api/cron/mailing-list-comparison
