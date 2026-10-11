@@ -11,6 +11,11 @@
  * - minor: bump minor + versionCode (1.0.7+15 → 1.1.0+16)
  * - major: bump major + versionCode (1.0.7+15 → 2.0.0+16)
  *
+ * version.json's optional `iosVersion` freezes the iPhone app's version (the
+ * iOS TestFlight workflow builds with it; the build number stays shared), so
+ * TestFlight uploads skip a new full beta review. It is kept on every bump
+ * except `major`, which drops it: the store launch (3.0.0) syncs all apps.
+ *
  * Output: prints oldVersion then newVersion (last line is new version for scripts)
  */
 
@@ -28,7 +33,13 @@ const VERSION_REGEX = /^version:\s*(\d+)\.(\d+)\.(\d+)\+(\d+)\s*$/m;
 function getCurrent() {
   const data = JSON.parse(fs.readFileSync(VERSION_PATH, "utf8"));
   const [major, minor, patch] = data.version.split(".").map(Number);
-  return { major, minor, patch, build: data.build };
+  return {
+    major,
+    minor,
+    patch,
+    build: data.build,
+    iosVersion: data.iosVersion,
+  };
 }
 
 function bumpVersion(current, type) {
@@ -118,11 +129,20 @@ function main() {
   const oldMobile = formatMobileVersion(current);
   const newMobile = formatMobileVersion(bumped);
 
-  // Write version.json
+  // Write version.json (a major bump ends the iOS version freeze)
+  const iosVersion = type === "major" ? undefined : current.iosVersion;
+  if (current.iosVersion && !iosVersion) {
+    console.error(
+      `iOS version freeze at ${current.iosVersion} removed: iOS gets ${newVersion}`,
+    );
+  }
   fs.writeFileSync(
     VERSION_PATH,
-    JSON.stringify({ version: newVersion, build: bumped.build }, null, 2) +
-      "\n",
+    JSON.stringify(
+      { version: newVersion, build: bumped.build, iosVersion },
+      null,
+      2,
+    ) + "\n",
   );
 
   // Write website package.json

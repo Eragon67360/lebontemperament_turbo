@@ -171,6 +171,14 @@ platform :ios do
       xcargs: signing_xcargs,
       export_team_id: env!("APPLE_TEAM_ID")
     )
+    # The workflow sets IOS_VERSION when version.json freezes the iOS
+    # version: never upload an archive that didn't take it.
+    expected_version = ENV["IOS_VERSION"].to_s.strip
+    unless expected_version.empty?
+      built_version = FastlaneCore::IpaFileAnalyser.fetch_app_version(lane_context[SharedValues::IPA_OUTPUT_PATH])
+      UI.user_error!("The archive has version #{built_version}, expected #{expected_version} (version.json iosVersion)") unless built_version == expected_version
+      UI.message("Version #{built_version} (frozen), build #{FastlaneCore::IpaFileAnalyser.fetch_app_build(lane_context[SharedValues::IPA_OUTPUT_PATH])}")
+    end
     upload_to_testflight(
       api_key: key,
       ipa: "build/LeBonTemperament.ipa",

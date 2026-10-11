@@ -118,13 +118,28 @@ jobs:
           true
 
       # Compiles the Flutter part and installs the pods; fastlane then
-      # archives and signs.
+      # archives and signs. Until the store launch (3.0.0), the iOS version
+      # stays at version.json's `iosVersion`, the version Apple's beta review
+      # already approved for members: each upload is then a new build of that
+      # version, which members get without a new full review. The build
+      # number still comes from pubspec.yaml, shared with Android.
       - name: Build (unsigned)
         if: env.BUILD == 'true'
         working-directory: apps/mobile_app
         run: |
+          IOS_VERSION=$(node -p "require('../../version.json').iosVersion || ''")
           flutter pub get
-          flutter build ios --release --no-codesign
+          if [ -n "$IOS_VERSION" ]; then
+            if ! printf '%s' "$IOS_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "version.json iosVersion is not x.y.z: $IOS_VERSION" >&2
+              exit 1
+            fi
+            echo "iOS version frozen at $IOS_VERSION (version.json iosVersion)"
+            echo "IOS_VERSION=$IOS_VERSION" >> "$GITHUB_ENV"
+            flutter build ios --release --no-codesign --build-name "$IOS_VERSION"
+          else
+            flutter build ios --release --no-codesign
+          fi
 
       - name: Install fastlane
         uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
