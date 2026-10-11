@@ -1,7 +1,7 @@
 // Files attached to events (« bulletin de réservation », programme…): rules
 // shared by the admin, the website and their tests (no I/O). The table is
 // public.event_documents; the files live in the public bucket site-media
-// under events/<event id>/ (migration 20261011190000_event_documents.sql).
+// under events/<event id>/ (migration 20261011200000_event_documents.sql).
 
 import type { EventDocumentLink } from "../types/events";
 import { fileSizeLabel } from "./documents";
