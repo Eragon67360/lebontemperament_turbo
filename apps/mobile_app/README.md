@@ -76,7 +76,7 @@ The Drive explorer, the file viewers and "Télécharger" (which fetches `/api/dr
 
 Profil › Photo de profil sends the member's photo (resized to 1024 px JPEG on the phone) to the website's `/api/profile/photo` the same way; the website checks the image and changes only the caller's own `profile_picture_url` (members have no write access to `profiles` or the bucket, so the name stays the association's). Profil › Mot de passe checks the current password by signing in again, then calls Supabase's `updateUser`.
 
-Push notifications follow the session: the device subscribes to the `all_users` topic when a member is signed in and unsubscribes, deletes its FCM token and clears the local cache on sign-out (`lib/data/services/session_notifications.dart`). Reminders use inexact Android alarms (no exact-alarm permission), and app data is excluded from Android backups and device transfers.
+Push notifications follow the session: when a member is signed in, the device subscribes to the `members` topic (events, concerts) and to the topic of each rehearsal group concerning the ensembles picked in Profil › Mes ensembles (`rehearsals_femmes`…), so rehearsals of other groups never notify them (apps up to 2.0.142 used one `all_users` topic for everything, which the server still names in each push); it unsubscribes, deletes its FCM token and clears the local cache on sign-out (`lib/data/services/session_notifications.dart`). Reminders use inexact Android alarms (no exact-alarm permission), and app data is excluded from Android backups and device transfers.
 
 ### Remote flags (kill switch)
 

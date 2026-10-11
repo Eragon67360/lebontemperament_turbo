@@ -7,27 +7,37 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/dependency_injection.dart';
 import '../../core/config/supabase_config.dart';
+import '../../features/onboarding/data/welcome_prefs.dart';
 import '../../features/public/data/public_concert_notifications.dart';
+import '../models/rehearsal.dart';
+import '../providers/my_groups_provider.dart';
 import 'fcm_notification_handler.dart';
 import 'storage_service.dart';
 
 /// Keeps push notifications and the local cache tied to the member's session.
 ///
-/// - with a session (app start, sign-in): subscribed to the `all_users` topic,
-///   and the phone's FCM token registered with `register_push_device`, again
-///   whenever FCM rotates it. The server keeps it only for superadmins, who
-///   get the production alerts on it (#364). A member gets concerts through
-///   `all_users`, so the public concert topic is left;
-/// - without a session at app start: unsubscribed from `all_users` (devices
-///   that subscribed while signed out with older builds stop receiving
-///   pushes), and subscribed to [publicTopic] while the visitor keeps
-///   « Prochains concerts » on (#593);
+/// - with a session (app start, sign-in): subscribed to [membersTopic] (events,
+///   concerts) and to the topic of each rehearsal group concerning the
+///   member's ensembles ([rehearsalTopic]), again whenever they change them,
+///   so a woman who picked « Femmes » is not told about the men's rehearsals.
+///   Once all of that worked, the phone leaves [legacyTopic], which apps up to
+///   2.0.142 listened to for everything (the server still names it in each
+///   push, see send-push-notification/target.ts). The phone's FCM token is
+///   registered with `register_push_device`, again whenever FCM rotates it.
+///   The server keeps it only for superadmins, who get the production alerts
+///   on it (#364). A member gets concerts through [membersTopic], so the
+///   public concert topic is left;
+/// - without a session at app start: unsubscribed from every member topic
+///   (devices that subscribed while signed out with older builds stop
+///   receiving pushes), and subscribed to [publicTopic] while the visitor
+///   keeps « Prochains concerts » on (#593);
 /// - just before an explicit sign-out ([beforeSignOut], while the session can
 ///   still call the server): the token unregistered;
 /// - on sign-out (explicit, or a session Supabase could no longer refresh):
-///   unsubscribed, the FCM token deleted, the local cache cleared, then back
-///   on [publicTopic] like any visitor. A deleted token that was still
-///   registered is dropped by the server at its next send.
+///   unsubscribed from every member topic, the FCM token deleted, the local
+///   cache cleared, then back on [publicTopic] like any visitor. A deleted
+///   token that was still registered is dropped by the server at its next
+///   send.
 class SessionNotifications {
   SessionNotifications({
     required Future<void> Function(String topic) subscribe,
@@ -39,8 +49,10 @@ class SessionNotifications {
     required Future<void> Function(String token) registerDevice,
     required Future<void> Function(String token) unregisterDevice,
     Future<bool> Function()? publicConcertsWanted,
+    Future<Set<GroupType>> Function()? rehearsalGroups,
     Logger? logger,
   }) : _publicConcertsWanted = publicConcertsWanted ?? _never,
+       _rehearsalGroups = rehearsalGroups ?? _allGroups,
        _subscribe = subscribe,
        _unsubscribe = unsubscribe,
        _deleteToken = deleteToken,
@@ -51,14 +63,29 @@ class SessionNotifications {
        _unregisterDevice = unregisterDevice,
        _logger = logger ?? Logger();
 
-  /// The FCM topic the server sends internal notifications to.
-  static const String topic = 'all_users';
+  /// The FCM topic apps up to 2.0.142 listened to for every internal push.
+  static const String legacyTopic = 'all_users';
+
+  /// The FCM topic of the events and concerts for members.
+  static const String membersTopic = 'members';
+
+  /// The FCM topic of the rehearsals of [group] (`rehearsals_femmes`…); the
+  /// server maps the database's group names to the same names.
+  static String rehearsalTopic(GroupType group) => 'rehearsals_${group.name}';
+
+  /// Every topic a member's phone may listen to.
+  static final List<String> memberTopics = [
+    legacyTopic,
+    membersTopic,
+    for (final g in GroupType.values) rehearsalTopic(g),
+  ];
 
   /// The FCM topic of the concert announcements for visitors (#593): no
   /// token or personal data is stored for them.
   static const String publicTopic = 'public_concerts';
 
   static Future<bool> _never() async => false;
+  static Future<Set<GroupType>> _allGroups() async => GroupType.values.toSet();
 
   final Future<void> Function(String topic) _subscribe;
   final Future<void> Function(String topic) _unsubscribe;
@@ -69,6 +96,7 @@ class SessionNotifications {
   final Future<void> Function(String token) _registerDevice;
   final Future<void> Function(String token) _unregisterDevice;
   final Future<bool> Function() _publicConcertsWanted;
+  final Future<Set<GroupType>> Function() _rehearsalGroups;
   final Logger _logger;
 
   StreamSubscription<AuthState>? _subscription;
@@ -100,6 +128,8 @@ class SessionNotifications {
         );
       },
       publicConcertsWanted: PublicConcertNotifications.isEnabled,
+      rehearsalGroups: () async =>
+          groupsConcerning(await WelcomePrefs.myGroups()),
     );
   }
 
@@ -151,6 +181,7 @@ class SessionNotifications {
       unregisterTimeout,
       onTimeout: () {
         _logger.w('SessionNotifications: unregisterDevice timed out');
+        return false;
       },
     );
   }
@@ -165,6 +196,58 @@ class SessionNotifications {
     });
     _queue = done;
     return done;
+  }
+
+  /// The rehearsal groups last passed to [rehearsalGroupsChanged]; until
+  /// then, read with `rehearsalGroups`.
+  Set<GroupType>? _groups;
+
+  /// Applies [groups], the rehearsal groups concerning the member's
+  /// ensembles (Profil › Mes ensembles, the welcome tour), to the rehearsal
+  /// topics. A visitor's phone has none.
+  Future<void> rehearsalGroupsChanged(Set<GroupType> groups) {
+    _groups = groups;
+    final done = _queue.then((_) async {
+      if (_signedIn) await _applyMemberTopics();
+    });
+    _queue = done;
+    return done;
+  }
+
+  /// Subscribes to [membersTopic] and the wanted rehearsal topics, leaves the
+  /// others, then leaves [legacyTopic] only if every subscription worked: a
+  /// phone still on it keeps receiving every push (once, never twice).
+  Future<void> _applyMemberTopics() async {
+    final groups = _groups ?? await _readRehearsalGroups();
+    var subscribed = await _run('subscribe', () => _subscribe(membersTopic));
+    for (final g in GroupType.values) {
+      final topic = rehearsalTopic(g);
+      if (groups.contains(g)) {
+        subscribed &= await _run('subscribe', () => _subscribe(topic));
+      } else {
+        await _run('unsubscribe', () => _unsubscribe(topic));
+      }
+    }
+    if (subscribed) {
+      await _run('unsubscribeLegacy', () => _unsubscribe(legacyTopic));
+    }
+  }
+
+  /// Every group when the ensembles can't be read: too many pushes rather
+  /// than none.
+  Future<Set<GroupType>> _readRehearsalGroups() async {
+    try {
+      return await _rehearsalGroups();
+    } catch (e) {
+      _logger.w('SessionNotifications: rehearsal groups unreadable: $e');
+      return GroupType.values.toSet();
+    }
+  }
+
+  Future<void> _leaveMemberTopics() async {
+    for (final topic in memberTopics) {
+      await _run('unsubscribe', () => _unsubscribe(topic));
+    }
   }
 
   Future<void> _applyPublicTopic() async {
@@ -184,14 +267,14 @@ class SessionNotifications {
           await _signIn();
         } else {
           _signedIn = false;
-          await _run('unsubscribe', () => _unsubscribe(topic));
+          await _leaveMemberTopics();
           await _applyPublicTopic();
         }
       case AuthChangeEvent.signedIn:
         await _signIn();
       case AuthChangeEvent.signedOut:
         _signedIn = false;
-        await _run('unsubscribe', () => _unsubscribe(topic));
+        await _leaveMemberTopics();
         await _run('deleteToken', _deleteToken);
         await _run('clearCache', _clearCache);
         await _applyPublicTopic();
@@ -208,18 +291,21 @@ class SessionNotifications {
   Future<void> _signIn() async {
     _signedIn = true;
     await _run('unsubscribePublic', () => _unsubscribe(publicTopic));
-    await _run('subscribe', () => _subscribe(topic));
+    await _applyMemberTopics();
     await _run('registerDevice', () async {
       final token = await _readToken();
       if (token != null) await _registerDevice(token);
     });
   }
 
-  Future<void> _run(String step, Future<void> Function() action) async {
+  /// Whether [action] worked.
+  Future<bool> _run(String step, Future<void> Function() action) async {
     try {
       await action();
+      return true;
     } catch (e) {
       _logger.w('SessionNotifications: $step failed: $e');
+      return false;
     }
   }
 }

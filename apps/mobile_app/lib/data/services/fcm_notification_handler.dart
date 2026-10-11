@@ -199,13 +199,16 @@ class FcmNotificationHandler {
     }
   }
 
-  /// Subscribe to FCM topic for server-sent notifications (e.g. all app users).
+  /// Subscribe to FCM topic for server-sent notifications. Throws when it
+  /// fails: SessionNotifications keeps the phone on the topic of older apps
+  /// until its own topics are in place.
   static Future<void> subscribeToTopic(String topic) async {
     try {
       await FirebaseMessaging.instance.subscribeToTopic(topic);
       _logger.i('[FCM] Subscribed to topic: $topic');
     } catch (e) {
       _logger.e('[FCM] Subscribe to topic failed: $e');
+      rethrow;
     }
   }
 
@@ -215,6 +218,7 @@ class FcmNotificationHandler {
       _logger.i('[FCM] Unsubscribed from topic: $topic');
     } catch (e) {
       _logger.e('[FCM] Unsubscribe from topic failed: $e');
+      rethrow;
     }
   }
 

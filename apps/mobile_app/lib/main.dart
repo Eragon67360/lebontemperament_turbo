@@ -38,8 +38,8 @@ void main() async {
   // Initialize notification service (local + display for FCM)
   await NotificationService().initialize();
 
-  // Push notifications follow the session: subscribed to the topic and the
-  // phone registered for alerts only while a member is signed in;
+  // Push notifications follow the session: subscribed to the member topics
+  // and the phone registered for alerts only while a member is signed in;
   // unsubscribed, token deleted and cache cleared on sign-out (#358, #364).
   final auth = SupabaseConfig.client.auth;
   final sessionNotifications = SessionNotifications.production()
@@ -96,6 +96,13 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
       FcmNotificationHandler.setupForegroundListeners();
       // Delivery passes follow the FCM token when it rotates (#593).
       ref.read(deliveryServiceProvider).bindTokenRefreshes();
+    });
+
+    // Rehearsal pushes follow the member's ensembles (Profil › Mes ensembles).
+    ref.listenManual(myRehearsalGroupsProvider, (_, groups) {
+      DependencyInjection.getIt<SessionNotifications>().rehearsalGroupsChanged(
+        groups,
+      );
     });
 
     // Start real-time subscription for list updates (always, regardless of settings)
