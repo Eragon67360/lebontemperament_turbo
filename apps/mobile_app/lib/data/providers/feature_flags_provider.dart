@@ -15,14 +15,15 @@ final mobileFlagsProvider = FutureProvider<MobileFlags>((ref) async {
 });
 
 /// True when `mobile_min_version` is enabled and newer than the installed
-/// version: the home screen advises an update (never blocks).
+/// app (see [isInstalledBelow]): the home screen advises an update (never
+/// blocks).
 final updateAdvisedProvider = FutureProvider<bool>((ref) async {
   final flags = await ref.watch(mobileFlagsProvider.future);
   final minVersion = flags.minVersion;
   if (minVersion == null) return false;
   try {
     final info = await ref.watch(packageInfoProvider.future);
-    return isVersionBelow(info.version, minVersion);
+    return isInstalledBelow(info.version, info.buildNumber, minVersion);
   } catch (_) {
     return false;
   }

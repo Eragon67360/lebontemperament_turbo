@@ -51,6 +51,16 @@ submissions a day. A build that is never submitted stays at « Ready to
 Submit » and members never see it: that is why members get each upload in
 the same run.
 
+That is also why the iPhone app's version is **frozen** until the store
+launch (the owner's rule of 2026-10-11): `iosVersion` in the root
+`version.json` (`2.0.140`, the version Apple approved for « BT - Testeurs »)
+is passed to `flutter build ios --build-name`, so every upload is a new build
+of that version and members get it without waiting for a new full review.
+Android and the websites keep the normal version; the build number stays
+shared. The `beta` lane refuses to upload an archive whose version doesn't
+match. A major bump (`npm run bump-version -- major`, 3.0.0) removes the field
+and iOS takes the shared version again.
+
 Other choices under Actions → **iOS TestFlight** → Run workflow:
 
 - **Build and upload for internal testers only**: steps 1 to 3, members
@@ -86,7 +96,8 @@ Privacy (the data the app collects), Pricing and Availability, the content
 rights declaration, and the EU trader status (Business).
 
 The build number is the one in `pubspec.yaml` (`version: x.y.z+N`), the same
-as the Android build; TestFlight refuses a number it already has.
+as the Android build; TestFlight refuses a number it already has. The version
+is `pubspec.yaml`'s too, except while `version.json` has `iosVersion` (above).
 
 ## One-time setup (owner)
 
