@@ -1,18 +1,23 @@
 "use client";
 import CAMinutesList from "@/components/CAMinutesList";
 import CloudinaryImage from "@/components/CloudinaryImage";
-import { LinkButton } from "@/components/LinkButton";
 import { DocumentArchives } from "@/components/membres/DocumentArchives";
+import { DocumentCard } from "@/components/membres/DocumentCard";
+import { FilterButton } from "@/components/membres/FilterButton";
+import { MembersLinkButton } from "@/components/membres/MembersButton";
+import { PageHeader } from "@/components/membres/PageHeader";
 import { RoundedSize } from "@/utils/types";
-import { Link } from "@heroui/react";
-import { motion } from "motion/react";
 import { useState } from "react";
 import { IconType } from "react-icons";
-import { FaEdit, FaTools } from "react-icons/fa";
-import { FaHeadphones, FaRegFilePdf } from "react-icons/fa6";
+import { FaRegFilePdf } from "react-icons/fa6";
 import { FcVlc } from "react-icons/fc";
-import { IoDocumentText } from "react-icons/io5";
-import { MdAdminPanelSettings, MdOpenInNew } from "react-icons/md";
+import {
+  IoBulbOutline,
+  IoCreateOutline,
+  IoDocumentTextOutline,
+  IoHeadsetOutline,
+  IoOpenOutline,
+} from "react-icons/io5";
 
 interface SoftwareItem {
   name: string;
@@ -29,180 +34,89 @@ interface SoftwareCategory {
 }
 
 const ArchivesSection = () => (
-  <div className="space-y-4 lg:space-y-6">
-    {/* CA Section */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="group relative overflow-hidden rounded-xl"
+  <div className="flex flex-col gap-6">
+    <DocumentCard
+      id="archives-ca"
+      icon={IoOpenOutline}
+      title="Comptes-rendus du CA"
+      description="Les réunions du conseil d’administration."
     >
-      <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-        <div className="flex items-start gap-3 p-4 md:p-6">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            className="bg-primary/10 rounded-lg p-2"
-          >
-            <MdOpenInNew className="text-primary h-5 w-5" />
-          </motion.div>
-          <div className="flex-1">
-            <h3 className="from-primary via-foreground mb-1 bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent">
-              Comptes-rendus CA
-            </h3>
-            <p className="text-foreground/60 text-sm">
-              Archives des réunions du conseil d&apos;administration
-            </p>
-          </div>
-        </div>
-        <div className="px-4 pb-4 md:px-6 md:pb-6">
-          <CAMinutesList />
-        </div>
-      </div>
-    </motion.div>
+      <CAMinutesList />
+    </DocumentCard>
 
     <DocumentArchives />
   </div>
 );
 
 const RegulationsSection = () => (
-  <div className="space-y-6">
-    {/* Main Regulations Card */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="group relative overflow-hidden rounded-xl"
+  <div className="flex flex-col gap-6">
+    <DocumentCard
+      id="reglement"
+      icon={IoDocumentTextOutline}
+      title="Règlement intérieur"
+      description="Un extrait du règlement intérieur."
     >
-      <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-        <div className="flex flex-col items-start justify-between gap-3 p-4 md:p-6 lg:flex-row lg:items-center">
-          <div className="flex items-start gap-3">
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className="bg-primary/10 rounded-lg p-2"
-            >
-              <IoDocumentText className="text-primary h-5 w-5" />
-            </motion.div>
-            <div>
-              <h3 className="from-primary via-foreground mb-1 bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent">
-                Règlement intérieur
-              </h3>
-              <p className="text-foreground/60 text-sm">
-                Extrait du règlement intérieur
-              </p>
-            </div>
-          </div>
-          <LinkButton
-            variant="outline"
-            className="transition-transform hover:scale-105"
-            href="/pdf/reglement.pdf"
-            target="_blank"
-          >
-            <IoDocumentText />
-            Version complète
-          </LinkButton>
+      <div className="flex flex-col gap-4">
+        <div className="bg-members-band rounded-2xl p-5">
+          <h3 className="mb-1 text-lg font-extrabold">Répétitions</h3>
+          <p className="text-muted">
+            Le Bon Tempérament répète un dimanche par mois et part en tournée
+            dix jours en été. Les répétitions de pupitres, hommes et femmes, ont
+            lieu tous les 15 jours.
+          </p>
         </div>
-        <div className="space-y-3 px-4 pb-4 md:px-6 md:pb-6">
-          {/* Répétitions */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="bg-surface-secondary/50 rounded-lg p-4 backdrop-blur-sm"
-          >
-            <h4 className="text-foreground mb-2 font-semibold">Répétitions</h4>
-            <p className="text-foreground/60 text-sm italic">
-              Le Bon Tempérament répète un dimanche par mois et part en tournée
-              dix jours en été. Les répétitions de pupitres, hommes et femmes,
-              ont lieu tous les 15 jours.
-            </p>
-          </motion.div>
-
-          {/* Commission de solidarité */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="bg-surface-secondary/50 rounded-lg p-4 backdrop-blur-sm"
-          >
-            <h4 className="text-foreground mb-2 font-semibold">
-              Commission de solidarité
-            </h4>
-            <p className="text-foreground/60 text-sm italic">
-              Une commission de solidarité est mise en place. Le fonds de
-              solidarité est alimenté par des dons et par le produit de
-              certaines manifestations auxquelles l&apos;association
-              participe...
-            </p>
-          </motion.div>
+        <div className="bg-members-band rounded-2xl p-5">
+          <h3 className="mb-1 text-lg font-extrabold">
+            Commission de solidarité
+          </h3>
+          <p className="text-muted">
+            Une commission de solidarité est mise en place. Le fonds de
+            solidarité est alimenté par des dons et par le produit de certaines
+            manifestations auxquelles l&apos;association participe...
+          </p>
         </div>
       </div>
-    </motion.div>
+      <div>
+        <MembersLinkButton href="/pdf/reglement.pdf" external>
+          <IoDocumentTextOutline aria-hidden="true" className="h-5 w-5" />
+          Lire la version complète
+        </MembersLinkButton>
+      </div>
+    </DocumentCard>
 
-    {/* Additional Documents */}
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.3 }}
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <DocumentCard
+        id="charte"
+        icon={IoDocumentTextOutline}
+        title="Charte des séjours"
+        description="La charte complète des séjours du BT."
       >
-        <Link
-          href="/pdf/charte_BT.pdf"
-          target="_blank"
-          className="group relative block overflow-hidden rounded-xl"
-        >
-          <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-          <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 flex items-start gap-4 p-4 backdrop-blur-sm transition-all duration-300">
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className="bg-primary/10 rounded-lg p-2"
-            >
-              <IoDocumentText className="text-primary h-5 w-5" />
-            </motion.div>
-            <div>
-              <h4 className="text-foreground mb-1 font-semibold">
-                Charte des séjours
-              </h4>
-              <p className="text-foreground/60 text-sm">
-                Consultez la charte complète sur les séjours BT
-              </p>
-            </div>
-          </div>
-        </Link>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.3 }}
+        <div>
+          <MembersLinkButton
+            href="/pdf/charte_BT.pdf"
+            variant="outline"
+            external
+          >
+            Ouvrir la charte
+          </MembersLinkButton>
+        </div>
+      </DocumentCard>
+      <DocumentCard
+        id="statuts"
+        icon={IoDocumentTextOutline}
+        title="Statuts de l’association"
+        description="Les statuts complets du Bon Tempérament."
       >
-        <Link
-          href="/pdf/Statuts_Le_Bon_Tempérament.pdf"
-          target="_blank"
-          className="group relative block overflow-hidden rounded-xl"
-        >
-          <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-          <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 flex items-start gap-4 p-4 backdrop-blur-sm transition-all duration-300">
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className="bg-primary/10 rounded-lg p-2"
-            >
-              <IoDocumentText className="text-primary h-5 w-5" />
-            </motion.div>
-            <div>
-              <h4 className="text-foreground mb-1 font-semibold">
-                Statuts de l&apos;association
-              </h4>
-              <p className="text-foreground/60 text-sm">
-                Consultez les statuts complets du Bon Tempérament
-              </p>
-            </div>
-          </div>
-        </Link>
-      </motion.div>
+        <div>
+          <MembersLinkButton
+            href="/pdf/Statuts_Le_Bon_Tempérament.pdf"
+            variant="outline"
+            external
+          >
+            Ouvrir les statuts
+          </MembersLinkButton>
+        </div>
+      </DocumentCard>
     </div>
   </div>
 );
@@ -211,7 +125,7 @@ const SoftwareSection = () => {
   const softwareCategories: SoftwareCategory[] = [
     {
       title: "Écouter",
-      icon: FaHeadphones,
+      icon: IoHeadsetOutline,
       items: [
         {
           name: "VLC",
@@ -235,7 +149,7 @@ const SoftwareSection = () => {
     },
     {
       title: "Consulter",
-      icon: IoDocumentText,
+      icon: IoDocumentTextOutline,
       items: [
         {
           name: "OpenOffice",
@@ -253,7 +167,7 @@ const SoftwareSection = () => {
     },
     {
       title: "Modifier",
-      icon: FaEdit,
+      icon: IoCreateOutline,
       items: [
         {
           name: "Musescore",
@@ -272,170 +186,91 @@ const SoftwareSection = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      {softwareCategories.map((category, categoryIndex) => (
-        <motion.div
+    <div className="flex flex-col gap-6">
+      {softwareCategories.map((category) => (
+        <DocumentCard
           key={category.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 * categoryIndex }}
-          className="group relative overflow-hidden rounded-xl"
+          id={`logiciels-${category.title}`}
+          icon={category.icon}
+          title={category.title}
         >
-          <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-          <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-            <div className="flex items-center gap-3 p-4 md:p-6">
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="bg-primary/10 rounded-lg p-2"
-              >
-                <category.icon className="text-primary h-5 w-5" />
-              </motion.div>
-              <h3 className="from-primary via-foreground bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent">
-                {category.title}
-              </h3>
-            </div>
-            <div className="px-4 pb-4 md:px-6 md:pb-6">
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-                {category.items.map((item, itemIndex) => (
-                  <motion.div
-                    key={item.name}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.3, delay: 0.05 * itemIndex }}
-                  >
-                    <Link
-                      href={item.link}
-                      target="_blank"
-                      className="group/item relative block overflow-hidden rounded-lg"
-                    >
-                      <div className="from-primary/10 absolute inset-0 z-0 bg-gradient-to-br to-purple-500/10 opacity-0 blur-md transition-opacity duration-300 group-hover/item:opacity-100" />
-                      <div className="bg-surface-secondary/80 group-hover/item:bg-surface-secondary/80 relative z-10 flex flex-col items-center p-4 backdrop-blur-sm transition-all duration-300">
-                        {item.imageType === "icon" && item.icon ? (
-                          <item.icon className="mb-3 h-12 w-12 transition-transform group-hover/item:scale-110" />
-                        ) : (
-                          <CloudinaryImage
-                            src={item.image!}
-                            alt={`logo ${item.name}`}
-                            width={48}
-                            height={48}
-                            rounded={RoundedSize.NONE}
-                            className="mb-3 transition-transform group-hover/item:scale-110"
-                          />
-                        )}
-                        <span className="text-foreground text-center text-sm font-medium">
-                          {item.name}
-                        </span>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {category.items.map((item) => (
+              <li key={item.name} className="flex">
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border-members-line bg-members-band hover:border-primary hover:bg-primary/5 text-foreground flex min-h-28 w-full flex-col items-center justify-center gap-3 rounded-2xl border p-4 text-center font-bold no-underline transition-colors"
+                >
+                  {item.imageType === "icon" && item.icon ? (
+                    <item.icon aria-hidden="true" className="h-12 w-12" />
+                  ) : (
+                    <CloudinaryImage
+                      src={item.image!}
+                      alt=""
+                      width={48}
+                      height={48}
+                      rounded={RoundedSize.NONE}
+                    />
+                  )}
+                  <span>
+                    {item.name}
+                    <span className="sr-only"> (nouvel onglet)</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </DocumentCard>
       ))}
 
-      {/* Tips Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="group relative overflow-hidden rounded-xl"
-      >
-        <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-          <div className="flex items-center gap-3 p-4 md:p-6">
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className="bg-primary/10 rounded-lg p-2"
-            >
-              <FaTools className="text-primary h-5 w-5" />
-            </motion.div>
-            <h3 className="from-primary via-foreground bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent">
-              Trucs et astuces
-            </h3>
-          </div>
-          <div className="px-4 pb-4 md:px-6 md:pb-6">
-            <p className="text-foreground/60 text-sm">
-              Windows Media Player permet de modifier la vitesse de lecture
-              d&apos;un enregistrement sans modifier la tessiture...
-            </p>
-          </div>
-        </div>
-      </motion.div>
+      <DocumentCard id="astuces" icon={IoBulbOutline} title="Trucs et astuces">
+        <p className="text-muted">
+          Windows Media Player permet de modifier la vitesse de lecture
+          d&apos;un enregistrement sans modifier la tessiture...
+        </p>
+      </DocumentCard>
     </div>
   );
 };
+
+const SECTIONS = [
+  { key: "archives", label: "Archives" },
+  { key: "reglement", label: "Règlement" },
+  { key: "logiciels", label: "Logiciels" },
+] as const;
 
 const Administration = () => {
   const [selected, setSelected] = useState<string>("archives");
 
   return (
-    <div className="container mx-auto w-full px-2 py-6 md:px-4 md:py-8 lg:px-6 lg:py-12">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-6 flex items-center gap-4 md:mb-8"
-      >
-        <motion.div
-          whileHover={{ scale: 1.1, rotate: 360 }}
-          transition={{ duration: 0.6 }}
-          className="bg-primary/10 rounded-xl p-3"
-        >
-          <MdAdminPanelSettings className="text-primary h-7 w-7" />
-        </motion.div>
-        <div>
-          <h1 className="from-primary via-foreground bg-gradient-to-r to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl lg:text-4xl">
-            Administration
-          </h1>
-          <p className="text-foreground/60 mt-1 text-sm md:text-base">
-            Documents et ressources administratives
-          </p>
-        </div>
-      </motion.div>
+    <div className="flex flex-col gap-7">
+      <PageHeader
+        current="Documents de l’association"
+        title="Documents de l’association"
+        intro="Comptes-rendus du CA, règlement, gazettes, archives et logiciels utiles."
+      />
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="bg-surface-secondary/50 rounded-xl p-1 backdrop-blur-sm md:p-2"
-      >
-        <div className="mb-4 flex gap-2 overflow-x-auto md:mb-6">
-          {[
-            { key: "archives", label: "Archives" },
-            { key: "reglement", label: "Règlement" },
-            { key: "logiciels", label: "Logiciels" },
-          ].map((tab) => (
-            <motion.button
+      <fieldset className="m-0 flex flex-col gap-2.5 border-0 p-0">
+        <legend className="mb-2.5 p-0 font-bold">Choisir une rubrique</legend>
+        <div className="flex flex-wrap gap-2.5">
+          {SECTIONS.map((tab) => (
+            <FilterButton
               key={tab.key}
-              onClick={() => setSelected(tab.key)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-300 md:px-6 md:py-3 md:text-base ${
-                selected === tab.key
-                  ? "from-primary bg-gradient-to-r to-purple-500 text-white shadow-lg"
-                  : "bg-surface-secondary/80 text-foreground hover:bg-surface-tertiary/80 backdrop-blur-sm"
-              }`}
-            >
-              {tab.label}
-            </motion.button>
+              label={tab.label}
+              pressed={selected === tab.key}
+              onPress={() => setSelected(tab.key)}
+            />
           ))}
         </div>
+      </fieldset>
 
-        <motion.div
-          key={selected}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.4 }}
-        >
-          {selected === "archives" && <ArchivesSection />}
-          {selected === "reglement" && <RegulationsSection />}
-          {selected === "logiciels" && <SoftwareSection />}
-        </motion.div>
-      </motion.div>
+      <div>
+        {selected === "archives" && <ArchivesSection />}
+        {selected === "reglement" && <RegulationsSection />}
+        {selected === "logiciels" && <SoftwareSection />}
+      </div>
     </div>
   );
 };

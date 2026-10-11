@@ -1,11 +1,12 @@
 "use client";
 
 import type { ListedCollection } from "@/lib/siteDocuments";
-import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FaRegFilePdf } from "react-icons/fa6";
-import { MdOpenInNew } from "react-icons/md";
+import { IoDocumentTextOutline } from "react-icons/io5";
+import { DocumentCard } from "./DocumentCard";
+import { membersButtonClass } from "./MembersButton";
+import { MembersCard } from "./MembersCard";
 
 type State =
   | { status: "loading" }
@@ -16,11 +17,7 @@ type State =
  * The members area's archives after the CA minutes: one card per collection
  * of « Documents de l'association » (managed in the admin), newest first.
  */
-export function DocumentArchives({
-  firstDelay = 0.2,
-}: {
-  firstDelay?: number;
-}) {
+export function DocumentArchives() {
   const [state, setState] = useState<State>({ status: "loading" });
 
   useEffect(() => {
@@ -44,73 +41,49 @@ export function DocumentArchives({
 
   if (state.status !== "ready") {
     return (
-      <div className="bg-surface-secondary/80 rounded-xl p-4 md:p-6">
-        <p className="text-muted text-sm" role="status">
+      <MembersCard className="p-5 sm:p-7">
+        <p role="status">
           {state.status === "loading"
             ? "Chargement des archives…"
-            : "Les archives n'ont pas pu être chargées. Réessayez dans un instant."}
+            : "Les archives n’ont pas pu être chargées. Réessaie dans un instant."}
         </p>
-      </div>
+      </MembersCard>
     );
   }
 
   return (
     <>
-      {state.collections.map((collection, index) => (
-        <motion.section
+      {state.collections.map((collection) => (
+        <DocumentCard
           key={collection.slug}
-          aria-labelledby={`archives-${collection.slug}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: firstDelay + index * 0.1 }}
-          className="group relative overflow-hidden rounded-xl"
+          id={`archives-${collection.slug}`}
+          icon={IoDocumentTextOutline}
+          title={collection.label}
+          description={collection.description || undefined}
         >
-          <div className="from-primary/20 absolute inset-0 z-0 bg-gradient-to-r to-purple-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-          <div className="bg-surface-secondary/80 group-hover:bg-surface-tertiary/80 relative z-10 backdrop-blur-sm transition-all duration-300">
-            <div className="flex items-start gap-3 p-4 md:p-6">
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="bg-primary/10 rounded-lg p-2"
-              >
-                <MdOpenInNew className="text-primary h-5 w-5" />
-              </motion.div>
-              <div className="flex-1">
-                <h3
-                  id={`archives-${collection.slug}`}
-                  className="from-primary via-foreground mb-1 bg-gradient-to-r to-purple-500 bg-clip-text text-lg font-bold text-transparent"
+          <ul className="flex flex-wrap gap-3">
+            {collection.documents.map((document) => (
+              <li key={document.id}>
+                <Link
+                  href={document.href}
+                  target="_blank"
+                  rel="noopener"
+                  prefetch={false}
+                  className={membersButtonClass("solid", "text-base", "md")}
                 >
-                  {collection.label}
-                </h3>
-                {collection.description && (
-                  <p className="text-foreground/60 text-sm">
-                    {collection.description}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="px-4 pb-4 md:px-6 md:pb-6">
-              <ul className="mt-2 flex flex-wrap gap-6">
-                {collection.documents.map((document) => (
-                  <li key={document.id}>
-                    <Link
-                      href={document.href}
-                      target="_blank"
-                      rel="noopener"
-                      prefetch={false}
-                      className="bg-primary-solid hover:bg-primary-solid-hover flex items-center gap-4 rounded-lg p-2 text-xs text-white md:text-sm lg:p-4"
-                    >
-                      <FaRegFilePdf aria-hidden />
-                      <span>
-                        {document.title}
-                        <span className="sr-only"> (PDF, nouvel onglet)</span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </motion.section>
+                  <IoDocumentTextOutline
+                    aria-hidden="true"
+                    className="h-5 w-5"
+                  />
+                  <span>
+                    {document.title}
+                    <span className="sr-only"> (PDF, nouvel onglet)</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </DocumentCard>
       ))}
     </>
   );
