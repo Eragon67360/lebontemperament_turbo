@@ -4,14 +4,15 @@ This Edge Function checks production every 15 minutes and pushes what goes wrong
 
 ## What it checks
 
-| Alert            | Fires when                                                                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `rehearsal_sync` | the latest cron run in `rehearsal_sync_logs` failed or was partial, is stuck in `running` for 30 min, or is over 14 h old (it runs at 07:00 and 19:00 Paris) |
-| `drive_sync`     | the latest cron run in `drive_sync_runs` failed, is stuck for 30 min, or is over 26 h old (it runs nightly at 03:30 Paris)                                   |
-| `cron_jobs`      | a pg_cron job failed in the last 30 min (`cron.job_run_details`)                                                                                             |
-| `function_calls` | 2 or more pg_net calls (cron jobs and triggers calling edge functions) answered 4xx/5xx or timed out in the last 30 min                                      |
-| `website`        | `https://www.lebontemperament.com/` answers 4xx/5xx or nothing, twice 5 s apart                                                                              |
-| `admin`          | `https://admin.lebontemperament.com/auth/login`, same rule                                                                                                   |
+| Alert            | Fires when                                                                                                                                                                                                                                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rehearsal_sync` | the latest cron run in `rehearsal_sync_logs` failed or was partial, is stuck in `running` for 30 min, or is over 14 h old (it runs at 07:00 and 19:00 Paris)                                                                                                                                       |
+| `drive_sync`     | the latest cron run in `drive_sync_runs` failed, is stuck for 30 min, or is over 26 h old (it runs nightly at 03:30 Paris)                                                                                                                                                                         |
+| `cron_jobs`      | a pg_cron job failed in the last 30 min (`cron.job_run_details`)                                                                                                                                                                                                                                   |
+| `function_calls` | 2 or more pg_net calls (cron jobs and triggers calling edge functions) answered 4xx/5xx or timed out in the last 30 min                                                                                                                                                                            |
+| `website`        | `https://www.lebontemperament.com/` answers 4xx/5xx or nothing, twice 5 s apart                                                                                                                                                                                                                    |
+| `admin`          | `https://admin.lebontemperament.com/auth/login`, same rule                                                                                                                                                                                                                                         |
+| `mailing_list`   | a mailing list compared with the member roster (`mailing_list_comparisons`, enabled in admin › Liste de diffusion) has people to add or remove, its latest comparison failed, or the weekly comparison (`.github/workflows/mailing-list-check.yml`) is over 9 days old; reminded weekly, not daily |
 
 Rules and thresholds live in `checks.ts`, covered by `checks_test.ts`. The database side is read in one call to `ops_alert_facts()` (service_role only). The site URLs can be changed with the function secrets `ALERT_WEBSITE_URL` and `ALERT_ADMIN_URL` (for a staging project).
 

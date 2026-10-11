@@ -2,6 +2,7 @@
 "use client";
 
 import { PageShell } from "@/components/layouts/PageShell";
+import { RosterComparisonSection } from "@/components/mailing-list/RosterComparisonSection";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -23,6 +24,7 @@ import {
   useGoogleGroupMembers,
   useGoogleGroupsList,
 } from "@/hooks/useGoogleGroups";
+import { mailingListComparisonKey } from "@/hooks/useMailingListComparison";
 import {
   addressCountLabel,
   DEFAULT_GROUP_EMAIL,
@@ -31,6 +33,7 @@ import {
   memberEmails,
   readAtLabel,
 } from "@/utils/google-groups/members";
+import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Mail, RefreshCw, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -55,9 +58,14 @@ export default function GoogleGroupsPage() {
     refetch: refetchMembers,
   } = useGoogleGroupMembers(selectedGroupEmail);
 
+  const queryClient = useQueryClient();
+
   const handleRefresh = () => {
     refetchMembers();
     refetchGroups();
+    queryClient.invalidateQueries({
+      queryKey: mailingListComparisonKey(selectedGroupEmail),
+    });
     toast.success("Actualisation en cours…");
   };
 
@@ -167,6 +175,8 @@ export default function GoogleGroupsPage() {
             </ProvenanceNote>
           </Card>
         )}
+
+        <RosterComparisonSection groupEmail={selectedGroupEmail} />
 
         <section aria-labelledby="members-heading" className="space-y-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">

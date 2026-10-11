@@ -1547,6 +1547,74 @@ export type Database = {
         };
         Relationships: [];
       };
+      mailing_list_comparisons: {
+        Row: {
+          checked_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          cron_checked_at: string | null;
+          error: string | null;
+          extra_count: number;
+          group_email: string;
+          missing_count: number;
+          status: string | null;
+        };
+        Insert: {
+          checked_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          cron_checked_at?: string | null;
+          error?: string | null;
+          extra_count?: number;
+          group_email: string;
+          missing_count?: number;
+          status?: string | null;
+        };
+        Update: {
+          checked_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          cron_checked_at?: string | null;
+          error?: string | null;
+          extra_count?: number;
+          group_email?: string;
+          missing_count?: number;
+          status?: string | null;
+        };
+        Relationships: [];
+      };
+      mailing_list_exceptions: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          email: string;
+          group_email: string;
+          note: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          email: string;
+          group_email: string;
+          note?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          email?: string;
+          group_email?: string;
+          note?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mailing_list_exceptions_group_email_fkey";
+            columns: ["group_email"];
+            isOneToOne: false;
+            referencedRelation: "mailing_list_comparisons";
+            referencedColumns: ["group_email"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           bug_report_id: string | null;

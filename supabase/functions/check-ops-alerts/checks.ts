@@ -23,6 +23,21 @@ export interface DbFacts {
   /** pg_net calls (edge functions called by cron jobs and triggers) that
    * answered 4xx/5xx or timed out inside the window. */
   http_failures: { count: number; codes: string[] };
+  /** Mailing lists compared with the member roster (`mailing_list_comparisons`,
+   * read by index.ts, not by `ops_alert_facts()`). Absent or empty when no
+   * list is compared, or before the migration. */
+  mailing_lists?: MailingListFact[];
+}
+
+/** Latest comparison of one mailing list with the roster (counts only). */
+export interface MailingListFact {
+  group_email: string;
+  created_at: string;
+  cron_checked_at: string | null;
+  status: "ok" | "failed" | null;
+  missing_count: number;
+  extra_count: number;
+  error: string | null;
 }
 
 /** Result of one HTTP check of a site (after its retry). */
@@ -39,7 +54,8 @@ export type AlertKey =
   | "cron_jobs"
   | "function_calls"
   | "website"
-  | "admin";
+  | "admin"
+  | "mailing_list";
 
 export interface Finding {
   key: AlertKey;
@@ -78,6 +94,13 @@ export const STUCK_AFTER = 30 * MINUTE;
 export const HTTP_FAILURE_THRESHOLD = 2;
 /** A firing alert is pushed again once a day until it resolves. */
 export const REMIND_AFTER = 24 * HOUR;
+/** Except a mailing list to update or a failed weekly comparison: once a
+ * week, like the comparison itself. */
+const REMIND_AFTER_BY_KEY: Partial<Record<AlertKey, number>> = {
+  mailing_list: 7 * 24 * HOUR,
+};
+/** The weekly comparison runs on Mondays, with Tuesday as a fallback. */
+export const MAILING_LIST_MAX_AGE = 9 * 24 * HOUR;
 
 const parisTime = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
@@ -218,8 +241,66 @@ export function evaluate(
 
   findings.push(siteFinding("website", "Site web", sites.website));
   findings.push(siteFinding("admin", "Admin", sites.admin));
+  findings.push(mailingListFinding(facts.mailing_lists ?? [], now));
 
   return findings;
+}
+
+/**
+ * One finding for every compared list: a failed comparison first, then a
+ * weekly comparison that stopped running, then lists with differences.
+ */
+export function mailingListFinding(
+  lists: MailingListFact[],
+  now: Date,
+): Finding {
+  const key = "mailing_list";
+  const failed = lists.filter((l) => l.status === "failed");
+  if (failed.length > 0) {
+    return {
+      key,
+      firing: true,
+      title: "Comparaison des listes de diffusion en échec",
+      body: failed
+        .map((l) => `${l.group_email} : ${l.error ?? "erreur inconnue"}`)
+        .join(" ; "),
+    };
+  }
+
+  const stale = lists.filter(
+    (l) =>
+      now.getTime() - new Date(l.cron_checked_at ?? l.created_at).getTime() >
+      MAILING_LIST_MAX_AGE,
+  );
+  if (stale.length > 0) {
+    return {
+      key,
+      firing: true,
+      title: "Comparaison des listes de diffusion en retard",
+      body: `La comparaison hebdomadaire n'a pas tourné depuis plus de 9 jours (${stale.map((l) => l.group_email).join(", ")}). Voir le workflow « Mailing list check » sur GitHub.`,
+    };
+  }
+
+  const drifted = lists.filter((l) => l.missing_count + l.extra_count > 0);
+  if (drifted.length > 0) {
+    const lines = drifted.map((l) => {
+      const parts = [
+        l.missing_count > 0 &&
+          plural(l.missing_count, "membre à ajouter", "membres à ajouter"),
+        l.extra_count > 0 &&
+          plural(l.extra_count, "adresse à retirer", "adresses à retirer"),
+      ].filter(Boolean);
+      return `${l.group_email} : ${parts.join(", ")}`;
+    });
+    return {
+      key,
+      firing: true,
+      title: "Liste de diffusion à mettre à jour",
+      body: `${lines.join(" ; ")}. Détail dans l'admin, page Liste de diffusion.`,
+    };
+  }
+
+  return ok(key);
 }
 
 /** 2xx and 3xx count as up (the admin redirects to its login page). */
@@ -252,7 +333,8 @@ export interface Decision {
 /**
  * Decides what to push and what to store for one finding.
  *
- * - A new problem is pushed once; while it lasts, again once a day.
+ * - A new problem is pushed once; while it lasts, again once a day (once a
+ *   week for a mailing list).
  * - Its end is pushed once, only if its start was (a problem that came and
  *   went while no phone was registered stays silent).
  * - A push that reached no phone leaves `last_notified_at` unset (the caller
@@ -280,7 +362,8 @@ export function decide(
     };
     if (next.last_notified_at === null) return { notify: "fire", next };
     const since = now.getTime() - new Date(next.last_notified_at).getTime();
-    return { notify: since >= REMIND_AFTER ? "remind" : null, next };
+    const remindAfter = REMIND_AFTER_BY_KEY[finding.key] ?? REMIND_AFTER;
+    return { notify: since >= remindAfter ? "remind" : null, next };
   }
 
   if (prev?.status === "firing") {
