@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 import '../../../../data/models/notification_settings.dart';
+import '../../../../data/models/rehearsal.dart';
+import '../../../../data/providers/my_groups_provider.dart';
 import '../../../../data/services/notification_service.dart';
 
 class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
@@ -13,19 +15,22 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
 
   static const String _settingsKey = 'notification_settings';
 
-  Future<void> _loadSettings() async {
+  /// The settings saved on this phone, or the defaults.
+  static Future<NotificationSettings> readStored() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final settingsJson = prefs.getString(_settingsKey);
-
-      if (settingsJson != null) {
-        final settingsMap = json.decode(settingsJson) as Map<String, dynamic>;
-        state = NotificationSettings.fromJson(settingsMap);
-      }
+      if (settingsJson == null) return const NotificationSettings();
+      return NotificationSettings.fromJson(
+        json.decode(settingsJson) as Map<String, dynamic>,
+      );
     } catch (e) {
-      // Use default settings if loading fails
-      state = const NotificationSettings();
+      return const NotificationSettings();
     }
+  }
+
+  Future<void> _loadSettings() async {
+    state = await readStored();
   }
 
   Future<void> _saveSettings() async {
@@ -55,6 +60,13 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
 
   Future<void> toggleRehearsalsEnabled() async {
     state = state.copyWith(rehearsalsEnabled: !state.rehearsalsEnabled);
+    await _saveSettings();
+  }
+
+  Future<void> toggleRehearsalChangesEnabled() async {
+    state = state.copyWith(
+      rehearsalChangesEnabled: !state.rehearsalChangesEnabled,
+    );
     await _saveSettings();
   }
 
@@ -101,6 +113,24 @@ final notificationSettingsProvider =
     StateNotifierProvider<NotificationSettingsNotifier, NotificationSettings>(
       (ref) => NotificationSettingsNotifier(),
     );
+
+/// The rehearsal groups whose pushes this phone listens to: those of the
+/// member's ensembles, none when « Changements de l'agenda › Répétitions » is off.
+final rehearsalPushGroupsProvider = Provider<Set<GroupType>>((ref) {
+  final wanted = ref.watch(
+    notificationSettingsProvider.select((s) => s.rehearsalChangesEnabled),
+  );
+  return wanted ? ref.watch(myRehearsalGroupsProvider) : const {};
+});
+
+/// The same, read from the phone's preferences before Riverpod runs.
+Future<Set<GroupType>> readRehearsalPushGroups(
+  Future<Set<GroupType>> Function() myGroups,
+) async {
+  final settings = await NotificationSettingsNotifier.readStored();
+  if (!settings.rehearsalChangesEnabled) return const {};
+  return groupsConcerning(await myGroups());
+}
 
 /// Remembers that the member answered (or skipped) the explanatory
 /// notification screen, so a signed-out cold start goes straight to the

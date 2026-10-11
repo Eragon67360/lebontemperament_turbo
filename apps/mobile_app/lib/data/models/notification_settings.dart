@@ -27,6 +27,9 @@ abstract class NotificationSettings with _$NotificationSettings {
     @Default(true) bool concertsEnabled,
     @Default(true) bool rehearsalsEnabled,
     @Default(false) bool realtimeEnabled,
+    // The server's pushes for the rehearsals of the member's ensembles
+    // (added, changed, cancelled), apart from the reminders.
+    @Default(true) bool rehearsalChangesEnabled,
   }) = _NotificationSettings;
 
   factory NotificationSettings.fromJson(Map<String, dynamic> json) =>
