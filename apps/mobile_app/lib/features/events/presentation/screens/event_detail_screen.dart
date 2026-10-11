@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../data/models/event.dart';
+import '../../../../data/models/event_document.dart';
 import '../../../../data/providers/data_providers.dart';
+import '../../../../data/services/events_service.dart';
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
 import '../../../../core/utils/text_scale.dart';
 
@@ -70,6 +73,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       FadeInUp(delay: 100, child: _EventInfoCard(event: event)),
+                      // Right under the key facts: a member opening the
+                      // event finds the « bulletin » without scrolling.
+                      if (event.documents.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        FadeInUp(
+                          delay: 150,
+                          child: EventDocumentsSection(
+                            documents: event.documents,
+                          ),
+                        ),
+                      ],
                       if (event.description != null &&
                           event.description!.isNotEmpty) ...[
                         const SizedBox(height: 32),
@@ -394,6 +408,158 @@ class _InfoRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// « Documents »: the files attached to the event, one tap each.
+@visibleForTesting
+class EventDocumentsSection extends StatelessWidget {
+  final List<EventDocument> documents;
+
+  /// Where to open a file; [eventDocumentUrl] outside tests.
+  final String Function(EventDocument document) urlOf;
+
+  const EventDocumentsSection({
+    super.key,
+    required this.documents,
+    this.urlOf = eventDocumentUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(header: true, child: const _SectionTitle(title: 'Documents')),
+        const SizedBox(height: 12),
+        for (final (index, document) in documents.indexed) ...[
+          if (index > 0) const SizedBox(height: 10),
+          _DocumentTile(document: document, urlOf: urlOf),
+        ],
+      ],
+    );
+  }
+}
+
+class _DocumentTile extends StatelessWidget {
+  final EventDocument document;
+  final String Function(EventDocument document) urlOf;
+
+  const _DocumentTile({required this.document, required this.urlOf});
+
+  Future<void> _open(BuildContext context) async {
+    HapticFeedback.lightImpact();
+    var opened = false;
+    try {
+      opened = await launchUrl(
+        Uri.parse(urlOf(document)),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {}
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible d’ouvrir le document.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isPdf = document.kind == EventDocumentKind.pdf;
+    final action = isPdf ? 'ouvrir' : 'télécharger';
+
+    return Semantics(
+      button: true,
+      label: '${document.label}, ${document.details}, $action',
+      excludeSemantics: true,
+      child: Material(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () => _open(context),
+          borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: scheme.outline.withValues(alpha: 0.2)),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: scheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _documentIcon(document.kind),
+                        color: scheme.onPrimaryContainer,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            document.label,
+                            style: AppFonts.sans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurface,
+                              height: 1.3,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            document.details,
+                            style: AppFonts.sans(
+                              fontSize: 13,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      isPdf
+                          ? Icons.open_in_new_rounded
+                          : Icons.download_rounded,
+                      color: scheme.primary,
+                      size: 22,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+IconData _documentIcon(EventDocumentKind kind) {
+  switch (kind) {
+    case EventDocumentKind.pdf:
+      return Icons.picture_as_pdf_outlined;
+    case EventDocumentKind.word:
+      return Icons.description_outlined;
+    case EventDocumentKind.excel:
+      return Icons.table_chart_outlined;
   }
 }
 

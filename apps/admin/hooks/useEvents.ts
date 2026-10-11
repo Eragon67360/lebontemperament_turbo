@@ -83,6 +83,8 @@ export function useDeleteEvent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
+      // The event's files went with it.
+      queryClient.invalidateQueries({ queryKey: ["event-documents"] });
     },
   });
 }

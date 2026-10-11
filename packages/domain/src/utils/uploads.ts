@@ -27,6 +27,11 @@ export const WORD_TYPES: TypeMap = {
     "docx",
 };
 
+export const EXCEL_TYPES: TypeMap = {
+  "application/vnd.ms-excel": "xls",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+};
+
 export type UploadRule = { types: TypeMap; maxBytes: number };
 
 export function normalizeMimeType(type: string): string {
@@ -73,7 +78,23 @@ const SIGNATURES: Record<string, (bytes: Uint8Array) => boolean> = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": (
     b,
   ) => startsWithBytes(b, [0x50, 0x4b, 0x03, 0x04]),
+  "application/vnd.ms-excel": (b) =>
+    startsWithBytes(b, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": (b) =>
+    startsWithBytes(b, [0x50, 0x4b, 0x03, 0x04]),
 };
+
+/**
+ * True when `bytes` (the file's first kilobyte) start like `mimeType`, or
+ * when that type has no known signature.
+ */
+export function contentMatchesType(
+  mimeType: string,
+  bytes: Uint8Array,
+): boolean {
+  const matches = SIGNATURES[normalizeMimeType(mimeType)];
+  return !matches || matches(bytes.subarray(0, 1100));
+}
 
 export type UploadCheck =
   | { ok: true; mimeType: string; extension: string }
@@ -104,8 +125,7 @@ export function validateUpload(
   if (!extension) {
     return { ok: false, error: "Type de fichier non autorisé" };
   }
-  const matches = SIGNATURES[mimeType];
-  if (matches && !matches(bytes.subarray(0, 1100))) {
+  if (!contentMatchesType(mimeType, bytes)) {
     return {
       ok: false,
       error: "Le contenu du fichier ne correspond pas à son type",
