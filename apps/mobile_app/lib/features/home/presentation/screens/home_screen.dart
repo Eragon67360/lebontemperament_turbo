@@ -14,6 +14,7 @@ import 'package:lebontemperament/data/providers/connectivity_provider.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
 import 'package:lebontemperament/data/providers/feature_flags_provider.dart';
 import 'package:lebontemperament/data/providers/my_groups_provider.dart';
+import 'package:lebontemperament/data/services/feature_flags_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -185,8 +186,9 @@ class _NoticesSection extends ConsumerWidget {
           title: 'Mise à jour recommandée',
           message:
               'Cette version de l\'application n\'est plus à jour '
-              '(minimum : ${flags?.minVersion}). Mettez-la à jour depuis '
-              'le store pour éviter les dysfonctionnements.',
+              '(minimum : ${displayVersion(flags?.minVersion ?? '')}). '
+              'Mettez-la à jour depuis le store pour éviter les '
+              'dysfonctionnements.',
         ),
       if (dataOffline) OfflineDataBanner(isOnline: isOnline),
     ];
