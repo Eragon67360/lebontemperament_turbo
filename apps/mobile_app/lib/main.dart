@@ -17,6 +17,7 @@ import 'data/providers/my_groups_provider.dart';
 import 'data/providers/realtime_notifications_provider.dart';
 import 'features/delivery/presentation/providers/delivery_providers.dart';
 import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'features/notifications/presentation/providers/notification_settings_provider.dart';
 import 'features/onboarding/data/welcome_prefs.dart';
 import 'firebase_options.dart';
 
@@ -98,8 +99,9 @@ class _LeBonTemperamentAppState extends ConsumerState<LeBonTemperamentApp>
       ref.read(deliveryServiceProvider).bindTokenRefreshes();
     });
 
-    // Rehearsal pushes follow the member's ensembles (Profil › Mes ensembles).
-    ref.listenManual(myRehearsalGroupsProvider, (_, groups) {
+    // Rehearsal pushes follow the member's ensembles (Profil › Mes ensembles)
+    // and the « Changements de l'agenda › Répétitions » switch.
+    ref.listenManual(rehearsalPushGroupsProvider, (_, groups) {
       DependencyInjection.getIt<SessionNotifications>().rehearsalGroupsChanged(
         groups,
       );

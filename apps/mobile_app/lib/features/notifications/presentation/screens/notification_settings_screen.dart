@@ -97,18 +97,57 @@ class _NotificationSettingsScreenState
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // --- 1. Master Switch ---
-                FadeInUp(
+                // --- 1. Pushes when the agenda changes ---
+                // (New concerts and events are always announced: they follow
+                // the system permission alone.)
+                const FadeInUp(
                   delay: 100,
+                  child: _SectionTitle(title: 'Changements de l\'agenda'),
+                ),
+                const SizedBox(height: 12),
+                FadeInUp(
+                  delay: 150,
+                  child: _SettingsGroup(
+                    children: [
+                      _SettingsSwitchTile(
+                        icon: Icons.edit_calendar_outlined,
+                        title: 'Répétitions',
+                        subtitle:
+                            'Une notification quand une répétition de vos '
+                            'ensembles est ajoutée, déplacée ou annulée',
+                        value: settings.rehearsalChangesEnabled,
+                        onChanged: (_) => ref
+                            .read(notificationSettingsProvider.notifier)
+                            .toggleRehearsalChangesEnabled(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const FadeInUp(
+                  delay: 150,
+                  child: _Hint(
+                    'Les nouveaux concerts et événements vous sont toujours '
+                    'annoncés.',
+                  ),
+                ),
+
+                // --- 2. Reminders: master switch ---
+                const SizedBox(height: 32),
+                const FadeInUp(
+                  delay: 200,
+                  child: _SectionTitle(title: 'Rappels'),
+                ),
+                const SizedBox(height: 12),
+                FadeInUp(
+                  delay: 200,
                   child: _MainToggleCard(
                     isEnabled: settings.enabled,
                     onChanged: _handleMasterToggle,
                   ),
                 ),
 
-                // --- 2. Animated Section for detailed settings ---
-                // (The server pushes for new events are not a setting: they
-                // follow the system permission alone.)
+                // --- 3. Animated section for the reminder details ---
                 AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
                   opacity: settings.enabled ? 1.0 : 0.0,
@@ -119,11 +158,6 @@ class _NotificationSettingsScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 32),
-                          const FadeInUp(
-                            delay: 200,
-                            child: _SectionTitle(title: 'Rappels programmés'),
-                          ),
                           const SizedBox(height: 12),
                           FadeInUp(
                             delay: 300,
@@ -132,8 +166,7 @@ class _NotificationSettingsScreenState
                                 _SettingsSwitchTile(
                                   icon: Icons.music_note_outlined,
                                   title: 'Concerts',
-                                  subtitle:
-                                      'Recevoir des rappels pour les concerts',
+                                  subtitle: 'Un rappel avant chaque concert',
                                   value: settings.concertsEnabled,
                                   onChanged: (_) => ref
                                       .read(
@@ -145,7 +178,8 @@ class _NotificationSettingsScreenState
                                   icon: Icons.repeat_rounded,
                                   title: 'Répétitions',
                                   subtitle:
-                                      'Recevoir des rappels pour les répétitions',
+                                      'Un rappel avant chaque répétition de '
+                                      'vos ensembles',
                                   value: settings.rehearsalsEnabled,
                                   onChanged: (_) => ref
                                       .read(
@@ -160,6 +194,14 @@ class _NotificationSettingsScreenState
                           const FadeInUp(
                             delay: 400,
                             child: _SectionTitle(title: 'Moments des rappels'),
+                          ),
+                          const SizedBox(height: 4),
+                          const FadeInUp(
+                            delay: 400,
+                            child: _Hint(
+                              'Cochez quand recevoir les rappels, un ou '
+                              'plusieurs moments.',
+                            ),
                           ),
                           const SizedBox(height: 12),
                           FadeInUp(
@@ -231,7 +273,7 @@ class _MainToggleCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Activer les notifications',
+                        'Activer les rappels',
                         style: AppFonts.sans(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -241,7 +283,8 @@ class _MainToggleCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         isEnabled
-                            ? 'Vous recevrez des rappels avant vos concerts et répétitions'
+                            ? 'Une notification avant vos concerts et '
+                                  'répétitions, aux moments choisis'
                             : 'Vous ne recevrez aucun rappel',
                         style: AppFonts.sans(
                           fontSize: 14,
@@ -276,6 +319,26 @@ class _SectionTitle extends StatelessWidget {
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+/// A short explanation under a setting, in the secondary text colour.
+class _Hint extends StatelessWidget {
+  final String text;
+  const _Hint(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        text,
+        style: AppFonts.sans(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );

@@ -7,10 +7,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/dependency_injection.dart';
 import '../../core/config/supabase_config.dart';
+import '../../features/notifications/presentation/providers/notification_settings_provider.dart';
 import '../../features/onboarding/data/welcome_prefs.dart';
 import '../../features/public/data/public_concert_notifications.dart';
 import '../models/rehearsal.dart';
-import '../providers/my_groups_provider.dart';
 import 'fcm_notification_handler.dart';
 import 'storage_service.dart';
 
@@ -19,7 +19,8 @@ import 'storage_service.dart';
 /// - with a session (app start, sign-in): subscribed to [membersTopic] (events,
 ///   concerts) and to the topic of each rehearsal group concerning the
 ///   member's ensembles ([rehearsalTopic]), again whenever they change them,
-///   so a woman who picked « Femmes » is not told about the men's rehearsals.
+///   so a woman who picked « Femmes » is not told about the men's rehearsals
+///   (none when they switched « Changements de l'agenda › Répétitions » off).
 ///   Once all of that worked, the phone leaves [legacyTopic], which apps up to
 ///   2.0.142 listened to for everything (the server still names it in each
 ///   push, see send-push-notification/target.ts). The phone's FCM token is
@@ -128,8 +129,7 @@ class SessionNotifications {
         );
       },
       publicConcertsWanted: PublicConcertNotifications.isEnabled,
-      rehearsalGroups: () async =>
-          groupsConcerning(await WelcomePrefs.myGroups()),
+      rehearsalGroups: () => readRehearsalPushGroups(WelcomePrefs.myGroups),
     );
   }
 
@@ -204,7 +204,8 @@ class SessionNotifications {
 
   /// Applies [groups], the rehearsal groups concerning the member's
   /// ensembles (Profil › Mes ensembles, the welcome tour), to the rehearsal
-  /// topics. A visitor's phone has none.
+  /// topics; empty when the member wants no rehearsal pushes. A visitor's
+  /// phone has none.
   Future<void> rehearsalGroupsChanged(Set<GroupType> groups) {
     _groups = groups;
     final done = _queue.then((_) async {
