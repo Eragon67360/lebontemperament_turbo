@@ -6,7 +6,9 @@
 //   failed, stuck or too old;
 // - pg_cron jobs that failed, and pg_net calls (edge functions called by cron
 //   jobs and triggers) that failed, in the last 30 minutes;
-// - the website and the admin answer over HTTP.
+// - the website and the admin answer over HTTP;
+// - the mailing lists compared with the member roster: differences, a failed
+//   comparison, or a weekly comparison that stopped running.
 //
 // Each problem is pushed once when it starts, again once a day while it
 // lasts, and once when it ends; `ops_alerts` holds that state. Only phones
@@ -35,6 +37,7 @@ import {
   markNotified,
   message,
   type DbFacts,
+  type MailingListFact,
   type Notification,
   type SiteProbe,
   type StoredAlert,
@@ -99,6 +102,24 @@ async function probe(url: string): Promise<SiteProbe> {
   if (isUp(first.status)) return first;
   await new Promise((r) => setTimeout(r, PROBE_RETRY_DELAY_MS));
   return probeOnce(url);
+}
+
+/** Latest comparison of each mailing list with the roster. A failed read
+ * (the table doesn't exist before its migration) counts as no list, so it
+ * never blocks the other checks. */
+async function mailingLists(
+  supabase: SupabaseClient,
+): Promise<MailingListFact[]> {
+  const { data, error } = await supabase
+    .from("mailing_list_comparisons")
+    .select(
+      "group_email, created_at, cron_checked_at, status, missing_count, extra_count, error",
+    );
+  if (error) {
+    log("mailing_lists_unavailable", { error: error.message });
+    return [];
+  }
+  return (data ?? []) as MailingListFact[];
 }
 
 /** Device tokens of every superadmin, read at send time so a lost role stops
@@ -176,15 +197,19 @@ Deno.serve(async (req) => {
       return jsonResponse({ test: true, devices: tokens.length, delivered });
     }
 
-    const [factsResult, website, admin] = await Promise.all([
+    const [factsResult, lists, website, admin] = await Promise.all([
       supabase.rpc("ops_alert_facts", { p_window_minutes: WINDOW_MINUTES }),
+      mailingLists(supabase),
       probe(WEBSITE_URL),
       probe(ADMIN_URL),
     ]);
     if (factsResult.error) {
       throw new Error(`ops_alert_facts: ${factsResult.error.message}`);
     }
-    const facts = factsResult.data as DbFacts;
+    const facts: DbFacts = {
+      ...(factsResult.data as DbFacts),
+      mailing_lists: lists,
+    };
     const findings = evaluate(facts, { website, admin }, now, WINDOW_MINUTES);
 
     const { data: rows, error: rowsError } = await supabase

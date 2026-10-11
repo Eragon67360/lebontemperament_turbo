@@ -10,6 +10,7 @@ import {
   message,
   type DbFacts,
   type Finding,
+  type MailingListFact,
   type SiteProbe,
   type StoredAlert,
 } from "./checks.ts";
@@ -56,6 +57,7 @@ Deno.test("healthy production: one finding per check, none firing", () => {
     "cron_jobs",
     "drive_sync",
     "function_calls",
+    "mailing_list",
     "rehearsal_sync",
     "website",
   ]);
@@ -297,4 +299,85 @@ Deno.test("messages: fire as found, reminder and end name the problem", () => {
     message(stored, "resolve", NOW).title,
     "Rétabli : Site web injoignable",
   );
+});
+
+const list = (over: Partial<MailingListFact> = {}): MailingListFact => ({
+  group_email: "liste@example.com",
+  created_at: hoursAgo(24 * 30),
+  cron_checked_at: hoursAgo(24 * 2),
+  status: "ok",
+  missing_count: 0,
+  extra_count: 0,
+  error: null,
+  ...over,
+});
+
+const mailingFinding = (lists: MailingListFact[] | undefined) =>
+  find(
+    evaluate(
+      { ...healthyFacts(), mailing_lists: lists },
+      healthySites(),
+      NOW,
+      30,
+    ),
+    "mailing_list",
+  );
+
+Deno.test("mailing list: quiet without lists or differences", () => {
+  assertEquals(mailingFinding(undefined).firing, false);
+  assertEquals(mailingFinding([]).firing, false);
+  assertEquals(mailingFinding([list()]).firing, false);
+  // Just enabled, the weekly run hasn't come yet.
+  assertEquals(
+    mailingFinding([list({ created_at: hoursAgo(24), cron_checked_at: null })])
+      .firing,
+    false,
+  );
+});
+
+Deno.test("mailing list: differences, failure, stale weekly run", () => {
+  let f = mailingFinding([list({ missing_count: 3, extra_count: 1 })]);
+  assertEquals(f.firing, true);
+  assertEquals(f.title, "Liste de diffusion à mettre à jour");
+  assertEquals(
+    f.body,
+    "liste@example.com : 3 membres à ajouter, 1 adresse à retirer. Détail dans l'admin, page Liste de diffusion.",
+  );
+
+  f = mailingFinding([list({ extra_count: 2 })]);
+  assert(
+    f.body.startsWith("liste@example.com : 2 adresses à retirer."),
+    f.body,
+  );
+
+  f = mailingFinding([
+    list({
+      missing_count: 3,
+      status: "failed",
+      error: "Google Groups est injoignable.",
+    }),
+  ]);
+  assertEquals(f.title, "Comparaison des listes de diffusion en échec");
+  assertEquals(f.body, "liste@example.com : Google Groups est injoignable.");
+
+  f = mailingFinding([list({ cron_checked_at: hoursAgo(24 * 10) })]);
+  assertEquals(f.title, "Comparaison des listes de diffusion en retard");
+
+  f = mailingFinding([
+    list({ created_at: hoursAgo(24 * 10), cron_checked_at: null }),
+  ]);
+  assertEquals(f.title, "Comparaison des listes de diffusion en retard");
+});
+
+Deno.test("mailing list: reminded once a week, not once a day", () => {
+  const finding = mailingFinding([list({ missing_count: 1 })]);
+  const stored = markNotified(
+    decide(undefined, finding, NOW).next!,
+    "fire",
+    NOW,
+  );
+  const nextDay = new Date(NOW.getTime() + 25 * 3_600_000);
+  assertEquals(decide(stored, finding, nextDay).notify, null);
+  const nextWeek = new Date(NOW.getTime() + 7 * 24 * 3_600_000);
+  assertEquals(decide(stored, finding, nextWeek).notify, "remind");
 });

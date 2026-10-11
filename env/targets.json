@@ -13,7 +13,8 @@
     "GOOGLE_SITE_VERIFICATION": "only needed to verify the site in Google Search Console",
     "BING_SITE_VERIFICATION": "only needed to verify the site in Bing Webmaster Tools",
     "INDEXNOW_SUBMIT_SECRET": "without it /api/indexnow refuses every submission",
-    "REVALIDATE_SECRET": "without it admin edits wait for the cache to expire instead of refreshing the site"
+    "REVALIDATE_SECRET": "without it admin edits wait for the cache to expire instead of refreshing the site",
+    "CRON_SECRET": "without it the weekly mailing list check still runs, limited to once every 6 days per list"
   },
   "targets": {
     "website.production": {
