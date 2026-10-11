@@ -26,9 +26,9 @@ const MusicList = () => {
   };
 
   return (
-    <div className="bg-content1 overflow-hidden rounded-xl">
+    <div className="border-members-line bg-members-card overflow-hidden rounded-2xl border">
       {/* Album Header */}
-      <div className="from-primary bg-gradient-to-r to-[#43475e] p-4">
+      <div className="bg-primary-solid text-accent-foreground p-4 sm:p-5">
         <div className="flex items-center gap-4">
           <Image
             src="/music/BT - Album/bt_20ans_pochette.jpg"
@@ -38,10 +38,8 @@ const MusicList = () => {
             className="rounded-lg shadow-lg"
           />
           <div className="flex flex-col">
-            <h2 className="text-lg font-semibold text-white">
-              Les 20 ans du BT (Live)
-            </h2>
-            <h3 className="text-sm text-white/80">Le Bon Tempérament</h3>
+            <h3 className="text-xl font-extrabold">Les 20 ans du BT (Live)</h3>
+            <p className="opacity-90">Le Bon Tempérament</p>
           </div>
         </div>
 
@@ -54,33 +52,40 @@ const MusicList = () => {
       </div>
 
       {/* Tracks List */}
-      <div className="divide-divider divide-y">
+      <div className="divide-members-line divide-y">
         {musicDetails.map((file, index) => (
           <button
             key={index}
             onClick={() => setCurrentSong(getMusicSrc(file.name))}
-            className={`hover:bg-surface-secondary flex w-full items-center gap-3 px-4 py-3 transition-colors ${
+            aria-pressed={currentSong === getMusicSrc(file.name)}
+            className={`hover:bg-primary/5 flex min-h-14 w-full items-center gap-3.5 px-4 py-3 transition-colors ${
               currentSong === getMusicSrc(file.name)
-                ? "bg-primary/5"
+                ? "bg-primary/10"
                 : "bg-transparent"
             }`}
           >
-            <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+            <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
               {currentSong === getMusicSrc(file.name) ? (
-                <IoMusicalNotes className="text-primary h-4 w-4" />
+                <IoMusicalNotes
+                  aria-hidden="true"
+                  className="text-primary-text h-5 w-5"
+                />
               ) : (
-                <IoPlay className="text-primary h-4 w-4" />
+                <IoPlay
+                  aria-hidden="true"
+                  className="text-primary-text h-5 w-5"
+                />
               )}
             </div>
 
             <div className="flex-1 text-left">
-              <p className="text-foreground text-sm font-medium">
+              <p className="text-foreground font-bold">
                 {cleanDisplayName(file.name)}
               </p>
-              <p className="text-muted text-xs">Le Bon Tempérament</p>
+              <p className="text-muted text-base">Le Bon Tempérament</p>
             </div>
 
-            <span className="text-muted text-xs">{file.duration}</span>
+            <span className="text-muted text-base">{file.duration}</span>
           </button>
         ))}
       </div>

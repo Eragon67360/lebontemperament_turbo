@@ -67,7 +67,7 @@ export const EVENT_COLUMNS =
 
 /** The members' calendar lists rehearsals by group, place and time. */
 export const MEMBER_REHEARSAL_COLUMNS =
-  "id, name, date, start_time, end_time, place, room, group_type";
+  "id, name, date, start_time, end_time, place, room, address, group_type";
 export type MemberRehearsal = Pick<
   Rehearsal,
   | "id"
@@ -77,5 +77,6 @@ export type MemberRehearsal = Pick<
   | "end_time"
   | "place"
   | "room"
+  | "address"
   | "group_type"
 >;

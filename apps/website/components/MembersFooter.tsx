@@ -1,21 +1,34 @@
 // components/MembersFooter.tsx
 "use client";
+import { CONTACT_EMAIL } from "@/lib/contact";
+import NextLink from "next/link";
 import { useMemo } from "react";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export const MembersFooter = () => {
   const year = useMemo(() => new Date().getFullYear(), []);
+  const linkClass =
+    "text-primary-text inline-flex min-h-12 items-center font-medium underline underline-offset-2 hover:no-underline";
 
   return (
-    <footer className="border-separator mx-auto flex w-full max-w-7xl items-center justify-between border-t px-4 py-3 text-xs sm:px-6 sm:text-sm lg:px-8">
-      <div className="flex items-center gap-2 sm:gap-4">
-        <div className="text-foreground/70">
-          ©&nbsp;{year}&nbsp;Le Bon Tempérament
+    <footer className="border-members-line bg-members-card text-muted w-full border-t text-base">
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-4 md:px-6">
+        <span>©&nbsp;{year}&nbsp;Le Bon Tempérament</span>
+        <span>
+          Une question ?{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
+            {CONTACT_EMAIL}
+          </a>
+        </span>
+        <div className="flex flex-wrap items-center gap-x-6">
+          <NextLink href="/" className={linkClass}>
+            Retour au site public
+          </NextLink>
+          <div className="flex items-center gap-1">
+            <span aria-hidden="true">Thème</span>
+            <ThemeSwitcher large />
+          </div>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 sm:gap-4">
-        <ThemeSwitcher />
       </div>
     </footer>
   );
