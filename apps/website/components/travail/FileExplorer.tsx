@@ -53,7 +53,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ folders }) => {
                     type="button"
                     onClick={() => setActiveSlug(tab.slug)}
                     aria-pressed={active}
-                    className={`flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 text-left text-lg font-bold transition-colors ${
+                    className={`flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 text-left text-lg font-medium transition-colors ${
                       active
                         ? "bg-primary-solid text-accent-foreground border-primary-solid"
                         : "text-foreground hover:bg-primary/10 border-transparent"
@@ -85,7 +85,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ folders }) => {
       >
         <h2
           id="travail-folder"
-          className="mb-5 flex items-center gap-3 text-2xl font-extrabold"
+          className="mb-5 flex items-center gap-3 text-2xl font-semibold"
         >
           <span
             aria-hidden="true"

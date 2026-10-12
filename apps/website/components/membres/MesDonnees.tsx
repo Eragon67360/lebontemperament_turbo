@@ -23,7 +23,7 @@ import { MembersCard } from "./MembersCard";
 import { PageHeader } from "./PageHeader";
 
 const linkClass =
-  "text-primary-text font-bold underline underline-offset-2 hover:no-underline";
+  "text-primary-text font-medium underline underline-offset-2 hover:no-underline";
 
 function Panel({
   icon,
@@ -48,7 +48,7 @@ function Panel({
         >
           {icon}
         </div>
-        <h2 id={id} className="text-foreground text-[22px] font-extrabold">
+        <h2 id={id} className="text-foreground text-[22px] font-semibold">
           {title}
         </h2>
       </div>
@@ -110,7 +110,7 @@ function DownloadPanel() {
         <Button
           variant="primary"
           size="lg"
-          className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+          className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
           onPress={download}
           isPending={isLoading}
         >
@@ -204,7 +204,7 @@ function DeletionPanel() {
             <Button
               variant="danger-soft"
               size="lg"
-              className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+              className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
               onPress={() => setIsOpen(true)}
             >
               <IoTrashOutline className="size-4" aria-hidden="true" />
@@ -252,7 +252,7 @@ function DeletionPanel() {
                 <Button
                   variant="ghost"
                   size="lg"
-                  className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+                  className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
                   onPress={() => setIsOpen(false)}
                   isDisabled={isSending}
                 >
@@ -261,7 +261,7 @@ function DeletionPanel() {
                 <Button
                   variant="danger"
                   size="lg"
-                  className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+                  className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
                   onPress={send}
                   isPending={isSending}
                 >

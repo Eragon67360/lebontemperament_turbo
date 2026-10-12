@@ -15,7 +15,7 @@ export function RehearsalDateBlock({
 }) {
   const large = size === "large";
   const label = format(date, "EEEE d MMMM", { locale: fr });
-  const word = "text-sm font-bold uppercase sm:text-base";
+  const word = "text-sm font-medium uppercase sm:text-base";
   return (
     <div
       role="img"
@@ -42,7 +42,7 @@ export function RehearsalDateBlock({
       </span>
       <span
         aria-hidden="true"
-        className={`leading-none font-extrabold ${large ? "text-[38px] sm:text-5xl" : "text-[28px]"}`}
+        className={`leading-none font-semibold ${large ? "text-[38px] sm:text-5xl" : "text-[28px]"}`}
       >
         {format(date, "d", { locale: fr })}
       </span>

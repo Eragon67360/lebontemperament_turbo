@@ -88,7 +88,7 @@ export function HomeTiles() {
     >
       <h2
         id="home-todo"
-        className="text-foreground text-2xl font-extrabold sm:text-3xl"
+        className="text-foreground text-2xl font-semibold sm:text-3xl"
       >
         Que veux-tu faire ?
       </h2>
@@ -108,7 +108,7 @@ export function HomeTiles() {
                   <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col sm:gap-3.5">
-                  <span className="text-[19px] leading-snug font-extrabold sm:text-[22px]">
+                  <span className="text-[19px] leading-snug font-semibold sm:text-[22px]">
                     {tile.title}
                   </span>
                   <span className="text-muted text-base leading-snug sm:hidden">
@@ -118,7 +118,7 @@ export function HomeTiles() {
                     {tile.description}
                   </span>
                 </span>
-                <span className="text-primary-text hidden items-center gap-2 font-bold sm:inline-flex">
+                <span className="text-primary-text hidden items-center gap-2 font-medium sm:inline-flex">
                   {tile.cta}
                   <IoArrowForwardOutline
                     aria-hidden="true"

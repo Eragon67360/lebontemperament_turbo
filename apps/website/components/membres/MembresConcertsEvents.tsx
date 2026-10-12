@@ -19,7 +19,7 @@ import { TONES, type Tone } from "./tones";
 const SectionTitle = ({ id, title }: { id: string; title: string }) => (
   <h2
     id={id}
-    className="text-foreground mb-5 text-2xl font-extrabold sm:text-3xl"
+    className="text-foreground mb-5 text-2xl font-semibold sm:text-3xl"
   >
     {title}
   </h2>
@@ -164,7 +164,7 @@ const MembresConcertsEvents = () => {
                 key={index}
                 className="flex flex-col gap-4 p-5 sm:p-6"
               >
-                <h3 className="text-[21px] leading-snug font-extrabold">
+                <h3 className="text-[21px] leading-snug font-semibold">
                   {concert.name ||
                     `Concert du ${format(new Date(concert.date), "dd MMMM yyyy", { locale: fr })}`}
                 </h3>
@@ -182,7 +182,7 @@ const MembresConcertsEvents = () => {
                 </div>
 
                 <span
-                  className={`mt-auto self-start rounded-lg px-3 py-1 text-base font-bold ${TONES.teal}`}
+                  className={`mt-auto self-start rounded-lg px-3 py-1 text-base font-medium ${TONES.teal}`}
                 >
                   {concert.context === "orchestre_et_choeur"
                     ? "Orchestre et Chœur"
@@ -217,11 +217,11 @@ const MembresConcertsEvents = () => {
               >
                 <div className="flex flex-col items-start gap-2">
                   <span
-                    className={`rounded-lg px-3 py-1 text-base font-bold ${getEventTypeColor(event.event_type)}`}
+                    className={`rounded-lg px-3 py-1 text-base font-medium ${getEventTypeColor(event.event_type)}`}
                   >
                     {getEventTypeLabel(event.event_type)}
                   </span>
-                  <h3 className="text-[21px] leading-snug font-extrabold">
+                  <h3 className="text-[21px] leading-snug font-semibold">
                     {event.title}
                   </h3>
                 </div>
@@ -253,7 +253,7 @@ const MembresConcertsEvents = () => {
                         Contact :{" "}
                         <a
                           href={`mailto:${event.responsible_email}`}
-                          className="text-primary-text font-bold underline underline-offset-2 hover:no-underline"
+                          className="text-primary-text font-medium underline underline-offset-2 hover:no-underline"
                         >
                           {event.responsible_name || event.responsible_email}
                         </a>
@@ -264,7 +264,7 @@ const MembresConcertsEvents = () => {
                         href={event.link}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-text inline-flex min-h-12 items-center gap-2 font-bold underline underline-offset-2 hover:no-underline"
+                        className="text-primary-text inline-flex min-h-12 items-center gap-2 font-medium underline underline-offset-2 hover:no-underline"
                       >
                         Plus d’infos
                         <IoOpenOutline aria-hidden="true" className="h-5 w-5" />

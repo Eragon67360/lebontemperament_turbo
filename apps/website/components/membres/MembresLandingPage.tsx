@@ -16,7 +16,7 @@ export const MembresLandingPage = () => {
   return (
     <div className="flex flex-col gap-12 md:gap-14">
       <section className="flex flex-col gap-2">
-        <h1 className="text-foreground text-[34px] leading-[1.1] font-extrabold tracking-tight break-words md:text-[44px]">
+        <h1 className="text-foreground text-[34px] leading-[1.1] font-semibold tracking-tight break-words md:text-[44px]">
           Bonjour{firstName ? ` ${firstName}` : ""}
         </h1>
         <p className="text-muted text-lg md:text-xl">

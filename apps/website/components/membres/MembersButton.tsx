@@ -2,7 +2,7 @@ import NextLink from "next/link";
 import type { ReactNode } from "react";
 
 const base =
-  "inline-flex items-center justify-center gap-2.5 rounded-xl text-lg font-bold no-underline transition-colors";
+  "inline-flex items-center justify-center gap-2.5 rounded-xl text-lg font-medium no-underline transition-colors";
 
 const SIZES = {
   /** 52 px: the main buttons of a card. */
