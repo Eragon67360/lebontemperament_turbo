@@ -50,12 +50,12 @@ Each list is a starting point, not a boundary. Facts flagged on 2026-10-01 are m
 
 ### 6. Engineering and delivery
 
-- No checks on PRs: propose a GitHub Actions workflow (lint, check-types, domain tests, builds, read-only e2e against the preview; `flutter analyze` and `flutter test` for app changes).
-- The pre-commit hook (format all, `git add -A`, full build): safe and fast enough? `lint-staged` and a narrower `git add` are candidates, as an owner decision.
+- PR checks: `.github/workflows/ci.yml` runs lint, types, domain tests, builds and the Flutter checks on every PR ([quality gates](quality-gates.md)). Still missing: a read-only e2e run against the PR's preview, and Deno checks for edge functions.
+- The pre-commit hook (`lint-staged` formats staged files only, see [workflow](workflow.md#the-pre-commit-hook)): still enough?
 - Branch protection: only deletion and force-push are blocked on `main`; a PR requirement plus required checks is possible on this public repo.
 - Supabase migrations and functions: no automation and no history for the core tables (a baseline migration from the production schema would fix it).
 - Observability: uptime, error tracking, the e2e failure issues, cron and function logs; backups (Supabase plan's PITR window).
-- Dependencies: Dependabot security updates are on; version updates aren't configured.
+- Dependencies: Dependabot security updates and grouped version updates (npm, pub, GitHub Actions) are on, into `dev` (`.github/dependabot.yml`).
 - Tracked artefacts (`desktop.ini`, `portfolio-hover/`, root `migrations/`).
 
 ## Issue format
