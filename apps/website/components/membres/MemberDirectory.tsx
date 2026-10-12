@@ -108,7 +108,7 @@ export function MemberDirectory() {
     <div className="flex flex-col gap-7">
       <MembersCard className="flex flex-col gap-5 p-5 sm:p-6">
         <div className="flex flex-col gap-2">
-          <label htmlFor="member-search" className="font-bold">
+          <label htmlFor="member-search" className="font-medium">
             Chercher un membre
           </label>
           <div className="border-members-line-strong bg-members-card focus-within:border-primary flex min-h-[60px] items-center gap-3 rounded-[14px] border-2 px-4">
@@ -128,7 +128,7 @@ export function MemberDirectory() {
           </div>
         </div>
         <fieldset className="m-0 flex flex-col gap-2.5 border-0 p-0">
-          <legend className="mb-2.5 p-0 font-bold">Afficher</legend>
+          <legend className="mb-2.5 p-0 font-medium">Afficher</legend>
           <div className="flex flex-wrap gap-2.5">
             <FilterButton
               label="Tout le monde"
@@ -151,7 +151,7 @@ export function MemberDirectory() {
 
       <section aria-label="Liste des membres" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p aria-live="polite" className="font-bold">
+          <p aria-live="polite" className="font-medium">
             {state.status === "ready" &&
               (total === 0
                 ? "Aucun membre"
@@ -183,7 +183,7 @@ export function MemberDirectory() {
                 key={group.letter}
                 className="border-members-line border-t first:border-t-0"
               >
-                <h2 className="bg-members-band text-primary-text px-4 py-2 text-[17px] font-extrabold sm:px-6">
+                <h2 className="bg-members-band text-primary-text px-4 py-2 text-[17px] font-semibold sm:px-6">
                   {group.letter}
                 </h2>
                 <ul>

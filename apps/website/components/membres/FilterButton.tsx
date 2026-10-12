@@ -20,7 +20,7 @@ export function FilterButton({
       type="button"
       aria-pressed={pressed}
       onClick={onPress}
-      className={`inline-flex min-h-12 items-center gap-2.5 rounded-full border px-4.5 text-lg font-bold transition-colors ${
+      className={`inline-flex min-h-12 items-center gap-2.5 rounded-full border px-4.5 text-lg font-medium transition-colors ${
         pressed
           ? "bg-primary-solid text-accent-foreground border-primary-solid"
           : "bg-members-card text-foreground border-members-line-strong hover:bg-primary/10"

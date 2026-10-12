@@ -29,7 +29,7 @@ export function DocumentCard({
           <Icon className="h-6 w-6" />
         </span>
         <div className="flex min-w-0 flex-col gap-1">
-          <h2 id={id} className="text-[22px] leading-snug font-extrabold">
+          <h2 id={id} className="text-[22px] leading-snug font-semibold">
             {title}
           </h2>
           {description && <p className="text-muted">{description}</p>}

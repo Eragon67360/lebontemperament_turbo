@@ -21,7 +21,7 @@ export function MemberAvatar({
   return (
     <span
       aria-hidden={showPhoto ? undefined : true}
-      className={`relative flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-extrabold ${TONES[voiceTone(voice)]}`}
+      className={`relative flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-semibold ${TONES[voiceTone(voice)]}`}
     >
       {showPhoto ? (
         <Image

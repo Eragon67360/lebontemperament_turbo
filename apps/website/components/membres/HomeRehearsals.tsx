@@ -32,7 +32,7 @@ function AllRehearsalsLink() {
   return (
     <NextLink
       href={CALENDAR_HREF}
-      className="text-primary-text inline-flex min-h-12 items-center gap-2 font-bold no-underline hover:underline"
+      className="text-primary-text inline-flex min-h-12 items-center gap-2 font-medium no-underline hover:underline"
     >
       Toutes les répétitions
       <IoArrowForwardOutline aria-hidden="true" className="h-5 w-5" />
@@ -85,11 +85,11 @@ function NextRehearsalCard({ rehearsal }: { rehearsal: MemberRehearsal }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="home-next"
-          className="text-foreground text-[21px] font-extrabold sm:text-[26px]"
+          className="text-foreground text-[21px] font-semibold sm:text-[26px]"
         >
           Ta prochaine répétition
         </h2>
-        <span className="bg-primary/10 text-primary-text rounded-full px-3.5 py-1 text-base font-bold">
+        <span className="bg-primary/10 text-primary-text rounded-full px-3.5 py-1 text-base font-medium">
           {whenLabel(date)}
         </span>
       </div>
@@ -99,9 +99,9 @@ function NextRehearsalCard({ rehearsal }: { rehearsal: MemberRehearsal }) {
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <GroupChip group={rehearsal.group_type} className="self-start" />
           {showName && (
-            <p className="text-foreground font-semibold">{rehearsal.name}</p>
+            <p className="text-foreground font-medium">{rehearsal.name}</p>
           )}
-          <p className="text-foreground flex items-center gap-2.5 text-lg font-bold sm:text-xl">
+          <p className="text-foreground flex items-center gap-2.5 text-lg font-medium sm:text-xl">
             <IoTimeOutline
               aria-hidden="true"
               className="text-primary h-[22px] w-[22px] shrink-0"
@@ -152,7 +152,7 @@ function LaterRehearsals({ rehearsals }: { rehearsals: MemberRehearsal[] }) {
     >
       <h2
         id="home-later"
-        className="text-foreground mb-2 text-[21px] font-extrabold sm:text-[22px]"
+        className="text-foreground mb-2 text-[21px] font-semibold sm:text-[22px]"
       >
         Ensuite
       </h2>
@@ -172,16 +172,16 @@ function LaterRehearsals({ rehearsals }: { rehearsals: MemberRehearsal[] }) {
               >
                 <div
                   aria-hidden="true"
-                  className="text-muted text-sm font-bold uppercase"
+                  className="text-muted text-sm font-medium uppercase"
                 >
                   {format(date, "EEE", { locale: fr })}
                 </div>
-                <div aria-hidden="true" className="text-2xl font-extrabold">
+                <div aria-hidden="true" className="text-2xl font-semibold">
                   {format(date, "d", { locale: fr })}
                 </div>
               </div>
               <div className="flex min-w-0 flex-col">
-                <span className="font-bold">
+                <span className="font-medium">
                   {GROUP_LABEL[rehearsal.group_type]}
                 </span>
                 <span className="text-muted text-base">
@@ -213,7 +213,7 @@ export function HomeRehearsals() {
   if (state.status === "error") {
     return (
       <MembersCard className="flex flex-col items-start gap-4 p-5 sm:p-8">
-        <h2 className="text-[21px] font-extrabold sm:text-[26px]">
+        <h2 className="text-[21px] font-semibold sm:text-[26px]">
           Ta prochaine répétition
         </h2>
         <p role="alert">
@@ -231,7 +231,7 @@ export function HomeRehearsals() {
   if (!next) {
     return (
       <MembersCard className="flex flex-col items-start gap-4 p-5 sm:p-8">
-        <h2 className="text-[21px] font-extrabold sm:text-[26px]">
+        <h2 className="text-[21px] font-semibold sm:text-[26px]">
           Ta prochaine répétition
         </h2>
         <p>Pas de répétition prévue pour l’instant.</p>

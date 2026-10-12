@@ -168,7 +168,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Folders Section */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-xl font-extrabold">Dossiers</h3>
+        <h3 className="text-xl font-semibold">Dossiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2" aria-busy="true">
             {[1, 2, 3].map((i) => (
@@ -190,7 +190,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                     aria-hidden="true"
                     className="text-primary-text h-5 w-5 shrink-0"
                   />
-                  <span className="text-foreground min-w-0 font-bold break-words">
+                  <span className="text-foreground min-w-0 font-medium break-words">
                     {folder.name}
                   </span>
                 </button>
@@ -201,7 +201,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
 
       {/* Files Section */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-xl font-extrabold">Fichiers</h3>
+        <h3 className="text-xl font-semibold">Fichiers</h3>
         {loading ? (
           <div className="animate-pulse space-y-2" aria-busy="true">
             {[1, 2, 3].map((i) => (
@@ -217,7 +217,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                   <div aria-hidden="true" className="h-5 w-5 shrink-0">
                     {renderFileIcon(file.mimeType)}
                   </div>
-                  <span className="text-foreground min-w-0 flex-[1_1_200px] font-bold break-words">
+                  <span className="text-foreground min-w-0 flex-[1_1_200px] font-medium break-words">
                     {file.name}
                   </span>
                   <button

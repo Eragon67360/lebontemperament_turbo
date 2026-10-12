@@ -58,11 +58,11 @@ export function MembersAccountMenu() {
     <Dropdown>
       <Dropdown.Trigger
         aria-label={firstName ? `Mon compte, ${firstName}` : "Mon compte"}
-        className="border-members-line bg-members-card text-foreground hover:bg-primary/10 flex min-h-12 items-center gap-2.5 rounded-full border p-1 text-lg font-bold sm:pr-3.5"
+        className="border-members-line bg-members-card text-foreground hover:bg-primary/10 flex min-h-12 items-center gap-2.5 rounded-full border p-1 text-lg font-medium sm:pr-3.5"
       >
         <span
           aria-hidden="true"
-          className="bg-primary/15 text-primary-text flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-extrabold"
+          className="bg-primary/15 text-primary-text flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-semibold"
         >
           {fullName ? getInitials(fullName) : <IoPersonOutline />}
         </span>

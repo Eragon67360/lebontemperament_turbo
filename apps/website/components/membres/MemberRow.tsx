@@ -14,7 +14,7 @@ export function MemberRow({ member }: { member: Member }) {
     <li className="hover:bg-primary/5 border-members-line flex flex-wrap items-center gap-x-4 gap-y-3 border-t px-4 py-3.5 sm:gap-x-[18px] sm:px-6">
       <MemberAvatar name={name} voice={voice} photoUrl={member.photoUrl} />
       <div className="flex min-w-0 flex-[1_1_160px] flex-col">
-        <span className="text-[19px] leading-snug font-extrabold break-words">
+        <span className="text-[19px] leading-snug font-semibold break-words">
           {name}
         </span>
         {email && (
@@ -26,7 +26,7 @@ export function MemberRow({ member }: { member: Member }) {
       <div className="flex w-full items-center justify-between gap-3 pl-[68px] sm:ml-auto sm:w-auto sm:pl-0">
         {voice ? (
           <span
-            className={`min-w-24 rounded-lg px-3 py-1 text-center text-base font-bold ${TONES[voiceTone(voice)]}`}
+            className={`min-w-24 rounded-lg px-3 py-1 text-center text-base font-medium ${TONES[voiceTone(voice)]}`}
           >
             {voice}
           </span>
