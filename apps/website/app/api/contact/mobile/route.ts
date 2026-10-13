@@ -1,5 +1,5 @@
-import { CONTACT_EMAIL } from "@/lib/contact";
 import { createMailer } from "@/lib/mail";
+import { getContactEmail } from "@/lib/siteSettings";
 import type { Database } from "@repo/domain/database.types";
 import { parseBearerToken } from "@repo/domain/utils/bearer";
 import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     // Send email to support
     await mailer.transporter.sendMail({
       from: mailer.from,
-      to: CONTACT_EMAIL,
+      to: await getContactEmail(),
       subject: `[App] ${subject} - ${user.email}`,
       html: `
         <p><strong>Depuis l'application mobile</strong></p>

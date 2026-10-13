@@ -32,6 +32,8 @@ export const WEBSITE_PATHS = {
   /** Rehearsal times read by the app's « Nous rejoindre » screen. */
   joiningApi: "/api/joining",
   sitemap: "/sitemap.xml",
+  /** The site summary for AI engines (contact, joining facts). */
+  llms: "/llms.txt",
   /** The root layout: every page (feature flags are read there). */
   everything: { path: "/", type: "layout" },
 } as const satisfies Record<string, RevalidatePath>;
@@ -40,6 +42,7 @@ export const WEBSITE_PATHS = {
 export const WEBSITE_TAGS = {
   featureFlags: "feature-flags",
   galleryImages: "gallery-images",
+  siteSettings: "site-settings",
 } as const;
 
 /** What each kind of change invalidates. */
@@ -71,6 +74,13 @@ export const REVALIDATE = {
   featureFlags: {
     tags: [WEBSITE_TAGS.featureFlags],
     paths: [WEBSITE_PATHS.everything, WEBSITE_PATHS.sitemap],
+  },
+  /** site settings (contact, social links, donations, joining facts, legal
+   * notice) are read in the root layout's footer and structured data:
+   * everything, plus llms.txt */
+  siteSettings: {
+    tags: [WEBSITE_TAGS.siteSettings],
+    paths: [WEBSITE_PATHS.everything, WEBSITE_PATHS.llms],
   },
   /** Cloudinary uploads/deletes: the gallery listing and the page showing it */
   galleryImages: {

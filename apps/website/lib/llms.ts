@@ -1,9 +1,9 @@
 import {
-  CONTACT_ADDRESS_LINE,
-  CONTACT_EMAIL,
-  CONTACT_FORM_PATH,
-} from "./contact";
-import { JOINING_FACTS } from "./joining";
+  contactAddressLine,
+  DEFAULT_SITE_SETTINGS,
+  type SiteSettings,
+} from "@repo/domain/utils/siteSettings";
+import { CONTACT_FORM_PATH } from "./contact";
 
 /** Public pages described in llms.txt, in reading order. */
 const PAGES: { path: string; title: string; summary: string }[] = [
@@ -49,9 +49,13 @@ const PAGES: { path: string; title: string; summary: string }[] = [
 /**
  * The site summary served at /llms.txt (https://llmstxt.org): what the
  * association is, its pages, the joining facts and how to reach it, built
- * from the same constants as the pages so they never disagree.
+ * from the same site settings as the pages so they never disagree.
  */
-export function buildLlmsTxt(baseUrl: string): string {
+export function buildLlmsTxt(
+  baseUrl: string,
+  settings: SiteSettings = DEFAULT_SITE_SETTINGS,
+): string {
+  const { contact, joining } = settings;
   const url = (path: string) => `${baseUrl}${path}`;
   const lines = [
     "# Le Bon Tempérament",
@@ -68,21 +72,21 @@ export function buildLlmsTxt(baseUrl: string): string {
     "",
     "## Rejoindre l’ensemble",
     "",
-    JOINING_FACTS.intro,
+    joining.intro,
     "",
-    `- Lieux : ${JOINING_FACTS.where}`,
-    `- Horaires : ${JOINING_FACTS.when}`,
-    `- Âges : ${JOINING_FACTS.ages}`,
-    `- Audition : ${JOINING_FACTS.audition}`,
-    `- Lecture de la musique : ${JOINING_FACTS.readingMusic}`,
-    `- Cotisation : ${JOINING_FACTS.fee}`,
-    `- Inscription : ${JOINING_FACTS.anyTime}`,
+    `- Lieux : ${joining.where}`,
+    `- Horaires : ${joining.when}`,
+    `- Âges : ${joining.ages}`,
+    `- Audition : ${joining.audition}`,
+    `- Lecture de la musique : ${joining.readingMusic}`,
+    `- Cotisation : ${joining.fee}`,
+    `- Inscription : ${joining.anyTime}`,
     "",
     "## Contact",
     "",
-    `- Email : ${CONTACT_EMAIL}`,
+    `- Email : ${contact.email}`,
     `- Formulaire : ${url(CONTACT_FORM_PATH)}`,
-    `- Siège : ${CONTACT_ADDRESS_LINE}`,
+    `- Siège : ${contactAddressLine(contact)}`,
     "",
   ];
   return lines.join("\n");

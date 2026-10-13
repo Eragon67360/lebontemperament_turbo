@@ -1,11 +1,12 @@
 // components/MembersFooter.tsx
 "use client";
-import { CONTACT_EMAIL } from "@/lib/contact";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import NextLink from "next/link";
 import { useMemo } from "react";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export const MembersFooter = () => {
+  const { contact } = useSiteSettings();
   const year = useMemo(() => new Date().getFullYear(), []);
   const linkClass =
     "text-primary-text inline-flex min-h-12 items-center font-medium underline underline-offset-2 hover:no-underline";
@@ -16,8 +17,8 @@ export const MembersFooter = () => {
         <span>©&nbsp;{year}&nbsp;Le Bon Tempérament</span>
         <span>
           Une question ?{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
-            {CONTACT_EMAIL}
+          <a href={`mailto:${contact.email}`} className={linkClass}>
+            {contact.email}
           </a>
         </span>
         <div className="flex flex-wrap items-center gap-x-6">

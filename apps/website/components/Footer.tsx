@@ -1,16 +1,44 @@
 "use client";
 import CookiePreferencesButton from "@/components/cookies/CookiePreferencesButton";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import { cloudinaryLoader } from "@/lib/cloudinaryImage";
-import { CONTACT_ADDRESS, CONTACT_EMAIL } from "@/lib/contact";
+import type { SocialNetwork } from "@repo/domain/utils/siteSettings";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { IconType } from "react-icons";
 import { CiMail } from "react-icons/ci";
 import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
 import { IoLocationOutline } from "react-icons/io5";
 
+// Not imported from lib/contact: that module derives from the settings'
+// defaults, which must stay out of the browser bundle.
+const COUNTRY = "France";
+
+// The links themselves are the admin's (social_links setting); the icon and
+// the screen-reader label are the site's.
+const SOCIALS: Record<SocialNetwork, { icon: IconType; label: string }> = {
+  facebook: {
+    icon: FaFacebookF,
+    label: "Accéder à la page Facebook de Le Bon Tempérament",
+  },
+  instagram: {
+    icon: FaInstagram,
+    label: "Accéder à la page Instagram de Le Bon Tempérament",
+  },
+  youtube: {
+    icon: FaYoutube,
+    label: "Accéder à la chaîne YouTube de Le Bon Tempérament",
+  },
+  tiktok: {
+    icon: FaTiktok,
+    label: "Accéder à la page TikTok de Le Bon Tempérament",
+  },
+};
+
 const Footer = () => {
   const path = usePathname();
+  const { contact, social_links } = useSiteSettings();
   if (path.startsWith("/membres")) {
     return <></>;
   }
@@ -123,10 +151,9 @@ const Footer = () => {
                 aria-hidden="true"
               />
               <p className="text-left">
-                {CONTACT_ADDRESS.street},
+                {contact.street},
                 <br />
-                {CONTACT_ADDRESS.postalCode}{" "}
-                {CONTACT_ADDRESS.city.toUpperCase()}, {CONTACT_ADDRESS.country}
+                {contact.postalCode} {contact.city.toUpperCase()}, {COUNTRY}
               </p>
             </div>
 
@@ -137,65 +164,46 @@ const Footer = () => {
                 aria-hidden="true"
               />
               <a
-                href={`mailto:${CONTACT_EMAIL}`}
+                href={`mailto:${contact.email}`}
                 aria-label="Envoyer un email à Le Bon Tempérament"
                 className="hover:text-primary-text transition-colors duration-200"
               >
-                {CONTACT_EMAIL}
+                {contact.email}
               </a>
             </div>
           </address>
 
           {/* Social Media Links */}
-          <nav
-            className="text-muted flex flex-col items-center gap-4 text-sm select-none lg:items-start"
-            aria-labelledby="footer-social"
-          >
-            <h3
-              id="footer-social"
-              className="text-foreground mb-2 text-lg font-semibold"
+          {social_links.links.length > 0 && (
+            <nav
+              className="text-muted flex flex-col items-center gap-4 text-sm select-none lg:items-start"
+              aria-labelledby="footer-social"
             >
-              Nos réseaux
-            </h3>
-            <div className="flex items-center gap-4">
-              <a
-                href="https://www.facebook.com/p/Le-Bon-Temp%C3%A9rament-100063069588507/"
-                aria-label="Accéder à la page Facebook de Le Bon Tempérament"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-primary-solid bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
+              <h3
+                id="footer-social"
+                className="text-foreground mb-2 text-lg font-semibold"
               >
-                <FaFacebookF size={16} aria-hidden="true" />
-              </a>
-              <a
-                href="https://www.instagram.com/lebontemperament_?igsh=bm1ndG4xNXpnZmI5"
-                aria-label="Accéder à la page Instagram de Le Bon Tempérament"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-primary-solid bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
-              >
-                <FaInstagram size={16} aria-hidden="true" />
-              </a>
-              <a
-                href="https://www.youtube.com/@lebontemperament"
-                aria-label="Accéder à la chaîne YouTube de Le Bon Tempérament"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-primary-solid bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
-              >
-                <FaYoutube size={16} aria-hidden="true" />
-              </a>
-              <a
-                href="https://www.tiktok.com/@lebontemperament"
-                aria-label="Accéder à la page TikTok de Le Bon Tempérament"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-primary-solid bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
-              >
-                <FaTiktok size={16} aria-hidden="true" />
-              </a>
-            </div>
-          </nav>
+                Nos réseaux
+              </h3>
+              <div className="flex items-center gap-4">
+                {social_links.links.map(({ network, url }) => {
+                  const { icon: Icon, label } = SOCIALS[network];
+                  return (
+                    <a
+                      key={network}
+                      href={url}
+                      aria-label={label}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:bg-primary-solid bg-surface-secondary text-muted flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all duration-200 hover:text-white hover:shadow-md"
+                    >
+                      <Icon size={16} aria-hidden="true" />
+                    </a>
+                  );
+                })}
+              </div>
+            </nav>
+          )}
         </div>
       </div>
       <hr className="border-separator" />

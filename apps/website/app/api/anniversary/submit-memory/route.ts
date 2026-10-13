@@ -1,5 +1,5 @@
-import { CONTACT_EMAIL } from "@/lib/contact";
 import { createMailer } from "@/lib/mail";
+import { getContactEmail } from "@/lib/siteSettings";
 import { createClient } from "@/utils/supabase/server";
 import { detectFormAbuse } from "@repo/domain/utils/formAbuse";
 import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
@@ -272,7 +272,7 @@ export async function POST(request: Request) {
 
     // Send emails using nodemailer
     const mailer = createMailer();
-    const adminEmail = process.env.ADMIN_EMAIL || CONTACT_EMAIL;
+    const adminEmail = process.env.ADMIN_EMAIL || (await getContactEmail());
 
     if (!mailer) {
       console.error("Email service not configured");

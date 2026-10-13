@@ -1,5 +1,5 @@
-import { CONTACT_EMAIL } from "@/lib/contact";
 import { createMailer } from "@/lib/mail";
+import { getContactEmail } from "@/lib/siteSettings";
 import { ContactFormProps } from "@/types/contactFormData";
 import { detectFormAbuse } from "@repo/domain/utils/formAbuse";
 import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Send email to BT
     await mailer.transporter.sendMail({
       from: mailer.from,
-      to: CONTACT_EMAIL,
+      to: await getContactEmail(),
       subject: `Nouvelle demande de contact de ${text(firstName)} ${text(lastName)}`,
       html: `
                 <p>Nom: ${escapeHtml(text(lastName))} </p>

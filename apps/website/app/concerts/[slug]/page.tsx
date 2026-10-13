@@ -229,10 +229,7 @@ export default async function ConcertPage({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
-      />
+      <JsonLd data={articleSchema} />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Concerts", path: "/concerts" },

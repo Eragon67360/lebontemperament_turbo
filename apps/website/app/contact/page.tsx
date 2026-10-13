@@ -2,7 +2,8 @@ import ContactForm from "@/components/ContactForm";
 import { JsonLd } from "@/components/JsonLd";
 import Map from "@/components/Maps";
 import Subscribe from "@/components/newsletter/Subscribe";
-import { CONTACT_ADDRESS, CONTACT_EMAIL } from "@/lib/contact";
+import { CONTACT_ADDRESS } from "@/lib/contact";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 
@@ -23,7 +24,12 @@ export const metadata: Metadata = {
   },
 };
 
-const Contact = () => {
+// The address and the mailbox come from the site settings (admin):
+// prerendered, refreshed every five minutes or when an admin saves.
+export const revalidate = 300;
+
+const Contact = async () => {
+  const { contact } = await getSiteSettings();
   return (
     <div className="container mx-auto flex min-h-screen w-full flex-col pb-8">
       <JsonLd
@@ -40,17 +46,17 @@ const Contact = () => {
           <hr className="border-separator mt-8" />
           <h3 className="text-foreground mt-8 font-bold">Où nous trouver</h3>
           <p className="text-foreground">
-            {CONTACT_ADDRESS.street},
+            {contact.street},
             <br />
-            {CONTACT_ADDRESS.postalCode} {CONTACT_ADDRESS.city.toUpperCase()},{" "}
+            {contact.postalCode} {contact.city.toUpperCase()},{" "}
             {CONTACT_ADDRESS.country}
           </p>
           <h3 className="text-foreground mt-2 font-bold">Email</h3>
           <a
-            href={`mailto:${CONTACT_EMAIL}`}
+            href={`mailto:${contact.email}`}
             className="text-foreground hover:text-primary-text"
           >
-            {CONTACT_EMAIL}
+            {contact.email}
           </a>
           <p className="text-muted mt-2 text-sm">
             Ou écrivez-nous avec le formulaire de cette page.
