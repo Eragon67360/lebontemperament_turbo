@@ -43,7 +43,7 @@ function Panel({
     >
       <div className="flex items-center gap-3.5">
         <div
-          className="bg-primary/10 text-primary-text flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]"
+          className="bg-members-band text-foreground flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
           aria-hidden="true"
         >
           {icon}

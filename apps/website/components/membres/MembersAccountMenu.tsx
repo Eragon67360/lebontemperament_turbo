@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from "@/components/providers/AuthProvider";
-import { membersFont } from "@/lib/membres/font";
+import { useMyVoice } from "@/hooks/useMyVoice";
+import { membersFontClasses } from "@/lib/membres/font";
 import { getFirstName, getInitials } from "@/lib/membres/names";
 import RouteNames from "@/utils/routes";
 import { loadBrowserClient } from "@/utils/supabase/lazy";
@@ -14,12 +15,14 @@ import {
   IoLogOutOutline,
   IoPersonOutline,
 } from "react-icons/io5";
+import { voiceFill } from "./tones";
 
 const itemClass = "min-h-12 gap-3 px-3 text-lg";
 
 /**
- * The account button of the members header: initials, first name, and a
- * small menu (my account, back to the public site, sign out).
+ * The account button of the members header: initials on the member's voice
+ * colour, first name, and a small menu (my account, back to the public site,
+ * sign out).
  */
 export function MembersAccountMenu() {
   const { user, setUser } = useAuth();
@@ -29,6 +32,10 @@ export function MembersAccountMenu() {
   const fullName: string =
     user?.user_metadata?.display_name || user?.user_metadata?.name || "";
   const firstName = getFirstName(fullName);
+  const myVoice = useMyVoice();
+  const avatarColor = voiceFill(
+    myVoice.status === "ready" ? myVoice.voice : null,
+  );
 
   // Same sign-out as the public site's user menu.
   const signOut = () => {
@@ -58,11 +65,11 @@ export function MembersAccountMenu() {
     <Dropdown>
       <Dropdown.Trigger
         aria-label={firstName ? `Mon compte, ${firstName}` : "Mon compte"}
-        className="border-members-line bg-members-card text-foreground hover:bg-primary/10 flex min-h-12 items-center gap-2.5 rounded-full border p-1 text-lg font-medium sm:pr-3.5"
+        className="bg-members-band text-foreground hover:bg-members-line flex min-h-12 items-center gap-2.5 rounded-full p-1 text-lg font-medium sm:pr-4"
       >
         <span
           aria-hidden="true"
-          className="bg-primary/15 text-primary-text flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-semibold"
+          className={`font-members-display flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-semibold ${avatarColor}`}
         >
           {fullName ? getInitials(fullName) : <IoPersonOutline />}
         </span>
@@ -74,7 +81,7 @@ export function MembersAccountMenu() {
       </Dropdown.Trigger>
       <Dropdown.Popover
         placement="bottom end"
-        className={`${membersFont.className} min-w-64`}
+        className={`${membersFontClasses} members-scope min-w-64 rounded-[24px]`}
       >
         <Dropdown.Menu aria-label="Mon compte" onAction={onAction}>
           <Dropdown.Item

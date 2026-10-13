@@ -14,11 +14,13 @@ export const TEXT = "font-(family-name:--font-programme-text)";
 /** Small spaced capitals, in the site's Roboto. */
 export const CAPS = "text-[11.5px] font-medium tracking-[0.28em] uppercase";
 
-export const PROGRAMME_ROOT = [
+/** The paper tones as variables, light and dark (also used by the entry points). */
+export const PROGRAMME_TOKENS = [
   "[--p-ivory:#F4EFE4] [--p-paper:#FBF8F1] [--p-ink:#1d1f1f] [--p-muted:#5e6462] [--p-rule:#cfc6b4] [--p-teal:#156c71] [--p-deep:#0D3B3E]",
   "dark:[--p-ivory:#0d1616] dark:[--p-paper:#132121] dark:[--p-ink:#ecedee] dark:[--p-muted:#a7b2b1] dark:[--p-rule:#2c3d3d] dark:[--p-teal:#26a5ad] dark:[--p-deep:#082a2c]",
-  "bg-(--p-ivory) text-(--p-ink)",
 ].join(" ");
+
+export const PROGRAMME_ROOT = `${PROGRAMME_TOKENS} bg-(--p-ivory) text-(--p-ink)`;
 
 /** A page of the booklet: paper on the ivory, a hairline and a soft shadow. */
 export const PAPER =

@@ -9,9 +9,10 @@ import { useEffect, useRef, useState } from "react";
 import { IoCloseOutline, IoMenuOutline } from "react-icons/io5";
 
 /**
- * The members area's header, on every /membres page: logo, six sections,
- * account menu. Below 1024 px the sections move into a « Menu » button that
- * opens the same links with a line of explanation each.
+ * The members area's header, on every /membres page (« Les Pupitres »): logo,
+ * the six sections as pills in a grey capsule, the account menu. Below
+ * 1024 px the sections move into a « Menu » pill that opens the same links
+ * with a line of explanation each.
  */
 export const MembersNavigation = () => {
   const pathname = usePathname();
@@ -31,26 +32,28 @@ export const MembersNavigation = () => {
   }, [isOpen]);
 
   return (
-    <header className="border-members-line bg-members-card w-full border-b">
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 md:px-6 lg:gap-x-6">
+    <header className="bg-members-page w-full">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center gap-x-3 gap-y-3 px-3.5 py-3.5 md:px-6 md:py-5 lg:gap-x-5">
         <NextLink
           href="/membres"
           aria-label="Le Bon Tempérament, espace membres, accueil"
           className="text-foreground flex min-w-0 items-center gap-3 no-underline"
         >
-          <Image
-            src="/img/bt_logo.webp"
-            alt=""
-            width={48}
-            height={48}
-            priority
-            className="h-11 w-11 shrink-0 rounded-lg object-contain sm:h-12 sm:w-12 dark:bg-white dark:p-0.5"
-          />
+          <span className="border-members-line flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white">
+            <Image
+              src="/img/bt_logo.webp"
+              alt=""
+              width={40}
+              height={40}
+              priority
+              className="h-9 w-9 object-contain"
+            />
+          </span>
           <span className="flex min-w-0 flex-col leading-tight lg:max-xl:hidden">
-            <span className="hidden text-lg font-semibold sm:block">
+            <span className="font-members-display hidden text-xl font-semibold sm:block">
               Le Bon Tempérament
             </span>
-            <span className="text-muted truncate text-base font-medium max-[479px]:hidden sm:font-normal">
+            <span className="text-members-muted truncate text-base font-medium max-[479px]:hidden sm:font-normal">
               Espace membres
             </span>
           </span>
@@ -58,7 +61,7 @@ export const MembersNavigation = () => {
 
         <nav
           aria-label="Espace membres"
-          className="hidden flex-1 flex-wrap justify-center gap-1 lg:flex"
+          className="bg-members-band mx-auto hidden flex-wrap justify-center gap-1 rounded-full p-1.5 lg:flex"
         >
           {MEMBERS_NAV_LINKS.map((link) => {
             const active = isActiveLink(pathname, link.href);
@@ -67,10 +70,10 @@ export const MembersNavigation = () => {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-12 items-center rounded-[10px] px-3.5 text-[17px] font-medium no-underline transition-colors ${
+                className={`inline-flex min-h-11 items-center rounded-full px-4 text-[17px] font-medium no-underline transition-colors ${
                   active
-                    ? "bg-primary/10 text-primary-text shadow-[inset_0_-3px_0_0_var(--primary)]"
-                    : "text-foreground hover:bg-primary/10 hover:text-primary-text"
+                    ? "bg-members-ink text-members-ink-foreground"
+                    : "text-foreground hover:bg-members-card"
                 }`}
               >
                 {link.label}
@@ -79,14 +82,14 @@ export const MembersNavigation = () => {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3 lg:ml-0">
           <button
             ref={buttonRef}
             type="button"
             aria-expanded={isOpen}
             aria-controls="members-menu"
             onClick={() => setIsOpen((open) => !open)}
-            className="border-members-line-strong bg-members-card text-foreground hover:bg-primary/10 flex min-h-12 items-center gap-2 rounded-xl border px-3.5 text-lg font-medium lg:hidden"
+            className="bg-members-band text-foreground hover:bg-members-line flex min-h-12 items-center gap-2 rounded-full px-4 text-lg font-medium lg:hidden"
           >
             {isOpen ? (
               <IoCloseOutline aria-hidden="true" className="h-6 w-6" />
@@ -104,7 +107,7 @@ export const MembersNavigation = () => {
             aria-label="Menu de l’espace membres"
             className="basis-full lg:hidden"
           >
-            <ul className="border-members-line divide-members-line divide-y overflow-hidden rounded-2xl border">
+            <ul className="bg-members-band flex flex-col gap-1 rounded-[28px] p-2">
               {MEMBERS_NAV_LINKS.map((link) => {
                 const active = isActiveLink(pathname, link.href);
                 const Icon = link.icon;
@@ -114,25 +117,29 @@ export const MembersNavigation = () => {
                       href={link.href}
                       aria-current={active ? "page" : undefined}
                       onClick={() => setIsOpen(false)}
-                      className={`flex min-h-16 items-center gap-3.5 px-4 py-2.5 no-underline ${
+                      className={`flex min-h-16 items-center gap-3.5 rounded-[22px] px-3 py-2.5 no-underline ${
                         active
-                          ? "bg-primary/10 shadow-[inset_4px_0_0_0_var(--primary)]"
-                          : "hover:bg-primary/5"
+                          ? "bg-members-ink text-members-ink-foreground"
+                          : "hover:bg-members-card"
                       }`}
                     >
                       <span
                         aria-hidden="true"
-                        className="bg-primary/10 text-primary-text flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                          active
+                            ? "bg-members-ink-foreground text-members-ink"
+                            : "bg-members-card text-foreground"
+                        }`}
                       >
                         <Icon className="h-6 w-6" />
                       </span>
                       <span className="flex min-w-0 flex-col">
-                        <span
-                          className={`text-lg font-semibold ${active ? "text-primary-text" : "text-foreground"}`}
-                        >
+                        <span className="text-lg font-semibold">
                           {link.label}
                         </span>
-                        <span className="text-muted text-base leading-snug">
+                        <span
+                          className={`text-base leading-snug ${active ? "opacity-85" : "text-members-muted"}`}
+                        >
                           {link.description}
                         </span>
                       </span>

@@ -29,15 +29,22 @@ const TAB_ICONS: Record<string, IconType> = {
 
 interface FileExplorerProps {
   folders: DriveFolderTab[];
+  /** The folder to open first, when it exists; the first one otherwise. */
+  initialSlug?: string;
 }
 
 /** The score library: one button per Drive folder, the chosen folder's files. */
-const FileExplorer: React.FC<FileExplorerProps> = ({ folders }) => {
+const FileExplorer: React.FC<FileExplorerProps> = ({
+  folders,
+  initialSlug,
+}) => {
   const tabs = folders.map((folder) => ({
     ...folder,
     icon: TAB_ICONS[folder.slug] ?? FaMusic,
   }));
-  const [activeSlug, setActiveSlug] = useState<string>(tabs[0]?.slug ?? "");
+  const [activeSlug, setActiveSlug] = useState<string>(
+    tabs.find((tab) => tab.slug === initialSlug)?.slug ?? tabs[0]?.slug ?? "",
+  );
   const activeTab = tabs.find((tab) => tab.slug === activeSlug) ?? tabs[0]!;
 
   return (
@@ -53,7 +60,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ folders }) => {
                     type="button"
                     onClick={() => setActiveSlug(tab.slug)}
                     aria-pressed={active}
-                    className={`flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 text-left text-lg font-medium transition-colors ${
+                    className={`flex min-h-14 w-full items-center gap-3 rounded-full border px-2 pr-4 text-left text-lg font-medium transition-colors ${
                       active
                         ? "bg-primary-solid text-accent-foreground border-primary-solid"
                         : "text-foreground hover:bg-primary/10 border-transparent"
@@ -61,7 +68,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ folders }) => {
                   >
                     <span
                       aria-hidden="true"
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
                         active
                           ? "bg-white/20"
                           : "bg-primary/10 text-primary-text"
@@ -85,11 +92,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ folders }) => {
       >
         <h2
           id="travail-folder"
-          className="mb-5 flex items-center gap-3 text-2xl font-semibold"
+          className="font-members-display mb-5 flex items-center gap-3 text-[26px] font-semibold"
         >
           <span
             aria-hidden="true"
-            className="bg-primary/10 text-primary-text flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+            className="bg-members-band text-foreground flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
           >
             <activeTab.icon className="h-6 w-6" />
           </span>

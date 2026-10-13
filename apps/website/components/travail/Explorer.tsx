@@ -148,7 +148,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   };
 
   const rowClass =
-    "border-members-line bg-members-band flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left";
+    "border-members-line bg-members-band flex min-h-14 w-full items-center gap-3 rounded-[18px] border px-3 py-2 text-left";
 
   return (
     <div className="flex flex-col gap-7">
@@ -172,7 +172,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
         {loading ? (
           <div className="animate-pulse space-y-2" aria-busy="true">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-primary/10 h-14 rounded-xl" />
+              <div key={i} className="bg-members-band h-14 rounded-[18px]" />
             ))}
           </div>
         ) : (
@@ -205,7 +205,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
         {loading ? (
           <div className="animate-pulse space-y-2" aria-busy="true">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-primary/10 h-14 rounded-xl" />
+              <div key={i} className="bg-members-band h-14 rounded-[18px]" />
             ))}
           </div>
         ) : (
@@ -224,7 +224,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                     type="button"
                     onClick={() => downloadDriveFile(file)}
                     aria-label={`Télécharger ${file.name}`}
-                    className={membersButtonClass("outlineTeal", "", "md")}
+                    className={membersButtonClass("quiet", "", "md")}
                   >
                     <IoDownloadOutline aria-hidden="true" className="h-5 w-5" />
                     Télécharger

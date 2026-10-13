@@ -1,4 +1,5 @@
 // MainLinks.tsx
+import { AnniversaryNavLink } from "@/components/anniversary/AnniversaryEntry";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import type { User } from "@supabase/supabase-js";
@@ -78,15 +79,10 @@ const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
       </li>
       {(isAnniversaryEnabled || isAdmin) && (
         <li>
-          <Link
-            href="/40-ans"
-            aria-label="Célébrer 40 ans du Bon Tempérament"
-            className={`from-primary-600 via-primary to-primary-400 dark:from-primary-700 dark:via-primary-600 dark:to-primary-500 focus-visible:outline-primary rounded-full bg-linear-to-r px-3 py-1 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-px hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 ${
-              isActive("/40-ans") ? "ring-2 ring-white/50" : ""
-            }`}
-          >
-            🎉 40 ans
-          </Link>
+          <AnniversaryNavLink
+            isLight={isLight}
+            isActive={isActive("/40-ans")}
+          />
         </li>
       )}
       {!isLoading && user && (
