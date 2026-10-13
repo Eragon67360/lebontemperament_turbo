@@ -11,7 +11,7 @@ export function GroupChip({
 }) {
   return (
     <span
-      className={`inline-block rounded-lg px-3 py-1 text-base leading-snug font-bold ${TONES[GROUP_TONE[group]]} ${className}`}
+      className={`inline-block rounded-lg px-3 py-1 text-base leading-snug font-medium ${TONES[GROUP_TONE[group]]} ${className}`}
     >
       {GROUP_LABEL[group] ?? group}
     </span>

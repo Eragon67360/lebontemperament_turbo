@@ -71,7 +71,7 @@ const Calendrier = () => {
 
         {!showGoogleCalendar && (
           <fieldset className="m-0 flex flex-col gap-2.5 border-0 p-0">
-            <legend className="mb-2.5 p-0 font-bold">Afficher</legend>
+            <legend className="mb-2.5 p-0 font-medium">Afficher</legend>
             <div className="flex flex-wrap gap-2.5">
               <FilterButton
                 label="Tous les groupes"
@@ -145,12 +145,12 @@ const Calendrier = () => {
                     />
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                        <h2 className="text-[19px] leading-snug font-extrabold">
+                        <h2 className="text-[19px] leading-snug font-semibold">
                           {rehearsal.name}
                         </h2>
                         <GroupChip group={rehearsal.group_type} />
                       </div>
-                      <p className="flex items-center gap-2.5 font-bold">
+                      <p className="flex items-center gap-2.5 font-medium">
                         <IoTimeOutline
                           aria-hidden="true"
                           className="text-primary h-5 w-5 shrink-0"

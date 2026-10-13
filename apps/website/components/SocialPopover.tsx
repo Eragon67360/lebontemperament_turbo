@@ -1,50 +1,58 @@
 "use client";
 
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
+import type { SocialNetwork } from "@repo/domain/utils/siteSettings";
 import { AnimatePresence, m } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
 import { IoShareSocial } from "react-icons/io5";
 
-const socials = [
-  {
+// The links are the admin's (social_links setting, same as the footer); the
+// icon and the colours are the site's.
+const SOCIAL_LOOKS: Record<
+  SocialNetwork,
+  { name: string; icon: ReactNode; bgClass: string }
+> = {
+  facebook: {
     name: "Facebook",
-    url: "https://www.facebook.com/profile.php?id=100063069588507",
     icon: <FaFacebook size={24} />,
     bgClass: "bg-[#1877F2]",
   },
-  {
+  tiktok: {
     name: "Tiktok",
-    url: "https://www.tiktok.com/@lebontemperament",
     icon: <FaTiktok size={24} />,
     bgClass: "bg-gradient-to-br from-[#00F2EA] via-[#000000] to-[#FE2C55]",
   },
-  {
+  instagram: {
     name: "Instagram",
-    url: "https://www.instagram.com/lebontemperament_/",
     icon: <FaInstagram size={24} />,
     bgClass:
       "bg-gradient-to-tr from-[#FCAF45] via-[#F77737] via-[#DD2A7B] via-[#8134AF] to-[#5B51D8]",
   },
-  {
+  youtube: {
     name: "YouTube",
-    url: "https://www.youtube.com/@lebontemperament",
     icon: <FaYoutube size={24} />,
     bgClass: "bg-[#FF0000]",
   },
-];
+};
 
 export const SocialPopover = () => {
+  const { social_links } = useSiteSettings();
+  const socials = social_links.links.map(({ network, url }) => ({
+    ...SOCIAL_LOOKS[network],
+    url,
+  }));
   const [isOpen, setIsOpen] = useState(false);
   const [currentIconIndex, setCurrentIconIndex] = useState(0);
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen) return;
+    if (isOpen || socials.length < 2) return;
     const interval = setInterval(() => {
       setCurrentIconIndex((prev) => (prev + 1) % socials.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [isOpen]);
+  }, [isOpen, socials.length]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,7 +73,10 @@ export const SocialPopover = () => {
     };
   }, [isOpen]);
 
-  const currentSocial = socials[currentIconIndex];
+  // The admin may have emptied the list: nothing to share, no button.
+  if (socials.length === 0) return null;
+
+  const currentSocial = socials[currentIconIndex % socials.length];
 
   return (
     <div

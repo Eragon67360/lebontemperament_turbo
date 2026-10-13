@@ -46,12 +46,7 @@ export default async function FAQPage() {
   const faqData = await listFaq(createPublicClient());
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema(faqData)),
-        }}
-      />
+      <JsonLd data={faqSchema(faqData)} />
       <JsonLd data={breadcrumbJsonLd([{ name: "FAQ", path: "/faq" }])} />
       <div className="container mx-auto mb-32 flex flex-col px-8 py-4 md:py-8 lg:py-16">
         <div className="mb-8">

@@ -47,10 +47,10 @@ export const MembersNavigation = () => {
             className="h-11 w-11 shrink-0 rounded-lg object-contain sm:h-12 sm:w-12 dark:bg-white dark:p-0.5"
           />
           <span className="flex min-w-0 flex-col leading-tight lg:max-xl:hidden">
-            <span className="hidden text-lg font-extrabold sm:block">
+            <span className="hidden text-lg font-semibold sm:block">
               Le Bon Tempérament
             </span>
-            <span className="text-muted truncate text-base font-bold max-[479px]:hidden sm:font-normal">
+            <span className="text-muted truncate text-base font-medium max-[479px]:hidden sm:font-normal">
               Espace membres
             </span>
           </span>
@@ -67,7 +67,7 @@ export const MembersNavigation = () => {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-12 items-center rounded-[10px] px-3.5 text-[17px] font-bold no-underline transition-colors ${
+                className={`inline-flex min-h-12 items-center rounded-[10px] px-3.5 text-[17px] font-medium no-underline transition-colors ${
                   active
                     ? "bg-primary/10 text-primary-text shadow-[inset_0_-3px_0_0_var(--primary)]"
                     : "text-foreground hover:bg-primary/10 hover:text-primary-text"
@@ -86,7 +86,7 @@ export const MembersNavigation = () => {
             aria-expanded={isOpen}
             aria-controls="members-menu"
             onClick={() => setIsOpen((open) => !open)}
-            className="border-members-line-strong bg-members-card text-foreground hover:bg-primary/10 flex min-h-12 items-center gap-2 rounded-xl border px-3.5 text-lg font-bold lg:hidden"
+            className="border-members-line-strong bg-members-card text-foreground hover:bg-primary/10 flex min-h-12 items-center gap-2 rounded-xl border px-3.5 text-lg font-medium lg:hidden"
           >
             {isOpen ? (
               <IoCloseOutline aria-hidden="true" className="h-6 w-6" />
@@ -128,7 +128,7 @@ export const MembersNavigation = () => {
                       </span>
                       <span className="flex min-w-0 flex-col">
                         <span
-                          className={`text-lg font-extrabold ${active ? "text-primary-text" : "text-foreground"}`}
+                          className={`text-lg font-semibold ${active ? "text-primary-text" : "text-foreground"}`}
                         >
                           {link.label}
                         </span>

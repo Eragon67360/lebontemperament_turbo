@@ -1,6 +1,6 @@
 "use client";
 
-import { PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import { DELETION_NOTE_MAX_LENGTH } from "@/lib/deletionRequest";
 import { membersFont } from "@/lib/membres/font";
 import {
@@ -23,7 +23,7 @@ import { MembersCard } from "./MembersCard";
 import { PageHeader } from "./PageHeader";
 
 const linkClass =
-  "text-primary-text font-bold underline underline-offset-2 hover:no-underline";
+  "text-primary-text font-medium underline underline-offset-2 hover:no-underline";
 
 function Panel({
   icon,
@@ -48,7 +48,7 @@ function Panel({
         >
           {icon}
         </div>
-        <h2 id={id} className="text-foreground text-[22px] font-extrabold">
+        <h2 id={id} className="text-foreground text-[22px] font-semibold">
           {title}
         </h2>
       </div>
@@ -64,6 +64,7 @@ function fileNameOf(response: Response): string {
 }
 
 function DownloadPanel() {
+  const { email } = useSiteSettings().contact;
   const [isLoading, setIsLoading] = useState(false);
 
   const download = async () => {
@@ -86,7 +87,7 @@ function DownloadPanel() {
     } catch (error) {
       console.error("Export failed:", error);
       toast.danger(
-        `Le téléchargement a échoué. Réessayez, ou écrivez à ${PRIVACY_CONTACT_EMAIL}.`,
+        `Le téléchargement a échoué. Réessayez, ou écrivez à ${email}.`,
       );
     } finally {
       setIsLoading(false);
@@ -110,7 +111,7 @@ function DownloadPanel() {
         <Button
           variant="primary"
           size="lg"
-          className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+          className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
           onPress={download}
           isPending={isLoading}
         >
@@ -123,6 +124,7 @@ function DownloadPanel() {
 }
 
 function CorrectPanel() {
+  const { email } = useSiteSettings().contact;
   return (
     <Panel
       icon={<IoCreateOutline className="h-6 w-6" />}
@@ -131,8 +133,8 @@ function CorrectPanel() {
       <p className="text-muted leading-relaxed">
         Une information est fausse ou a changé (nom, pupitre, coordonnées,
         photo) ? Écrivez à{" "}
-        <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className={linkClass}>
-          {PRIVACY_CONTACT_EMAIL}
+        <a href={`mailto:${email}`} className={linkClass}>
+          {email}
         </a>{" "}
         : nous la corrigeons dans votre profil et dans le fichier des adhérents,
         d’où viennent votre nom, votre adresse, votre téléphone fixe et votre
@@ -143,6 +145,7 @@ function CorrectPanel() {
 }
 
 function DeletionPanel() {
+  const { email } = useSiteSettings().contact;
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -162,7 +165,7 @@ function DeletionPanel() {
     } catch (error) {
       console.error("Deletion request failed:", error);
       toast.danger(
-        `La demande n’a pas pu être envoyée. Réessayez, ou écrivez à ${PRIVACY_CONTACT_EMAIL}.`,
+        `La demande n’a pas pu être envoyée. Réessayez, ou écrivez à ${email}.`,
       );
     } finally {
       setIsSending(false);
@@ -204,7 +207,7 @@ function DeletionPanel() {
             <Button
               variant="danger-soft"
               size="lg"
-              className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+              className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
               onPress={() => setIsOpen(true)}
             >
               <IoTrashOutline className="size-4" aria-hidden="true" />
@@ -252,7 +255,7 @@ function DeletionPanel() {
                 <Button
                   variant="ghost"
                   size="lg"
-                  className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+                  className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
                   onPress={() => setIsOpen(false)}
                   isDisabled={isSending}
                 >
@@ -261,7 +264,7 @@ function DeletionPanel() {
                 <Button
                   variant="danger"
                   size="lg"
-                  className="h-auto min-h-12 py-2 text-lg font-bold whitespace-normal"
+                  className="h-auto min-h-12 py-2 text-lg font-medium whitespace-normal"
                   onPress={send}
                   isPending={isSending}
                 >

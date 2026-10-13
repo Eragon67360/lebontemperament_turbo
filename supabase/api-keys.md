@@ -1,6 +1,8 @@
 # Moving production to the new Supabase API keys (#570)
 
-Production (`website`, ref `fsklunxplbbtzgurwqmc`) still runs on the legacy JWT keys (`anon`, `service_role`). Staging already runs on the new keys only ([staging](staging/README.md)). This page is the owner's checklist to switch production, step by step, without breaking anything. Each step can wait as long as needed; the legacy keys keep working alongside the new ones until step 7, and Supabase keeps them working until the end of 2026.
+Production (`website`, ref `fsklunxplbbtzgurwqmc`) is moving from the legacy JWT keys (`anon`, `service_role`) to the new ones. Staging already runs on the new keys only ([staging](staging/README.md)). This page is the owner's checklist to switch production, step by step, without breaking anything. Each step can wait as long as needed; the legacy keys keep working alongside the new ones until step 7, and Supabase keeps them working until the end of 2026.
+
+**Status (checked 2026-10-12):** steps 1 to 5 are done. The website and admin (since 2.0.141) and the edge functions call production with the new keys (production API logs). The apps up to build 160 (Android 2.0.143, iPhone 2.0.140) still carry the legacy anon key: the Android APK's `.env` holds it, and every app request in the logs uses it. Step 6 is next, then step 7.
 
 **Never disable the legacy keys before step 7's conditions are all true.** Installed apps carry the legacy anon key until a release ships the publishable key (step 6) and members install it.
 

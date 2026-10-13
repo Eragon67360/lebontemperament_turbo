@@ -1,5 +1,5 @@
 import CookiePreferencesButton from "@/components/cookies/CookiePreferencesButton";
-import { PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -103,9 +103,9 @@ function Processing({
   );
 }
 
-const PrivacyMail = () => (
-  <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className={linkClass}>
-    {PRIVACY_CONTACT_EMAIL}
+const PrivacyMail = ({ email }: { email: string }) => (
+  <a href={`mailto:${email}`} className={linkClass}>
+    {email}
   </a>
 );
 
@@ -217,7 +217,12 @@ const RETENTION: [what: string, howLong: string][] = [
   ],
 ];
 
-export default function PrivacyPolicy() {
+// The mailbox and the address come from the site settings (admin):
+// prerendered, refreshed every five minutes or when an admin saves.
+export const revalidate = 300;
+
+export default async function PrivacyPolicy() {
+  const { contact } = await getSiteSettings();
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -260,7 +265,8 @@ export default function PrivacyPolicy() {
           <Section id="responsable">
             <p className={pClass}>
               Le responsable des traitements décrits ici est l’association Le
-              Bon Tempérament, 3 Rue Clemenceau, 67700 Saverne, France (voir les{" "}
+              Bon Tempérament, {contact.street}, {contact.postalCode}{" "}
+              {contact.city}, France (voir les{" "}
               <Link href="/mentions-legales" className={linkClass}>
                 mentions légales
               </Link>
@@ -268,9 +274,9 @@ export default function PrivacyPolicy() {
             </p>
             <p className={pClass}>
               Pour toute question sur vos données ou pour exercer vos droits,
-              écrivez-nous à <PrivacyMail /> ou par courrier à l’adresse
-              ci-dessus. L’association n’a pas désigné de délégué à la
-              protection des données.
+              écrivez-nous à <PrivacyMail email={contact.email} /> ou par
+              courrier à l’adresse ci-dessus. L’association n’a pas désigné de
+              délégué à la protection des données.
             </p>
           </Section>
 
@@ -647,11 +653,12 @@ export default function PrivacyPolicy() {
                 <strong>Suppression du compte</strong> : le bouton « Supprimer
                 le compte » de l’application nous envoie une demande par e-mail
                 ; vous pouvez aussi la faire depuis la page « Mes données » de
-                l’espace membres du site, ou écrire à <PrivacyMail />. Nous
-                supprimons dans un délai d’un mois le compte, le profil, la
-                photo, les notifications, les signalements avec leurs captures
-                et les messages échangés à leur sujet ; ce que vous avez publié
-                pour l’association en tant qu’administrateur (concerts, comptes
+                l’espace membres du site, ou écrire à{" "}
+                <PrivacyMail email={contact.email} />. Nous supprimons dans un
+                délai d’un mois le compte, le profil, la photo, les
+                notifications, les signalements avec leurs captures et les
+                messages échangés à leur sujet ; ce que vous avez publié pour
+                l’association en tant qu’administrateur (concerts, comptes
                 rendus…) reste en ligne sans votre nom.
               </li>
             </ul>
@@ -823,7 +830,7 @@ export default function PrivacyPolicy() {
               <li className="mb-2">
                 <strong>Vos droits</strong> : si vous apparaissez sur une image
                 ou un enregistrement, vous pouvez demander son retrait à tout
-                moment en écrivant à <PrivacyMail />.
+                moment en écrivant à <PrivacyMail email={contact.email} />.
               </li>
             </ul>
           </Section>
@@ -941,12 +948,13 @@ export default function PrivacyPolicy() {
               d’un mois.
             </p>
             <p className={pClass}>
-              Pour exercer ces droits, écrivez-nous à <PrivacyMail /> ou par
-              courrier au 3 Rue Clemenceau, 67700 Saverne. Nous répondons dans
-              un délai d’un mois, qui peut être prolongé de deux mois pour une
-              demande complexe ; nous vous en informons alors. Nous pouvons vous
-              demander de justifier de votre identité en cas de doute
-              raisonnable.
+              Pour exercer ces droits, écrivez-nous à{" "}
+              <PrivacyMail email={contact.email} /> ou par courrier au{" "}
+              {contact.street}, {contact.postalCode} {contact.city}. Nous
+              répondons dans un délai d’un mois, qui peut être prolongé de deux
+              mois pour une demande complexe ; nous vous en informons alors.
+              Nous pouvons vous demander de justifier de votre identité en cas
+              de doute raisonnable.
             </p>
             <p className="text-foreground">
               Si vous estimez, après nous avoir contactés, que vos droits ne

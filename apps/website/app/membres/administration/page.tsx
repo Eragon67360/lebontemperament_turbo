@@ -58,7 +58,7 @@ const RegulationsSection = () => (
     >
       <div className="flex flex-col gap-4">
         <div className="bg-members-band rounded-2xl p-5">
-          <h3 className="mb-1 text-lg font-extrabold">Répétitions</h3>
+          <h3 className="mb-1 text-lg font-semibold">Répétitions</h3>
           <p className="text-muted">
             Le Bon Tempérament répète un dimanche par mois et part en tournée
             dix jours en été. Les répétitions de pupitres, hommes et femmes, ont
@@ -66,7 +66,7 @@ const RegulationsSection = () => (
           </p>
         </div>
         <div className="bg-members-band rounded-2xl p-5">
-          <h3 className="mb-1 text-lg font-extrabold">
+          <h3 className="mb-1 text-lg font-semibold">
             Commission de solidarité
           </h3>
           <p className="text-muted">
@@ -201,7 +201,7 @@ const SoftwareSection = () => {
                   href={item.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border-members-line bg-members-band hover:border-primary hover:bg-primary/5 text-foreground flex min-h-28 w-full flex-col items-center justify-center gap-3 rounded-2xl border p-4 text-center font-bold no-underline transition-colors"
+                  className="border-members-line bg-members-band hover:border-primary hover:bg-primary/5 text-foreground flex min-h-28 w-full flex-col items-center justify-center gap-3 rounded-2xl border p-4 text-center font-medium no-underline transition-colors"
                 >
                   {item.imageType === "icon" && item.icon ? (
                     <item.icon aria-hidden="true" className="h-12 w-12" />
@@ -253,7 +253,7 @@ const Administration = () => {
       />
 
       <fieldset className="m-0 flex flex-col gap-2.5 border-0 p-0">
-        <legend className="mb-2.5 p-0 font-bold">Choisir une rubrique</legend>
+        <legend className="mb-2.5 p-0 font-medium">Choisir une rubrique</legend>
         <div className="flex flex-wrap gap-2.5">
           {SECTIONS.map((tab) => (
             <FilterButton

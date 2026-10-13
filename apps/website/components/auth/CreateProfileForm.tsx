@@ -1,7 +1,7 @@
 "use client";
 
 import { LinkButton } from "@/components/LinkButton";
-import { CONTACT_EMAIL } from "@/lib/contact";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -18,6 +18,7 @@ import { CiMail } from "react-icons/ci";
 import { FiLoader } from "react-icons/fi";
 
 export default function CreateProfileForm() {
+  const { contact } = useSiteSettings();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -115,7 +116,7 @@ export default function CreateProfileForm() {
         <LinkButton
           variant="outline"
           className="mt-2"
-          href={`mailto:${CONTACT_EMAIL}?subject=Nouveau lien d'invitation - Le Bon Tempérament&body=Bonjour, mon lien d'invitation n'est plus valide. Pourriez-vous m'en envoyer un nouveau ? Merci !`}
+          href={`mailto:${contact.email}?subject=Nouveau lien d'invitation - Le Bon Tempérament&body=Bonjour, mon lien d'invitation n'est plus valide. Pourriez-vous m'en envoyer un nouveau ? Merci !`}
         >
           <span className="mr-2">
             <CiMail className="text-muted" />

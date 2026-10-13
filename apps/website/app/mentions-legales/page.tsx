@@ -1,29 +1,9 @@
-import {
-  CONTACT_ADDRESS_LINE,
-  CONTACT_EMAIL,
-  CONTACT_FORM_PATH,
-  PRIVACY_CONTACT_EMAIL,
-} from "@/lib/contact";
+import { CONTACT_FORM_PATH } from "@/lib/contact";
+import { getSiteSettings } from "@/lib/siteSettings";
+import { contactAddressLine } from "@repo/domain/utils/siteSettings";
 import { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-
-/**
- * The association's entry in the register of associations (Alsace-Moselle
- * local-law associations are registered at the tribunal judiciaire, e.g.
- * "Tribunal judiciaire de Saverne, volume …, folio …").
- *
- * TODO(owner): not found anywhere in the repo; the board gives the exact
- * reference. While it is null, nothing is rendered.
- */
-const ASSOCIATION_REGISTRY: string | null = null;
-
-/**
- * The president's phone number, required of the publisher by the LCEN. It is
- * shown on this page only, as plain text: everywhere else the site's contacts
- * are the mailbox and the contact form (owner decision, 2026-10-07, #329).
- */
-const PUBLISHER_PHONE = "+33 6 89 68 74 82";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
@@ -53,7 +33,12 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 const linkClass = "text-primary-text hover:text-primary-text/80 underline";
 
-export default function MentionsLegales() {
+// Contact, publisher and registry come from the site settings (admin):
+// prerendered, refreshed every five minutes or when an admin saves.
+export const revalidate = 300;
+
+export default async function MentionsLegales() {
+  const { contact, legal_notice } = await getSiteSettings();
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -76,11 +61,13 @@ export default function MentionsLegales() {
               <Row label="Éditeur">
                 Le Bon Tempérament, association de droit local (Alsace-Moselle)
               </Row>
-              <Row label="Siège">{CONTACT_ADDRESS_LINE}</Row>
-              <Row label="Téléphone">{PUBLISHER_PHONE}</Row>
+              <Row label="Siège">{contactAddressLine(contact)}</Row>
+              {/* The president's phone, required of the publisher by the LCEN:
+                  shown on this page only (owner decision, 2026-10-07, #329). */}
+              <Row label="Téléphone">{legal_notice.publisherPhone}</Row>
               <Row label="E-mail">
-                <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
-                  {CONTACT_EMAIL}
+                <a href={`mailto:${contact.email}`} className={linkClass}>
+                  {contact.email}
                 </a>
               </Row>
               <Row label="Formulaire">
@@ -88,10 +75,10 @@ export default function MentionsLegales() {
                   page Contact
                 </Link>
               </Row>
-              <Row label="SIRET">499 664 654 00013</Row>
-              {ASSOCIATION_REGISTRY && (
+              <Row label="SIRET">{legal_notice.siret}</Row>
+              {legal_notice.registry && (
                 <Row label="Registre des associations">
-                  {ASSOCIATION_REGISTRY}
+                  {legal_notice.registry}
                 </Row>
               )}
             </div>
@@ -102,10 +89,10 @@ export default function MentionsLegales() {
               Direction de la publication
             </h2>
             <div className="space-y-4">
-              <Row label="Nom">Sophie Bellard</Row>
+              <Row label="Nom">{legal_notice.publicationDirector}</Row>
               <Row label="Contact">
-                <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
-                  {CONTACT_EMAIL}
+                <a href={`mailto:${contact.email}`} className={linkClass}>
+                  {contact.email}
                 </a>
               </Row>
             </div>
@@ -162,8 +149,8 @@ export default function MentionsLegales() {
                 politique de confidentialité
               </Link>
               . Pour toute question ou demande concernant vos données :{" "}
-              <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className={linkClass}>
-                {PRIVACY_CONTACT_EMAIL}
+              <a href={`mailto:${contact.email}`} className={linkClass}>
+                {contact.email}
               </a>
               .
             </p>

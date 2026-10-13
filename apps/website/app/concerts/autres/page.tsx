@@ -64,11 +64,7 @@ const page = () => {
   return (
     <>
       {structuredData.map((schema, index) => (
-        <script
-          key={index}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
+        <JsonLd key={index} data={schema} />
       ))}
       <JsonLd
         data={breadcrumbJsonLd([

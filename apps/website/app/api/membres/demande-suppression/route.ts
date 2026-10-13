@@ -1,9 +1,9 @@
-import { PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
 import {
   deletionRequestEmails,
   parseDeletionNote,
 } from "@/lib/deletionRequest";
 import { createMailer } from "@/lib/mail";
+import { getContactEmail } from "@/lib/siteSettings";
 import { checkAuthorization } from "@/utils/auth";
 import { NextResponse } from "next/server";
 
@@ -62,6 +62,8 @@ export async function POST(request: Request) {
     metadata.name ||
     null;
 
+  // Personal-data requests go to the main mailbox (site settings).
+  const privacyEmail = await getContactEmail();
   const { toAssociation, toMember } = deletionRequestEmails(
     { id: auth.user.id, email, name },
     note,
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
   try {
     await mailer.transporter.sendMail({
       from: mailer.from,
-      to: PRIVACY_CONTACT_EMAIL,
+      to: privacyEmail,
       replyTo: email,
       ...toAssociation,
     });
@@ -85,7 +87,7 @@ export async function POST(request: Request) {
     await mailer.transporter.sendMail({
       from: mailer.from,
       to: email,
-      replyTo: PRIVACY_CONTACT_EMAIL,
+      replyTo: privacyEmail,
       ...toMember,
     });
   } catch (error) {

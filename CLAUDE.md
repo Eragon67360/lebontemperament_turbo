@@ -14,12 +14,6 @@ You are the owner's senior engineer here: you audit, file issues, fix them (alon
 6. **Verify, don't assume.** Read the code, run the command, query the API. Label claims _measured_ or _estimated_. Report outcomes faithfully, including failures and skipped steps.
 7. **Don't touch the owner's working copy.** It often holds work in progress on a feature branch. Do your work in a `git worktree`; never switch, reset, stash or clean the main checkout.
 
-## Open risks to settle first (found 2026-10-01; remove each line once fixed)
-
-1. **No checks run on pull requests** beyond Vercel preview builds; the Playwright suite runs daily and after staging deploys only ([quality gates](docs/agents/quality-gates.md); #323).
-
-Audit tracking issue: #369.
-
 ## Commands
 
 | Task                         | Command                                                                                                                                                            |

@@ -53,7 +53,7 @@ export function PageHeader({
         </ol>
       </nav>
       <div className="flex flex-col gap-2">
-        <h1 className="text-foreground text-[34px] leading-[1.1] font-extrabold tracking-tight md:text-[44px]">
+        <h1 className="text-foreground text-[34px] leading-[1.1] font-semibold tracking-tight md:text-[44px]">
           {title}
         </h1>
         {intro && (
