@@ -152,21 +152,19 @@ class _SaleCard extends StatelessWidget {
                   color: s.onSurface,
                 ),
               ),
-              const Spacer(),
-              if (owed != null)
-                Flexible(
-                  child: Text(
-                    owed,
-                    textAlign: TextAlign.end,
-                    style: AppFonts.sans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: overview.dueCents > 0 ? s.tertiary : s.primary,
-                    ),
-                  ),
-                ),
             ],
           ),
+          if (owed != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              owed,
+              style: AppFonts.sans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: overview.dueCents > 0 ? s.tertiary : s.primary,
+              ),
+            ),
+          ],
         ],
       ),
     );
