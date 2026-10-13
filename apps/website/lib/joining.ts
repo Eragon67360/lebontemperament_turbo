@@ -1,4 +1,5 @@
 import type { Database } from "@repo/domain/database.types";
+import { DEFAULT_SITE_SETTINGS } from "@repo/domain/utils/siteSettings";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -7,10 +8,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * 2026-2027 season). The Join page, the FAQ and llms.txt all read them, so
  * search and AI engines get one answer.
  *
- * The rehearsal slots are now edited in the admin (`listRehearsalSlots`
- * below; REHEARSAL_SLOTS is their fallback). When the facts change, update
- * this file: the agenda in the members area stays the reference for exact
- * dates.
+ * The facts and the rehearsal slots are now edited in the admin (site
+ * settings, and `listRehearsalSlots` below with REHEARSAL_SLOTS as its
+ * fallback). JOINING_FACTS is the facts' fallback, the built-in FAQ's source
+ * (server code only, like lib/contact.ts). The agenda in the members area
+ * stays the reference for exact dates.
  */
 
 export type RehearsalSlot = {
@@ -53,22 +55,7 @@ export const REHEARSAL_SLOTS: readonly RehearsalSlot[] = [
   },
 ];
 
-export const JOINING_FACTS = {
-  /** First paragraph of the Join page: who, what, where, when. */
-  intro:
-    "Le Bon Tempérament est un ensemble vocal et instrumental associatif, fondé en 1987 à Saverne (Bas-Rhin), avec des chœurs pour tous les âges et, depuis 2023, un orchestre symphonique. Il accueille les chanteurs et les instrumentistes de tous niveaux, sans audition et sans obligation de lire la musique. Le chœur d’adultes répète principalement à Wangen et à Nordheim : le mercredi soir pour les femmes, le samedi matin pour les hommes et un dimanche par mois pour le chœur complet ; l’orchestre répète le jeudi soir au Conservatoire de Strasbourg. Vous pouvez nous rejoindre à tout moment de l’année, en commençant par une répétition d’essai.",
-  where:
-    "Les répétitions ont lieu en plusieurs endroits du Bas-Rhin : principalement à Wangen et à Nordheim pour le chœur d’adultes, et au Conservatoire de Strasbourg pour l’orchestre. Nous vous indiquons le lieu de votre répétition d’essai quand vous nous contactez ; les membres retrouvent ensuite chaque répétition dans leur agenda.",
-  when: "Pour le chœur d’adultes, en général : le mercredi de 20 h 30 à 22 h pour les pupitres de femmes et le samedi de 10 h à 11 h 30 pour les pupitres d’hommes, toutes les deux semaines ; le dimanche de 9 h 30 à 16 h, environ une fois par mois, pour le chœur complet. L’orchestre répète le jeudi de 19 h 45 à 21 h 45. Les chœurs d’enfants et de jeunes ont leurs propres horaires : demandez-les-nous.",
-  ages: "Tous les âges sont les bienvenus, des enfants aux seniors : le chœur des tout-jeunes, le chœur de jeunes, le chœur d’adultes et l’orchestre mêlent les générations.",
-  audition:
-    "Il n’y a pas d’audition. Vous venez à une répétition d’essai, puis c’est vous qui décidez si vous restez.",
-  readingMusic:
-    "Non, il n’est pas nécessaire de savoir lire la musique pour chanter dans le chœur. L’important est l’envie de chanter ensemble.",
-  fee: "La cotisation est d’environ 40 € par an pour un adulte qui travaille, partitions comprises. Une commission de solidarité aide les membres qui en ont besoin.",
-  anyTime:
-    "Vous pouvez nous rejoindre à tout moment de l’année, il n’y a pas de date limite d’inscription.",
-} as const;
+export const JOINING_FACTS = DEFAULT_SITE_SETTINGS.joining;
 
 /**
  * The usual rehearsals shown on /rejoindre (public.joining_slots, managed in

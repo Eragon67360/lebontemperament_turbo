@@ -1,5 +1,6 @@
 import DonationTiers from "@/components/donations/DonationTiers";
 import { JsonLd } from "@/components/JsonLd";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { Metadata } from "next";
 
@@ -23,7 +24,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DonPage() {
+// The suggested amounts and the HelloAsso link come from the site settings
+// (admin): prerendered, refreshed every five minutes or when an admin saves.
+export const revalidate = 300;
+
+export default async function DonPage() {
+  const { donations } = await getSiteSettings();
   return (
     <div className="container mx-auto flex min-h-screen w-full flex-col px-4 py-12 pb-16 md:py-16">
       <JsonLd
@@ -45,7 +51,11 @@ export default function DonPage() {
             aide à continuer de faire vivre la musique ensemble.
           </p>
 
-          <DonationTiers />
+          <DonationTiers
+            helloassoUrl={donations.helloassoUrl}
+            tiers={donations.tiers}
+            defaultAmount={donations.defaultAmount}
+          />
 
           <p className="border-default-200 text-muted mt-8 border-t pt-5 text-sm">
             Le Bon Tempérament est une association d&apos;intérêt général :

@@ -1,6 +1,7 @@
 import { JsonLd } from "@/components/JsonLd";
-import { CONTACT_EMAIL, CONTACT_FORM_PATH } from "@/lib/contact";
-import { JOINING_FACTS, listRehearsalSlots } from "@/lib/joining";
+import { CONTACT_FORM_PATH } from "@/lib/contact";
+import { listRehearsalSlots } from "@/lib/joining";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { breadcrumbJsonLd } from "@/utils/seo";
 import { createPublicClient } from "@/utils/supabase/public";
 import { Metadata } from "next";
@@ -35,12 +36,14 @@ export const metadata: Metadata = {
 
 /**
  * The joining steps: rendered on the page and copied into the HowTo JSON-LD,
- * so both say the same thing.
+ * so both say the same thing. The mailbox and the fee come from the site
+ * settings (the meta description above still names the fee: update it by hand
+ * if the amount changes).
  */
-const joiningSteps = [
+const joiningSteps = (email: string, fee: string) => [
   {
     name: "Contactez-nous",
-    text: `Écrivez-nous à ${CONTACT_EMAIL} ou par le formulaire de contact, en nous disant ce que vous chantez ou jouez (ou aimeriez chanter). Nous répondons à vos questions et vous proposons une date.`,
+    text: `Écrivez-nous à ${email} ou par le formulaire de contact, en nous disant ce que vous chantez ou jouez (ou aimeriez chanter). Nous répondons à vos questions et vous proposons une date.`,
   },
   {
     name: "Venez à une répétition d’essai",
@@ -48,36 +51,38 @@ const joiningSteps = [
   },
   {
     name: "Vous décidez de rester",
-    text: "C’est vous qui choisissez de continuer. Vous adhérez alors à l’association (environ 40 € par an pour un adulte qui travaille, partitions comprises) et participez aux répétitions, aux concerts et à la tournée d’été.",
+    text: `C’est vous qui choisissez de continuer. Vous adhérez alors à l’association et participez aux répétitions, aux concerts et à la tournée d’été. ${fee}`,
   },
 ];
 
-const howToSchema = {
+const howToSchema = (steps: ReturnType<typeof joiningSteps>) => ({
   "@context": "https://schema.org",
   "@type": "HowTo",
   name: "Comment rejoindre Le Bon Tempérament",
   description:
     "Les étapes pour rejoindre l'ensemble vocal et instrumental Le Bon Tempérament",
-  step: joiningSteps.map((step, index) => ({
+  step: steps.map((step, index) => ({
     "@type": "HowToStep",
     position: index + 1,
     name: step.name,
     text: step.text,
   })),
-};
+});
 
-// The rehearsal times come from the admin (lib/joining.ts): prerendered,
-// refreshed every five minutes or when an admin saves (/api/revalidate).
+// The rehearsal times (lib/joining.ts), the joining facts and the mailbox
+// (site settings) come from the admin: prerendered, refreshed every five
+// minutes or when an admin saves (/api/revalidate).
 export const revalidate = 300;
 
 export default async function RejoindrePage() {
-  const slots = await listRehearsalSlots(createPublicClient());
+  const [slots, { contact, joining }] = await Promise.all([
+    listRehearsalSlots(createPublicClient()),
+    getSiteSettings(),
+  ]);
+  const steps = joiningSteps(contact.email, joining.fee);
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
-      />
+      <JsonLd data={howToSchema(steps)} />
       <JsonLd
         data={breadcrumbJsonLd([{ name: "Rejoindre", path: "/rejoindre" }])}
       />
@@ -92,7 +97,7 @@ export default async function RejoindrePage() {
           </h2>
           <hr className="border-separator mt-2 md:mt-4 lg:mt-8" />
           <p className="text-foreground mt-8 text-base leading-relaxed md:text-lg">
-            {JOINING_FACTS.intro}
+            {joining.intro}
           </p>
           <p className="text-muted mt-4 text-base leading-relaxed">
             Notre ensemble se distingue par le mélange des générations, la
@@ -202,7 +207,7 @@ export default async function RejoindrePage() {
               Comment nous rejoindre
             </h2>
             <ol className="space-y-6">
-              {joiningSteps.map((step, index) => (
+              {steps.map((step, index) => (
                 <li
                   key={step.name}
                   className="border-separator bg-background rounded-lg border p-6"
@@ -232,10 +237,10 @@ export default async function RejoindrePage() {
             <p className="text-muted mt-6 leading-relaxed">
               Pour nous écrire :{" "}
               <a
-                href={`mailto:${CONTACT_EMAIL}`}
+                href={`mailto:${contact.email}`}
                 className="text-primary-text font-medium hover:underline"
               >
-                {CONTACT_EMAIL}
+                {contact.email}
               </a>{" "}
               ou le{" "}
               <Link
@@ -361,7 +366,7 @@ export default async function RejoindrePage() {
               Frais et adhésion
             </h2>
             <p className="text-muted text-base leading-relaxed">
-              {JOINING_FACTS.fee} {JOINING_FACTS.anyTime}
+              {joining.fee} {joining.anyTime}
             </p>
           </div>
         </section>

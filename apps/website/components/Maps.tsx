@@ -1,10 +1,11 @@
 "use client";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
+import { contactAddressLine } from "@repo/domain/utils/siteSettings";
 import { useEffect, useRef, useState } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 
+// The address text follows the site settings; the pin does not (coordinates).
 const POSITION = { lat: 48.738602, lng: 7.363074 };
-const ADDRESS = "3 Rue Clemenceau, 67700 Saverne, France";
-const GOOGLE_MAPS_LINK = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ADDRESS)}`;
 const OPENSTREETMAP_LINK = `https://www.openstreetmap.org/?mlat=${POSITION.lat}&mlon=${POSITION.lng}#map=17/${POSITION.lat}/${POSITION.lng}`;
 
 /**
@@ -13,6 +14,8 @@ const OPENSTREETMAP_LINK = `https://www.openstreetmap.org/?mlat=${POSITION.lat}&
  * through plain links to Google Maps and OpenStreetMap.
  */
 function Map() {
+  const address = contactAddressLine(useSiteSettings().contact);
+  const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   const mapRef = useRef<HTMLDivElement>(null);
   const [requested, setRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +102,7 @@ function Map() {
             aria-hidden="true"
           />
           <p className="text-foreground text-sm">
-            {ADDRESS}
+            {address}
             <br />
             <span className="text-muted text-xs">
               La carte Google Maps se charge seulement si vous l’affichez.
@@ -115,7 +118,7 @@ function Map() {
           <p className="text-muted text-xs">
             Ouvrir dans{" "}
             <a
-              href={GOOGLE_MAPS_LINK}
+              href={googleMapsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary-text underline hover:no-underline"

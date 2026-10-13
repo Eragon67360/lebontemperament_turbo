@@ -2,13 +2,11 @@ import ConditionalGoogleAnalytics from "@/components/cookies/ConditionalGoogleAn
 import CookieConsentComponent from "@/components/cookies/CookieConsent";
 import { DeveloperFootprint } from "@/components/DeveloperFootprint";
 import { EasterEgg } from "@/components/EasterEgg";
+import { JsonLd } from "@/components/JsonLd";
 import { LayoutShell } from "@/components/LayoutShell";
-import {
-  CONTACT_ADDRESS,
-  CONTACT_EMAIL,
-  CONTACT_FORM_PATH,
-} from "@/lib/contact";
+import { CONTACT_ADDRESS, CONTACT_FORM_PATH } from "@/lib/contact";
 import { getPublicFeatureFlags } from "@/lib/featureFlags";
+import { getSiteSettings } from "@/lib/siteSettings";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
@@ -106,8 +104,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Read once per render from the data cache (no cookies: pages stay static)
-  // and handed to client components through FeatureFlagProvider.
-  const featureFlags = await getPublicFeatureFlags();
+  // and handed to client components through FeatureFlagProvider and
+  // SiteSettingsProvider.
+  const [featureFlags, siteSettings] = await Promise.all([
+    getPublicFeatureFlags(),
+    getSiteSettings(),
+  ]);
+  // Only these two go to the browser: the rest stays on the server.
+  const { contact, social_links } = siteSettings;
 
   return (
     <html lang="fr" className={roboto.className} suppressHydrationWarning>
@@ -133,88 +137,76 @@ export default async function RootLayout({
       </head>
       <body className="bg-background text-foreground z-10 transition-colors duration-200">
         <CookieConsentComponent />
-        <Providers featureFlags={featureFlags}>
+        <Providers
+          featureFlags={featureFlags}
+          siteSettings={{ contact, social_links }}
+        >
           <DeveloperFootprint />
           <EasterEgg />
           <LayoutShell>{children}</LayoutShell>
         </Providers>
         <ConditionalGoogleAnalytics />
         {/* Organization Schema */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": ["Organization", "MusicGroup"],
-              "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#organization`,
-              name: "Le Bon Tempérament",
-              alternateName: "BT",
-              url: process.env.NEXT_PUBLIC_BASE_URL,
-              logo: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
-              image:
-                "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
-              description:
-                "Ensemble vocal et instrumental renommé à Saverne, France, depuis 1987",
-              genre: [
-                "Musique classique",
-                "Musique baroque",
-                "Musique chorale",
-              ],
-              address: {
-                "@type": "PostalAddress",
-                streetAddress: CONTACT_ADDRESS.street,
-                addressLocality: CONTACT_ADDRESS.city,
-                addressRegion: CONTACT_ADDRESS.region,
-                postalCode: CONTACT_ADDRESS.postalCode,
-                addressCountry: CONTACT_ADDRESS.countryCode,
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": ["Organization", "MusicGroup"],
+            "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#organization`,
+            name: "Le Bon Tempérament",
+            alternateName: "BT",
+            url: process.env.NEXT_PUBLIC_BASE_URL,
+            logo: "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+            image:
+              "https://res.cloudinary.com/dlt2j3dld/image/upload/v1716454520/Site/logo",
+            description:
+              "Ensemble vocal et instrumental renommé à Saverne, France, depuis 1987",
+            genre: ["Musique classique", "Musique baroque", "Musique chorale"],
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: contact.street,
+              addressLocality: contact.city,
+              addressRegion: CONTACT_ADDRESS.region,
+              postalCode: contact.postalCode,
+              addressCountry: CONTACT_ADDRESS.countryCode,
+            },
+            location: {
+              "@type": "Place",
+              name: "Saverne",
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: "48.7417",
+                longitude: "7.3622",
               },
-              location: {
-                "@type": "Place",
-                name: "Saverne",
-                geo: {
-                  "@type": "GeoCoordinates",
-                  latitude: "48.7417",
-                  longitude: "7.3622",
-                },
-              },
-              contactPoint: {
-                "@type": "ContactPoint",
-                contactType: "customer service",
-                email: CONTACT_EMAIL,
-                url: `${process.env.NEXT_PUBLIC_BASE_URL}${CONTACT_FORM_PATH}`,
-                areaServed: "FR",
-                availableLanguage: "fr",
-              },
-              sameAs: [
-                "https://www.facebook.com/p/Le-Bon-Temp%C3%A9rament-100063069588507/",
-                "https://www.instagram.com/lebontemperament_",
-                "https://www.youtube.com/@lebontemperament",
-                "https://www.tiktok.com/@lebontemperament",
-              ],
-              foundingDate: "1987",
-              founder: {
-                "@type": "Person",
-                name: "Simone Duclos",
-              },
-            }),
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              contactType: "customer service",
+              email: contact.email,
+              url: `${process.env.NEXT_PUBLIC_BASE_URL}${CONTACT_FORM_PATH}`,
+              areaServed: "FR",
+              availableLanguage: "fr",
+            },
+            sameAs: social_links.links.map((link) => link.url),
+            foundingDate: "1987",
+            founder: {
+              "@type": "Person",
+              name: "Simone Duclos",
+            },
           }}
         />
         {/* WebSite Schema — no SearchAction: the site has no /search page */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              name: "Le Bon Tempérament",
-              url: process.env.NEXT_PUBLIC_BASE_URL,
-              description:
-                "Site officiel de l'ensemble vocal et instrumental Le Bon Tempérament",
-              inLanguage: "fr-FR",
-              publisher: {
-                "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#organization`,
-              },
-            }),
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Le Bon Tempérament",
+            url: process.env.NEXT_PUBLIC_BASE_URL,
+            description:
+              "Site officiel de l'ensemble vocal et instrumental Le Bon Tempérament",
+            inLanguage: "fr-FR",
+            publisher: {
+              "@id": `${process.env.NEXT_PUBLIC_BASE_URL}/#organization`,
+            },
           }}
         />
       </body>

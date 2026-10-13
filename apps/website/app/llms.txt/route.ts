@@ -1,13 +1,15 @@
 import { buildLlmsTxt } from "@/lib/llms";
+import { getSiteSettings } from "@/lib/siteSettings";
 
 const WEBSITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://www.lebontemperament.com";
 
-// Built from constants only: prerendered once at build time.
-export const dynamic = "force-static";
+// Built from the site settings (admin): prerendered, refreshed every five
+// minutes or when an admin saves (/api/revalidate).
+export const revalidate = 300;
 
-export function GET() {
-  return new Response(buildLlmsTxt(WEBSITE_URL), {
+export async function GET() {
+  return new Response(buildLlmsTxt(WEBSITE_URL, await getSiteSettings()), {
     headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

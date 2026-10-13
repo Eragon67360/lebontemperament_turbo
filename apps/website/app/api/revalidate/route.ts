@@ -6,7 +6,8 @@ import { timingSafeEqual } from "node:crypto";
 /**
  * POST /api/revalidate — on-demand cache invalidation, called by the admin
  * after it changes public data (concerts, tours, events, stories, videos,
- * feature flags, gallery uploads). See `apps/admin/utils/revalidateWebsite.ts`.
+ * feature flags, site settings, gallery uploads). See
+ * `apps/admin/utils/revalidateWebsite.ts`.
  *
  * Auth: the `x-revalidate-secret` header must equal `REVALIDATE_SECRET`
  * (same value in both Vercel projects). While the variable is unset the

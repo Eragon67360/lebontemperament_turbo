@@ -6,6 +6,8 @@
 export const CACHE_TAGS = {
   /** `feature_flags` rows (read once per page render, see lib/featureFlags.ts). */
   featureFlags: "feature-flags",
+  /** `site_settings` rows: contact, socials, donations… (lib/siteSettings.ts). */
+  siteSettings: "site-settings",
   /** Cloudinary listing of `Site/galerie/*` behind `/api/images`. */
   galleryImages: "gallery-images",
 } as const;

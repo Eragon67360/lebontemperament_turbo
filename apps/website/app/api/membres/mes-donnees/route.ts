@@ -1,5 +1,5 @@
-import { PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
 import { collectMemberData, exportFileName } from "@/lib/memberData";
+import { getContactEmail } from "@/lib/siteSettings";
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -24,7 +24,7 @@ export async function GET() {
       // them and collectMemberData keeps only this member's rows.
       createAdminClient() as unknown as SupabaseClient,
       auth.user,
-      PRIVACY_CONTACT_EMAIL,
+      await getContactEmail(),
       now,
     );
 

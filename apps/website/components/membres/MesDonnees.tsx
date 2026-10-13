@@ -1,6 +1,6 @@
 "use client";
 
-import { PRIVACY_CONTACT_EMAIL } from "@/lib/contact";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import { DELETION_NOTE_MAX_LENGTH } from "@/lib/deletionRequest";
 import { membersFont } from "@/lib/membres/font";
 import {
@@ -64,6 +64,7 @@ function fileNameOf(response: Response): string {
 }
 
 function DownloadPanel() {
+  const { email } = useSiteSettings().contact;
   const [isLoading, setIsLoading] = useState(false);
 
   const download = async () => {
@@ -86,7 +87,7 @@ function DownloadPanel() {
     } catch (error) {
       console.error("Export failed:", error);
       toast.danger(
-        `Le téléchargement a échoué. Réessayez, ou écrivez à ${PRIVACY_CONTACT_EMAIL}.`,
+        `Le téléchargement a échoué. Réessayez, ou écrivez à ${email}.`,
       );
     } finally {
       setIsLoading(false);
@@ -123,6 +124,7 @@ function DownloadPanel() {
 }
 
 function CorrectPanel() {
+  const { email } = useSiteSettings().contact;
   return (
     <Panel
       icon={<IoCreateOutline className="h-6 w-6" />}
@@ -131,8 +133,8 @@ function CorrectPanel() {
       <p className="text-muted leading-relaxed">
         Une information est fausse ou a changé (nom, pupitre, coordonnées,
         photo) ? Écrivez à{" "}
-        <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className={linkClass}>
-          {PRIVACY_CONTACT_EMAIL}
+        <a href={`mailto:${email}`} className={linkClass}>
+          {email}
         </a>{" "}
         : nous la corrigeons dans votre profil et dans le fichier des adhérents,
         d’où viennent votre nom, votre adresse, votre téléphone fixe et votre
@@ -143,6 +145,7 @@ function CorrectPanel() {
 }
 
 function DeletionPanel() {
+  const { email } = useSiteSettings().contact;
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -162,7 +165,7 @@ function DeletionPanel() {
     } catch (error) {
       console.error("Deletion request failed:", error);
       toast.danger(
-        `La demande n’a pas pu être envoyée. Réessayez, ou écrivez à ${PRIVACY_CONTACT_EMAIL}.`,
+        `La demande n’a pas pu être envoyée. Réessayez, ou écrivez à ${email}.`,
       );
     } finally {
       setIsSending(false);

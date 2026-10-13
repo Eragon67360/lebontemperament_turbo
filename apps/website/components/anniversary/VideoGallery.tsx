@@ -1,6 +1,7 @@
 "use client";
 
 import CloudinaryImage from "@/components/CloudinaryImage";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Video } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
@@ -20,6 +21,9 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
   const shouldReduceMotion = useReducedMotion();
+  const youtubeUrl = useSiteSettings().social_links.links.find(
+    (link) => link.network === "youtube",
+  )?.url;
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
 
@@ -141,12 +145,11 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-12 text-center"
         >
-          <AnniversaryCTA
-            href="https://www.youtube.com/@lebontemperament"
-            external
-          >
-            Voir Plus sur <FaYoutube />
-          </AnniversaryCTA>
+          {youtubeUrl && (
+            <AnniversaryCTA href={youtubeUrl} external>
+              Voir Plus sur <FaYoutube />
+            </AnniversaryCTA>
+          )}
         </motion.div>
       </div>
 
