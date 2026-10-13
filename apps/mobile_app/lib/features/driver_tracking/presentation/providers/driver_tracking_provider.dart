@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:geocoding/geocoding.dart' show Geocoding;
 import 'package:geolocator/geolocator.dart';
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -86,14 +87,62 @@ final driverTrackingProvider =
       return DriverTrackingNotifier(service);
     });
 
+/// The coordinates of a postal address, or null when none is found.
+typedef Geocoder = Future<(double, double)?> Function(String address);
+
+/// The platform's geocoder (the one the recipient dialog uses).
+Future<(double, double)?> platformGeocode(String address) async {
+  final locations = await Geocoding().locationFromAddress(address);
+  if (locations.isEmpty) return null;
+  return (locations.first.latitude, locations.first.longitude);
+}
+
 class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   final DeliveryService _service;
+  final Geocoder _geocode;
   final Logger _logger = Logger();
 
   StreamSubscription<Position>? _positionSubscription;
   Timer? _backupTimer;
 
-  DriverTrackingNotifier(this._service) : super(const DriverTrackingState());
+  /// Recipients already looked up (found or not): one try per recipient.
+  final _geocodeTried = <String>{};
+
+  /// The lookups [loadDelivery] started, for callers who need them done.
+  Future<void> pendingGeocoding = Future.value();
+
+  DriverTrackingNotifier(this._service, {Geocoder? geocode})
+    : _geocode = geocode ?? platformGeocode,
+      super(const DriverTrackingState());
+
+  /// Stops created from orders (« Ajouter à la tournée ») have an address but
+  /// no coordinates: looks them up once each and saves them, quietly. A
+  /// failure leaves the stop as it is. Returns once every lookup is done.
+  Future<void> geocodeMissingPositions(List<DeliveryRecipient> recipients) async {
+    var changed = false;
+    for (final r in recipients) {
+      final address = r.address?.trim() ?? '';
+      if (address.isEmpty ||
+          (r.latitude != null && r.longitude != null) ||
+          r.deliveredAt != null ||
+          !_geocodeTried.add(r.id)) {
+        continue;
+      }
+      try {
+        final found = await _geocode(address);
+        if (found == null) continue;
+        await _service.updateRecipient(
+          r.id,
+          latitude: found.$1,
+          longitude: found.$2,
+        );
+        changed = true;
+      } catch (e) {
+        _logger.w('DriverTrackingNotifier geocode ${r.id} failed', error: e);
+      }
+    }
+    if (changed && mounted) await loadRecipients();
+  }
 
   /// Load or create delivery. Call when screen opens.
   Future<void> loadDelivery() async {
@@ -106,6 +155,8 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
           recipients = await _service.getRecipients(delivery.id);
         } catch (_) {}
       }
+      // Not awaited: the screen shows the round while the lookups run.
+      pendingGeocoding = geocodeMissingPositions(recipients);
       // "Active" in the database only means live when this process still
       // streams positions; after an app kill it is stale, and the screen
       // must not claim the position is shared (nothing is written here:

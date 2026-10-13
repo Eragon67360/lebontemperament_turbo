@@ -285,8 +285,9 @@ class _RehearsalsSection extends ConsumerWidget {
   }
 }
 
-/// Superadmins only: the delivery tracking, after the agenda since it is
-/// neither a rehearsal nor a members' shortcut.
+/// Superadmins only: the orders of the sales and the delivery tracking,
+/// after the agenda since they are neither a rehearsal nor a members'
+/// shortcut.
 class _DeliveryModeCard extends ConsumerWidget {
   const _DeliveryModeCard();
 
@@ -296,11 +297,22 @@ class _DeliveryModeCard extends ConsumerWidget {
     if (!isSuperadmin) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 24),
-      child: _AdminActionCard(
-        icon: Icons.local_shipping_outlined,
-        title: 'Mode livraison',
-        subtitle: 'Suivi de position en temps réel',
-        onTap: () => context.push('/driver-tracking'),
+      child: Column(
+        children: [
+          _AdminActionCard(
+            icon: Icons.shopping_basket_outlined,
+            title: 'Commandes',
+            subtitle: 'Acheteurs, paiements et totaux des ventes',
+            onTap: () => context.push('/orders'),
+          ),
+          const SizedBox(height: 12),
+          _AdminActionCard(
+            icon: Icons.local_shipping_outlined,
+            title: 'Mode livraison',
+            subtitle: 'Suivi de position en temps réel',
+            onTap: () => context.push('/driver-tracking'),
+          ),
+        ],
       ),
     );
   }
