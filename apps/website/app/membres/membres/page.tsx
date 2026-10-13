@@ -8,7 +8,7 @@ const Membres = () => {
       <PageHeader
         current="Les membres"
         title="Les membres"
-        intro="Retrouve un choriste ou un musicien. Clique sur « Écrire » pour lui envoyer un e-mail."
+        intro="Le chœur et l’orchestre, pupitre par pupitre. Clique sur une adresse pour écrire, ou copie-la."
       />
       <MemberDirectory />
     </div>

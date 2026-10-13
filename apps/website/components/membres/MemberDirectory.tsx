@@ -1,39 +1,118 @@
 "use client";
 
+import { useMemberDirectory } from "@/hooks/useMemberDirectory";
 import {
-  extractVoiceWords,
   groupByLastName,
-  hasVoice,
   matchesSearch,
-  voiceFilterLabel,
   type Member,
 } from "@/lib/membres/directory";
-import { useEffect, useMemo, useState } from "react";
+import { VOICE_LABEL, voiceKeys, type VoiceKey } from "@/lib/membres/voices";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
-import { FilterButton } from "./FilterButton";
-import { MemberRow } from "./MemberRow";
-import { MembersCard } from "./MembersCard";
+import { ChoirArc } from "./ChoirArc";
+import { MemberCard } from "./MemberCard";
+import { VOICE_HEX } from "./tones";
 
-type State =
-  | { status: "loading" }
-  | { status: "error" }
-  | { status: "ready"; members: Member[] };
+/** A section of the choir, or « Autres » for voices the roster doesn't name. */
+type Section = VoiceKey | "autres";
 
-function ListSkeleton() {
+const SECTIONS: readonly Section[] = [
+  "soprane",
+  "alte",
+  "tenor",
+  "basse",
+  "orchestre",
+  "jeune",
+  "autres",
+];
+
+const SECTION_LABEL: Record<Section, string> = {
+  ...VOICE_LABEL,
+  autres: "Autres",
+};
+
+/** The sections drawn on the seating plan (the young choir sits elsewhere). */
+const ON_ARC = new Set<Section>([
+  "soprane",
+  "alte",
+  "tenor",
+  "basse",
+  "orchestre",
+]);
+
+function sectionsOf(member: Member): Section[] {
+  const keys = voiceKeys(member.Voix);
+  return keys.length > 0 ? keys : ["autres"];
+}
+
+function parseSection(value: string | null): Section | null {
+  return SECTIONS.find((section) => section === value) ?? null;
+}
+
+function SectionButton({
+  label,
+  count,
+  dot,
+  pressed,
+  onPress,
+}: {
+  label: string;
+  count: number;
+  /** The section's colour; null for « Tout le monde » (ink). */
+  dot: string | null;
+  pressed: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onPress}
+      className={`inline-flex min-h-12 items-center gap-2.5 rounded-full border-2 py-1 pr-4 pl-1.5 text-lg font-medium transition-colors ${
+        pressed
+          ? "bg-members-ink text-members-ink-foreground border-members-ink"
+          : "bg-members-card text-foreground border-members-line-strong hover:bg-members-band"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`h-8 w-8 shrink-0 rounded-full ring-[1.5px] ring-inset ${
+          pressed ? "ring-members-ink-foreground/80" : "ring-members-ink/80"
+        } ${dot === null ? (pressed ? "bg-members-ink-foreground" : "bg-members-ink") : ""}`}
+        style={dot === null ? undefined : { backgroundColor: dot }}
+      />
+      {label}
+      <span
+        className={`rounded-full px-2 text-[15px] ${
+          pressed
+            ? "bg-members-ink-foreground/20"
+            : "bg-members-band text-members-muted"
+        }`}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
+function GridSkeleton() {
   return (
     <div aria-busy="true">
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div
-          key={i}
-          className="border-members-line flex animate-pulse items-center gap-4 border-t px-4 py-3.5 first:border-t-0 sm:px-6"
-        >
-          <div className="bg-primary/10 h-[52px] w-[52px] shrink-0 rounded-full" />
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="bg-primary/10 h-5 w-40 rounded" />
-            <div className="bg-primary/10 h-4 w-56 max-w-full rounded" />
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3.5">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            className="border-members-line flex animate-pulse items-center gap-4 rounded-[28px] border-2 p-3.5"
+          >
+            <div className="bg-members-band h-[60px] w-[60px] shrink-0 rounded-full" />
+            <div className="flex flex-1 flex-col gap-2">
+              <div className="bg-members-band h-5 w-40 max-w-full rounded-full" />
+              <div className="bg-members-band h-4 w-24 rounded-full" />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
       <p role="status" className="sr-only">
         Chargement des membres…
       </p>
@@ -41,162 +120,173 @@ function ListSkeleton() {
   );
 }
 
-/** The directory: search, voice filters, members grouped by family name. */
+/**
+ * « Le chœur, pupitre par pupitre »: the seating plan, one button per
+ * section (`?voix=alte` opens on one), a search, then everyone as cards
+ * sorted by family name.
+ */
 export function MemberDirectory() {
-  const [state, setState] = useState<State>({ status: "loading" });
+  const directory = useMemberDirectory();
+  const searchParams = useSearchParams();
+  const [selected, setSelected] = useState<Section | null>(() =>
+    parseSection(searchParams.get("voix")),
+  );
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedVoice, setSelectedVoice] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/membres")
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Failed to fetch members");
-        const members: unknown = await response.json();
-        if (!Array.isArray(members)) throw new Error("Not a list");
-        // Filter out empty rows and normalize data
-        const validData: Member[] = (members as Member[])
-          .filter((member) => member["NOM Prénom"]?.trim())
-          .map((member) => ({
-            "NOM Prénom": member["NOM Prénom"]?.trim() || "",
-            "Adresse mail": member["Adresse mail"]?.trim() || "",
-            Voix: member.Voix?.trim() || "",
-            photoUrl: member.photoUrl,
-          }));
-        if (!cancelled) setState({ status: "ready", members: validData });
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        if (!cancelled) setState({ status: "error" });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [announcement, setAnnouncement] = useState("");
 
   const members = useMemo(
-    () => (state.status === "ready" ? state.members : []),
-    [state],
+    () => (directory.status === "ready" ? directory.members : []),
+    [directory],
   );
 
-  // One filter per voice word that exists in the data
-  const voiceFilters = useMemo(() => {
-    const words = extractVoiceWords(
-      Array.from(new Set(members.map((member) => member.Voix))).filter(Boolean),
-    );
-    return words.map((word) => ({
-      word,
-      label: voiceFilterLabel(word),
-      count: members.filter((member) => hasVoice(member, word)).length,
-    }));
+  const counts = useMemo(() => {
+    const counted = new Map<Section, number>();
+    for (const member of members) {
+      for (const section of sectionsOf(member)) {
+        counted.set(section, (counted.get(section) ?? 0) + 1);
+      }
+    }
+    return counted;
   }, [members]);
 
-  const groups = useMemo(
+  const shown = useMemo(
     () =>
       groupByLastName(
         members.filter(
           (member) =>
             matchesSearch(member, searchTerm) &&
-            (selectedVoice === "" || hasVoice(member, selectedVoice)),
+            (selected === null || sectionsOf(member).includes(selected)),
         ),
-      ),
-    [members, searchTerm, selectedVoice],
+      ).flatMap((group) => group.members),
+    [members, searchTerm, selected],
   );
-  const total = groups.reduce((sum, group) => sum + group.members.length, 0);
+
+  const heading =
+    selected === null
+      ? "Tout le monde, de A à Z"
+      : `${SECTION_LABEL[selected]}, de A à Z`;
+
+  async function copyEmail(member: Member): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(member["Adresse mail"]);
+      setAnnouncement(`Adresse de ${member["NOM Prénom"]} copiée.`);
+      return true;
+    } catch {
+      setAnnouncement(
+        "La copie n’a pas marché. Sélectionne l’adresse pour la copier.",
+      );
+      return false;
+    }
+  }
 
   return (
     <div className="flex flex-col gap-7">
-      <MembersCard className="flex flex-col gap-5 p-5 sm:p-6">
-        <div className="flex flex-col gap-2">
+      <section
+        aria-label="Les pupitres"
+        className="bg-members-band flex flex-col items-center gap-6 rounded-[32px] p-5 sm:rounded-[40px] sm:p-10"
+      >
+        <div className="flex w-full max-w-[420px] flex-col gap-2 self-start">
           <label htmlFor="member-search" className="font-medium">
-            Chercher un membre
+            Chercher quelqu’un
           </label>
-          <div className="border-members-line-strong bg-members-card focus-within:border-primary flex min-h-[60px] items-center gap-3 rounded-[14px] border-2 px-4">
+          <div className="border-members-line-strong bg-members-card focus-within:outline-members-ink flex min-h-14 items-center gap-3 rounded-full border-2 px-5 focus-within:outline-2 focus-within:outline-offset-2">
             <IoSearchOutline
               aria-hidden="true"
-              className="text-muted h-6 w-6 shrink-0"
+              className="text-members-muted h-6 w-6 shrink-0"
             />
             <input
               id="member-search"
               type="search"
               autoComplete="off"
-              placeholder="Tape un prénom ou un nom"
+              placeholder="Prénom ou nom"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="text-foreground placeholder:text-muted min-h-14 min-w-0 flex-1 bg-transparent text-[19px] outline-none"
+              className="text-foreground placeholder:text-members-muted min-h-12 min-w-0 flex-1 bg-transparent text-lg outline-none"
             />
           </div>
         </div>
-        <fieldset className="m-0 flex flex-col gap-2.5 border-0 p-0">
-          <legend className="mb-2.5 p-0 font-medium">Afficher</legend>
-          <div className="flex flex-wrap gap-2.5">
-            <FilterButton
+
+        <ChoirArc
+          only={
+            selected !== null && ON_ARC.has(selected)
+              ? (selected as VoiceKey)
+              : null
+          }
+          conductor
+          className="max-w-[640px]"
+        />
+
+        <fieldset className="m-0 flex flex-col items-center gap-3 border-0 p-0">
+          <legend className="sr-only">Afficher un pupitre</legend>
+          <div className="flex flex-wrap justify-center gap-2.5">
+            <SectionButton
               label="Tout le monde"
               count={members.length}
-              pressed={selectedVoice === ""}
-              onPress={() => setSelectedVoice("")}
+              dot={null}
+              pressed={selected === null}
+              onPress={() => setSelected(null)}
             />
-            {voiceFilters.map((filter) => (
-              <FilterButton
-                key={filter.word}
-                label={filter.label}
-                count={filter.count}
-                pressed={selectedVoice === filter.word}
-                onPress={() => setSelectedVoice(filter.word)}
-              />
-            ))}
+            {SECTIONS.filter((section) => counts.has(section)).map(
+              (section) => (
+                <SectionButton
+                  key={section}
+                  label={SECTION_LABEL[section]}
+                  count={counts.get(section) ?? 0}
+                  dot={VOICE_HEX[section === "autres" ? "none" : section]}
+                  pressed={selected === section}
+                  onPress={() =>
+                    setSelected(selected === section ? null : section)
+                  }
+                />
+              ),
+            )}
           </div>
         </fieldset>
-      </MembersCard>
+      </section>
 
-      <section aria-label="Liste des membres" className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p aria-live="polite" className="font-medium">
-            {state.status === "ready" &&
-              (total === 0
-                ? "Aucun membre"
-                : `${total} membre${total > 1 ? "s" : ""}, classés par nom de famille`)}
-          </p>
-          <p className="text-muted text-base">
-            Tu vois le nom, la voix, l’adresse e-mail et la photo de chaque
-            membre.
+      <section aria-labelledby="directory-list" className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-1">
+          <h2
+            id="directory-list"
+            className="font-members-display text-[26px] font-semibold sm:text-[32px]"
+          >
+            {heading}
+          </h2>
+          <p aria-live="polite" className="text-members-muted">
+            {directory.status === "ready" &&
+              (shown.length === 0
+                ? "Personne"
+                : `${shown.length} membre${shown.length > 1 ? "s" : ""}`)}
           </p>
         </div>
 
-        <MembersCard className="overflow-hidden p-0">
-          {state.status === "loading" && <ListSkeleton />}
-          {state.status === "error" && (
-            <p role="alert" className="p-6 sm:p-8">
-              La liste des membres n’a pas pu être chargée. Réessaie dans un
-              instant.
-            </p>
-          )}
-          {state.status === "ready" && total === 0 && (
-            <p className="p-6 sm:p-8">
-              Personne ne correspond. Vérifie l’orthographe, ou choisis « Tout
-              le monde ».
-            </p>
-          )}
-          {state.status === "ready" &&
-            groups.map((group) => (
-              <div
-                key={group.letter}
-                className="border-members-line border-t first:border-t-0"
-              >
-                <h2 className="bg-members-band text-primary-text px-4 py-2 text-[17px] font-semibold sm:px-6">
-                  {group.letter}
-                </h2>
-                <ul>
-                  {group.members.map((member, index) => (
-                    <MemberRow
-                      key={`${member["Adresse mail"]}-${index}`}
-                      member={member}
-                    />
-                  ))}
-                </ul>
-              </div>
+        {directory.status === "loading" && <GridSkeleton />}
+        {directory.status === "error" && (
+          <p role="alert" className="bg-members-band rounded-[28px] p-6">
+            La liste des membres n’a pas pu être chargée. Réessaie dans un
+            instant.
+          </p>
+        )}
+        {directory.status === "ready" && shown.length === 0 && (
+          <p className="bg-members-band rounded-[28px] p-6">
+            Personne ne correspond. Vérifie l’orthographe, ou choisis « Tout le
+            monde ».
+          </p>
+        )}
+        {directory.status === "ready" && shown.length > 0 && (
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3.5">
+            {shown.map((member, index) => (
+              <MemberCard
+                key={`${member["Adresse mail"]}-${index}`}
+                member={member}
+                onCopy={() => copyEmail(member)}
+              />
             ))}
-        </MembersCard>
+          </ul>
+        )}
+        <p role="status" className="sr-only">
+          {announcement}
+        </p>
       </section>
     </div>
   );

@@ -2,7 +2,7 @@ import NextLink from "next/link";
 import type { ReactNode } from "react";
 
 const base =
-  "inline-flex items-center justify-center gap-2.5 rounded-xl text-lg font-medium no-underline transition-colors";
+  "inline-flex items-center justify-center gap-2.5 rounded-full text-lg font-medium no-underline transition-colors";
 
 const SIZES = {
   /** 52 px: the main buttons of a card. */
@@ -12,14 +12,14 @@ const SIZES = {
 } as const;
 
 const VARIANTS = {
-  /** Solid teal, white text (the one main action of a block). */
-  solid: "bg-primary-solid text-accent-foreground hover:bg-primary-solid-hover",
-  /** Outlined, for the second action. */
+  /** Solid ink pill (the one main action of a block). */
+  solid:
+    "bg-members-ink text-members-ink-foreground hover:bg-members-ink-hover",
+  /** Outlined ink pill, for the second action. */
   outline:
-    "border-members-line-strong bg-members-card text-foreground hover:bg-primary/10 border",
-  /** Outlined with teal text, for a small action repeated in a list. */
-  outlineTeal:
-    "border-members-line-strong bg-members-card text-primary-text hover:bg-primary/10 border",
+    "border-members-line-strong bg-members-card text-foreground hover:bg-members-band border-2",
+  /** A quiet grey pill, for a small action repeated in a list. */
+  quiet: "bg-members-band text-foreground hover:bg-members-line",
 } as const;
 
 export type MembersButtonVariant = keyof typeof VARIANTS;

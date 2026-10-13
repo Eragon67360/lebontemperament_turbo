@@ -182,7 +182,7 @@ const MembresConcertsEvents = () => {
                 </div>
 
                 <span
-                  className={`mt-auto self-start rounded-lg px-3 py-1 text-base font-medium ${TONES.teal}`}
+                  className={`mt-auto self-start rounded-full px-3 py-1 text-base font-medium ${TONES.teal}`}
                 >
                   {concert.context === "orchestre_et_choeur"
                     ? "Orchestre et Chœur"
@@ -217,7 +217,7 @@ const MembresConcertsEvents = () => {
               >
                 <div className="flex flex-col items-start gap-2">
                   <span
-                    className={`rounded-lg px-3 py-1 text-base font-medium ${getEventTypeColor(event.event_type)}`}
+                    className={`rounded-full px-3 py-1 text-base font-medium ${getEventTypeColor(event.event_type)}`}
                   >
                     {getEventTypeLabel(event.event_type)}
                   </span>

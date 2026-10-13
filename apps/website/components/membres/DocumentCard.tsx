@@ -1,7 +1,7 @@
 import type { ElementType, ReactNode } from "react";
 import { MembersCard } from "./MembersCard";
 
-/** A white card with a teal icon tile, a heading, a sentence and its content. */
+/** A white card with a round icon, a heading, a sentence and its content. */
 export function DocumentCard({
   id,
   icon: Icon,
@@ -24,7 +24,7 @@ export function DocumentCard({
       <div className="flex items-start gap-4">
         <span
           aria-hidden="true"
-          className="bg-primary/10 text-primary-text flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]"
+          className="bg-members-band text-foreground flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
         >
           <Icon className="h-6 w-6" />
         </span>

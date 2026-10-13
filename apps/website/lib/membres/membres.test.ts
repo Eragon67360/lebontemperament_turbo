@@ -17,6 +17,13 @@ import {
   upcomingRehearsals,
   whenLabel,
 } from "./rehearsals";
+import {
+  groupsForVoice,
+  mainVoice,
+  scoreFolderFor,
+  voiceKeys,
+  voicesLabel,
+} from "./voices";
 
 const member = (name: string, voice = "Alte"): Member => ({
   "NOM Prénom": name,
@@ -105,5 +112,44 @@ assert.deepEqual(
   ).map((r) => r.id),
   ["early", "late"],
 );
+
+// Voices are free text: words are read whatever the case, accents or order,
+// choir voices first.
+assert.deepEqual(voiceKeys("Alte"), ["alte"]);
+assert.deepEqual(voiceKeys("Orchestre & Ténor"), ["tenor", "orchestre"]);
+assert.deepEqual(voiceKeys("jeune & basse"), ["basse", "jeune"]);
+assert.deepEqual(voiceKeys("SOPRANO"), ["soprane"]);
+assert.deepEqual(voiceKeys("Chef de chœur"), []);
+assert.deepEqual(voiceKeys(null), []);
+assert.equal(mainVoice("Orchestre & Alte"), "alte");
+assert.equal(mainVoice("Orchestre"), "orchestre");
+assert.equal(mainVoice(""), null);
+assert.equal(voicesLabel("Orchestre & Alte"), "Altes · Orchestre");
+
+// The groups that concern a member mirror the app's `groupsConcerning`.
+const groupsOf = (voice: string | null) => {
+  const set = groupsForVoice(voice);
+  return set === null ? null : [...set].sort();
+};
+assert.deepEqual(groupsOf("Alte"), ["Choeur complet", "Femmes", "Tous"]);
+assert.deepEqual(groupsOf("Basse"), ["Choeur complet", "Hommes", "Tous"]);
+assert.deepEqual(groupsOf("Orchestre"), ["Orchestre", "Tous"]);
+assert.deepEqual(groupsOf("Orchestre & Ténor"), [
+  "Choeur complet",
+  "Hommes",
+  "Orchestre",
+  "Tous",
+]);
+assert.deepEqual(groupsOf("jeune"), ["Jeunes/Enfants", "Tous"]);
+// Unknown voice: every rehearsal concerns them.
+assert.equal(groupsForVoice("Chef de chœur"), null);
+assert.equal(groupsForVoice(null), null);
+
+// The score folder the home opens.
+assert.equal(scoreFolderFor("Soprane"), "adultes");
+assert.equal(scoreFolderFor("Orchestre"), "orchestre");
+assert.equal(scoreFolderFor("Orchestre & Basse"), "adultes");
+assert.equal(scoreFolderFor("jeune & alte"), "jeunes");
+assert.equal(scoreFolderFor(""), null);
 
 console.log("membres helpers: all assertions passed");

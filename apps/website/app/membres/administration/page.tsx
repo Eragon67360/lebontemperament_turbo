@@ -57,7 +57,7 @@ const RegulationsSection = () => (
       description="Un extrait du règlement intérieur."
     >
       <div className="flex flex-col gap-4">
-        <div className="bg-members-band rounded-2xl p-5">
+        <div className="bg-members-band rounded-[22px] p-5">
           <h3 className="mb-1 text-lg font-semibold">Répétitions</h3>
           <p className="text-muted">
             Le Bon Tempérament répète un dimanche par mois et part en tournée
@@ -65,7 +65,7 @@ const RegulationsSection = () => (
             lieu tous les 15 jours.
           </p>
         </div>
-        <div className="bg-members-band rounded-2xl p-5">
+        <div className="bg-members-band rounded-[22px] p-5">
           <h3 className="mb-1 text-lg font-semibold">
             Commission de solidarité
           </h3>
@@ -201,7 +201,7 @@ const SoftwareSection = () => {
                   href={item.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border-members-line bg-members-band hover:border-primary hover:bg-primary/5 text-foreground flex min-h-28 w-full flex-col items-center justify-center gap-3 rounded-2xl border p-4 text-center font-medium no-underline transition-colors"
+                  className="border-members-line bg-members-band hover:border-primary hover:bg-primary/5 text-foreground flex min-h-28 w-full flex-col items-center justify-center gap-3 rounded-[22px] border p-4 text-center font-medium no-underline transition-colors"
                 >
                   {item.imageType === "icon" && item.icon ? (
                     <item.icon aria-hidden="true" className="h-12 w-12" />
