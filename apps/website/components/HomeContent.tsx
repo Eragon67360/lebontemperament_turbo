@@ -3,10 +3,11 @@
 import { m, useInView, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
+import { AnniversaryHeroCard } from "@/components/anniversary/AnniversaryEntry";
 import CloudinaryImage from "@/components/CloudinaryImage";
+import HomeAnnouncements from "@/components/home/HomeAnnouncements";
 import { LinkButton } from "@/components/LinkButton";
 import ProjectViewer from "@/components/ProjectViewer";
-import HomeAnnouncements from "@/components/home/HomeAnnouncements";
 import { useClientValue } from "@/hooks/useClientValue";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -204,37 +205,27 @@ const HomeContent = ({
                 </m.div>
               )}
 
-              {/* Anniversary CTA */}
+              {/* 40 ans: the programme ticket (phones, tablets) */}
               {(isAnniversaryEnabled || isAdmin) && (
                 <m.div
-                  initial={{
-                    opacity: 0,
-                    scale: prefersReducedMotion ? 1 : 0.9,
-                  }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-                  className="!md:max-w-md mt-8 flex w-fit overflow-hidden px-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.4 }}
+                  className="mt-10 flex w-full justify-center lg:hidden"
                 >
-                  <LinkButton
-                    size="lg"
-                    className="hover:shadow-primary/50 from-primary-600 via-primary to-primary-400 dark:from-primary-700 dark:via-primary-600 dark:to-primary-500 flex w-fit max-w-fit rounded-full bg-linear-to-r px-2 py-3 text-xs font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 sm:px-4 sm:text-sm md:w-fit md:max-w-fit md:text-base lg:px-6"
-                    aria-label="Célébrer 40 ans du Bon Tempérament"
-                    href="/40-ans"
-                  >
-                    <span className="hidden text-sm sm:text-base md:block md:text-xl">
-                      🎉
-                    </span>
-                    <span className="ml-1 text-center wrap-break-word sm:ml-2">
-                      Célébrons les 40 ans du Bon Tempérament !
-                    </span>
-                    <span className="ml-1 hidden text-sm sm:ml-2 sm:text-base md:block md:text-xl">
-                      🎉
-                    </span>
-                  </LinkButton>
+                  <AnniversaryHeroCard variant="inline" />
                 </m.div>
               )}
             </div>
           </m.div>
+
+          {/* 40 ans: the programme card, bottom-left of the hero (desktop) */}
+          {(isAnniversaryEnabled || isAdmin) && (
+            <AnniversaryHeroCard
+              variant="corner"
+              className="absolute bottom-10 left-10 z-20 hidden lg:block"
+            />
+          )}
 
           {/* Pulsing Arrow */}
           <button
