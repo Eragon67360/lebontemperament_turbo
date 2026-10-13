@@ -7,10 +7,10 @@ type Params = {
   params: Promise<{ saleId: string; orderId: string; paymentId: string }>;
 };
 
-const UNKNOWN = NextResponse.json(
-  { error: "Paiement introuvable" },
-  { status: 404 },
-);
+// A function: a Response body can only be read once, so each request
+// needs its own.
+const unknown = () =>
+  NextResponse.json({ error: "Paiement introuvable" }, { status: 404 });
 
 /** DELETE: a payment recorded by mistake. */
 export async function DELETE(_request: Request, { params }: Params) {
@@ -18,7 +18,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (!auth.ok) return auth.response;
   const { saleId, orderId, paymentId } = await params;
   if (!isUuid(saleId) || !isUuid(orderId) || !isUuid(paymentId)) {
-    return UNKNOWN;
+    return unknown();
   }
 
   const supabase = await createClient();
@@ -32,7 +32,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (orderError) {
     return dbErrorResponse(orderError, "La commande n'a pas pu être lue");
   }
-  if (!order) return UNKNOWN;
+  if (!order) return unknown();
 
   const { data, error } = await supabase
     .from("order_payments")
@@ -43,6 +43,6 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) {
     return dbErrorResponse(error, "Le paiement n'a pas pu être supprimé");
   }
-  if (data.length === 0) return UNKNOWN;
+  if (data.length === 0) return unknown();
   return NextResponse.json({ ok: true });
 }

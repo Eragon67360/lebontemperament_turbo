@@ -9,10 +9,10 @@ import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ saleId: string; orderId: string }> };
 
-const UNKNOWN = NextResponse.json(
-  { error: "Commande introuvable" },
-  { status: 404 },
-);
+// A function: a Response body can only be read once, so each request
+// needs its own.
+const unknown = () =>
+  NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
 
 /**
  * POST `{ amount_cents, method, paid_on?, note? }`: a payment received for
@@ -22,7 +22,7 @@ export async function POST(request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId, orderId } = await params;
-  if (!isUuid(saleId) || !isUuid(orderId)) return UNKNOWN;
+  if (!isUuid(saleId) || !isUuid(orderId)) return unknown();
 
   const parsed = parsePaymentInput(await readJson(request));
   if (!parsed.ok) {
@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: Params) {
   if (orderError) {
     return dbErrorResponse(orderError, "La commande n'a pas pu être lue");
   }
-  if (!order) return UNKNOWN;
+  if (!order) return unknown();
 
   const { paid_on, ...rest } = parsed.value;
   const { data, error } = await supabase

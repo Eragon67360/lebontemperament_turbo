@@ -10,17 +10,17 @@ import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ saleId: string; orderId: string }> };
 
-const UNKNOWN = NextResponse.json(
-  { error: "Commande introuvable" },
-  { status: 404 },
-);
+// A function: a Response body can only be read once, so each request
+// needs its own.
+const unknown = () =>
+  NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
 
 /** PUT: the whole order again (buyer and quantities) through `save_order`. */
 export async function PUT(request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId, orderId } = await params;
-  if (!isUuid(saleId) || !isUuid(orderId)) return UNKNOWN;
+  if (!isUuid(saleId) || !isUuid(orderId)) return unknown();
 
   const body = await readJson(request);
   const supabase = await createClient();
@@ -52,7 +52,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId, orderId } = await params;
-  if (!isUuid(saleId) || !isUuid(orderId)) return UNKNOWN;
+  if (!isUuid(saleId) || !isUuid(orderId)) return unknown();
 
   const body = await readJson(request);
   const handedOver =
@@ -74,7 +74,7 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) {
     return dbErrorResponse(error, "La commande n'a pas pu être enregistrée");
   }
-  if (!data) return UNKNOWN;
+  if (!data) return unknown();
   return NextResponse.json(data);
 }
 
@@ -83,7 +83,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId, orderId } = await params;
-  if (!isUuid(saleId) || !isUuid(orderId)) return UNKNOWN;
+  if (!isUuid(saleId) || !isUuid(orderId)) return unknown();
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -95,6 +95,6 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) {
     return dbErrorResponse(error, "La commande n'a pas pu être supprimée");
   }
-  if (data.length === 0) return UNKNOWN;
+  if (data.length === 0) return unknown();
   return NextResponse.json({ ok: true });
 }

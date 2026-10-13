@@ -9,10 +9,10 @@ import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ saleId: string; productId: string }> };
 
-const UNKNOWN = NextResponse.json(
-  { error: "Produit introuvable" },
-  { status: 404 },
-);
+// A function: a Response body can only be read once, so each request
+// needs its own.
+const unknown = () =>
+  NextResponse.json({ error: "Produit introuvable" }, { status: 404 });
 
 /**
  * PATCH: any of a product's fields (`{ is_available: false }` alone hides it
@@ -23,7 +23,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId, productId } = await params;
-  if (!isUuid(saleId) || !isUuid(productId)) return UNKNOWN;
+  if (!isUuid(saleId) || !isUuid(productId)) return unknown();
 
   const body = await readJson(request);
   if (typeof body !== "object" || body === null || Array.isArray(body)) {
@@ -40,7 +40,7 @@ export async function PATCH(request: Request, { params }: Params) {
   if (readError) {
     return dbErrorResponse(readError, "Le produit n'a pas pu être lu");
   }
-  if (!current) return UNKNOWN;
+  if (!current) return unknown();
 
   const parsed = parseProductInput({
     category: current.category,
@@ -79,7 +79,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId, productId } = await params;
-  if (!isUuid(saleId) || !isUuid(productId)) return UNKNOWN;
+  if (!isUuid(saleId) || !isUuid(productId)) return unknown();
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -91,6 +91,6 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) {
     return dbErrorResponse(error, "Le produit n'a pas pu être supprimé");
   }
-  if (data.length === 0) return UNKNOWN;
+  if (data.length === 0) return unknown();
   return NextResponse.json({ ok: true });
 }

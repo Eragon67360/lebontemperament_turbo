@@ -10,17 +10,17 @@ import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ saleId: string }> };
 
-const UNKNOWN = NextResponse.json(
-  { error: "Vente introuvable" },
-  { status: 404 },
-);
+// A function: a Response body can only be read once, so each request
+// needs its own.
+const unknown = () =>
+  NextResponse.json({ error: "Vente introuvable" }, { status: 404 });
 
 /** POST: a product added at the end of the sale's catalogue. */
 export async function POST(request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId } = await params;
-  if (!isUuid(saleId)) return UNKNOWN;
+  if (!isUuid(saleId)) return unknown();
 
   const parsed = parseProductInput(await readJson(request));
   if (!parsed.ok) {
@@ -66,7 +66,7 @@ export async function PUT(request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
   const { saleId } = await params;
-  if (!isUuid(saleId)) return UNKNOWN;
+  if (!isUuid(saleId)) return unknown();
 
   const body = await readJson(request);
   const ids =
