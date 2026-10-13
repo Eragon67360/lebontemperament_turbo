@@ -1,6 +1,6 @@
 /**
- * A toggle button for a filter group (`aria-pressed`): solid teal with white
- * text when chosen, outlined otherwise. Wrap a group of them in a
+ * A toggle pill for a filter group (`aria-pressed`): solid ink when chosen,
+ * outlined otherwise. Wrap a group of them in a
  * `<fieldset>` with a `<legend>`.
  */
 export function FilterButton({
@@ -20,17 +20,19 @@ export function FilterButton({
       type="button"
       aria-pressed={pressed}
       onClick={onPress}
-      className={`inline-flex min-h-12 items-center gap-2.5 rounded-full border px-4.5 text-lg font-medium transition-colors ${
+      className={`inline-flex min-h-12 items-center gap-2.5 rounded-full border-2 px-4.5 text-lg font-medium transition-colors ${
         pressed
-          ? "bg-primary-solid text-accent-foreground border-primary-solid"
-          : "bg-members-card text-foreground border-members-line-strong hover:bg-primary/10"
+          ? "bg-members-ink text-members-ink-foreground border-members-ink"
+          : "bg-members-card text-foreground border-members-line-strong hover:bg-members-band"
       }`}
     >
       {label}
       {count !== undefined && (
         <span
           className={`rounded-full px-2 text-[15px] ${
-            pressed ? "bg-white/20" : "bg-members-band text-muted"
+            pressed
+              ? "bg-members-ink-foreground/20"
+              : "bg-members-band text-members-muted"
           }`}
         >
           {count}

@@ -56,13 +56,18 @@
   --primary-solid: #156c71;
   --primary-solid-hover: #105155;
   --primary-text: var(--primary-600);
-  /* Members area surfaces (/membres): a calm off-white page with white cards
-     and fine lines. Dark values follow the site's teal-tinted dark palette. */
-  --members-page: #f3f7f7;
+  /* Members area surfaces (/membres), direction « Les Pupitres »: a white
+     page, white cards with a soft grey line, grey panels, ink for the one
+     main action. The voice colours live in components/membres/tones.ts. */
+  --members-page: #ffffff;
   --members-card: #ffffff;
-  --members-band: #f3f7f7;
-  --members-line: #dce5e5;
-  --members-line-strong: #c2cccc;
+  --members-band: #f2f2f4;
+  --members-line: #e4e4e8;
+  --members-line-strong: #17171c;
+  --members-ink: #17171c;
+  --members-ink-hover: #3a3a42;
+  --members-ink-foreground: #ffffff;
+  --members-muted: #4a4a52;
 }
 
 .dark {
@@ -90,11 +95,15 @@
   --primary-900: #082123;
   /* Small teal text follows the dark scale (#26a5ad), not `--primary` */
   --primary-text: var(--primary-500);
-  --members-page: #0d1616;
-  --members-card: #1a2c2c;
-  --members-band: #142323;
-  --members-line: #2c4343;
-  --members-line-strong: #4a6767;
+  --members-page: #131316;
+  --members-card: #1c1c21;
+  --members-band: #26262d;
+  --members-line: #34343c;
+  --members-line-strong: #f4f4f6;
+  --members-ink: #f4f4f6;
+  --members-ink-hover: #d6d6dc;
+  --members-ink-foreground: #17171c;
+  --members-muted: #b9b9c3;
 }
 
 /* High contrast accessibility. Kept outside @layer base: the brand tokens
@@ -151,6 +160,38 @@
   --color-members-band: var(--members-band);
   --color-members-line: var(--members-line);
   --color-members-line-strong: var(--members-line-strong);
+  --color-members-ink: var(--members-ink);
+  --color-members-ink-hover: var(--members-ink-hover);
+  --color-members-ink-foreground: var(--members-ink-foreground);
+  --color-members-muted: var(--members-muted);
+  --font-members-display: var(--font-members-display-face);
+}
+
+/* Inside the members area the brand teal steps aside for ink: the shared
+   utilities (text-primary-text, bg-primary-solid, bg-primary/10, focus
+   rings, text-muted) read these variables, so every members page and the
+   menus it opens in a portal follow « Les Pupitres » without one-off
+   classes. The high-contrast override below keeps black and white. */
+.members-scope {
+  --primary: var(--members-ink);
+  --primary-text: var(--members-ink);
+  --primary-solid: var(--members-ink);
+  --primary-solid-hover: var(--members-ink-hover);
+  --accent-foreground: var(--members-ink-foreground);
+  --muted: var(--members-muted);
+  --color-primary: var(--members-ink);
+}
+
+@media (prefers-contrast: more) {
+  .members-scope {
+    --members-line: #000000;
+    --members-muted: #000000;
+  }
+  .dark .members-scope,
+  .dark.members-scope {
+    --members-line: #ffffff;
+    --members-muted: #ffffff;
+  }
 }
 
 /* ==========================================================================

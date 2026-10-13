@@ -9,11 +9,11 @@ export const MembersFooter = () => {
   const { contact } = useSiteSettings();
   const year = useMemo(() => new Date().getFullYear(), []);
   const linkClass =
-    "text-primary-text inline-flex min-h-12 items-center font-medium underline underline-offset-2 hover:no-underline";
+    "text-foreground inline-flex min-h-12 items-center font-medium underline underline-offset-4 hover:no-underline";
 
   return (
-    <footer className="border-members-line bg-members-card text-muted w-full border-t text-base">
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-4 md:px-6">
+    <footer className="bg-members-page text-members-muted w-full text-base">
+      <div className="border-members-line mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-x-6 gap-y-1 border-t-2 px-3.5 py-4 md:px-6">
         <span>©&nbsp;{year}&nbsp;Le Bon Tempérament</span>
         <span>
           Une question ?{" "}

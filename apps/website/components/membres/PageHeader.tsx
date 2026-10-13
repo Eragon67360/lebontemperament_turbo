@@ -21,12 +21,12 @@ export function PageHeader({
 }) {
   return (
     <div className="flex flex-col gap-5">
-      <nav aria-label="Fil d’Ariane" className="text-muted text-base">
+      <nav aria-label="Fil d’Ariane" className="text-members-muted text-base">
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <li>
             <NextLink
               href="/membres"
-              className="text-primary-text inline-flex min-h-8 items-center font-medium underline-offset-2 hover:underline"
+              className="text-foreground inline-flex min-h-8 items-center font-medium underline underline-offset-4 hover:no-underline"
             >
               Accueil
             </NextLink>
@@ -39,7 +39,7 @@ export function PageHeader({
               <li>
                 <NextLink
                   href={parent.href}
-                  className="text-primary-text inline-flex min-h-8 items-center font-medium underline-offset-2 hover:underline"
+                  className="text-foreground inline-flex min-h-8 items-center font-medium underline underline-offset-4 hover:no-underline"
                 >
                   {parent.label}
                 </NextLink>
@@ -53,11 +53,13 @@ export function PageHeader({
         </ol>
       </nav>
       <div className="flex flex-col gap-2">
-        <h1 className="text-foreground text-[34px] leading-[1.1] font-semibold tracking-tight md:text-[44px]">
+        <h1 className="font-members-display text-foreground text-[36px] leading-[1.05] font-semibold tracking-tight md:text-[52px]">
           {title}
         </h1>
         {intro && (
-          <p className="text-muted max-w-3xl text-lg md:text-xl">{intro}</p>
+          <p className="text-members-muted max-w-3xl text-lg md:text-xl">
+            {intro}
+          </p>
         )}
       </div>
     </div>

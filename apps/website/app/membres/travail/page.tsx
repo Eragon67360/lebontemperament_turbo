@@ -18,7 +18,13 @@ export const metadata: Metadata = {
   },
 };
 
-const Travail = async () => {
+const Travail = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) => {
+  // `?dossier=adultes` opens that folder (the home links to the member's).
+  const { dossier } = await searchParams;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("drive_folders")
@@ -48,6 +54,7 @@ const Travail = async () => {
            to open Drive itself (#347): documents open through the site. */
         <FileExplorer
           folders={folders.filter((folder) => folder.slug !== DRIVE_ROOT_SLUG)}
+          initialSlug={typeof dossier === "string" ? dossier : undefined}
         />
       )}
     </div>
