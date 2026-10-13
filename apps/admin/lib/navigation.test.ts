@@ -50,6 +50,7 @@ const NEW_NAV_HREFS = [
   "/dashboard/public/annonces",
   "/dashboard/public/rejoindre-faq",
   "/dashboard/public/reglages-du-site",
+  "/dashboard/admin/commandes",
 ];
 for (const href of NEW_NAV_HREFS) {
   assert.ok(hrefs.includes(href), `${href} has no nav entry`);
@@ -84,6 +85,33 @@ for (const section of admin) {
 assert.deepEqual(
   admin[1]?.groups.map((group) => group.label),
   [undefined, "Contenu", "Témoignages"],
+);
+
+// Commandes is superadmin-only, in the Association section after its documents.
+assert.equal(navLabelForHref(admin, "/dashboard/admin/commandes"), undefined);
+assert.equal(
+  navLabelForHref(superadmin, "/dashboard/admin/commandes"),
+  "Commandes",
+);
+assert.equal(
+  navSectionForHref(superadmin, "/dashboard/admin/commandes")?.id,
+  "association",
+);
+assert.deepEqual(
+  superadmin
+    .find((section) => section.id === "association")
+    ?.groups[0]?.items.map((item) => item.label),
+  [
+    "Documents de l’association",
+    "Assemblée générale",
+    "Comptes rendus du CA",
+    "Commandes",
+    "Signalements",
+  ],
+);
+assert.equal(
+  activeNavHref(superadmin, "/dashboard/admin/commandes/some-sale-id"),
+  "/dashboard/admin/commandes",
 );
 
 // Signalements is superadmin-only, with its attention dot when unread.

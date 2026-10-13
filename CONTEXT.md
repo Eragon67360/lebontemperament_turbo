@@ -34,5 +34,6 @@ The words the association, its members and the code use. Use them in issues, cod
 - **Activité** (`activities`, `activity_type`): the admin activity feed (user created, role changed, concert created/updated/deleted, poster updated, group updated, CA created, tour created).
 - **Notification** (`notifications`): a message to members, delivered as a push notification (FCM) to the app.
 - **Tournée de livraison** (`deliveries`, `delivery_recipients`): a delivery round: a driver, recipients, an optimized route, a public tracking link (`public_token`, expiring), SMS to recipients (Twilio).
+- **Vente** et **Commande** (`order_sales`, `order_products`, `orders`, `order_items`, `order_payments`): a sale (e.g. the November cheese sale) with its own catalogue and prices; an order is one buyer (« acheteur »: name, phone, address, « vendu par », livraison or retrait) with quantities and payments (virement, espèces, chèque). Superadmins only, in the admin and the app. « Ajouter à la tournée » copies the buyers to deliver into a delivery round. Buyers’ details are erased 30 days after delivery day.
 - **Bug report** (`bug_reports`, `bug_messages`): a reported problem with its message thread, handled in the admin.
 - **Feature flag** (`feature_flags`): switches read by the website and admin (`/api/feature-flags`).

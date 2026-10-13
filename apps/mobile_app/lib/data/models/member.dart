@@ -2,12 +2,15 @@
 /// only the name, e-mail, voice and photo: no phone, no address (#350).
 class Member {
   const Member({
+    this.id,
     required this.displayName,
     required this.email,
     this.voice,
     this.photoUrl,
   });
 
+  /// profiles.id when the directory gave it (« Vendu par » on an order).
+  final String? id;
   final String displayName;
   final String email;
   final String? voice;
@@ -15,6 +18,7 @@ class Member {
 
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
+      id: json['id']?.toString(),
       displayName:
           (json['display_name'] ??
                   json['email']?.toString().split('@').first ??

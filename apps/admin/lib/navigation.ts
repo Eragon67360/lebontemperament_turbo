@@ -16,6 +16,7 @@ import {
   Megaphone,
   Music,
   Music2,
+  ShoppingBasket,
   SlidersHorizontal,
   Ticket,
   Users,
@@ -250,7 +251,7 @@ export function buildNavSections({
       id: "association",
       label: "Association",
       description: isSuperAdmin
-        ? "Documents, AG, comptes rendus du CA et signalements"
+        ? "Documents, AG, comptes rendus du CA, commandes et signalements"
         : "Documents, AG et comptes rendus du CA",
       icon: Landmark,
       groups: [
@@ -279,14 +280,23 @@ export function buildNavSections({
   ];
 
   if (isSuperAdmin) {
+    // The sales (« Commandes ») and the reports are superadmin tools of the
+    // association, after its documents.
     sections
       .find((section) => section.id === "association")
-      ?.groups[0]?.items.push({
-        href: RouteNames.DASHBOARD.ADMIN.BUG_REPORTS,
-        label: "Signalements",
-        icon: LifeBuoy,
-        badge: unreadBugReports > 0 ? "dot" : undefined,
-      });
+      ?.groups[0]?.items.push(
+        {
+          href: RouteNames.DASHBOARD.ADMIN.ORDERS,
+          label: "Commandes",
+          icon: ShoppingBasket,
+        },
+        {
+          href: RouteNames.DASHBOARD.ADMIN.BUG_REPORTS,
+          label: "Signalements",
+          icon: LifeBuoy,
+          badge: unreadBugReports > 0 ? "dot" : undefined,
+        },
+      );
   }
 
   return sections;
