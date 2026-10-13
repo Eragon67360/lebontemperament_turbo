@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.6";
-const POLICY_UPDATED_ON = "9 octobre 2026";
+const POLICY_VERSION = "2.7";
+const POLICY_UPDATED_ON = "14 octobre 2026";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -44,7 +44,7 @@ const SECTIONS = [
   { id: "formulaires", title: "Formulaires et lettre d’information" },
   { id: "membres", title: "Membres de l’association" },
   { id: "application-mobile", title: "Application mobile" },
-  { id: "livraisons", title: "Tournées de livraison" },
+  { id: "livraisons", title: "Commandes et tournées de livraison" },
   { id: "dons", title: "Dons" },
   { id: "images", title: "Photos, vidéos et enregistrements" },
   { id: "prestataires", title: "Destinataires et prestataires" },
@@ -197,6 +197,10 @@ const RETENTION: [what: string, howLong: string][] = [
     "1 an au plus après leur résolution",
   ],
   ["Journaux des synchronisations (agenda, Google Drive)", "90 jours"],
+  [
+    "Commandes d’une vente (nom, téléphone, adresse, remarques)",
+    "effacées 30 jours après le jour de livraison ; les quantités et montants restent, sans nom",
+  ],
   [
     "Données des destinataires d’une livraison",
     "supprimées 30 jours après la tournée",
@@ -665,6 +669,36 @@ export default async function PrivacyPolicy() {
           </Section>
 
           <Section id="livraisons">
+            <p className={pClass}>
+              Lors de nos ventes (fromages, saucissons…), les bons de commande
+              sur papier sont saisis par les responsables de l’association pour
+              suivre les paiements et préparer la livraison.
+            </p>
+            <Processing
+              title="Commandes"
+              facts={[
+                [
+                  "Données",
+                  "nom, numéro de téléphone, adresse postale, livraison ou retrait, produits et quantités commandés, paiements reçus (montant, moyen, date), membre qui a pris la commande et remarques éventuelles",
+                ],
+                [
+                  "Finalité",
+                  "préparer les commandes, suivre ce qui est payé et ce qui reste à payer et, si vous êtes livré, vous ajouter à la tournée de livraison (voir ci-dessous)",
+                ],
+                [
+                  "Base légale",
+                  "l’exécution de la vente conclue avec vous (article 6.1.b du RGPD)",
+                ],
+                [
+                  "Conservation",
+                  "votre nom, votre téléphone, votre adresse et les remarques sont effacés 30 jours après le jour de livraison ; les quantités et les montants restent, sans nom, pour les comptes de l’association",
+                ],
+                [
+                  "Destinataires",
+                  "les responsables de l’association chargés de la vente (super-administrateurs) ; Supabase en tant que sous-traitant",
+                ],
+              ]}
+            />
             <p className={pClass}>
               Avant une tournée de livraison, l’association envoie à chaque
               destinataire un SMS d’invitation avec la date de livraison, un
