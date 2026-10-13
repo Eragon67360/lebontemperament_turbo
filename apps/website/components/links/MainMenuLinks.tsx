@@ -1,3 +1,4 @@
+import { AnniversaryMenuLink } from "@/components/anniversary/AnniversaryEntry";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
 import RouteNames from "@/utils/routes";
 import type { User } from "@supabase/supabase-js";
@@ -78,13 +79,7 @@ const MainMenuLinks: React.FC<MainMenuLinksProps> = ({
         </li>
         {(isAnniversaryEnabled || isAdmin) && (
           <li>
-            <Link
-              href="/40-ans"
-              onClick={onNavigate}
-              className="from-primary-600 via-primary to-primary-400 dark:from-primary-700 dark:via-primary-600 dark:to-primary-500 focus-visible:outline-primary block w-full rounded-lg bg-linear-to-r px-4 py-2 text-center font-bold text-white shadow-lg transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98]"
-            >
-              🎉 40 ans du Bon Tempérament
-            </Link>
+            <AnniversaryMenuLink onNavigate={onNavigate} />
           </li>
         )}
         {!isLoading && user && (
