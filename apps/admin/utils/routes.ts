@@ -16,6 +16,11 @@ const RouteNames = {
       DOCUMENTS: "/dashboard/admin/documents",
       ASSEMBLIES: "/dashboard/admin/assemblies",
       GOOGLE_GROUPS: "/dashboard/admin/google-groups",
+      /** « Commandes »: the association's sales (superadmins only). */
+      ORDERS: "/dashboard/admin/commandes",
+      /** One sale's page. */
+      ORDER_SALE: (id: string) =>
+        `/dashboard/admin/commandes/${encodeURIComponent(id)}`,
       ANNIVERSARY: {
         ROOT: "/dashboard/admin/anniversary",
         HERO: "/dashboard/admin/anniversary/hero",
