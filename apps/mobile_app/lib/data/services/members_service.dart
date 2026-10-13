@@ -44,6 +44,7 @@ class MembersService {
 
         members.add(
           Member(
+            id: row['id']?.toString(),
             displayName: name.isNotEmpty ? name : email.split('@').first,
             email: email,
             voice: row['voice']?.toString().trim(),
