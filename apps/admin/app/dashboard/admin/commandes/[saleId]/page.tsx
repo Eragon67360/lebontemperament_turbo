@@ -525,7 +525,11 @@ export default function SalePage() {
               >
                 <TabsTrigger value="buyers">Acheteurs</TabsTrigger>
                 <TabsTrigger value="suppliers">
-                  Produits et fournisseurs
+                  {/* The three tabs must fit side by side on a 390 px phone. */}
+                  <span className="sm:hidden">Fournisseurs</span>
+                  <span className="hidden sm:inline">
+                    Produits et fournisseurs
+                  </span>
                 </TabsTrigger>
                 <TabsTrigger value="catalogue">Catalogue</TabsTrigger>
               </TabsList>

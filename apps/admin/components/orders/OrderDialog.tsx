@@ -362,7 +362,7 @@ export function OrderDialog({
                               className="flex items-center justify-between gap-3 px-3 py-2"
                             >
                               <div className="min-w-0">
-                                <p className="truncate text-[15px] leading-6 font-medium">
+                                <p className="text-[15px] leading-6 font-medium break-words">
                                   {productLabel(product)}
                                 </p>
                                 <p className="text-note text-muted-foreground">
@@ -434,7 +434,7 @@ export function OrderDialog({
                   className="flex items-start justify-between gap-3 py-1.5"
                 >
                   <span className="min-w-0">
-                    <span className="block truncate">{line.label}</span>
+                    <span className="block break-words">{line.label}</span>
                     <span className="text-note text-muted-foreground block">
                       {line.quantity} × {formatEuros(line.unit)}
                     </span>

@@ -46,7 +46,7 @@ export function BuyersList({
   const actions = (row: BuyerRow) => {
     const busy = busyOrderId === row.orderId;
     return (
-      <div className="flex items-center justify-end gap-1">
+      <div className="ml-auto flex items-center justify-end gap-1">
         <Button
           type="button"
           variant="outline"
