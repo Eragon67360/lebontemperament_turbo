@@ -48,6 +48,8 @@ type Version = {
   heading: string;
   summary: string;
   changes: string;
+  /** Same as today's value: nothing to restore. */
+  same: boolean;
   value: SiteSettings[SiteSettingKey];
 };
 
@@ -90,13 +92,17 @@ export function HistoryDialog({
     id: string,
     heading: string,
     value: SiteSettings[SiteSettingKey],
-  ): Version => ({
-    id,
-    heading,
-    value,
-    summary: settingSummary(settingKey, value),
-    changes: differencesLabel(settingDifferences(settingKey, value, current)),
-  });
+  ): Version => {
+    const differences = settingDifferences(settingKey, value, current);
+    return {
+      id,
+      heading,
+      value,
+      summary: settingSummary(settingKey, value),
+      changes: differencesLabel(differences),
+      same: differences.length === 0,
+    };
+  };
   const versions: Version[] = [
     ...(data ?? []).map((revision) =>
       describe(
@@ -187,17 +193,19 @@ export function HistoryDialog({
                       {version.changes}
                     </p>
                   </div>
-                  <div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => ask(version)}
-                      disabled={!editable || restoring}
-                    >
-                      Restaurer cette version
-                      <span className="sr-only"> ({version.heading})</span>
-                    </Button>
-                  </div>
+                  {!version.same && (
+                    <div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => ask(version)}
+                        disabled={!editable || restoring}
+                      >
+                        Restaurer cette version
+                        <span className="sr-only"> ({version.heading})</span>
+                      </Button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ol>
