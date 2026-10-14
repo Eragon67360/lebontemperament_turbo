@@ -1,5 +1,5 @@
 // « Commandes »: what the pages compute from a sale (rows of buyers, the
-// search and filters, the sentences, the spreadsheet export). Pure and
+// search and filters, the sentences, the export's file name). Pure and
 // unit-tested (view.test.ts); the totals themselves come from
 // @repo/domain/utils/orders and are never recomputed here.
 import type { StatusTone } from "@/components/ui/status-badge";
@@ -10,12 +10,10 @@ import {
   FULFILMENT_LABELS,
   type Fulfilment,
   type SaleSummary,
-  saleSpreadsheet,
   saleSummary,
 } from "@repo/domain/utils/orders";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import Papa from "papaparse";
 
 // ---------------------------------------------------------------------------
 // Buyers
@@ -235,7 +233,7 @@ export function todayParisIso(now: Date = new Date()): string {
 }
 
 // ---------------------------------------------------------------------------
-// Export (« Exporter (Excel) »)
+// Export (« Exporter (Excel) », see workbook.ts)
 
 /** « fromages-et-saucissons-novembre-2026 » from a sale title. */
 export function slugify(title: string): string {
@@ -243,36 +241,4 @@ export function slugify(title: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug || "vente";
-}
-
-export function csvFilename(title: string): string {
-  return `commandes-${slugify(title)}.csv`;
-}
-
-/** The rows of the export: the domain's spreadsheet with phone, address and seller. */
-export function saleCsvRows(detail: SaleDetail): string[][] {
-  const summary = saleSummary(detail.products, detail.orders);
-  const extra = new Map(
-    detail.orders.map((o) => [
-      o.id,
-      {
-        phone: o.buyer_phone,
-        address: o.buyer_address,
-        soldBy: o.sold_by ? (detail.sellers[o.sold_by] ?? null) : null,
-      },
-    ]),
-  );
-  return saleSpreadsheet(summary, extra);
-}
-
-/**
- * CSV as Excel in French opens it: « ; » between cells, CRLF, and a UTF-8
- * byte-order mark so accents survive.
- */
-export function csvText(rows: readonly string[][]): string {
-  return (
-    "﻿" +
-    Papa.unparse(rows as string[][], { delimiter: ";", newline: "\r\n" }) +
-    "\r\n"
-  );
 }
