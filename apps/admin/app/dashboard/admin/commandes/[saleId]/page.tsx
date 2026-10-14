@@ -62,20 +62,18 @@ import { memberName } from "@/utils/members/list";
 import type { SaleProduct } from "@/utils/orders/types";
 import {
   type BuyerFilters,
-  csvFilename,
-  csvText,
   deliverableCount,
   filterBuyers,
   hasBuyerFilters,
   MODE_FILTERS,
   type ModeFilter,
   NO_BUYER_FILTERS,
-  saleCsvRows,
   saleDatesLine,
   saleView,
   STATE_FILTERS,
   type StateFilter,
 } from "@/utils/orders/view";
+import { saleWorkbook, XLSX_MIME, xlsxFilename } from "@/utils/orders/workbook";
 import RouteNames from "@/utils/routes";
 import {
   groupProductsByCategory,
@@ -146,6 +144,7 @@ export default function SalePage() {
   const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [deleting, setDeleting] = useState<Deleting | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [orderedProduct, setOrderedProduct] = useState<SaleProduct | null>(
     null,
   );
@@ -347,22 +346,35 @@ export default function SalePage() {
     }
   };
 
-  const exportCsv = () => {
+  const exportXlsx = async () => {
     if (!detail) return;
-    const blob = new Blob([csvText(saleCsvRows(detail))], {
-      type: "text/csv;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = csvFilename(detail.sale.title);
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-    toast.success("Export téléchargé", {
-      description: "Ouvrez le fichier avec Excel ou LibreOffice.",
-    });
+    setExporting(true);
+    try {
+      // Loaded on click: the library stays out of the page's bundle.
+      const { default: writeExcelFile } =
+        await import("write-excel-file/universal");
+      const blob = await writeExcelFile(saleWorkbook(detail), {
+        fontFamily: "Calibri",
+        fontSize: 11,
+      }).toBlob();
+      const url = URL.createObjectURL(new Blob([blob], { type: XLSX_MIME }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = xlsxFilename(detail.sale.title);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Export téléchargé", {
+        description: "Résumé, acheteurs, détail, fournisseurs et paiements.",
+      });
+    } catch (error) {
+      toast.error("L'export n'a pas pu être créé", {
+        description: describe(error),
+      });
+    } finally {
+      setExporting(false);
+    }
   };
 
   // --- Deletion ---
@@ -476,8 +488,8 @@ export default function SalePage() {
             </Button>
             <Button
               variant="outline"
-              onClick={exportCsv}
-              disabled={detail.orders.length === 0}
+              onClick={exportXlsx}
+              disabled={detail.orders.length === 0 || exporting}
             >
               <Download aria-hidden />
               Exporter (Excel)
