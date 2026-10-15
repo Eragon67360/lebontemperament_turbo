@@ -56,7 +56,7 @@ const DropdownMenuSubContent = React.forwardRef<
     ref={ref}
     className={cn(
       contentClassName,
-      "origin-[--radix-dropdown-menu-content-transform-origin]",
+      "origin-(--radix-dropdown-menu-content-transform-origin)",
       className,
     )}
     {...props}
@@ -75,7 +75,7 @@ const DropdownMenuContent = React.forwardRef<
       sideOffset={sideOffset}
       className={cn(
         contentClassName,
-        "max-h-[var(--radix-dropdown-menu-content-available-height)] origin-[--radix-dropdown-menu-content-transform-origin] overflow-x-hidden overflow-y-auto",
+        "max-h-[var(--radix-dropdown-menu-content-available-height)] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto",
         className,
       )}
       {...props}
