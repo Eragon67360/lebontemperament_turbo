@@ -1,6 +1,7 @@
 "use client";
 
 import { useDriveIndex } from "@/hooks/useDriveIndex";
+import { useSale } from "@/hooks/useOrders";
 import { useUsers } from "@/hooks/useUsers";
 import { buildNavSections } from "@/lib/navigation";
 import {
@@ -8,6 +9,7 @@ import {
   groupSegmentFromPathname,
   memberIdFromPathname,
   programIdFromPathname,
+  saleIdFromPathname,
   type TrailItem,
 } from "@/lib/trail";
 import { isLegacyProgramId } from "@/utils/drive/tree";
@@ -43,6 +45,16 @@ export function useShellTrail(): TrailItem[] {
     return found ? nameOfMember(found) : null;
   }, [memberId, users.data]);
 
+  // A sale page: the same query as the page (shared cache). null once the
+  // server has answered that it does not exist (404), undefined while loading.
+  const saleId = saleIdFromPathname(pathname);
+  const sale = useSale(saleId);
+  const saleTitle = sale.data
+    ? sale.data.sale.title
+    : sale.isError
+      ? null
+      : undefined;
+
   const names = useMemo(() => {
     if (legacy) return { programName: legacyName, groupName: undefined };
     const nodes = driveIndex.data?.nodes;
@@ -68,8 +80,20 @@ export function useShellTrail(): TrailItem[] {
         groupName: names.groupName,
         memberId,
         memberName,
+        saleId,
+        saleTitle,
       }),
-    [pathname, sections, programId, groupId, names, memberId, memberName],
+    [
+      pathname,
+      sections,
+      programId,
+      groupId,
+      names,
+      memberId,
+      memberName,
+      saleId,
+      saleTitle,
+    ],
   );
 }
 

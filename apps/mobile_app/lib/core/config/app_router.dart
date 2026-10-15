@@ -22,6 +22,8 @@ import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/notifications/presentation/screens/permission_request_screen.dart';
 import '../../features/onboarding/presentation/screens/welcome_tour_screen.dart';
+import '../../features/orders/presentation/screens/sale_screen.dart';
+import '../../features/orders/presentation/screens/sales_list_screen.dart';
 import '../../features/profile/presentation/screens/developer_mode_screen.dart';
 import '../../features/public/presentation/screens/public_shell_screen.dart';
 import '../../features/reports/presentation/screens/report_conversation_screen.dart';
@@ -63,6 +65,11 @@ class AppRouter {
   static const String rehearsals = '/rehearsals';
   static const String reportDetail = '/reports/:id';
   static const String driverTracking = '/driver-tracking';
+
+  /// « Commandes » (superadmins; the screens show « Accès non autorisé »
+  /// to anyone else): the sales, then one sale with its buyers.
+  static const String orders = '/orders';
+  static const String orderSale = '/orders/:saleId';
   static const String developer = '/developer';
   // The name for the new sub-route
   static const String driverTrackingRecipient = 'driverTrackingRecipient';
@@ -263,6 +270,21 @@ class AppRouter {
                   ),
                 );
               },
+            ),
+          ],
+        ),
+
+        // Orders of the association's sales (superadmins only)
+        GoRoute(
+          path: orders,
+          name: 'orders',
+          builder: (context, state) => const OrdersScreen(),
+          routes: [
+            GoRoute(
+              path: ':saleId',
+              name: 'orderSale',
+              builder: (context, state) =>
+                  SaleScreen(saleId: state.pathParameters['saleId']!),
             ),
           ],
         ),

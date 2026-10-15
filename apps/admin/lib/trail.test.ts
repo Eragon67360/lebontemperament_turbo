@@ -5,6 +5,7 @@ import {
   groupSegmentFromPathname,
   memberIdFromPathname,
   programIdFromPathname,
+  saleIdFromPathname,
 } from "./trail";
 
 const sections = buildNavSections({ isSuperAdmin: true });
@@ -164,4 +165,45 @@ assert.deepEqual(
     memberName: null,
   }).at(-1),
   { label: "Membre introuvable" },
+);
+
+// A sale page: « Association › Commandes › <title> », the id swapped for the
+// title once loaded, a placeholder before, « Vente introuvable » when unknown.
+const salePath = "/dashboard/admin/commandes/22222222-bbbb";
+assert.equal(saleIdFromPathname(salePath), "22222222-bbbb");
+assert.equal(saleIdFromPathname("/dashboard/admin/commandes"), undefined);
+assert.equal(
+  saleIdFromPathname("/dashboard/admin/users/22222222-bbbb"),
+  undefined,
+);
+assert.deepEqual(trail("/dashboard/admin/commandes"), [
+  { label: "Association" },
+  { label: "Commandes" },
+]);
+assert.deepEqual(
+  trail(salePath, {
+    pathname: salePath,
+    sections,
+    saleId: "22222222-bbbb",
+    saleTitle: "Fromages et saucissons · novembre 2026",
+  }),
+  [
+    { label: "Association" },
+    { label: "Commandes", href: "/dashboard/admin/commandes" },
+    { label: "Fromages et saucissons · novembre 2026" },
+  ],
+);
+assert.equal(
+  trail(salePath, { pathname: salePath, sections, saleId: "22222222-bbbb" })[2]
+    ?.label,
+  "Vente…",
+);
+assert.equal(
+  trail(salePath, {
+    pathname: salePath,
+    sections,
+    saleId: "22222222-bbbb",
+    saleTitle: null,
+  })[2]?.label,
+  "Vente introuvable",
 );

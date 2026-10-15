@@ -1663,6 +1663,239 @@ export type Database = {
           },
         ];
       };
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string;
+          quantity: number;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          product_id: string;
+          quantity: number;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          product_id?: string;
+          quantity?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "order_products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_payments: {
+        Row: {
+          amount_cents: number;
+          created_at: string;
+          id: string;
+          method: string;
+          note: string | null;
+          order_id: string;
+          paid_on: string;
+          recorded_by: string | null;
+        };
+        Insert: {
+          amount_cents: number;
+          created_at?: string;
+          id?: string;
+          method: string;
+          note?: string | null;
+          order_id: string;
+          paid_on?: string;
+          recorded_by?: string | null;
+        };
+        Update: {
+          amount_cents?: number;
+          created_at?: string;
+          id?: string;
+          method?: string;
+          note?: string | null;
+          order_id?: string;
+          paid_on?: string;
+          recorded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_payments_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_products: {
+        Row: {
+          category: string;
+          created_at: string;
+          display_order: number;
+          id: string;
+          is_available: boolean;
+          name: string;
+          sale_id: string;
+          supplier: string | null;
+          unit_price_cents: number;
+          updated_at: string;
+          variant: string | null;
+        };
+        Insert: {
+          category: string;
+          created_at?: string;
+          display_order?: number;
+          id?: string;
+          is_available?: boolean;
+          name: string;
+          sale_id: string;
+          supplier?: string | null;
+          unit_price_cents: number;
+          updated_at?: string;
+          variant?: string | null;
+        };
+        Update: {
+          category?: string;
+          created_at?: string;
+          display_order?: number;
+          id?: string;
+          is_available?: boolean;
+          name?: string;
+          sale_id?: string;
+          supplier?: string | null;
+          unit_price_cents?: number;
+          updated_at?: string;
+          variant?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_products_sale_id_fkey";
+            columns: ["sale_id"];
+            isOneToOne: false;
+            referencedRelation: "order_sales";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_sales: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          delivery_date: string | null;
+          id: string;
+          order_deadline: string | null;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          delivery_date?: string | null;
+          id?: string;
+          order_deadline?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          delivery_date?: string | null;
+          id?: string;
+          order_deadline?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      orders: {
+        Row: {
+          buyer_address: string | null;
+          buyer_name: string;
+          buyer_phone: string | null;
+          created_at: string;
+          created_by: string | null;
+          delivery_recipient_id: string | null;
+          fulfilment: string;
+          handed_over_at: string | null;
+          id: string;
+          notes: string | null;
+          personal_data_erased_at: string | null;
+          sale_id: string;
+          sold_by: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          buyer_address?: string | null;
+          buyer_name: string;
+          buyer_phone?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          delivery_recipient_id?: string | null;
+          fulfilment?: string;
+          handed_over_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          personal_data_erased_at?: string | null;
+          sale_id: string;
+          sold_by?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          buyer_address?: string | null;
+          buyer_name?: string;
+          buyer_phone?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          delivery_recipient_id?: string | null;
+          fulfilment?: string;
+          handed_over_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          personal_data_erased_at?: string | null;
+          sale_id?: string;
+          sold_by?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "orders_delivery_recipient_id_fkey";
+            columns: ["delivery_recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "delivery_recipients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "orders_sale_id_fkey";
+            columns: ["sale_id"];
+            isOneToOne: false;
+            referencedRelation: "order_sales";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "orders_sold_by_fkey";
+            columns: ["sold_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           address: string | null;
@@ -2138,6 +2371,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_sale_orders_to_delivery: {
+        Args: { p_driver_id?: string; p_sale_id: string };
+        Returns: Json;
+      };
       auth_user_summaries: {
         Args: never;
         Returns: {
@@ -2161,6 +2398,10 @@ export type Database = {
           p_venue_name: string;
         };
         Returns: boolean;
+      };
+      copy_order_sale: {
+        Args: { p_sale_id: string; p_title: string };
+        Returns: string;
       };
       drive_index_apply: {
         Args: {
@@ -2200,6 +2441,10 @@ export type Database = {
       };
       is_admin: { Args: never; Returns: boolean };
       is_admin_or_superadmin: { Args: never; Returns: boolean };
+      is_superadmin: {
+        Args: never;
+        Returns: boolean;
+      };
       mark_bug_report_read: {
         Args: { p_report_id: string };
         Returns: undefined;
@@ -2225,6 +2470,10 @@ export type Database = {
           voice: string;
         }[];
       };
+      normalize_order_phone: {
+        Args: { p_phone: string };
+        Returns: string;
+      };
       redeem_delivery_code: {
         Args: {
           p_client: string;
@@ -2241,6 +2490,15 @@ export type Database = {
           p_upserts: Json;
         };
         Returns: Json;
+      };
+      save_order: {
+        Args: {
+          p_items: Json;
+          p_order: Json;
+          p_order_id: string | null;
+          p_sale_id: string;
+        };
+        Returns: string;
       };
       site_document_object: {
         Args: { p_collection: string; p_file_name: string };

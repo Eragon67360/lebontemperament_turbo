@@ -19,7 +19,8 @@ class DeliveryWithRecipients {
 }
 
 class DeliveryService {
-  final SupabaseClient _client = SupabaseConfig.client;
+  // Read lazily so a test can build a fake subclass without Supabase.
+  SupabaseClient get _client => SupabaseConfig.client;
   final AuthService _auth = AuthService();
   final Logger _logger = Logger();
 
