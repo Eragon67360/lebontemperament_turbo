@@ -36,6 +36,7 @@ import {
   type DriveSyncDiffGroup,
   type DriveSyncResult,
 } from "@/utils/driveSync";
+import { DRIVE_ROOT_SLUG } from "@repo/domain/utils/drive";
 import {
   AlertTriangle,
   Check,
@@ -268,7 +269,9 @@ export function DriveSyncSection({
 function DiffView({ result }: { result: DriveSyncResult }) {
   const { data: folders } = useDriveFolders();
   const labelOf = (slug: string) =>
-    folders?.find((f) => f.slug === slug)?.label ?? slug;
+    slug === DRIVE_ROOT_SLUG
+      ? "Dossier racine du Drive"
+      : (folders?.find((f) => f.slug === slug)?.label ?? slug);
   const changes = hasChanges(result.counts);
 
   return (
