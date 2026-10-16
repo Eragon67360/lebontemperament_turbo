@@ -36,6 +36,7 @@ import {
   BALANCE_LABELS,
   balanceStatus,
   formatEuros,
+  formatPhone,
   FULFILMENT_LABELS,
   FULFILMENTS,
   groupProductsByCategory,
@@ -242,6 +243,7 @@ export function OrderDialog({
                   id={LABELS.buyer_phone.id}
                   label={LABELS.buyer_phone.label}
                   inputMode="tel"
+                  format={formatPhone}
                   placeholder="06 12 34 56 78"
                   hint="Pour le SMS de livraison."
                 />

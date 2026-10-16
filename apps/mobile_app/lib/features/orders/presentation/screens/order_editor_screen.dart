@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lebontemperament/core/constants/ui_constants.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
@@ -183,6 +184,7 @@ class _OrderEditorScreenState extends ConsumerState<OrderEditorScreen> {
             controller: _phone,
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.next,
+            inputFormatters: [_PhoneInputFormatter()],
             decoration: const InputDecoration(
               labelText: 'Téléphone',
               hintText: '06 12 34 56 78',
@@ -522,6 +524,25 @@ class _SellerPickerState extends ConsumerState<_SellerPicker> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Formats the phone field as it is typed, while the caret is at the end
+/// (an edit in the middle is left alone until the order is saved).
+class _PhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    if (newValue.selection.baseOffset != text.length) return newValue;
+    final formatted = formatPhone(text);
+    if (formatted == text) return newValue;
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

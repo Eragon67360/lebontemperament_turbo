@@ -16,6 +16,8 @@ On delivery day the steps are pushes to the phones linked in the app. The only o
 
 > Bonjour Marie, nous arrivons dans 5 minutes environ avec votre commande ! Suivez-nous : www.lebontemperament.com/l/K7MP-4XQ9 - Félix & Thomas
 
+Phone numbers may be stored as typed (« 06 12 34 56 78 », « +33 6… »): `_shared/twilio.ts` turns them into `+33612345678` before calling Twilio (`_shared/phone.ts`, the same rule as `public.normalize_order_phone`) and skips a number that can't be one.
+
 Links use the host of the `SITE_URL` secret, which must be `https://www.lebontemperament.com`: the bare domain redirects to www, and iPhones only open the app from the exact host.
 
 ## Setup

@@ -237,6 +237,10 @@ const products = [
     ],
   });
   assert.equal(orderFormToBody({ ...ok.data, sold_by: NONE }).sold_by, null);
+  assert.equal(
+    orderFormToBody({ ...ok.data, buyer_phone: "+33612345678" }).buyer_phone,
+    "06 12 34 56 78",
+  );
 
   // The warning about the round: delivery without an address.
   assert.equal(
