@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart' show CancelToken;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +10,7 @@ import 'package:lebontemperament/core/widgets/notice_banner.dart';
 import 'package:lebontemperament/core/widgets/stage.dart';
 
 import '../../../../data/models/member.dart';
+import '../../data/address_search.dart';
 import '../../domain/order_totals.dart';
 import '../../domain/orders_models.dart';
 import '../providers/orders_providers.dart';
@@ -191,15 +195,7 @@ class _OrderEditorScreenState extends ConsumerState<OrderEditorScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _address,
-            textCapitalization: TextCapitalization.sentences,
-            maxLines: 2,
-            decoration: const InputDecoration(
-              labelText: 'Adresse',
-              hintText: 'Pour la livraison',
-            ),
-          ),
+          AddressSearchField(controller: _address),
           const SizedBox(height: 12),
           _SellerField(name: _soldByName, onTap: _pickSeller),
           const SizedBox(height: 16),
@@ -543,6 +539,102 @@ class _PhoneInputFormatter extends TextInputFormatter {
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+/// The buyer's address with suggestions from the national address base:
+/// type a few words, tap a line, and the field holds « 31a Rue des Vignes
+/// 67520 Wangen », the form the round's map finds. Typing freely still
+/// works, and a geocoder that can't be reached leaves a plain text field.
+class AddressSearchField extends ConsumerStatefulWidget {
+  const AddressSearchField({super.key, required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  ConsumerState<AddressSearchField> createState() => _AddressSearchFieldState();
+}
+
+class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
+  static const _debounce = Duration(milliseconds: 300);
+
+  Timer? _timer;
+  CancelToken? _cancel;
+  List<AddressSuggestion> _suggestions = const [];
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _cancel?.cancel();
+    super.dispose();
+  }
+
+  void _onChanged(String text) {
+    _timer?.cancel();
+    _cancel?.cancel();
+    if (addressQuery(text) == null) {
+      if (_suggestions.isNotEmpty) setState(() => _suggestions = const []);
+      return;
+    }
+    _timer = Timer(_debounce, () async {
+      final cancel = _cancel = CancelToken();
+      final found = await ref
+          .read(addressSearchServiceProvider)
+          .search(text, cancelToken: cancel);
+      if (!mounted || cancel.isCancelled) return;
+      setState(() => _suggestions = found);
+    });
+  }
+
+  void _choose(AddressSuggestion s) {
+    _timer?.cancel();
+    _cancel?.cancel();
+    widget.controller.value = TextEditingValue(
+      text: s.label,
+      selection: TextSelection.collapsed(offset: s.label.length),
+    );
+    setState(() => _suggestions = const []);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: widget.controller,
+          textCapitalization: TextCapitalization.sentences,
+          maxLines: 2,
+          minLines: 1,
+          autocorrect: false,
+          onChanged: _onChanged,
+          decoration: const InputDecoration(
+            labelText: 'Adresse',
+            hintText: 'Tapez le début, puis choisissez',
+          ),
+        ),
+        if (_suggestions.isNotEmpty)
+          Card(
+            margin: const EdgeInsets.only(top: 4),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final s in _suggestions)
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.place_outlined),
+                    title: Text(s.label),
+                    subtitle: s.context == null
+                        ? null
+                        : Text(s.context!, style: theme.textTheme.bodySmall),
+                    onTap: () => _choose(s),
+                  ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

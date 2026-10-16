@@ -9,6 +9,7 @@ import {
   FormFeedback,
   saveErrorMessage,
 } from "@/components/anniversary/FormFeedback";
+import { AddressField } from "@/components/orders/AddressField";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
@@ -248,17 +249,16 @@ export function OrderDialog({
                   hint="Pour le SMS de livraison."
                 />
               </div>
-              <TextareaField
+              <AddressField
                 control={form.control}
                 name="buyer_address"
                 id={LABELS.buyer_address.id}
                 label={LABELS.buyer_address.label}
-                rows={2}
                 placeholder="N°, rue, code postal et ville"
                 hint={
                   fulfilment === "pickup"
                     ? "Facultative pour un retrait."
-                    : "Celle où la commande est livrée : elle sert à la tournée."
+                    : "Celle où la commande est livrée. Choisissez-la dans les propositions : la tournée la trouvera sur la carte."
                 }
               />
               {warnAddress && (
