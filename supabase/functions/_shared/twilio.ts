@@ -1,8 +1,17 @@
+import { smsPhone } from "./phone.ts";
+
 // Sends one SMS through Twilio with the function secrets TWILIO_ACCOUNT_SID,
 // TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER. Never throws: returns whether
 // Twilio accepted the message and logs its error otherwise (never the text,
-// which holds the recipient's name and code).
-export async function sendSms(to: string, body: string): Promise<boolean> {
+// which holds the recipient's name and code, nor the number).
+// The number may be written any French way (« 06 12 34 56 78 »): Twilio only
+// takes « +33612345678 », so it is converted here first.
+export async function sendSms(phone: string, body: string): Promise<boolean> {
+  const to = smsPhone(phone);
+  if (!to) {
+    console.error("SMS not sent: the phone number is not valid");
+    return false;
+  }
   const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
   const from = Deno.env.get("TWILIO_PHONE_NUMBER");

@@ -21,6 +21,8 @@ import '../../../../core/config/app_config.dart';
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
+import '../../../orders/domain/order_totals.dart'
+    show isValidPhone, normalizePhone;
 import '../../data/delivery_invitations.dart';
 import '../providers/driver_tracking_provider.dart';
 import '../widgets/invitation_widgets.dart';
@@ -1146,6 +1148,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   late final TextEditingController _addressController;
   late final TextEditingController _phoneController;
   bool _isGeocoding = false;
+  String? _phoneError;
 
   @override
   void initState() {
@@ -1161,7 +1164,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   void dispose() {
     _labelController.dispose();
     _addressController.dispose();
-    _phoneController.dispose(); // <-- ADDED disposal
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -1169,7 +1172,13 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     final label = _labelController.text.trim();
     if (label.isEmpty) return;
     final addressStr = _addressController.text.trim();
-    final phoneStr = _phoneController.text.trim(); // <-- ADDED get phone value
+    final phoneStr = _phoneController.text.trim();
+    // Any French way of writing it (06 12 34 56 78, +33 6…) is stored as
+    // +33612345678, the form Twilio needs for the invitation SMS.
+    if (phoneStr.isNotEmpty && !isValidPhone(phoneStr)) {
+      setState(() => _phoneError = "Ce numéro de téléphone n'est pas valide");
+      return;
+    }
 
     String? savedAddress;
     double? savedLatitude;
@@ -1210,13 +1219,12 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
 
     if (!mounted) return;
 
-    // <-- MODIFIED the returned object to include the phone number
     Navigator.of(context).pop((
       label: label,
       address: savedAddress?.isEmpty == true ? null : savedAddress,
       latitude: savedLatitude,
       longitude: savedLongitude,
-      phoneNumber: phoneStr.isEmpty ? null : phoneStr, // <-- ADDED phone number
+      phoneNumber: normalizePhone(phoneStr),
     ));
   }
 
@@ -1254,11 +1262,15 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Téléphone (pour l’invitation par SMS)',
-                hintText: 'Format international (ex. : +336…)',
-                border: OutlineInputBorder(),
+                hintText: 'Ex. : 06 12 34 56 78',
+                errorText: _phoneError,
+                border: const OutlineInputBorder(),
               ),
+              onChanged: (_) {
+                if (_phoneError != null) setState(() => _phoneError = null);
+              },
             ),
           ],
         ),

@@ -421,6 +421,22 @@ export function isValidPhone(input: string): boolean {
   return n !== null && /^\+[1-9]\d{6,14}$/.test(n);
 }
 
+/**
+ * How a buyer's number is shown and stored: a French number in any usual
+ * form (« 0677565184 », « +33 6 77 56 51 84 », « 0033… ») becomes
+ * « 06 77 56 51 84 ». A French number still being typed (« 06775 ») gets its
+ * pairs (« 06 77 5 »); anything else, foreign numbers included, is kept as
+ * written. The app's formatPhone follows the same rule.
+ */
+export function formatPhone(input: string): string {
+  const d = input.replace(/[\s.\-()/]/g, "");
+  const pairs = (digits: string) => digits.replace(/(\d{2})(?=\d)/g, "$1 ");
+  if (/^0([1-9]\d{0,8})?$/.test(d)) return pairs(d);
+  const intl = /^(?:\+33|0033)0?([1-9]\d{8})$/.exec(d);
+  if (intl) return pairs(`0${intl[1]}`);
+  return input;
+}
+
 // ---------------------------------------------------------------------------
 // Input checks for the admin's routes (the database checks the same limits)
 
@@ -703,7 +719,7 @@ export function parseOrderInput(
     value: {
       order: {
         buyer_name: name.value!,
-        buyer_phone: phone.value,
+        buyer_phone: phone.value ? formatPhone(phone.value) : null,
         buyer_address: address.value,
         sold_by: soldBy === "" ? null : (soldBy as string | null),
         fulfilment: fulfilment as Fulfilment,

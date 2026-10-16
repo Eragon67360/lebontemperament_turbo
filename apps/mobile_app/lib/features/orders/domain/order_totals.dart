@@ -432,6 +432,21 @@ bool isValidPhone(String input) {
   return n != null && RegExp(r'^\+[1-9]\d{6,14}$').hasMatch(n);
 }
 
+/// How a buyer's number is shown and stored (same rule as the admin's
+/// formatPhone): a French number in any usual form (« 0677565184 »,
+/// « +33 6 77 56 51 84 », « 0033… ») becomes « 06 77 56 51 84 ». A French
+/// number still being typed (« 06775 ») gets its pairs (« 06 77 5 »);
+/// anything else, foreign numbers included, is kept as written.
+String formatPhone(String input) {
+  final d = input.replaceAll(RegExp(r'[\s.\-()/]'), '');
+  String pairs(String digits) =>
+      digits.replaceAllMapped(RegExp(r'(\d{2})(?=\d)'), (m) => '${m[1]} ');
+  if (RegExp(r'^0([1-9]\d{0,8})?$').hasMatch(d)) return pairs(d);
+  final intl = RegExp(r'^(?:\+33|0033)0?([1-9]\d{8})$').firstMatch(d);
+  if (intl != null) return pairs('0${intl[1]}');
+  return input;
+}
+
 // ---------------------------------------------------------------------------
 // Input checks (the same messages as the admin's parsers)
 
@@ -550,7 +565,7 @@ Parsed<OrderInput> parseOrderInput({
   return Parsed.ok(
     OrderInput(
       buyerName: buyerName.trim(),
-      buyerPhone: phone,
+      buyerPhone: phone == null ? null : formatPhone(phone),
       buyerAddress: _clean(buyerAddress),
       soldBy: _clean(soldBy),
       fulfilment: fulfilment,

@@ -69,10 +69,16 @@ export function TextField<T extends FieldValues>({
   type = "text",
   inputMode,
   maxLength,
+  format,
 }: Common<T> & {
   type?: "text" | "url" | "time" | "email";
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   maxLength?: number;
+  /**
+   * Tidies the value as it is typed (only while the caret is at the end, so
+   * an edit in the middle isn't disturbed) and again when the field is left.
+   */
+  format?: (value: string) => string;
 }) {
   return (
     <FormField
@@ -95,6 +101,18 @@ export function TextField<T extends FieldValues>({
               disabled={disabled}
               aria-required={required || undefined}
               value={field.value ?? ""}
+              {...(format && {
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                  const { value, selectionStart } = e.target;
+                  field.onChange(
+                    selectionStart === value.length ? format(value) : value,
+                  );
+                },
+                onBlur: () => {
+                  field.onChange(format(field.value ?? ""));
+                  field.onBlur();
+                },
+              })}
             />
           </FormControl>
           {hint && <FormDescription>{hint}</FormDescription>}

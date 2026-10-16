@@ -6,6 +6,7 @@ import type { SaleOrder, SaleProduct } from "@/utils/orders/types";
 import {
   BUYER_ADDRESS_MAX,
   BUYER_NAME_MAX,
+  formatPhone,
   FULFILMENTS,
   isValidPhone,
   ORDER_NOTES_MAX,
@@ -212,7 +213,7 @@ export function orderFormToBody(
 ): OrderInput["order"] & { items: OrderInput["items"] } {
   return {
     buyer_name: values.buyer_name.trim(),
-    buyer_phone: values.buyer_phone.trim() || null,
+    buyer_phone: formatPhone(values.buyer_phone).trim() || null,
     buyer_address: values.buyer_address.trim() || null,
     sold_by: values.sold_by === NONE ? null : values.sold_by,
     fulfilment: values.fulfilment,
