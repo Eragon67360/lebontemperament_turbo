@@ -20,6 +20,17 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        // The bare domain sends every page to www, except the app-link files:
+        // Android App Links and iOS Universal Links refuse a redirected
+        // `/.well-known/` file, so `lebontemperament.com/l/<code>` could not
+        // open the app. Vercel serves the bare domain from this project
+        // (no domain-level redirect) so that this rule is the one that runs.
+        source: "/:path((?!\\.well-known/).*)",
+        has: [{ type: "host", value: "lebontemperament.com" }],
+        destination: "https://www.lebontemperament.com/:path",
+        permanent: true,
+      },
+      {
         source: "/nos-concerts",
         destination: "/concerts",
         permanent: true,

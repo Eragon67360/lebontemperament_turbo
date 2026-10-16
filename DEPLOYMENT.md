@@ -17,6 +17,10 @@ Both Vercel projects build from the **repository root**, with a Turbo filter per
 
 `turbo-ignore` cancels a deployment when nothing the app depends on changed since the branch's last successful deployment (docs, `supabase/`, the mobile app). Vercel then shows it as Canceled, and a Redeploy from the dashboard is cancelled the same way, because the check runs again on the same commit (_measured_ 2026-10-07: four dev deployments of both projects cancelled after a docs-only merge). So after changing environment variables, force the build with a commit whose message contains `[vercel deploy]`: for example, merge the next PR into `dev` with `[vercel deploy]` in the merge commit title. `[vercel skip]` does the opposite.
 
+## The bare domain
+
+`lebontemperament.com` must be **connected to Production** in the website project's domains, not set to « Redirect to www.lebontemperament.com ». A domain-level redirect answers before the site runs, so it also redirects `/.well-known/assetlinks.json` and `/.well-known/apple-app-site-association`, and Android App Links and iOS Universal Links refuse a redirected file (Play Console then lists the bare domain as not verified). The site itself sends every other path of the bare domain to `www` with a 308 (first rule of `redirects()` in `apps/website/next.config.js`).
+
 ## `vercel.json` files are not read
 
 Vercel only reads `vercel.json` from the Root Directory, which is the repository root here. `apps/website/vercel.json` and `apps/admin/vercel.json` are therefore never read: change the settings in the Vercel project, not in those files. Build skipping and the dead `vercel.json` files are tracked in #366.
