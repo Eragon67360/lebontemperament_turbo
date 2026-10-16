@@ -99,7 +99,7 @@ assert.deepEqual(
   ["orphan"],
 );
 
-// --- Sections: drive_folders order and labels, racine last, programmes vs loose files ---
+// --- Sections: drive_folders order and labels, no racine section, programmes vs loose files ---
 {
   const sections = rootSections(tree, [
     { slug: "racine", label: "Drive complet", display_order: 0 },
@@ -107,7 +107,7 @@ assert.deepEqual(
   ]);
   assert.deepEqual(
     sections.map((s) => s.label),
-    ["Adultes (chœur)", "Drive complet"],
+    ["Adultes (chœur)"],
   );
   assert.deepEqual(
     sections[0]!.programmes.map((n) => n.name),
@@ -117,7 +117,7 @@ assert.deepEqual(
     sections[0]!.documents.map((n) => n.name),
     ["planning.pdf"],
   );
-  assert.deepEqual(sections[1]!.programmes, []);
+  assert.equal(sections.length, 1, "the whole-Drive root has no section");
   // Without drive_folders rows, the folder's own name is the label.
   assert.equal(rootSections(tree)[0]!.label, "Adultes");
 }
