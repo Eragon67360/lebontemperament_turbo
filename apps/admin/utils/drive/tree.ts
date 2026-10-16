@@ -129,9 +129,9 @@ export interface RootSection {
 
 /**
  * One section per indexed root, in the members site's order (drive_folders
- * display_order; unknown slugs last, by name). The « racine » root comes
- * last whatever its order: the members site shows it as a link, not a tab,
- * and its index holds only what the other roots don't.
+ * display_order; unknown slugs last, by name). The « racine » root (the whole
+ * Drive, which holds only what the other roots don't) has no section: the
+ * members site doesn't show it and the admin doesn't offer it.
  */
 export function rootSections(
   tree: DriveTree,
@@ -139,14 +139,11 @@ export function rootSections(
   rootSlug = "racine",
 ): RootSection[] {
   const bySlug = new Map(folders.map((f) => [f.slug, f]));
-  const rank = (node: DriveIndexNode) => {
-    if (node.root_slug === rootSlug) return Number.MAX_SAFE_INTEGER;
-    return (
-      bySlug.get(node.root_slug)?.display_order ?? Number.MAX_SAFE_INTEGER - 1
-    );
-  };
+  const rank = (node: DriveIndexNode) =>
+    bySlug.get(node.root_slug)?.display_order ?? Number.MAX_SAFE_INTEGER;
 
-  return [...tree.roots]
+  return tree.roots
+    .filter((root) => root.root_slug !== rootSlug)
     .sort((a, b) => rank(a) - rank(b) || compareNodes(a, b))
     .map((root) => {
       const children = childrenOf(tree, root.drive_id);
