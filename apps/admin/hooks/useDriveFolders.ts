@@ -1,3 +1,4 @@
+import { DRIVE_INDEX_KEY } from "@/hooks/useDriveIndex";
 import type { Database } from "@repo/domain/database.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -18,7 +19,11 @@ export function useUpdateDriveFolder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { id: string; folder_id: string }) => {
+    mutationFn: async (data: {
+      id: string;
+      label?: string;
+      folder_id?: string;
+    }) => {
       const response = await fetch("/api/drive-folders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -30,10 +35,15 @@ export function useUpdateDriveFolder() {
         throw new Error(error.error || "Failed to update drive folder");
       }
 
-      return response.json() as Promise<DriveFolder>;
+      return response.json() as Promise<{
+        folder: DriveFolder;
+        /** Indexed files marked removed after a new Drive folder; null when not applicable. */
+        indexCleared: number | null;
+      }>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["drive-folders"] });
+      queryClient.invalidateQueries({ queryKey: DRIVE_INDEX_KEY });
     },
   });
 }
