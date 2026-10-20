@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock, // <-- Import the Clock icon
   ShipWheel,
+  Truck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
@@ -162,6 +163,20 @@ export function StatusPanel({ delivery }: { delivery: Delivery }) {
 }
 
 /**
+ * Where the recipient's delivery stands on the page: `live` once the driver
+ * is on the way to this recipient (map and ETA), `started` once the round
+ * has started (`is_tracking_active`) but another stop comes first, `pending`
+ * before that. Same stages as the app's « Votre livraison » screen.
+ */
+export type RecipientStatus = "live" | "started" | "pending";
+
+const STATUS_BADGE: Record<RecipientStatus, string> = {
+  live: "En direct",
+  started: "Tournée en cours",
+  pending: "Prévu",
+};
+
+/**
  * A panel showing the specific recipient's information.
  * ETA is the hero; overall delivery window is secondary contextual info.
  */
@@ -174,7 +189,7 @@ export function RecipientSinglePanel({
   recipient: DeliveryRecipient;
   delivery: Delivery;
   etaForCurrentRecipient?: Date | null;
-  status: "live" | "pending";
+  status: RecipientStatus;
 }) {
   const isInProgress = delivery.current_recipient_id === recipient.id;
   // Ticks every few seconds so the "in N minutes" label keeps counting down.
@@ -246,18 +261,19 @@ export function RecipientSinglePanel({
             <div
               className={clsx(
                 "flex shrink-0 items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5",
-                status === "live"
-                  ? "text-gray-700 dark:text-gray-300"
-                  : "text-gray-600 dark:text-gray-400",
+                status === "pending"
+                  ? "text-gray-600 dark:text-gray-400"
+                  : "text-gray-700 dark:text-gray-300",
               )}
             >
               <div
                 className={clsx("h-2 w-2 rounded-full", {
                   "animate-pulse bg-green-500": status === "live",
+                  "bg-green-500": status === "started",
                   "bg-gray-400 dark:bg-gray-500": status === "pending",
                 })}
               />
-              <span>{status === "live" ? "En direct" : "Prévu"}</span>
+              <span>{STATUS_BADGE[status]}</span>
             </div>
           </div>
 
@@ -277,7 +293,7 @@ export function RecipientSinglePanel({
               )}
             </>
           ) : (
-            /* RENDER PATH 2: Delivery is PENDING - only show range, no exact time */
+            /* RENDER PATH 2: not on the way to this recipient yet - only show range, no exact time */
             <>
               {hasRange && (
                 <>
@@ -290,13 +306,26 @@ export function RecipientSinglePanel({
                 </>
               )}
               <div className="w-full">
-                <div className="mt-4 flex w-full items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
-                  <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p className="text-sm">
-                    Le suivi en direct s&apos;activera lorsque le conducteur
-                    sera en route.
-                  </p>
-                </div>
+                {status === "started" ? (
+                  <div className="mt-4 flex w-full items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 dark:border-green-800/50 dark:bg-green-950/40 dark:text-green-300">
+                    <Truck className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p className="text-sm">
+                      <span className="font-semibold">
+                        Notre tournée a commencé !
+                      </span>{" "}
+                      La carte s&apos;affichera ici dès que le livreur sera en
+                      route vers chez vous.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 flex w-full items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p className="text-sm">
+                      Le suivi en direct s&apos;activera lorsque le conducteur
+                      sera en route.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}
