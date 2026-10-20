@@ -13,7 +13,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireSuperadmin } from "../_shared/caller-auth.ts";
 import { invitationSms } from "../_shared/delivery-sms.ts";
-import { sendSms } from "../_shared/twilio.ts";
+import { sendSms } from "../_shared/sms.ts";
 import { requireServiceKey } from "../_shared/supabase-keys.ts";
 
 interface RecipientRow {
