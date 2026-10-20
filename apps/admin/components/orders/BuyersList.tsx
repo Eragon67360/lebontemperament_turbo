@@ -15,16 +15,19 @@ import {
 import {
   BALANCE_TONES,
   type BuyerRow,
+  canJoinRound,
   fulfilmentLabel,
 } from "@/utils/orders/view";
 import { BALANCE_LABELS, formatEuros } from "@repo/domain/utils/orders";
-import { Banknote, PackageCheck, Pencil, Undo2 } from "lucide-react";
+import { Banknote, PackageCheck, Pencil, Truck, Undo2 } from "lucide-react";
 
 export interface BuyersListProps {
   rows: BuyerRow[];
   onEdit: (row: BuyerRow) => void;
   onPay: (row: BuyerRow) => void;
   onHandOver: (row: BuyerRow, handedOver: boolean) => void;
+  /** « Ajouter à la tournée… » for this buyer alone; offered when `canJoinRound`. */
+  onAddToRound?: (row: BuyerRow) => void;
   onDelete: (row: BuyerRow) => void;
   /** The id of the order whose write is running: its row waits. */
   busyOrderId?: string | null;
@@ -33,13 +36,16 @@ export interface BuyersListProps {
 /**
  * « Acheteurs »: a table from `md` (name, mode, vendu par, total, payé,
  * reste, state and chips, actions), stacked rows on phones. « Modifier »
- * stays visible; payments, « Remis » and deletion are in the row's menu.
+ * stays visible; payments, « Ajouter à la tournée… » (a buyer to be
+ * delivered, with an address and no stop yet), « Remis » and deletion are in
+ * the row's menu.
  */
 export function BuyersList({
   rows,
   onEdit,
   onPay,
   onHandOver,
+  onAddToRound,
   onDelete,
   busyOrderId,
 }: BuyersListProps) {
@@ -68,6 +74,14 @@ export function BuyersList({
             <Banknote aria-hidden />
             Enregistrer un paiement…
           </DropdownMenuItem>
+          {onAddToRound && canJoinRound(row.order) && (
+            <DropdownMenuItem
+              onSelect={() => setTimeout(() => onAddToRound(row), 0)}
+            >
+              <Truck aria-hidden />
+              Ajouter à la tournée…
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => onHandOver(row, !row.handedOver)}>
             {row.handedOver ? (
               <>

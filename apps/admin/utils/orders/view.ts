@@ -189,21 +189,49 @@ export function orderCountLabel(count: number): string {
   return count === 1 ? "1 commande" : `${count} commandes`;
 }
 
-/** The buyers « Ajouter à la tournée » would add: to be delivered, with an address, no stop yet. */
-export function deliverableCount(orders: readonly SaleOrder[]): {
-  ready: number;
+/** A buyer « Ajouter à la tournée » can add, as its list shows them. */
+export type DeliverableBuyer = {
+  orderId: string;
+  name: string;
+  address: string;
+};
+
+/**
+ * True when the order can get a stop: to be delivered, no stop yet, its
+ * personal data still there. Whether it has an address is apart: without
+ * one it waits (`deliverableBuyers` counts it).
+ */
+function awaitsRound(o: SaleOrder): boolean {
+  return (
+    o.fulfilment === "delivery" &&
+    o.delivery_recipient_id === null &&
+    o.personal_data_erased_at === null
+  );
+}
+
+/** The order can join a round now (`awaitsRound`, with an address). */
+export function canJoinRound(o: SaleOrder): boolean {
+  return awaitsRound(o) && !!o.buyer_address?.trim();
+}
+
+/**
+ * The buyers « Ajouter à la tournée » can add (to be delivered, with an
+ * address, no stop yet), by name as the database adds them, and how many
+ * wait for an address.
+ */
+export function deliverableBuyers(orders: readonly SaleOrder[]): {
+  ready: DeliverableBuyer[];
   withoutAddress: number;
 } {
-  let ready = 0;
+  const ready: DeliverableBuyer[] = [];
   let withoutAddress = 0;
   for (const o of orders) {
-    if (o.fulfilment !== "delivery" || o.delivery_recipient_id !== null) {
-      continue;
-    }
-    if (o.personal_data_erased_at !== null) continue;
-    if (o.buyer_address?.trim()) ready += 1;
+    if (!awaitsRound(o)) continue;
+    const address = o.buyer_address?.trim();
+    if (address) ready.push({ orderId: o.id, name: o.buyer_name, address });
     else withoutAddress += 1;
   }
+  ready.sort((a, b) => a.name.localeCompare(b.name, "fr"));
   return { ready, withoutAddress };
 }
 

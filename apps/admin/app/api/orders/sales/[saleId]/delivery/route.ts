@@ -1,3 +1,4 @@
+import { addOrdersToRound, parseOrderIds } from "@/utils/orders/addToRound";
 import {
   dbErrorResponse,
   readJson,
@@ -11,9 +12,11 @@ import { NextResponse } from "next/server";
 type Params = { params: Promise<{ saleId: string }> };
 
 /**
- * POST `{ driver_id?, new_round? }`: « Ajouter à la tournée ». Every buyer to
- * be delivered who has an address and no stop yet joins the driver's current
- * round (the caller's by default) through `add_sale_orders_to_delivery`. With
+ * POST `{ driver_id?, new_round?, order_ids? }`: « Ajouter à la tournée ».
+ * Every buyer to be delivered who has an address and no stop yet joins the
+ * driver's current round (the caller's by default) through
+ * `add_sale_orders_to_delivery`; with `order_ids`, only those buyers do
+ * (`addOrdersToRound`, the same rules), so a round can take one day's buyers. With
  * `new_round: true` an empty round is opened for the driver first, unless
  * their latest round is empty already: being their latest, it is the one the
  * buyers join, and the previous round stays in the app as it was. Answers
@@ -53,11 +56,20 @@ export async function POST(request: Request, { params }: Params) {
     );
   }
 
+  const orderIds = parseOrderIds(body);
+  if (typeof orderIds === "string") {
+    return NextResponse.json(
+      { error: orderIds, field: "order_ids" },
+      { status: 400 },
+    );
+  }
+
   const supabase = await createClient();
-  if (newRound === true) {
+  const driver = isUuid(driverId) ? driverId : auth.user.id;
+  if (newRound === true || orderIds) {
     // Checked before the round is opened: the function would refuse a driver
-    // who isn't a superadmin, but only after leaving an empty round behind.
-    const driver = isUuid(driverId) ? driverId : auth.user.id;
+    // who isn't a superadmin, but only after leaving an empty round behind
+    // (and the add of chosen buyers has no function to check it).
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("id")
@@ -76,7 +88,9 @@ export async function POST(request: Request, { params }: Params) {
         { status: 400 },
       );
     }
+  }
 
+  if (newRound === true) {
     // A latest round without stops is new already (one the app just opened,
     // or the one a retry of this request opened before the add failed): the
     // buyers join it rather than a second empty round.
@@ -116,6 +130,12 @@ export async function POST(request: Request, { params }: Params) {
         );
       }
     }
+  }
+
+  if (orderIds) {
+    const added = await addOrdersToRound(supabase, saleId, driver, orderIds);
+    if (!added.ok) return dbErrorResponse(added.error, added.fallback);
+    return NextResponse.json(added.result);
   }
 
   const { data, error } = await supabase.rpc("add_sale_orders_to_delivery", {

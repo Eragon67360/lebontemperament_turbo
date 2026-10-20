@@ -265,7 +265,7 @@ export function useDeletePayment(saleId: string) {
   });
 }
 
-/** Adds the sale's buyers to the driver's round, or to a new one (`newRound`). */
+/** Adds the sale's buyers (all, or the chosen `orderIds`) to the driver's round, or to a new one (`newRound`). */
 export function useAddSaleToDelivery(saleId: string) {
   const queryClient = useQueryClient();
   const refresh = useRefresh(saleId);
@@ -273,15 +273,20 @@ export function useAddSaleToDelivery(saleId: string) {
     mutationFn: ({
       driverId,
       newRound = false,
+      orderIds = null,
     }: {
       driverId: string | null;
       newRound?: boolean;
+      /** The orders to add; null adds every buyer to be delivered. */
+      orderIds?: string[] | null;
     }) =>
       send<DeliveryResult>(`${BASE}/sales/${saleId}/delivery`, "POST", {
         ...(driverId ? { driver_id: driverId } : {}),
         ...(newRound ? { new_round: true } : {}),
+        ...(orderIds ? { order_ids: orderIds } : {}),
       }),
-    onSuccess: () => {
+    // Also after a failure: an add of chosen buyers may have added some.
+    onSettled: () => {
       refresh();
       // The driver's round has the new stops (and may be a new round).
       queryClient.invalidateQueries({ queryKey: DRIVERS_KEY });

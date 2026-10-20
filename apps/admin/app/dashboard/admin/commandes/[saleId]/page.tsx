@@ -62,7 +62,7 @@ import { memberName } from "@/utils/members/list";
 import type { SaleProduct } from "@/utils/orders/types";
 import {
   type BuyerFilters,
-  deliverableCount,
+  deliverableBuyers,
   filterBuyers,
   hasBuyerFilters,
   MODE_FILTERS,
@@ -141,7 +141,11 @@ export default function SalePage() {
     category?: string;
   }>({ open: false, product: null });
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
-  const [deliveryOpen, setDeliveryOpen] = useState(false);
+  // « Ajouter à la tournée », for every buyer or one row's (`only`).
+  const [delivery, setDelivery] = useState<{
+    open: boolean;
+    only: string | null;
+  }>({ open: false, only: null });
   const [deleting, setDeleting] = useState<Deleting | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -151,7 +155,7 @@ export default function SalePage() {
   const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
   const [busyProductId, setBusyProductId] = useState<string | null>(null);
 
-  const drivers = useDrivers(deliveryOpen);
+  const drivers = useDrivers(delivery.open);
 
   const view = useMemo(() => (detail ? saleView(detail) : null), [detail]);
   const visibleRows = useMemo(
@@ -188,7 +192,7 @@ export default function SalePage() {
     [detail],
   );
   const deliverable = useMemo(
-    () => deliverableCount(detail?.orders ?? []),
+    () => deliverableBuyers(detail?.orders ?? []),
     [detail],
   );
 
@@ -482,7 +486,10 @@ export default function SalePage() {
       headerAction={
         detail && (
           <>
-            <Button variant="outline" onClick={() => setDeliveryOpen(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setDelivery({ open: true, only: null })}
+            >
               <Truck aria-hidden />
               Ajouter à la tournée
             </Button>
@@ -677,6 +684,9 @@ export default function SalePage() {
                           onEdit={(row) => openOrder(row.orderId)}
                           onPay={(row) =>
                             setPayment({ open: true, orderId: row.orderId })
+                          }
+                          onAddToRound={(row) =>
+                            setDelivery({ open: true, only: row.orderId })
                           }
                           onHandOver={(row, handedOver) =>
                             handOver(row.orderId, row.buyerName, handedOver)
@@ -899,14 +909,17 @@ export default function SalePage() {
           />
 
           <DeliveryDialog
-            open={deliveryOpen}
-            onOpenChange={setDeliveryOpen}
-            ready={deliverable.ready}
+            open={delivery.open}
+            onOpenChange={(open) =>
+              setDelivery((current) => ({ ...current, open }))
+            }
+            buyers={deliverable.ready}
+            only={delivery.only}
             withoutAddress={deliverable.withoutAddress}
             drivers={drivers.data?.drivers ?? []}
             me={drivers.data?.me ?? null}
-            onConfirm={(driverId, newRound) =>
-              addToDelivery.mutateAsync({ driverId, newRound })
+            onConfirm={(driverId, newRound, orderIds) =>
+              addToDelivery.mutateAsync({ driverId, newRound, orderIds })
             }
             isPending={addToDelivery.isPending}
           />
