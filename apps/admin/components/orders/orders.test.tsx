@@ -1,7 +1,9 @@
 // Static renders of « Commandes » (no DOM, no queries): what a superadmin
 // reads on a sale row, in the figures, in a buyer's row and in the catalogue,
-// and the names of the actions. Fake data only.
+// the names of the actions, and what « Ajouter à la tournée » says of the
+// driver's round. Fake data only.
 import type {
+  DriverRound,
   SaleDetail,
   SaleListItem,
   SaleOrder,
@@ -13,6 +15,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BuyersList } from "./BuyersList";
 import { CatalogueSection } from "./CatalogueSection";
+import { RoundChoice, type RoundChoiceProps } from "./RoundChoice";
 import { SaleFigures } from "./SaleFigures";
 import { SaleRow } from "./SaleRow";
 import { SuppliersSection } from "./SuppliersSection";
@@ -323,6 +326,114 @@ const { summary, rows } = saleView(detail);
   );
   assert.match(empty, /Le catalogue est vide/);
   assert.match(empty, /Ajouter un produit/);
+}
+
+// --- « Ajouter à la tournée »: which round, the warning, the new round ---
+// (The dialog itself is a portal, which renders nothing without a DOM: this is
+// the part of it that carries the words.)
+{
+  const roundNow = new Date("2026-10-20T10:00:00Z");
+  const round: DriverRound = {
+    opened_at: "2026-10-19T08:00:00Z",
+    scheduled_at: null,
+    scheduled_end_at: null,
+    stops: 4,
+    delivered: 1,
+    sales: ["Vente de test"],
+  };
+  const choice = (
+    props: Partial<RoundChoiceProps> & Pick<RoundChoiceProps, "round">,
+  ) =>
+    html(
+      createElement(RoundChoice, {
+        now: roundNow,
+        newRound: false,
+        onNewRoundChange: noop,
+        ...props,
+      }),
+    );
+  const checkbox = (markup: string) =>
+    markup.split("<button").find((b) => b.includes('role="checkbox"')) ?? "";
+
+  // Not read: today's sentence, and nothing to choose.
+  const unknown = choice({ round: undefined });
+  assert.match(
+    unknown,
+    /Sa tournée en cours dans l(&#x27;|')application, ou une nouvelle\./,
+  );
+  assert.doesNotMatch(unknown, /Tournée ancienne|role="checkbox"/);
+
+  // None: a new one is created, so there is nothing to choose either.
+  const none = choice({ round: null });
+  assert.match(none, /Pas de tournée en cours : une nouvelle sera créée\./);
+  assert.doesNotMatch(none, /Tournée ancienne|role="checkbox"/);
+
+  // Empty: the buyers are added to it, and a new one would add nothing.
+  const empty = choice({
+    round: { ...round, stops: 0, delivered: 0, sales: [] },
+  });
+  assert.match(
+    empty,
+    /Sa tournée en cours est vide \(ouverte le lun\. 19 oct\.\) : les acheteurs y seront ajoutés\./,
+  );
+  assert.doesNotMatch(empty, /Tournée ancienne|role="checkbox"/);
+
+  // A round in progress: which sale, how far, and the box, unticked.
+  const current = choice({ round });
+  assert.match(
+    current,
+    /Tournée en cours : « Vente de test », ouverte le lun\. 19 oct\., 4 destinataires, 1 livré\. Les acheteurs s(&#x27;|')y ajoutent\./,
+  );
+  assert.doesNotMatch(current, /Tournée ancienne/);
+  assert.match(current, /Nouvelle tournée<\/label>/);
+  assert.match(current, /for="delivery-new-round"/);
+  assert.match(
+    current,
+    /L(&#x27;|')ancienne tournée reste dans l(&#x27;|')historique de l(&#x27;|')application, avec ses destinataires\./,
+  );
+  assert.match(checkbox(current), /aria-checked="false"/);
+  assert.match(checkbox(current), /id="delivery-new-round"/);
+  assert.match(checkbox(current), /aria-describedby="delivery-new-round-note"/);
+  assert.match(current, /id="delivery-new-round-note"/);
+  assert.doesNotMatch(checkbox(current), /\sdisabled=""/);
+  noRawColours(current);
+
+  // Ticked: the buyers go to a new round, and the line says so.
+  const ticked = choice({ round, newRound: true });
+  assert.match(checkbox(ticked), /aria-checked="true"/);
+  assert.match(
+    ticked,
+    /4 destinataires, 1 livré\. Les acheteurs iront dans une nouvelle tournée\./,
+  );
+  assert.doesNotMatch(ticked, /Les acheteurs s(&#x27;|')y ajoutent/);
+  // While the add runs.
+  assert.match(checkbox(choice({ round, disabled: true })), /\sdisabled=""/);
+
+  // Forgotten: the warning comes with the box that answers it.
+  const old = choice({
+    round: { ...round, opened_at: "2026-10-05T08:00:00Z", delivered: 1 },
+  });
+  assert.match(old, /data-tone="warning"/);
+  assert.match(old, />Tournée ancienne</);
+  assert.match(
+    old,
+    /Elle date du lun\. 5 oct\. et a encore 3 destinataires non livrés\. Pour une autre livraison, cochez « Nouvelle tournée »\./,
+  );
+  assert.match(checkbox(old), /aria-checked="false"/);
+  noRawColours(old);
+  // Ticked, the warning has its answer and goes.
+  const oldTicked = choice({
+    round: { ...round, opened_at: "2026-10-05T08:00:00Z", delivered: 1 },
+    newRound: true,
+  });
+  assert.doesNotMatch(oldTicked, /Tournée ancienne|data-tone="warning"/);
+  assert.match(oldTicked, /Les acheteurs iront dans une nouvelle tournée\./);
+
+  // Opened in another year: the year shows, the weekday goes.
+  assert.match(
+    choice({ round: { ...round, opened_at: "2025-02-21T10:00:00Z" } }),
+    /ouverte le 21 févr\. 2025, 4 destinataires/,
+  );
 }
 
 console.log("orders: all assertions passed");

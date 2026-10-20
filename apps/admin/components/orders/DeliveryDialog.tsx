@@ -1,5 +1,6 @@
 "use client";
 
+import { RoundChoice } from "@/components/orders/RoundChoice";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
+import { offersNewRound } from "@/utils/orders/round";
 import type { DeliveryResult, Driver } from "@/utils/orders/types";
 import { deliveryResultLine } from "@/utils/orders/view";
 import { Loader2 } from "lucide-react";
@@ -35,15 +37,20 @@ export interface DeliveryDialogProps {
   drivers: readonly Driver[];
   /** The signed-in superadmin, the default driver. */
   me: string | null;
-  /** Runs the add; resolves with what the database reports. */
-  onConfirm: (driverId: string) => Promise<DeliveryResult>;
+  /**
+   * Runs the add, in a new round when `newRound`; resolves with what the
+   * database reports.
+   */
+  onConfirm: (driverId: string, newRound: boolean) => Promise<DeliveryResult>;
   isPending: boolean;
 }
 
 /**
  * « Ajouter à la tournée »: names how many buyers join whose round, lets the
- * admin pick another superadmin as the driver, then reports « 12 ajoutés ·
- * 2 sans adresse ». The app places the new stops on the map.
+ * admin pick another superadmin as the driver, says which round that is (its
+ * sales, its progress, a warning when it looks forgotten) and offers « Nouvelle
+ * tournée » when it has stops, then reports « 12 ajoutés · 2 sans adresse ».
+ * The app shows the new stops when the round is opened or pulled down.
  */
 export function DeliveryDialog({
   open,
@@ -58,17 +65,21 @@ export function DeliveryDialog({
   // The driver picked in this opening; the caller (or the first superadmin)
   // until then, so the default follows the list as it loads.
   const [chosen, setChosen] = useState<string | null>(null);
+  const [newRound, setNewRound] = useState(false);
   const [result, setResult] = useState<DeliveryResult | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   useResetOnChange([open], () => {
     setChosen(null);
+    setNewRound(false);
     setResult(null);
     setProblem(null);
   });
   const driverId = chosen ?? me ?? drivers[0]?.id ?? "";
+  // Another driver, another round: « Nouvelle tournée » starts unticked again.
+  useResetOnChange([driverId], () => setNewRound(false));
 
-  const driverName =
-    drivers.find((d) => d.id === driverId)?.name ?? "ce livreur";
+  const selected = drivers.find((d) => d.id === driverId);
+  const driverName = selected?.name ?? "ce livreur";
   const buyers =
     ready === 1
       ? "1 acheteur à livrer sera ajouté"
@@ -77,7 +88,10 @@ export function DeliveryDialog({
   const confirm = async () => {
     setProblem(null);
     try {
-      setResult(await onConfirm(driverId));
+      // The box only counts while it is offered.
+      setResult(
+        await onConfirm(driverId, offersNewRound(selected?.round) && newRound),
+      );
     } catch (error) {
       setProblem(
         error instanceof Error && error.message
@@ -109,8 +123,9 @@ export function DeliveryDialog({
 
         {result ? (
           <p className="text-detail text-muted-foreground">
-            L&apos;application place les nouveaux arrêts sur la carte à
-            l&apos;ouverture de la tournée.
+            Dans l&apos;application, la tournée montre les nouveaux
+            destinataires à son ouverture, ou en tirant l&apos;écran vers le
+            bas.
             {result.without_address > 0 &&
               " Les acheteurs sans adresse apparaîtront ici dès qu'elle sera renseignée."}
           </p>
@@ -132,9 +147,13 @@ export function DeliveryDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-note text-muted-foreground">
-                  Sa tournée en cours dans l&apos;application, ou une nouvelle.
-                </p>
+                <RoundChoice
+                  round={selected?.round}
+                  now={new Date()}
+                  newRound={newRound}
+                  onNewRoundChange={setNewRound}
+                  disabled={isPending}
+                />
               </div>
             )}
             {withoutAddress > 0 && (
