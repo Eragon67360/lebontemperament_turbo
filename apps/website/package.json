@@ -29,7 +29,7 @@
     "cloudinary": "^2.11.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
-    "googleapis": "^185.0.0",
+    "googleapis": "^186.0.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.54.0",
     "mapbox-gl": "^3.32.0",
