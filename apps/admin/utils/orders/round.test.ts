@@ -6,11 +6,22 @@ import {
   currentRound,
   isOldRound,
   offersNewRound,
-  oldRoundWarning,
-  roundDay,
-  roundLine,
+  oldRoundWarning as oldRoundWarningAsShown,
+  roundDay as roundDayAsShown,
+  roundLine as roundLineAsShown,
 } from "./round";
 import type { DriverRound, RoundRow, RoundStop } from "./types";
+
+// The sentences keep « », dates and counts together with no-break spaces; the
+// expectations read better with plain ones (where they go is checked below).
+const NBSP = "\u00a0";
+const plain = (s: string) => s.replaceAll(NBSP, " ");
+const roundDay = (...args: Parameters<typeof roundDayAsShown>) =>
+  plain(roundDayAsShown(...args));
+const roundLine = (...args: Parameters<typeof roundLineAsShown>) =>
+  plain(roundLineAsShown(...args));
+const oldRoundWarning = (...args: Parameters<typeof oldRoundWarningAsShown>) =>
+  plain(oldRoundWarningAsShown(...args));
 
 // Tuesday 20 October 2026, noon in Paris.
 const NOW = new Date("2026-10-20T10:00:00Z");
@@ -304,6 +315,24 @@ assert.equal(
     NOW,
   ),
   "Elle date du 18 déc. 2025 et a encore 2 destinataires non livrés. Pour une autre livraison, cochez « Nouvelle tournée ».",
+);
+
+// --- Where the no-break spaces go: no line ends on « or before a colon, and
+// a date or a count never splits ---
+assert.equal(
+  roundLineAsShown(round(), NOW),
+  `Tournée en cours${NBSP}: «${NBSP}Vente de test${NBSP}», ouverte le lun.${NBSP}19${NBSP}oct., 4${NBSP}destinataires, 1${NBSP}livré. Les acheteurs s'y ajoutent.`,
+);
+assert.equal(
+  roundLineAsShown(null, NOW),
+  `Pas de tournée en cours${NBSP}: une nouvelle sera créée.`,
+);
+assert.equal(
+  oldRoundWarningAsShown(
+    round({ opened_at: "2025-12-18T08:00:00Z", stops: 2, delivered: 0 }),
+    NOW,
+  ),
+  `Elle date du 18${NBSP}déc.${NBSP}2025 et a encore 2${NBSP}destinataires non livrés. Pour une autre livraison, cochez «${NBSP}Nouvelle tournée${NBSP}».`,
 );
 
 console.log("orders/round: all assertions passed");

@@ -4,6 +4,9 @@
 // « Mode livraison » opens too. Pure and unit-tested (round.test.ts).
 import type { DriverRound, RoundRow, RoundStop } from "@/utils/orders/types";
 
+/** Keeps « », a date or a count on one line, as French spacing wants. */
+const NBSP = "\u00a0";
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Opened longer ago than this and still with stops to deliver: probably forgotten. */
 const OLD_AFTER_OPENED_MS = 14 * DAY_MS;
@@ -87,10 +90,14 @@ const YEAR_FORMAT = parisFormat({ year: "numeric" });
  */
 export function roundDay(iso: string, now: Date): string {
   const date = new Date(iso);
-  return YEAR_FORMAT.format(date) === YEAR_FORMAT.format(now)
-    ? DAY_FORMAT.format(date)
-    : DAY_WITH_YEAR_FORMAT.format(date);
+  const day =
+    YEAR_FORMAT.format(date) === YEAR_FORMAT.format(now)
+      ? DAY_FORMAT.format(date)
+      : DAY_WITH_YEAR_FORMAT.format(date);
+  return day.replace(/\s/g, NBSP);
 }
+
+const quoted = (title: string) => `«${NBSP}${title}${NBSP}»`;
 
 /**
  * « « A » », « « A » et « B » », « « A » et 3 autres ventes », or nothing
@@ -99,20 +106,19 @@ export function roundDay(iso: string, now: Date): string {
 function salesPhrase(sales: readonly string[]): string {
   const [first, second] = sales;
   if (first === undefined) return "";
-  if (second === undefined) return `« ${first} »`;
-  if (sales.length === 2) return `« ${first} » et « ${second} »`;
-  return `« ${first} » et ${sales.length - 1} autres ventes`;
+  if (second === undefined) return quoted(first);
+  if (sales.length === 2) return `${quoted(first)} et ${quoted(second)}`;
+  return `${quoted(first)} et ${sales.length - 1}${NBSP}autres ventes`;
 }
 
 /** « 1 destinataire, aucun livré », « 4 destinataires, 2 livrés », « 3 destinataires, tous livrés ». */
 function progressPhrase(stops: number, delivered: number): string {
-  const recipients =
-    stops < 2 ? `${stops} destinataire` : `${stops} destinataires`;
+  const recipients = `${stops}${NBSP}${stops < 2 ? "destinataire" : "destinataires"}`;
   if (delivered === 0) return `${recipients}, aucun livré`;
   if (delivered >= stops) {
     return `${recipients}, ${stops < 2 ? "livré" : "tous livrés"}`;
   }
-  return `${recipients}, ${delivered} ${delivered < 2 ? "livré" : "livrés"}`;
+  return `${recipients}, ${delivered}${NBSP}${delivered < 2 ? "livré" : "livrés"}`;
 }
 
 /**
@@ -130,17 +136,17 @@ export function roundLine(
     return "Sa tournée en cours dans l'application, ou une nouvelle.";
   }
   if (round === null) {
-    return "Pas de tournée en cours : une nouvelle sera créée.";
+    return `Pas de tournée en cours${NBSP}: une nouvelle sera créée.`;
   }
   const day = roundDay(round.opened_at, now);
   if (round.stops === 0) {
-    return `Sa tournée en cours est vide (ouverte le ${day}) : les acheteurs y seront ajoutés.`;
+    return `Sa tournée en cours est vide (ouverte le ${day})${NBSP}: les acheteurs y seront ajoutés.`;
   }
   const sales = salesPhrase(round.sales);
   const next = newRound
     ? "Les acheteurs iront dans une nouvelle tournée."
     : "Les acheteurs s'y ajoutent.";
-  return `Tournée en cours : ${sales ? `${sales}, ` : ""}ouverte le ${day}, ${progressPhrase(round.stops, round.delivered)}. ${next}`;
+  return `Tournée en cours${NBSP}: ${sales ? `${sales}, ` : ""}ouverte le ${day}, ${progressPhrase(round.stops, round.delivered)}. ${next}`;
 }
 
 /** Why a round that looks forgotten (see `isOldRound`) deserves a second thought. */
@@ -148,7 +154,7 @@ export function oldRoundWarning(round: DriverRound, now: Date): string {
   const left = round.stops - round.delivered;
   const recipients =
     left < 2
-      ? `${left} destinataire non livré`
-      : `${left} destinataires non livrés`;
-  return `Elle date du ${roundDay(round.opened_at, now)} et a encore ${recipients}. Pour une autre livraison, cochez « Nouvelle tournée ».`;
+      ? `${left}${NBSP}destinataire non livré`
+      : `${left}${NBSP}destinataires non livrés`;
+  return `Elle date du ${roundDay(round.opened_at, now)} et a encore ${recipients}. Pour une autre livraison, cochez ${quoted("Nouvelle tournée")}.`;
 }

@@ -341,6 +341,7 @@ const { summary, rows } = saleView(detail);
     delivered: 1,
     sales: ["Vente de test"],
   };
+  // Read with plain spaces: the no-break ones are round.test.ts's business.
   const choice = (
     props: Partial<RoundChoiceProps> & Pick<RoundChoiceProps, "round">,
   ) =>
@@ -351,7 +352,7 @@ const { summary, rows } = saleView(detail);
         onNewRoundChange: noop,
         ...props,
       }),
-    );
+    ).replaceAll("\u00a0", " ");
   const checkbox = (markup: string) =>
     markup.split("<button").find((b) => b.includes('role="checkbox"')) ?? "";
 
