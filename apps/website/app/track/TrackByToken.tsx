@@ -254,7 +254,8 @@ export function TrackByTokenContent({
     );
   }
 
-  // Default view for "Pending" status (not yet en route)
+  // Not yet on the way to this recipient: planned, or the round has started
+  // and other stops come first (the page polls, so it follows the driver).
   return (
     <PendingPanel>
       {banner}
@@ -262,7 +263,7 @@ export function TrackByTokenContent({
         recipient={recipient}
         delivery={delivery}
         etaForCurrentRecipient={null} // No real-time ETA when pending
-        status="pending"
+        status={delivery.is_tracking_active ? "started" : "pending"}
       />
       {(delivery.is_delayed || delivery.problem_message) && (
         <StatusPanel delivery={delivery} />
