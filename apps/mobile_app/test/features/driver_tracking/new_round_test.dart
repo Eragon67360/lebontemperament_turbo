@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lebontemperament/data/models/delivery.dart';
 import 'package:lebontemperament/data/models/delivery_recipient.dart';
@@ -15,6 +17,9 @@ class _FakeDeliveryService extends DeliveryService {
   final bool live;
   int created = 0;
   List<String>? askedTitlesFor;
+
+  /// When set, reading the round's stops waits for it (a slow network).
+  Completer<void>? gate;
 
   late final current = Delivery(
     id: 'delivery-old',
@@ -38,8 +43,10 @@ class _FakeDeliveryService extends DeliveryService {
   Future<Delivery?> getOrCreateDelivery() async => current;
 
   @override
-  Future<List<DeliveryRecipient>> getRecipients(String deliveryId) async =>
-      deliveryId == current.id ? recipients : const [];
+  Future<List<DeliveryRecipient>> getRecipients(String deliveryId) async {
+    await gate?.future;
+    return deliveryId == current.id ? recipients : const [];
+  }
 
   @override
   Future<List<String>> getSaleTitles(List<String> recipientIds) async {
@@ -94,6 +101,23 @@ void main() {
     expect(notifier.state.recipients, isEmpty);
     expect(notifier.state.saleTitles, isEmpty);
     expect(notifier.state.isActionLoading, isFalse);
+  });
+
+  test('a refresh still running when « Nouvelle tournée » opens the new '
+      'round does not bring the old one back', () async {
+    final service = _FakeDeliveryService();
+    final notifier = DriverTrackingNotifier(service);
+    await notifier.loadDelivery();
+
+    service.gate = Completer<void>();
+    final refresh = notifier.loadDelivery();
+    expect(await notifier.startNewRound(), isTrue);
+    service.gate!.complete();
+    await refresh;
+
+    expect(notifier.state.delivery?.id, 'delivery-new');
+    expect(notifier.state.recipients, isEmpty);
+    expect(notifier.state.isLoading, isFalse);
   });
 
   test('« Nouvelle tournée » is refused while the round is live', () async {

@@ -154,6 +154,12 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   /// The lookups [loadDelivery] started, for callers who need them done.
   Future<void> pendingGeocoding = Future.value();
 
+  /// Moves on when tracking starts or stops and when a new round opens. A
+  /// [loadDelivery] that overlaps one of those (pull to refresh and coming
+  /// back to the app reload at any moment) read the round before it, so it
+  /// drops what it read rather than undo the change.
+  int _roundVersion = 0;
+
   DriverTrackingNotifier(this._service, {Geocoder? geocode})
     : _geocode = geocode ?? platformGeocode,
       super(const DriverTrackingState());
@@ -192,6 +198,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
   /// round being tracked stays, even once every stop is delivered, so
   /// « Arrêter le suivi » stops that round and not a new one.
   Future<void> loadDelivery() async {
+    final version = _roundVersion;
     state = state.copyWith(isLoading: true, error: null);
     try {
       final tracked = _positionSubscription != null ? state.delivery : null;
@@ -212,6 +219,10 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         } catch (e) {
           _logger.w('DriverTrackingNotifier sale titles', error: e);
         }
+      }
+      if (version != _roundVersion) {
+        state = state.copyWith(isLoading: false);
+        return;
       }
       // Not awaited: the screen shows the round while the lookups run.
       pendingGeocoding = geocodeMissingPositions(recipients);
@@ -261,6 +272,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         state = state.copyWith(isActionLoading: false);
         return false;
       }
+      _roundVersion++;
       state = DriverTrackingState(delivery: created);
       return true;
     } catch (e) {
@@ -710,6 +722,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       return;
     }
 
+    _roundVersion++;
     state = state.copyWith(isTracking: true, isTrackingInterrupted: false);
 
     final deliveryId = delivery.id;
@@ -808,6 +821,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       }
     }
 
+    _roundVersion++;
     state = state.copyWith(isTracking: false, isTrackingInterrupted: false);
     _logger.i('DriverTrackingNotifier: tracking stopped');
   }
