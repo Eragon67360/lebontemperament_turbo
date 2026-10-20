@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lebontemperament/core/theme/app_theme.dart';
 import 'package:lebontemperament/data/models/member.dart';
 import 'package:lebontemperament/data/providers/data_providers.dart';
+import 'package:lebontemperament/features/orders/domain/orders_models.dart';
 import 'package:lebontemperament/features/orders/presentation/providers/orders_providers.dart';
 import 'package:lebontemperament/features/orders/presentation/screens/buyer_screen.dart';
 import 'package:lebontemperament/features/orders/presentation/screens/order_editor_screen.dart';
@@ -61,13 +62,14 @@ void main() {
     Size size,
     Brightness brightness, {
     Future<void> Function(WidgetTester)? then,
+    FakeOrdersService? service,
   }) async {
     GoogleFonts.config.allowRuntimeFetching = false;
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2.0;
     addTearDown(tester.view.reset);
     final key = GlobalKey();
-    final fake = FakeOrdersService();
+    final fake = service ?? FakeOrdersService();
     await tester.pumpWidget(
       RepaintBoundary(
         key: key,
@@ -176,6 +178,45 @@ void main() {
             );
             await t.pumpAndSettle();
             await t.tap(button);
+            await t.pumpAndSettle();
+          },
+        );
+      }, skip: dir == null);
+
+      testWidgets('round picker $suffix', (tester) async {
+        await shoot(
+          tester,
+          const SaleScreen(saleId: kTestSaleId),
+          'tournee-choix-$suffix',
+          phone.value,
+          theme.value,
+          service: FakeOrdersService(
+            detail: testDetail(
+              orders: [
+                ...kTestOrders,
+                for (final (i, name) in const [
+                  'Paul Test',
+                  'Lucie Test',
+                  'Hugo Test',
+                ].indexed)
+                  OrderRecord(
+                    id: 'o-extra-$i',
+                    saleId: kTestSaleId,
+                    buyerName: name,
+                    buyerAddress: '${i + 3} rue du Test, 25000 Testville',
+                    fulfilment: 'delivery',
+                    items: const [],
+                  ),
+              ],
+            ),
+          ),
+          then: (t) async {
+            await t.tap(find.byTooltip('Ajouter à la tournée'));
+            await t.pumpAndSettle();
+            final paul = find.widgetWithText(CheckboxListTile, 'Paul Test');
+            await t.ensureVisible(paul);
+            await t.pumpAndSettle();
+            await t.tap(paul);
             await t.pumpAndSettle();
           },
         );
