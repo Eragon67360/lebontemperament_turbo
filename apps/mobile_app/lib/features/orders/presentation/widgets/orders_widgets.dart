@@ -382,6 +382,157 @@ Future<bool> showConfirmSheet(
   return result ?? false;
 }
 
+/// A buyer « Ajouter à la tournée » can add, as its list shows them.
+class RoundCandidate {
+  const RoundCandidate({
+    required this.orderId,
+    required this.name,
+    required this.address,
+  });
+
+  final String orderId;
+  final String name;
+  final String address;
+}
+
+/// « Ajouter à la tournée »: who joins the round. Every buyer is ticked, or
+/// only [only] when given (a buyer's own page); « Tous » ticks or unticks
+/// them all. Resolves with the ticked order ids in the list's order, or null
+/// when cancelled.
+Future<List<String>?> showRoundPickerSheet(
+  BuildContext context, {
+  required List<RoundCandidate> candidates,
+  int withoutAddress = 0,
+  String? only,
+}) {
+  final s = Theme.of(context).colorScheme;
+  final ticked = <String>{
+    if (only != null) only else ...candidates.map((c) => c.orderId),
+  };
+  return showModalBottomSheet<List<String>>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (sheet) => StatefulBuilder(
+      builder: (sheet, setSheet) {
+        final count = candidates
+            .where((c) => ticked.contains(c.orderId))
+            .length;
+        final all = count == 0
+            ? false
+            : count == candidates.length
+            ? true
+            : null;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(sheet).height * 0.85,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Ajouter à la tournée',
+                    style: AppFonts.display(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: s.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Les acheteurs cochés deviendront des arrêts de votre '
+                    'tournée en cours (ou d’une nouvelle). Les autres '
+                    'attendront une prochaine tournée.'
+                    '${withoutAddress > 0 ? ' ${countOf(withoutAddress, 'acheteur')} sans adresse '
+                              'resteront en dehors.' : ''}',
+                    style: AppFonts.sans(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: s.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    tristate: true,
+                    value: all,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Tous'),
+                    secondary: Text(
+                      '$count sur ${candidates.length}',
+                      style: AppFonts.sans(
+                        fontSize: 14,
+                        color: s.onSurfaceVariant,
+                      ),
+                    ),
+                    onChanged: (_) => setSheet(() {
+                      if (all == true) {
+                        ticked.clear();
+                      } else {
+                        ticked.addAll(candidates.map((c) => c.orderId));
+                      }
+                    }),
+                  ),
+                  const Divider(height: 1),
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        for (final c in candidates)
+                          CheckboxListTile(
+                            value: ticked.contains(c.orderId),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(c.name),
+                            subtitle: Text(
+                              c.address,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onChanged: (v) => setSheet(() {
+                              if (v == true) {
+                                ticked.add(c.orderId);
+                              } else {
+                                ticked.remove(c.orderId);
+                              }
+                            }),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: count == 0
+                        ? null
+                        : () => Navigator.of(sheet).pop([
+                            for (final c in candidates)
+                              if (ticked.contains(c.orderId)) c.orderId,
+                          ]),
+                    child: Text(
+                      count == 0
+                          ? 'Cochez au moins un acheteur'
+                          : 'Ajouter ${countOf(count, 'acheteur')}',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.of(sheet).pop(),
+                    child: const Text('Annuler'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
 /// A short line at the bottom (« Paiement enregistré »).
 void showOrdersSnack(BuildContext context, String message) {
   ScaffoldMessenger.of(context)

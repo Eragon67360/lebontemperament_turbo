@@ -1,5 +1,6 @@
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/config/supabase_config.dart';
 import '../domain/order_totals.dart';
@@ -77,6 +78,13 @@ abstract class OrdersService {
   /// Adds the sale's buyers to deliver into the signed-in superadmin's
   /// current round (the one the app opens), or a new one.
   Future<DeliveryAddResult> addSaleOrdersToDelivery(String saleId);
+
+  /// The same for the chosen [orderIds] only, so a round can take one day's
+  /// buyers and leave the others for the next.
+  Future<DeliveryAddResult> addOrdersToDelivery(
+    String saleId,
+    List<String> orderIds,
+  );
 }
 
 const _saleWithOrders =
@@ -227,4 +235,145 @@ class SupabaseOrdersService implements OrdersService {
       rethrow;
     }
   }
+
+  /// The steps of `add_sale_orders_to_delivery` limited to [orderIds], with
+  /// the member's session (RLS lets superadmins write rounds, stops and
+  /// orders), as the admin's « Ajouter à la tournée » does for chosen
+  /// buyers: the current round (the latest, unless every stop is
+  /// delivered: then a new one), stops after its last one in name order,
+  /// only orders still waiting. A stop is linked to its order only while the
+  /// order has none, so two adds at once never give a buyer two stops.
+  @override
+  Future<DeliveryAddResult> addOrdersToDelivery(
+    String saleId,
+    List<String> orderIds,
+  ) async {
+    final driverId = _client.auth.currentUser?.id;
+    if (driverId == null) throw StateError('Pas de session');
+    try {
+      final rows = await _client
+          .from('orders')
+          .select('id, buyer_name, buyer_phone, buyer_address, created_at')
+          .eq('sale_id', saleId)
+          .inFilter('id', orderIds)
+          .eq('fulfilment', 'delivery')
+          .isFilter('delivery_recipient_id', null)
+          .isFilter('personal_data_erased_at', null);
+      final waiting = [
+        for (final r in rows)
+          if (((r['buyer_address'] as String?) ?? '').trim().isNotEmpty) r,
+      ]..sort(compareForRound);
+
+      final latest = await _client
+          .from('deliveries')
+          .select('id')
+          .eq('driver_id', driverId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+      String? deliveryId = latest?['id'] as String?;
+      var nextSort = 0;
+      if (deliveryId != null) {
+        final stops = await _client
+            .from('delivery_recipients')
+            .select('sort_order, delivered_at')
+            .eq('delivery_id', deliveryId);
+        final finished =
+            stops.isNotEmpty && stops.every((s) => s['delivered_at'] != null);
+        if (finished) {
+          deliveryId = null;
+        } else {
+          for (final s in stops) {
+            final next = ((s['sort_order'] as num?)?.toInt() ?? 0) + 1;
+            if (next > nextSort) nextSort = next;
+          }
+        }
+      }
+      if (deliveryId == null && waiting.isNotEmpty) {
+        // The columns the function gives a round it opens.
+        final round = await _client
+            .from('deliveries')
+            .insert({
+              'driver_id': driverId,
+              'public_token': const Uuid().v4(),
+              'expires_at': DateTime.now()
+                  .add(const Duration(hours: 24))
+                  .toUtc()
+                  .toIso8601String(),
+              'is_tracking_active': false,
+            })
+            .select('id')
+            .single();
+        deliveryId = round['id'] as String;
+      }
+
+      var added = 0;
+      for (final order in waiting) {
+        final stop = await _client
+            .from('delivery_recipients')
+            .insert({
+              'delivery_id': deliveryId,
+              'label': order['buyer_name'],
+              'sort_order': nextSort,
+              'public_token': const Uuid().v4(),
+              'address': order['buyer_address'],
+              'phone_number': normalizePhone(order['buyer_phone'] as String?),
+            })
+            .select('id')
+            .single();
+        final stopId = stop['id'] as String;
+        List<dynamic> linked;
+        try {
+          linked = await _client
+              .from('orders')
+              .update({'delivery_recipient_id': stopId})
+              .eq('id', order['id'] as String)
+              .isFilter('delivery_recipient_id', null)
+              .select('id');
+        } catch (_) {
+          await _client.from('delivery_recipients').delete().eq('id', stopId);
+          rethrow;
+        }
+        if (linked.isEmpty) {
+          // Linked by another add meanwhile: no stray stop.
+          await _client.from('delivery_recipients').delete().eq('id', stopId);
+          continue;
+        }
+        nextSort++;
+        added++;
+      }
+
+      final rest = await _client
+          .from('orders')
+          .select('buyer_address')
+          .eq('sale_id', saleId)
+          .eq('fulfilment', 'delivery')
+          .isFilter('delivery_recipient_id', null)
+          .isFilter('personal_data_erased_at', null);
+      return DeliveryAddResult(
+        deliveryId: deliveryId,
+        added: added,
+        withoutAddress: rest
+            .where(
+              (r) => ((r['buyer_address'] as String?) ?? '').trim().isEmpty,
+            )
+            .length,
+      );
+    } catch (e) {
+      _logger.e('OrdersService addOrdersToDelivery', error: e);
+      rethrow;
+    }
+  }
+}
+
+/// Stops are added by buyer name, then by when the order was taken, as
+/// `add_sale_orders_to_delivery` adds them.
+int compareForRound(Map<String, dynamic> a, Map<String, dynamic> b) {
+  final byName = sortKey(
+    (a['buyer_name'] as String?) ?? '',
+  ).compareTo(sortKey((b['buyer_name'] as String?) ?? ''));
+  if (byName != 0) return byName;
+  return ((a['created_at'] as String?) ?? '').compareTo(
+    (b['created_at'] as String?) ?? '',
+  );
 }
