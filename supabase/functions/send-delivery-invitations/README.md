@@ -16,7 +16,22 @@ On delivery day the steps are pushes to the phones linked in the app. The only o
 
 > Bonjour Marie, nous arrivons dans 5 minutes environ avec votre commande ! Suivez-nous : www.lebontemperament.com/l/K7MP-4XQ9 - Félix & Thomas
 
-Phone numbers may be stored as typed (« 06 12 34 56 78 », « +33 6… »): `_shared/twilio.ts` turns them into `+33612345678` before calling Twilio (`_shared/phone.ts`, the same rule as `public.normalize_order_phone`) and skips a number that can't be one.
+Phone numbers may be stored as typed (« 06 12 34 56 78 », « +33 6… »): `_shared/sms.ts` turns them into `+33612345678` before sending (`_shared/phone.ts`, the same rule as `public.normalize_order_phone`) and skips a number that can't be one.
+
+## Who sends the SMS
+
+`_shared/sms.ts` picks the provider:
+
+- **An Android phone** (free: the phone's own plan), when the `SMS_GATEWAY_USERNAME`, `SMS_GATEWAY_PASSWORD` and `SMS_GATEWAY_PASSPHRASE` secrets are set. The phone runs the open-source app [SMS Gateway for Android](https://sms-gate.app) in Cloud mode; the function hands each SMS to the app's relay (`api.sms-gate.app`, or `SMS_GATEWAY_URL` for a self-hosted server), which wakes the phone. The text and the number are encrypted with the passphrase before they leave Supabase (`_shared/sms-gateway.ts`), so the relay can't read them; without a passphrase the gateway is not used. « Sent » means the relay accepted it: a phone that is off sends it when it comes back (the « 5 minutes » SMS is dropped after 5 minutes).
+- **Twilio** (`TWILIO_*` secrets, about 0.08 $ per SMS to France), when the gateway isn't set up, or when the relay refuses a message. Remove the `TWILIO_*` secrets to never pay for one.
+
+Setting up the phone:
+
+1. Install SMS Gateway for Android (sms-gate.app links its Google Play and GitHub downloads) on the phone whose number should send the SMS, open it, allow SMS, and turn on **Cloud server**. It shows a username and a password.
+2. In the app's Settings › Encryption, set a passphrase: a long random one (for example the output of `openssl rand -base64 32`).
+3. Supabase › Edge Functions › Secrets: add `SMS_GATEWAY_USERNAME`, `SMS_GATEWAY_PASSWORD` and `SMS_GATEWAY_PASSPHRASE` with those values. No redeploy is needed for a secret change.
+4. Android asks for confirmation after about 30 SMS in 30 minutes from one app. Before a round with more recipients, either allow it when the phone asks (and tick the box that remembers the choice), or raise the limit once over USB: `adb shell settings put global sms_outgoing_check_max_count 1000`.
+5. Keep the phone charged and online, and let the app run in the background (Android › Battery › the app › Unrestricted).
 
 Links use the host of the `SITE_URL` secret, which must be `https://www.lebontemperament.com`: the bare domain redirects to www, and iPhones only open the app from the exact host.
 

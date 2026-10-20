@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalSecret } from "../_shared/caller-auth.ts";
 import { deliveryMessage } from "../_shared/delivery-messages.ts";
 import { arrivalSms } from "../_shared/delivery-sms.ts";
-import { sendSms } from "../_shared/twilio.ts";
+import { sendSms } from "../_shared/sms.ts";
 import {
   linkedDeviceCounts,
   pushToRecipient,
@@ -143,6 +143,8 @@ serve(async (req) => {
         smsSent = await sendSms(
           r.phone_number!,
           arrivalSms({ label: r.label, code: r.code, siteUrl }),
+          // Pointless once those 5 minutes are over.
+          { ttlSeconds: 300, urgent: true },
         );
         if (smsSent) {
           sentCount++;
