@@ -91,13 +91,18 @@ export function useSale(saleId: string | undefined) {
   });
 }
 
-/** The superadmins who can drive a round, and who the caller is. */
+/**
+ * The superadmins who can drive a round, each with the round their next add
+ * would join, and who the caller is. A round changes under the page (the app
+ * marks stops delivered), so it is read again at every opening.
+ */
 export function useDrivers(enabled: boolean) {
   return useQuery({
     queryKey: DRIVERS_KEY,
     queryFn: () =>
       send<{ drivers: Driver[]; me: string }>(`${BASE}/drivers`, "GET"),
     enabled,
+    staleTime: 0,
     retry: retryUnlessFinal,
   });
 }
@@ -260,15 +265,26 @@ export function useDeletePayment(saleId: string) {
   });
 }
 
+/** Adds the sale's buyers to the driver's round, or to a new one (`newRound`). */
 export function useAddSaleToDelivery(saleId: string) {
+  const queryClient = useQueryClient();
   const refresh = useRefresh(saleId);
   return useMutation({
-    mutationFn: (driverId: string | null) =>
-      send<DeliveryResult>(
-        `${BASE}/sales/${saleId}/delivery`,
-        "POST",
-        driverId ? { driver_id: driverId } : {},
-      ),
-    onSuccess: refresh,
+    mutationFn: ({
+      driverId,
+      newRound = false,
+    }: {
+      driverId: string | null;
+      newRound?: boolean;
+    }) =>
+      send<DeliveryResult>(`${BASE}/sales/${saleId}/delivery`, "POST", {
+        ...(driverId ? { driver_id: driverId } : {}),
+        ...(newRound ? { new_round: true } : {}),
+      }),
+    onSuccess: () => {
+      refresh();
+      // The driver's round has the new stops (and may be a new round).
+      queryClient.invalidateQueries({ queryKey: DRIVERS_KEY });
+    },
   });
 }

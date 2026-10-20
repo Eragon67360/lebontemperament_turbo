@@ -23,6 +23,7 @@ import 'package:lebontemperament/data/services/feature_flags_service.dart';
 import 'package:lebontemperament/data/services/site_documents_service.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/auth_provider.dart';
 import 'package:lebontemperament/features/auth/presentation/providers/profile_role_provider.dart';
+import 'package:lebontemperament/features/driver_tracking/presentation/providers/driver_tracking_provider.dart';
 import 'package:lebontemperament/features/profile/presentation/screens/about_screen.dart';
 import 'package:lebontemperament/features/public/data/public_content.dart';
 import 'package:lebontemperament/features/public/presentation/providers/rehearsal_slots_provider.dart';
@@ -153,6 +154,7 @@ List<Override> offlineOverrides({
   DriveService? drive,
   DriveFolderCatalog? catalog,
   FakeBugReportsService? bugReports,
+  String? deliveryRoundLine,
 }) => [
   authStateProvider.overrideWith((ref) => const Stream<AuthState>.empty()),
   // The real provider falls back to the Supabase client, absent here.
@@ -185,6 +187,9 @@ List<Override> offlineOverrides({
   bugReportsServiceProvider.overrideWithValue(
     bugReports ?? FakeBugReportsService(),
   ),
+  // The home's « Mode livraison » line; unknown (its usual subtitle) by
+  // default.
+  currentRoundLineProvider.overrideWith((ref) async => deliveryRoundLine),
   packageInfoProvider.overrideWith(
     (ref) async => PackageInfo(
       appName: 'Le Bon Tempérament',

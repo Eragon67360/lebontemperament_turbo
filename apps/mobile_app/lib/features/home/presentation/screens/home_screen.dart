@@ -19,6 +19,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
+import '../../../driver_tracking/presentation/providers/driver_tracking_provider.dart'
+    show currentRoundLineProvider;
 import '../../../main/presentation/providers/main_navigation_provider.dart';
 
 /// Home (« Portée »), in two worlds that never mix: first « Espace
@@ -287,7 +289,8 @@ class _RehearsalsSection extends ConsumerWidget {
 
 /// Superadmins only: the orders of the sales and the delivery tracking,
 /// after the agenda since they are neither a rehearsal nor a members'
-/// shortcut.
+/// shortcut. « Mode livraison » names the driver's current round, read
+/// again after either screen (an order may have joined it).
 class _DeliveryModeCard extends ConsumerWidget {
   const _DeliveryModeCard();
 
@@ -295,6 +298,7 @@ class _DeliveryModeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isSuperadmin = ref.watch(isSuperadminProvider).value ?? false;
     if (!isSuperadmin) return const SizedBox.shrink();
+    final roundLine = ref.watch(currentRoundLineProvider).value;
     return Padding(
       padding: const EdgeInsets.only(top: 24),
       child: Column(
@@ -303,14 +307,20 @@ class _DeliveryModeCard extends ConsumerWidget {
             icon: Icons.shopping_basket_outlined,
             title: 'Commandes',
             subtitle: 'Acheteurs, paiements et totaux des ventes',
-            onTap: () => context.push('/orders'),
+            onTap: () async {
+              await context.push('/orders');
+              if (context.mounted) ref.invalidate(currentRoundLineProvider);
+            },
           ),
           const SizedBox(height: 12),
           _AdminActionCard(
             icon: Icons.local_shipping_outlined,
             title: 'Mode livraison',
-            subtitle: 'Suivi de position en temps réel',
-            onTap: () => context.push('/driver-tracking'),
+            subtitle: roundLine ?? 'Suivi de position en temps réel',
+            onTap: () async {
+              await context.push('/driver-tracking');
+              if (context.mounted) ref.invalidate(currentRoundLineProvider);
+            },
           ),
         ],
       ),

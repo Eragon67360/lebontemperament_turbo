@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/delivery.dart';
 import '../models/delivery_recipient.dart';
+import '../../features/driver_tracking/data/current_round.dart';
 import '../../core/config/supabase_config.dart';
 import '../../features/auth/data/services/auth_service.dart';
 
@@ -26,11 +27,12 @@ class DeliveryService {
 
   String? get _userId => _auth.currentUser?.id;
 
-  /// Fetches the latest delivery for the current user, or creates one if none.
-  /// Reuses the latest delivery when it has pending (undelivered) recipients.
-  /// Creates new only when: no delivery exists, all recipients delivered, or no recipients.
-  /// RLS: only superadmins can insert/update. Call only when authenticated.
-  Future<Delivery?> getOrCreateDelivery() async {
+  /// The current user's current round with its stops, or null when they
+  /// have none: no round yet, or every stop of the latest one delivered.
+  /// The rule of `add_sale_orders_to_delivery` (`current_round.dart`), so
+  /// « Mode livraison » opens the round the admin's « Ajouter à la tournée »
+  /// fills. Reads only: nothing is created.
+  Future<DeliveryWithRecipients?> getCurrentDelivery() async {
     final userId = _userId;
     if (userId == null) return null;
 
@@ -42,30 +44,58 @@ class DeliveryService {
           .order('created_at', ascending: false)
           .limit(1)
           .maybeSingle();
+      if (response == null) return null;
+      final delivery = Delivery.fromJson(response);
+      final recipients = await getRecipients(delivery.id);
+      if (isRoundFinished(recipients)) return null;
+      return DeliveryWithRecipients(delivery: delivery, recipients: recipients);
+    } catch (e) {
+      _logger.e('DeliveryService: getCurrentDelivery failed', error: e);
+      rethrow;
+    }
+  }
 
-      if (response != null) {
-        final delivery = Delivery.fromJson(response);
-        final recipients = await getRecipients(delivery.id);
-        final hasPending = recipients.any((r) => r.deliveredAt == null);
+  /// The current user's current round ([getCurrentDelivery]), or a new one
+  /// when they have none. An expired round that is reused gets 24 more
+  /// hours, so its tracking links keep working.
+  /// RLS: only superadmins can insert/update. Call only when authenticated.
+  Future<Delivery?> getOrCreateDelivery() async {
+    if (_userId == null) return null;
 
-        if (hasPending) {
-          final isExpired = delivery.expiresAt.isBefore(DateTime.now());
-          if (isExpired) {
-            final expiresAt = DateTime.now().add(const Duration(hours: 24));
-            await _client.from('deliveries').update({
-              'expires_at': expiresAt.toUtc().toIso8601String(),
-            }).eq('id', delivery.id);
-            final refreshed = await getDelivery(delivery.id);
-            _logger.i(
-                'DeliveryService: reused expired delivery ${delivery.id}, extended expiry');
-            return refreshed;
-          }
-          _logger.i('DeliveryService: using existing delivery ${delivery.id}');
-          return delivery;
-        }
+    try {
+      final current = await getCurrentDelivery();
+      if (current == null) return await createDelivery();
+
+      final delivery = current.delivery;
+      if (delivery.expiresAt.isBefore(DateTime.now())) {
+        final expiresAt = DateTime.now().add(const Duration(hours: 24));
+        await _client
+            .from('deliveries')
+            .update({'expires_at': expiresAt.toUtc().toIso8601String()})
+            .eq('id', delivery.id);
+        final refreshed = await getDelivery(delivery.id);
+        _logger.i(
+          'DeliveryService: reused expired delivery ${delivery.id}, extended expiry',
+        );
+        return refreshed;
       }
+      _logger.i('DeliveryService: using existing delivery ${delivery.id}');
+      return delivery;
+    } catch (e) {
+      _logger.e('DeliveryService: getOrCreateDelivery failed', error: e);
+      rethrow;
+    }
+  }
 
-      // Create new delivery
+  /// A new, empty round for the current user (« Nouvelle tournée », or when
+  /// they have no current round). Being the latest, it becomes their current
+  /// round in the app and for the admin's « Ajouter à la tournée »; the
+  /// previous one stays in the history as it is.
+  Future<Delivery?> createDelivery() async {
+    final userId = _userId;
+    if (userId == null) return null;
+
+    try {
       final publicToken = const Uuid().v4();
       final expiresAt = DateTime.now().add(const Duration(hours: 24));
 
@@ -84,7 +114,34 @@ class DeliveryService {
       _logger.i('DeliveryService: created delivery ${newDelivery.id}');
       return newDelivery;
     } catch (e) {
-      _logger.e('DeliveryService: getOrCreateDelivery failed', error: e);
+      _logger.e('DeliveryService: createDelivery failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// The titles of the sales the stops [recipientIds] were added from
+  /// (« Ajouter à la tournée »), in the order of the stops. Stops added by
+  /// hand have no sale.
+  Future<List<String>> getSaleTitles(List<String> recipientIds) async {
+    if (recipientIds.isEmpty) return const [];
+    try {
+      final response = await _client
+          .from('orders')
+          .select('delivery_recipient_id, order_sales(title)')
+          .inFilter('delivery_recipient_id', recipientIds);
+      final titleByRecipient = <String, String>{};
+      for (final row in response as List<dynamic>? ?? const []) {
+        final map = row as Map<String, dynamic>;
+        final recipientId = map['delivery_recipient_id'] as String?;
+        final sale = map['order_sales'];
+        final title = sale is Map ? sale['title'] as String? : null;
+        if (recipientId != null && title != null) {
+          titleByRecipient[recipientId] = title;
+        }
+      }
+      return saleTitlesInOrder(recipientIds, titleByRecipient);
+    } catch (e) {
+      _logger.e('DeliveryService: getSaleTitles failed', error: e);
       rethrow;
     }
   }
