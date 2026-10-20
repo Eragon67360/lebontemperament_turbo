@@ -13,6 +13,7 @@ import { saleView } from "@/utils/orders/view";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { BuyerPicker } from "./BuyerPicker";
 import { BuyersList } from "./BuyersList";
 import { CatalogueSection } from "./CatalogueSection";
 import { RoundChoice, type RoundChoiceProps } from "./RoundChoice";
@@ -434,6 +435,53 @@ const { summary, rows } = saleView(detail);
   assert.match(
     choice({ round: { ...round, opened_at: "2025-02-21T10:00:00Z" } }),
     /ouverte le 21 févr\. 2025, 4 destinataires/,
+  );
+}
+
+// --- « Ajouter à la tournée »: who joins this round ---
+{
+  const buyers = [
+    { orderId: O(1), name: "Léa TEST", address: "1 rue du Test, 67000 Ville" },
+    { orderId: O(2), name: "Zoé TEST", address: "2 rue du Test, 67000 Ville" },
+    { orderId: O(3), name: "Marc TEST", address: "3 rue du Test, 67000 Ville" },
+  ];
+  const picker = (selected: string[], disabled?: boolean) =>
+    html(
+      createElement(BuyerPicker, {
+        buyers,
+        selected: new Set(selected),
+        onSelectedChange: noop,
+        disabled,
+      }),
+    );
+  const box = (markup: string, id: string) =>
+    markup.split("<button").find((b) => b.includes(`id="${id}"`)) ?? "";
+
+  // Everyone ticked (the dialog's default): « Tous » is ticked too.
+  const all = picker([O(1), O(2), O(3)]);
+  assert.match(all, /<legend[^>]*>Acheteurs<\/legend>/);
+  assert.match(all, />Tous</);
+  assert.match(all, />3 sur 3</);
+  assert.match(box(all, "delivery-buyers-all"), /aria-checked="true"/);
+  assert.match(all, /Léa TEST/);
+  assert.match(all, /2 rue du Test, 67000 Ville/);
+  assert.match(all, new RegExp(`for="delivery-buyer-${O(2)}"`));
+  noRawColours(all);
+
+  // One buyer (their row's « Ajouter à la tournée… »): « Tous » is mixed.
+  const one = picker([O(2)]);
+  assert.match(one, />1 sur 3</);
+  assert.match(box(one, "delivery-buyers-all"), /aria-checked="mixed"/);
+  assert.match(box(one, `delivery-buyer-${O(2)}`), /aria-checked="true"/);
+  assert.match(box(one, `delivery-buyer-${O(1)}`), /aria-checked="false"/);
+
+  // None ticked, and every box waits while the add runs.
+  const none = picker([]);
+  assert.match(none, />0 sur 3</);
+  assert.match(box(none, "delivery-buyers-all"), /aria-checked="false"/);
+  assert.match(
+    box(picker([O(1)], true), `delivery-buyer-${O(3)}`),
+    /\sdisabled=""/,
   );
 }
 

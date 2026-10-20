@@ -71,9 +71,10 @@ export type DriverRound = {
   sales: string[];
 };
 
-/** What `add_sale_orders_to_delivery` reports. */
+/** What `add_sale_orders_to_delivery` reports (and the add of chosen buyers, `addOrdersToRound`). */
 export type DeliveryResult = {
-  delivery_id: string;
+  /** The round filled; null when chosen buyers were all skipped and the driver had no round to fill. */
+  delivery_id: string | null;
   added: number;
   without_address: number;
 };
