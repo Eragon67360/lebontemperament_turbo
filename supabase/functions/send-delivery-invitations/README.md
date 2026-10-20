@@ -27,7 +27,7 @@ Phone numbers may be stored as typed (« 06 12 34 56 78 », « +33 6… »): `_s
 
 Setting up the phone:
 
-1. Install SMS Gateway for Android (sms-gate.app links its Google Play and GitHub downloads) on the phone whose number should send the SMS, open it, allow SMS, and turn on **Cloud server**. It shows a username and a password.
+1. Install SMS Gateway for Android on the phone (it isn't on Google Play: download the APK from https://github.com/capcom6/android-sms-gateway/releases/latest/download/app-release.apk and allow the install) whose number should send the SMS, open it, allow SMS, and turn on **Cloud server**. It shows a username and a password.
 2. In the app's Settings › Encryption, set a passphrase: a long random one (for example the output of `openssl rand -base64 32`).
 3. Supabase › Edge Functions › Secrets: add `SMS_GATEWAY_USERNAME`, `SMS_GATEWAY_PASSWORD` and `SMS_GATEWAY_PASSPHRASE` with those values. No redeploy is needed for a secret change.
 4. Android asks for confirmation after about 30 SMS in 30 minutes from one app. Before a round with more recipients, either allow it when the phone asks (and tick the box that remembers the choice), or raise the limit once over USB: `adb shell settings put global sms_outgoing_check_max_count 1000`.
