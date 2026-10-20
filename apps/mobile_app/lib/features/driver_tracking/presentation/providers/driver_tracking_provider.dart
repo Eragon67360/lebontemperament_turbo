@@ -11,7 +11,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../../data/services/delivery_service.dart';
+import '../../data/current_round.dart';
 import '../../data/delivery_invitations.dart';
+import '../widgets/invitation_widgets.dart' show utcToParisWallClock;
 
 /// Current position (lat, lng) for display.
 class TrackingPosition {
@@ -31,6 +33,10 @@ class DriverTrackingState {
   final Delivery? delivery;
   final List<DeliveryRecipient> recipients;
 
+  /// The sales the stops come from (« Ajouter à la tournée »), in the order
+  /// of the stops: they name the round on the screen.
+  final List<String> saleTitles;
+
   /// Positions are being sent: a GPS stream runs in this process.
   final bool isTracking;
 
@@ -45,6 +51,7 @@ class DriverTrackingState {
   const DriverTrackingState({
     this.delivery,
     this.recipients = const [],
+    this.saleTitles = const [],
     this.isTracking = false,
     this.isTrackingInterrupted = false,
     this.position,
@@ -56,6 +63,7 @@ class DriverTrackingState {
   DriverTrackingState copyWith({
     Delivery? delivery,
     List<DeliveryRecipient>? recipients,
+    List<String>? saleTitles,
     bool? isTracking,
     bool? isTrackingInterrupted,
     TrackingPosition? position,
@@ -66,6 +74,7 @@ class DriverTrackingState {
     return DriverTrackingState(
       delivery: delivery ?? this.delivery,
       recipients: recipients ?? this.recipients,
+      saleTitles: saleTitles ?? this.saleTitles,
       isTracking: isTracking ?? this.isTracking,
       isTrackingInterrupted:
           isTrackingInterrupted ?? this.isTrackingInterrupted,
@@ -79,6 +88,40 @@ class DriverTrackingState {
 
 final deliveryServiceProvider = Provider<DeliveryService>((ref) {
   return DeliveryService();
+});
+
+/// The home card's line about the signed-in driver's current round
+/// (`homeRoundLine`): read only, so opening the home never creates a round.
+/// Null while unknown (no connection): the card keeps its usual subtitle.
+final currentRoundLineProvider = FutureProvider.autoDispose<String?>((
+  ref,
+) async {
+  final service = ref.watch(deliveryServiceProvider);
+  try {
+    final current = await service.getCurrentDelivery();
+    if (current == null) return homeRoundLine(recipients: null, title: '');
+    final recipients = current.recipients;
+    var titles = const <String>[];
+    try {
+      titles = await service.getSaleTitles([for (final r in recipients) r.id]);
+    } catch (_) {}
+    final delivery = current.delivery;
+    return homeRoundLine(
+      recipients: recipients,
+      title: roundTitle(
+        saleTitles: titles,
+        slotStartParis: delivery.scheduledAt == null
+            ? null
+            : utcToParisWallClock(delivery.scheduledAt!),
+        openedParis: delivery.createdAt == null
+            ? null
+            : utcToParisWallClock(delivery.createdAt!),
+        now: DateTime.now(),
+      ),
+    );
+  } catch (_) {
+    return null;
+  }
 });
 
 final driverTrackingProvider =
@@ -110,6 +153,12 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
 
   /// The lookups [loadDelivery] started, for callers who need them done.
   Future<void> pendingGeocoding = Future.value();
+
+  /// Moves on when tracking starts or stops and when a new round opens. A
+  /// [loadDelivery] that overlaps one of those (pull to refresh and coming
+  /// back to the app reload at any moment) read the round before it, so it
+  /// drops what it read rather than undo the change.
+  int _roundVersion = 0;
 
   DriverTrackingNotifier(this._service, {Geocoder? geocode})
     : _geocode = geocode ?? platformGeocode,
@@ -144,16 +193,36 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
     if (changed && mounted) await loadRecipients();
   }
 
-  /// Load or create delivery. Call when screen opens.
+  /// Load or create delivery. Call when screen opens, and to refresh it
+  /// (pull to refresh, back to the app). While positions are being sent the
+  /// round being tracked stays, even once every stop is delivered, so
+  /// « Arrêter le suivi » stops that round and not a new one.
   Future<void> loadDelivery() async {
+    final version = _roundVersion;
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final delivery = await _service.getOrCreateDelivery();
+      final tracked = _positionSubscription != null ? state.delivery : null;
+      final delivery = tracked != null
+          ? await _service.getDelivery(tracked.id) ?? tracked
+          : await _service.getOrCreateDelivery();
       List<DeliveryRecipient> recipients = const [];
+      List<String> saleTitles = const [];
       if (delivery != null) {
         try {
           recipients = await _service.getRecipients(delivery.id);
         } catch (_) {}
+        // Only names the round: without it the screen still works.
+        try {
+          saleTitles = await _service.getSaleTitles([
+            for (final r in recipients) r.id,
+          ]);
+        } catch (e) {
+          _logger.w('DriverTrackingNotifier sale titles', error: e);
+        }
+      }
+      if (version != _roundVersion) {
+        state = state.copyWith(isLoading: false);
+        return;
       }
       // Not awaited: the screen shows the round while the lookups run.
       pendingGeocoding = geocodeMissingPositions(recipients);
@@ -166,6 +235,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       state = state.copyWith(
         delivery: delivery,
         recipients: recipients,
+        saleTitles: saleTitles,
         isLoading: false,
         error: null,
         isTracking: dbActive && streaming,
@@ -186,6 +256,32 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
         isLoading: false,
         error: 'Erreur lors du chargement de la livraison.',
       );
+    }
+  }
+
+  /// « Nouvelle tournée »: opens a new, empty round, which becomes the
+  /// driver's current one (here and for the admin's « Ajouter à la
+  /// tournée »); the previous round stays in the history as it is. Refused
+  /// while the position is shared. Returns whether the new round is open.
+  Future<bool> startNewRound() async {
+    if (state.isTracking || state.isTrackingInterrupted) return false;
+    state = state.copyWith(isActionLoading: true, error: null);
+    try {
+      final created = await _service.createDelivery();
+      if (created == null) {
+        state = state.copyWith(isActionLoading: false);
+        return false;
+      }
+      _roundVersion++;
+      state = DriverTrackingState(delivery: created);
+      return true;
+    } catch (e) {
+      _logger.e('DriverTrackingNotifier startNewRound', error: e);
+      state = state.copyWith(
+        isActionLoading: false,
+        error: 'La nouvelle tournée n\'a pas pu être créée.',
+      );
+      return false;
     }
   }
 
@@ -626,6 +722,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       return;
     }
 
+    _roundVersion++;
     state = state.copyWith(isTracking: true, isTrackingInterrupted: false);
 
     final deliveryId = delivery.id;
@@ -724,6 +821,7 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
       }
     }
 
+    _roundVersion++;
     state = state.copyWith(isTracking: false, isTrackingInterrupted: false);
     _logger.i('DriverTrackingNotifier: tracking stopped');
   }

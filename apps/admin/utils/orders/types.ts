@@ -34,7 +34,42 @@ export type SaleListItem = Sale & {
   dueCents: number;
 };
 
-export type Driver = { id: string; name: string };
+export type Driver = {
+  id: string;
+  name: string;
+  /**
+   * The round « Ajouter à la tournée » would fill (see `currentRound`): null
+   * when the driver has none and a new one will be created, absent when it
+   * could not be read.
+   */
+  round?: DriverRound | null;
+};
+
+/** The columns of a driver's latest round that `currentRound` reads. */
+export type RoundRow = Pick<
+  Database["public"]["Tables"]["deliveries"]["Row"],
+  "created_at" | "scheduled_at" | "scheduled_end_at"
+>;
+
+/** The columns of a stop (`delivery_recipients`) that `currentRound` reads. */
+export type RoundStop = Pick<
+  Database["public"]["Tables"]["delivery_recipients"]["Row"],
+  "id" | "sort_order" | "delivered_at"
+>;
+
+/** The round a driver's next add would join, as « Ajouter à la tournée » tells it. */
+export type DriverRound = {
+  /** When the round was created (`deliveries.created_at`). */
+  opened_at: string;
+  /** The créneau the driver set in the app, if any. */
+  scheduled_at: string | null;
+  scheduled_end_at: string | null;
+  /** The stops of the round and how many of them are delivered. */
+  stops: number;
+  delivered: number;
+  /** Titles of the sales the stops come from: distinct, in the stops' order. */
+  sales: string[];
+};
 
 /** What `add_sale_orders_to_delivery` reports. */
 export type DeliveryResult = {

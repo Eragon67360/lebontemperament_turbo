@@ -4,6 +4,7 @@ import {
   buyerBreakdown,
   eurosForSpreadsheet,
   formatEuros,
+  formatPhone,
   groupProductsByCategory,
   isValidPhone,
   normalizePhone,
@@ -251,6 +252,28 @@ assert.equal(normalizePhone("+41 79 123 45 67"), "+41791234567");
 assert.equal(normalizePhone("  "), null);
 assert.equal(normalizePhone(null), null);
 assert.ok(isValidPhone("06 12 34 56 78"));
+for (const typed of [
+  "0677565184",
+  "06 77 56 51 84",
+  "06.77.56.51.84",
+  "+33 6 77 56 51 84",
+  "+33677565184",
+  "0033 6 77 56 51 84",
+  "+33 (0)6 77 56 51 84",
+]) {
+  assert.equal(formatPhone(typed), "06 77 56 51 84", typed);
+}
+// While typing.
+assert.equal(formatPhone("0"), "0");
+assert.equal(formatPhone("06"), "06");
+assert.equal(formatPhone("067"), "06 7");
+assert.equal(formatPhone("06 77 5"), "06 77 5");
+assert.equal(formatPhone("06 77 "), "06 77");
+assert.equal(formatPhone("+33 6 77"), "+33 6 77");
+assert.equal(formatPhone("00"), "00");
+// Kept as written.
+assert.equal(formatPhone("+41 79 123 45 67"), "+41 79 123 45 67");
+assert.equal(formatPhone("06 77 56 51 84 12"), "06 77 56 51 84 12");
 assert.ok(isValidPhone("+33 6 12 34 56 78"));
 assert.ok(!isValidPhone("12"));
 assert.ok(!isValidPhone("06 12 34"));
@@ -349,6 +372,21 @@ assert.deepEqual(good, {
     items: [{ product_id: P(1), quantity: 2 }],
   },
 });
+{
+  const r = parseOrderInput(
+    {
+      buyer_name: "A",
+      buyer_phone: "+33612345678",
+      items: [{ product_id: P(1), quantity: 1 }],
+    },
+    ids,
+  );
+  assert.equal(
+    r.ok && r.value.order.buyer_phone,
+    "06 12 34 56 78",
+    "saved in the French form",
+  );
+}
 const refuse = (body: unknown, field: string) => {
   const r = parseOrderInput(body, ids);
   assert.ok(!r.ok, JSON.stringify(body));

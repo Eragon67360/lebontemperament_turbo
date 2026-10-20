@@ -905,7 +905,9 @@ export default function SalePage() {
             withoutAddress={deliverable.withoutAddress}
             drivers={drivers.data?.drivers ?? []}
             me={drivers.data?.me ?? null}
-            onConfirm={(driverId) => addToDelivery.mutateAsync(driverId)}
+            onConfirm={(driverId, newRound) =>
+              addToDelivery.mutateAsync({ driverId, newRound })
+            }
             isPending={addToDelivery.isPending}
           />
 

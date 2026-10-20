@@ -1,8 +1,24 @@
 // Sends one SMS through Twilio with the function secrets TWILIO_ACCOUNT_SID,
-// TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER. Never throws: returns whether
-// Twilio accepted the message and logs its error otherwise (never the text,
-// which holds the recipient's name and code).
-export async function sendSms(to: string, body: string): Promise<boolean> {
+// TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER. Used by `sms.ts` when the SMS
+// gateway (an Android phone of the association) is not set up or refused
+// the message. Never throws: returns whether Twilio accepted the message and
+// logs its error otherwise (never the text, which holds the recipient's name
+// and code, nor the number).
+
+/** Whether the Twilio secrets are set. */
+export function twilioConfigured(): boolean {
+  return !!(
+    Deno.env.get("TWILIO_ACCOUNT_SID") &&
+    Deno.env.get("TWILIO_AUTH_TOKEN") &&
+    Deno.env.get("TWILIO_PHONE_NUMBER")
+  );
+}
+
+/** `to` is already in the E.164 form Twilio takes (« +33612345678 »). */
+export async function sendTwilioSms(
+  to: string,
+  body: string,
+): Promise<boolean> {
   const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
   const from = Deno.env.get("TWILIO_PHONE_NUMBER");

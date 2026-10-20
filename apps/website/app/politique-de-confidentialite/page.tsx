@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.7";
-const POLICY_UPDATED_ON = "14 octobre 2026";
+const POLICY_VERSION = "2.8";
+const POLICY_UPDATED_ON = "20 octobre 2026";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -136,8 +136,14 @@ const PROCESSORS: { name: string; role: string; safeguard: string }[] = [
       "décision d’adéquation de la Commission européenne pour Israël et cadre de protection des données UE–États-Unis",
   },
   {
+    name: "SMS Gateway for Android (service de relais sms-gate.app)",
+    role: "transmission des SMS des tournées de livraison au téléphone d’un bénévole de l’association, qui les envoie ; le numéro et le texte sont chiffrés de bout en bout, le service ne peut pas les lire",
+    safeguard:
+      "chiffrement de bout en bout : aucune donnée lisible ne lui est confiée",
+  },
+  {
     name: "Twilio (Twilio Ireland Limited, Irlande, et Twilio Inc., États-Unis)",
-    role: "envoi des SMS des tournées de livraison",
+    role: "envoi des SMS des tournées de livraison quand le relais vers le téléphone de l’association est indisponible",
     safeguard:
       "cadre de protection des données UE–États-Unis, règles d’entreprise contraignantes et clauses contractuelles types",
   },
@@ -727,7 +733,7 @@ export default async function PrivacyPolicy() {
                 ],
                 [
                   "Destinataires",
-                  "les conducteurs et administrateurs de l’association chargés de la tournée ; Supabase, Twilio (SMS), FOSSGIS (calcul des itinéraires), Mapbox (carte) et le service de localisation d’adresses du téléphone du conducteur (Apple ou Google) en tant que sous-traitants",
+                  "les conducteurs et administrateurs de l’association chargés de la tournée ; Supabase, SMS Gateway for Android et, en secours, Twilio (SMS), FOSSGIS (calcul des itinéraires), Mapbox (carte) et le service de localisation d’adresses du téléphone du conducteur (Apple ou Google) en tant que sous-traitants",
                 ],
               ]}
             />

@@ -21,6 +21,9 @@ import '../../../../core/config/app_config.dart';
 import '../../../../data/models/delivery.dart';
 import '../../../../data/models/delivery_recipient.dart';
 import '../../../auth/presentation/providers/profile_role_provider.dart';
+import '../../../orders/domain/order_totals.dart'
+    show isValidPhone, normalizePhone;
+import '../../data/current_round.dart';
 import '../../data/delivery_invitations.dart';
 import '../providers/driver_tracking_provider.dart';
 import '../widgets/invitation_widgets.dart';
@@ -71,13 +74,16 @@ class _TrackingContent extends ConsumerStatefulWidget {
   ConsumerState<_TrackingContent> createState() => _TrackingContentState();
 }
 
-class _TrackingContentState extends ConsumerState<_TrackingContent> {
+class _TrackingContentState extends ConsumerState<_TrackingContent>
+    with WidgetsBindingObserver {
   final _problemController = TextEditingController();
   final _delayController = TextEditingController();
+  final _refreshKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     initializeDateFormatting('fr_FR');
     if (!tz.timeZoneDatabase.isInitialized) {
       tz_data.initializeTimeZones();
@@ -89,9 +95,51 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _problemController.dispose();
     _delayController.dispose();
     super.dispose();
+  }
+
+  /// Back from another app (the admin in a browser, often): stops added
+  /// there meanwhile show up without leaving the screen.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
+    if (lifecycle != AppLifecycleState.resumed) return;
+    final state = ref.read(driverTrackingProvider);
+    if (state.isLoading || state.isActionLoading) return;
+    ref.read(driverTrackingProvider.notifier).loadDelivery();
+  }
+
+  /// « Nouvelle tournée », after the driver confirms.
+  Future<void> _confirmNewRound(String title) async {
+    final state = ref.read(driverTrackingProvider);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Nouvelle tournée\u00a0?'),
+        content: Text(newRoundQuestion(title, state.recipients)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Nouvelle tournée'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final opened = await ref
+        .read(driverTrackingProvider.notifier)
+        .startNewRound();
+    if (opened && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Nouvelle tournée ouverte')));
+    }
   }
 
   // --- Dialog & Picker Logic ---
@@ -310,158 +358,356 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: theme.colorScheme.surface,
-            surfaceTintColor: theme.colorScheme.surface,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              tooltip: 'Retour',
-              onPressed: () => context.pop(),
-            ),
-            title: Text(
-              'Suivi livraison',
-              style: AppFonts.sans(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
+      child: RefreshIndicator(
+        key: _refreshKey,
+        onRefresh: () =>
+            ref.read(driverTrackingProvider.notifier).loadDelivery(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: theme.colorScheme.surface,
+              surfaceTintColor: theme.colorScheme.surface,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                tooltip: 'Retour',
+                onPressed: () => context.pop(),
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              kFloatingNavBarBottomPadding,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                FadeInUp(delay: 100, child: _TrackingStatusHero(state: state)),
-                const SizedBox(height: 32),
-                const FadeInUp(
-                  delay: 200,
-                  child: _SectionTitle(title: 'Panneau de contrôle'),
+              title: Text(
+                'Suivi livraison',
+                style: AppFonts.sans(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 12),
-                FadeInUp(delay: 300, child: _ActionButtons(state: state)),
-                if (state.delivery != null)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 32),
-                      FadeInUp(
-                        delay: 400,
-                        child: Row(
-                          children: [
-                            const _SectionTitle(title: 'Destinataires'),
-                            const Spacer(),
-                            FilledButton.tonalIcon(
-                              onPressed: state.isActionLoading
-                                  ? null
-                                  : () => ref
-                                        .read(driverTrackingProvider.notifier)
-                                        .optimizeRecipientsRoute(
-                                          startLat: state.position?.lat,
-                                          startLng: state.position?.lng,
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded),
+                  tooltip: 'Actualiser la tournée',
+                  onPressed: () => _refreshKey.currentState?.show(),
+                ),
+              ],
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                kFloatingNavBarBottomPadding,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (state.delivery != null) ...[
+                    FadeInUp(
+                      delay: 50,
+                      child: _RoundCard(
+                        state: state,
+                        onNewRound: _confirmNewRound,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  FadeInUp(
+                    delay: 100,
+                    child: _TrackingStatusHero(state: state),
+                  ),
+                  const SizedBox(height: 32),
+                  const FadeInUp(
+                    delay: 200,
+                    child: _SectionTitle(title: 'Panneau de contrôle'),
+                  ),
+                  const SizedBox(height: 12),
+                  FadeInUp(delay: 300, child: _ActionButtons(state: state)),
+                  if (state.delivery != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 32),
+                        FadeInUp(
+                          delay: 400,
+                          child: Row(
+                            children: [
+                              const _SectionTitle(title: 'Destinataires'),
+                              const Spacer(),
+                              FilledButton.tonalIcon(
+                                onPressed: state.isActionLoading
+                                    ? null
+                                    : () => ref
+                                          .read(driverTrackingProvider.notifier)
+                                          .optimizeRecipientsRoute(
+                                            startLat: state.position?.lat,
+                                            startLng: state.position?.lng,
+                                          ),
+                                icon: state.isActionLoading
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
                                         ),
-                              icon: state.isActionLoading
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.auto_awesome, size: 18),
-                              label: const Text('Optimiser l\'itinéraire'),
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                textStyle: AppFonts.sans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                                      )
+                                    : const Icon(Icons.auto_awesome, size: 18),
+                                label: const Text('Optimiser l\'itinéraire'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  textStyle: AppFonts.sans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      SendInvitationsButton(
-                        recipients: state.recipients,
-                        isBusy: state.isActionLoading,
-                        onPressed: _sendInvitations,
-                      ),
-                      FadeInUp(
-                        delay: 500,
-                        child: _RecipientsCard(
-                          delivery: state.delivery!,
+                        const SizedBox(height: 12),
+                        SendInvitationsButton(
                           recipients: state.recipients,
-                          onAdd: () => _showAddOrEditRecipientDialog(),
-                          onTapRecipient: (recipient) {
-                            // THIS IS THE PART TO CHANGE
-                            context.push(
-                              '/driver-tracking/recipient',
-                              extra: {
-                                'delivery': state.delivery!,
-                                'recipient': recipient,
-                                // Add the callback here
-                                'onEdit': () => _showAddOrEditRecipientDialog(
-                                  recipient: recipient,
-                                ),
-                              },
-                            );
-                          },
-                          onReorder: (newOrder) => ref
-                              .read(driverTrackingProvider.notifier)
-                              .reorderRecipients(newOrder),
+                          isBusy: state.isActionLoading,
+                          onPressed: _sendInvitations,
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      const FadeInUp(
-                        delay: 600,
-                        child: _SectionTitle(title: 'Mises à jour en direct'),
-                      ),
-                      const SizedBox(height: 12),
-                      FadeInUp(
-                        delay: 700,
-                        child: _LiveUpdatesCard(
-                          delivery: state.delivery!,
-                          problemController: _problemController,
-                          delayController: _delayController,
-                          onPickTime: () => _pickScheduledTimeRange(context),
+                        FadeInUp(
+                          delay: 500,
+                          child: _RecipientsCard(
+                            delivery: state.delivery!,
+                            recipients: state.recipients,
+                            onAdd: () => _showAddOrEditRecipientDialog(),
+                            onTapRecipient: (recipient) {
+                              // THIS IS THE PART TO CHANGE
+                              context.push(
+                                '/driver-tracking/recipient',
+                                extra: {
+                                  'delivery': state.delivery!,
+                                  'recipient': recipient,
+                                  // Add the callback here
+                                  'onEdit': () => _showAddOrEditRecipientDialog(
+                                    recipient: recipient,
+                                  ),
+                                },
+                              );
+                            },
+                            onReorder: (newOrder) => ref
+                                .read(driverTrackingProvider.notifier)
+                                .reorderRecipients(newOrder),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      const FadeInUp(
-                        delay: 800,
-                        child: _SectionTitle(title: 'Partage'),
-                      ),
-                      const SizedBox(height: 12),
-                      FadeInUp(
-                        delay: 900,
-                        child: _SessionDetailsCard(
-                          delivery: state.delivery!,
-                          onResetToken: _confirmResetToken,
+                        const SizedBox(height: 32),
+                        const FadeInUp(
+                          delay: 600,
+                          child: _SectionTitle(title: 'Mises à jour en direct'),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      FadeInUp(
-                        delay: 950,
-                        child: TextButton.icon(
-                          onPressed: () =>
-                              context.push('/driver-tracking/history'),
-                          icon: const Icon(Icons.history_rounded, size: 20),
-                          label: const Text('Historique des tournées'),
+                        const SizedBox(height: 12),
+                        FadeInUp(
+                          delay: 700,
+                          child: _LiveUpdatesCard(
+                            delivery: state.delivery!,
+                            problemController: _problemController,
+                            delayController: _delayController,
+                            onPickTime: () => _pickScheduledTimeRange(context),
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 32),
+                        const FadeInUp(
+                          delay: 800,
+                          child: _SectionTitle(title: 'Partage'),
+                        ),
+                        const SizedBox(height: 12),
+                        FadeInUp(
+                          delay: 900,
+                          child: _SessionDetailsCard(
+                            delivery: state.delivery!,
+                            onResetToken: _confirmResetToken,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        FadeInUp(
+                          delay: 950,
+                          child: TextButton.icon(
+                            onPressed: () =>
+                                context.push('/driver-tracking/history'),
+                            icon: const Icon(Icons.history_rounded, size: 20),
+                            label: const Text('Historique des tournées'),
+                          ),
+                        ),
+                      ],
+                    ),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// MARK: - UI Components
+
+/// Which round this is, first on the screen: the sales its stops come from
+/// (or its day), the créneau, the stops delivered and the day it was
+/// opened, so the driver can match it with the admin's « Ajouter à la
+/// tournée ». A round that looks like an earlier delivery left open says
+/// so; « Nouvelle tournée » leaves it in the history and starts an empty
+/// one.
+class _RoundCard extends StatelessWidget {
+  final DriverTrackingState state;
+  final void Function(String title) onNewRound;
+
+  const _RoundCard({required this.state, required this.onNewRound});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final delivery = state.delivery!;
+    final recipients = state.recipients;
+    final now = DateTime.now();
+    final slotStart = delivery.scheduledAt == null
+        ? null
+        : _utcToParis(delivery.scheduledAt!);
+    final slotEnd = delivery.scheduledEndAt == null
+        ? null
+        : _utcToParis(delivery.scheduledEndAt!);
+    final opened = delivery.createdAt == null
+        ? null
+        : _utcToParis(delivery.createdAt!);
+    final title = roundTitle(
+      saleTitles: state.saleTitles,
+      slotStartParis: slotStart,
+      openedParis: opened,
+      now: now,
+    );
+    final slot = roundSlot(slotStart, slotEnd, now);
+    final oldNote = oldRoundNote(delivery, recipients, now);
+    // Named after the day it was opened: no need to say it twice.
+    final titleIsOpenedDay =
+        state.saleTitles.isEmpty && slotStart == null && opened != null;
+    final canStartNew =
+        recipients.isNotEmpty &&
+        !state.isTracking &&
+        !state.isTrackingInterrupted;
+
+    return Semantics(
+      container: true,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'TOURNÉE EN COURS',
+              style: AppFonts.sans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+                color: scheme.primary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: AppFonts.sans(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _RoundFact(
+              icon: Icons.schedule_outlined,
+              text: slot ?? 'Créneau à choisir',
+              color: slot == null ? scheme.tertiary : null,
+            ),
+            _RoundFact(
+              icon: Icons.people_outline_rounded,
+              text: roundProgress(recipients),
+            ),
+            if (opened != null && !titleIsOpenedDay)
+              _RoundFact(
+                icon: Icons.event_outlined,
+                text: 'Ouverte le ${roundDay(opened, now)}',
+              ),
+            if (oldNote != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  oldNote,
+                  style: AppFonts.sans(
+                    fontSize: 14,
+                    color: scheme.onTertiaryContainer,
                   ),
-              ]),
+                ),
+              ),
+            ],
+            if (canStartNew) ...[
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: oldNote != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 4),
+                        child: FilledButton.tonalIcon(
+                          onPressed: state.isActionLoading
+                              ? null
+                              : () => onNewRound(title),
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: const Text('Nouvelle tournée'),
+                        ),
+                      )
+                    : TextButton.icon(
+                        onPressed: state.isActionLoading
+                            ? null
+                            : () => onNewRound(title),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Nouvelle tournée'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                      ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One line of the round card: an icon and a fact.
+class _RoundFact extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color? color;
+
+  const _RoundFact({required this.icon, required this.text, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color ?? muted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: AppFonts.sans(fontSize: 15, color: color ?? muted),
             ),
           ),
         ],
@@ -469,8 +715,6 @@ class _TrackingContentState extends ConsumerState<_TrackingContent> {
     );
   }
 }
-
-// MARK: - UI Components
 
 class _SectionTitle extends StatelessWidget {
   final String title;
@@ -721,11 +965,13 @@ class _RecipientsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+    // A Material, not a decorated box: the tiles paint their ink on it, so
+    // a tap shows.
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
+        side: BorderSide(
           color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
@@ -925,14 +1171,16 @@ class _LiveUpdatesCard extends ConsumerWidget {
       }
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+    // A Material, as in the recipients card, so the tiles' ink shows.
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
+        side: BorderSide(
           color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           ListTile(
@@ -1146,6 +1394,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   late final TextEditingController _addressController;
   late final TextEditingController _phoneController;
   bool _isGeocoding = false;
+  String? _phoneError;
 
   @override
   void initState() {
@@ -1161,7 +1410,7 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
   void dispose() {
     _labelController.dispose();
     _addressController.dispose();
-    _phoneController.dispose(); // <-- ADDED disposal
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -1169,7 +1418,13 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
     final label = _labelController.text.trim();
     if (label.isEmpty) return;
     final addressStr = _addressController.text.trim();
-    final phoneStr = _phoneController.text.trim(); // <-- ADDED get phone value
+    final phoneStr = _phoneController.text.trim();
+    // Any French way of writing it (06 12 34 56 78, +33 6…) is stored as
+    // +33612345678, the form Twilio needs for the invitation SMS.
+    if (phoneStr.isNotEmpty && !isValidPhone(phoneStr)) {
+      setState(() => _phoneError = "Ce numéro de téléphone n'est pas valide");
+      return;
+    }
 
     String? savedAddress;
     double? savedLatitude;
@@ -1210,13 +1465,12 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
 
     if (!mounted) return;
 
-    // <-- MODIFIED the returned object to include the phone number
     Navigator.of(context).pop((
       label: label,
       address: savedAddress?.isEmpty == true ? null : savedAddress,
       latitude: savedLatitude,
       longitude: savedLongitude,
-      phoneNumber: phoneStr.isEmpty ? null : phoneStr, // <-- ADDED phone number
+      phoneNumber: normalizePhone(phoneStr),
     ));
   }
 
@@ -1254,11 +1508,15 @@ class _AddOrEditRecipientDialogState extends State<_AddOrEditRecipientDialog> {
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Téléphone (pour l’invitation par SMS)',
-                hintText: 'Format international (ex. : +336…)',
-                border: OutlineInputBorder(),
+                hintText: 'Ex. : 06 12 34 56 78',
+                errorText: _phoneError,
+                border: const OutlineInputBorder(),
               ),
+              onChanged: (_) {
+                if (_phoneError != null) setState(() => _phoneError = null);
+              },
             ),
           ],
         ),

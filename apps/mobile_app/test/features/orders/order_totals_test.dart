@@ -166,6 +166,26 @@ void main() {
       expect(normalizePhone(null), isNull);
     });
 
+    test('formats like the admin', () {
+      for (final typed in [
+        '0677565184',
+        '06 77 56 51 84',
+        '06.77.56.51.84',
+        '+33 6 77 56 51 84',
+        '+33677565184',
+        '0033 6 77 56 51 84',
+        '+33 (0)6 77 56 51 84',
+      ]) {
+        expect(formatPhone(typed), '06 77 56 51 84', reason: typed);
+      }
+      expect(formatPhone('0'), '0');
+      expect(formatPhone('067'), '06 7');
+      expect(formatPhone('06 77 '), '06 77');
+      expect(formatPhone('+33 6 77'), '+33 6 77');
+      expect(formatPhone('00'), '00');
+      expect(formatPhone('+41 79 123 45 67'), '+41 79 123 45 67');
+    });
+
     test('validity', () {
       expect(isValidPhone('06 12 34 56 78'), isTrue);
       expect(isValidPhone('+33 6 12 34 56 78'), isTrue);
