@@ -10,6 +10,7 @@ import { Dropdown, Label, toast } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import {
+  IoBagHandleOutline,
   IoChevronDownOutline,
   IoGlobeOutline,
   IoLogOutOutline,
@@ -21,8 +22,8 @@ const itemClass = "min-h-12 gap-3 px-3 text-lg";
 
 /**
  * The account button of the members header: initials on the member's voice
- * colour, first name, and a small menu (my account, back to the public site,
- * sign out).
+ * colour, first name, and a small menu (my account, my orders, back to the
+ * public site, sign out).
  */
 export function MembersAccountMenu() {
   const { user, setUser } = useAuth();
@@ -57,6 +58,7 @@ export function MembersAccountMenu() {
 
   const onAction = (key: React.Key) => {
     if (key === "compte") router.push(RouteNames.MEMBRES.MES_DONNEES);
+    else if (key === "commandes") router.push(RouteNames.MEMBRES.COMMANDES);
     else if (key === "site") router.push(RouteNames.ROOT);
     else if (key === "deconnexion") signOut();
   };
@@ -91,6 +93,14 @@ export function MembersAccountMenu() {
           >
             <IoPersonOutline aria-hidden="true" className="h-5 w-5" />
             <Label className="text-lg">Mon compte</Label>
+          </Dropdown.Item>
+          <Dropdown.Item
+            id="commandes"
+            textValue="Mes commandes"
+            className={itemClass}
+          >
+            <IoBagHandleOutline aria-hidden="true" className="h-5 w-5" />
+            <Label className="text-lg">Mes commandes</Label>
           </Dropdown.Item>
           <Dropdown.Item
             id="site"

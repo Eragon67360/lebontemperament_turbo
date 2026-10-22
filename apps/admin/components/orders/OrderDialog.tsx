@@ -10,13 +10,18 @@ import {
   saveErrorMessage,
 } from "@/components/anniversary/FormFeedback";
 import { AddressField } from "@/components/orders/AddressField";
+import { BuyerNameField } from "@/components/orders/BuyerNameField";
+import {
+  type CurrentOrderDocument,
+  OrderDocumentField,
+} from "@/components/orders/OrderDocumentField";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { RequiredMark } from "@/components/ui/label";
-import { OrderApiError } from "@/hooks/useOrders";
+import { type DocumentChange, OrderApiError } from "@/hooks/useOrders";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { cn } from "@/lib/utils";
 import {
@@ -31,6 +36,7 @@ import {
   readQuantity,
   stepQuantity,
 } from "@/utils/orders/form";
+import { fillFromMember, type MemberOption } from "@/utils/orders/members";
 import type { SaleOrder, SaleProduct } from "@/utils/orders/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -61,6 +67,7 @@ const LABELS = {
   buyer_phone: { label: "Téléphone", id: "order-buyer-phone" },
   buyer_address: { label: "Adresse", id: "order-buyer-address" },
   sold_by: { label: "Vendu par", id: "order-sold-by" },
+  buyer_member_id: { label: "Membre acheteur", id: "order-buyer-name" },
   fulfilment: { label: "Remise", id: "order-fulfilment-delivery" },
   quantities: { label: "Produits", id: QUANTITIES_ID },
   notes: { label: "Remarque", id: "order-notes" },
@@ -71,6 +78,7 @@ const FIELD_OF: Record<string, keyof OrderFormValues> = {
   buyer_phone: "buyer_phone",
   buyer_address: "buyer_address",
   sold_by: "sold_by",
+  buyer_member_id: "buyer_name",
   fulfilment: "fulfilment",
   notes: "notes",
   items: "quantities",
@@ -78,7 +86,7 @@ const FIELD_OF: Record<string, keyof OrderFormValues> = {
 
 const FULFILMENT_ICONS = { delivery: Truck, pickup: Store } as const;
 
-export type MemberOption = { id: string; name: string };
+export type { MemberOption };
 
 export interface OrderDialogProps {
   open: boolean;
@@ -86,10 +94,21 @@ export interface OrderDialogProps {
   /** The order being edited; none for a creation. */
   order?: SaleOrder | null;
   products: readonly SaleProduct[];
-  /** The members who may have sold the order, in alphabetical order. */
+  /**
+   * The members, in alphabetical order: who may have sold the order, and
+   * who may have bought it (« Nom de l'acheteur »).
+   */
   members: readonly MemberOption[];
-  /** Saves; throws when it fails. */
-  onSubmit: (body: ReturnType<typeof orderFormToBody>) => Promise<void>;
+  /** The order's attached form, if any (edit only). */
+  document?: CurrentOrderDocument | null;
+  /**
+   * Saves the order, then applies the change of order form; throws when the
+   * order itself could not be saved.
+   */
+  onSubmit: (
+    body: ReturnType<typeof orderFormToBody>,
+    documentChange: DocumentChange,
+  ) => Promise<void>;
   isPending: boolean;
   /** Opens « Enregistrer un paiement » for this order (edit only). */
   onPay?: () => void;
@@ -110,6 +129,7 @@ export function OrderDialog({
   order,
   products,
   members,
+  document = null,
   onSubmit,
   isPending,
   onPay,
@@ -117,13 +137,19 @@ export function OrderDialog({
   deletingPaymentId,
 }: OrderDialogProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [documentChange, setDocumentChange] = useState<DocumentChange>({
+    type: "keep",
+  });
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema),
     defaultValues: orderFormDefaults(order ?? null, products),
     shouldFocusError: false,
   });
 
-  useResetOnChange([open], () => setSaveError(null));
+  useResetOnChange([open], () => {
+    setSaveError(null);
+    setDocumentChange({ type: "keep" });
+  });
   useEffect(() => {
     if (open) form.reset(orderFormDefaults(order ?? null, products));
     // Reset when the dialog opens or changes subject, not when a payment
@@ -139,6 +165,35 @@ export function OrderDialog({
   const quantities = useWatch({ control: form.control, name: "quantities" });
   const fulfilment = useWatch({ control: form.control, name: "fulfilment" });
   const address = useWatch({ control: form.control, name: "buyer_address" });
+  const buyerMemberId = useWatch({
+    control: form.control,
+    name: "buyer_member_id",
+  });
+  const linkedMember = useMemo(
+    () =>
+      buyerMemberId && buyerMemberId !== NONE
+        ? (members.find((m) => m.id === buyerMemberId) ?? {
+            id: buyerMemberId,
+            name: order?.buyer_name ?? "Membre",
+          })
+        : null,
+    [buyerMemberId, members, order?.buyer_name],
+  );
+
+  const pickBuyer = (member: MemberOption) => {
+    const filled = fillFromMember(member, {
+      buyer_phone: form.getValues("buyer_phone") ?? "",
+      buyer_address: form.getValues("buyer_address") ?? "",
+    });
+    const options = {
+      shouldDirty: true,
+      shouldValidate: form.formState.submitCount > 0,
+    };
+    form.setValue("buyer_member_id", member.id, options);
+    form.setValue("buyer_name", filled.buyer_name, options);
+    form.setValue("buyer_phone", filled.buyer_phone, options);
+    form.setValue("buyer_address", filled.buyer_address, options);
+  };
   const totalCents = quantitiesTotalCents(quantities ?? {}, listed);
 
   const memberOptions = useMemo(
@@ -159,7 +214,7 @@ export function OrderDialog({
   const submit = async (values: OrderFormValues) => {
     setSaveError(null);
     try {
-      await onSubmit(orderFormToBody(values));
+      await onSubmit(orderFormToBody(values), documentChange);
       onOpenChange(false);
     } catch (error) {
       const field =
@@ -205,7 +260,7 @@ export function OrderDialog({
           : "Une commande par acheteur : ses coordonnées, puis les quantités de la feuille de commande."
       }
       formId={FORM_ID}
-      isDirty={form.formState.isDirty}
+      isDirty={form.formState.isDirty || documentChange.type !== "keep"}
       isPending={isPending}
       submitLabel={order ? "Enregistrer" : "Ajouter la commande"}
       className="lg:max-w-[1040px]"
@@ -229,14 +284,27 @@ export function OrderDialog({
               <legend className="text-[17px] leading-6 font-semibold">
                 L&apos;acheteur
               </legend>
-              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
-                <TextField
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem] sm:items-start">
+                <FormField
                   control={form.control}
                   name="buyer_name"
-                  id={LABELS.buyer_name.id}
-                  label={LABELS.buyer_name.label}
-                  required
-                  placeholder="Prénom NOM"
+                  render={({ field }) => (
+                    <BuyerNameField
+                      id={LABELS.buyer_name.id}
+                      label={LABELS.buyer_name.label}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      members={members}
+                      linked={linkedMember}
+                      onPick={pickBuyer}
+                      onUnlink={() =>
+                        form.setValue("buyer_member_id", NONE, {
+                          shouldDirty: true,
+                        })
+                      }
+                    />
+                  )}
                 />
                 <TextField
                   control={form.control}
@@ -405,6 +473,13 @@ export function OrderDialog({
               label={LABELS.notes.label}
               rows={2}
               placeholder="Code de la porte, horaires, demande particulière…"
+            />
+
+            <OrderDocumentField
+              current={document}
+              change={documentChange}
+              onChange={setDocumentChange}
+              linkedName={linkedMember?.name ?? null}
             />
           </form>
         </Form>

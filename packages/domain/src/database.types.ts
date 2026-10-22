@@ -1826,11 +1826,17 @@ export type Database = {
       orders: {
         Row: {
           buyer_address: string | null;
+          buyer_member_id: string | null;
           buyer_name: string;
           buyer_phone: string | null;
           created_at: string;
           created_by: string | null;
           delivery_recipient_id: string | null;
+          document_added_at: string | null;
+          document_key: string | null;
+          document_mime_type: string | null;
+          document_name: string | null;
+          document_size_bytes: number | null;
           fulfilment: string;
           handed_over_at: string | null;
           id: string;
@@ -1842,11 +1848,17 @@ export type Database = {
         };
         Insert: {
           buyer_address?: string | null;
+          buyer_member_id?: string | null;
           buyer_name: string;
           buyer_phone?: string | null;
           created_at?: string;
           created_by?: string | null;
           delivery_recipient_id?: string | null;
+          document_added_at?: string | null;
+          document_key?: string | null;
+          document_mime_type?: string | null;
+          document_name?: string | null;
+          document_size_bytes?: number | null;
           fulfilment?: string;
           handed_over_at?: string | null;
           id?: string;
@@ -1858,11 +1870,17 @@ export type Database = {
         };
         Update: {
           buyer_address?: string | null;
+          buyer_member_id?: string | null;
           buyer_name?: string;
           buyer_phone?: string | null;
           created_at?: string;
           created_by?: string | null;
           delivery_recipient_id?: string | null;
+          document_added_at?: string | null;
+          document_key?: string | null;
+          document_mime_type?: string | null;
+          document_name?: string | null;
+          document_size_bytes?: number | null;
           fulfilment?: string;
           handed_over_at?: string | null;
           id?: string;
@@ -1873,6 +1891,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "orders_buyer_member_id_fkey";
+            columns: ["buyer_member_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "orders_delivery_recipient_id_fkey";
             columns: ["delivery_recipient_id"];
@@ -2386,6 +2411,10 @@ export type Database = {
           last_sign_in_at: string | null;
         }[];
       };
+      can_read_order_document: {
+        Args: { p_name: string };
+        Returns: boolean;
+      };
       concert_event_data_write: {
         Args: {
           p_city: string;
@@ -2449,6 +2478,7 @@ export type Database = {
         Args: { p_report_id: string };
         Returns: undefined;
       };
+      member_orders: { Args: never; Returns: Json };
       member_directory_with_avatars: {
         Args: never;
         Returns: {
@@ -2473,6 +2503,10 @@ export type Database = {
       normalize_order_phone: {
         Args: { p_phone: string };
         Returns: string;
+      };
+      order_documents_to_purge: {
+        Args: { p_limit?: number };
+        Returns: string[];
       };
       redeem_delivery_code: {
         Args: {

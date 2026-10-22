@@ -368,6 +368,7 @@ assert.deepEqual(good, {
       sold_by: null,
       fulfilment: "pickup",
       notes: null,
+      buyer_member_id: null,
     },
     items: [{ product_id: P(1), quantity: 2 }],
   },
@@ -396,6 +397,14 @@ const base = { buyer_name: "A", items: [{ product_id: P(1), quantity: 1 }] };
 refuse({ ...base, buyer_name: "  " }, "buyer_name");
 refuse({ ...base, buyer_phone: "123" }, "buyer_phone");
 refuse({ ...base, sold_by: "nobody" }, "sold_by");
+refuse({ ...base, buyer_member_id: "nobody" }, "buyer_member_id");
+refuse({ ...base, buyer_member_id: 42 }, "buyer_member_id");
+{
+  const r = parseOrderInput({ ...base, buyer_member_id: P(7) }, ids);
+  assert.equal(r.ok && r.value.order.buyer_member_id, P(7), "member linked");
+  const empty = parseOrderInput({ ...base, buyer_member_id: "" }, ids);
+  assert.equal(empty.ok && empty.value.order.buyer_member_id, null);
+}
 refuse({ ...base, fulfilment: "drone" }, "fulfilment");
 refuse({ ...base, items: [] }, "items");
 refuse({ ...base, items: [{ product_id: P(1), quantity: 0 }] }, "items");
