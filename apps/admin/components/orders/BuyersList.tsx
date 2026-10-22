@@ -19,7 +19,15 @@ import {
   fulfilmentLabel,
 } from "@/utils/orders/view";
 import { BALANCE_LABELS, formatEuros } from "@repo/domain/utils/orders";
-import { Banknote, PackageCheck, Pencil, Truck, Undo2 } from "lucide-react";
+import {
+  Banknote,
+  PackageCheck,
+  Paperclip,
+  Pencil,
+  Truck,
+  Undo2,
+  UserRound,
+} from "lucide-react";
 
 export interface BuyersListProps {
   rows: BuyerRow[];
@@ -131,8 +139,9 @@ export function BuyersList({
           {rows.map((row) => (
             <TableRow key={row.orderId}>
               <TableCell className="max-w-64 py-2 pl-4 lg:pl-6">
-                <span className="block truncate font-medium">
-                  {row.buyerName}
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate font-medium">{row.buyerName}</span>
+                  <BuyerMarks row={row} />
                 </span>
                 {row.order.buyer_phone && (
                   <span className="text-note text-muted-foreground block truncate">
@@ -177,7 +186,10 @@ export function BuyersList({
         {rows.map((row) => (
           <li key={row.orderId} className="flex flex-col gap-2 px-4 py-3">
             <div className="min-w-0">
-              <p className="truncate font-medium">{row.buyerName}</p>
+              <p className="flex min-w-0 items-center gap-1.5">
+                <span className="truncate font-medium">{row.buyerName}</span>
+                <BuyerMarks row={row} />
+              </p>
               <p className="text-note text-muted-foreground truncate">
                 {[fulfilmentLabel(row.fulfilment), row.soldBy]
                   .filter(Boolean)
@@ -202,6 +214,29 @@ export function BuyersList({
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+/**
+ * Two quiet icons after the name: linked to a member's account (the order
+ * shows in their members area) and an order form attached.
+ */
+function BuyerMarks({ row }: { row: BuyerRow }) {
+  return (
+    <>
+      {row.order.buyer_member_id && (
+        <span title="Lié à un compte membre" className="shrink-0">
+          <UserRound className="text-primary size-3.5" aria-hidden />
+          <span className="sr-only">, lié à un compte membre</span>
+        </span>
+      )}
+      {row.order.document_key && (
+        <span title="Bon de commande joint" className="shrink-0">
+          <Paperclip className="text-muted-foreground size-3.5" aria-hidden />
+          <span className="sr-only">, bon de commande joint</span>
+        </span>
+      )}
     </>
   );
 }

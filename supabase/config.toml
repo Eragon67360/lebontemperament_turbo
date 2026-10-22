@@ -305,6 +305,9 @@ verify_jwt = false
 [functions.purge-bug-screenshots]
 verify_jwt = false
 
+[functions.purge-order-documents]
+verify_jwt = false
+
 [functions.send-push-notification]
 verify_jwt = false
 

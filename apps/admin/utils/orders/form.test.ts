@@ -29,6 +29,7 @@ const P1 = "aaaaaaaa-aaaa-4aaa-8aaa-000000000001";
 const P2 = "aaaaaaaa-aaaa-4aaa-8aaa-000000000002";
 const P3 = "aaaaaaaa-aaaa-4aaa-8aaa-000000000003";
 const MEMBER = "dddddddd-dddd-4ddd-8ddd-000000000001";
+const BUYER = "dddddddd-dddd-4ddd-8ddd-000000000002";
 
 const product = (id: string, fields: Partial<SaleProduct>): SaleProduct => ({
   id,
@@ -154,6 +155,7 @@ const products = [
     buyer_phone: "06 12 34 56 78",
     buyer_address: null,
     sold_by: MEMBER,
+    buyer_member_id: BUYER,
     fulfilment: "pickup",
     notes: null,
     items: [
@@ -167,10 +169,12 @@ const products = [
   assert.deepEqual(blank.quantities, { [P1]: 0, [P2]: 0, [P3]: 0 });
   assert.equal(blank.fulfilment, "delivery");
   assert.equal(blank.sold_by, NONE);
+  assert.equal(blank.buyer_member_id, NONE);
 
   const edit = orderFormDefaults(order, products);
   assert.deepEqual(edit.quantities, { [P1]: 2, [P2]: 0, [P3]: 1 });
   assert.equal(edit.sold_by, MEMBER);
+  assert.equal(edit.buyer_member_id, BUYER);
   assert.equal(edit.fulfilment, "pickup");
   assert.equal(edit.buyer_address, "");
 
@@ -231,12 +235,17 @@ const products = [
     sold_by: MEMBER,
     fulfilment: "delivery",
     notes: null,
+    buyer_member_id: BUYER,
     items: [
       { product_id: P1, quantity: 2 },
       { product_id: P3, quantity: 1 },
     ],
   });
   assert.equal(orderFormToBody({ ...ok.data, sold_by: NONE }).sold_by, null);
+  assert.equal(
+    orderFormToBody({ ...ok.data, buyer_member_id: NONE }).buyer_member_id,
+    null,
+  );
   assert.equal(
     orderFormToBody({ ...ok.data, buyer_phone: "+33612345678" }).buyer_phone,
     "06 12 34 56 78",

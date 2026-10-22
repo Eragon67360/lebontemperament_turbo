@@ -20,6 +20,7 @@ const RouteNames = {
   MEMBRES: {
     ROOT: "/membres",
     MES_DONNEES: "/membres/mes-donnees",
+    COMMANDES: "/membres/commandes",
   },
   AG: "/ag",
   ERROR: "/error",

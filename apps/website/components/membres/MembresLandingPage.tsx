@@ -16,12 +16,14 @@ import { AppPromoCard } from "./AppPromoCard";
 import { HomeDesk } from "./HomeDesk";
 import { HomeHero } from "./HomeHero";
 import { HomeLater } from "./HomeLater";
+import { HomeOrder } from "./HomeOrder";
 import { HomeTiles } from "./HomeTiles";
 
 /**
  * The members home, « Les Pupitres »: everything starts from the member's
  * voice. Their colour and next rehearsal, the ones after it (their groups
- * only, as in the app), their section, then the ways in.
+ * only, as in the app), their section, then the ways in. An order still to
+ * come (« Ta commande ») shows under the voice block.
  */
 export const MembresLandingPage = () => {
   const { user } = useAuth();
@@ -59,6 +61,7 @@ export const MembresLandingPage = () => {
         voiceLabel={voicesLabel(rawVoice)}
         rehearsals={heroRehearsals}
       />
+      <HomeOrder />
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {heroRehearsals.status === "ready" && next ? (
           <HomeLater

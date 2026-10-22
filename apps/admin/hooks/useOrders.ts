@@ -9,6 +9,7 @@ import type {
   SaleListItem,
   SaleProduct,
 } from "@/utils/orders/types";
+import { uploadOrderDocument } from "@/utils/orders/upload";
 import type {
   OrderInput,
   ProductInput,
@@ -204,6 +205,41 @@ export function useSaveOrder(saleId: string) {
         : send<{ id: string }>(`${BASE}/sales/${saleId}/orders`, "POST", body),
     onSuccess: refresh,
   });
+}
+
+/**
+ * What happens to an order's form when the order dialog is saved: kept as
+ * it is, replaced by a new file, or removed.
+ */
+export type DocumentChange =
+  { type: "keep" } | { type: "replace"; file: File } | { type: "remove" };
+
+/** Uploads the new file and attaches it, or removes the current one. */
+export function useChangeOrderDocument(saleId: string) {
+  const refresh = useRefresh(saleId);
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      change,
+    }: {
+      orderId: string;
+      change: DocumentChange;
+    }) => {
+      const url = `${BASE}/sales/${saleId}/orders/${orderId}/document`;
+      if (change.type === "remove") {
+        await send<{ ok: true }>(url, "DELETE");
+      } else if (change.type === "replace") {
+        const uploaded = await uploadOrderDocument(change.file, orderId);
+        await send(url, "PUT", uploaded);
+      }
+    },
+    onSettled: refresh,
+  });
+}
+
+/** « Ouvrir » on an attached order form: a one-minute link from the route. */
+export function orderDocumentHref(saleId: string, orderId: string) {
+  return `${BASE}/sales/${saleId}/orders/${orderId}/document`;
 }
 
 export function useSetHandedOver(saleId: string) {
