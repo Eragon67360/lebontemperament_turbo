@@ -1,12 +1,17 @@
 "use client";
-import { membersButtonClass } from "@/components/membres/MembersButton";
+import {
+  MembersLinkButton,
+  membersButtonClass,
+} from "@/components/membres/MembersButton";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { DriveFile } from "@/utils/types";
+import { isDrivePreviewable } from "@repo/domain/utils/driveDownload";
 import { FC, useEffect, useState } from "react";
 import { FaFile, FaFolder, FaMusic, FaRegFilePdf } from "react-icons/fa";
 import {
   IoArrowBack,
   IoDownloadOutline,
+  IoEyeOutline,
   IoMusicalNotes,
 } from "react-icons/io5";
 import { toast } from "sonner";
@@ -32,6 +37,13 @@ async function loadFolder(folderId: string) {
     truncated: response.headers.get("x-drive-truncated") === "true",
   };
 }
+
+/**
+ * The score itself, inline: the browser's own viewer shows it in a new tab
+ * (zoom, search, print). The proxy answers a short French page on errors.
+ */
+const driveViewUrl = (file: DriveFile) =>
+  `/api/drive/file?fileId=${encodeURIComponent(file.id ?? "")}`;
 
 /** The name the proxy chose (Google Docs gain ".pdf"), from `filename*`. */
 function fileNameFromDisposition(header: string | null): string | null {
@@ -220,6 +232,18 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
                   <span className="text-foreground min-w-0 flex-[1_1_200px] font-medium break-words">
                     {file.name}
                   </span>
+                  {file.id && isDrivePreviewable(file.mimeType) && (
+                    <MembersLinkButton
+                      href={driveViewUrl(file)}
+                      external
+                      variant="quiet"
+                      size="md"
+                      aria-label={`Voir ${file.name} (nouvel onglet)`}
+                    >
+                      <IoEyeOutline aria-hidden="true" className="h-5 w-5" />
+                      Voir
+                    </MembersLinkButton>
+                  )}
                   <button
                     type="button"
                     onClick={() => downloadDriveFile(file)}

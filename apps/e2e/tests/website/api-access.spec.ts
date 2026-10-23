@@ -68,6 +68,20 @@ test.describe("members-only routes refuse anonymous callers", () => {
   }
 });
 
+// « Voir » opens a score in a tab: a refusal there is a French page, not JSON,
+// and is still a 401 (the app and scripts keep getting JSON, above).
+test("a score opened in a tab without a session gets a French 401 page", async ({
+  request,
+}) => {
+  const response = await request.get(
+    `/api/drive/file?fileId=${FAKE_DRIVE_ID}`,
+    { headers: { "Sec-Fetch-Dest": "document" } },
+  );
+  expect(response.status()).toBe(401);
+  expect(response.headers()["content-type"]).toContain("text/html");
+  expect(await response.text()).toContain("Ta session a expiré");
+});
+
 // #354: a deletion request needs the member's own session.
 test("POST /api/membres/demande-suppression without a session is 401", async ({
   request,
