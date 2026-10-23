@@ -109,6 +109,45 @@ class _BuyerBody extends ConsumerWidget {
     }
   }
 
+  /// « Ajouter à la tournée » for this buyer alone: into the current round
+  /// (or a new one), the others of the sale left for another day.
+  Future<void> _addToRound(
+    BuildContext context,
+    WidgetRef ref,
+    OrderRecord order,
+  ) async {
+    final ok = await showConfirmSheet(
+      context,
+      title: 'Ajouter à la tournée',
+      message:
+          '${order.buyerName} deviendra un arrêt de votre tournée en cours '
+          '(ou d’une nouvelle), avec son adresse et son téléphone. Les autres '
+          'acheteurs ne sont pas ajoutés.',
+      confirmLabel: 'Ajouter ${order.buyerName}',
+    );
+    if (!ok || !context.mounted) return;
+    try {
+      final result = await ref.read(ordersServiceProvider).addOrdersToDelivery(
+        saleId,
+        [order.id],
+      );
+      ref.invalidate(saleDetailProvider(saleId));
+      if (context.mounted) {
+        showOrdersSnack(
+          context,
+          result.added == 1
+              ? 'Ajouté à la tournée'
+              : 'Déjà dans une tournée : rien n’a été ajouté.',
+        );
+      }
+    } catch (_) {
+      ref.invalidate(saleDetailProvider(saleId));
+      if (context.mounted) {
+        showOrdersSnack(context, 'La tournée n’a pas pu être mise à jour.');
+      }
+    }
+  }
+
   Future<void> _edit(
     BuildContext context,
     WidgetRef ref,
@@ -221,18 +260,27 @@ class _BuyerBody extends ConsumerWidget {
           tooltip: 'Plus d’actions',
           onSelected: (v) => switch (v) {
             'edit' => _edit(context, ref, detail, order),
+            'round' => _addToRound(context, ref, order),
             'delete' => _delete(context, ref, order),
             _ => null,
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(
+          itemBuilder: (_) => [
+            const PopupMenuItem(
               value: 'edit',
               child: ListTile(
                 leading: Icon(Icons.edit_outlined),
                 title: Text('Modifier'),
               ),
             ),
-            PopupMenuItem(
+            if (order.canJoinRound)
+              const PopupMenuItem(
+                value: 'round',
+                child: ListTile(
+                  leading: Icon(Icons.local_shipping_outlined),
+                  title: Text('Ajouter à la tournée'),
+                ),
+              ),
+            const PopupMenuItem(
               value: 'delete',
               child: ListTile(
                 leading: Icon(Icons.delete_outline_rounded),

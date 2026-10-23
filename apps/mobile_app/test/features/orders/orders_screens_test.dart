@@ -212,6 +212,55 @@ void main() {
       expect(find.text('Ouvrir la tournée'), findsOneWidget);
     });
 
+    testWidgets('« Ajouter à la tournée » takes only the ticked buyers', (
+      tester,
+    ) async {
+      final paul = OrderRecord(
+        id: 'o-paul',
+        saleId: kTestSaleId,
+        buyerName: 'Paul Test',
+        buyerAddress: '3 rue du Test, 25000 Testville',
+        fulfilment: 'delivery',
+        items: [OrderItem(productId: productId(1), quantity: 1)],
+      );
+      final fake = FakeOrdersService(
+        detail: testDetail(orders: [kMarie, kZoe, kEric, paul]),
+      );
+      await pump(tester, const SaleScreen(saleId: kTestSaleId), fake);
+
+      await tester.tap(find.byTooltip('Ajouter à la tournée'));
+      await tester.pumpAndSettle();
+      // Both waiting buyers are listed and ticked, with their address.
+      expect(find.text('2 sur 2'), findsOneWidget);
+      expect(find.text('3 rue du Test, 25000 Testville'), findsOneWidget);
+      expect(find.text('Ajouter 2 acheteurs'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(CheckboxListTile, 'Paul Test'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 sur 2'), findsOneWidget);
+      await tester.tap(find.text('Ajouter 1 acheteur'));
+      await tester.pumpAndSettle();
+
+      expect(fake.roundCalls, isEmpty);
+      expect(fake.chosenRoundCalls.single.$1, kTestSaleId);
+      expect(fake.chosenRoundCalls.single.$2, ['o-marie']);
+      expect(find.text('Tournée mise à jour'), findsOneWidget);
+    });
+
+    testWidgets('« Tous » unticked: nothing can be sent', (tester) async {
+      final fake = FakeOrdersService();
+      await pump(tester, const SaleScreen(saleId: kTestSaleId), fake);
+      await tester.tap(find.byTooltip('Ajouter à la tournée'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CheckboxListTile, 'Tous'));
+      await tester.pumpAndSettle();
+      expect(find.text('0 sur 1'), findsOneWidget);
+      await tester.tap(find.text('Cochez au moins un acheteur'));
+      await tester.pumpAndSettle();
+      expect(fake.roundCalls, isEmpty);
+      expect(fake.chosenRoundCalls, isEmpty);
+    });
+
     testWidgets('nothing to add: a word, no call', (tester) async {
       final fake = FakeOrdersService(detail: testDetail(orders: [kZoe, kEric]));
       await pump(tester, const SaleScreen(saleId: kTestSaleId), fake);
@@ -267,6 +316,44 @@ void main() {
       expect(find.text('Chèque · dim. 25 oct.'), findsOneWidget);
       expect(find.text('Espèces · mer. 21 oct.'), findsOneWidget);
       expect(find.text('Chèque n° 12'), findsOneWidget);
+    });
+
+    testWidgets('« Ajouter à la tournée » adds this buyer alone', (
+      tester,
+    ) async {
+      final fake = FakeOrdersService(
+        deliveryResult: const DeliveryAddResult(
+          deliveryId: 'delivery-test',
+          added: 1,
+          withoutAddress: 0,
+        ),
+      );
+      await pump(tester, screen, fake);
+      await tester.tap(find.byTooltip('Plus d’actions'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ajouter à la tournée'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ajouter Marie Test'));
+      await tester.pumpAndSettle();
+
+      expect(fake.roundCalls, isEmpty);
+      expect(fake.chosenRoundCalls.single.$1, kTestSaleId);
+      expect(fake.chosenRoundCalls.single.$2, ['o-marie']);
+      expect(find.text('Ajouté à la tournée'), findsOneWidget);
+    });
+
+    testWidgets('a buyer already in a round is not offered the round', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const BuyerScreen(saleId: kTestSaleId, orderId: 'o-eric'),
+        FakeOrdersService(),
+      );
+      await tester.tap(find.byTooltip('Plus d’actions'));
+      await tester.pumpAndSettle();
+      expect(find.text('Modifier'), findsOneWidget);
+      expect(find.text('Ajouter à la tournée'), findsNothing);
     });
 
     testWidgets('records a payment prefilled with what is left', (

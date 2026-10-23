@@ -89,13 +89,19 @@ class _SaleBodyState extends ConsumerState<_SaleBody> {
   Future<void> _addToRound(SaleDetail detail) async {
     final candidates = [
       for (final o in detail.orders)
-        if (o.isDelivery && !o.isInRound && !o.isErased) o,
-    ];
-    final withAddress = candidates
-        .where((o) => (o.buyerAddress ?? '').trim().isNotEmpty)
-        .length;
-    final without = candidates.length - withAddress;
-    if (withAddress == 0) {
+        if (o.canJoinRound)
+          RoundCandidate(
+            orderId: o.id,
+            name: o.buyerName,
+            address: o.buyerAddress!.trim(),
+          ),
+    ]..sort((a, b) => sortKey(a.name).compareTo(sortKey(b.name)));
+    final without =
+        detail.orders
+            .where((o) => o.isDelivery && !o.isInRound && !o.isErased)
+            .length -
+        candidates.length;
+    if (candidates.isEmpty) {
       showOrdersSnack(
         context,
         without == 0
@@ -105,25 +111,22 @@ class _SaleBodyState extends ConsumerState<_SaleBody> {
       );
       return;
     }
-    final ok = await showConfirmSheet(
+    final chosen = await showRoundPickerSheet(
       context,
-      title: 'Ajouter à la tournée',
-      message:
-          '${countOf(withAddress, 'acheteur')} en livraison, pas encore dans '
-          'une tournée, deviendront des arrêts de votre tournée en cours (ou '
-          'd’une nouvelle).'
-          '${without > 0 ? ' ${countOf(without, 'acheteur')} sans adresse '
-                    'resteront en dehors.' : ''}',
-      confirmLabel: 'Ajouter ${countOf(withAddress, 'acheteur')}',
+      candidates: candidates,
+      withoutAddress: without,
     );
-    if (!ok || !mounted) return;
+    if (chosen == null || chosen.isEmpty || !mounted) return;
     setState(() => _addingToRound = true);
     DeliveryAddResult result;
     try {
-      result = await ref
-          .read(ordersServiceProvider)
-          .addSaleOrdersToDelivery(widget.saleId);
+      final service = ref.read(ordersServiceProvider);
+      // Everyone ticked is the add of the whole sale, as before the list.
+      result = chosen.length == candidates.length
+          ? await service.addSaleOrdersToDelivery(widget.saleId)
+          : await service.addOrdersToDelivery(widget.saleId, chosen);
     } catch (_) {
+      ref.invalidate(saleDetailProvider(widget.saleId));
       if (mounted) {
         setState(() => _addingToRound = false);
         showOrdersSnack(context, 'La tournée n’a pas pu être mise à jour.');
