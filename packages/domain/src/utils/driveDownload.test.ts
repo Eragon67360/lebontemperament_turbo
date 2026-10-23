@@ -5,6 +5,7 @@ import {
   contentDisposition,
   driveDownloadName,
   driveDownloadPlan,
+  isDrivePreviewable,
   listAllDrivePages,
   type DrivePage,
 } from "./driveDownload";
@@ -244,3 +245,21 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
+
+// --- isDrivePreviewable ------------------------------------------------------
+
+// PDFs and the Google files exported as PDF open in the browser's viewer.
+assert.equal(isDrivePreviewable("application/pdf"), true);
+assert.equal(isDrivePreviewable("application/vnd.google-apps.document"), true);
+assert.equal(
+  isDrivePreviewable("application/vnd.google-apps.spreadsheet"),
+  true,
+);
+// Recordings, MuseScore files, folders, Forms and unknown types are saved.
+assert.equal(isDrivePreviewable("audio/mpeg"), false);
+assert.equal(isDrivePreviewable("application/x-musescore"), false);
+assert.equal(isDrivePreviewable("application/vnd.google-apps.folder"), false);
+assert.equal(isDrivePreviewable("application/vnd.google-apps.form"), false);
+assert.equal(isDrivePreviewable(""), false);
+assert.equal(isDrivePreviewable(null), false);
+assert.equal(isDrivePreviewable(undefined), false);

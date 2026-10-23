@@ -37,6 +37,15 @@ export const driveDownloadPlan = (
   return { kind: "media", mimeType: type };
 };
 
+/**
+ * Whether the browser can show the file in a tab instead of saving it: PDFs,
+ * and the Google Docs, Sheets, Slides and Drawings the proxy exports as PDF.
+ */
+export const isDrivePreviewable = (
+  mimeType: string | null | undefined,
+): boolean =>
+  mimeType === "application/pdf" || PDF_EXPORTABLE.has(mimeType ?? "");
+
 /** The name the member saves: exported files gain the export's extension. */
 export const driveDownloadName = (
   name: string | null | undefined,
