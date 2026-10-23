@@ -175,6 +175,8 @@ export const orderFormSchema = z.object({
   buyer_address: optionalText(BUYER_ADDRESS_MAX),
   /** A member's id, or NONE. */
   sold_by: z.string(),
+  /** The member who bought it (« Mes commandes »), or NONE. */
+  buyer_member_id: z.string(),
   fulfilment: z.enum(FULFILMENTS),
   notes: optionalText(ORDER_NOTES_MAX),
   /** Quantity by product id; 0 means not ordered. */
@@ -201,6 +203,7 @@ export function orderFormDefaults(
     buyer_phone: order?.buyer_phone ?? "",
     buyer_address: order?.buyer_address ?? "",
     sold_by: order?.sold_by ?? NONE,
+    buyer_member_id: order?.buyer_member_id ?? NONE,
     fulfilment:
       (order?.fulfilment as OrderFormValues["fulfilment"]) ?? "delivery",
     notes: order?.notes ?? "",
@@ -218,6 +221,8 @@ export function orderFormToBody(
     sold_by: values.sold_by === NONE ? null : values.sold_by,
     fulfilment: values.fulfilment,
     notes: values.notes.trim() || null,
+    buyer_member_id:
+      values.buyer_member_id === NONE ? null : values.buyer_member_id,
     items: Object.entries(values.quantities)
       .filter(([, quantity]) => quantity > 0)
       .map(([product_id, quantity]) => ({ product_id, quantity })),

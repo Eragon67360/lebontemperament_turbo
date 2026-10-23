@@ -1,3 +1,4 @@
+import { removeOrderDocuments } from "@/utils/orders/documents";
 import {
   dbErrorResponse,
   readJson,
@@ -78,7 +79,7 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json(data);
 }
 
-/** DELETE: the order with its quantities and payments (cascade). */
+/** DELETE: the order with its quantities, payments (cascade) and order form. */
 export async function DELETE(_request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
@@ -91,10 +92,14 @@ export async function DELETE(_request: Request, { params }: Params) {
     .delete()
     .eq("id", orderId)
     .eq("sale_id", saleId)
-    .select("id");
+    .select("id, document_key");
   if (error) {
     return dbErrorResponse(error, "La commande n'a pas pu être supprimée");
   }
   if (data.length === 0) return unknown();
+  await removeOrderDocuments(
+    supabase,
+    data.map((o) => o.document_key),
+  );
   return NextResponse.json({ ok: true });
 }

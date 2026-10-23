@@ -613,6 +613,8 @@ export type OrderInput = {
     sold_by: string | null;
     fulfilment: Fulfilment;
     notes: string | null;
+    /** The member who bought it (their « Mes commandes »); null when none. */
+    buyer_member_id: string | null;
   };
   items: { product_id: string; quantity: number }[];
 };
@@ -663,6 +665,10 @@ export function parseOrderInput(
   const soldBy = body.sold_by ?? null;
   if (soldBy !== null && soldBy !== "" && !isUuid(soldBy)) {
     return { ok: false, error: "Vendeur inconnu", field: "sold_by" };
+  }
+  const buyerMember = body.buyer_member_id ?? null;
+  if (buyerMember !== null && buyerMember !== "" && !isUuid(buyerMember)) {
+    return { ok: false, error: "Membre inconnu", field: "buyer_member_id" };
   }
   const fulfilment = body.fulfilment ?? "delivery";
   if (!(FULFILMENTS as readonly unknown[]).includes(fulfilment)) {
@@ -724,6 +730,8 @@ export function parseOrderInput(
         sold_by: soldBy === "" ? null : (soldBy as string | null),
         fulfilment: fulfilment as Fulfilment,
         notes: notes.value,
+        buyer_member_id:
+          buyerMember === "" ? null : (buyerMember as string | null),
       },
       items,
     },

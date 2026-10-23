@@ -1,3 +1,4 @@
+import { removeOrderDocuments } from "@/utils/orders/documents";
 import {
   dbErrorResponse,
   displayNames,
@@ -124,7 +125,10 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json(data);
 }
 
-/** DELETE: the sale with its catalogue, orders and payments (cascade). */
+/**
+ * DELETE: the sale with its catalogue, orders and payments (cascade), then
+ * the orders' forms in storage.
+ */
 export async function DELETE(_request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
@@ -132,6 +136,11 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (!isUuid(saleId)) return unknown();
 
   const supabase = await createClient();
+  const { data: files } = await supabase
+    .from("orders")
+    .select("document_key")
+    .eq("sale_id", saleId)
+    .not("document_key", "is", null);
   const { data, error } = await supabase
     .from("order_sales")
     .delete()
@@ -141,5 +150,9 @@ export async function DELETE(_request: Request, { params }: Params) {
     return dbErrorResponse(error, "La vente n'a pas pu être supprimée");
   }
   if (data.length === 0) return unknown();
+  await removeOrderDocuments(
+    supabase,
+    (files ?? []).map((o) => o.document_key),
+  );
   return NextResponse.json({ ok: true });
 }

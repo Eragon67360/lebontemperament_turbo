@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  * TODO(owner): set the date to the day the board approves the text, and bump
  * the version on every later change.
  */
-const POLICY_VERSION = "2.8";
-const POLICY_UPDATED_ON = "20 octobre 2026";
+const POLICY_VERSION = "2.9";
+const POLICY_UPDATED_ON = "22 octobre 2026";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -204,7 +204,7 @@ const RETENTION: [what: string, howLong: string][] = [
   ],
   ["Journaux des synchronisations (agenda, Google Drive)", "90 jours"],
   [
-    "Commandes d’une vente (nom, téléphone, adresse, remarques)",
+    "Commandes d’une vente (nom, téléphone, adresse, remarques, copie du bon de commande, lien avec le compte membre)",
     "effacées 30 jours après le jour de livraison ; les quantités et montants restent, sans nom",
   ],
   [
@@ -678,14 +678,18 @@ export default async function PrivacyPolicy() {
             <p className={pClass}>
               Lors de nos ventes (fromages, saucissons…), les bons de commande
               sur papier sont saisis par les responsables de l’association pour
-              suivre les paiements et préparer la livraison.
+              suivre les paiements et préparer la livraison. Une copie du bon
+              (photo, scan ou fichier) peut être jointe à la commande. Si vous
+              êtes membre, la commande peut être reliée à votre compte : vous la
+              retrouvez alors, avec le bon de commande, dans « Mes commandes »
+              de l’espace membres.
             </p>
             <Processing
               title="Commandes"
               facts={[
                 [
                   "Données",
-                  "nom, numéro de téléphone, adresse postale, livraison ou retrait, produits et quantités commandés, paiements reçus (montant, moyen, date), membre qui a pris la commande et remarques éventuelles",
+                  "nom, numéro de téléphone, adresse postale, livraison ou retrait, produits et quantités commandés, paiements reçus (montant, moyen, date), membre qui a pris la commande, remarques éventuelles, copie du bon de commande remis et, si vous êtes membre, le lien avec votre compte",
                 ],
                 [
                   "Finalité",
@@ -701,7 +705,7 @@ export default async function PrivacyPolicy() {
                 ],
                 [
                   "Destinataires",
-                  "les responsables de l’association chargés de la vente (super-administrateurs) ; Supabase en tant que sous-traitant",
+                  "les responsables de l’association chargés de la vente (super-administrateurs) ; vous-même, dans l’espace membres, si la commande est reliée à votre compte ; Supabase en tant que sous-traitant",
                 ],
               ]}
             />

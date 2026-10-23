@@ -9,6 +9,7 @@ import type {
   SaleListItem,
   SaleProduct,
 } from "@/utils/orders/types";
+import { uploadOrderDocument } from "@/utils/orders/upload";
 import type {
   OrderInput,
   ProductInput,
@@ -206,6 +207,41 @@ export function useSaveOrder(saleId: string) {
   });
 }
 
+/**
+ * What happens to an order's form when the order dialog is saved: kept as
+ * it is, replaced by a new file, or removed.
+ */
+export type DocumentChange =
+  { type: "keep" } | { type: "replace"; file: File } | { type: "remove" };
+
+/** Uploads the new file and attaches it, or removes the current one. */
+export function useChangeOrderDocument(saleId: string) {
+  const refresh = useRefresh(saleId);
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      change,
+    }: {
+      orderId: string;
+      change: DocumentChange;
+    }) => {
+      const url = `${BASE}/sales/${saleId}/orders/${orderId}/document`;
+      if (change.type === "remove") {
+        await send<{ ok: true }>(url, "DELETE");
+      } else if (change.type === "replace") {
+        const uploaded = await uploadOrderDocument(change.file, orderId);
+        await send(url, "PUT", uploaded);
+      }
+    },
+    onSettled: refresh,
+  });
+}
+
+/** « Ouvrir » on an attached order form: a one-minute link from the route. */
+export function orderDocumentHref(saleId: string, orderId: string) {
+  return `${BASE}/sales/${saleId}/orders/${orderId}/document`;
+}
+
 export function useSetHandedOver(saleId: string) {
   const refresh = useRefresh(saleId);
   return useMutation({
@@ -265,7 +301,7 @@ export function useDeletePayment(saleId: string) {
   });
 }
 
-/** Adds the sale's buyers to the driver's round, or to a new one (`newRound`). */
+/** Adds the sale's buyers (all, or the chosen `orderIds`) to the driver's round, or to a new one (`newRound`). */
 export function useAddSaleToDelivery(saleId: string) {
   const queryClient = useQueryClient();
   const refresh = useRefresh(saleId);
@@ -273,15 +309,20 @@ export function useAddSaleToDelivery(saleId: string) {
     mutationFn: ({
       driverId,
       newRound = false,
+      orderIds = null,
     }: {
       driverId: string | null;
       newRound?: boolean;
+      /** The orders to add; null adds every buyer to be delivered. */
+      orderIds?: string[] | null;
     }) =>
       send<DeliveryResult>(`${BASE}/sales/${saleId}/delivery`, "POST", {
         ...(driverId ? { driver_id: driverId } : {}),
         ...(newRound ? { new_round: true } : {}),
+        ...(orderIds ? { order_ids: orderIds } : {}),
       }),
-    onSuccess: () => {
+    // Also after a failure: an add of chosen buyers may have added some.
+    onSettled: () => {
       refresh();
       // The driver's round has the new stops (and may be a new round).
       queryClient.invalidateQueries({ queryKey: DRIVERS_KEY });

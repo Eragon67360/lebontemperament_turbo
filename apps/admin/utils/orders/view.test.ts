@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { detail } from "./testData";
 import {
   BALANCE_TONES,
-  deliverableCount,
+  canJoinRound,
+  deliverableBuyers,
   deliveryResultLine,
   filterBuyers,
   formatDayFr,
@@ -122,10 +123,44 @@ assert.equal(
 );
 
 // --- The round: who would be added ---
-assert.deepEqual(deliverableCount(detail.orders), {
-  ready: 1, // Léa: delivery, address, no stop yet
+assert.deepEqual(deliverableBuyers(detail.orders), {
+  // Léa: delivery, address, no stop yet
+  ready: [
+    {
+      orderId: detail.orders[0]!.id,
+      name: "Léa TEST",
+      address: "1 rue de l'Exemple, 67000 Strasbourg",
+    },
+  ],
   withoutAddress: 1, // Émile
 });
+// The buyers come by name, as the database adds them; erased ones never.
+const [leaOrder, marcOrder, emileOrder, zoeOrder] = detail.orders;
+assert.deepEqual(
+  deliverableBuyers([
+    { ...zoeOrder!, delivery_recipient_id: null },
+    leaOrder!,
+    {
+      ...leaOrder!,
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-000000000009",
+      personal_data_erased_at: "2026-12-27T03:35:00Z",
+    },
+  ]).ready.map((b) => b.name),
+  ["Léa TEST", "Zoé TEST"],
+);
+// A buyer's own « Ajouter à la tournée… »: only when they wait for a round.
+assert.equal(canJoinRound(leaOrder!), true);
+assert.equal(canJoinRound(marcOrder!), false); // retrait
+assert.equal(canJoinRound(emileOrder!), false); // no address
+assert.equal(canJoinRound({ ...emileOrder!, buyer_address: "  " }), false);
+assert.equal(canJoinRound(zoeOrder!), false); // in a round already
+assert.equal(
+  canJoinRound({
+    ...leaOrder!,
+    personal_data_erased_at: "2026-12-27T03:35:00Z",
+  }),
+  false,
+);
 assert.equal(
   deliveryResultLine({ added: 12, without_address: 2 }),
   "12 acheteurs ajoutés · 2 sans adresse",

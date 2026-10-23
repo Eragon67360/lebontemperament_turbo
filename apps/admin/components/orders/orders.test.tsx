@@ -13,8 +13,10 @@ import { saleView } from "@/utils/orders/view";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { BuyerPicker } from "./BuyerPicker";
 import { BuyersList } from "./BuyersList";
 import { CatalogueSection } from "./CatalogueSection";
+import { OrderDocumentField } from "./OrderDocumentField";
 import { RoundChoice, type RoundChoiceProps } from "./RoundChoice";
 import { SaleFigures } from "./SaleFigures";
 import { SaleRow } from "./SaleRow";
@@ -61,6 +63,12 @@ const order = (
   delivery_recipient_id: null,
   handed_over_at: null,
   personal_data_erased_at: null,
+  buyer_member_id: null,
+  document_key: null,
+  document_name: null,
+  document_mime_type: null,
+  document_size_bytes: null,
+  document_added_at: null,
   created_by: null,
   created_at: "",
   updated_at: "",
@@ -108,6 +116,12 @@ const detail: SaleDetail = {
       buyer_name: "Léa TEST",
       buyer_phone: "06 12 34 56 78",
       sold_by: "dddddddd-dddd-4ddd-8ddd-000000000001",
+      buyer_member_id: "dddddddd-dddd-4ddd-8ddd-000000000002",
+      document_key: `${O(1)}/abc-bon.pdf`,
+      document_name: "bon.pdf",
+      document_mime_type: "application/pdf",
+      document_size_bytes: 1200,
+      document_added_at: "2026-10-22T10:00:00Z",
       items: [
         { product_id: P(1), quantity: 2 },
         { product_id: P(2), quantity: 3 },
@@ -228,6 +242,9 @@ const { summary, rows } = saleView(detail);
   assert.match(markup, /Payé/);
   assert.match(markup, /bg-warning-soft/);
   assert.match(markup, /bg-success-soft/);
+  // Léa is linked to a member and has her order form; nobody else.
+  assert.equal(markup.match(/, lié à un compte membre/g)?.length, 2);
+  assert.equal(markup.match(/, bon de commande joint/g)?.length, 2);
   // Marc is in a round and handed over.
   assert.match(markup, /Dans la tournée/);
   assert.match(markup, />Remis</);
@@ -245,6 +262,55 @@ const { summary, rows } = saleView(detail);
   assert.doesNotMatch(markup, />Supprimer…</);
   assert.doesNotMatch(markup, /Enregistrer un paiement/);
   noRawColours(markup);
+}
+
+// --- « Bon de commande »: attach, the current file, a pending change ---
+{
+  const empty = html(
+    createElement(OrderDocumentField, {
+      current: null,
+      change: { type: "keep" },
+      onChange: noop,
+      linkedName: null,
+    }),
+  );
+  assert.match(empty, /<legend[^>]*>Bon de commande<\/legend>/);
+  assert.match(empty, /Joindre le bon de commande/);
+  assert.match(empty, /accept="[^"]*\.pdf[^"]*image\/jpeg/);
+  assert.match(empty, /Lié à un membre, il pourra le télécharger/);
+
+  const current = {
+    name: "bon.pdf",
+    mimeType: "application/pdf",
+    sizeBytes: 240_000,
+    href: "/api/orders/x/document",
+  };
+  const attached = html(
+    createElement(OrderDocumentField, {
+      current,
+      change: { type: "keep" },
+      onChange: noop,
+      linkedName: "Léa TEST",
+    }),
+  );
+  assert.match(attached, /bon\.pdf/);
+  assert.match(attached, /PDF · 234 ko/);
+  assert.match(attached, /href="\/api\/orders\/x\/document"/);
+  assert.match(attached, />Remplacer</);
+  assert.match(attached, />Retirer</);
+  assert.match(attached, /Léa TEST pourra le télécharger/);
+
+  const removing = html(
+    createElement(OrderDocumentField, {
+      current,
+      change: { type: "remove" },
+      onChange: noop,
+      linkedName: null,
+    }),
+  );
+  assert.match(removing, /sera retiré à l(&#x27;|')enregistrement/);
+  assert.match(removing, />Garder</);
+  noRawColours(attached);
 }
 
 // --- Suppliers: what to order from each, products under their supplier ---
@@ -434,6 +500,53 @@ const { summary, rows } = saleView(detail);
   assert.match(
     choice({ round: { ...round, opened_at: "2025-02-21T10:00:00Z" } }),
     /ouverte le 21 févr\. 2025, 4 destinataires/,
+  );
+}
+
+// --- « Ajouter à la tournée »: who joins this round ---
+{
+  const buyers = [
+    { orderId: O(1), name: "Léa TEST", address: "1 rue du Test, 67000 Ville" },
+    { orderId: O(2), name: "Zoé TEST", address: "2 rue du Test, 67000 Ville" },
+    { orderId: O(3), name: "Marc TEST", address: "3 rue du Test, 67000 Ville" },
+  ];
+  const picker = (selected: string[], disabled?: boolean) =>
+    html(
+      createElement(BuyerPicker, {
+        buyers,
+        selected: new Set(selected),
+        onSelectedChange: noop,
+        disabled,
+      }),
+    );
+  const box = (markup: string, id: string) =>
+    markup.split("<button").find((b) => b.includes(`id="${id}"`)) ?? "";
+
+  // Everyone ticked (the dialog's default): « Tous » is ticked too.
+  const all = picker([O(1), O(2), O(3)]);
+  assert.match(all, /<legend[^>]*>Acheteurs<\/legend>/);
+  assert.match(all, />Tous</);
+  assert.match(all, />3 sur 3</);
+  assert.match(box(all, "delivery-buyers-all"), /aria-checked="true"/);
+  assert.match(all, /Léa TEST/);
+  assert.match(all, /2 rue du Test, 67000 Ville/);
+  assert.match(all, new RegExp(`for="delivery-buyer-${O(2)}"`));
+  noRawColours(all);
+
+  // One buyer (their row's « Ajouter à la tournée… »): « Tous » is mixed.
+  const one = picker([O(2)]);
+  assert.match(one, />1 sur 3</);
+  assert.match(box(one, "delivery-buyers-all"), /aria-checked="mixed"/);
+  assert.match(box(one, `delivery-buyer-${O(2)}`), /aria-checked="true"/);
+  assert.match(box(one, `delivery-buyer-${O(1)}`), /aria-checked="false"/);
+
+  // None ticked, and every box waits while the add runs.
+  const none = picker([]);
+  assert.match(none, />0 sur 3</);
+  assert.match(box(none, "delivery-buyers-all"), /aria-checked="false"/);
+  assert.match(
+    box(picker([O(1)], true), `delivery-buyer-${O(3)}`),
+    /\sdisabled=""/,
   );
 }
 

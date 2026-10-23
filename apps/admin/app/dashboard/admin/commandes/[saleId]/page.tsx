@@ -42,9 +42,12 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotInstalledError } from "@/hooks/useDocuments";
 import {
+  type DocumentChange,
   OrderApiError,
+  orderDocumentHref,
   useAddPayment,
   useAddSaleToDelivery,
+  useChangeOrderDocument,
   useDeleteOrder,
   useDeletePayment,
   useDeleteProduct,
@@ -59,10 +62,11 @@ import {
 } from "@/hooks/useOrders";
 import { useUsers } from "@/hooks/useUsers";
 import { memberName } from "@/utils/members/list";
+import { memberOptions } from "@/utils/orders/members";
 import type { SaleProduct } from "@/utils/orders/types";
 import {
   type BuyerFilters,
-  deliverableCount,
+  deliverableBuyers,
   filterBuyers,
   hasBuyerFilters,
   MODE_FILTERS,
@@ -114,6 +118,7 @@ export default function SalePage() {
   const users = useUsers();
 
   const saveOrder = useSaveOrder(saleId);
+  const changeDocument = useChangeOrderDocument(saleId);
   const setHandedOver = useSetHandedOver(saleId);
   const deleteOrder = useDeleteOrder(saleId);
   const addPayment = useAddPayment(saleId);
@@ -141,7 +146,11 @@ export default function SalePage() {
     category?: string;
   }>({ open: false, product: null });
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
-  const [deliveryOpen, setDeliveryOpen] = useState(false);
+  // « Ajouter à la tournée », for every buyer or one row's (`only`).
+  const [delivery, setDelivery] = useState<{
+    open: boolean;
+    only: string | null;
+  }>({ open: false, only: null });
   const [deleting, setDeleting] = useState<Deleting | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -151,7 +160,7 @@ export default function SalePage() {
   const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
   const [busyProductId, setBusyProductId] = useState<string | null>(null);
 
-  const drivers = useDrivers(deliveryOpen);
+  const drivers = useDrivers(delivery.open);
 
   const view = useMemo(() => (detail ? saleView(detail) : null), [detail]);
   const visibleRows = useMemo(
@@ -159,10 +168,7 @@ export default function SalePage() {
     [view, filters],
   );
   const members = useMemo(
-    () =>
-      (users.data ?? [])
-        .map((u) => ({ id: u.id, name: memberName(u) }))
-        .sort((a, b) => a.name.localeCompare(b.name, "fr")),
+    () => memberOptions(users.data ?? [], memberName),
     [users.data],
   );
   const orderedQuantities = useMemo(
@@ -188,7 +194,7 @@ export default function SalePage() {
     [detail],
   );
   const deliverable = useMemo(
-    () => deliverableCount(detail?.orders ?? []),
+    () => deliverableBuyers(detail?.orders ?? []),
     [detail],
   );
 
@@ -204,16 +210,41 @@ export default function SalePage() {
   const openOrder = (orderId: string | null) =>
     setOrderDialog({ open: true, orderId });
 
+  // The order first; then its form (a new order needs its id for the
+  // file's folder). A file that fails leaves the order saved: the dialog
+  // closes and the toast says to try again from the order.
   const submitOrder = async (
     body: Parameters<typeof saveOrder.mutateAsync>[0],
+    documentChange: DocumentChange,
   ) => {
-    const orderId = orderDialog.orderId ?? undefined;
-    await saveOrder.mutateAsync({ ...body, orderId });
-    toast.success(
-      orderId
-        ? `Commande de « ${body.buyer_name} » enregistrée`
-        : `Commande de « ${body.buyer_name} » ajoutée`,
-    );
+    const editing = orderDialog.orderId ?? undefined;
+    const { id } = await saveOrder.mutateAsync({ ...body, orderId: editing });
+    const saved = editing
+      ? `Commande de « ${body.buyer_name} » enregistrée`
+      : `Commande de « ${body.buyer_name} » ajoutée`;
+    if (documentChange.type === "keep") {
+      toast.success(saved);
+      return;
+    }
+    try {
+      await changeDocument.mutateAsync({ orderId: id, change: documentChange });
+      toast.success(saved, {
+        description:
+          documentChange.type === "replace"
+            ? "Bon de commande joint."
+            : "Bon de commande retiré.",
+      });
+    } catch (error) {
+      toast.error(
+        documentChange.type === "replace"
+          ? "Commande enregistrée, mais le bon de commande n'a pas été joint"
+          : "Commande enregistrée, mais le bon de commande n'a pas été retiré",
+        {
+          description:
+            `${describe(error) ?? ""} Rouvrez la commande pour réessayer.`.trim(),
+        },
+      );
+    }
   };
 
   const handOver = async (
@@ -482,7 +513,10 @@ export default function SalePage() {
       headerAction={
         detail && (
           <>
-            <Button variant="outline" onClick={() => setDeliveryOpen(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setDelivery({ open: true, only: null })}
+            >
               <Truck aria-hidden />
               Ajouter à la tournée
             </Button>
@@ -678,6 +712,9 @@ export default function SalePage() {
                           onPay={(row) =>
                             setPayment({ open: true, orderId: row.orderId })
                           }
+                          onAddToRound={(row) =>
+                            setDelivery({ open: true, only: row.orderId })
+                          }
                           onHandOver={(row, handedOver) =>
                             handOver(row.orderId, row.buyerName, handedOver)
                           }
@@ -847,8 +884,18 @@ export default function SalePage() {
             order={editingOrder}
             products={detail.products}
             members={members}
+            document={
+              editingOrder?.document_key && editingOrder.document_name
+                ? {
+                    name: editingOrder.document_name,
+                    mimeType: editingOrder.document_mime_type ?? "",
+                    sizeBytes: editingOrder.document_size_bytes,
+                    href: orderDocumentHref(saleId, editingOrder.id),
+                  }
+                : null
+            }
             onSubmit={submitOrder}
-            isPending={saveOrder.isPending}
+            isPending={saveOrder.isPending || changeDocument.isPending}
             onPay={
               editingOrder
                 ? () => setPayment({ open: true, orderId: editingOrder.id })
@@ -899,14 +946,17 @@ export default function SalePage() {
           />
 
           <DeliveryDialog
-            open={deliveryOpen}
-            onOpenChange={setDeliveryOpen}
-            ready={deliverable.ready}
+            open={delivery.open}
+            onOpenChange={(open) =>
+              setDelivery((current) => ({ ...current, open }))
+            }
+            buyers={deliverable.ready}
+            only={delivery.only}
             withoutAddress={deliverable.withoutAddress}
             drivers={drivers.data?.drivers ?? []}
             me={drivers.data?.me ?? null}
-            onConfirm={(driverId, newRound) =>
-              addToDelivery.mutateAsync({ driverId, newRound })
+            onConfirm={(driverId, newRound, orderIds) =>
+              addToDelivery.mutateAsync({ driverId, newRound, orderIds })
             }
             isPending={addToDelivery.isPending}
           />
