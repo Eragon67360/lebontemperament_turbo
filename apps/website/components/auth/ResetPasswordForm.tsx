@@ -2,7 +2,7 @@
 
 import { LinkButton } from "@/components/LinkButton";
 import RouteNames from "@/utils/routes";
-import { createClient } from "@/utils/supabase/client";
+import { loadBrowserClient } from "@/utils/supabase/lazy";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,13 +15,13 @@ export default function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const supabase = await loadBrowserClient();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/update-password`,
       });
