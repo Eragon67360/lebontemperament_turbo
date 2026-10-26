@@ -45,37 +45,42 @@ export function FeatureFlagProvider({
 
     let cancelled = false;
     let cleanup: (() => void) | undefined;
-    loadBrowserClient().then((supabase) => {
-      if (cancelled) return;
-      const channel = supabase
-        .channel(`feature-flags-admin-${crypto.randomUUID()}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "feature_flags",
-            filter: `flag_key=eq.${ANNIVERSARY_FLAG_KEY}`,
-          },
-          (payload) => {
-            const row = payload.new as { is_enabled?: boolean } | null;
-            if (row && typeof row.is_enabled === "boolean") {
-              setAdminOverrides((current) => ({
-                ...current,
-                anniversary: row.is_enabled === true,
-              }));
-            }
-          },
-        )
-        .subscribe((status, err) => {
-          if (err) console.error("[FeatureFlag] Subscription error:", err);
-          else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
-            console.error(`[FeatureFlag] Realtime ${status}`);
-        });
-      cleanup = () => {
-        supabase.removeChannel(channel);
-      };
-    });
+    loadBrowserClient()
+      .then((supabase) => {
+        if (cancelled) return;
+        const channel = supabase
+          .channel(`feature-flags-admin-${crypto.randomUUID()}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "feature_flags",
+              filter: `flag_key=eq.${ANNIVERSARY_FLAG_KEY}`,
+            },
+            (payload) => {
+              const row = payload.new as { is_enabled?: boolean } | null;
+              if (row && typeof row.is_enabled === "boolean") {
+                setAdminOverrides((current) => ({
+                  ...current,
+                  anniversary: row.is_enabled === true,
+                }));
+              }
+            },
+          )
+          .subscribe((status, err) => {
+            if (err) console.error("[FeatureFlag] Subscription error:", err);
+            else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
+              console.error(`[FeatureFlag] Realtime ${status}`);
+          });
+        cleanup = () => {
+          supabase.removeChannel(channel);
+        };
+      })
+      .catch((error: unknown) => {
+        // No live updates for this visit; the server-rendered value stays.
+        console.error("[FeatureFlag] Could not load supabase-js:", error);
+      });
 
     return () => {
       cancelled = true;
