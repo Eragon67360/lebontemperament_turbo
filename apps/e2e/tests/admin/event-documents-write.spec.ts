@@ -35,6 +35,11 @@ test("attach, open and remove event documents", async ({ page, request }) => {
 
   const name = `E2E_Event_${Date.now()}`;
   const main = page.getByRole("main");
+  // CSS locators for « is it gone? » checks: unlike role locators they also
+  // match content under aria-hidden, so a count of 0 means the element has
+  // left the DOM, never that an open layer is hiding it.
+  const dialogs = page.locator('[role="dialog"]');
+  const alertDialogs = page.locator('[role="alertdialog"]');
 
   // 1. A members-only event today.
   await page.goto("/dashboard/members/evenements");
@@ -125,11 +130,16 @@ test("attach, open and remove event documents", async ({ page, request }) => {
   await expect(
     page.getByText("« Bulletin E2E » retiré", { exact: true }),
   ).toBeVisible();
-  await expect(
-    documents.getByText("Bulletin E2E", { exact: true }),
-  ).toBeHidden();
+  // The toast shows while the confirmation still plays its exit animation.
+  // Until it unmounts it stays the top layer: everything else is aria-hidden
+  // (so role locators match nothing) and it swallows the Escape meant for
+  // the documents dialog. Wait for it to be gone first.
+  await expect(alertDialogs).toHaveCount(0);
+  await expect(dialogs.getByText("Bulletin E2E", { exact: true })).toHaveCount(
+    0,
+  );
   await page.keyboard.press("Escape");
-  await expect(documents).toBeHidden();
+  await expect(dialogs).toHaveCount(0);
   await expect(
     main.getByRole("button", {
       name: `Documents (1) à « ${name} »`,
@@ -155,5 +165,11 @@ test("attach, open and remove event documents", async ({ page, request }) => {
   await expect(
     page.getByText(`« ${name} » supprimé`, { exact: true }),
   ).toBeVisible();
-  await expect(main.getByRole("heading", { name, exact: true })).toBeHidden();
+  // `main` is aria-hidden until the confirmation unmounts, so a role locator
+  // under it matches nothing and `toBeHidden()` would pass on an empty match.
+  await expect(
+    page
+      .locator("main")
+      .getByRole("heading", { name, exact: true, includeHidden: true }),
+  ).toHaveCount(0);
 });
