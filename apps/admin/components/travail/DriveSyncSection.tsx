@@ -1,6 +1,5 @@
 "use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
 import { ErrorState, ListSkeleton } from "@/components/ui/data-state";
 import {
   Table,
@@ -37,13 +37,7 @@ import {
   type DriveSyncResult,
 } from "@/utils/driveSync";
 import { DRIVE_ROOT_SLUG } from "@repo/domain/utils/drive";
-import {
-  AlertTriangle,
-  Check,
-  ChevronRight,
-  Loader2,
-  RefreshCw,
-} from "lucide-react";
+import { Check, ChevronRight, Loader2, RefreshCw } from "lucide-react";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -221,16 +215,15 @@ export function DriveSyncSection({
         </div>
       )}
 
+      {/* Static: the toast already announced the result. */}
       {applied && (
-        <Alert>
-          <Check className="h-4 w-4" aria-hidden />
-          <AlertTitle>Changements appliqués</AlertTitle>
-          <AlertDescription>
+        <Callout tone="success" title="Changements appliqués">
+          <p>
             {describeCounts(applied.counts)}
             {applied.diff.unreadable_roots.length > 0 &&
               ` — ${applied.diff.unreadable_roots.length} dossier(s) illisible(s) laissé(s) tel(s) quel(s).`}
-          </AlertDescription>
-        </Alert>
+          </p>
+        </Callout>
       )}
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
@@ -289,33 +282,28 @@ function DiffView({ result }: { result: DriveSyncResult }) {
         )}
       </p>
 
+      {/* Something to fix, not a failure: the index keeps what it had. The
+          diff around it is already a polite live region. */}
       {result.diff.unreadable_roots.length > 0 && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-          <AlertTitle>Dossiers illisibles</AlertTitle>
-          <AlertDescription>
-            <p>
-              Le site ne peut pas lire ces dossiers. Partagez chacun d&apos;eux
-              avec le compte de service{" "}
-              <code className="font-mono text-xs">
-                {result.service_account}
-              </code>{" "}
-              (accès « Lecteur »), puis vérifiez à nouveau. En attendant, leur
-              contenu déjà indexé est conservé tel quel.
-            </p>
-            <ul className="mt-2 list-disc pl-5">
-              {result.diff.unreadable_roots.map((root) => (
-                <li key={root.slug}>
-                  <strong>{labelOf(root.slug)}</strong>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    — {root.reason}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <Callout tone="warning" title="Dossiers illisibles">
+          <p>
+            Le site ne peut pas lire ces dossiers. Partagez chacun d&apos;eux
+            avec le compte de service{" "}
+            <code className="font-mono text-xs">{result.service_account}</code>{" "}
+            (accès « Lecteur »), puis vérifiez à nouveau. En attendant, leur
+            contenu déjà indexé est conservé tel quel.
+          </p>
+          <ul className="mt-2 list-disc pl-5">
+            {result.diff.unreadable_roots.map((root) => (
+              <li key={root.slug}>
+                <strong className="text-foreground">
+                  {labelOf(root.slug)}
+                </strong>{" "}
+                — {root.reason}
+              </li>
+            ))}
+          </ul>
+        </Callout>
       )}
 
       {DIFF_GROUPS.map(({ key, label }) => (

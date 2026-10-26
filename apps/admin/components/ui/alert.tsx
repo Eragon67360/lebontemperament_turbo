@@ -4,9 +4,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Inline notice. Semantic variants are soft tints with a coloured icon and
- * normal text, so they read in both themes. `destructive` stays as an alias
- * of `danger` for existing call sites.
+ * Inline notice, static: it has no `role`, so screen readers read it where it
+ * stands instead of being interrupted. A notice that must be announced when
+ * it appears is a `Callout` with `role="alert"` (a failure) passed by the
+ * caller. Semantic variants are soft tints with a coloured icon and normal
+ * text, so they read in both themes. `destructive` stays as an alias of
+ * `danger` for existing call sites.
  */
 const alertVariants = cva(
   "relative w-full rounded-lg border px-4 py-3 text-detail text-foreground [&>svg]:absolute [&>svg]:top-3.5 [&>svg]:left-4 [&>svg]:size-5 [&>svg+div]:translate-y-[-3px] [&>svg~*]:pl-8",
@@ -33,18 +36,18 @@ const Alert = React.forwardRef<
 >(({ className, variant, ...props }, ref) => (
   <div
     ref={ref}
-    role="alert"
     className={cn(alertVariants({ variant }), className)}
     {...props}
   />
 ));
 Alert.displayName = "Alert";
 
+/** A bold line, not a heading: a notice never adds a level to the page's outline. */
 const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLHeadingElement>
+  React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <h5
+  <p
     ref={ref}
     className={cn("mb-1 text-base leading-6 font-semibold", className)}
     {...props}
