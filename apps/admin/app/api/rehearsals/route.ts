@@ -1,22 +1,14 @@
 // app/api/rehearsals/route.ts
 import { REHEARSAL_COLUMNS } from "@/lib/columns";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
+import { databaseErrorResponse } from "@/utils/databaseErrors";
+import {
+  rehearsalCreateSchema,
+  rehearsalSeriesSchema,
+} from "@/utils/season/apiSchemas";
 import { createClient } from "@/utils/supabase/server";
-import type { TablesInsert } from "@repo/domain/database.types";
 import { NextResponse } from "next/server";
-
-/** The fields a client may send for a rehearsal (bulk insert). */
-type RehearsalInput = Pick<
-  TablesInsert<"rehearsals">,
-  | "name"
-  | "place"
-  | "address"
-  | "room"
-  | "date"
-  | "start_time"
-  | "end_time"
-  | "group_type"
->;
 
 export async function GET() {
   const authCheck = await checkAuthorization();
@@ -59,29 +51,29 @@ export async function POST(request: Request) {
     );
   }
 
+  // One rehearsal, or one row per date of a weekly series: only the form's
+  // columns, each value checked.
+  const body = await readJson(request);
+  const parsed = Array.isArray(body)
+    ? parsePatchBody(rehearsalSeriesSchema, body)
+    : parsePatchBody(rehearsalCreateSchema, body);
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
-    const json = await request.json();
+    const json = parsed.data;
 
     // Check if it's an array (bulk insert) or single object
-    const isBulk = Array.isArray(json);
-
-    if (isBulk) {
+    if (Array.isArray(json)) {
       // Bulk insert
-      const rehearsals = json.map((item: RehearsalInput) => ({
-        name: item.name,
-        place: item.place,
-        address: item.address,
-        room: item.room,
-        date: item.date,
-        start_time: item.start_time,
-        end_time: item.end_time,
-        group_type: item.group_type,
-      }));
-
       const { data, error } = await supabase
         .from("rehearsals")
-        .insert(rehearsals)
+        .insert(json)
         .select(REHEARSAL_COLUMNS);
 
       if (error) throw error;
@@ -89,23 +81,9 @@ export async function POST(request: Request) {
       return NextResponse.json(data, { status: 201 });
     } else {
       // Single insert
-      const { name, place, address, room, date, start_time, end_time } = json;
-      const { group_type } = json;
-
       const { data, error } = await supabase
         .from("rehearsals")
-        .insert([
-          {
-            name,
-            place,
-            address,
-            room,
-            date,
-            start_time,
-            end_time,
-            group_type,
-          },
-        ])
+        .insert([json])
         .select(REHEARSAL_COLUMNS)
         .single();
 
@@ -114,11 +92,9 @@ export async function POST(request: Request) {
       return NextResponse.json(data, { status: 201 });
     }
   } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      { error: "Error creating rehearsal" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la création de la répétition",
     );
   }
 }
