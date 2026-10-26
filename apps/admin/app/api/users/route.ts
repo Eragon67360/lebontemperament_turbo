@@ -9,6 +9,7 @@ import { checkAuthorization } from "@/utils/auth";
 import { deleteMemberAccount } from "@/utils/members/memberFiles";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { inviteStatusOf, listAuthSummaries } from "@/utils/users/authUsers";
+import { createMemberAccount } from "@/utils/users/memberProfile";
 import { normalizeName } from "@repo/domain/roster/normalize";
 import { NextResponse } from "next/server";
 
@@ -114,56 +115,40 @@ export async function POST(request: Request) {
     // One order everywhere: « Prénom NOM », whatever was typed.
     const name =
       (typeof display_name === "string" && normalizeName(display_name)) ||
-      email.split("@")[0];
+      email.split("@")[0] ||
+      email;
 
     const supabaseAdmin = createAdminClient();
 
-    // Create user with metadata
-    const { data: authData, error: authError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          display_name: name,
+    // The account and its member profile, with the role checked above.
+    const user = await createMemberAccount(supabaseAdmin, {
+      email,
+      password,
+      role: newRole,
+      displayName: name,
+    });
+
+    const { error: activityError } = await supabaseAdmin
+      .from("activities")
+      .insert({
+        type: "user_created",
+        user_id: auth.user.id, // ID of the admin who created the user
+        target_id: user.id, // ID of the created user
+        title: "Nouveau membre",
+        description: `${name} a rejoint la plateforme`,
+        metadata: {
+          created_user_id: user.id,
+          created_user_email: email,
+          created_user_role: newRole,
         },
       });
-
-    if (authError) throw authError;
-
-    if (authData.user) {
-      // Update profiles table
-      const { error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          role: newRole,
-          display_name: name,
-        })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
-      const { error: activityError } = await supabaseAdmin
-        .from("activities")
-        .insert({
-          type: "user_created",
-          user_id: auth.user.id, // ID of the admin who created the user
-          target_id: authData.user.id, // ID of the created user
-          title: "Nouveau membre",
-          description: `${name} a rejoint la plateforme`,
-          metadata: {
-            created_user_id: authData.user.id,
-            created_user_email: email,
-            created_user_role: newRole,
-          },
-        });
-      if (activityError) {
-        console.error("Error logging user creation:", activityError);
-      }
-      return NextResponse.json({
-        message: "Utilisateur créé avec succès",
-        user: authData.user,
-      });
+    if (activityError) {
+      console.error("Error logging user creation:", activityError);
     }
+    return NextResponse.json({
+      message: "Utilisateur créé avec succès",
+      user,
+    });
   } catch (error) {
     console.error("Error creating user:", error);
     return NextResponse.json(
