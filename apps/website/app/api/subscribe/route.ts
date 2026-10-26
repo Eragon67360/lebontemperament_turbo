@@ -1,3 +1,4 @@
+import { errorCodes } from "@/lib/errorCodes";
 import { createMailer, type Mailer } from "@/lib/mail";
 import { escapeHtml } from "@repo/domain/utils/html";
 import { classifyNewsletterRequest } from "@repo/domain/utils/newsletter";
@@ -84,7 +85,10 @@ async function isAlreadySubscribed(email: string): Promise<boolean> {
       );
     });
   } catch (error) {
-    console.error("[api/subscribe] Group membership check failed:", error);
+    console.error(
+      "[api/subscribe] Group membership check failed:",
+      errorCodes(error),
+    );
     return false;
   }
 }
@@ -120,7 +124,10 @@ async function processSubscription(
       html: welcomeEmailTemplate,
     });
   } catch (error) {
-    console.error("[api/subscribe] Failed to send subscription emails:", error);
+    console.error(
+      "[api/subscribe] Failed to send subscription emails:",
+      errorCodes(error),
+    );
   }
 }
 

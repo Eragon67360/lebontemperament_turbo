@@ -1,3 +1,4 @@
+import { errorCodes } from "@/lib/errorCodes";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import type { Database } from "@repo/domain/database.types";
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
       message: "Votre demande de contact a bien été envoyée",
     });
   } catch (error) {
-    console.error("[api/contact/mobile] Email error:", error);
+    console.error("[api/contact/mobile] Email error:", errorCodes(error));
     return NextResponse.json(SEND_FAILED, { status: 500 });
   }
 }

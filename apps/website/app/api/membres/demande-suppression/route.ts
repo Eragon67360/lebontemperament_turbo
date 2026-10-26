@@ -2,6 +2,7 @@ import {
   deletionRequestEmails,
   parseDeletionNote,
 } from "@/lib/deletionRequest";
+import { errorCodes } from "@/lib/errorCodes";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { checkAuthorization } from "@/utils/auth";
@@ -79,7 +80,10 @@ export async function POST(request: Request) {
       ...toAssociation,
     });
   } catch (error) {
-    console.error("[api/membres/demande-suppression] Send failed:", error);
+    console.error(
+      "[api/membres/demande-suppression] Send failed:",
+      errorCodes(error),
+    );
     return NextResponse.json(FAILED, { status: 500 });
   }
 
@@ -92,7 +96,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     // The association has the request; only the acknowledgement is missing.
-    console.error("[api/membres/demande-suppression] Ack failed:", error);
+    console.error(
+      "[api/membres/demande-suppression] Ack failed:",
+      errorCodes(error),
+    );
   }
 
   return NextResponse.json({

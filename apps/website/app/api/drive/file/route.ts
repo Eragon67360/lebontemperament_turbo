@@ -3,6 +3,7 @@ import {
   isDriveItemAllowed,
   isDriveNotFound,
 } from "@/lib/drive";
+import { errorCodes } from "@/lib/errorCodes";
 import { checkAuthorization } from "@/utils/auth";
 import {
   contentDisposition,
@@ -167,7 +168,7 @@ export async function GET(req: NextRequest) {
 
     return new NextResponse(body, { headers });
   } catch (error: unknown) {
-    console.error("Drive file proxy error:", error);
+    console.error("Drive file proxy error:", errorCodes(error));
     return failure(req, 500, { error: "Failed to retrieve file" });
   }
 }

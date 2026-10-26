@@ -1,3 +1,4 @@
+import { errorCodes } from "@/lib/errorCodes";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { createClient } from "@/utils/supabase/server";
@@ -263,7 +264,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error("Error submitting memory:", error);
+      console.error("Error submitting memory:", errorCodes(error));
       return NextResponse.json(
         { error: "Failed to submit memory" },
         { status: 500 },
@@ -306,7 +307,7 @@ export async function POST(request: Request) {
         ),
       });
     } catch (emailError) {
-      console.error("Error sending emails:", emailError);
+      console.error("Error sending emails:", errorCodes(emailError));
       // Still return success if email fails, as the memory was saved
     }
 
@@ -316,7 +317,10 @@ export async function POST(request: Request) {
       id: data.id,
     });
   } catch (error) {
-    console.error("Error in POST /api/anniversary/submit-memory:", error);
+    console.error(
+      "Error in POST /api/anniversary/submit-memory:",
+      errorCodes(error),
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
