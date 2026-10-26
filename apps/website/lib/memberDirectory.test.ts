@@ -11,6 +11,7 @@ type RpcResult = {
 };
 
 const missing = { code: "PGRST202", message: "Could not find the function" };
+const GOOGLE = "https://lh3.googleusercontent.com/a/fake-avatar=s96-c";
 
 function callerClient(results: Record<string, RpcResult>) {
   const called: string[] = [];
@@ -57,15 +58,23 @@ const base = {
 };
 
 async function main() {
-  // New function present: a single call, no Auth admin API.
+  // New function present: a single call, no Auth admin API. Only Google
+  // account pictures are kept, even before the function filters them itself.
   {
-    const rows = [{ id: "1", ...base, auth_avatar_url: "https://x/g.png" }];
+    const rows = [
+      { id: "1", ...base, auth_avatar_url: GOOGLE },
+      { id: "2", ...base, auth_avatar_url: "https://other.example/x.gif" },
+      { id: "3", ...base, auth_avatar_url: null },
+    ];
     const caller = callerClient({
       member_directory_with_avatars: { data: rows, error: null },
     });
     const admin = adminClient([]);
     const result = await loadMemberDirectory(caller.client, admin.client);
-    assert.deepEqual(result, { rows, error: null });
+    assert.deepEqual(result, {
+      rows: [rows[0], { ...rows[1], auth_avatar_url: null }, rows[2]],
+      error: null,
+    });
     assert.deepEqual(caller.called, ["member_directory_with_avatars"]);
     assert.equal(admin.calls.listUsers, 0);
   }
@@ -77,21 +86,24 @@ async function main() {
         data: [
           { id: "1", ...base },
           { id: "2", ...base, display_name: "B" },
+          { id: "3", ...base, display_name: "C" },
         ],
         error: null,
       },
     });
     const admin = adminClient([
-      { id: "1", avatar: "https://x/g.png" },
+      { id: "1", avatar: GOOGLE },
       { id: "2", avatar: 42 }, // not a string: ignored
+      { id: "3", avatar: "https://other.example/x.gif" }, // not Google: ignored
     ]);
     const result = await loadMemberDirectory(caller.client, admin.client);
     assert.equal(result.error, null);
     assert.deepEqual(
       result.rows.map((r) => [r.id, r.auth_avatar_url]),
       [
-        ["1", "https://x/g.png"],
+        ["1", GOOGLE],
         ["2", null],
+        ["3", null],
       ],
     );
     assert.deepEqual(caller.called, [
