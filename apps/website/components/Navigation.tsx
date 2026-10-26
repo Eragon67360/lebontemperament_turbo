@@ -11,6 +11,7 @@ import { CiLock } from "react-icons/ci";
 import DonationCampaignShowcase from "./donations/DonationCampaignShowcase";
 import MainLinks from "./links/MainLinks";
 import MainMenuLinks from "./links/MainMenuLinks";
+import { useOverPhotoHeader } from "./navigation/OverPhotoHeader";
 import { useAuth } from "./providers/AuthProvider";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
@@ -27,15 +28,21 @@ const Navigation = () => {
   const [hasScrolled, setHasScrolled] = useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const isMembresSection = pathname.startsWith("/membres");
-  const isSpecialPath = pathname === "/" || pathname.startsWith("/concerts/");
+  // Transparent with white text only over a dark photo: while the page's hero
+  // says it renders one (the home, a concert story with a banner) and until
+  // the visitor scrolls past it. Both are known after mount only, so the
+  // server HTML and the hydrating render agree on the solid header.
+  const overPhoto = useOverPhotoHeader();
+  const isLight = overPhoto && !hasScrolled;
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrolled = window.scrollY >= window.innerHeight;
-      setHasScrolled(scrolled);
+      setHasScrolled(window.scrollY >= window.innerHeight);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    // A page opened at a restored scroll position starts solid.
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -66,7 +73,7 @@ const Navigation = () => {
         className={`sticky top-0 z-50 w-full overflow-x-hidden transition-colors ${
           isMenuOpen
             ? "bg-background"
-            : isSpecialPath && !hasScrolled
+            : isLight
               ? "bg-background/0"
               : "bg-background/50 backdrop-blur-lg"
         }`}
@@ -81,7 +88,7 @@ const Navigation = () => {
             aria-controls="main-menu"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={
-              isSpecialPath && !hasScrolled && !isMenuOpen
+              isLight && !isMenuOpen
                 ? "text-white lg:hidden dark:text-white"
                 : "text-black lg:hidden dark:text-white"
             }
@@ -129,17 +136,13 @@ const Navigation = () => {
             </Link>
           </div>
 
-          <MainLinks
-            user={user}
-            isLoading={isLoading}
-            isLight={isSpecialPath && !hasScrolled}
-          />
+          <MainLinks user={user} isLoading={isLoading} isLight={isLight} />
 
           <div className="flex shrink grow basis-0 flex-row flex-nowrap items-center justify-end gap-4">
             {/* Donation link - icon only, large screens */}
-            <DonationCampaignShowcase isLight={isSpecialPath && !hasScrolled} />
+            <DonationCampaignShowcase isLight={isLight} />
             {/* Theme Switcher - Always visible */}
-            <ThemeSwitcher isLight={isSpecialPath && !hasScrolled} />
+            <ThemeSwitcher isLight={isLight} />
 
             {user ? (
               <UserMenu user={user} />
