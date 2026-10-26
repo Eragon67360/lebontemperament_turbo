@@ -3,7 +3,8 @@
  * a honeypot field that only bots fill in, and the time a person needed to
  * fill the form. Neither needs a third party, so nothing loads before the
  * visitor has typed anything. The checks are advisory: a targeted script can
- * fake both, which the rate limit on the API routes (Vercel Firewall) covers.
+ * fake both, which the per-IP and per-recipient limits of the website's form
+ * routes cover (apps/website/lib/formRateLimit.ts).
  */
 
 /** Name of the hidden form field that only bots fill in. */

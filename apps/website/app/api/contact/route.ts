@@ -1,3 +1,4 @@
+import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { ContactFormProps } from "@/types/contactFormData";
@@ -21,6 +22,8 @@ const INVALID = {
   message: "Une adresse email valide et un message sont requis",
 };
 
+const RATE_LIMITED = { success: false, message: RATE_LIMITED_MESSAGE };
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
@@ -41,6 +44,11 @@ export async function POST(request: NextRequest) {
       body as ContactFormProps;
     if (!EMAIL_PATTERN.test(text(email)) || !text(message).trim()) {
       return NextResponse.json(INVALID, { status: 400 });
+    }
+
+    // Per-IP and per-recipient limits, before anything is sent.
+    if (await isFormRateLimited("contact", request.headers, text(email))) {
+      return NextResponse.json(RATE_LIMITED, { status: 429 });
     }
 
     const mailer = createMailer();

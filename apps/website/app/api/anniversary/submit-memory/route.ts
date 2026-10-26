@@ -1,3 +1,4 @@
+import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { createClient } from "@/utils/supabase/server";
@@ -243,6 +244,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Invalid email format" },
         { status: 400 },
+      );
+    }
+
+    // Per-IP and per-recipient limits, before anything is stored or sent.
+    if (await isFormRateLimited("memory", request.headers, String(email))) {
+      return NextResponse.json(
+        { error: RATE_LIMITED_MESSAGE },
+        { status: 429 },
       );
     }
 
