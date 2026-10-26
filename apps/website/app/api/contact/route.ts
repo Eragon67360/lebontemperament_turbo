@@ -71,13 +71,14 @@ export async function POST(request: NextRequest) {
             `,
     });
 
-    // Send confirmation email to user
+    // Confirmation to the address the visitor typed: fixed text, nothing they
+    // typed is repeated.
     await mailer.transporter.sendMail({
       from: mailer.from,
       to: email,
       subject: `Votre demande de contact est bien arrivée!`,
       html: `
-                <p>Bonjour ${escapeHtml(text(firstName))} !</p>
+                <p>Bonjour !</p>
                 <p>L'équipe communication du BT vous remercie pour votre demande de contact! Nous essayerons de traiter votre demande le plus vite possible!</p>
                 <p>Chaleureusement et musicalement,</p>
                 <p>L'équipe <strong>Com' du Bon Tempérament</strong></p>

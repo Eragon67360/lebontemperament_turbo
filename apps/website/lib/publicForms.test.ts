@@ -2,7 +2,8 @@
 //
 // The public forms that send e-mail (audit SEC-010): past the per-IP or the
 // per-recipient limit they answer 429 and store and send nothing; when the
-// limit can't be checked, they still work. The real routes run against the
+// limit can't be checked, they still work; the e-mail to the address the
+// visitor typed repeats nothing they typed. The real routes run against the
 // fakes of testing/routeFakes.ts: no e-mail, no database. Fake values only.
 import assert from "node:assert/strict";
 import {
@@ -13,6 +14,7 @@ import {
   resetFakes,
   runAfterTasks,
   sentMail,
+  type SentMail,
 } from "./testing/routeFakes";
 
 process.env.ADMIN_EMAIL = "admin@example.org";
@@ -37,6 +39,15 @@ function post(path: string, body: Record<string, unknown>, ip = "203.0.113.7") {
 }
 
 const FAILING = ["missing-function", "unreachable", "no-key"] as const;
+
+/** The e-mail to the address the visitor typed repeats none of `typed`. */
+function repeatsNothingTyped(mail: SentMail | undefined, typed: string[]) {
+  assert.ok(mail, "no confirmation sent");
+  const text = `${mail.subject ?? ""}\n${mail.html ?? ""}`;
+  for (const value of typed) {
+    assert.ok(!text.includes(value), `the confirmation repeats « ${value} »`);
+  }
+}
 
 // ------------------------------------------------------------- /api/contact
 const contactBody = (email: string) => ({
@@ -63,6 +74,23 @@ async function contactTests() {
     sentMail.map((m) => m.to),
     ["contact@example.org", "visiteur@example.com"],
   );
+  // The confirmation is fixed text; the association's e-mail has it all.
+  const [toAssociation, toVisitor] = sentMail;
+  repeatsNothingTyped(toVisitor, [
+    "Zoé",
+    "TESTNOM",
+    "Sujet-unique",
+    "Message-unique",
+    "gras",
+  ]);
+  for (const value of [
+    "Zoé",
+    "TESTNOM",
+    "Sujet-unique",
+    "Message-unique &lt;b&gt;gras&lt;/b&gt;",
+  ]) {
+    assert.ok(toAssociation?.html?.includes(value), value);
+  }
 
   // 5 per IP: the 6th from the same address is refused and sends nothing.
   resetFakes();
@@ -140,6 +168,7 @@ async function subscribeTests() {
     sentMail.map((m) => m.to),
     ["admin@example.org", "lecteur@example.com"],
   );
+  repeatsNothingTyped(sentMail[1], ["lecteur"]);
 
   // 5 per IP: the 6th is refused and queues nothing.
   resetFakes();
@@ -203,6 +232,22 @@ async function memoryTests() {
     sentMail.map((m) => m.to),
     ["ancien@example.com", "admin@example.org"],
   );
+  // The confirmation is fixed text; the admin's notice has it all.
+  const [toVisitor, toAdmin] = sentMail;
+  repeatsNothingTyped(toVisitor, [
+    "Zoé",
+    "TESTNOM",
+    "Souvenir-unique",
+    "italique",
+    "1987",
+  ]);
+  for (const value of [
+    "Zoé TESTNOM",
+    "Souvenir-unique &lt;i&gt;italique&lt;/i&gt;",
+    "1987",
+  ]) {
+    assert.ok(toAdmin?.html?.includes(value), value);
+  }
 
   // 5 per IP: the 6th is refused, nothing stored or sent.
   resetFakes();
