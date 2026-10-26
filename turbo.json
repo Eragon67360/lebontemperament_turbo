@@ -35,6 +35,7 @@
         "ANALYZE",
         "NEXT_PUBLIC_SITE_URL",
         "GOOGLE_APPS_SCRIPT_URL",
+        "GOOGLE_APPS_SCRIPT_KEY",
         "ADMIN_EMAIL",
         "INDEXNOW_SUBMIT_SECRET",
         "REVALIDATE_SECRET"

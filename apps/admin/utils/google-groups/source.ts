@@ -4,6 +4,8 @@
 // app (env GOOGLE_APPS_SCRIPT_URL, source in google-apps-script/Code.gs,
 // read-only). Import it from route handlers and server code only.
 
+import { appsScriptUrl } from "./appsScript";
+
 const REQUEST_TIMEOUT_MS = 20_000;
 
 /** Every failure, with a French message for the UI and the alert push. */
@@ -35,8 +37,8 @@ export async function fetchGroupMemberEmails(
     );
   }
 
-  const url = new URL(scriptUrl);
-  url.searchParams.set("groupEmail", groupEmail);
+  // Holds the script's key: never logged.
+  const url = appsScriptUrl(scriptUrl, { groupEmail });
 
   let response: Response;
   try {
