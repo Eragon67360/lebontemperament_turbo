@@ -37,7 +37,9 @@ export async function POST(request: Request, { params }: Params) {
 
   const { data, error } = await supabase.rpc("save_order", {
     p_sale_id: saleId,
-    p_order_id: null,
+    // NULL creates the order. The argument has no default, so the generated
+    // type (database.types.ts, never edited by hand) says `string`.
+    p_order_id: null as unknown as string,
     p_order: parsed.value.order,
     p_items: parsed.value.items,
   });

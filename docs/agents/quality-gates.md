@@ -11,7 +11,7 @@ Nothing is "done" until these pass, and your report says exactly which ran and w
 | Format          | `npm run format` (the pre-commit hook formats staged files only)                                                   | Prettier defaults + organize-imports + Tailwind class sorting                 |
 | Build           | `npx turbo build --filter=<app>` for each app you touched                                                          | succeeds                                                                      |
 | Domain tests    | `npm test -w @repo/domain` when `packages/domain` changed                                                          | all pass                                                                      |
-| Supabase types  | `npm run db:types` after any schema change (owner applies the migration first, see [release](release.md#supabase)) | `packages/domain/src/database.types.ts` matches the database and is committed |
+| Supabase types  | `npm run db:types` after each schema change, once the migration is on staging (see [release](release.md#supabase)) | `packages/domain/src/database.types.ts` is generated, then committed unedited |
 | Mobile          | `flutter analyze` and `flutter test` in `apps/mobile_app` when the app changed                                     | no new analyzer issues, tests pass                                            |
 | Vercel previews | the PR's preview builds for `lebontemperament` and `lebontemperament-admin`                                        | both ready (CI builds with placeholder env; previews prove the real config)   |
 
