@@ -6,13 +6,24 @@ import { PageTransition } from "@/components/PageTransition";
 import { AccountMenu } from "@/components/shell/AccountMenu";
 import { AppHeader } from "@/components/shell/AppHeader";
 import { AppSidebar } from "@/components/shell/AppSidebar";
-import { CommandPalette } from "@/components/shell/CommandPalette";
 import { ShellDialogsProvider } from "@/components/shell/ShellDialogs";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useMyBugReports } from "@/hooks/useMyBugReports";
 import { useUnreadBugReports } from "@/hooks/useUnreadBugReports";
 import { buildNavSections } from "@/lib/navigation";
-import { useMemo, useState } from "react";
+import { isSearchShortcut } from "@/utils/search/palette";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+// The palette and its search library load on the first ⌘K or « Rechercher »,
+// not with the shell: the shortcut below works before they do.
+const CommandPalette = dynamic(
+  () =>
+    import("@/components/shell/CommandPalette").then(
+      (mod) => mod.CommandPalette,
+    ),
+  { ssr: false },
+);
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -29,6 +40,24 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
   const [bugReportDialogOpen, setBugReportDialogOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  // From its first opening on, the palette stays mounted: the next openings
+  // are instant and nothing is fetched again.
+  const [searchLoaded, setSearchLoaded] = useState(false);
+  const toggleSearch = useCallback((open: boolean) => {
+    if (open) setSearchLoaded(true);
+    setSearchOpen(open);
+  }, []);
+
+  // ⌘K / Ctrl+K from anywhere in the admin, also while typing in a field.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!isSearchShortcut(event)) return;
+      event.preventDefault();
+      toggleSearch(!searchOpen);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [searchOpen, toggleSearch]);
 
   const { data: profile } = useCurrentProfile();
   const { data: unreadBugReports = 0 } = useUnreadBugReports();
@@ -68,7 +97,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         <aside className="border-border bg-sidebar hidden w-[280px] shrink-0 border-r lg:flex lg:flex-col">
           <AppSidebar
             sections={sections}
-            onOpenSearch={() => setSearchOpen(true)}
+            onOpenSearch={() => toggleSearch(true)}
             account={
               <AccountMenu
                 placement="sidebar"
@@ -86,7 +115,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
             unreadMessages={unreadMessages}
             onOpenMessages={() => setMessagesDialogOpen(true)}
             onOpenBugReport={() => setBugReportDialogOpen(true)}
-            onOpenSearch={() => setSearchOpen(true)}
+            onOpenSearch={() => toggleSearch(true)}
           />
           <main
             id="main"
@@ -102,11 +131,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
         </div>
       </div>
 
-      <CommandPalette
-        sections={sections}
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-      />
+      {searchLoaded && (
+        <CommandPalette
+          sections={sections}
+          open={searchOpen}
+          onOpenChange={toggleSearch}
+        />
+      )}
 
       {/* Dialogs outside the header and the drawer so they don't unmount with them. */}
       <MessagesDialog
