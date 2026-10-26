@@ -1,8 +1,11 @@
 /**
  * Access scoping for Google Drive items served by the website: an item may be
  * read only if it is one of the configured root folders (`drive_folders`) or
- * lies below one of them.
+ * lies below one of them. The whole-Drive row (`racine`) is a root for admins
+ * only; members get the tab folders.
  */
+
+import { DRIVE_ROOT_SLUG } from "./drive";
 
 const DRIVE_ID = /^[A-Za-z0-9_-]{10,200}$/;
 
@@ -82,4 +85,62 @@ export const isWithinDriveRoots = async (
   }
 
   return false;
+};
+
+/** A `drive_folders` row, as the scope check reads it. */
+export interface DriveRootRow {
+  slug: string;
+  folder_id: string;
+}
+
+/**
+ * Splits the `drive_folders` rows into the tab folders, which every member
+ * browses, and the whole-Drive root (`racine`), which only admins may read.
+ * Rows without a folder ID are left out.
+ */
+export const driveScopeRoots = (
+  rows: readonly DriveRootRow[],
+): { tabs: Set<string>; wholeDrive: Set<string> } => {
+  const tabs = new Set<string>();
+  const wholeDrive = new Set<string>();
+  for (const row of rows) {
+    if (!row.folder_id) continue;
+    (row.slug === DRIVE_ROOT_SLUG ? wholeDrive : tabs).add(row.folder_id);
+  }
+  return { tabs, wholeDrive };
+};
+
+/** The signed-in caller of the Drive proxy. */
+export interface DriveCaller {
+  /** True for an admin or a superadmin. */
+  isAdmin: () => Promise<boolean>;
+}
+
+/**
+ * True when `caller` may read the Drive item `id` through the website's
+ * proxy: every signed-in member reads the tab folders and what lies below
+ * them; admins and superadmins also read the whole Drive (`racine`). Without
+ * a caller (no session), nothing.
+ *
+ * `isAdmin` is only asked when the tabs don't already allow the item, so a
+ * member's usual request costs no role lookup. Pass a memoized `getParents`
+ * (`memoizeParentsLookup`): the admin check walks the same parents again.
+ */
+export const isDriveItemAllowedFor = async (
+  caller: DriveCaller | null,
+  id: string,
+  rows: readonly DriveRootRow[],
+  getParents: DriveParentsLookup,
+): Promise<boolean> => {
+  if (!caller) {
+    return false;
+  }
+  const { tabs, wholeDrive } = driveScopeRoots(rows);
+  if (await isWithinDriveRoots(id, tabs, getParents)) {
+    return true;
+  }
+  if (wholeDrive.size === 0 || !(await caller.isAdmin())) {
+    return false;
+  }
+  return isWithinDriveRoots(id, wholeDrive, getParents);
 };

@@ -66,7 +66,9 @@ function failure(req: NextRequest, status: number, body: { error: unknown }) {
  * Proxies a Drive file for the members area and the mobile app. Drive's own
  * public download link only works for files shared with "anyone with the
  * link" and often answers an HTML page (virus scan) instead of the bytes.
- * Only files inside the folders configured in `drive_folders` are served.
+ * Only files inside the folders configured in `drive_folders` are served; a
+ * file under the whole-Drive root (`racine`) but in no tab folder goes to
+ * admins and superadmins only.
  *
  * GET /api/drive/file?fileId=xxx             the bytes, inline (viewers, and
  *                                            the members' « Voir » tab)
@@ -111,12 +113,9 @@ export async function GET(req: NextRequest) {
       throw error;
     }
 
-    const allowed = await isDriveItemAllowed(
-      drive,
-      authCheck.supabase,
-      fileId,
-      [[fileId, metadata.data.parents ?? []]],
-    );
+    const allowed = await isDriveItemAllowed(drive, authCheck, fileId, [
+      [fileId, metadata.data.parents ?? []],
+    ]);
     if (!allowed) {
       return failure(req, 403, FORBIDDEN);
     }
