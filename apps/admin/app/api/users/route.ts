@@ -5,9 +5,14 @@ import {
   decideUserDeletion,
   type UserRole,
 } from "@/utils/access";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { deleteMemberAccount } from "@/utils/members/memberFiles";
 import { createAdminClient } from "@/utils/supabase/admin";
+import {
+  userCreateSchema,
+  userRolePatchSchema,
+} from "@/utils/users/apiSchemas";
 import { inviteStatusOf, listAuthSummaries } from "@/utils/users/authUsers";
 import { normalizeName } from "@repo/domain/roster/normalize";
 import { NextResponse } from "next/server";
@@ -93,14 +98,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { email, password, role, display_name } = await request.json();
-
-    if (typeof email !== "string" || !email || typeof password !== "string") {
+    // Only what « Ajouter un membre » sends: unknown keys are refused.
+    const parsed = parsePatchBody(userCreateSchema, await readJson(request));
+    if (!parsed.ok) {
       return NextResponse.json(
-        { error: "Email et mot de passe requis" },
-        { status: 400 },
+        { error: parsed.error },
+        { status: parsed.status },
       );
     }
+    const { email, password, role, display_name } = parsed.data;
 
     // Admins create `user` accounts; only a superadmin creates admins.
     const decision = decideUserCreation(auth.role, role);
@@ -231,16 +237,15 @@ export async function PATCH(request: Request) {
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-    const supabaseAdmin = createAdminClient();
-
-    const { userId, role } = await request.json();
-
-    if (!userId || !role) {
+    const parsed = parsePatchBody(userRolePatchSchema, await readJson(request));
+    if (!parsed.ok) {
       return NextResponse.json(
-        { error: "ID utilisateur et rôle requis" },
-        { status: 400 },
+        { error: parsed.error },
+        { status: parsed.status },
       );
     }
+    const { userId, role } = parsed.data;
+    const supabaseAdmin = createAdminClient();
 
     const { data: targetUser, error: targetError } = await supabaseAdmin
       .from("profiles")
