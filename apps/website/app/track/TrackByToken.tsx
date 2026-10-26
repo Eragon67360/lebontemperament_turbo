@@ -36,6 +36,9 @@ function isExpired(expiresAt: string): boolean {
 /** How often the page refreshes the driver's position while a round is live. */
 const POLL_INTERVAL_MS = 10_000;
 
+/** Where the map opens while the driver has no position yet (Paris). */
+const DEFAULT_CENTER: [number, number] = [2.3522, 48.8566];
+
 type TrackingState =
   | { kind: "ok"; delivery: Delivery; recipient: DeliveryRecipient }
   | { kind: "invalid" | "not-found" | "expired" | "error" };
@@ -65,22 +68,48 @@ export function TrackByTokenContent({
   // State management
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [recipient, setRecipient] = useState<DeliveryRecipient | null>(null);
-  const [etaForCurrentRecipient, setEtaForCurrentRecipient] =
-    useState<Date | null>(null);
+  // The live arrival time, in ms since the epoch: a number, so a route
+  // answer that changes nothing sets no state and renders nothing (#741).
+  const [etaMs, setEtaMs] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Memoize Supabase client to prevent re-creation on re-renders
   const supabase = useMemo(() => createClient(), []);
 
-  // Callback for when the map component calculates a new route ETA
+  // Callback for when the map component fetched a route (or lost it)
   const handleRouteFetched = useCallback((durationSeconds: number | null) => {
-    if (durationSeconds === null) {
-      setEtaForCurrentRecipient(null);
-      return;
-    }
-    setEtaForCurrentRecipient(new Date(Date.now() + durationSeconds * 1000));
+    setEtaMs(
+      durationSeconds === null ? null : Date.now() + durationSeconds * 1000,
+    );
   }, []);
+  const etaForCurrentRecipient = useMemo(
+    () => (etaMs === null ? null : new Date(etaMs)),
+    [etaMs],
+  );
+
+  // The map's effects depend on these coordinates: the tuples are rebuilt
+  // only when a number changes, never on an unrelated re-render (#741).
+  const driverLongitude = delivery?.longitude ?? null;
+  const driverLatitude = delivery?.latitude ?? null;
+  const hasPosition = driverLongitude !== null && driverLatitude !== null;
+  // MapLibre/GeoJSON expect [longitude, latitude]
+  const driverPosition = useMemo<[number, number]>(
+    () =>
+      driverLongitude !== null && driverLatitude !== null
+        ? [driverLongitude, driverLatitude]
+        : DEFAULT_CENTER,
+    [driverLongitude, driverLatitude],
+  );
+  const recipientLongitude = recipient?.longitude ?? null;
+  const recipientLatitude = recipient?.latitude ?? null;
+  const destination = useMemo<[number, number] | undefined>(
+    () =>
+      recipientLongitude !== null && recipientLatitude !== null
+        ? [recipientLongitude, recipientLatitude]
+        : undefined,
+    [recipientLongitude, recipientLatitude],
+  );
 
   // Fetch the round through the token-checked function: it returns only what
   // this page shows, for this recipient's own link, while the round is live.
@@ -187,17 +216,6 @@ export function TrackByTokenContent({
   // --- Derived State for Rendering ---
   const isDelivered = !!recipient.delivered_at;
   const isInProgress = delivery.current_recipient_id === recipient.id;
-  const hasPosition = delivery.latitude !== null && delivery.longitude !== null;
-
-  // MapLibre/GeoJSON expect [longitude, latitude]
-  const driverPosition: [number, number] = hasPosition
-    ? [delivery.longitude!, delivery.latitude!]
-    : [2.3522, 48.8566]; // Default to Paris if no position
-
-  const destination: [number, number] | undefined =
-    recipient.latitude != null && recipient.longitude != null
-      ? [recipient.longitude, recipient.latitude]
-      : undefined;
 
   // --- Render Views ---
 

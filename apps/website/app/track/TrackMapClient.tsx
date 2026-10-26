@@ -1,5 +1,7 @@
 "use client";
 
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
+import { shouldRequestRoute, type RouteRequest } from "@/lib/trackRoute";
 import { fetchOSRMRoute } from "@/utils/osrm";
 import type * as GeoJSON from "geojson";
 import { Crosshair, MapPin, Maximize2 } from "lucide-react";
@@ -61,6 +63,47 @@ function addOrUpdateSource(
   }
 }
 
+/** Draws (or redraws) the route line. */
+function drawRoute(map: MapboxMap, coordinates: [number, number][]) {
+  addOrUpdateSource(map, ROUTE_SOURCE_ID, {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "LineString", coordinates },
+  });
+  if (!map.getLayer(ROUTE_LAYER_ID)) {
+    map.addLayer({
+      id: ROUTE_LAYER_ID,
+      type: "line",
+      source: ROUTE_SOURCE_ID,
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint: { "line-color": "#3b82f6", "line-width": 5 },
+    });
+  }
+}
+
+function clearRoute(map: MapboxMap) {
+  if (map.getSource(ROUTE_SOURCE_ID)) {
+    addOrUpdateSource(map, ROUTE_SOURCE_ID, {
+      type: "FeatureCollection",
+      features: [],
+    });
+  }
+}
+
+/**
+ * Whether a camera move comes from the visitor. mapbox-gl puts the DOM event
+ * behind a gesture (drag, pinch, wheel, keyboard, the zoom buttons) in
+ * `originalEvent`; the moves this page makes itself (`jumpTo`, `flyTo`,
+ * `fitBounds`, including one cut short by the next) carry none, and a
+ * window resize carries the `resize` event.
+ */
+function isUserGesture(
+  event: { originalEvent?: Event | null } | undefined,
+): boolean {
+  const source = event?.originalEvent;
+  return !!source && source.type !== "resize";
+}
+
 export function TrackMapClient({
   center,
   delivery,
@@ -71,11 +114,20 @@ export function TrackMapClient({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
+  // The effects below depend on these numbers, not on the tuples: a parent
+  // that rebuilds the arrays on every render changes nothing here (#741).
+  const [centerLng, centerLat] = center;
+  const destinationLng = destination?.[0];
+  const destinationLat = destination?.[1];
+
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapboxMap | null>(null);
 
   const isInitialLoad = useRef(true);
-  const isProgrammaticMove = useRef(false);
+
+  // The last route asked of the routing service, and the last one drawn.
+  const lastRouteRequest = useRef<RouteRequest | null>(null);
+  const lastRouteCoordinates = useRef<[number, number][] | null>(null);
 
   // The setter has a stable identity, so the map's listeners can hold it.
   const [userHasInteracted, setUserHasInteracted] = useState(false);
@@ -86,6 +138,10 @@ export function TrackMapClient({
 
   // Controls when it is safe to add layers that depend on images
   const [iconsReady, setIconsReady] = useState(false);
+
+  // No route is asked while the tab is hidden; the effect runs again when it
+  // shows.
+  const isVisible = useDocumentVisible();
 
   // --- Effect 1: Map Instance Management & Console Patch ---
   useEffect(() => {
@@ -112,10 +168,13 @@ export function TrackMapClient({
     // 2. Explicitly clear the container to fix "Map container element should be empty"
     containerRef.current.innerHTML = "";
 
+    // The import resolves after this effect; if the component unmounted in
+    // between (React's development double mount), no map is created for it.
+    let cancelled = false;
     import("mapbox-gl").then((mod) => {
+      if (cancelled || !containerRef.current) return;
       const mapboxgl = mod.default;
       if (token) mapboxgl.accessToken = token;
-      if (!containerRef.current) return;
 
       const map = new mapboxgl.Map({
         container: containerRef.current,
@@ -140,16 +199,15 @@ export function TrackMapClient({
         setStyleVersion((v) => v + 1);
       });
 
-      map.on("moveend", () => {
-        if (isProgrammaticMove.current) {
-          isProgrammaticMove.current = false;
-          return;
-        }
-        setUserHasInteracted(true);
+      // Only a gesture stops the map from following the driver: the page's
+      // own camera moves end with a `moveend` too.
+      map.on("moveend", (event) => {
+        if (isUserGesture(event)) setUserHasInteracted(true);
       });
     });
 
     return () => {
+      cancelled = true;
       // Restore console on cleanup
       console.warn = originalWarn;
 
@@ -215,26 +273,31 @@ export function TrackMapClient({
   }, [isMapLoaded, styleVersion]);
 
   // --- Effect 3: Map View Management ---
+  // Follows the driver until the visitor moves the map: once per new
+  // position, as the effect depends on the coordinates themselves.
   useEffect(() => {
-    if (!isMapLoaded || !mapRef.current) return;
+    const map = mapRef.current;
+    if (!isMapLoaded || !map) return;
     const zoom = hasPosition ? 15 : 10;
+    const target: [number, number] = [centerLng, centerLat];
 
     if (isInitialLoad.current) {
-      isProgrammaticMove.current = true;
-      mapRef.current.jumpTo({ center, zoom });
+      map.jumpTo({ center: target, zoom });
       isInitialLoad.current = false;
     } else if (!userHasInteracted) {
-      isProgrammaticMove.current = true;
-      mapRef.current.flyTo({ center, zoom, duration: 2000, essential: true });
+      map.flyTo({ center: target, zoom, duration: 2000, essential: true });
     }
-  }, [center, hasPosition, isMapLoaded, userHasInteracted]);
+  }, [centerLng, centerLat, hasPosition, isMapLoaded, userHasInteracted]);
 
   const handleRecenter = () => {
     if (!mapRef.current) return;
     const zoom = hasPosition ? 15 : 10;
     setUserHasInteracted(false);
-    isProgrammaticMove.current = true;
-    mapRef.current.flyTo({ center, zoom, duration: 800 });
+    mapRef.current.flyTo({
+      center: [centerLng, centerLat],
+      zoom,
+      duration: 800,
+    });
   };
 
   const handleFitBoth = () => {
@@ -244,7 +307,6 @@ export function TrackMapClient({
     const lats = [center[1], destination[1]];
     const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)];
     const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)];
-    isProgrammaticMove.current = true;
     map.fitBounds([sw, ne], { padding: 40, maxZoom: 14, duration: 800 });
   };
 
@@ -289,65 +351,70 @@ export function TrackMapClient({
   ]);
 
   // --- Effect 5: Route Line Layer ---
+  // Asks the routing service for the route when the driver has really moved
+  // (or the last answer is old, see `shouldRequestRoute`), never while the
+  // tab is hidden; a request still running when the position changes or the
+  // map goes away is aborted.
   useEffect(() => {
     const map = mapRef.current;
-    if (
-      !isMapLoaded ||
-      !map ||
-      !destination ||
-      !delivery.latitude ||
-      !delivery.longitude
-    ) {
-      if (map && map.getSource(ROUTE_SOURCE_ID)) {
-        addOrUpdateSource(map, ROUTE_SOURCE_ID, {
-          type: "FeatureCollection",
-          features: [],
-        });
-      }
+    if (!isMapLoaded || !map) return;
+
+    const from: [number, number] | null =
+      delivery.latitude != null && delivery.longitude != null
+        ? [delivery.longitude, delivery.latitude]
+        : null;
+    if (!from || destinationLng === undefined || destinationLat === undefined) {
+      clearRoute(map);
+      lastRouteRequest.current = null;
+      lastRouteCoordinates.current = null;
       onRouteFetched?.(null);
       return;
     }
+    if (!isVisible) return;
 
-    let isCancelled = false;
+    const to: [number, number] = [destinationLng, destinationLat];
+    if (!shouldRequestRoute(lastRouteRequest.current, from, to, Date.now())) {
+      // The route on screen is still good; redraw it if the style lost it.
+      const kept = lastRouteCoordinates.current;
+      if (kept && !map.getSource(ROUTE_SOURCE_ID)) drawRoute(map, kept);
+      return;
+    }
+    const request: RouteRequest = { from, to, at: Date.now() };
+    lastRouteRequest.current = request;
 
-    const fetchAndDrawRoute = async () => {
-      const from: [number, number] = [delivery.longitude!, delivery.latitude!];
-      const result = await fetchOSRMRoute(from, destination);
-
-      if (isCancelled || !mapRef.current) return;
+    const controller = new AbortController();
+    let answered = false;
+    void (async () => {
+      const result = await fetchOSRMRoute(from, to, {
+        signal: controller.signal,
+      });
+      answered = true;
+      if (controller.signal.aborted || !mapRef.current) return;
 
       if (result?.coordinates?.length) {
-        addOrUpdateSource(mapRef.current, ROUTE_SOURCE_ID, {
-          type: "Feature",
-          properties: {},
-          geometry: { type: "LineString", coordinates: result.coordinates },
-        });
-
-        if (!mapRef.current.getLayer(ROUTE_LAYER_ID)) {
-          mapRef.current.addLayer({
-            id: ROUTE_LAYER_ID,
-            type: "line",
-            source: ROUTE_SOURCE_ID,
-            layout: { "line-join": "round", "line-cap": "round" },
-            paint: { "line-color": "#3b82f6", "line-width": 5 },
-          });
-        }
+        lastRouteCoordinates.current = result.coordinates;
+        drawRoute(mapRef.current, result.coordinates);
         onRouteFetched?.(result.durationSeconds ?? null);
       } else {
         onRouteFetched?.(null);
       }
-    };
-
-    void fetchAndDrawRoute();
+    })();
 
     return () => {
-      isCancelled = true;
+      controller.abort();
+      // A request cut short (the position changed meanwhile, the tab was
+      // hidden, the map went away) doesn't count: the next run asks again.
+      if (!answered && lastRouteRequest.current === request) {
+        lastRouteRequest.current = null;
+      }
     };
   }, [
     delivery.latitude,
     delivery.longitude,
-    destination,
+    destinationLng,
+    destinationLat,
     isMapLoaded,
+    isVisible,
     onRouteFetched,
     styleVersion,
   ]);
@@ -358,11 +425,14 @@ export function TrackMapClient({
     // CRITICAL: Do not attempt to add layers until icons are loaded
     if (!isMapLoaded || !map || !iconsReady) return;
 
-    if (destination) {
+    if (destinationLng !== undefined && destinationLat !== undefined) {
       addOrUpdateSource(map, DESTINATION_SOURCE_ID, {
         type: "Feature",
         properties: {},
-        geometry: { type: "Point", coordinates: destination },
+        geometry: {
+          type: "Point",
+          coordinates: [destinationLng, destinationLat],
+        },
       });
 
       if (!map.getLayer(DESTINATION_LAYER_ID)) {
@@ -384,7 +454,7 @@ export function TrackMapClient({
         features: [],
       });
     }
-  }, [destination, isMapLoaded, iconsReady, styleVersion]);
+  }, [destinationLng, destinationLat, isMapLoaded, iconsReady, styleVersion]);
 
   return (
     <div
