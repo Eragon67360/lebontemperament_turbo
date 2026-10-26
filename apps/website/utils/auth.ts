@@ -1,3 +1,4 @@
+import { isAccountUser } from "@/lib/memberSession";
 import type { Database } from "@repo/domain/database.types";
 import { parseBearerToken } from "@repo/domain/utils/bearer";
 import {
@@ -46,7 +47,8 @@ function createBearerClient(token: string) {
  * Authenticates the caller of a route handler. The mobile app sends
  * `Authorization: Bearer <Supabase access token>`; browsers send the session
  * cookie. A bearer token, when present, decides on its own (an invalid one is
- * refused rather than falling back to cookies).
+ * refused rather than falling back to cookies). An anonymous sign-in is
+ * refused like no session at all.
  */
 export async function checkAuthorization(): Promise<AuthorizationResult> {
   const token = parseBearerToken((await headers()).get("authorization"));
@@ -54,7 +56,7 @@ export async function checkAuthorization(): Promise<AuthorizationResult> {
   if (token) {
     const supabase = createBearerClient(token);
     const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data.user) {
+    if (error || !isAccountUser(data.user)) {
       return UNAUTHENTICATED;
     }
     return { authorized: true, user: data.user, supabase };
@@ -62,7 +64,7 @@ export async function checkAuthorization(): Promise<AuthorizationResult> {
 
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  if (!data.user) {
+  if (!isAccountUser(data.user)) {
     return UNAUTHENTICATED;
   }
   return { authorized: true, user: data.user, supabase };
