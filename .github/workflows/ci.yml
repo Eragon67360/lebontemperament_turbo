@@ -2,8 +2,9 @@ name: CI
 
 # Checks on every pull request into dev or main (and on demand). Vercel's
 # preview builds run separately; these are the gates docs/agents/quality-gates.md
-# asks for: lint, types, domain tests, a build of each changed app, and the
-# Flutter analyzer, tests and Android and iOS builds when the mobile app changed.
+# asks for: lint, types, domain tests, the website and admin unit tests, a
+# build of each changed app, and the Flutter analyzer, tests and Android and
+# iOS builds when the mobile app changed.
 #
 # A job that already passed on the exact same code is skipped instead of run
 # twice: each job leaves a marker artifact keyed by the code it checked, and
@@ -83,7 +84,7 @@ jobs:
             const repoId = context.payload.repository.id;
             const { TREE, MOBILE } = process.env;
             const keys = {
-              lint: TREE, types: TREE, 'domain-tests': TREE,
+              lint: TREE, types: TREE, 'domain-tests': TREE, 'app-tests': TREE,
               'build-website': TREE, 'build-admin': TREE,
               flutter: MOBILE, android: MOBILE, ios: MOBILE,
             };
@@ -194,6 +195,31 @@ jobs:
         uses: ./.github/actions/record-pass
         with:
           job: domain-tests
+          key: ${{ needs.changes.outputs.tree }}
+
+  app-tests:
+    name: App tests
+    needs: changes
+    if: ${{ !cancelled() && !contains(fromJSON(needs.changes.outputs.passed || '[]'), 'app-tests') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Both suites run every *.test.ts(x) with tsx (the admin through
+      # apps/admin/scripts/run-tests.mjs): no browser, no network, the
+      # placeholder env above is all they need.
+      - run: npm test -w website
+      - run: npm test -w admin
+      - name: Record the pass
+        if: needs.changes.outputs.tree != ''
+        uses: ./.github/actions/record-pass
+        with:
+          job: app-tests
           key: ${{ needs.changes.outputs.tree }}
 
   build-website:
