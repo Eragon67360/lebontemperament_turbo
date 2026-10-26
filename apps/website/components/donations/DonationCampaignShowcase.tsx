@@ -269,11 +269,11 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
                     role="region"
                     aria-label={title}
                     style={{ top: anchor.top, right: anchor.right }}
-                    className="border-default-200 bg-content1 fixed z-50 hidden w-72 origin-top-right rounded-xl border p-4 shadow-lg lg:block"
+                    className="bg-overlay border-separator fixed z-50 hidden w-72 origin-top-right rounded-xl border p-4 shadow-lg lg:block"
                   >
                     <span
                       aria-hidden="true"
-                      className="border-default-200 bg-content1 absolute -top-1 right-3.5 size-2 rotate-45 border-t border-l"
+                      className="bg-overlay border-separator absolute -top-1 right-3.5 size-2 rotate-45 border-t border-l"
                     />
                     {card}
                   </m.div>
@@ -285,7 +285,7 @@ const DonationCampaignShowcase = ({ isLight }: { isLight: boolean }) => {
                   {...cardMotion}
                   role="region"
                   aria-label={title}
-                  className="border-default-200 bg-content1 fixed top-20 right-3 left-3 z-50 mx-auto max-w-sm origin-top rounded-xl border p-4 shadow-lg lg:hidden"
+                  className="bg-overlay border-separator fixed top-20 right-3 left-3 z-50 mx-auto max-w-sm origin-top rounded-xl border p-4 shadow-lg lg:hidden"
                 >
                   {card}
                 </m.div>
