@@ -4,6 +4,7 @@ import VideoFacade from "@/components/VideoFacade";
 import { youTubeEmbedUrl } from "@/components/YouTubeVideo";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Video } from "@/types/anniversary";
+import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import { motion, useTime, useTransform } from "motion/react";
 import { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
@@ -15,15 +16,15 @@ interface VideoModalProps {
 
 type Embed = { url: string; provider: string };
 
-/** Player URLs that set no cookie before the visitor plays. */
-const getEmbed = (url: string): Embed => {
-  if (url.includes("youtube.com/watch?v=")) {
-    const videoId = url.split("v=")[1]?.split("&")[0] ?? "";
-    return { url: youTubeEmbedUrl(videoId), provider: "YouTube" };
-  }
-  if (url.includes("youtu.be/")) {
-    const videoId = url.split("youtu.be/")[1]?.split("?")[0] ?? "";
-    return { url: youTubeEmbedUrl(videoId), provider: "YouTube" };
+/**
+ * Player URLs that set no cookie before the visitor plays. YouTube links are
+ * read like everywhere else on the site (watch, share, short, Shorts and embed
+ * links, with or without a time), so any of them opens the privacy player.
+ */
+export const getEmbed = (url: string): Embed => {
+  const youTubeId = extractYouTubeId(url);
+  if (youTubeId) {
+    return { url: youTubeEmbedUrl(youTubeId), provider: "YouTube" };
   }
   if (url.includes("vimeo.com/")) {
     const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
