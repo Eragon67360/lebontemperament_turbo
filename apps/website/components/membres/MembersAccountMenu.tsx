@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/providers/AuthProvider";
-import { useMyVoice } from "@/hooks/useMyVoice";
+import { useMyProfile } from "@/hooks/useMyProfile";
 import { membersFontClasses } from "@/lib/membres/font";
 import { getFirstName, getInitials } from "@/lib/membres/names";
 import RouteNames from "@/utils/routes";
@@ -26,17 +26,15 @@ const itemClass = "min-h-12 gap-3 px-3 text-lg";
  * public site, sign out).
  */
 export function MembersAccountMenu() {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const fullName: string =
-    user?.user_metadata?.display_name || user?.user_metadata?.name || "";
+  // The name on the member's profile, not the account's metadata.
+  const me = useMyProfile();
+  const fullName: string = me.status === "ready" ? (me.displayName ?? "") : "";
   const firstName = getFirstName(fullName);
-  const myVoice = useMyVoice();
-  const avatarColor = voiceFill(
-    myVoice.status === "ready" ? myVoice.voice : null,
-  );
+  const avatarColor = voiceFill(me.status === "ready" ? me.voice : null);
 
   // Same sign-out as the public site's user menu.
   const signOut = () => {
