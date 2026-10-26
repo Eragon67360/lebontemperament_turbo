@@ -82,6 +82,29 @@ test("a score opened in a tab without a session gets a French 401 page", async (
   expect(await response.text()).toContain("Ta session a expiré");
 });
 
+// The Drive file proxy sends its own sandbox policy, in which nothing runs;
+// the site-wide policy (next.config.js) must not replace it.
+test("the Drive file proxy's answers carry its sandbox policy", async ({
+  request,
+}) => {
+  const asked: Record<string, string>[] = [
+    {},
+    { "Sec-Fetch-Dest": "document" },
+  ];
+  for (const headers of asked) {
+    const response = await request.get(
+      `/api/drive/file?fileId=${FAKE_DRIVE_ID}`,
+      { headers },
+    );
+    expect(response.status()).toBe(401);
+    const policy = response.headers()["content-security-policy"] ?? "";
+    expect(policy).toContain("default-src 'none'");
+    expect(policy).toContain("sandbox");
+    expect(policy).not.toContain("allow-scripts");
+    expect(response.headers()["x-content-type-options"]).toContain("nosniff");
+  }
+});
+
 // #354: a deletion request needs the member's own session.
 test("POST /api/membres/demande-suppression without a session is 401", async ({
   request,
