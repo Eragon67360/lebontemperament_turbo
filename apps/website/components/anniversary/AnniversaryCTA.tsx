@@ -47,7 +47,7 @@ const AnniversaryCTA = ({
       {!disabled && (
         <span
           aria-hidden="true"
-          className="bg-primary absolute inset-0 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0"
+          className="bg-primary-solid absolute inset-0 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0"
         />
       )}
       <span className="relative flex items-center justify-center gap-2">

@@ -45,7 +45,7 @@ const PreviewBanner = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
-          className="fixed top-0 right-0 left-0 z-100 bg-linear-to-r from-amber-500 via-orange-500 to-amber-600 px-4 py-3 shadow-lg"
+          className="bg-primary-solid fixed top-0 right-0 left-0 z-100 px-4 py-3 shadow-lg"
         >
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <div className="flex flex-1 items-center gap-3">
