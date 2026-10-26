@@ -4,6 +4,7 @@
 // every query the export runs is filtered on the signed-in member's id (or on
 // the ids of their own reports), and nothing the export copies names another
 // person.
+import type { Database } from "@repo/domain/database.types";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
 import { collectMemberData, exportFileName } from "./memberData";
@@ -66,7 +67,7 @@ function fakeClient(calls: Call[], failing = new Set<string>()) {
       };
       return builder;
     },
-  } as unknown as SupabaseClient;
+  } as unknown as SupabaseClient<Database>;
 }
 
 const user = {
