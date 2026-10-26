@@ -129,6 +129,105 @@ export const contentDisposition = (
   return `${disposition}; filename="${fallback}"; filename*=UTF-8''${encodeExtValue(clean)}`;
 };
 
+/** The types the proxy shows in the browser; none of them runs script. */
+const INLINE_TYPES = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+]);
+
+/**
+ * Types a page could run as a script or apply as a stylesheet by pointing a
+ * `<script>` or a `<link>` at the proxy (`nosniff` refuses every other type
+ * there): never sent under their own type.
+ */
+const SCRIPT_OR_STYLE_TYPE =
+  /^(?:(?:text|application)\/(?:x-)?(?:java|ecma)script|text\/(?:javascript1\.[0-5]|jscript|livescript|css))$/;
+
+/** A bare `type/subtype` (RFC 6838 names). */
+const MEDIA_TYPE = /^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/;
+
+/** `Image/PNG; x=1` → `image/png`; "" for anything that isn't a media type. */
+const mediaTypeEssence = (value: string): string => {
+  const essence = (value ?? "").split(";")[0]!.trim().toLowerCase();
+  return MEDIA_TYPE.test(essence) ? essence : "";
+};
+
+const isMediaType = (type: string): boolean =>
+  type.startsWith("audio/") || type.startsWith("video/");
+
+const isInlineType = (type: string): boolean =>
+  INLINE_TYPES.has(type) || isMediaType(type);
+
+/**
+ * The policy on every answer of the proxy but a PDF, audio or video: the
+ * document loads nothing, runs nothing and gets an opaque origin, whatever
+ * its bytes are; only inline styles apply (the browser's own image viewer,
+ * the error page). PDFs go without a policy: the browsers' PDF viewers may
+ * not run under `sandbox`.
+ */
+export const DRIVE_FILE_SANDBOX_CSP =
+  "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+
+/**
+ * Audio and video: the browser's own player fetches the file again from its
+ * document, with the member's session, so that document keeps the site's
+ * origin and may load media from it. Nothing runs there either.
+ */
+export const DRIVE_MEDIA_SANDBOX_CSP =
+  "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox allow-same-origin";
+
+/** The headers that type a file served by `/api/drive/file`. */
+export type DriveFileHeaders = {
+  "Content-Type": string;
+  "Content-Disposition": string;
+  "X-Content-Type-Options": "nosniff";
+  "Content-Security-Policy"?: string;
+};
+
+/**
+ * How the proxy serves a file of type `mimeType` (the plan's type: a Google
+ * Doc is already `application/pdf`) under the name `fileName`:
+ * - PDFs, PNG, JPEG, GIF and WebP images, audio and video open in the
+ *   browser (`inline`) under their own type;
+ * - anything else is an attachment typed `application/octet-stream`, so the
+ *   browser saves it and never renders it;
+ * - with `download`, every file is an attachment and keeps its own type (the
+ *   app hands it to the share sheet, which offers the apps that open it),
+ *   except script and stylesheet types;
+ * - every answer but a PDF carries a sandbox policy in which nothing runs
+ *   (`DRIVE_MEDIA_SANDBOX_CSP` for audio and video, `DRIVE_FILE_SANDBOX_CSP`
+ *   otherwise), and all carry `nosniff`.
+ */
+export const driveFileHeaders = (
+  mimeType: string,
+  fileName: string,
+  download: boolean,
+): DriveFileHeaders => {
+  const type = mediaTypeEssence(mimeType);
+  const inline = !download && isInlineType(type);
+  const keepsType =
+    inline || (download && type !== "" && !SCRIPT_OR_STYLE_TYPE.test(type));
+  const contentType = keepsType ? type : "application/octet-stream";
+
+  const headers: DriveFileHeaders = {
+    "Content-Type": contentType,
+    "Content-Disposition": contentDisposition(
+      fileName,
+      inline ? "inline" : "attachment",
+    ),
+    "X-Content-Type-Options": "nosniff",
+  };
+  if (contentType !== "application/pdf") {
+    headers["Content-Security-Policy"] = isMediaType(contentType)
+      ? DRIVE_MEDIA_SANDBOX_CSP
+      : DRIVE_FILE_SANDBOX_CSP;
+  }
+  return headers;
+};
+
 /** One page of a Drive `files.list` answer (only what the loop needs). */
 export type DrivePage<T> = {
   files?: T[] | null;
