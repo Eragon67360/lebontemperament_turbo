@@ -1,10 +1,11 @@
 "use client";
 
+import { useHydrated } from "@/hooks/useClientValue";
 import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -13,12 +14,18 @@ import {
 /**
  * Which pages draw the header over a dark photo.
  *
- * The header starts solid on every page, in the server HTML and in the
- * first client render alike. A hero that really renders a dark photo under
- * it (the home, a concert story with a banner) registers after mount through
- * `useOverPhotoHero`, and the header switches to its transparent, white
- * style until the visitor scrolls past the hero. A page without such a photo
- * (`/concerts/autres`, a story without a banner) never gets the white header.
+ * A hero that really renders a dark photo under the header (the home, a
+ * concert story with a banner) registers through `useOverPhotoHero`, and the
+ * header switches to its transparent, white style until the visitor scrolls
+ * past the hero. A page without such a photo (`/concerts/autres`, a story
+ * without a banner) never gets the white header.
+ *
+ * Mounted heroes are only known in the browser, so the server HTML carries
+ * the solid header, except where `assumeOverPhoto` says the photo is certain
+ * (the home, whose photo is a static asset): that assumption stands until the
+ * client has hydrated, and the registered hero takes over from there without
+ * a solid frame in between. A story with a banner starts solid and switches
+ * at hydration.
  */
 
 type OverPhotoHeader = {
@@ -34,7 +41,14 @@ const OverPhotoHeaderContext = createContext<OverPhotoHeader>({
   register: () => () => {},
 });
 
-export function OverPhotoHeaderProvider({ children }: { children: ReactNode }) {
+export function OverPhotoHeaderProvider({
+  children,
+  assumeOverPhoto = false,
+}: {
+  children: ReactNode;
+  /** The page is known to render a dark photo under the header. */
+  assumeOverPhoto?: boolean;
+}) {
   // A count, not a flag: during a navigation the next page's hero can mount
   // before the previous one unmounts.
   const [photoHeroes, setPhotoHeroes] = useState(0);
@@ -42,10 +56,12 @@ export function OverPhotoHeaderProvider({ children }: { children: ReactNode }) {
     setPhotoHeroes((count) => count + 1);
     return () => setPhotoHeroes((count) => count - 1);
   }, []);
-  const value = useMemo(
-    () => ({ overPhoto: photoHeroes > 0, register }),
-    [photoHeroes, register],
-  );
+  // The assumption covers the server HTML and the hydrating render only.
+  // Once hydrated, only mounted heroes count, so a page that renders no hero
+  // at "/" (an error boundary, for instance) ends up solid.
+  const hydrated = useHydrated();
+  const overPhoto = hydrated ? photoHeroes > 0 : assumeOverPhoto;
+  const value = useMemo(() => ({ overPhoto, register }), [overPhoto, register]);
 
   return (
     <OverPhotoHeaderContext.Provider value={value}>
@@ -54,20 +70,22 @@ export function OverPhotoHeaderProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** True while a hero with a dark photo is mounted under the header. */
+/** True while the header is drawn over a dark photo. */
 export function useOverPhotoHeader(): boolean {
   return useContext(OverPhotoHeaderContext).overPhoto;
 }
 
 /**
  * Called by a hero with `true` only when it really renders a dark photo under
- * the header. Registers after mount, so the server HTML and the hydrating
- * render never carry the over-photo state.
+ * the header. A layout effect, so the registration is committed before the
+ * browser paints the hydrated page: the home's assumed state hands over to
+ * the registered hero without a solid frame in between (a passive effect's
+ * update could land in a later render than the hydrated flag).
  */
 export function useOverPhotoHero(hasPhoto: boolean): void {
   const { register } = useContext(OverPhotoHeaderContext);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!hasPhoto) return;
     return register();
   }, [hasPhoto, register]);

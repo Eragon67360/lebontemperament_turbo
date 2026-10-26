@@ -30,8 +30,9 @@ const Navigation = () => {
   const isMembresSection = pathname.startsWith("/membres");
   // Transparent with white text only over a dark photo: while the page's hero
   // says it renders one (the home, a concert story with a banner) and until
-  // the visitor scrolls past it. Both are known after mount only, so the
-  // server HTML and the hydrating render agree on the solid header.
+  // the visitor scrolls past it. Heroes register in the browser, so the
+  // server HTML is solid except on the home, whose photo the provider
+  // assumes (OverPhotoHeader); server and hydrating render always agree.
   const overPhoto = useOverPhotoHeader();
   const isLight = overPhoto && !hasScrolled;
 

@@ -71,7 +71,8 @@ test.describe("light theme", () => {
       name: /agenda des concerts/i,
     });
     await expect(agenda).toBeVisible();
-    // Opted in after mount, so the hydrated DOM matches the server HTML.
+    // The server HTML already assumes the home's photo; the hero confirms it
+    // at hydration, so the header is white from the first paint on.
     await expect.poll(() => color(agenda)).toBe(WHITE);
 
     await page.evaluate(() => window.scrollTo(0, window.innerHeight + 200));
