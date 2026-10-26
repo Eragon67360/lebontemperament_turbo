@@ -1,6 +1,7 @@
 // « Mes signalements »: the messages of every report of the inbox come in one
-// query, whatever the number of reports, and are summarized per report in
-// memory (count, last message, unread for the reader). Fake ids only.
+// query, whatever the number of reports (one per 1000 messages, Supabase's
+// cap for one answer), and are summarized per report in memory (count, last
+// message, unread for the reader). Fake ids only.
 import type { createClient } from "@/utils/supabase/server";
 import assert from "node:assert/strict";
 import {
@@ -72,7 +73,8 @@ const row = (
 // --- One query for all the reports, through the caller's client ---
 type Call = { table: string; chain: [string, ...unknown[]][] };
 
-function fakeClient(answer: { data: unknown; error: unknown }) {
+/** Answers the queries in order; the last answer repeats. */
+function fakeClient(...answers: { data: unknown; error: unknown }[]) {
   const calls: Call[] = [];
   const client = {
     from(table: string) {
@@ -80,10 +82,11 @@ function fakeClient(answer: { data: unknown; error: unknown }) {
       const builder: Record<string, unknown> = {
         then(resolve: (value: unknown) => unknown) {
           calls.push(call);
+          const answer = answers[Math.min(calls.length, answers.length) - 1];
           return Promise.resolve(answer).then(resolve);
         },
       };
-      for (const method of ["select", "in", "order"]) {
+      for (const method of ["select", "in", "order", "range"]) {
         builder[method] = (...args: unknown[]) => {
           call.chain.push([method, ...args]);
           return builder;
@@ -116,6 +119,29 @@ async function main() {
     assert.equal(result.summaries.get("b1")?.unread_count, 1);
     assert.equal(result.summaries.get("b2")?.unread_count, 0);
     assert.equal(result.summaries.get("b2")?.last_message?.id, "m2");
+  }
+  // Past 1000 messages, the next page is read too: nothing is cut.
+  {
+    const fullPage = Array.from({ length: 1000 }, () =>
+      row(1, "b1", other, me, false),
+    );
+    const { client, calls } = fakeClient(
+      { data: fullPage, error: null },
+      { data: [row(2, "b1", other, me, true)], error: null },
+    );
+    const result = await loadMessageSummaries(client, me, ["b1"]);
+    assert.equal(calls.length, 2);
+    assert.deepEqual(
+      calls.map((call) => call.chain.find(([method]) => method === "range")),
+      [
+        ["range", 0, 999],
+        ["range", 1000, 1999],
+      ],
+    );
+    assert.ok(result.ok);
+    assert.equal(result.summaries.get("b1")?.message_count, 1001);
+    assert.equal(result.summaries.get("b1")?.unread_count, 1000);
+    assert.equal(result.summaries.get("b1")?.last_message?.id, "m2");
   }
   // A failed read is reported, never shown as « no messages ».
   {

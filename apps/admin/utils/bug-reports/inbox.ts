@@ -1,9 +1,13 @@
 // The conversations behind « Mes signalements » (`app/api/my-bug-reports`):
-// the messages of every report of the inbox in one query, summarized per
-// report in memory, instead of two queries per report.
+// the messages of every report of the inbox in one query (one per 1000
+// messages), summarized per report in memory, instead of two queries per
+// report.
 import type { createClient } from "@/utils/supabase/server";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
+
+/** Supabase answers at most 1000 rows to one request: past that, page by page. */
+const PAGE_SIZE = 1000;
 
 /** A message as the inbox shows a report's last one. */
 export type InboxMessage = {
@@ -62,6 +66,8 @@ export function summarizeMessages(
 /**
  * The messages of the given reports, oldest first, in one query through the
  * caller's client (so their RLS applies), summarized with `summarizeMessages`.
+ * Past {@link PAGE_SIZE} messages the read goes on page by page, so the
+ * counts are never cut at Supabase's cap.
  */
 export async function loadMessageSummaries(
   supabase: Client,
@@ -71,13 +77,20 @@ export async function loadMessageSummaries(
   | { ok: true; summaries: Map<string, MessageSummary> }
   | { ok: false; error: { message: string } }
 > {
-  const { data, error } = await supabase
-    .from("bug_messages")
-    .select(
-      "id, bug_report_id, created_at, message, sender_id, receiver_id, is_read",
-    )
-    .in("bug_report_id", bugReportIds)
-    .order("created_at", { ascending: true });
-  if (error) return { ok: false, error };
-  return { ok: true, summaries: summarizeMessages(data, userId) };
+  const rows: MessageRow[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("bug_messages")
+      .select(
+        "id, bug_report_id, created_at, message, sender_id, receiver_id, is_read",
+      )
+      .in("bug_report_id", bugReportIds)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) return { ok: false, error };
+    rows.push(...data);
+    if (data.length < PAGE_SIZE) break;
+  }
+  return { ok: true, summaries: summarizeMessages(rows, userId) };
 }
