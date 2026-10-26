@@ -99,6 +99,11 @@ function CommandGroup({
   );
 }
 
+/**
+ * The selected item is the one Enter opens. It never holds the focus (that
+ * stays in the input), so it is tinted soft teal and marked on its left edge
+ * like a selected table row: visible in both themes, whatever the pointer.
+ */
 function CommandItem({
   className,
   ...props
@@ -107,7 +112,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-foreground-faint relative flex min-h-11 cursor-default items-center gap-3 rounded-md px-3 py-2 text-[15px] outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-55 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+        "data-[selected=true]:bg-primary-soft data-[selected=true]:text-foreground data-[selected=true]:shadow-[inset_3px_0_0_var(--primary)] [&_svg:not([class*='text-'])]:text-foreground-faint relative flex min-h-11 cursor-default items-center gap-3 rounded-md px-3 py-2 text-[15px] outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-55 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
         className,
       )}
       {...props}

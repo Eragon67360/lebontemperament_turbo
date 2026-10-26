@@ -27,7 +27,7 @@ import {
 } from "@/utils/search/palette";
 import { CornerDownLeft, FileText, Music2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /** How many members and concerts one search lists; typing more narrows them. */
 const RESULT_LIMIT = 6;
@@ -54,6 +54,12 @@ export function CommandPalette({
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+
+  // What had the focus when the palette opened: the « Rechercher » button, or
+  // the field ⌘K was pressed in. Radix only gives the focus back to a
+  // DialogTrigger, and the palette has none, so it is restored by hand when
+  // the palette closes (Escape, a choice, ⌘K again).
+  const openerRef = useRef<HTMLElement | null>(null);
 
   // Each opening starts from an empty search.
   useResetOnChange([open], () => setQuery(""));
@@ -124,6 +130,18 @@ export function CommandPalette({
       <DialogContent
         showCloseButton={false}
         className="top-[12dvh] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-[600px] sm:p-0"
+        onOpenAutoFocus={() => {
+          const active = document.activeElement;
+          openerRef.current = active instanceof HTMLElement ? active : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          const opener = openerRef.current;
+          openerRef.current = null;
+          if (opener?.isConnected) {
+            event.preventDefault();
+            opener.focus();
+          }
+        }}
       >
         <DialogTitle className="sr-only">Rechercher</DialogTitle>
         <DialogDescription className="sr-only">
