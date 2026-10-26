@@ -183,8 +183,14 @@ const nextConfig = {
     optimizePackageImports: ["@heroui/react", "react-icons"],
   },
   compiler: {
-    // eslint-disable-next-line no-undef
-    removeConsole: process.env.NODE_ENV === "production",
+    // Production builds drop every console call except error and warn, the
+    // server's diagnostics in Vercel's runtime logs: log ids and codes there,
+    // never personal data (lib/errorCodes.ts).
+    removeConsole:
+      // eslint-disable-next-line no-undef
+      process.env.NODE_ENV === "production"
+        ? { exclude: ["error", "warn"] }
+        : false,
   },
   poweredByHeader: false,
   compress: true,
