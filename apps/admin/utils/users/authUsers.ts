@@ -5,9 +5,12 @@
 //
 // listAuthSummaries() reads the few fields the admin uses in one query
 // (auth_user_summaries(), #345). Until that migration is applied it falls back
-// to paging through the Auth admin API, as before.
+// to paging through the Auth admin API, as before. Either way the avatar is
+// kept only when it is a Google account picture (googleAvatarUrl), the rule
+// the database function applies since 20261026192418_directory_avatar_hosts.
 
 import type { createAdminClient } from "@/utils/supabase/admin";
+import { googleAvatarUrl } from "@repo/domain/utils/profilePicture";
 import { isMissingFunctionError } from "@repo/domain/utils/supabaseErrors";
 import type { User } from "@supabase/supabase-js";
 
@@ -40,18 +43,18 @@ export type AuthSummary = {
   confirmed_at: string | null;
   email_confirmed_at: string | null;
   last_sign_in_at: string | null;
+  /** The account's Google picture, or null. */
   avatar_url: string | null;
 };
 
 export function summaryOf(user: User): AuthSummary {
-  const avatar = user.user_metadata?.avatar_url;
   return {
     id: user.id,
     invited_at: user.invited_at ?? null,
     confirmed_at: user.confirmed_at ?? null,
     email_confirmed_at: user.email_confirmed_at ?? null,
     last_sign_in_at: user.last_sign_in_at ?? null,
-    avatar_url: typeof avatar === "string" ? avatar : null,
+    avatar_url: googleAvatarUrl(user.user_metadata?.avatar_url),
   };
 }
 
@@ -64,7 +67,12 @@ export async function listAuthSummaries(
   client: AdminClient,
 ): Promise<AuthSummary[]> {
   const { data, error } = await client.rpc("auth_user_summaries");
-  if (!error) return data ?? [];
+  if (!error) {
+    return (data ?? []).map((summary) => ({
+      ...summary,
+      avatar_url: googleAvatarUrl(summary.avatar_url),
+    }));
+  }
   if (!isMissingFunctionError(error)) throw error;
   return (await listAllAuthUsers(client)).map(summaryOf);
 }
