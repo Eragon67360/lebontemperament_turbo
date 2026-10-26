@@ -10,12 +10,15 @@ import {
   customItemTemplate,
   fingerprint,
   itemTitles,
+  loadTurbo,
   mergeCandidates,
   parseDotenv,
   parseTemplate,
   planGithub,
   readTemplate,
   planVercel,
+  scanCodeNames,
+  turboDrift,
   validateTarget,
 } from "./lib.mjs";
 
@@ -402,4 +405,42 @@ test("push.mjs skips optional names left empty and still stops on required ones"
   } finally {
     rmSync(env.HOME, { recursive: true, force: true });
   }
+});
+
+test("turboDrift finds names strict env mode would hide, and declared names nobody reads", () => {
+  const turbo = {
+    globalEnv: ["VERCEL_ENV"],
+    tasks: {
+      build: { env: ["A_KEY", "UNUSED_KEY"], passThroughEnv: ["PASSED"] },
+      "test:e2e": { env: ["WEBSITE_URL"] },
+    },
+  };
+  assert.deepEqual(
+    turboDrift(
+      turbo,
+      "build",
+      new Set(["A_KEY", "PASSED", "VERCEL_ENV", "NEXT_PUBLIC_X", "HIDDEN"]),
+    ),
+    { undeclared: ["HIDDEN"], unused: ["UNUSED_KEY"] },
+  );
+  // globalEnv counts as declared for every task, and is never "unused".
+  assert.deepEqual(
+    turboDrift(turbo, "test:e2e", new Set(["WEBSITE_URL", "VERCEL_ENV"])),
+    { undeclared: [], unused: [] },
+  );
+  // A task turbo.json doesn't configure declares nothing of its own.
+  assert.deepEqual(turboDrift(turbo, "lint", new Set(["X"])), {
+    undeclared: ["X"],
+    unused: [],
+  });
+});
+
+test("turbo.json declares every name the apps and the e2e suite read", () => {
+  const turbo = loadTurbo();
+  const apps = scanCodeNames(["apps/website", "apps/admin", "packages"]);
+  assert.deepEqual(turboDrift(turbo, "build", apps).undeclared, []);
+  assert.deepEqual(
+    turboDrift(turbo, "test:e2e", scanCodeNames(["apps/e2e"])).undeclared,
+    [],
+  );
 });
