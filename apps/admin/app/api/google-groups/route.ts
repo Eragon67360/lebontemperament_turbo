@@ -1,5 +1,13 @@
 // app/api/google-groups/route.ts
+//
+// The groups and a group's addresses, read through the Apps Script.
+// Production only (utils/memberLists.ts).
 import { checkAuthorization } from "@/utils/auth";
+import {
+  GROUPS_PRODUCTION_ONLY_MESSAGE,
+  memberListsAvailable,
+  productionOnlyResponse,
+} from "@/utils/memberLists";
 import { NextResponse } from "next/server";
 
 const GOOGLE_APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL;
@@ -15,6 +23,9 @@ export async function GET(request: Request) {
     const auth = await checkAuthorization();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    if (!memberListsAvailable()) {
+      return productionOnlyResponse(GROUPS_PRODUCTION_ONLY_MESSAGE);
     }
 
     if (!GOOGLE_APPS_SCRIPT_URL) {

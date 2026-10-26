@@ -3,8 +3,13 @@
 // The reviewed diff between the member roster and the accounts (#462):
 // validation, groups (nouveaux, modifiés, absents de la liste, à régler) and
 // the roster's fingerprint, which POST /api/users/sync/apply must echo.
-// Read-only: nothing is written here.
+// Read-only: nothing is written here. Production only (utils/memberLists.ts).
 import { checkAuthorization } from "@/utils/auth";
+import {
+  memberListsAvailable,
+  productionOnlyResponse,
+  ROSTER_PRODUCTION_ONLY_MESSAGE,
+} from "@/utils/memberLists";
 import { buildRosterReview, loadProfilesForDiff } from "@/utils/roster/review";
 import { fetchRosterRows, RosterSourceError } from "@/utils/roster/source";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -18,6 +23,9 @@ export async function GET() {
     const auth = await checkAuthorization();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    if (!memberListsAvailable()) {
+      return productionOnlyResponse(ROSTER_PRODUCTION_ONLY_MESSAGE);
     }
 
     const supabaseAdmin = createAdminClient();
