@@ -59,7 +59,7 @@ export function AccountMenu({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
-  const { data: profile } = useCurrentProfile();
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentProfile();
   const { density, setDensity } = useDensity();
   const { theme, setTheme } = useTheme();
   // next-themes only knows the stored choice after hydration.
@@ -88,7 +88,8 @@ export function AccountMenu({
 
   const inSidebar = placement === "sidebar";
 
-  if (isLoadingUser || !user) {
+  // The name comes with the profile: wait for it rather than show a stand-in.
+  if (isLoadingUser || !user || isLoadingProfile) {
     if (inSidebar) {
       return (
         <div className="flex h-14 items-center gap-3 px-2" aria-hidden>
@@ -105,10 +106,8 @@ export function AccountMenu({
     );
   }
 
-  const name: string =
-    user.user_metadata?.display_name ||
-    user.user_metadata?.name ||
-    "Utilisateur";
+  // The name on the profile, not the account's metadata.
+  const name: string = profile?.display_name?.trim() || "Utilisateur";
   const unreadLabel =
     unreadMessages > 0
       ? `, ${unreadMessages} message${unreadMessages > 1 ? "s" : ""} non lu${unreadMessages > 1 ? "s" : ""}`

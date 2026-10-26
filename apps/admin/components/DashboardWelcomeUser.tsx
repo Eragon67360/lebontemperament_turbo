@@ -3,6 +3,7 @@
 import { PageHeader } from "@/components/layouts/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useConcerts } from "@/hooks/useConcerts";
+import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { parseIsoDate, todayIso } from "@/utils/concerts/schedule";
 import { greetingFr, homeIntroFr } from "@/utils/home/greeting";
@@ -44,13 +45,14 @@ function useClock(): Date | null {
  * attend. » when none is planned.
  */
 export function DashboardWelcomeHeader() {
-  const { data: user, isLoading } = useCurrentUser();
+  const { isLoading: isLoadingUser } = useCurrentUser();
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentProfile();
+  const isLoading = isLoadingUser || isLoadingProfile;
   const concerts = useConcerts();
   const now = useClock();
 
-  const name = firstNameOf(
-    user?.user_metadata?.display_name || user?.user_metadata?.name,
-  );
+  // The name on the profile, not the account's metadata.
+  const name = firstNameOf(profile?.display_name);
   const greeting = now ? greetingFr(now) : "Bonjour";
   // undefined while the concerts load: the date alone, then the sentence is
   // added once (never one sentence swapped for another).
