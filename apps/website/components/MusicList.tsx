@@ -6,8 +6,22 @@ import { useState } from "react";
 import { IoMusicalNotes, IoPlay } from "react-icons/io5"; // Add these imports
 import MusicPlayer from "./MusicPlayer";
 
-const MusicList = () => {
+/**
+ * The public site keeps its bold album header and track names; the members
+ * area (« Les Pupitres ») never goes above 600 for titles and 500 for names.
+ */
+const WEIGHTS = {
+  default: { title: "font-extrabold", track: "font-bold" },
+  members: { title: "font-semibold", track: "font-medium" },
+} as const;
+
+const MusicList = ({
+  variant = "default",
+}: {
+  variant?: keyof typeof WEIGHTS;
+}) => {
   const [currentSong, setCurrentSong] = useState("");
+  const weight = WEIGHTS[variant];
   const commonExtensions = [".mp3", ".wav", ".flac", ".aac", ".m4a"];
 
   const getMusicSrc = (fileName: string) => {
@@ -38,7 +52,9 @@ const MusicList = () => {
             className="rounded-lg shadow-lg"
           />
           <div className="flex flex-col">
-            <h3 className="text-xl font-extrabold">Les 20 ans du BT (Live)</h3>
+            <h3 className={`text-xl ${weight.title}`}>
+              Les 20 ans du BT (Live)
+            </h3>
             <p className="opacity-90">Le Bon Tempérament</p>
           </div>
         </div>
@@ -79,7 +95,7 @@ const MusicList = () => {
             </div>
 
             <div className="flex-1 text-left">
-              <p className="text-foreground font-bold">
+              <p className={`text-foreground ${weight.track}`}>
                 {cleanDisplayName(file.name)}
               </p>
               <p className="text-muted text-base">Le Bon Tempérament</p>

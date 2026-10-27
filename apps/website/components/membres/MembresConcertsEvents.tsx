@@ -287,7 +287,7 @@ const MembresConcertsEvents = () => {
             Enregistrement du concert anniversaire pour les 20 ans du Bon
             Tempérament.
           </p>
-          <MusicList />
+          <MusicList variant="members" />
         </MembersCard>
       </section>
     </div>
