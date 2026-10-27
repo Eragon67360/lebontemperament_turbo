@@ -2,6 +2,7 @@ import {
   insertPendingMemory,
   pendingMemoryRow,
 } from "@/lib/anniversaryMemories";
+import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { createClient } from "@/utils/supabase/server";
@@ -9,8 +10,9 @@ import { detectFormAbuse } from "@repo/domain/utils/formAbuse";
 import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
 import { NextResponse } from "next/server";
 
-// Email template for user confirmation
-const userConfirmationEmailTemplate = (name: string) => `
+// Confirmation to the address the visitor typed: fixed text, nothing they
+// typed is repeated.
+const userConfirmationEmail = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -77,7 +79,7 @@ const userConfirmationEmailTemplate = (name: string) => `
             
             <h1>Merci pour votre témoignage ! 🎉</h1>
             
-            <p>Bonjour ${escapeHtml(name)},</p>
+            <p>Bonjour,</p>
             
             <p>Nous avons bien reçu votre témoignage pour les 40 ans du Bon Tempérament !</p>
             
@@ -250,6 +252,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Per-IP and per-recipient limits, before anything is stored or sent.
+    if (await isFormRateLimited("memory", request.headers, String(email))) {
+      return NextResponse.json(
+        { error: RATE_LIMITED_MESSAGE },
+        { status: 429 },
+      );
+    }
+
     const supabase = await createClient();
 
     // The memory starts pending (admin approval). Its id is chosen here and
@@ -285,7 +295,7 @@ export async function POST(request: Request) {
         from: mailer.from,
         to: memory.email,
         subject: "Merci pour votre témoignage - 40 ans du Bon Tempérament",
-        html: userConfirmationEmailTemplate(memory.name),
+        html: userConfirmationEmail,
       });
 
       // Send notification email to admin

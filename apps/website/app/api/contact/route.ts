@@ -1,3 +1,4 @@
+import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { ContactFormProps } from "@/types/contactFormData";
@@ -21,6 +22,8 @@ const INVALID = {
   message: "Une adresse email valide et un message sont requis",
 };
 
+const RATE_LIMITED = { success: false, message: RATE_LIMITED_MESSAGE };
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
@@ -43,6 +46,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(INVALID, { status: 400 });
     }
 
+    // Per-IP and per-recipient limits, before anything is sent.
+    if (await isFormRateLimited("contact", request.headers, text(email))) {
+      return NextResponse.json(RATE_LIMITED, { status: 429 });
+    }
+
     const mailer = createMailer();
     if (!mailer) {
       console.error("[api/contact] Email service not configured");
@@ -63,13 +71,14 @@ export async function POST(request: NextRequest) {
             `,
     });
 
-    // Send confirmation email to user
+    // Confirmation to the address the visitor typed: fixed text, nothing they
+    // typed is repeated.
     await mailer.transporter.sendMail({
       from: mailer.from,
       to: email,
       subject: `Votre demande de contact est bien arrivée!`,
       html: `
-                <p>Bonjour ${escapeHtml(text(firstName))} !</p>
+                <p>Bonjour !</p>
                 <p>L'équipe communication du BT vous remercie pour votre demande de contact! Nous essayerons de traiter votre demande le plus vite possible!</p>
                 <p>Chaleureusement et musicalement,</p>
                 <p>L'équipe <strong>Com' du Bon Tempérament</strong></p>
