@@ -116,7 +116,7 @@ export interface RowActionsProps {
  * before: same order, same gaps.
  */
 export function RowActions({ menu, children, className }: RowActionsProps) {
-  const buttons = React.Children.toArray(children);
+  const buttons = rowButtons(children);
   const last = buttons.pop();
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
@@ -126,5 +126,23 @@ export function RowActions({ menu, children, className }: RowActionsProps) {
         {menu}
       </span>
     </div>
+  );
+}
+
+/**
+ * The row's buttons as a flat list. A fragment counts as its buttons, so a row
+ * that groups several (« Mettre à la une » and « Retirer de la publication »)
+ * keeps only the last one beside the menu, and the others still wrap.
+ */
+function rowButtons(children: React.ReactNode): React.ReactNode[] {
+  return React.Children.toArray(children).flatMap((child) =>
+    React.isValidElement<{ children?: React.ReactNode }>(child) &&
+    child.type === React.Fragment
+      ? rowButtons(child.props.children).map((inner) =>
+          React.isValidElement(inner)
+            ? React.cloneElement(inner, { key: `${child.key}${inner.key}` })
+            : inner,
+        )
+      : [child],
   );
 }

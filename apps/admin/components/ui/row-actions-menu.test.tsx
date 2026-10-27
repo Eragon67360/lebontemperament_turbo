@@ -3,7 +3,7 @@
 // Radix menu renders no items, so the item's name is checked through the
 // pure helper the component uses.
 import assert from "node:assert/strict";
-import { createElement } from "react";
+import { createElement, Fragment } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   RowActions,
@@ -89,6 +89,33 @@ assert.deepEqual(rowActionsLabels("Lucie", "le témoignage de Lucie"), {
     html,
     '<div class="flex flex-wrap items-center gap-2">' +
       '<span class="flex items-center gap-2">' +
+      '<button type="button">⋯</button>' +
+      "</span></div>",
+  );
+}
+{
+  // A fragment counts as its buttons (the published témoignage's two), so
+  // only its last one joins the menu and the first can still wrap.
+  const button = (label: string) =>
+    createElement("button", { type: "button" }, label);
+  const html = renderToStaticMarkup(
+    createElement(
+      RowActions,
+      { menu: button("⋯") },
+      createElement(
+        Fragment,
+        null,
+        button("Mettre à la une"),
+        button("Retirer de la publication"),
+      ),
+    ),
+  );
+  assert.equal(
+    html,
+    '<div class="flex flex-wrap items-center gap-2">' +
+      '<button type="button">Mettre à la une</button>' +
+      '<span class="flex items-center gap-2">' +
+      '<button type="button">Retirer de la publication</button>' +
       '<button type="button">⋯</button>' +
       "</span></div>",
   );
