@@ -33,7 +33,7 @@ const PreviewBanner = ({
 
   const handleGoToAdmin = () => {
     const adminUrl =
-      process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001";
+      process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3002";
     window.open(`${adminUrl}/dashboard/admin/anniversary`, "_blank");
   };
 
