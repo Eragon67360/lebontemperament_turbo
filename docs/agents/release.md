@@ -47,4 +47,4 @@ Production (`website`) serves the live sites, the mobile apps, edge functions an
 
 - **Web**: Vercel can promote the previous production deployment (owner's approval). Code rolls back; the database doesn't.
 - **Database**: write a forward fix; don't revert a migration on production without the owner.
-- **Mobile**: an installed app can't be rolled back; ship a fixed build. The `feature_flags` table is read by the website (`lib/featureFlags.ts`, on the server) and the admin (its `/api/feature-flags`) but not by the app today; having the app read it is worth doing before risky app-facing changes, so they can be switched off remotely.
+- **Mobile**: an installed app can't be rolled back; ship a fixed build. The `feature_flags` table is read by the website (`lib/featureFlags.ts`, on the server) and the admin (its `/api/feature-flags`); the app reads only its own two rows, `mobile_maintenance` (a maintenance banner) and `mobile_min_version` (asks older builds to update, #361). Having the app read more flags is worth doing before risky app-facing changes, so they can be switched off remotely.
