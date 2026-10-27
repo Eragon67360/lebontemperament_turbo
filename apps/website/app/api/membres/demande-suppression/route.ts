@@ -4,7 +4,7 @@ import {
 } from "@/lib/deletionRequest";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { NextResponse } from "next/server";
 
 const FAILED = {
@@ -19,7 +19,7 @@ const FAILED = {
  * nothing; see lib/deletionRequest.ts.
  */
 export async function POST(request: Request) {
-  const auth = await checkAuthorization();
+  const auth = await requireUser();
   if (!auth.authorized) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

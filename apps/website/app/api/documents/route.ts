@@ -1,5 +1,5 @@
 import { listDocumentCollections } from "@/lib/siteDocuments";
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { createPublicClient } from "@/utils/supabase/public";
 import { NextResponse } from "next/server";
 
@@ -13,7 +13,7 @@ import { NextResponse } from "next/server";
  * first; `href` is a path on this site.
  */
 export async function GET() {
-  const auth = await checkAuthorization();
+  const auth = await requireUser();
   const supabase = auth.authorized ? auth.supabase : createPublicClient();
   const { collections } = await listDocumentCollections(supabase);
 

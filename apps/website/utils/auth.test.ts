@@ -143,11 +143,15 @@ registerHooks({
 
 // --- The checks, loaded after the fakes are in place ---
 
-const { checkAuthorization, checkAdminAuth } = await import("./auth");
+const { requireUser, checkAuthorization, checkAdminAuth } =
+  await import("./auth");
 const { GET: checkAdminRoute } =
   await import("../app/api/auth/check-admin/route");
 
-type Check = Awaited<ReturnType<typeof checkAuthorization>>;
+// The former name, still used by the Drive routes, is the same function.
+assert.equal(checkAuthorization, requireUser);
+
+type Check = Awaited<ReturnType<typeof requireUser>>;
 function signedIn(result: Check) {
   if (!result.authorized) return `${result.status} ${result.error}`;
   assert.equal(result.user, someone);
@@ -162,14 +166,14 @@ for (const [who, caller] of Object.entries(CALLERS)) {
   state.cookie = caller;
   state.authorization = null;
   state.profileReads = 0;
-  const cookie = signedIn(await checkAuthorization());
+  const cookie = signedIn(await requireUser());
   assert.equal(state.profileReads, 0, "no role is read");
 
   // The mobile app: a bearer token (an invalid one when signed out).
   state.cookie = CALLERS.anonymous;
   state.bearer = caller;
   state.authorization = `Bearer ${caller.user ? VALID_TOKEN : "not-a-token"}`;
-  const bearer = signedIn(await checkAuthorization());
+  const bearer = signedIn(await requireUser());
   assert.equal(state.profileReads, 0, "no role is read");
 
   state.cookie = caller;
@@ -219,9 +223,9 @@ assert.deepEqual(matrix, {
 state.cookie = CALLERS.admin;
 state.bearer = CALLERS.admin;
 state.authorization = "Bearer not-a-token";
-assert.equal(signedIn(await checkAuthorization()), "401 Non authentifié");
+assert.equal(signedIn(await requireUser()), "401 Non authentifié");
 state.authorization = `Bearer ${VALID_TOKEN}`;
-assert.equal(signedIn(await checkAuthorization()), "200 bearer");
+assert.equal(signedIn(await requireUser()), "200 bearer");
 assert.deepEqual(state.bearerOptions, {
   global: { headers: { Authorization: `Bearer ${VALID_TOKEN}` } },
   auth: {
@@ -232,6 +236,6 @@ assert.deepEqual(state.bearerOptions, {
 });
 // Another scheme is not a bearer token: the cookie decides.
 state.authorization = `Basic ${VALID_TOKEN}`;
-assert.equal(signedIn(await checkAuthorization()), "200 cookie");
+assert.equal(signedIn(await requireUser()), "200 cookie");
 
 console.log("auth.test.ts: role matrix holds");

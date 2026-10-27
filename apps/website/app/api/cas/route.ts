@@ -1,8 +1,8 @@
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const authCheck = await checkAuthorization();
+  const authCheck = await requireUser();
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },

@@ -49,7 +49,7 @@ function createBearerClient(token: string) {
  * cookie. A bearer token, when present, decides on its own (an invalid one is
  * refused rather than falling back to cookies).
  */
-export async function checkAuthorization(): Promise<AuthorizationResult> {
+export async function requireUser(): Promise<AuthorizationResult> {
   const token = parseBearerToken((await headers()).get("authorization"));
 
   if (token) {
@@ -68,6 +68,12 @@ export async function checkAuthorization(): Promise<AuthorizationResult> {
   }
   return { authorized: true, user: data.user, supabase };
 }
+
+/**
+ * @deprecated Former name of {@link requireUser}, the same function: any
+ * signed-in account, whatever its role. Kept for the Drive routes.
+ */
+export const checkAuthorization = requireUser;
 
 /**
  * Check if the current user is authenticated and is an admin

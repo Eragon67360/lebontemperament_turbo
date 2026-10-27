@@ -1,10 +1,10 @@
 import { MEMBER_REHEARSAL_COLUMNS } from "@/lib/publicConcerts";
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const authCheck = await checkAuthorization();
+  const authCheck = await requireUser();
   if (!authCheck.authorized) {
     return NextResponse.json(
       { error: authCheck.error },
