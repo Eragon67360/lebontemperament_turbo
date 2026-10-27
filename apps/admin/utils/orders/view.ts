@@ -3,15 +3,17 @@
 // unit-tested (view.test.ts); the totals themselves come from
 // @repo/domain/utils/orders and are never recomputed here.
 import type { StatusTone } from "@/components/ui/status-badge";
-import type { SaleDetail, SaleOrder } from "@/utils/orders/types";
+import type { OrderPayment, SaleDetail, SaleOrder } from "@/utils/orders/types";
 import {
   type BalanceStatus,
   type BuyerBreakdown,
-  FULFILMENT_LABELS,
+  formatEuros,
   type Fulfilment,
+  FULFILMENT_LABELS,
   type SaleSummary,
   saleSummary,
 } from "@repo/domain/utils/orders";
+import { foldAccents, slugify as toSlug } from "@repo/domain/utils/slug";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -78,9 +80,9 @@ export function saleView(detail: SaleDetail): {
   return { summary, rows };
 }
 
-/** Lower case, no accents: « Léa » matches « lea ». */
+/** Lower case, no accents: « Léa » matches « lea », « Chœur » « choeur ». */
 export function normalizeText(value: string): string {
-  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  return foldAccents(value).toLowerCase().trim();
 }
 
 export function hasBuyerFilters(filters: BuyerFilters): boolean {
@@ -148,6 +150,29 @@ export function formatDayFr(iso: string, now: Date = new Date()): string {
   return format(date, sameYear ? "EEEE d MMMM" : "EEEE d MMMM yyyy", {
     locale: fr,
   });
+}
+
+/**
+ * What « Supprimer le paiement » asks: the payment by its amount and day,
+ * then the buyer and what the order will owe once it is gone. A deleted
+ * payment cannot be restored, only recorded again.
+ */
+export function paymentDeletionText(
+  row: Pick<BuyerRow, "buyerName" | "dueCents">,
+  payment: Pick<OrderPayment, "amount_cents" | "paid_on">,
+  now: Date = new Date(),
+): { title: string; description: string } {
+  const dueAfter = row.dueCents + payment.amount_cents;
+  const balance =
+    dueAfter > 0
+      ? `dont le reste à payer passe à ${formatEuros(dueAfter)}`
+      : dueAfter < 0
+        ? `dont le trop-perçu passe à ${formatEuros(-dueAfter)}`
+        : "qui sera alors payée";
+  return {
+    title: `Supprimer le paiement de ${formatEuros(payment.amount_cents)} du ${formatDayFr(payment.paid_on, now)} ?`,
+    description: `Il disparaît de la commande de « ${row.buyerName} », ${balance}. Cette action ne peut pas être annulée.`,
+  };
 }
 
 /**
@@ -265,8 +290,5 @@ export function todayParisIso(now: Date = new Date()): string {
 
 /** « fromages-et-saucissons-novembre-2026 » from a sale title. */
 export function slugify(title: string): string {
-  const slug = normalizeText(title)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return slug || "vente";
+  return toSlug(title) || "vente";
 }

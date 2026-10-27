@@ -47,6 +47,7 @@ export default function ArchivesPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={archives.length > 0}
         isEmpty={archives.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les archives n'ont pas pu être chargées."

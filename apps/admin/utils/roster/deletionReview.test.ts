@@ -54,6 +54,23 @@ assert.equal(
 assert.equal(isAdminAccount(account("a", "A", { role: "admin" })), true);
 assert.equal(isAdminAccount(account("a", "A", { role: "superadmin" })), true);
 assert.equal(isAdminAccount(account("a", "A")), false);
+// Every kind of role (a profile without one arrives here as "user").
+assert.deepEqual(
+  Object.fromEntries(
+    ["user", "admin", "superadmin", "owner", "Admin", " admin", ""].map(
+      (role) => [role, isAdminAccount({ role })],
+    ),
+  ),
+  {
+    user: false,
+    admin: true,
+    superadmin: true,
+    owner: false,
+    Admin: false,
+    " admin": false,
+    "": false,
+  },
+);
 
 const review = reviewDeletion(
   [

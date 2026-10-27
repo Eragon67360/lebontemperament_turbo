@@ -1,9 +1,18 @@
 "use client";
 
 import { getInitials } from "@/lib/membres/names";
+import { memberPhotoUrl } from "@repo/domain/utils/profilePicture";
 import Image from "next/image";
 import { useState } from "react";
 import { voiceFill } from "./tones";
+
+// Where members' uploaded photos are stored: this environment's Supabase
+// project and production's two hosts (the ones next.config.js's images list).
+const PHOTO_STORAGE = [
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  "https://fsklunxplbbtzgurwqmc.supabase.co",
+  "https://api.lebontemperament.com",
+];
 
 const SIZES = {
   sm: { px: 48, className: "h-12 w-12 text-base" },
@@ -25,22 +34,24 @@ export function MemberAvatar({
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  const showPhoto = Boolean(photoUrl) && !failed;
+  // The association's Storage or a Google account picture; any other address
+  // shows the initials and is never requested.
+  const photo = failed ? null : memberPhotoUrl(photoUrl, PHOTO_STORAGE);
   const { px, className: sizeClass } = SIZES[size];
 
   return (
     <span
-      aria-hidden={showPhoto ? undefined : true}
+      aria-hidden={photo ? undefined : true}
       className={`font-members-display relative flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold ${sizeClass} ${voiceFill(voice)} ${className}`}
     >
-      {showPhoto ? (
+      {photo ? (
         <Image
-          src={photoUrl!}
+          src={photo}
           alt={`Photo de ${name}`}
           width={px}
           height={px}
-          // Photos come from arbitrary external hosts, with the initials
-          // fallback below: served as-is, as before.
+          // Storage or Google pictures only (checked above), with the
+          // initials fallback below: served as-is, as before.
           unoptimized
           className="h-full w-full object-cover"
           crossOrigin="anonymous"

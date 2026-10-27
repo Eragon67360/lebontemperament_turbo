@@ -5,10 +5,16 @@ import {
   decideUserDeletion,
   type UserRole,
 } from "@/utils/access";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { deleteMemberAccount } from "@/utils/members/memberFiles";
 import { createAdminClient } from "@/utils/supabase/admin";
+import {
+  userCreateSchema,
+  userRolePatchSchema,
+} from "@/utils/users/apiSchemas";
 import { inviteStatusOf, listAuthSummaries } from "@/utils/users/authUsers";
+import { createMemberAccount } from "@/utils/users/memberProfile";
 import { normalizeName } from "@repo/domain/roster/normalize";
 import { NextResponse } from "next/server";
 
@@ -93,14 +99,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { email, password, role, display_name } = await request.json();
-
-    if (typeof email !== "string" || !email || typeof password !== "string") {
+    // Only what « Ajouter un membre » sends: unknown keys are refused.
+    const parsed = parsePatchBody(userCreateSchema, await readJson(request));
+    if (!parsed.ok) {
       return NextResponse.json(
-        { error: "Email et mot de passe requis" },
-        { status: 400 },
+        { error: parsed.error },
+        { status: parsed.status },
       );
     }
+    const { email, password, role, display_name } = parsed.data;
 
     // Admins create `user` accounts; only a superadmin creates admins.
     const decision = decideUserCreation(auth.role, role);
@@ -114,56 +121,40 @@ export async function POST(request: Request) {
     // One order everywhere: « Prénom NOM », whatever was typed.
     const name =
       (typeof display_name === "string" && normalizeName(display_name)) ||
-      email.split("@")[0];
+      email.split("@")[0] ||
+      email;
 
     const supabaseAdmin = createAdminClient();
 
-    // Create user with metadata
-    const { data: authData, error: authError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          display_name: name,
+    // The account and its member profile, with the role checked above.
+    const user = await createMemberAccount(supabaseAdmin, {
+      email,
+      password,
+      role: newRole,
+      displayName: name,
+    });
+
+    const { error: activityError } = await supabaseAdmin
+      .from("activities")
+      .insert({
+        type: "user_created",
+        user_id: auth.user.id, // ID of the admin who created the user
+        target_id: user.id, // ID of the created user
+        title: "Nouveau membre",
+        description: `${name} a rejoint la plateforme`,
+        metadata: {
+          created_user_id: user.id,
+          created_user_email: email,
+          created_user_role: newRole,
         },
       });
-
-    if (authError) throw authError;
-
-    if (authData.user) {
-      // Update profiles table
-      const { error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          role: newRole,
-          display_name: name,
-        })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
-      const { error: activityError } = await supabaseAdmin
-        .from("activities")
-        .insert({
-          type: "user_created",
-          user_id: auth.user.id, // ID of the admin who created the user
-          target_id: authData.user.id, // ID of the created user
-          title: "Nouveau membre",
-          description: `${name} a rejoint la plateforme`,
-          metadata: {
-            created_user_id: authData.user.id,
-            created_user_email: email,
-            created_user_role: newRole,
-          },
-        });
-      if (activityError) {
-        console.error("Error logging user creation:", activityError);
-      }
-      return NextResponse.json({
-        message: "Utilisateur créé avec succès",
-        user: authData.user,
-      });
+    if (activityError) {
+      console.error("Error logging user creation:", activityError);
     }
+    return NextResponse.json({
+      message: "Utilisateur créé avec succès",
+      user,
+    });
   } catch (error) {
     console.error("Error creating user:", error);
     return NextResponse.json(
@@ -231,16 +222,15 @@ export async function PATCH(request: Request) {
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-    const supabaseAdmin = createAdminClient();
-
-    const { userId, role } = await request.json();
-
-    if (!userId || !role) {
+    const parsed = parsePatchBody(userRolePatchSchema, await readJson(request));
+    if (!parsed.ok) {
       return NextResponse.json(
-        { error: "ID utilisateur et rôle requis" },
-        { status: 400 },
+        { error: parsed.error },
+        { status: parsed.status },
       );
     }
+    const { userId, role } = parsed.data;
+    const supabaseAdmin = createAdminClient();
 
     const { data: targetUser, error: targetError } = await supabaseAdmin
       .from("profiles")

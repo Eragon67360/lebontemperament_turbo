@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { test } from "node:test";
 import {
   ROOT,
@@ -10,12 +10,16 @@ import {
   customItemTemplate,
   fingerprint,
   itemTitles,
+  loadTurbo,
   mergeCandidates,
   parseDotenv,
   parseTemplate,
   planGithub,
   readTemplate,
   planVercel,
+  scanCodeNames,
+  stripComments,
+  turboDrift,
   validateTarget,
 } from "./lib.mjs";
 
@@ -181,6 +185,61 @@ test("the templates in env/ pass the check", () => {
     { encoding: "utf8" },
   );
   assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test("scanCodeNames counts the names code reads, not the ones in comments", () => {
+  const dir = mkdtempSync(join(tmpdir(), "lbt-env-scan-"));
+  try {
+    writeFileSync(
+      join(dir, "page.tsx"),
+      [
+        "// const stripe = loadStripe(process.env.COMMENTED_OUT!);",
+        "/* process.env.IN_A_BLOCK */",
+        "/**",
+        " * process.env.IN_A_DOC_COMMENT",
+        " */",
+        "const url = `https://cdn.example.com/${process.env.IN_A_TEMPLATE}/x`; // process.env.TRAILING",
+        'const site = "https://example.com/" + process.env.AFTER_A_URL;',
+        "const re = /https?:\\/\\//; const key = process.env.AFTER_A_REGEX;",
+        "const half = total / 2; const other = process.env.AFTER_A_DIVISION;",
+      ].join("\n"),
+    );
+    assert.deepEqual([...scanCodeNames([relative(ROOT, dir)])].sort(), [
+      "AFTER_A_DIVISION",
+      "AFTER_A_REGEX",
+      "AFTER_A_URL",
+      "IN_A_TEMPLATE",
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("stripComments keeps strings, template literals, regular expressions and line breaks", () => {
+  assert.equal(stripComments('a("//x"); // c\nb'), 'a("//x"); \nb');
+  assert.equal(
+    stripComments("s = '/* no */'; /* yes */ t"),
+    "s = '/* no */';  t",
+  );
+  assert.equal(stripComments("a /* one\ntwo */ b"), "a \n b");
+  assert.equal(
+    stripComments("x = `${y /* c */} // kept` // d"),
+    "x = `${y } // kept` ",
+  );
+  assert.equal(
+    stripComments("`a ${`b ${c}`} // kept` // d"),
+    "`a ${`b ${c}`} // kept` ",
+  );
+  assert.equal(
+    stripComments("o = `${{ a: 1 }.a}` // d"),
+    "o = `${{ a: 1 }.a}` ",
+  );
+  assert.equal(stripComments("r = /[/]\\/*/g; // c"), "r = /[/]\\/*/g; ");
+  assert.equal(
+    stripComments("return /\\/\\//.test(u) // c"),
+    "return /\\/\\//.test(u) ",
+  );
+  assert.equal(stripComments("h = a / b / c; // d"), "h = a / b / c; ");
 });
 
 test("push.mjs stops before any network call when pass-cli didn't resolve the values", () => {
@@ -402,4 +461,42 @@ test("push.mjs skips optional names left empty and still stops on required ones"
   } finally {
     rmSync(env.HOME, { recursive: true, force: true });
   }
+});
+
+test("turboDrift finds names strict env mode would hide, and declared names nobody reads", () => {
+  const turbo = {
+    globalEnv: ["VERCEL_ENV"],
+    tasks: {
+      build: { env: ["A_KEY", "UNUSED_KEY"], passThroughEnv: ["PASSED"] },
+      "test:e2e": { env: ["WEBSITE_URL"] },
+    },
+  };
+  assert.deepEqual(
+    turboDrift(
+      turbo,
+      "build",
+      new Set(["A_KEY", "PASSED", "VERCEL_ENV", "NEXT_PUBLIC_X", "HIDDEN"]),
+    ),
+    { undeclared: ["HIDDEN"], unused: ["UNUSED_KEY"] },
+  );
+  // globalEnv counts as declared for every task, and is never "unused".
+  assert.deepEqual(
+    turboDrift(turbo, "test:e2e", new Set(["WEBSITE_URL", "VERCEL_ENV"])),
+    { undeclared: [], unused: [] },
+  );
+  // A task turbo.json doesn't configure declares nothing of its own.
+  assert.deepEqual(turboDrift(turbo, "lint", new Set(["X"])), {
+    undeclared: ["X"],
+    unused: [],
+  });
+});
+
+test("turbo.json declares every name the apps and the e2e suite read", () => {
+  const turbo = loadTurbo();
+  const apps = scanCodeNames(["apps/website", "apps/admin", "packages"]);
+  assert.deepEqual(turboDrift(turbo, "build", apps).undeclared, []);
+  assert.deepEqual(
+    turboDrift(turbo, "test:e2e", scanCodeNames(["apps/e2e"])).undeclared,
+    [],
+  );
 });

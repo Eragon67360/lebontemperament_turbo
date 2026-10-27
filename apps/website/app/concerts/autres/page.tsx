@@ -72,14 +72,14 @@ const page = () => {
           { name: "CDs", path: "/concerts/autres" },
         ])}
       />
-      <div className="container mx-auto flex w-full flex-col pb-8">
+      <div className="container mx-auto flex w-full flex-col px-4 pb-8">
         <div className="py-16">
           <div>
             <h1>
               <span className="text-title text-primary-400 dark:text-primary block leading-none font-light">
                 Concerts
               </span>
-              <span className="text-title block leading-none font-bold text-[#333]">
+              <span className="text-title text-foreground block leading-none font-bold">
                 CDs
               </span>
             </h1>

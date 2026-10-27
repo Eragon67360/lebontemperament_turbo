@@ -61,6 +61,7 @@ export default function BugReportsPage() {
         <DataState
           isLoading={isPending}
           isError={isError}
+          hasData={reports.length > 0}
           isEmpty={reports.length === 0}
           onRetry={() => refetch()}
           errorDescription="Les signalements n'ont pas pu être chargés. Vérifiez votre connexion, puis réessayez."

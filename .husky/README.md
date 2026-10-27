@@ -1,42 +1,9 @@
-# Husky Git Hooks
+# Husky Git hooks
 
-This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks.
+`npm ci` (or `npm install`) installs [Husky](https://typicode.github.io/husky/) through the root `prepare` script, skipped on CI and Vercel. One hook exists.
 
-## Pre-commit Hook
+## Pre-commit
 
-The pre-commit hook automatically:
+`.husky/pre-commit` runs `npx lint-staged`: `prettier --write` on the **staged** `ts`, `tsx`, `js`, `mjs`, `md`, `json` and `css` files (the `lint-staged` key in the root `package.json`), which re-stages those files. It stages nothing else, builds nothing, bumps no version and takes seconds. A worktree without `node_modules` has no `.husky/_` directory, so the hook does not run there.
 
-1. **Bumps versions** - Automatically bumps versions for `@website` and `@admin` apps based on changed files
-2. **Formats code** - Runs `npm run format` to format all code with Prettier
-3. **Builds projects** - Runs `npm run build` to ensure everything compiles
-
-### Version Bumping Logic
-
-The version bumping script (`scripts/bump-versions.js`) automatically determines the version bump type:
-
-- **Minor** - For API route changes, config changes, or new features (pages, components, API routes)
-- **Patch** - For bug fixes, refactoring, and other changes
-
-You can also manually specify the bump type:
-
-```bash
-npm run bump-versions major   # Force major version bump
-npm run bump-versions minor   # Force minor version bump
-npm run bump-versions patch   # Force patch version bump
-```
-
-The script only bumps versions for apps that have actual changes, so if you only modify files in `apps/website/`, only the website version will be bumped.
-
-## Manual Version Bumping
-
-To manually bump versions without committing:
-
-```bash
-npm run bump-versions
-```
-
-Or with a specific bump type:
-
-```bash
-npm run bump-versions minor
-```
+Lint, type checks, tests and builds are yours to run before a PR ([quality gates](../docs/agents/quality-gates.md)); CI runs them on the PR. Versions are bumped on the release PR only, with `npm run release:bump` ([release](../docs/agents/release.md#preparing-a-release)).

@@ -25,14 +25,14 @@ Each list is a starting point, not a boundary. Facts flagged on 2026-10-01 are m
 
 - ⚑ Staging has its own database since 2026-10-07 (#363), but Google, Cloudinary and SMTP accounts are still shared by every environment ([safety](safety.md#production-and-staging-databases)).
 - ⚑ Secret scanning off on a public repo; `NEXT_PUBLIC_` mailbox credentials; an unused `NEXT_PUBLIC_ADMIN_PASSWORD` in Vercel. Scan the git history for committed secrets (`git log -p` searches, or `gitleaks` via `npx`/a container) without printing what you find; report locations only.
-- RLS on every table (the core tables' policies live only in the database), service-role usage behind explicit checks, admin role checks (`admin` / `superadmin`), members-area access by group, API routes (auth, validation, reCAPTCHA, enumeration, rate limits), Stripe webhook verification and receipt numbering, delivery tracking tokens and location sharing, uploads, `proxy.ts` guards.
+- RLS on every table (the core tables' policies live only in the database), service-role usage behind explicit checks, admin role checks (`admin` / `superadmin`), members-area access by group, API routes (auth, validation, reCAPTCHA, enumeration, rate limits), the `/don` HelloAsso link and tiers (site settings, superadmins only) and the Stripe-era `donations` records (RLS), delivery tracking tokens and location sharing, uploads, `proxy.ts` guards.
 - Mobile: no secrets in the app bundle beyond the anon key; Supabase session storage; push token handling.
 
 ### 2. Product, data protection and legal (France / EU)
 
 - Members' and donors' personal data: what is collected (profiles, phone numbers, voices, groups, addresses for deliveries, live locations), who can see it, retention, export and deletion on request (GDPR arts. 15–17).
-- `/politique-de-confidentialite` and `/impressum` (an _impressum_ is a German notion; French law asks for _mentions légales_, LCEN art. 6) against GDPR art. 13: controller (the association), purposes, legal bases, processors (Vercel, Supabase, Stripe, Cloudinary, Google, Firebase, Twilio, Mapbox), transfers outside the EU, rights, CNIL.
-- Donations: tax receipts (_reçus fiscaux_) correctness and numbering, refunds, Stripe test vs live separation.
+- `/politique-de-confidentialite` and `/mentions-legales` (`/impressum` redirects there; LCEN art. 6) against GDPR art. 13: controller (the association), purposes, legal bases, processors (the policy names Vercel, Supabase, Google, Cloudinary, SMS Gateway for Android, Twilio, Mapbox, FOSSGIS, Apple, OpenAI, and Stripe for the old donation records: check the list against the code), transfers outside the EU, rights, CNIL.
+- Donations: HelloAsso takes the payments and issues the tax receipts (_reçus fiscaux_); check that `/don` and the campaign card point at the right campaign (site settings, announcements) and that the Stripe-era `donations` and `donors` rows stay unreadable to members.
 - Consent: reCAPTCHA, Google Maps/Mapbox, YouTube embeds, analytics; cookies banner needs.
 
 ### 3. SEO and GEO (website)
@@ -45,7 +45,7 @@ Each list is a starting point, not a boundary. Facts flagged on 2026-10-01 are m
 
 ### 5. Performance and architecture
 
-- Rendering mode per route, CDN caching (`x-vercel-cache`), TTFB, client component weight (HeroUI, GSAP, motion, FullCalendar, maps, PDF), images via Cloudinary, Supabase query patterns (N+1, `select('*')`, missing indexes), TanStack Query usage in the admin, edge function timeouts and cron health (`rehearsal_sync_logs`), mobile offline cache consistency.
+- Rendering mode per route, CDN caching (`x-vercel-cache`), TTFB, client component weight (HeroUI, motion, FullCalendar, maps, PDF), images via Cloudinary, Supabase query patterns (N+1, `select('*')`, missing indexes), TanStack Query usage in the admin, edge function timeouts and cron health (`rehearsal_sync_logs`), mobile offline cache consistency.
 - Monorepo hygiene: dependencies declared outside the workspace that imports them (the root `package.json` carries tooling only), TypeScript 5.9 at the root vs 7 in the apps (deliberate, see project.md).
 
 ### 6. Engineering and delivery

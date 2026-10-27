@@ -21,8 +21,6 @@ import { createPublicClient } from "@/utils/supabase/public";
 import type { Database } from "@repo/domain/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export { ANNIVERSARY_FLAG_KEY } from "@/lib/featureFlags";
-
 /**
  * The featured memories shown on `/40-ans`, public columns only.
  *

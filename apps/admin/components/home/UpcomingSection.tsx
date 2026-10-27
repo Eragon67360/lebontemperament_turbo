@@ -65,6 +65,7 @@ export function UpcomingSection({ className }: { className?: string }) {
           <DataState
             isLoading={sources.isLoading}
             isError={sources.isError}
+            hasData={!!(rehearsals.data && events.data && concerts.data)}
             onRetry={sources.retryAll}
             errorDescription="L'agenda n'a pas pu être chargé."
             skeleton={<ListSkeleton rows={4} label="Chargement de l'agenda…" />}
@@ -79,7 +80,9 @@ export function UpcomingSection({ className }: { className?: string }) {
                 className="py-8"
               />
             )}
-            <SourceNote failed={sources.failed} className="mt-4" />
+            {!sources.isError && (
+              <SourceNote failed={sources.failed} className="mt-4" />
+            )}
           </DataState>
         </CardContent>
       </Card>

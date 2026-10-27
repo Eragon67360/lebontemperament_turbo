@@ -112,6 +112,7 @@ export function DriveIndexOverview() {
         <DataState
           isLoading={query.isLoading}
           isError={query.isError}
+          hasData={!!query.data}
           isEmpty={sections.length === 0}
           onRetry={() => query.refetch()}
           errorDescription={INDEX_ERROR}
@@ -225,7 +226,7 @@ function IndexPageFrame({
   title: string;
   children: () => ReactNode;
 }) {
-  if (query.isError || query.isLoading) {
+  if ((query.isError && !query.data) || query.isLoading) {
     return (
       <PageShell title={title}>
         <DataState

@@ -1,15 +1,16 @@
 // « Prochain concert » on the home and the countdown in its greeting: which
 // concert comes next, in how many days, and the French wording of its facts.
 // Pure and unit-tested; the home feeds it the concerts query it already has.
+import { websiteUrl } from "@/lib/website";
 import {
   contextLabel,
   formatTimeFr,
   parseIsoDate,
   splitConcerts,
-  todayIso,
   type ConcertLike,
 } from "@/utils/concerts/schedule";
 import { formatDayFr } from "@/utils/home/upcoming";
+import { parisToday } from "@repo/domain/utils/parisDay";
 
 /** The slice of a concert row the card needs (fixtures stay small). */
 export type NextConcertLike = ConcertLike & {
@@ -19,30 +20,31 @@ export type NextConcertLike = ConcertLike & {
 };
 
 /**
- * The first concert still to come, by the admin's local day: a concert dated
- * today is still the next one until midnight, as on the concerts page.
+ * The first concert still to come, by the Paris day (as on the site and the
+ * concerts page): a concert dated today is still the next one until
+ * midnight in Paris, whatever the admin's device says.
  */
 export function pickNextConcert<T extends ConcertLike>(
   concerts: readonly T[] | undefined,
   now: Date = new Date(),
 ): T | null {
   if (!concerts?.length) return null;
-  return splitConcerts(concerts, todayIso(now)).upcoming[0] ?? null;
+  return splitConcerts(concerts, parisToday(now)).upcoming[0] ?? null;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Whole calendar days from today to the concert's day (0 today, 1 tomorrow),
- * counted on local days so a daylight-saving change never shifts it; null
- * when the date is unreadable.
+ * Whole calendar days from today (the Paris day) to the concert's day (0
+ * today, 1 tomorrow), counted between calendar days so a daylight-saving
+ * change never shifts it; null when the date is unreadable.
  */
 export function daysUntil(
   dateIso: string,
   now: Date = new Date(),
 ): number | null {
   const day = parseIsoDate(dateIso);
-  const today = parseIsoDate(todayIso(now));
+  const today = parseIsoDate(parisToday(now));
   if (!day || !today) return null;
   return Math.round((day.getTime() - today.getTime()) / DAY_MS);
 }
@@ -102,8 +104,6 @@ export function concertMetaFr(
   return { when, details: details || null };
 }
 
-const DEFAULT_WEBSITE_URL = "https://www.lebontemperament.com";
-
 /**
  * The public concerts page. A concert has no page of its own on the site
  * (`/concerts/[slug]` is a concert story), so « Voir sur le site » opens the
@@ -112,5 +112,5 @@ const DEFAULT_WEBSITE_URL = "https://www.lebontemperament.com";
 export function siteConcertsUrl(
   base: string | undefined = process.env.NEXT_PUBLIC_WEBSITE_URL,
 ): string {
-  return `${(base || DEFAULT_WEBSITE_URL).replace(/\/+$/, "")}/concerts`;
+  return websiteUrl("/concerts", base);
 }

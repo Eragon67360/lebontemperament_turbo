@@ -16,7 +16,7 @@ const SkeletonImage: React.FC<SkeletonImageProps> = ({
 }) => {
   return (
     <m.div
-      className={`animate-pulse bg-gradient-to-br from-gray-200 to-gray-300 ${className}`}
+      className={`from-surface-secondary to-surface-tertiary animate-pulse bg-gradient-to-br ${className}`}
       style={{ width, height }}
       data-testid={dataTestId}
       role="img"
@@ -27,7 +27,7 @@ const SkeletonImage: React.FC<SkeletonImageProps> = ({
     >
       <div className="flex h-full w-full items-center justify-center">
         <svg
-          className="h-12 w-12 text-gray-400"
+          className="text-muted h-12 w-12"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

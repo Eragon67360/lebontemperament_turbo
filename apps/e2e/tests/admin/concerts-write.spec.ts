@@ -103,5 +103,13 @@ test("create and delete an E2E concert", async ({ page }) => {
   await expect(
     page.getByText(`« ${name} » supprimé`, { exact: true }),
   ).toBeVisible();
-  await expect(heading).toBeHidden();
+  // `main` is aria-hidden until the confirmation finishes its exit animation,
+  // so `heading` (a role locator) matches nothing meanwhile and `toBeHidden()`
+  // would pass on an empty match. A CSS parent with hidden content included
+  // only reaches 0 once the row has really left the DOM.
+  await expect(
+    page
+      .locator("main")
+      .getByRole("heading", { name, exact: true, includeHidden: true }),
+  ).toHaveCount(0);
 });

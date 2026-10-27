@@ -4,7 +4,7 @@ import type { PublicVideo } from "@/lib/publicVideos";
 import { Button } from "@heroui/react";
 import { extractYouTubeId } from "@repo/domain/utils/youtube";
 import { AnimatePresence, m } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { IoClose, IoPlay } from "react-icons/io5";
 import VideoFacade from "./VideoFacade";
@@ -16,6 +16,29 @@ const FeaturedVideosBubble = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const headingId = useId();
+  // The bubble and the panel replace each other, so the focus would fall to
+  // the body on each swap: the panel takes it when it appears, and the bubble
+  // takes it back when the panel was closed on purpose (Escape, « Fermer »),
+  // not when a click elsewhere closed it.
+  const restoreFocus = useRef(false);
+
+  const panelRef = useCallback((element: HTMLDivElement | null) => {
+    popoverRef.current = element;
+    element?.focus({ preventScroll: true });
+  }, []);
+
+  const bubbleRef = useCallback((element: HTMLButtonElement | null) => {
+    if (element && restoreFocus.current) {
+      restoreFocus.current = false;
+      element.focus({ preventScroll: true });
+    }
+  }, []);
+
+  const close = () => {
+    restoreFocus.current = true;
+    setIsOpen(false);
+  };
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -44,12 +67,20 @@ const FeaturedVideosBubble = () => {
       }
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      restoreFocus.current = true;
+      setIsOpen(false);
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
@@ -73,8 +104,11 @@ const FeaturedVideosBubble = () => {
       <AnimatePresence mode="wait">
         {isOpen ? (
           <m.div
-            ref={popoverRef}
+            ref={panelRef}
             key="content"
+            role="dialog"
+            aria-labelledby={headingId}
+            tabIndex={-1}
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -83,14 +117,18 @@ const FeaturedVideosBubble = () => {
           >
             {/* Header */}
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-foreground text-lg font-semibold">
+              <h3
+                id={headingId}
+                className="text-foreground text-lg font-semibold"
+              >
                 À la une
               </h3>
               <Button
                 isIconOnly
                 size="sm"
                 variant="ghost"
-                onPress={() => setIsOpen(false)}
+                aria-label="Fermer"
+                onPress={close}
                 className="text-foreground/50 hover:text-foreground"
               >
                 <IoClose size={20} />
@@ -111,14 +149,12 @@ const FeaturedVideosBubble = () => {
               <h4 className="text-foreground line-clamp-1 text-base font-medium">
                 {currentVideo.title}
               </h4>
-              <p className="text-foreground/60 text-xs">
-                {currentVideo.composer}
-              </p>
+              <p className="text-muted text-xs">{currentVideo.composer}</p>
             </div>
 
             {/* Controls */}
             <div className="mt-4 flex items-center justify-between">
-              <div className="text-foreground/40 text-xs font-medium">
+              <div className="text-muted text-xs font-medium">
                 {currentIndex + 1} / {videos.length}
               </div>
               <div className="flex gap-2">
@@ -126,6 +162,7 @@ const FeaturedVideosBubble = () => {
                   isIconOnly
                   size="sm"
                   variant="ghost"
+                  aria-label="Vidéo précédente"
                   className="bg-default/40"
                   onPress={prevVideo}
                   isDisabled={videos.length <= 1}
@@ -136,6 +173,7 @@ const FeaturedVideosBubble = () => {
                   isIconOnly
                   size="sm"
                   variant="ghost"
+                  aria-label="Vidéo suivante"
                   className="bg-default/40"
                   onPress={nextVideo}
                   isDisabled={videos.length <= 1}
@@ -147,6 +185,7 @@ const FeaturedVideosBubble = () => {
           </m.div>
         ) : (
           <m.button
+            ref={bubbleRef}
             key="button"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -162,7 +201,7 @@ const FeaturedVideosBubble = () => {
               aria-hidden="true"
               className="absolute -top-1 -right-1 flex h-4 w-4"
             >
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75 motion-reduce:animate-none"></span>
               <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500"></span>
             </span>
             <IoPlay className="ml-1 h-6 w-6" />

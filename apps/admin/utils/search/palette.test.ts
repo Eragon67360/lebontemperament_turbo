@@ -1,6 +1,7 @@
 import { buildNavSections } from "@/lib/navigation";
 import assert from "node:assert/strict";
 import {
+  isSearchShortcut,
   matchesSearch,
   normalizeSearch,
   palettePages,
@@ -9,7 +10,9 @@ import {
 
 // --- Accents, case and spaces never get in the way ---
 assert.equal(normalizeSearch("  Thérèse   MARTIN "), "therese martin");
-assert.equal(normalizeSearch("Chœur"), "chœur");
+assert.equal(normalizeSearch("Chœur"), "choeur");
+assert.ok(matchesSearch(["Chœur d'hommes"], "choeur"));
+assert.ok(matchesSearch(["Choeur d'hommes"], "chœur"));
 assert.ok(matchesSearch(["Thérèse Martin"], "therese"));
 assert.ok(matchesSearch(["Thérèse Martin"], "MARTIN thé"));
 assert.ok(!matchesSearch(["Thérèse Martin"], "paul"));
@@ -53,6 +56,29 @@ assert.ok(matchesSearch(["a"], "   "), "an empty query matches everything");
     extra: [p.section, p.hint],
   }));
   assert.equal(found[0]?.label, "Répétitions");
+}
+
+// --- ⌘K or Ctrl+K, from a field too; not with Alt or Shift, not another key ---
+{
+  const press = (
+    key: string,
+    held: Partial<
+      Record<"metaKey" | "ctrlKey" | "altKey" | "shiftKey", boolean>
+    > = {},
+  ) => ({
+    key,
+    metaKey: false,
+    ctrlKey: false,
+    altKey: false,
+    shiftKey: false,
+    ...held,
+  });
+  assert.ok(isSearchShortcut(press("k", { metaKey: true })));
+  assert.ok(isSearchShortcut(press("K", { ctrlKey: true })));
+  assert.ok(!isSearchShortcut(press("k")));
+  assert.ok(!isSearchShortcut(press("j", { metaKey: true })));
+  assert.ok(!isSearchShortcut(press("k", { metaKey: true, shiftKey: true })));
+  assert.ok(!isSearchShortcut(press("k", { ctrlKey: true, altKey: true })));
 }
 
 console.log("palette.test.ts ok");

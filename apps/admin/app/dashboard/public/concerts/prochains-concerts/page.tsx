@@ -32,10 +32,10 @@ import {
   concertTitle,
   splitConcerts,
   splitTours,
-  todayIso,
 } from "@/utils/concerts/schedule";
 import type { ConcertFormValues, TourFormValues } from "@/utils/formSchemas";
 import type { Concert } from "@repo/domain/types/concerts";
+import { parisToday } from "@repo/domain/utils/parisDay";
 import { format } from "date-fns";
 import { Music2, Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -85,11 +85,11 @@ export default function ConcertsAndToursPage() {
   // unsaved selection. Today is read when the data changes, so a page left
   // open overnight stays consistent until it refetches.
   const concerts = useMemo(
-    () => splitConcerts(concertsQuery.data ?? [], todayIso()),
+    () => splitConcerts(concertsQuery.data ?? [], parisToday()),
     [concertsQuery.data],
   );
   const tours = useMemo(
-    () => splitTours(toursQuery.data ?? [], todayIso()),
+    () => splitTours(toursQuery.data ?? [], parisToday()),
     [toursQuery.data],
   );
   const tourNames = useMemo(
@@ -280,6 +280,7 @@ export default function ConcertsAndToursPage() {
           <DataState
             isLoading={toursQuery.isLoading}
             isError={toursQuery.isError}
+            hasData={!!toursQuery.data}
             isEmpty={periodTours.length === 0}
             onRetry={() => toursQuery.refetch()}
             errorDescription="Les tournées n'ont pas pu être chargées."
@@ -341,6 +342,7 @@ export default function ConcertsAndToursPage() {
           <DataState
             isLoading={concertsQuery.isLoading}
             isError={concertsQuery.isError}
+            hasData={!!concertsQuery.data}
             isEmpty={periodConcerts.length === 0}
             onRetry={() => concertsQuery.refetch()}
             errorDescription="Les concerts n'ont pas pu être chargés."

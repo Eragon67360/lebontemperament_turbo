@@ -1,9 +1,11 @@
+import type { Enums } from "@repo/domain/database.types";
+
 // Define the user structure
 export type User = {
   id: string;
   email: string;
   display_name: string | null;
-  role: "user" | "admin" | "superadmin";
+  role: Enums<"user_role">;
   created_at: string;
   invite_status: "en attente" | "approuvé";
   avatar?: string;

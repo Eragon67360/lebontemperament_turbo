@@ -83,7 +83,7 @@ const Decouvrir = () => {
         </p>
       </div>
 
-      <div className="flex flex-col gap-16 text-justify">
+      <div className="flex flex-col gap-16 sm:text-justify">
         <div className="bg-surface-secondary flex w-full flex-col gap-8 p-8 lg:flex-row">
           <div className="flex w-full flex-col lg:w-3/5">
             <h2 className="text-title text-muted dark:text-primary leading-none font-light">

@@ -5,6 +5,7 @@
 // are orders.document_* (migration 20261022142528_member_orders.sql).
 
 import { fileSizeLabel } from "./documents";
+import { asciiWords } from "./slug";
 import {
   contentMatchesType,
   EXCEL_TYPES,
@@ -62,15 +63,6 @@ export function orderDocumentMimeType(fileName: string): string | null {
   return Object.hasOwn(TYPE_BY_EXTENSION, extension)
     ? TYPE_BY_EXTENSION[extension]!
     : null;
-}
-
-/** ASCII words joined by `-`: accents dropped, everything else a separator. */
-function asciiWords(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^A-Za-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 /**

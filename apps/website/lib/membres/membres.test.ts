@@ -1,7 +1,11 @@
 // Run with: npx tsx lib/membres/membres.test.ts
 // Fake names only: the repository is public.
+import { VOICE_HEX } from "@/components/membres/tones";
 import type { MemberRehearsal } from "@/lib/publicConcerts";
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
 import {
   groupByLastName,
   hasVoice,
@@ -59,6 +63,9 @@ assert.ok(!hasVoice(member("A B", "Altesse"), "alte"));
 // Search ignores accents and case, across words.
 assert.ok(matchesSearch(member("Élise SCHMITT"), "elise schm"));
 assert.ok(!matchesSearch(member("Élise SCHMITT"), "weber"));
+// Ligatures fold too: « loeb » finds « LŒB » and the other way round.
+assert.ok(matchesSearch(member("Noé LŒB"), "loeb"));
+assert.ok(matchesSearch(member("Noé LOEB"), "lœb"));
 
 const rehearsal = (over: Partial<MemberRehearsal>): MemberRehearsal => ({
   id: "r",
@@ -151,5 +158,76 @@ assert.equal(scoreFolderFor("Orchestre"), "orchestre");
 assert.equal(scoreFolderFor("Orchestre & Basse"), "adultes");
 assert.equal(scoreFolderFor("jeune & alte"), "jeunes");
 assert.equal(scoreFolderFor(""), null);
+
+// « Les Pupitres » conformance, read from the sources: the voice colours
+// are typed in tones.ts only, nothing under the members pages (MusicList,
+// shown only on the members' concerts page, included) asks for a 700 or 800
+// weight, and the bold class of FullCalendar's classic theme is the one
+// globals.css softens for the members' calendar.
+const website = path.resolve(import.meta.dirname, "../..");
+const read = (file: string) => readFileSync(path.join(website, file), "utf8");
+function* sources(dir: string): Generator<string> {
+  const entries = readdirSync(path.join(website, dir), { withFileTypes: true });
+  for (const entry of entries) {
+    const file = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) yield* sources(file);
+    else if (/\.tsx?$/.test(entry.name) && !entry.name.includes(".test.")) {
+      yield file;
+    }
+  }
+}
+const membersFiles = [
+  ...sources("app/membres"),
+  ...sources("components/membres"),
+  ...sources("components/travail"),
+  "components/GoogleCalendar.tsx",
+  "components/MembersFooter.tsx",
+  "components/MembersNavigation.tsx",
+  "components/MusicList.tsx",
+];
+const retyped: string[] = [];
+const heavy: string[] = [];
+for (const file of membersFiles) {
+  const source = read(file);
+  if (file !== "components/membres/tones.ts") {
+    for (const hex of Object.values(VOICE_HEX)) {
+      if (source.toLowerCase().includes(hex)) retyped.push(`${file}: ${hex}`);
+    }
+  }
+  const weights = source.matchAll(
+    /(?:^|[^\w-])((?:[\w-]+:)*font-(?:bold|extrabold|black))(?![\w-])/g,
+  );
+  for (const match of weights) heavy.push(`${file}: ${match[1]}`);
+}
+assert.deepEqual(
+  retyped,
+  [],
+  `voice colours typed outside tones.ts:\n${retyped.join("\n")}`,
+);
+assert.deepEqual(
+  heavy,
+  [],
+  `700 or 800 weights under the members pages:\n${heavy.join("\n")}`,
+);
+
+const require = createRequire(import.meta.url);
+const themeCss = readFileSync(
+  require.resolve("@fullcalendar/react/themes/classic/theme.css"),
+  "utf8",
+);
+const boldSelectors = [...themeCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+  .filter((match) => /font-weight:\s*[789]00/.test(match[2] ?? ""))
+  .map((match) => (match[1] ?? "").trim());
+assert.ok(
+  boldSelectors.length > 0,
+  "FullCalendar's classic theme declares no bold rule any more: drop the override in app/globals.css",
+);
+const globals = read("app/globals.css");
+for (const selector of boldSelectors) {
+  assert.ok(
+    globals.includes(`.members-scope ${selector} {`),
+    `app/globals.css must soften FullCalendar's ${selector} under .members-scope`,
+  );
+}
 
 console.log("membres helpers: all assertions passed");

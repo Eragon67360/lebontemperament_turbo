@@ -9,14 +9,14 @@ issue (GitHub) ──► branch from origin/dev ──► PR into dev ──► 
                                                                                                     │
                  owner says "merge it" ◄── release PR dev → main (summary of what ships) ◄──────────┘
                           │
-                          └──► merge ──► Vercel deploys www + admin ──► Android build to Play (internal, draft) if the app changed ──► checks
+                          └──► merge ──► Vercel deploys www + admin ──► Android build to Play (internal track) if the app changed ──► checks
 ```
 
 1. **Issue first** for anything bigger than a typo: why, where, what "done" means ([issue format](audit-playbook.md#issue-format)). The repo is public: keep personal data and exploit details out of issues.
 2. **Branch** from a fresh `origin/dev` in a worktree: `git fetch origin && git worktree add ../lbt-<topic> -b <type>/<topic> origin/dev`. Branch names in history: `feat/…`, `fix/…`, `bugfix/…`, `refactor/…`, `chore/…`, `ci/…`, `test/…`, `docs/…`.
 3. **Commits**: English Conventional Commits with a scope when one app is concerned (`feat(admin): …`, `fix(website): …`, `fix(domain): …`, `test(e2e): …`), one logical change each, body says why and links the issue (`Closes #12` / `Refs #12`). End each message with the attribution lines your harness provides.
-4. **PR into `dev`**: what changed, why, how it was verified (exact commands and results), owner steps if any. Vercel builds previews of both sites for the PR; those are the only automatic checks.
-5. **Merge into `dev`** yourself once the gates pass and the diff has been reviewed: `gh pr merge <n> --merge` (this repo uses **merge commits**). `dev` then deploys to staging; the e2e suite runs against it every morning.
+4. **PR into `dev`**: what changed, why, how it was verified (exact commands and results), owner steps if any. Vercel builds previews of both sites for the PR, and `.github/workflows/ci.yml` runs the gates on it (lint, types, tests, builds, the Flutter checks: [quality-gates.md](quality-gates.md)).
+5. **Merge into `dev`** yourself once the gates pass and the diff has been reviewed: `gh pr merge <n> --merge` (this repo uses **merge commits**). `dev` then deploys to staging; the e2e suite runs against it once a day.
 6. **Release** `dev` → `main` when a coherent batch is ready: see [release.md](release.md). Merge it only after the owner's explicit go for that PR.
 
 Never use `--delete-branch` on a release PR (its head is `dev`).
@@ -40,7 +40,7 @@ The owner is the product owner and decides; you are trusted to run everything el
 - **Recommend, don't survey.** When a decision is needed, give numbered questions, each with your recommended answer, batched in one message. He often answers "go with your recommendations". If an answer is ambiguous, state your interpretation and proceed.
 - **Facts are your job.** Don't ask what you can find out: read the code, query an API read-only, search the docs, measure the site. Ask only for real decisions: breaking changes, taste, scope, money, anything that touches members, donors or the association's identity, and anything only he can do in a dashboard.
 - **Don't block on non-breaking calls.** Pick, proceed, report. Discuss breaking changes before doing them.
-- **Things only he can do** (Supabase dashboard and SQL on production, secrets, Vercel and GitHub settings, Stripe, Google, Firebase, store consoles): give exact click-paths or commands, the order, and why. Then verify the result yourself (API read, `curl`) when you can.
+- **Things only he can do** (Supabase dashboard and SQL on production, secrets, Vercel and GitHub settings, Google, Firebase, store consoles): give exact click-paths or commands, the order, and why. Then verify the result yourself (API read, `curl`) when you can.
 - **Keep him posted** with short status lines while long work runs (he sometimes follows from his phone): what finished, what's running, what's waiting on him. Lead with what needs him.
 - **Report faithfully**: failures with evidence, skipped steps named, estimates labelled. When you made a mistake, say what it was, the impact, and what you did about it.
 - **Ask before outward or hard-to-reverse actions** not already authorised here: anything writing to the database, sending notifications, SMS or emails, payments, publishing, deleting, spending money, third-party configuration. A permission prompt or classifier refusal is a "no": hand the step to the owner with instructions instead of working around it.

@@ -1,27 +1,22 @@
 // utils/access.ts
 // Pure authorization rules for the admin (no I/O, unit-tested in access.test.ts).
 // The API routes and the dashboard layout call these through utils/auth.ts.
-import type { Database } from "@repo/domain/database.types";
+// The roles and the admin access rule are shared with the website and live
+// in @repo/domain/utils/roles; they are re-exported here for the admin.
+import {
+  isAdminRole,
+  isUserRole,
+  type UserRole,
+} from "@repo/domain/utils/roles";
 
-export type UserRole = Database["public"]["Enums"]["user_role"];
-export type AdminRole = Extract<UserRole, "admin" | "superadmin">;
-
-export const USER_ROLES = [
-  "user",
-  "admin",
-  "superadmin",
-] as const satisfies readonly UserRole[];
-
-export function isUserRole(value: unknown): value is UserRole {
-  return (
-    typeof value === "string" &&
-    (USER_ROLES as readonly string[]).includes(value)
-  );
-}
-
-export function isAdminRole(value: unknown): value is AdminRole {
-  return value === "admin" || value === "superadmin";
-}
+export {
+  decideAccess,
+  isAdminRole,
+  isUserRole,
+  USER_ROLES,
+  type AdminRole,
+  type UserRole,
+} from "@repo/domain/utils/roles";
 
 export type Denied = {
   allowed: false;
@@ -35,33 +30,6 @@ const deny = (status: Denied["status"], error: string): Denied => ({
   status,
   error,
 });
-
-/**
- * Who may use the admin: a signed-in user whose profile role is admin or
- * superadmin (`required: "admin"`, the default), or superadmin only.
- */
-export function decideAccess<U extends { id: string }>(
-  user: U | null | undefined,
-  role: unknown,
-  required: AdminRole = "admin",
-):
-  | { allowed: true; user: U; role: AdminRole }
-  | (Denied & { status: 401 | 403 }) {
-  if (!user) {
-    return { allowed: false, status: 401, error: "Non authentifié" };
-  }
-  if (required === "superadmin" && role !== "superadmin") {
-    return {
-      allowed: false,
-      status: 403,
-      error: "Non autorisé - Rôle superadmin requis",
-    };
-  }
-  if (!isAdminRole(role)) {
-    return { allowed: false, status: 403, error: "Non autorisé" };
-  }
-  return { allowed: true, user, role };
-}
 
 type Actor = { id: string; role: UserRole };
 type Target = { id: string; role: UserRole };

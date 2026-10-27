@@ -63,7 +63,7 @@ import {
 import { useUsers } from "@/hooks/useUsers";
 import { memberName } from "@/utils/members/list";
 import { memberOptions } from "@/utils/orders/members";
-import type { SaleProduct } from "@/utils/orders/types";
+import type { OrderPayment, SaleProduct } from "@/utils/orders/types";
 import {
   type BuyerFilters,
   deliverableBuyers,
@@ -72,6 +72,7 @@ import {
   MODE_FILTERS,
   type ModeFilter,
   NO_BUYER_FILTERS,
+  paymentDeletionText,
   saleDatesLine,
   saleView,
   STATE_FILTERS,
@@ -103,6 +104,14 @@ type Tab = "buyers" | "suppliers" | "catalogue";
 type Deleting =
   | { type: "order"; id: string; name: string }
   | { type: "product"; product: SaleProduct }
+  | {
+      type: "payment";
+      orderId: string;
+      payment: OrderPayment;
+      /** The buyer and what the order owes now, for the confirmation's text. */
+      buyerName: string;
+      dueCents: number;
+    }
   | { type: "sale" };
 
 const describe = (error: unknown) =>
@@ -281,15 +290,19 @@ export default function SalePage() {
     toast.success("Paiement enregistré");
   };
 
-  const removePayment = async (orderId: string, paymentId: string) => {
-    try {
-      await deletePayment.mutateAsync({ orderId, paymentId });
-      toast.success("Paiement supprimé");
-    } catch (error) {
-      toast.error("Le paiement n'a pas été supprimé", {
-        description: describe(error),
-      });
-    }
+  // The trash icon in the order dialog only asks: the deletion itself goes
+  // through the page's confirmation, like an order or a product.
+  const askDeletePayment = (orderId: string, paymentId: string) => {
+    const row = view?.rows.find((r) => r.orderId === orderId);
+    const found = row?.order.payments.find((p) => p.id === paymentId);
+    if (!row || !found) return;
+    setDeleting({
+      type: "payment",
+      orderId,
+      payment: found,
+      buyerName: row.buyerName,
+      dueCents: row.dueCents,
+    });
   };
 
   // --- Catalogue ---
@@ -420,6 +433,12 @@ export default function SalePage() {
       } else if (deleting.type === "product") {
         await deleteProduct.mutateAsync(deleting.product.id);
         toast.success(`« ${productLabel(deleting.product)} » supprimé`);
+      } else if (deleting.type === "payment") {
+        await deletePayment.mutateAsync({
+          orderId: deleting.orderId,
+          paymentId: deleting.payment.id,
+        });
+        toast.success("Paiement supprimé");
       } else {
         await deleteSale.mutateAsync(saleId);
         toast.success("Vente supprimée");
@@ -435,27 +454,38 @@ export default function SalePage() {
         setDeleting(null);
         setOrderedProduct(deleting.product);
       } else {
-        toast.error("La suppression a échoué", {
-          description: describe(error),
-        });
+        toast.error(
+          deleting.type === "payment"
+            ? "Le paiement n'a pas été supprimé"
+            : "La suppression a échoué",
+          { description: describe(error) },
+        );
       }
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const paymentText =
+    deleting?.type === "payment"
+      ? paymentDeletionText(deleting, deleting.payment)
+      : null;
   const deleteTitle =
     deleting?.type === "order"
       ? `Supprimer la commande de « ${deleting.name} » ?`
       : deleting?.type === "product"
         ? `Supprimer « ${productLabel(deleting.product)} » ?`
-        : `Supprimer la vente « ${detail?.sale.title ?? ""} » ?`;
+        : paymentText
+          ? paymentText.title
+          : `Supprimer la vente « ${detail?.sale.title ?? ""} » ?`;
   const deleteDescription =
     deleting?.type === "order"
       ? "Ses quantités et ses paiements sont effacés. Si l'acheteur est déjà dans une tournée, son arrêt y reste. Cette action ne peut pas être annulée."
       : deleting?.type === "product"
         ? "Le produit disparaît du catalogue de cette vente. Cette action ne peut pas être annulée."
-        : "Le catalogue, toutes les commandes et tous les paiements de cette vente sont effacés. Cette action ne peut pas être annulée.";
+        : paymentText
+          ? paymentText.description
+          : "Le catalogue, toutes les commandes et tous les paiements de cette vente sont effacés. Cette action ne peut pas être annulée.";
 
   // --- States ---
 
@@ -903,7 +933,7 @@ export default function SalePage() {
             }
             onDeletePayment={
               editingOrder
-                ? (paymentId) => removePayment(editingOrder.id, paymentId)
+                ? (paymentId) => askDeletePayment(editingOrder.id, paymentId)
                 : undefined
             }
             deletingPaymentId={

@@ -26,11 +26,16 @@ Loaded on 2026-10-07 and checked against the dump: 38 tables, 25 functions (bodi
 
 ## Test accounts
 
-In the Supabase dashboard, project `website-staging` › Authentication › Users › Add user › Create new user (tick "Auto Confirm User"). The sign-up trigger creates the profile with role `user`. To make an account admin, run in `website-staging` › SQL Editor:
+In the Supabase dashboard, project `website-staging` › Authentication › Users › Add user › Create new user (tick "Auto Confirm User"). Since migration `20261026191101_explicit_membership.sql` only the admin creates members, so an account made in the dashboard has no profile, and signing in with it to the website or the admin fails until it has one. Add the profile (role `user`, `admin` or `superadmin`) in `website-staging` › SQL Editor; the same statement changes the role of an account that already has one:
 
 ```sql
-update public.profiles set role = 'admin' where email = '<the account email>';
+insert into public.profiles (id, email, role, display_name)
+select id, email, 'admin', split_part(email, '@', 1)
+from auth.users where email = '<the account email>'
+on conflict (id) do update set role = excluded.role;
 ```
+
+With an admin account, « Créer un compte » and « Inviter » in the staging admin (Membres) create accounts with their profile.
 
 The e2e suite signs in with `E2E_USER_EMAIL` / `E2E_USER_PASSWORD` (GitHub secrets): once staging is wired, those must name an **admin account on staging**.
 
@@ -44,4 +49,4 @@ Only on a new, empty project. Run the files in order in that project's SQL Edito
 
 ## Keeping it in step
 
-Every new migration goes to staging first, then to production after release. `seed.sql` can be re-run: it deletes only its own tagged rows before inserting them again.
+Every new migration goes to staging first, then to production after release. Nothing checks that it happened: before relying on a migration being on staging, read `supabase_migrations.schema_migrations` there (SQL Editor, read-only) and apply what is missing with the Supabase CLI linked to `website-staging`. `seed.sql` can be re-run: it deletes only its own tagged rows before inserting them again.

@@ -7,6 +7,9 @@ import type { StatusTone } from "@/components/ui/status-badge";
  */
 export type BugReportStatus = "pending" | "in_progress" | "resolved";
 
+/** Where a report was written: `bug_reports.source`, as the table's CHECK allows. */
+export type BugReportSource = "admin" | "app";
+
 export const BUG_REPORT_STATUSES: readonly BugReportStatus[] = [
   "pending",
   "in_progress",

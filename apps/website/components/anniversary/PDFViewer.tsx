@@ -1,8 +1,9 @@
 "use client";
 
+import { useModalDialog } from "@/hooks/useModalDialog";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -36,6 +37,10 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
   const [pageNumber, setPageNumber] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  // Escape, focus in, Tab kept inside, focus back on close, no scroll behind.
+  useModalDialog(dialogRef, isOpen, onClose);
 
   // Reset state when a new document is opened
   useResetOnChange([isOpen, url], () => {
@@ -67,6 +72,11 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
     <AnimatePresence>
       {isOpen && (
         <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 backdrop-blur-sm sm:p-4"
           onClick={onClose}
         >
@@ -81,7 +91,10 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
             {/* Header */}
             <header className="border-separator flex shrink-0 items-center justify-between border-b p-4">
               <div className="min-w-0 flex-1">
-                <h2 className="text-foreground truncate text-lg font-medium">
+                <h2
+                  id={titleId}
+                  className="text-foreground truncate text-lg font-medium"
+                >
                   {title}
                 </h2>
                 {numPages && !loading && (
@@ -95,6 +108,7 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
                   onClick={handleDownload}
                   className="text-muted hover:bg-surface-tertiary hover:text-foreground rounded-lg p-2 transition-colors"
                   title="Télécharger"
+                  aria-label="Télécharger le document"
                 >
                   <FaDownload className="h-5 w-5" />
                 </button>
@@ -108,8 +122,8 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
               </div>
             </header>
 
-            {/* PDF Content */}
-            <main className="bg-surface-secondary relative flex-1 overflow-auto">
+            {/* PDF Content (the page's <main> is outside: no second landmark) */}
+            <div className="bg-surface-secondary relative flex-1 overflow-auto">
               <div className="flex min-h-full items-center justify-center p-4">
                 {loading && (
                   <div className="text-center">
@@ -121,7 +135,9 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
                 )}
                 {error && (
                   <div className="text-center">
-                    <p className="font-medium text-red-500">{error}</p>
+                    <p className="font-medium text-red-700 dark:text-red-400">
+                      {error}
+                    </p>
                     <p className="text-muted mt-1 text-sm">
                       Veuillez essayer de le télécharger directement.
                     </p>
@@ -155,7 +171,7 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
                   </Document>
                 </div>
               </div>
-            </main>
+            </div>
 
             {/* Navigation Controls */}
             {numPages && numPages > 1 && !loading && !error && (
@@ -163,6 +179,7 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
                 <button
                   onClick={goToPrevPage}
                   disabled={pageNumber <= 1}
+                  aria-label="Page précédente"
                   className="border-separator bg-background text-foreground hover:bg-surface-secondary flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <FaChevronLeft className="h-4 w-4" />
@@ -174,6 +191,7 @@ export function PDFViewer({ url, title, isOpen, onClose }: PDFViewerProps) {
                 <button
                   onClick={goToNextPage}
                   disabled={pageNumber >= numPages}
+                  aria-label="Page suivante"
                   className="border-separator bg-background text-foreground hover:bg-surface-secondary flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span className="hidden sm:inline">Suivant</span>

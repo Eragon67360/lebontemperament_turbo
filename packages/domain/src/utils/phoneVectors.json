@@ -1,0 +1,161 @@
+{
+  "$comment": "Test vectors of the order phone rule, one list for every copy of it: packages/domain/src/utils/orders.ts (normalizePhone, isValidPhone, formatPhone), supabase/functions/_shared/phone.ts (normalizePhone, smsPhone), public.normalize_order_phone (supabase/migrations) and the app's order_totals.dart. `normalized` is the international form an SMS needs (null when nothing is typed), `valid` whether an SMS can reach it, `formatted` how the forms show and store it. Every number is made up: the French ones are in the ranges ARCEP keeps for fiction (06 39 98 xx xx, 01 99 00 xx xx).",
+  "vectors": [
+    {
+      "input": "0639981234",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "06 39 98 12 34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "06.39.98.12.34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "06-39-98-12-34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": " 06 39 98 12 34 ",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "+33 6 39 98 12 34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "+33639981234",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "0033 6 39 98 12 34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "0033639981234",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "+33 (0)6 39 98 12 34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "+33(0)639981234",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "+33 (0) 6 39 98 12 34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "0033 (0)6 39 98 12 34",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "+330639981234",
+      "normalized": "+33639981234",
+      "valid": true,
+      "formatted": "06 39 98 12 34"
+    },
+    {
+      "input": "01 99 00 12 34",
+      "normalized": "+33199001234",
+      "valid": true,
+      "formatted": "01 99 00 12 34"
+    },
+    {
+      "input": "+33 1 99 00 12 34",
+      "normalized": "+33199001234",
+      "valid": true,
+      "formatted": "01 99 00 12 34"
+    },
+    {
+      "input": "+33 (0)1 99 00 12 34",
+      "normalized": "+33199001234",
+      "valid": true,
+      "formatted": "01 99 00 12 34"
+    },
+    {
+      "input": "0041 79 123 45 67",
+      "normalized": "+41791234567",
+      "valid": true,
+      "formatted": "0041 79 123 45 67"
+    },
+    {
+      "input": "+41 79 123 45 67",
+      "normalized": "+41791234567",
+      "valid": true,
+      "formatted": "+41 79 123 45 67"
+    },
+    {
+      "input": "+41791234567",
+      "normalized": "+41791234567",
+      "valid": true,
+      "formatted": "+41791234567"
+    },
+    {
+      "input": "",
+      "normalized": null,
+      "valid": false,
+      "formatted": ""
+    },
+    {
+      "input": "12",
+      "normalized": "12",
+      "valid": false,
+      "formatted": "12"
+    },
+    {
+      "input": "06 39 98",
+      "normalized": "063998",
+      "valid": false,
+      "formatted": "06 39 98"
+    },
+    {
+      "input": "abc",
+      "normalized": "abc",
+      "valid": false,
+      "formatted": "abc"
+    },
+    {
+      "input": "+33 (0)6 39 98 12",
+      "normalized": "+3306399812",
+      "valid": false,
+      "formatted": "+33 (0)6 39 98 12"
+    },
+    {
+      "input": "+3300639981234",
+      "normalized": "+3300639981234",
+      "valid": false,
+      "formatted": "+3300639981234"
+    }
+  ]
+}

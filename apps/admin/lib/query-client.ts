@@ -10,7 +10,12 @@ export const queryClient = new QueryClient({
       refetchOnReconnect: true, // Refetch when internet reconnects
     },
     mutations: {
-      retry: 1, // Retry mutations once on failure
+      // A failed write is never re-sent on its own: a save whose answer was
+      // lost on the way back (a reset connection, a gateway timeout) may
+      // have gone through, and sending it again records it twice (a
+      // payment, a concert, a whole rehearsal series). The admin retries by
+      // hand, with the list refreshed. Reads keep their retries above.
+      retry: 0,
     },
   },
 });

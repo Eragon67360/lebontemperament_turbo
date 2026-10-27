@@ -303,6 +303,7 @@ export default function DocumentsPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={!!data}
         isEmpty={false}
         onRetry={() => refetch()}
         errorDescription="Les documents n'ont pas pu être chargés."

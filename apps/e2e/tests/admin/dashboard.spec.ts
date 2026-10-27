@@ -43,3 +43,33 @@ for (const path of DASHBOARD_VIEWS) {
     await expect(page.locator("main")).toBeVisible();
   });
 }
+
+// Only production reads the member roster and the Google Groups (SEC-007):
+// anywhere else, staging and previews included, these two pages show their
+// title and a notice instead. Assert those, never the lists.
+const MEMBER_LIST_VIEWS = [
+  {
+    path: "/dashboard/admin/users/sync",
+    heading: "Synchronisation de la liste des membres",
+  },
+  { path: "/dashboard/admin/google-groups", heading: "Liste de diffusion" },
+];
+
+for (const { path, heading } of MEMBER_LIST_VIEWS) {
+  test(`${path} shows its title, and outside production a notice`, async ({
+    page,
+    baseURL,
+  }) => {
+    await page.goto(path);
+    await expect(
+      page.getByRole("heading", { level: 1, name: heading }),
+    ).toBeVisible();
+    const production =
+      !!baseURL && new URL(baseURL).hostname === "admin.lebontemperament.com";
+    if (!production) {
+      await expect(
+        page.getByText("Disponible uniquement en production"),
+      ).toBeVisible();
+    }
+  });
+}

@@ -100,3 +100,49 @@ export function RowActionsMenu({
     </DropdownMenu>
   );
 }
+
+export interface RowActionsProps {
+  /** The row's « Plus d'actions » menu (`RowActionsMenu`), after the buttons. */
+  menu: React.ReactNode;
+  /** The row's visible buttons (« Modifier », « Masquer »…), in reading order. */
+  children?: React.ReactNode;
+  className?: string;
+}
+
+/**
+ * The action bar of a list row: its buttons, wrapping on narrow screens, then
+ * the « ⋯ » menu. The last button and the menu stay together, so the menu
+ * never wraps onto a line of its own under the buttons. Wide rows look as
+ * before: same order, same gaps.
+ */
+export function RowActions({ menu, children, className }: RowActionsProps) {
+  const buttons = rowButtons(children);
+  const last = buttons.pop();
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      {buttons}
+      <span className="flex items-center gap-2">
+        {last}
+        {menu}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The row's buttons as a flat list. A fragment counts as its buttons, so a row
+ * that groups several (« Mettre à la une » and « Retirer de la publication »)
+ * keeps only the last one beside the menu, and the others still wrap.
+ */
+function rowButtons(children: React.ReactNode): React.ReactNode[] {
+  return React.Children.toArray(children).flatMap((child) =>
+    React.isValidElement<{ children?: React.ReactNode }>(child) &&
+    child.type === React.Fragment
+      ? rowButtons(child.props.children).map((inner) =>
+          React.isValidElement(inner)
+            ? React.cloneElement(inner, { key: `${child.key}${inner.key}` })
+            : inner,
+        )
+      : [child],
+  );
+}

@@ -53,6 +53,7 @@ export default function AudioPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={memories.length > 0}
         isEmpty={memories.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les souvenirs audio n'ont pas pu être chargés."

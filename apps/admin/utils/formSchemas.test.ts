@@ -9,7 +9,6 @@ import {
   galleryVideoFormSchema,
   invitationEntrySchema,
   projectFormSchema,
-  slugify,
   tourFormSchema,
 } from "./formSchemas";
 
@@ -123,8 +122,7 @@ assert.match(
   /YouTube/,
 );
 
-// --- Concert stories (#480) ---
-assert.equal(slugify("Concert de Noël 2024 !"), "concert-de-noel-2024");
+// --- Concert stories (#480); the slug itself is @repo/domain/utils/slug ---
 const story = {
   name: "Concert de Noël",
   sub_name: "",

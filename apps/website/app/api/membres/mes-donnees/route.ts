@@ -1,8 +1,7 @@
 import { collectMemberData, exportFileName } from "@/lib/memberData";
 import { getContactEmail } from "@/lib/siteSettings";
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 /**
@@ -12,7 +11,7 @@ import { NextResponse } from "next/server";
  * that id.
  */
 export async function GET() {
-  const auth = await checkAuthorization();
+  const auth = await requireUser();
   if (!auth.authorized) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -22,7 +21,7 @@ export async function GET() {
     const data = await collectMemberData(
       // Several tables have no policy for members; the service role reads
       // them and collectMemberData keeps only this member's rows.
-      createAdminClient() as unknown as SupabaseClient,
+      createAdminClient(),
       auth.user,
       await getContactEmail(),
       now,

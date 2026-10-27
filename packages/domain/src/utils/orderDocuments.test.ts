@@ -31,6 +31,10 @@ assert.equal(
   orderDocumentFileName("Bon de commande Léa.JPEG"),
   "Bon-de-commande-Lea.jpg",
 );
+assert.equal(
+  orderDocumentFileName("Bon de commande du chœur.PNG"),
+  "Bon-de-commande-du-choeur.png",
+);
 assert.equal(orderDocumentFileName("¿¿.pdf"), "bon-de-commande.pdf");
 assert.equal(orderDocumentFileName("x.heic"), null);
 assert.equal(orderDocumentFileName("x".repeat(400) + ".pdf")!.length, 150);

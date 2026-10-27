@@ -73,6 +73,7 @@ export function ActivityFeed({ className }: { className?: string }) {
           <DataState
             isLoading={isLoading}
             isError={isError}
+            hasData={activities.length > 0}
             isEmpty={activities.length === 0}
             onRetry={() => refetch()}
             errorDescription="Le fil d'activité n'a pas pu être chargé."

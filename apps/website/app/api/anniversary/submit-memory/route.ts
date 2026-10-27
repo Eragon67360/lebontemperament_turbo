@@ -1,3 +1,9 @@
+import {
+  insertPendingMemory,
+  pendingMemoryRow,
+} from "@/lib/anniversaryMemories";
+import { errorCodes } from "@/lib/errorCodes";
+import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { createClient } from "@/utils/supabase/server";
@@ -5,8 +11,9 @@ import { detectFormAbuse } from "@repo/domain/utils/formAbuse";
 import { escapeHtml, escapeHtmlWithBreaks } from "@repo/domain/utils/html";
 import { NextResponse } from "next/server";
 
-// Email template for user confirmation
-const userConfirmationEmailTemplate = (name: string) => `
+// Confirmation to the address the visitor typed: fixed text, nothing they
+// typed is repeated.
+const userConfirmationEmail = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -73,7 +80,7 @@ const userConfirmationEmailTemplate = (name: string) => `
             
             <h1>Merci pour votre témoignage ! 🎉</h1>
             
-            <p>Bonjour ${escapeHtml(name)},</p>
+            <p>Bonjour,</p>
             
             <p>Nous avons bien reçu votre témoignage pour les 40 ans du Bon Tempérament !</p>
             
@@ -246,24 +253,23 @@ export async function POST(request: Request) {
       );
     }
 
+    // Per-IP and per-recipient limits, before anything is stored or sent.
+    if (await isFormRateLimited("memory", request.headers, String(email))) {
+      return NextResponse.json(
+        { error: RATE_LIMITED_MESSAGE },
+        { status: 429 },
+      );
+    }
+
     const supabase = await createClient();
 
-    // Insert new memory (will be pending approval by default)
-    const { data, error } = await supabase
-      .from("anniversary_memories")
-      .insert({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        message: message.trim(),
-        year: year ? parseInt(year) : null,
-        is_approved: false, // Requires admin approval
-        is_featured: false,
-      })
-      .select("id")
-      .single();
+    // The memory starts pending (admin approval). Its id is chosen here and
+    // nothing is read back: the visitor's session may only insert.
+    const memory = pendingMemoryRow({ name, email, message, year });
+    const { error } = await insertPendingMemory(supabase, memory);
 
     if (error) {
-      console.error("Error submitting memory:", error);
+      console.error("Error submitting memory:", errorCodes(error));
       return NextResponse.json(
         { error: "Failed to submit memory" },
         { status: 500 },
@@ -280,7 +286,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: "Memory submitted successfully (email notification failed)",
-        id: data.id,
+        id: memory.id,
       });
     }
 
@@ -288,35 +294,38 @@ export async function POST(request: Request) {
       // Send confirmation email to user
       await mailer.transporter.sendMail({
         from: mailer.from,
-        to: email.trim().toLowerCase(),
+        to: memory.email,
         subject: "Merci pour votre témoignage - 40 ans du Bon Tempérament",
-        html: userConfirmationEmailTemplate(name.trim()),
+        html: userConfirmationEmail,
       });
 
       // Send notification email to admin
       await mailer.transporter.sendMail({
         from: mailer.from,
         to: adminEmail,
-        subject: `Nouveau témoignage reçu de ${name.trim()} - 40 ans`,
+        subject: `Nouveau témoignage reçu de ${memory.name} - 40 ans`,
         html: adminNotificationEmailTemplate(
-          name.trim(),
-          email.trim().toLowerCase(),
-          message.trim(),
-          year ? parseInt(year) : null,
+          memory.name,
+          memory.email,
+          memory.message,
+          memory.year,
         ),
       });
     } catch (emailError) {
-      console.error("Error sending emails:", emailError);
+      console.error("Error sending emails:", errorCodes(emailError));
       // Still return success if email fails, as the memory was saved
     }
 
     return NextResponse.json({
       success: true,
       message: "Memory submitted successfully",
-      id: data.id,
+      id: memory.id,
     });
   } catch (error) {
-    console.error("Error in POST /api/anniversary/submit-memory:", error);
+    console.error(
+      "Error in POST /api/anniversary/submit-memory:",
+      errorCodes(error),
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

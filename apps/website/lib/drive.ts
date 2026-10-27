@@ -1,12 +1,15 @@
 import "server-only";
 
+import { isAdmin } from "@/utils/auth";
 import type { Database } from "@repo/domain/database.types";
 import {
-  isWithinDriveRoots,
+  isDriveItemAllowedFor,
   memoizeParentsLookup,
+  type DriveCaller,
   type DriveParentsLookup,
+  type DriveRootRow,
 } from "@repo/domain/utils/driveScope";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { google, type drive_v3 } from "googleapis";
 
 /** Drive client acting with the association's Google account. */
@@ -58,26 +61,69 @@ function driveParentsLookup(drive: drive_v3.Drive): DriveParentsLookup {
   };
 }
 
+/** How long a server instance reuses its copy of the `drive_folders` roots. */
+const DRIVE_ROOTS_TTL_MS = 60_000;
+
 /**
- * True when the Drive item is one of the folders configured in `drive_folders`
- * (read as the caller) or lies below one of them. `knownParents` seeds the
+ * The last `drive_folders` read. Every signed-in user reads the same rows,
+ * so one copy serves every caller; who gets which root is decided per caller.
+ */
+let driveRootsCache: { rows: DriveRootRow[]; expiresAt: number } | undefined;
+
+/** Reads the roots from `drive_folders` (as the caller) and keeps a copy. */
+async function readDriveRoots(
+  supabase: SupabaseClient<Database>,
+): Promise<DriveRootRow[]> {
+  const { data, error } = await supabase
+    .from("drive_folders")
+    .select("slug, folder_id");
+  if (error) throw error;
+
+  driveRootsCache = { rows: data, expiresAt: Date.now() + DRIVE_ROOTS_TTL_MS };
+  return data;
+}
+
+/** The signed-in caller, as `checkAuthorization` returns them. */
+export interface DriveProxyCaller {
+  /** Client acting as the caller, so row-level security applies. */
+  supabase: SupabaseClient<Database>;
+  user: Pick<User, "id">;
+}
+
+/**
+ * True when the caller may read the Drive item: the tab folders configured in
+ * `drive_folders`, and what lies below them, for every member; the whole Drive
+ * (the `racine` row) for admins and superadmins only. `knownParents` seeds the
  * per-request lookup cache with parents the route already fetched.
+ *
+ * The roots come from a copy at most a minute old; when that copy refuses the
+ * item, the table is read again, so a folder an admin has just retargeted
+ * opens at once.
  */
 export async function isDriveItemAllowed(
   drive: drive_v3.Drive,
-  supabase: SupabaseClient<Database>,
+  caller: DriveProxyCaller,
   id: string,
   knownParents: Iterable<readonly [string, readonly string[]]> = [],
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("drive_folders")
-    .select("folder_id");
-  if (error) throw error;
-
-  const roots = new Set(data.map((row) => row.folder_id).filter(Boolean));
-  return isWithinDriveRoots(
-    id,
-    roots,
-    memoizeParentsLookup(driveParentsLookup(drive), knownParents),
+  const getParents = memoizeParentsLookup(
+    driveParentsLookup(drive),
+    knownParents,
   );
+  // The role is read at most once per request, and only when needed.
+  let roleCheck: Promise<boolean> | undefined;
+  const scopeCaller: DriveCaller = {
+    isAdmin: () => (roleCheck ??= isAdmin(caller.supabase, caller.user.id)),
+  };
+  const allows = (rows: readonly DriveRootRow[]) =>
+    isDriveItemAllowedFor(scopeCaller, id, rows, getParents);
+
+  const cached =
+    driveRootsCache && driveRootsCache.expiresAt > Date.now()
+      ? driveRootsCache.rows
+      : undefined;
+  if (cached && (await allows(cached))) {
+    return true;
+  }
+  return allows(await readDriveRoots(caller.supabase));
 }

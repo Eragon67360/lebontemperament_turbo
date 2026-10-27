@@ -160,7 +160,7 @@ export default function UsersPage() {
               {pending > 0 && (
                 <Badge
                   variant="secondary"
-                  className="bg-primary-foreground text-primary-text min-h-5 px-1.5"
+                  className="bg-primary-foreground text-primary-strong min-h-5 px-1.5"
                 >
                   {pending}
                   <span className="sr-only">
@@ -304,6 +304,7 @@ export default function UsersPage() {
               <DataState
                 isLoading={usersQuery.isLoading}
                 isError={usersQuery.isError}
+                hasData={!!usersQuery.data}
                 isEmpty={visible.length === 0}
                 onRetry={() => usersQuery.refetch()}
                 errorDescription="Les membres n’ont pas pu être chargés. Vérifiez votre connexion, puis réessayez."

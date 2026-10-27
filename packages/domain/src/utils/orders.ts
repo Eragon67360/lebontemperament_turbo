@@ -138,17 +138,6 @@ export function productsById<T extends OrderProductLike>(
   return new Map(products.map((p) => [p.id, p]));
 }
 
-export function orderTotalCents(
-  items: readonly OrderItemLike[],
-  byId: ReadonlyMap<string, OrderProductLike>,
-): number {
-  return items.reduce(
-    (sum, item) =>
-      sum + item.quantity * (byId.get(item.product_id)?.unit_price_cents ?? 0),
-    0,
-  );
-}
-
 export function orderPaidCents(payments: readonly OrderPaymentLike[]): number {
   return payments.reduce((sum, p) => sum + p.amount_cents, 0);
 }
@@ -398,11 +387,14 @@ export function saleSpreadsheet(
 }
 
 // ---------------------------------------------------------------------------
-// Phones (same rule as public.normalize_order_phone)
+// Phones (the rule of public.normalize_order_phone, plus the « (0) » fold the
+// SQL, Deno and Dart copies still lack; the vectors are in phoneVectors.json)
 
 /**
- * « 06 12 34 56 78 » → « +33612345678 » (the form SMS need); « 0041… » →
- * « +41… »; anything else without spaces; empty → null.
+ * « 06 12 34 56 78 », « +33 6… », « 0033 6… » and, with the « (0) » people
+ * write after the country code, « +33 (0)6… » → « +33612345678 » (the form
+ * SMS need); « 0041… » → « +41… »; anything else without spaces; empty →
+ * null.
  */
 export function normalizePhone(
   input: string | null | undefined,
@@ -410,15 +402,19 @@ export function normalizePhone(
   const d = (input ?? "").replace(/[\s.\-()/]/g, "");
   if (d === "") return null;
   if (/^0[1-9]\d{8}$/.test(d)) return `+33${d.slice(1)}`;
-  if (/^0033[1-9]\d{8}$/.test(d)) return `+${d.slice(2)}`;
+  const french = /^(?:\+33|0033)0?([1-9]\d{8})$/.exec(d);
+  if (french) return `+33${french[1]}`;
   if (/^00[1-9]\d{6,14}$/.test(d)) return `+${d.slice(2)}`;
   return d;
 }
 
-/** True for a number an SMS can reach once normalised. */
+/**
+ * True for a number an SMS can reach once normalised. A « +330… » never is:
+ * a French number has no 0 after its country code.
+ */
 export function isValidPhone(input: string): boolean {
   const n = normalizePhone(input);
-  return n !== null && /^\+[1-9]\d{6,14}$/.test(n);
+  return n !== null && /^\+[1-9]\d{6,14}$/.test(n) && !n.startsWith("+330");
 }
 
 /**

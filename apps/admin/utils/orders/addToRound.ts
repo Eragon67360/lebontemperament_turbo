@@ -9,7 +9,7 @@ import { isUuid, normalizePhone } from "@repo/domain/utils/orders";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 
-/** More than a sale ever has: the add is one write per buyer. */
+/** More than a sale ever has: the add still links one buyer per write. */
 export const MAX_ORDER_IDS = 300;
 
 /**
@@ -54,11 +54,14 @@ export type AddFailure = {
  * latest, unless it is over: then a new one), each as a stop after the
  * round's last, in name order. Only orders still waiting are added: to be
  * delivered, with an address, no stop yet, personal data not erased; the
- * others are skipped. The stop is linked to its order only while the order
- * has none, so an add running at the same time can't give it two (the
- * spare stop is removed). The driver must be a superadmin (checked by the
- * caller). Reports like the function: the round, how many were added, and
- * how many buyers of the sale still wait for an address.
+ * others are skipped. The stops are inserted in one write, then each order
+ * is linked to its own stop only while the order has none, so an add
+ * running at the same time can't give it two (the spare stop is removed,
+ * which may leave a gap in the round's places: the app and the function
+ * only ever take the greatest place plus one). The driver must be a
+ * superadmin (checked by the caller). Reports like the function: the round,
+ * how many were added, and how many buyers of the sale still wait for an
+ * address.
  */
 export async function addOrdersToRound(
   supabase: Client,
@@ -139,38 +142,57 @@ export async function addOrdersToRound(
   }
 
   let added = 0;
-  for (const order of waiting) {
-    const { data: stop, error: stopError } = await supabase
+  if (waiting.length > 0) {
+    // All the stops in one insert, each given its place in the round
+    // (nextSort + i, in name order), which is how its order finds it below.
+    const { data: stops, error: stopError } = await supabase
       .from("delivery_recipients")
-      .insert({
-        delivery_id: deliveryId!,
-        label: order.buyer_name,
-        sort_order: nextSort,
-        public_token: crypto.randomUUID(),
-        address: order.buyer_address,
-        phone_number: normalizePhone(order.buyer_phone),
-      })
-      .select("id")
-      .single();
+      .insert(
+        waiting.map((order, i) => ({
+          delivery_id: deliveryId!,
+          label: order.buyer_name,
+          sort_order: nextSort + i,
+          public_token: crypto.randomUUID(),
+          address: order.buyer_address,
+          phone_number: normalizePhone(order.buyer_phone),
+        })),
+      )
+      .select("id, sort_order");
     if (stopError) {
       return fail(stopError, "Les acheteurs n'ont pas pu être ajoutés");
     }
-    const { data: linked, error: linkError } = await supabase
-      .from("orders")
-      .update({ delivery_recipient_id: stop.id })
-      .eq("id", order.id)
-      .is("delivery_recipient_id", null)
-      .select("id");
-    if (linkError || linked.length === 0) {
-      // Not linked (or linked by another add meanwhile): no stray stop.
-      await supabase.from("delivery_recipients").delete().eq("id", stop.id);
-      if (linkError) {
-        return fail(linkError, "Les acheteurs n'ont pas pu être ajoutés");
+    const stopBySort = new Map(stops.map((s) => [s.sort_order, s.id]));
+    // A stop leaves this set once its order took it; the rest (linked by
+    // another add meanwhile, or left after an error) are removed together.
+    const unlinked = new Set(stops.map((s) => s.id));
+    let linkError: AddFailure["error"] = null;
+    for (const [i, order] of waiting.entries()) {
+      const stopId = stopBySort.get(nextSort + i);
+      if (!stopId) continue;
+      const { data: linked, error } = await supabase
+        .from("orders")
+        .update({ delivery_recipient_id: stopId })
+        .eq("id", order.id)
+        .is("delivery_recipient_id", null)
+        .select("id");
+      if (error) {
+        linkError = error;
+        break;
       }
-      continue;
+      if (linked.length > 0) {
+        unlinked.delete(stopId);
+        added += 1;
+      }
     }
-    nextSort += 1;
-    added += 1;
+    if (unlinked.size > 0) {
+      await supabase
+        .from("delivery_recipients")
+        .delete()
+        .in("id", [...unlinked]);
+    }
+    if (linkError) {
+      return fail(linkError, "Les acheteurs n'ont pas pu être ajoutés");
+    }
   }
 
   const { data: rest, error: restError } = await supabase

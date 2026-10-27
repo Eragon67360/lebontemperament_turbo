@@ -38,7 +38,7 @@ const MusicList = () => {
             className="rounded-lg shadow-lg"
           />
           <div className="flex flex-col">
-            <h3 className="text-xl font-extrabold">Les 20 ans du BT (Live)</h3>
+            <h3 className="text-xl font-semibold">Les 20 ans du BT (Live)</h3>
             <p className="opacity-90">Le Bon Tempérament</p>
           </div>
         </div>
@@ -79,7 +79,7 @@ const MusicList = () => {
             </div>
 
             <div className="flex-1 text-left">
-              <p className="text-foreground font-bold">
+              <p className="text-foreground font-medium">
                 {cleanDisplayName(file.name)}
               </p>
               <p className="text-muted text-base">Le Bon Tempérament</p>

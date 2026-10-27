@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.test.json",
+  "compilerOptions": {
+    "paths": {
+      "@/hooks/useClientValue": ["./test/stubs/useClientValue.ts"],
+      "next/font/google": ["./test/stubs/nextFontGoogle.ts"],
+      "next/image": ["./test/stubs/nextImage.ts"],
+      "next/link": ["./test/stubs/nextLink.tsx"],
+      "next-themes": ["./test/stubs/nextThemes.tsx"],
+      "@/*": ["./*"]
+    }
+  }
+}

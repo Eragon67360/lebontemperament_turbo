@@ -5,8 +5,10 @@
 // and the apps read. Applied at once, with no confirmation email, so it is
 // superadmin-only. Google or Apple sign-in links are left as they are.
 import { decideEmailChange } from "@/utils/access";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { userEmailPatchSchema } from "@/utils/users/apiSchemas";
 import {
   checkNewEmail,
   EMAIL_TAKEN,
@@ -29,13 +31,18 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const { userId, email } = await request.json();
-    if (typeof userId !== "string" || !userId) {
+    // The account and the new address only: unknown keys are refused.
+    const parsed = parsePatchBody(
+      userEmailPatchSchema,
+      await readJson(request),
+    );
+    if (!parsed.ok) {
       return NextResponse.json(
-        { error: "ID utilisateur requis" },
-        { status: 400 },
+        { error: parsed.error },
+        { status: parsed.status },
       );
     }
+    const { userId, email } = parsed.data;
 
     const supabaseAdmin = createAdminClient();
 

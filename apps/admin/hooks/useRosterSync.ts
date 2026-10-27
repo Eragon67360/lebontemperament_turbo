@@ -31,11 +31,49 @@ export class RosterChangedError extends Error {
   }
 }
 
-async function errorMessage(response: Response, fallback: string) {
-  const body = (await response.json().catch(() => null)) as {
+/**
+ * The server reads the roster in production only (utils/memberLists.ts):
+ * elsewhere it answers 403 with `productionOnly`, and asking again changes
+ * nothing.
+ */
+export class RosterUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RosterUnavailableError";
+  }
+}
+
+async function errorBody(response: Response) {
+  return (await response.json().catch(() => null)) as {
     error?: unknown;
+    productionOnly?: unknown;
   } | null;
+}
+
+async function errorMessage(response: Response, fallback: string) {
+  const body = await errorBody(response);
   return body && typeof body.error === "string" ? body.error : fallback;
+}
+
+/** Reads the review; throws `RosterUnavailableError` outside production. */
+export async function fetchRosterReview(): Promise<RosterReview> {
+  const response = await fetch("/api/users/sync");
+  if (!response.ok) {
+    const body = await errorBody(response);
+    const message =
+      body && typeof body.error === "string"
+        ? body.error
+        : "La comparaison avec le tableau des membres a échoué.";
+    throw body?.productionOnly === true
+      ? new RosterUnavailableError(message)
+      : new Error(message);
+  }
+  return response.json();
+}
+
+/** One retry after a failure, none after a refusal outside production. */
+export function retryRosterReview(failureCount: number, error: Error) {
+  return !(error instanceof RosterUnavailableError) && failureCount < 1;
 }
 
 /**
@@ -46,21 +84,10 @@ async function errorMessage(response: Response, fallback: string) {
 export function useRosterReview() {
   return useQuery({
     queryKey: ROSTER_REVIEW_KEY,
-    queryFn: async (): Promise<RosterReview> => {
-      const response = await fetch("/api/users/sync");
-      if (!response.ok) {
-        throw new Error(
-          await errorMessage(
-            response,
-            "La comparaison avec le tableau des membres a échoué.",
-          ),
-        );
-      }
-      return response.json();
-    },
+    queryFn: fetchRosterReview,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: retryRosterReview,
   });
 }
 

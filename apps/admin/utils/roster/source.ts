@@ -13,6 +13,9 @@
 //   every used row of the first visible sheet, up to column ZZ. Set it to a
 //   tab name (`Membres`) or `Membres!A:H` when the roster is not the first tab.
 //
+// Only production reads the sheet (utils/memberLists.ts): anywhere else
+// `fetchRosterRows()` throws `production_only` before reading any variable.
+//
 // The values grid is converted to the same row objects `Papa.parse(text,
 // { header: true })` produced from the CSV export: the header row gives the
 // keys as-is, missing trailing cells become "", fully empty rows are skipped,
@@ -21,6 +24,10 @@
 // The header row is the first row naming the required columns, usually the
 // first row; when a sort moved it down, the member rows above it are read too.
 
+import {
+  memberListsAvailable,
+  ROSTER_PRODUCTION_ONLY_MESSAGE,
+} from "@/utils/memberLists";
 import {
   findHeaderRowIndex,
   isValidEmail,
@@ -44,6 +51,7 @@ export const ROSTER_NOT_CONFIGURED_MESSAGE =
   "La synchronisation avec le tableau des membres n'est pas configurée.";
 
 export type RosterSourceErrorCode =
+  | "production_only"
   | "not_configured"
   | "not_shared"
   | "not_found"
@@ -53,6 +61,7 @@ export type RosterSourceErrorCode =
   | "invalid_response";
 
 const USER_MESSAGES: Record<RosterSourceErrorCode, string> = {
+  production_only: ROSTER_PRODUCTION_ONLY_MESSAGE,
   not_configured: ROSTER_NOT_CONFIGURED_MESSAGE,
   not_shared:
     "Le tableau des membres n'est pas partagé avec le compte de service, ou l'API Google Sheets n'est pas activée sur son projet.",
@@ -65,6 +74,7 @@ const USER_MESSAGES: Record<RosterSourceErrorCode, string> = {
 };
 
 const HTTP_STATUS: Record<RosterSourceErrorCode, number> = {
+  production_only: 403,
   not_configured: 503,
   not_shared: 503,
   not_found: 503,
@@ -359,10 +369,17 @@ interface ValuesResponse {
 /**
  * Reads the member roster from the private sheet and returns one object per
  * row, keyed by the header row. Throws a `RosterSourceError` (with a French
- * `userMessage` and an HTTP `status`) when the source is not configured, not
- * shared with the service account, missing, or unreachable.
+ * `userMessage` and an HTTP `status`) outside production (see
+ * utils/memberLists.ts), and when the source is not configured, not shared
+ * with the service account, missing, or unreachable.
  */
 export async function fetchRosterRows(): Promise<RosterRead> {
+  if (!memberListsAvailable()) {
+    throw new RosterSourceError(
+      "production_only",
+      "The roster is read in production only.",
+    );
+  }
   const config = readConfig();
   const token = await getAccessToken(config.serviceAccount);
 

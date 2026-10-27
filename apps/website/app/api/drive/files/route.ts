@@ -1,4 +1,5 @@
 import { getDriveClient, isDriveItemAllowed } from "@/lib/drive";
+import { errorCodes } from "@/lib/errorCodes";
 import { checkAuthorization } from "@/utils/auth";
 import {
   DRIVE_LIST_MAX_ITEMS,
@@ -12,7 +13,9 @@ const PAGE_SIZE = 200;
 
 /**
  * Lists a Drive folder for the members area and the mobile app.
- * Only folders configured in `drive_folders`, or below them, can be listed.
+ * Only folders configured in `drive_folders`, or below them, can be listed;
+ * the whole-Drive root (`racine`), and what lies below it outside the tab
+ * folders, only by admins and superadmins.
  *
  * GET /api/drive/files?folderID=xxx
  *
@@ -44,7 +47,7 @@ export async function GET(req: NextRequest) {
   try {
     const drive = getDriveClient();
 
-    if (!(await isDriveItemAllowed(drive, authCheck.supabase, folderId))) {
+    if (!(await isDriveItemAllowed(drive, authCheck, folderId))) {
       return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
     }
 
@@ -80,7 +83,7 @@ export async function GET(req: NextRequest) {
       headers: truncated ? { "X-Drive-Truncated": "true" } : undefined,
     });
   } catch (error: unknown) {
-    console.error("Error retrieving Drive files:", error);
+    console.error("Error retrieving Drive files:", errorCodes(error));
     return NextResponse.json(
       { error: "Failed to retrieve files" },
       { status: 500 },

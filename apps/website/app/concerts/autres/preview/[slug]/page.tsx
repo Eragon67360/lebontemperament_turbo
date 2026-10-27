@@ -7,8 +7,6 @@ import { Avatar } from "@heroui/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
 // interface Track {
 //     title: string;
 //     duration: string;
@@ -83,7 +81,7 @@ export default function Preview() {
                 </div>
               </div>
             </div>
-            <p className="mb-4 text-gray-600">{cd.description}</p>
+            <p className="text-muted mb-4">{cd.description}</p>
             <p className="mb-4 text-lg font-bold">
               {new Intl.NumberFormat("fr-FR", {
                 style: "currency",

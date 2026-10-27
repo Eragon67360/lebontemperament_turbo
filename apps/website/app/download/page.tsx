@@ -90,7 +90,7 @@ export default function DownloadPage() {
 
   return (
     <section
-      className="container mx-auto flex h-full w-full grow justify-center bg-white"
+      className="bg-background container mx-auto flex h-full w-full grow justify-center"
       aria-labelledby="download-title"
     >
       <div className="my-auto h-fit w-full max-w-[1440px] px-8 lg:px-24">
@@ -102,7 +102,7 @@ export default function DownloadPage() {
           >
             {programme?.title ?? "Programme du concert"}
           </h1>
-          <p className="mb-8 text-base font-light text-gray-500 md:text-lg lg:text-xl">
+          <p className="text-muted mb-8 text-base font-light md:text-lg lg:text-xl">
             {programme?.dateLabel
               ? `Programme ${programme.dateLabel}`
               : "Programme"}
@@ -111,9 +111,9 @@ export default function DownloadPage() {
           {/* Status Messages */}
           {downloadStarted && !downloadError && (
             <div className="mb-8">
-              <div className="inline-flex items-center rounded-lg bg-green-100 px-6 py-3 text-green-800">
+              <div className="bg-surface-secondary text-foreground inline-flex items-center rounded-lg px-6 py-3">
                 <svg
-                  className="mr-3 h-5 w-5"
+                  className="text-primary mr-3 h-5 w-5"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -130,9 +130,9 @@ export default function DownloadPage() {
 
           {downloadError && (
             <div className="mb-8">
-              <div className="inline-flex items-center rounded-lg bg-red-100 px-6 py-3 text-red-800">
+              <div className="bg-surface-secondary text-foreground inline-flex items-center rounded-lg px-6 py-3">
                 <svg
-                  className="mr-3 h-5 w-5"
+                  className="text-danger mr-3 h-5 w-5"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -149,7 +149,7 @@ export default function DownloadPage() {
 
           {!downloadStarted && !downloadError && (
             <div className="mb-8">
-              <div className="inline-flex items-center rounded-lg bg-blue-100 px-6 py-3 text-blue-800">
+              <div className="bg-surface-secondary text-foreground inline-flex items-center rounded-lg px-6 py-3">
                 <Spinner size="sm" className="mr-3" />
                 Préparation du téléchargement...
               </div>
@@ -184,7 +184,7 @@ export default function DownloadPage() {
           </div>
 
           {/* Help Text */}
-          <p className="max-w-md text-center text-sm text-gray-500">
+          <p className="text-muted max-w-md text-center text-sm">
             Si le téléchargement ne démarre pas automatiquement, cliquez sur le
             bouton ci-dessus.
           </p>

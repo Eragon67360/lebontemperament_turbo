@@ -3,10 +3,11 @@
 import { PageHeader } from "@/components/layouts/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useConcerts } from "@/hooks/useConcerts";
+import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { parseIsoDate, todayIso } from "@/utils/concerts/schedule";
 import { greetingFr, homeIntroFr } from "@/utils/home/greeting";
 import { pickNextConcert } from "@/utils/home/nextConcert";
+import { parisToday } from "@repo/domain/utils/parisDay";
 import { useMemo, useSyncExternalStore } from "react";
 
 /** « Camille » from « Camille Martin »; empty when there is no name. */
@@ -16,26 +17,22 @@ export function firstNameOf(displayName: string | null | undefined): string {
 }
 
 // The admin's clock, on the client only: the server has no idea of the
-// admin's day or hour, and a value rendered there would mismatch at
-// hydration. The snapshot changes once per hour, so « Bonsoir » arrives at
-// 18 h and the date turns at midnight on a page left open.
+// admin's hour, and a value rendered there would mismatch at hydration. The
+// snapshot is the top of the current hour, as an instant, so it changes once
+// per hour: « Bonsoir » arrives at 18 h on the admin's own clock, and the
+// date (the Paris day) turns at midnight in Paris on a page left open.
 function subscribe(onChange: () => void) {
   const timer = window.setInterval(onChange, 60_000);
   return () => window.clearInterval(timer);
 }
 function clockKey(): string {
   const now = new Date();
-  return `${todayIso(now)}T${String(now.getHours()).padStart(2, "0")}`;
+  now.setMinutes(0, 0, 0);
+  return String(now.getTime());
 }
 function useClock(): Date | null {
   const key = useSyncExternalStore(subscribe, clockKey, () => null);
-  return useMemo(() => {
-    if (!key) return null;
-    const [day = "", hour] = key.split("T");
-    const date = parseIsoDate(day);
-    date?.setHours(Number(hour));
-    return date;
-  }, [key]);
+  return useMemo(() => (key ? new Date(Number(key)) : null), [key]);
 }
 
 /**
@@ -44,13 +41,14 @@ function useClock(): Date | null {
  * attend. » when none is planned.
  */
 export function DashboardWelcomeHeader() {
-  const { data: user, isLoading } = useCurrentUser();
+  const { isLoading: isLoadingUser } = useCurrentUser();
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentProfile();
+  const isLoading = isLoadingUser || isLoadingProfile;
   const concerts = useConcerts();
   const now = useClock();
 
-  const name = firstNameOf(
-    user?.user_metadata?.display_name || user?.user_metadata?.name,
-  );
+  // The name on the profile, not the account's metadata.
+  const name = firstNameOf(profile?.display_name);
   const greeting = now ? greetingFr(now) : "Bonjour";
   // undefined while the concerts load: the date alone, then the sentence is
   // added once (never one sentence swapped for another).
@@ -60,7 +58,7 @@ export function DashboardWelcomeHeader() {
       ? pickNextConcert(concerts.data, now)
       : null;
   const intro = now
-    ? { ...homeIntroFr(now, concert), iso: todayIso(now) }
+    ? { ...homeIntroFr(now, concert), iso: parisToday(now) }
     : null;
 
   return (

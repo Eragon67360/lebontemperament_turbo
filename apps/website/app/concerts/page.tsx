@@ -1,11 +1,11 @@
 import ConcertsClient from "@/components/concerts/ConcertsClient";
 import { JsonLd } from "@/components/JsonLd";
 import { withEventDocuments } from "@/lib/eventDocuments";
+import { loadNextRehearsal } from "@/lib/nextRehearsal";
 import {
   CONCERT_COLUMNS,
   CONCERT_EVENT_DATA_COLUMNS,
   EVENT_COLUMNS,
-  REHEARSAL_COLUMNS,
   TOUR_COLUMNS,
   type PublicConcert,
   type PublicConcertEventData,
@@ -13,6 +13,7 @@ import {
   type PublicTour,
 } from "@/lib/publicConcerts";
 import { breadcrumbJsonLd, organizationRef } from "@/utils/seo";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createPublicClient } from "@/utils/supabase/public";
 import { concertEventJsonLd } from "@repo/domain/seo/concertEvent";
 import type { Event, EventWithDocuments } from "@repo/domain/types/events";
@@ -24,8 +25,9 @@ import {
 } from "@repo/domain/utils/projects";
 import type { Metadata } from "next";
 
-// Public data only (anon key, no cookies): prerendered and served from the
-// cache for five minutes, or until the admin's edit calls /api/revalidate.
+// Public data (anon key) and the next rehearsal's date (service role, on the
+// server), no cookies: prerendered and served from the cache for five
+// minutes, or until the admin's edit calls /api/revalidate.
 export const revalidate = 300;
 
 // --- Metadata Configuration ---
@@ -110,7 +112,7 @@ async function getPageData(): Promise<PageData> {
       { data: concerts },
       { data: tours },
       { data: events },
-      { data: rehearsals },
+      rehearsals,
     ] = await Promise.all([
       // Projects: ordered by display_order then date (the story view-model
       // is built by transformProjectForFrontend from PROJECT_STORY_COLUMNS)
@@ -141,13 +143,9 @@ async function getPageData(): Promise<PageData> {
         .eq("is_public", true)
         .order("date_from", { ascending: true }),
 
-      // Rehearsals: only the next one is shown
-      supabase
-        .from("rehearsals")
-        .select(REHEARSAL_COLUMNS)
-        .gte("date", today)
-        .order("date", { ascending: true })
-        .limit(1),
+      // Rehearsals are for members: only the next one's date is shown, read
+      // on the server with the service role, never with the public key.
+      loadNextRehearsal(createAdminClient, today),
     ]);
 
     // Transform projects using the utility
@@ -161,7 +159,7 @@ async function getPageData(): Promise<PageData> {
       tours: tours || [],
       // view-model: deliberate Event type; also narrows event_type from string to a 5-value union
       events: await withEventDocuments(supabase, (events || []) as Event[]),
-      rehearsals: rehearsals || [],
+      rehearsals,
     };
   } catch (error) {
     // Unreachable database (CI builds with placeholder credentials): the

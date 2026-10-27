@@ -5,14 +5,12 @@ node_modules
 .pnp
 .pnp.js
 
-# Local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-# Allow .env.example files to be committed
+# Local env files: any .env* name (.env.production from `vercel env pull`,
+# .env.development, ...) and local copies of the templates in env/.
+# Only the .env.example files are committed; values live in Proton Pass.
+.env*
 !.env.example
+env/*.local
 
 # Testing
 coverage

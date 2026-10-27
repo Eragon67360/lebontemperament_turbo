@@ -1,7 +1,13 @@
 import { REHEARSAL_COLUMNS } from "@/lib/columns";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
+import { id as idSchema } from "@/utils/apiFields";
 import { checkAuthorization } from "@/utils/auth";
+import { databaseErrorResponse } from "@/utils/databaseErrors";
+import { rehearsalPatchSchema } from "@/utils/season/apiSchemas";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
+
+const NOT_FOUND = "Répétition introuvable";
 
 export async function GET(
   request: Request,
@@ -55,46 +61,39 @@ export async function PATCH(
     );
   }
 
+  const id = idSchema.safeParse((await params).id);
+  if (!id.success) {
+    return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
+  }
+  // Only the form's columns, each value checked; unknown keys are refused.
+  const parsed = parsePatchBody(rehearsalPatchSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
-    const id = (await params).id;
-    const json = await request.json();
-
-    // Validate the request body here if needed
-    const { name, place, address, room, date, start_time, end_time } = json;
-    const { group_type } = json;
 
     const { data, error } = await supabase
       .from("rehearsals")
-      .update({
-        name,
-        place,
-        address,
-        room,
-        date,
-        start_time,
-        end_time,
-        group_type,
-      })
-      .eq("id", id)
+      .update(parsed.data)
+      .eq("id", id.data)
       .select(REHEARSAL_COLUMNS)
       .single();
 
     if (error) throw error;
     if (!data) {
-      return NextResponse.json(
-        { error: "Rehearsal not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
     }
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      { error: "Error updating rehearsal" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la modification de la répétition",
     );
   }
 }

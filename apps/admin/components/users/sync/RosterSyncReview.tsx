@@ -1,7 +1,6 @@
 "use client";
 
 import { PageShell } from "@/components/layouts/PageShell";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +12,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
 import { ErrorState, ListSkeleton } from "@/components/ui/data-state";
+import { Stepper, type Step } from "@/components/ui/stepper";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
@@ -24,7 +25,6 @@ import {
   type ApplyResponse,
   type BulkDeleteResponse,
 } from "@/hooks/useRosterSync";
-import { cn } from "@/lib/utils";
 import { MAX_APPLY_INVITES, type ApplyRequest } from "@/utils/roster/apply";
 import { MAX_BULK_DELETIONS } from "@/utils/roster/bulkDelete";
 import RouteNames from "@/utils/routes";
@@ -47,7 +47,11 @@ import {
   ToSettleGroup,
 } from "./RosterSyncGroups";
 
-const STEPS = ["Vérifier", "Choisir", "Appliquer"] as const;
+const STEPS: Step[] = [
+  { label: "Vérifier" },
+  { label: "Choisir" },
+  { label: "Appliquer" },
+];
 
 const EMPTY_SET: ReadonlySet<string> = new Set();
 
@@ -236,7 +240,11 @@ export function RosterSyncReview() {
         </div>
       }
     >
-      <Stepper current={step} />
+      <Stepper
+        aria-label="Étapes de la synchronisation"
+        steps={STEPS}
+        current={step}
+      />
 
       {review.isLoading ? (
         <ListSkeleton rows={4} label="Lecture du tableau des membres…" />
@@ -357,88 +365,40 @@ export function RosterSyncReview() {
   );
 }
 
-function Stepper({ current }: { current: number }) {
-  return (
-    <nav aria-label="Étapes de la synchronisation">
-      <ol className="flex flex-wrap gap-x-6 gap-y-2">
-        {STEPS.map((label, index) => {
-          const done = index < current;
-          const active = index === current;
-          return (
-            <li
-              key={label}
-              aria-current={active ? "step" : undefined}
-              className={cn(
-                "flex items-center gap-2 text-sm",
-                active
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground",
-              )}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full border text-xs font-medium",
-                  done &&
-                    "bg-primary-600 text-primary-foreground border-transparent",
-                  active && "border-primary-600 text-primary-600",
-                )}
-              >
-                {done ? <Check className="h-4 w-4" /> : index + 1}
-              </span>
-              <span className="sr-only">
-                {done
-                  ? "Étape terminée : "
-                  : active
-                    ? "Étape en cours : "
-                    : "Étape à venir : "}
-              </span>
-              {label}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-
 function ValidationPanel({ review }: { review: RosterReview }) {
   const { errors, warnings } = review.validation;
   if (errors.length === 0 && warnings.length === 0) return null;
 
   return (
     <div className="space-y-3">
+      {/* A failure (nothing can be applied): announced when it appears. */}
       {errors.length > 0 && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-          <AlertTitle>Le tableau ne peut pas être synchronisé</AlertTitle>
-          <AlertDescription>
-            <ul className="list-disc pl-5">
-              {errors.map((issue, index) => (
-                <li key={`${issue.code}-${index}`}>{issue.message}</li>
-              ))}
-            </ul>
-            <p className="mt-2">
-              Corrigez le tableau, puis cliquez sur « Relire le tableau ».
-            </p>
-          </AlertDescription>
-        </Alert>
+        <Callout
+          tone="danger"
+          role="alert"
+          title="Le tableau ne peut pas être synchronisé"
+        >
+          <ul className="list-disc pl-5">
+            {errors.map((issue, index) => (
+              <li key={`${issue.code}-${index}`}>{issue.message}</li>
+            ))}
+          </ul>
+          <p className="mt-2">
+            Corrigez le tableau, puis cliquez sur « Relire le tableau ».
+          </p>
+        </Callout>
       )}
       {warnings.length > 0 && (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-          <AlertTitle>
-            {plural(warnings.length, "point à vérifier", "points à vérifier")}{" "}
-            dans le tableau
-          </AlertTitle>
-          <AlertDescription>
-            <ul className="list-disc pl-5">
-              {warnings.map((issue, index) => (
-                <li key={`${issue.code}-${index}`}>{issue.message}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <Callout
+          tone="warning"
+          title={`${plural(warnings.length, "point à vérifier", "points à vérifier")} dans le tableau`}
+        >
+          <ul className="list-disc pl-5">
+            {warnings.map((issue, index) => (
+              <li key={`${issue.code}-${index}`}>{issue.message}</li>
+            ))}
+          </ul>
+        </Callout>
       )}
     </div>
   );
@@ -457,22 +417,23 @@ function ApplyOutcome({
 
   return (
     <section aria-labelledby="roster-apply-result" className="space-y-4">
-      <Alert variant={summary.failed > 0 ? "destructive" : "default"}>
-        {summary.failed > 0 ? (
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-        ) : (
-          <Check className="h-4 w-4" aria-hidden />
-        )}
-        <AlertTitle id="roster-apply-result">
-          {summary.failed > 0
-            ? `${plural(summary.done, "élément appliqué", "éléments appliqués")}, ${plural(summary.failed, "échec", "échecs")}`
-            : `Synchronisation appliquée : ${describeSelection(summary.invited, summary.updated)}`}
-        </AlertTitle>
-        <AlertDescription>
+      {/* Announced only when something failed; a success is already toasted. */}
+      <Callout
+        tone={summary.failed > 0 ? "danger" : "success"}
+        role={summary.failed > 0 ? "alert" : undefined}
+        title={
+          <span id="roster-apply-result">
+            {summary.failed > 0
+              ? `${plural(summary.done, "élément appliqué", "éléments appliqués")}, ${plural(summary.failed, "échec", "échecs")}`
+              : `Synchronisation appliquée : ${describeSelection(summary.invited, summary.updated)}`}
+          </span>
+        }
+      >
+        <p>
           Le détail de chaque élément est ci-dessous. Relisez le tableau pour
           vérifier le résultat ou continuer.
-        </AlertDescription>
-      </Alert>
+        </p>
+      </Callout>
 
       <ul className="divide-y rounded-md border text-sm">
         {[...failed, ...done].map((result) => (
@@ -483,7 +444,7 @@ function ApplyOutcome({
             <span className="mt-0.5 shrink-0">
               {result.status === "done" ? (
                 <>
-                  <Check className="text-primary-600 h-4 w-4" aria-hidden />
+                  <Check className="text-primary h-4 w-4" aria-hidden />
                   <span className="sr-only">Fait :</span>
                 </>
               ) : (
@@ -547,22 +508,23 @@ function DeleteOutcome({
 
   return (
     <section aria-labelledby="roster-delete-result" className="space-y-3">
-      <Alert variant={summary.failed > 0 ? "destructive" : "default"}>
-        {summary.failed > 0 ? (
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-        ) : (
-          <Check className="h-4 w-4" aria-hidden />
-        )}
-        <AlertTitle id="roster-delete-result">
-          {summary.failed > 0
-            ? `${plural(summary.done, "compte supprimé", "comptes supprimés")}, ${plural(summary.failed, "échec", "échecs")}`
-            : `${plural(summary.done, "compte supprimé", "comptes supprimés")}`}
-        </AlertTitle>
-        <AlertDescription>
+      {/* Announced only when something failed; a success is already toasted. */}
+      <Callout
+        tone={summary.failed > 0 ? "danger" : "success"}
+        role={summary.failed > 0 ? "alert" : undefined}
+        title={
+          <span id="roster-delete-result">
+            {summary.failed > 0
+              ? `${plural(summary.done, "compte supprimé", "comptes supprimés")}, ${plural(summary.failed, "échec", "échecs")}`
+              : `${plural(summary.done, "compte supprimé", "comptes supprimés")}`}
+          </span>
+        }
+      >
+        <p>
           Le détail de chaque compte est ci-dessous. Les comptes en échec sont
           conservés.
-        </AlertDescription>
-      </Alert>
+        </p>
+      </Callout>
       <ul className="divide-y rounded-md border text-sm">
         {[...failed, ...done].map((result) => (
           <li
@@ -572,7 +534,7 @@ function DeleteOutcome({
             <span className="mt-0.5 shrink-0">
               {result.status === "done" ? (
                 <>
-                  <Check className="text-primary-600 h-4 w-4" aria-hidden />
+                  <Check className="text-primary h-4 w-4" aria-hidden />
                   <span className="sr-only">Supprimé :</span>
                 </>
               ) : (

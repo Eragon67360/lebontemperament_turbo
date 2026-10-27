@@ -7,6 +7,7 @@ import { AnniversaryHeroCard } from "@/components/anniversary/AnniversaryEntry";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import HomeAnnouncements from "@/components/home/HomeAnnouncements";
 import { LinkButton } from "@/components/LinkButton";
+import { useOverPhotoHero } from "@/components/navigation/OverPhotoHeader";
 import ProjectViewer from "@/components/ProjectViewer";
 import { useClientValue } from "@/hooks/useClientValue";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
@@ -50,6 +51,9 @@ const HomeContent = ({
 }: HomeContentProps) => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
+  // The hero below always draws its dark photo under the site header, which
+  // turns transparent and white over it (OverPhotoHeader).
+  useOverPhotoHero(true);
   // Must render identically on server and client: measure in the effect below.
   const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
 
@@ -167,12 +171,7 @@ const HomeContent = ({
                     aria-hidden="true"
                   />
                 </LinkButton>
-                <LinkButton
-                  size="lg"
-                  variant="secondary"
-                  aria-label="Aller à la section Contact"
-                  href="#contact"
-                >
+                <LinkButton size="lg" variant="secondary" href="#contact">
                   Nous contacter
                 </LinkButton>
               </div>
@@ -192,7 +191,6 @@ const HomeContent = ({
                     size="lg"
                     variant="outline"
                     className="border-white/50 text-white hover:bg-white/10"
-                    aria-label="Informations sur l'Assemblée Générale"
                     href={RouteNames.AG}
                   >
                     Assemblée Générale –{" "}
@@ -315,7 +313,6 @@ const HomeContent = ({
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               <LinkButton
-                aria-label="Lire toutes nos histoires de concerts"
                 className="mx-auto"
                 variant="primary"
                 href="/concerts#histoires"
@@ -659,11 +656,7 @@ const HomeContent = ({
               {concertsNear && <ConcertPhotos />}
 
               <div className="mt-7.5 flex justify-end">
-                <LinkButton
-                  variant="outline"
-                  aria-label="Voir tous nos concerts"
-                  href={"/concerts"}
-                >
+                <LinkButton variant="outline" href={"/concerts"}>
                   <span className="text-xs tracking-[2.4px] uppercase">
                     Voir tous les concerts
                   </span>
@@ -712,11 +705,7 @@ const HomeContent = ({
               {cdsNear && <CDPochettePhotos />}
 
               <div className="mt-7.5 flex justify-end">
-                <LinkButton
-                  variant="outline"
-                  aria-label="Voir nos CDs actuellement en vente"
-                  href={"/concerts/autres"}
-                >
+                <LinkButton variant="outline" href={"/concerts/autres"}>
                   <span className="text-xs tracking-[2.4px] uppercase">
                     Acheter nos CDs
                   </span>

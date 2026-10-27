@@ -15,7 +15,7 @@ import {
   placeLine,
   upcomingRehearsals,
 } from "@/lib/membres/rehearsals";
-import { groupsForVoice } from "@/lib/membres/voices";
+import { groupsForVoice, voicesLabel } from "@/lib/membres/voices";
 import { GROUP_TYPES, GroupType } from "@repo/domain/types/rehearsals";
 import { useState } from "react";
 import {
@@ -115,7 +115,7 @@ const Calendrier = () => {
             </div>
             {myGroups && selectedGroup === "mine" && (
               <p className="text-members-muted text-base">
-                D’après ta voix ({voice}) :{" "}
+                D’après ta voix ({voicesLabel(voice)}) :{" "}
                 {GROUP_TYPES.filter((group) => myGroups.has(group))
                   .map((group) => GROUP_LABEL[group])
                   .join(", ")}
@@ -128,7 +128,12 @@ const Calendrier = () => {
 
       {showGoogleCalendar ? (
         <MembersCard className="overflow-hidden p-2 sm:p-4">
-          <GoogleCalendar embedId={"lebontemperament@gmail.com"} />
+          <GoogleCalendar
+            embedId={
+              process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID ??
+              "lebontemperament@gmail.com"
+            }
+          />
         </MembersCard>
       ) : (
         <MembersCard className="overflow-hidden p-0">

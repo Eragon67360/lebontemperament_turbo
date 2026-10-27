@@ -269,7 +269,7 @@ const Contact = async () => {
             <div className="text-foreground text-[18px] font-extrabold uppercase">
               Recevez notre
             </div>
-            <div className="from-primary-600 to-primary-400 inline-block bg-gradient-to-r bg-clip-text text-[32px] font-extrabold text-transparent uppercase">
+            <div className="text-primary-400 dark:text-primary inline-block text-[32px] font-extrabold uppercase">
               Newsletter
             </div>
             <div className="text-foreground mt-8">

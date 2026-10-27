@@ -2,9 +2,11 @@ import {
   deletionRequestEmails,
   parseDeletionNote,
 } from "@/lib/deletionRequest";
+import { errorCodes } from "@/lib/errorCodes";
 import { createMailer } from "@/lib/mail";
+import { readProfileName } from "@/lib/memberName";
 import { getContactEmail } from "@/lib/siteSettings";
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { NextResponse } from "next/server";
 
 const FAILED = {
@@ -19,7 +21,7 @@ const FAILED = {
  * nothing; see lib/deletionRequest.ts.
  */
 export async function POST(request: Request) {
-  const auth = await checkAuthorization();
+  const auth = await requireUser();
   if (!auth.authorized) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -48,19 +50,9 @@ export async function POST(request: Request) {
     return NextResponse.json(FAILED, { status: 500 });
   }
 
-  // The caller's own profile row (row-level security allows exactly that).
-  const { data: profile } = await auth.supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", auth.user.id)
-    .maybeSingle();
-  const metadata = auth.user.user_metadata ?? {};
-  const name =
-    profile?.display_name ||
-    metadata.display_name ||
-    metadata.full_name ||
-    metadata.name ||
-    null;
+  // The name on the caller's own profile row (row-level security allows
+  // exactly that), not the account's metadata.
+  const name = await readProfileName(auth.supabase, auth.user.id);
 
   // Personal-data requests go to the main mailbox (site settings).
   const privacyEmail = await getContactEmail();
@@ -79,7 +71,10 @@ export async function POST(request: Request) {
       ...toAssociation,
     });
   } catch (error) {
-    console.error("[api/membres/demande-suppression] Send failed:", error);
+    console.error(
+      "[api/membres/demande-suppression] Send failed:",
+      errorCodes(error),
+    );
     return NextResponse.json(FAILED, { status: 500 });
   }
 
@@ -92,7 +87,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     // The association has the request; only the acknowledgement is missing.
-    console.error("[api/membres/demande-suppression] Ack failed:", error);
+    console.error(
+      "[api/membres/demande-suppression] Ack failed:",
+      errorCodes(error),
+    );
   }
 
   return NextResponse.json({

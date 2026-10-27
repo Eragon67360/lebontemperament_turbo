@@ -3,7 +3,7 @@
 import { LinkButton } from "@/components/LinkButton";
 import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import RouteNames from "@/utils/routes";
-import { createClient } from "@/utils/supabase/client";
+import { loadBrowserClient } from "@/utils/supabase/lazy";
 import {
   Button,
   FieldError,
@@ -25,7 +25,6 @@ export default function CreateProfileForm() {
   const [invalidLink, setInvalidLink] = useState(false);
 
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     const handleTokens = async () => {
@@ -41,6 +40,7 @@ export default function CreateProfileForm() {
         }
 
         try {
+          const supabase = await loadBrowserClient();
           const { error } = await supabase.auth.refreshSession({
             refresh_token: refreshToken,
           });
@@ -56,7 +56,7 @@ export default function CreateProfileForm() {
     };
 
     handleTokens();
-  }, [router, supabase]);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +81,7 @@ export default function CreateProfileForm() {
     }
 
     try {
+      const supabase = await loadBrowserClient();
       const { error } = await supabase.auth.updateUser({
         password: password,
       });

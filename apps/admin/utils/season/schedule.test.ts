@@ -11,13 +11,11 @@ import {
   splitEvents,
   splitRehearsals,
   timeRangeFr,
-  todayIso,
   toEventPayload,
   toRehearsalPayloads,
 } from "./schedule";
 
-// --- todayIso is the concerts page's: the local day ---
-assert.equal(todayIso(new Date(2026, 9, 4, 0, 30)), "2026-10-04");
+// « Today » is the Paris day: `parisToday` of @repo/domain, tested there.
 
 // --- Rehearsals: today stays upcoming; soonest first, past most recent first ---
 {

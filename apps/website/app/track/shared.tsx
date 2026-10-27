@@ -1,19 +1,23 @@
 "use client";
 
+import { LinkButton } from "@/components/LinkButton";
+import { useNow } from "@/hooks/useNow";
+import { Button, Spinner } from "@heroui/react";
 import clsx from "clsx";
 import {
   AlertCircle,
   AlertTriangle,
   CheckCircle2,
-  Clock, // <-- Import the Clock icon
+  Clock,
   ShipWheel,
   Truck,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion, MotionConfig } from "motion/react";
+import Link from "next/link";
 import type { ReactNode } from "react";
+import { IoHome } from "react-icons/io5";
 
-import { useNow } from "@/hooks/useNow";
-
+import { frenchClock, roundedWindow } from "@repo/domain/utils/parisClock";
 // --- Data Interfaces (No changes here) ---
 export interface Delivery {
   id: string;
@@ -42,7 +46,11 @@ export interface DeliveryRecipient {
   longitude?: number | null;
 }
 
-// --- Helper Functions (No changes here) ---
+// --- Helper Functions ---
+//
+// Times are the recipient's: Paris wall-clock, in the « 9 h 15 » style of
+// the SMS, the pushes and the app, never the viewer's zone. The server and
+// the browser then render the same digits (no hydration mismatch).
 export function calculateETA(
   iso: string | null,
   delayMinutes: number | null,
@@ -55,22 +63,22 @@ export function calculateETA(
   return scheduledDate;
 }
 
+/** « 9 h 15 », « 14 h », Paris time; "--:--" while there is no time. */
 export function formatTime(date: Date | null): string {
   if (!date) return "--:--";
-  return date.toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return frenchClock(date);
 }
 
+const PARIS_DAY = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: "Europe/Paris",
+  day: "2-digit",
+  month: "2-digit",
+});
+
+/** « 10 h 31 le 27/10 », Paris time, after « livré à ». */
 export function formatDateTime(date: Date | null): string {
   if (!date) return "--:--";
-  return date.toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return `${frenchClock(date)} le ${PARIS_DAY.format(date)}`;
 }
 
 function formatTimeRangeLabel(
@@ -86,9 +94,9 @@ function formatTimeRangeLabel(
 }
 
 /**
- * Format per-recipient range: 30-min window with 15-min rounding.
- * e.g. scheduled 09:29 → "09:15 – 09:45"
- * Returns "HH:MM – HH:MM" or "--:--" if no scheduled_at.
+ * The recipient's window: the scheduled time (plus the announced delay)
+ * rounded to the nearest quarter hour, ±15 min, as the SMS and the pushes
+ * announce it: 09:29 → « 9 h 15 – 9 h 45 ». "--:--" without a scheduled_at.
  */
 export function formatRecipientRange(
   scheduledAt: string | null,
@@ -97,14 +105,67 @@ export function formatRecipientRange(
   if (!scheduledAt) return "--:--";
   const base = calculateETA(scheduledAt, delayMinutes);
   if (!base) return "--:--";
-  const quarterMs = 15 * 60 * 1000;
-  const rounded = new Date(Math.round(base.getTime() / quarterMs) * quarterMs);
-  const start = new Date(rounded.getTime() - 15 * 60 * 1000);
-  const end = new Date(rounded.getTime() + 15 * 60 * 1000);
+  const { start, end } = roundedWindow(base);
   return `${formatTime(start)} – ${formatTime(end)}`;
 }
 
-// --- UI Components (REFACTORED) ---
+// --- UI Components ---
+//
+// The page is opened from an SMS, mostly on a phone, by people who may never
+// have seen the site: it follows the site's look (the tokens of
+// `app/globals.css`, the same card as `not-found` and `/l/<code>`), in both
+// themes, without stock greys or glass. Solid cards stay readable over the
+// map whatever the tiles show.
+
+/** The site's card: the page background on the grey surface, a soft line, a soft shadow. */
+const CARD = "border-separator bg-background rounded-2xl border shadow-md";
+
+/** The grey page behind the states that show no map. */
+const PAGE = "bg-surface-secondary flex min-h-dvh w-full justify-center";
+
+/**
+ * A card that arrives with a short spring: from above, or growing from the
+ * centre for the centred ones. `MotionConfig reducedMotion="user"` reads the
+ * device's reduced-motion setting when the animation starts, so under it the
+ * card only fades in, on the first paint too (the site's `useReducedMotion`
+ * hook can only answer after mount, once an entrance has already started).
+ */
+function AnimatedCard({
+  from = "above",
+  delay = 0,
+  role,
+  className,
+  children,
+}: {
+  from?: "above" | "centre";
+  delay?: number;
+  role?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <motion.div
+        role={role}
+        initial={
+          from === "above"
+            ? { y: -24, opacity: 0 }
+            : { scale: 0.95, opacity: 0 }
+        }
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: from === "above" ? 100 : 150,
+          damping: 20,
+          delay,
+        }}
+        className={clsx(CARD, className)}
+      >
+        {children}
+      </motion.div>
+    </MotionConfig>
+  );
+}
 
 /**
  * A panel that shows delivery alerts (delay, problem).
@@ -113,52 +174,46 @@ export function formatRecipientRange(
 export function StatusPanel({ delivery }: { delivery: Delivery }) {
   const isProblem = !!delivery.problem_message;
   const isDelayed = delivery.is_delayed;
+  if (!isProblem && !isDelayed) return null;
 
   return (
-    <motion.div
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 100, damping: 20 }}
-      className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
-    >
-      <AnimatePresence>
-        {(isDelayed || isProblem) && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div
-              className={clsx(
-                "flex items-start gap-3 rounded-lg p-3 text-sm",
-                isProblem
-                  ? "border border-red-200 bg-red-50 text-red-800 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300"
-                  : "border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300",
-              )}
-            >
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-              <div>
-                {isProblem ? (
-                  <>
-                    <span className="font-bold">Problème:</span>{" "}
-                    {delivery.problem_message}
-                  </>
-                ) : (
-                  <>
-                    <span className="font-bold">En retard</span>
-                    {delivery.delay_minutes != null &&
-                      delivery.delay_minutes > 0 && (
-                        <span> (~{delivery.delay_minutes} min)</span>
-                      )}
-                  </>
-                )}
-              </div>
-            </div>
-          </motion.div>
+    <AnimatedCard role="status" className="overflow-hidden">
+      <div
+        className={clsx(
+          "text-foreground flex items-start gap-3 p-4 text-sm sm:px-6",
+          isProblem ? "bg-danger-soft" : "bg-warning-soft",
         )}
-      </AnimatePresence>
-    </motion.div>
+      >
+        <AlertTriangle
+          className={clsx(
+            "mt-0.5 h-5 w-5 shrink-0",
+            isProblem
+              ? "text-danger-soft-foreground"
+              : "text-warning-soft-foreground",
+          )}
+          aria-hidden
+        />
+        <p>
+          {isProblem ? (
+            <>
+              <span className="text-danger-soft-foreground font-semibold">
+                Problème :
+              </span>{" "}
+              {delivery.problem_message}
+            </>
+          ) : (
+            <>
+              <span className="text-warning-soft-foreground font-semibold">
+                En retard
+              </span>
+              {delivery.delay_minutes != null && delivery.delay_minutes > 0 && (
+                <span> (~{delivery.delay_minutes} min)</span>
+              )}
+            </>
+          )}
+        </p>
+      </div>
+    </AnimatedCard>
   );
 }
 
@@ -175,6 +230,23 @@ const STATUS_BADGE: Record<RecipientStatus, string> = {
   started: "Tournée en cours",
   pending: "Prévu",
 };
+
+/** The stage as a chip: a word, with a dot that pulses while live. */
+function StatusChip({ status }: { status: RecipientStatus }) {
+  return (
+    <span className="bg-surface-secondary text-muted inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
+      <span
+        aria-hidden
+        className={clsx("h-2 w-2 rounded-full", {
+          "bg-success motion-safe:animate-pulse": status === "live",
+          "bg-success": status === "started",
+          "bg-muted": status === "pending",
+        })}
+      />
+      {STATUS_BADGE[status]}
+    </span>
+  );
+}
 
 /**
  * A panel showing the specific recipient's information.
@@ -240,98 +312,77 @@ export function RecipientSinglePanel({
   };
 
   return (
-    <motion.div
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
-      className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-lg sm:p-6 dark:border-gray-500/20 dark:bg-gray-900/70"
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex w-full min-w-0 flex-col">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-col">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                Votre livraison
-              </p>
-              <p className="mt-1 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl dark:text-gray-100">
-                {recipient.label}
-              </p>
-            </div>
-            {/* Status badge */}
-            <div
-              className={clsx(
-                "flex shrink-0 items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-semibold dark:bg-white/5",
-                status === "pending"
-                  ? "text-gray-600 dark:text-gray-400"
-                  : "text-gray-700 dark:text-gray-300",
-              )}
-            >
-              <div
-                className={clsx("h-2 w-2 rounded-full", {
-                  "animate-pulse bg-green-500": status === "live",
-                  "bg-green-500": status === "started",
-                  "bg-gray-400 dark:bg-gray-500": status === "pending",
-                })}
-              />
-              <span>{STATUS_BADGE[status]}</span>
-            </div>
-          </div>
+    <AnimatedCard delay={0.1} className="p-4 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        {/* The page's title: « Votre livraison » then who it is for. */}
+        <h1 className="flex min-w-0 flex-col">
+          <span className="text-muted text-xs font-medium">
+            Votre livraison
+          </span>
+          <span className="text-foreground mt-1 text-xl font-bold tracking-tight sm:text-2xl">
+            {recipient.label}
+          </span>
+        </h1>
+        <StatusChip status={status} />
+      </div>
 
-          {/* RENDER PATH 1: Delivery is IN PROGRESS (Live) - ETA as hero */}
-          {isInProgress ? (
+      {/* RENDER PATH 1: Delivery is IN PROGRESS (Live) - ETA as hero */}
+      {isInProgress ? (
+        <>
+          <p className="text-muted mt-3 text-xs font-medium">Arrivée prévue</p>
+          <p className="text-foreground mt-1 text-4xl font-bold tracking-tighter sm:text-5xl">
+            {getSmartEtaLabel()}
+          </p>
+          {hasRange && (
+            <p className="text-muted mt-2 text-sm">
+              Créneau prévu : {rangeLabel}
+            </p>
+          )}
+        </>
+      ) : (
+        /* RENDER PATH 2: not on the way to this recipient yet - only show range, no exact time */
+        <>
+          {hasRange && (
             <>
-              <p className="mt-3 text-xs font-medium text-gray-500 dark:text-gray-400">
-                Arrivée prévue
+              <p className="text-muted mt-3 text-xs font-medium">
+                Créneau prévu
               </p>
-              <p className="mt-1 text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
-                {getSmartEtaLabel()}
+              <p className="text-foreground mt-1 text-4xl font-bold tracking-tighter sm:text-5xl">
+                {rangeLabel}
               </p>
-              {hasRange && (
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  Créneau prévu : {rangeLabel}
-                </p>
-              )}
-            </>
-          ) : (
-            /* RENDER PATH 2: not on the way to this recipient yet - only show range, no exact time */
-            <>
-              {hasRange && (
-                <>
-                  <p className="mt-3 text-xs font-medium text-gray-500 dark:text-gray-400">
-                    Créneau prévu
-                  </p>
-                  <p className="mt-1 text-4xl font-bold tracking-tighter text-gray-900 sm:text-5xl dark:text-gray-100">
-                    {rangeLabel}
-                  </p>
-                </>
-              )}
-              <div className="w-full">
-                {status === "started" ? (
-                  <div className="mt-4 flex w-full items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 dark:border-green-800/50 dark:bg-green-950/40 dark:text-green-300">
-                    <Truck className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p className="text-sm">
-                      <span className="font-semibold">
-                        Notre tournée a commencé !
-                      </span>{" "}
-                      La carte s&apos;affichera ici dès que le livreur sera en
-                      route vers chez vous.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-4 flex w-full items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300">
-                    <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p className="text-sm">
-                      Le suivi en direct s&apos;activera lorsque le conducteur
-                      sera en route.
-                    </p>
-                  </div>
-                )}
-              </div>
             </>
           )}
-        </div>
-      </div>
-    </motion.div>
+          <div className="bg-surface-secondary text-foreground mt-4 flex items-start gap-3 rounded-xl p-3 text-sm">
+            {status === "started" ? (
+              <>
+                <Truck
+                  className="text-primary-text mt-0.5 h-4 w-4 shrink-0"
+                  aria-hidden
+                />
+                <p>
+                  <span className="font-semibold">
+                    Notre tournée a commencé !
+                  </span>{" "}
+                  La carte s&apos;affichera ici dès que le livreur sera en route
+                  vers chez vous.
+                </p>
+              </>
+            ) : (
+              <>
+                <Clock
+                  className="text-primary-text mt-0.5 h-4 w-4 shrink-0"
+                  aria-hidden
+                />
+                <p>
+                  Le suivi en direct s&apos;activera lorsque le conducteur sera
+                  en route.
+                </p>
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </AnimatedCard>
   );
 }
 
@@ -347,26 +398,21 @@ export function DeliveredPanel({
 }) {
   const date = new Date(deliveredAt);
   return (
-    <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 150, damping: 20 }}
-      className="w-full max-w-lg rounded-2xl border border-green-200 bg-green-50 p-6 shadow-xl dark:border-green-800/50 dark:bg-green-950/40"
-    >
+    <AnimatedCard from="centre" className="w-full max-w-lg p-6 sm:p-8">
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-          <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+        <div className="bg-success-soft text-success-soft-foreground flex h-14 w-14 items-center justify-center rounded-full">
+          <CheckCircle2 className="h-8 w-8" aria-hidden />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-green-900 dark:text-green-100">
+          <h1 className="text-foreground text-xl font-bold sm:text-2xl">
             Livré
-          </h2>
-          <p className="mt-1 text-sm text-green-700 dark:text-green-300">
+          </h1>
+          <p className="text-muted mt-1 text-sm">
             {label} – livré à {formatDateTime(date)}
           </p>
         </div>
       </div>
-    </motion.div>
+    </AnimatedCard>
   );
 }
 
@@ -376,26 +422,22 @@ export function DeliveredPanel({
 export function StoppedOverlay({ delivery }: { delivery: Delivery }) {
   void delivery; // Prop kept for API consistency
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 150, damping: 20 }}
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-8 text-center shadow-2xl dark:bg-gray-900"
+    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4">
+      <AnimatedCard
+        role="status"
+        from="centre"
+        className="w-full max-w-md p-6 text-center shadow-xl sm:p-8"
       >
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-          <ShipWheel
-            className="h-8 w-8 text-gray-400 dark:text-gray-500"
-            strokeWidth={1.5}
-          />
+        <div className="bg-surface-secondary text-muted mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full">
+          <ShipWheel className="h-7 w-7" strokeWidth={1.5} aria-hidden />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+        <h1 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">
           Suivi en direct interrompu
         </h1>
-        <p className="mt-4 text-base text-gray-500 dark:text-gray-400">
+        <p className="text-muted mt-3">
           Le conducteur a mis le suivi en pause. Il sera réactivé prochainement.
         </p>
-      </motion.div>
+      </AnimatedCard>
     </div>
   );
 }
@@ -405,15 +447,15 @@ export function StoppedOverlay({ delivery }: { delivery: Delivery }) {
  */
 export function TrackPrivacyNotice() {
   return (
-    <p className="px-1 text-center text-xs text-gray-600 dark:text-gray-400">
+    <p className="text-muted px-1 text-center text-xs">
       Vos coordonnées servent uniquement à cette livraison et sont effacées 30
       jours après la tournée.{" "}
-      <a
+      <Link
         href="/politique-de-confidentialite"
-        className="underline underline-offset-2 hover:text-gray-900 dark:hover:text-gray-200"
+        className="text-primary-text underline underline-offset-2"
       >
         Politique de confidentialité
-      </a>
+      </Link>
     </p>
   );
 }
@@ -423,12 +465,12 @@ export function TrackPrivacyNotice() {
  */
 export function PendingPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh w-full items-start justify-center bg-gray-100 p-3 pt-12 sm:p-4 sm:pt-16 dark:bg-gray-900">
+    <main className={clsx(PAGE, "items-start p-3 pt-12 sm:p-4 sm:pt-16")}>
       <div className="flex w-full max-w-lg flex-col gap-3">
         {children}
         <TrackPrivacyNotice />
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -437,19 +479,21 @@ export function PendingPanel({ children }: { children: ReactNode }) {
  */
 export function TrackPageLoadingFallback() {
   return (
-    <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 dark:bg-gray-950">
-      <div className="flex flex-col items-center gap-4">
-        <ShipWheel className="h-10 w-10 animate-spin text-gray-400 dark:text-gray-500" />
-        <p className="font-medium text-gray-600 dark:text-gray-400">
+    <main className={clsx(PAGE, "items-center p-4")}>
+      <div role="status" className="flex flex-col items-center gap-4">
+        <Spinner size="lg" aria-hidden />
+        <p className="text-muted font-medium">
           Chargement du suivi en direct...
         </p>
       </div>
-    </div>
+    </main>
   );
 }
 
 /**
  * A component to display an error message with an optional refresh button.
+ * It is a dead end for the person who opened the link, so it also leads
+ * back to the site and to the contact page.
  */
 export function TrackPageError({
   message,
@@ -461,21 +505,40 @@ export function TrackPageError({
   const handleRetry = onRetry ?? (() => window.location.reload());
 
   return (
-    <div className="flex h-dvh min-h-dvh w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-950">
-      <div className="w-full max-w-md rounded-xl border border-red-200 bg-white p-6 shadow-lg dark:border-red-900/50 dark:bg-gray-900">
-        <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-          <AlertCircle className="h-6 w-6" />
-          <h2 className="text-xl font-semibold">Erreur de suivi</h2>
+    <main className={clsx(PAGE, "items-center p-4")}>
+      <section
+        aria-labelledby="track-error-title"
+        className={clsx(CARD, "w-full max-w-md p-6 text-center sm:p-8")}
+      >
+        <div className="bg-primary-50 dark:bg-primary-900/60 text-primary mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full">
+          <AlertCircle className="h-7 w-7" aria-hidden />
         </div>
-        <p className="mt-3 text-gray-600 dark:text-gray-400">{message}</p>
-        <button
-          type="button"
-          onClick={handleRetry}
-          className="mt-4 w-full rounded-lg bg-gray-900 px-4 py-2.5 font-medium text-white transition hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+        <h1
+          id="track-error-title"
+          className="text-foreground text-xl font-bold sm:text-2xl"
         >
-          Réactualiser la page
-        </button>
-      </div>
-    </div>
+          Erreur de suivi
+        </h1>
+        <p className="text-muted mt-3">{message}</p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <LinkButton href="/" variant="primary" size="lg">
+            <IoHome className="shrink-0" aria-hidden />
+            Retour à l’accueil
+          </LinkButton>
+          <Button variant="outline" size="lg" onPress={handleRetry}>
+            Réactualiser la page
+          </Button>
+        </div>
+        <p className="text-muted mt-6 text-sm">
+          Une question sur votre livraison ?{" "}
+          <Link
+            href="/contact"
+            className="text-primary-text underline underline-offset-2"
+          >
+            Nous contacter
+          </Link>
+        </p>
+      </section>
+    </main>
   );
 }

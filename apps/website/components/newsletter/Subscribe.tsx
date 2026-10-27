@@ -1,9 +1,11 @@
 "use client";
+import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { NEWSLETTER_HONEYPOT_FIELD } from "@repo/domain/utils/newsletter";
 import Link from "next/link";
 import React, { useState } from "react";
 import { FiLoader } from "react-icons/fi";
-import { toast } from "sonner";
+
+import { toast } from "@heroui/react";
 
 const Subscribe = () => {
   const [email, setEmail] = useState("");
@@ -46,14 +48,14 @@ const Subscribe = () => {
     // Validate email is not empty
     if (!trimmedEmail) {
       setEmailError("Veuillez entrer une adresse email");
-      toast.error("Veuillez entrer une adresse email valide");
+      toast.danger("Veuillez entrer une adresse email valide");
       return;
     }
 
     // Validate email format
     if (!validateEmail(trimmedEmail)) {
       setEmailError("Veuillez entrer une adresse email valide");
-      toast.error("Format d'email invalide. Exemple: nom@exemple.com");
+      toast.danger("Format d'email invalide. Exemple: nom@exemple.com");
       return;
     }
 
@@ -82,18 +84,30 @@ const Subscribe = () => {
         setEmail(""); // Clear the input on success
       } else {
         console.error("Failed to subscribe:", data.error);
-        toast.error("Une erreur s'est produite, veuillez réessayer plus tard!");
+        toast.danger(
+          "Une erreur s'est produite, veuillez réessayer plus tard!",
+        );
       }
     } catch (error) {
       console.error("Failed to subscribe:", error);
-      toast.error("Une erreur s'est produite, veuillez réessayer plus tard!");
+      toast.danger("Une erreur s'est produite, veuillez réessayer plus tard!");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const canSubmit = !isLoading && email.trim() !== "";
+
   return (
-    <div className="mt-8">
+    <form
+      className="mt-8"
+      noValidate
+      aria-label="Inscription à la newsletter"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (canSubmit) handleSubscribe();
+      }}
+    >
       {/* Honeypot, off-screen and hidden from assistive technologies */}
       <div
         aria-hidden="true"
@@ -110,56 +124,45 @@ const Subscribe = () => {
           onChange={(event) => setWebsite(event.target.value)}
         />
       </div>
-      <div
-        className={`flex overflow-hidden rounded-lg border bg-white shadow-sm transition-colors dark:bg-gray-800 ${
-          emailError
-            ? "border-red-500 dark:border-red-500"
-            : "border-gray-300 dark:border-gray-600"
-        }`}
+      {/* The same field kit as the contact form above: a visible label, the
+          site's focus ring, the invalid state and its message linked to the
+          field. The primary button is the solid teal (globals.css, #337). */}
+      <TextField
+        name="email"
+        type="email"
+        isInvalid={!!emailError}
+        isDisabled={isLoading}
+        fullWidth
       >
-        <input
-          type="email"
-          name="email"
-          placeholder="Adresse e-mail"
-          value={email}
-          onChange={handleInputChange}
-          disabled={isLoading}
-          className={`focus:ring-primary/20 w-3/5 rounded-l-lg border-0 bg-transparent py-3 pl-4 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:outline-none focus:ring-inset disabled:cursor-not-allowed disabled:opacity-50 lg:w-4/5 dark:text-gray-100 dark:placeholder:text-gray-400 ${
-            emailError ? "text-red-600 dark:text-red-400" : ""
-          }`}
-          aria-invalid={emailError ? "true" : "false"}
-          aria-describedby={emailError ? "email-error" : undefined}
-        />
-
-        <button
-          onClick={handleSubscribe}
-          disabled={isLoading || !email.trim()}
-          className={`bg-primary-solid flex w-2/5 items-center justify-center gap-2 rounded-r-lg px-4 py-3 text-xs font-bold text-white transition-all duration-200 md:text-sm lg:w-1/5 lg:text-base ${
-            isLoading || !email.trim()
-              ? "cursor-not-allowed opacity-50"
-              : "hover:bg-primary-solid-hover cursor-pointer"
-          }`}
-        >
-          {isLoading ? (
-            <>
-              <FiLoader className="h-4 w-4 animate-spin" />
-              <span className="hidden sm:inline">Chargement...</span>
-            </>
-          ) : (
-            "S'abonner"
-          )}
-        </button>
-      </div>
-      {emailError && (
-        <p
-          id="email-error"
-          className="mt-2 text-sm text-red-600 dark:text-red-400"
-          role="alert"
-        >
-          {emailError}
-        </p>
-      )}
-      <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+        <Label>Adresse e-mail</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            value={email}
+            onChange={handleInputChange}
+            autoComplete="email"
+            className="min-w-0 flex-1"
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            isDisabled={!canSubmit}
+            className="shrink-0"
+          >
+            {isLoading ? (
+              <>
+                <FiLoader className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span className="hidden sm:inline">Chargement...</span>
+              </>
+            ) : (
+              "S'abonner"
+            )}
+          </Button>
+        </div>
+        <FieldError>
+          {emailError && <span role="alert">{emailError}</span>}
+        </FieldError>
+      </TextField>
+      <p className="text-muted mt-2 text-xs">
         Votre adresse e-mail sert uniquement à vous envoyer la newsletter ; vous
         pouvez vous désinscrire à tout moment. En savoir plus dans notre{" "}
         <Link
@@ -170,7 +173,7 @@ const Subscribe = () => {
         </Link>
         .
       </p>
-    </div>
+    </form>
   );
 };
 

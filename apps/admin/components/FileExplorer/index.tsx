@@ -3,15 +3,22 @@
 
 import { Button } from "@/components/ui/button";
 import { DataState, ListSkeleton } from "@/components/ui/data-state";
-import { useCreateFile, useDeleteFile, useFiles } from "@/hooks/useFiles";
+import {
+  refetchFiles,
+  useCreateFile,
+  useDeleteFile,
+  useFiles,
+} from "@/hooks/useFiles";
 import {
   useCreateFolder,
   useDeleteFolder,
   useFolders,
 } from "@/hooks/useFolders";
 import { FileRecord, Folder } from "@/types/files";
+import { settleFailedSave, UNSETTLED_SAVE_HINT } from "@/utils/failedSave";
 import { createClient } from "@/utils/supabase/client";
 import { checkWorkFile, workFileStoragePath } from "@/utils/workFiles";
+import { useQueryClient } from "@tanstack/react-query";
 import { FolderPlus, Upload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -34,6 +41,7 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
     (Folder | FileRecord) | null
   >(null);
 
+  const queryClient = useQueryClient();
   const foldersQuery = useFolders(programId, groupId);
   const filesQuery = useFiles(programId, groupId, currentFolder?.id);
   const createFolder = useCreateFolder();
@@ -80,10 +88,14 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
       return;
     }
 
+    // Set when the save failed and the folder couldn't be read back: the
+    // object stays, and the error says what to check.
+    let unsettled = false;
     toast.promise(
       async () => {
         const supabase = createClient();
         const bucket = supabase.storage.from("programs");
+        const folderId = currentFolder?.id;
 
         const path = workFileStoragePath(
           programId,
@@ -112,12 +124,25 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
             storage_path: path,
             program_id: programId,
             group_id: groupId,
-            folder_id: currentFolder?.id,
+            folder_id: folderId,
           });
         } catch (error) {
-          // No row points to the object: remove it rather than orphan it.
-          await bucket.remove([path]);
-          throw error;
+          // The request can fail after the row was saved (its answer lost
+          // on the way back): the folder, read again, decides. A row that
+          // exists is a success; an object without a row is removed rather
+          // than orphaned; an unreadable folder keeps the object.
+          const outcome = await settleFailedSave({
+            storageKey: path,
+            readSavedKeys: async () =>
+              (
+                await refetchFiles(queryClient, programId, groupId, folderId)
+              ).map((record) => record.storage_path),
+            removeFile: () => bucket.remove([path]),
+          });
+          if (outcome !== "saved") {
+            unsettled = outcome === "unknown";
+            throw error;
+          }
         }
 
         setIsUploadFileOpen(false);
@@ -125,7 +150,10 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
       {
         loading: "Téléversement en cours...",
         success: "Fichier téléversé avec succès",
-        error: "Impossible de téléverser le fichier",
+        error: () =>
+          unsettled
+            ? `Impossible de téléverser le fichier. ${UNSETTLED_SAVE_HINT}`
+            : "Impossible de téléverser le fichier",
       },
     );
   };
@@ -197,6 +225,7 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
       <DataState
         isLoading={loading}
         isError={failed}
+        hasData={!!(foldersQuery.data && filesQuery.data)}
         onRetry={() => {
           foldersQuery.refetch();
           filesQuery.refetch();

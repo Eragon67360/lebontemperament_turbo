@@ -53,6 +53,7 @@ export default function HeroStatsPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={stats.length > 0}
         isEmpty={stats.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les chiffres clés n'ont pas pu être chargés."

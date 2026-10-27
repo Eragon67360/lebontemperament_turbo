@@ -53,9 +53,12 @@ export type PublicTour = Pick<
   | "end_date"
 >;
 
-/** The agenda only shows the date of the next rehearsal. */
-export const REHEARSAL_COLUMNS = "id, date";
-export type PublicRehearsal = Pick<Rehearsal, "id" | "date">;
+/**
+ * The agenda only shows the date of the next rehearsal, read on the server
+ * (lib/nextRehearsal.ts).
+ */
+export const REHEARSAL_COLUMNS = "date";
+export type PublicRehearsal = Pick<Rehearsal, "date">;
 
 /**
  * Events as the agenda and the members area show them (`/api/events`): the

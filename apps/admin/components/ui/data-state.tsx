@@ -1,23 +1,31 @@
 import { Button } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, type LucideIcon, RefreshCw } from "lucide-react";
 import type { ReactNode } from "react";
 
 /**
- * The four states every data-driven page has: loading, empty, error, loaded.
- * Pages compose these instead of hand-rolling their own, so a list looks the
- * same whether it is users, concerts or archives.
+ * The four states every data-driven page has: loading, empty, error, loaded,
+ * plus the one in between: loaded, then a refresh that failed. Pages compose
+ * these instead of hand-rolling their own, so a list looks the same whether
+ * it is users, concerts or archives.
  */
 
 /**
  * Picks the right state for a query-backed region, so pages stop growing
  * three-deep ternaries around every list.
+ *
+ * `hasData` says whether something is already on screen (for a query,
+ * `data !== undefined`). With it, a failed refresh keeps the children and
+ * adds a polite « Actualisation impossible » notice above them; without it
+ * (the default) an error always shows the error card, as before.
  */
 export function DataState({
   isLoading,
   isError,
   isEmpty,
+  hasData = false,
   onRetry,
   errorDescription,
   skeleton,
@@ -27,13 +35,15 @@ export function DataState({
   isLoading?: boolean;
   isError?: boolean;
   isEmpty?: boolean;
+  /** Something is loaded and shown: an error then becomes a notice, not a card. */
+  hasData?: boolean;
   onRetry?: () => void;
   errorDescription?: string;
   skeleton: ReactNode;
   empty?: ReactNode;
   children: ReactNode;
 }) {
-  if (isError)
+  if (isError && !hasData)
     return (
       <ErrorState
         description={errorDescription}
@@ -42,8 +52,20 @@ export function DataState({
       />
     );
   if (isLoading) return <>{skeleton}</>;
-  if (isEmpty) return <>{empty}</>;
-  return <>{children}</>;
+  const notice = isError ? <RefreshErrorNotice onRetry={onRetry} /> : null;
+  if (isEmpty)
+    return (
+      <>
+        {notice}
+        {empty}
+      </>
+    );
+  return (
+    <>
+      {notice}
+      {children}
+    </>
+  );
 }
 
 /**
@@ -210,5 +232,41 @@ export function ErrorState({
         </Button>
       )}
     </div>
+  );
+}
+
+/**
+ * A refresh failed while something is on screen (a laptop waking up, a flaky
+ * network): what loaded stays, this says it may be out of date and offers to
+ * try again. Polite (`role="status"`), since the list is still usable; the
+ * interrupting alert is `ErrorState`, for when nothing loaded.
+ */
+export function RefreshErrorNotice({
+  onRetry,
+  className,
+}: {
+  onRetry?: () => void;
+  className?: string;
+}) {
+  return (
+    <Callout
+      tone="warning"
+      role="status"
+      title="Actualisation impossible"
+      className={cn("mb-4", className)}
+      actions={
+        onRetry && (
+          <Button variant="outline" size="sm" onClick={onRetry}>
+            <RefreshCw aria-hidden />
+            Réessayer
+          </Button>
+        )
+      }
+    >
+      <p>
+        Les informations affichées peuvent ne plus être à jour. Vérifiez votre
+        connexion, puis réessayez.
+      </p>
+    </Callout>
   );
 }

@@ -112,7 +112,10 @@ export interface OrderDialogProps {
   isPending: boolean;
   /** Opens « Enregistrer un paiement » for this order (edit only). */
   onPay?: () => void;
-  /** Removes a payment recorded by mistake (edit only). */
+  /**
+   * Opens the page's confirmation for removing a payment recorded by
+   * mistake (edit only); nothing is deleted before the admin confirms.
+   */
   onDeletePayment?: (paymentId: string) => void;
   deletingPaymentId?: string | null;
 }

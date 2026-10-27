@@ -1,9 +1,8 @@
 "use client";
 
-import { useAuth } from "@/components/providers/AuthProvider";
 import { useMemberDirectory } from "@/hooks/useMemberDirectory";
 import { useMemberRehearsals } from "@/hooks/useMemberRehearsals";
-import { useMyVoice } from "@/hooks/useMyVoice";
+import { useMyProfile } from "@/hooks/useMyProfile";
 import { getFirstName } from "@/lib/membres/names";
 import { upcomingRehearsals } from "@/lib/membres/rehearsals";
 import {
@@ -26,20 +25,18 @@ import { HomeTiles } from "./HomeTiles";
  * come (« Ta commande ») shows under the voice block.
  */
 export const MembresLandingPage = () => {
-  const { user } = useAuth();
-  const firstName = getFirstName(
-    user?.user_metadata?.display_name || user?.user_metadata?.name,
-  );
-  const myVoice = useMyVoice();
+  // Voice and name from the member's profile, not the account's metadata.
+  const me = useMyProfile();
+  const firstName = getFirstName(me.status === "ready" ? me.displayName : null);
   const rehearsalsState = useMemberRehearsals();
   const directory = useMemberDirectory();
 
-  const rawVoice = myVoice.status === "ready" ? myVoice.voice : null;
+  const rawVoice = me.status === "ready" ? me.voice : null;
   const voice = mainVoice(rawVoice);
   const groups = groupsForVoice(rawVoice);
 
   const mine =
-    rehearsalsState.status === "ready" && myVoice.status === "ready"
+    rehearsalsState.status === "ready" && me.status === "ready"
       ? upcomingRehearsals(rehearsalsState.rehearsals).filter(
           (rehearsal) => groups === null || groups.has(rehearsal.group_type),
         )
@@ -49,7 +46,7 @@ export const MembresLandingPage = () => {
   const heroRehearsals =
     rehearsalsState.status === "error"
       ? ({ status: "error" } as const)
-      : rehearsalsState.status === "ready" && myVoice.status === "ready"
+      : rehearsalsState.status === "ready" && me.status === "ready"
         ? ({ status: "ready", next: next ?? null } as const)
         : ({ status: "loading" } as const);
 

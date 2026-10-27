@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
+import { DRIVE_ROOT_SLUG } from "./drive";
 import {
   DRIVE_SCOPE_MAX_DEPTH,
+  driveScopeRoots,
   isDriveId,
+  isDriveItemAllowedFor,
   isWithinDriveRoots,
   memoizeParentsLookup,
+  type DriveCaller,
   type DriveParentsLookup,
+  type DriveRootRow,
 } from "./driveScope";
 
 // Fake tree (IDs are made up):
@@ -128,7 +133,141 @@ const run = async () => {
   assert.equal(isDriveId(null), false);
   assert.equal(isDriveId("a".repeat(201)), false);
 
-  console.log("isWithinDriveRoots: all assertions passed");
+  // isDriveItemAllowedFor: what the Drive proxy serves to whom.
+  // Fake Drive (IDs are made up):
+  //   wholeDrive ─ adultesTab ─ concert ─ score
+  //              ─ otherFolder ─ otherFile
+  //   shared has two parents: otherFolder and concert
+  //   jeunesTab sits elsewhere in the Drive; stray is outside the whole Drive
+  {
+    const driveTree: Record<string, string[]> = {
+      wholeDrive: ["myDrive"],
+      adultesTab: ["wholeDrive"],
+      concert: ["adultesTab"],
+      score: ["concert"],
+      otherFolder: ["wholeDrive"],
+      otherFile: ["otherFolder"],
+      shared: ["otherFolder", "concert"],
+      jeunesTab: ["myDrive"],
+      stray: ["elsewhere"],
+      elsewhere: [],
+      myDrive: [],
+    };
+    const rows: DriveRootRow[] = [
+      { slug: DRIVE_ROOT_SLUG, folder_id: "wholeDrive" },
+      { slug: "adultes", folder_id: "adultesTab" },
+      { slug: "jeunes", folder_id: "jeunesTab" },
+    ];
+    const lookups: string[] = [];
+    const allowed = (
+      caller: DriveCaller | null,
+      id: string,
+      folders: readonly DriveRootRow[] = rows,
+    ) =>
+      isDriveItemAllowedFor(
+        caller,
+        id,
+        folders,
+        memoizeParentsLookup(async (item) => {
+          lookups.push(item);
+          return driveTree[item] ?? [];
+        }),
+      );
+    // A signed-in caller whose role lookups are counted.
+    const signedIn = (admin: boolean) => {
+      const caller = {
+        roleLookups: 0,
+        isAdmin: async () => {
+          caller.roleLookups++;
+          return admin;
+        },
+      };
+      return caller;
+    };
+
+    // A member reads the tab folders and what lies below them, with no role
+    // lookup.
+    for (const id of [
+      "adultesTab",
+      "concert",
+      "score",
+      "shared",
+      "jeunesTab",
+    ]) {
+      const member = signedIn(false);
+      assert.equal(await allowed(member, id), true, id);
+      assert.equal(member.roleLookups, 0, id);
+    }
+
+    // A member never reads the whole-Drive root, nor what lies below it
+    // outside the tabs.
+    for (const id of [
+      "wholeDrive",
+      "otherFolder",
+      "otherFile",
+      "stray",
+      "unknown",
+    ]) {
+      assert.equal(await allowed(signedIn(false), id), false, id);
+    }
+
+    // Admins and superadmins (isAdmin true) also read the whole Drive, but
+    // nothing outside it.
+    for (const id of ["wholeDrive", "otherFolder", "otherFile", "score"]) {
+      assert.equal(await allowed(signedIn(true), id), true, id);
+    }
+    assert.equal(await allowed(signedIn(true), "stray"), false);
+
+    // The admin check walks the same parents again from the request's cache:
+    // each item is fetched once.
+    lookups.length = 0;
+    assert.equal(await allowed(signedIn(true), "otherFile"), true);
+    assert.deepEqual(lookups, [
+      "otherFile",
+      "otherFolder",
+      "wholeDrive",
+      "myDrive",
+    ]);
+
+    // Without a session, nothing is allowed and nothing is looked up.
+    lookups.length = 0;
+    assert.equal(await allowed(null, "score"), false);
+    assert.equal(await allowed(null, "adultesTab"), false);
+    assert.equal(await allowed(null, "wholeDrive"), false);
+    assert.deepEqual(lookups, []);
+
+    // Without a whole-Drive row, admins get the tabs like everyone else.
+    {
+      const admin = signedIn(true);
+      const tabsOnly = rows.filter((row) => row.slug !== DRIVE_ROOT_SLUG);
+      assert.equal(await allowed(admin, "otherFile", tabsOnly), false);
+      assert.equal(await allowed(admin, "score", tabsOnly), true);
+      assert.equal(admin.roleLookups, 0);
+    }
+
+    // A role lookup that throws never allows: the error propagates.
+    await assert.rejects(
+      allowed(
+        {
+          isAdmin: async () => {
+            throw new Error("profiles unavailable");
+          },
+        },
+        "otherFolder",
+      ),
+    );
+
+    // driveScopeRoots keeps the whole-Drive row apart and skips empty IDs.
+    assert.deepEqual(
+      driveScopeRoots([...rows, { slug: "orchestre", folder_id: "" }]),
+      {
+        tabs: new Set(["adultesTab", "jeunesTab"]),
+        wholeDrive: new Set(["wholeDrive"]),
+      },
+    );
+  }
+
+  console.log("driveScope: all assertions passed");
 };
 
 run().catch((error: unknown) => {

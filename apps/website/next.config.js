@@ -98,10 +98,18 @@ const nextConfig = {
   images: {
     remotePatterns: [
       new URL("https://res.cloudinary.com/dlt2j3dld/image/**"),
-      new URL(
-        // eslint-disable-next-line no-undef
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`,
-      ),
+      // The configured Supabase host, when there is one: the config also
+      // loads without NEXT_PUBLIC_SUPABASE_URL (the two hosts below cover the
+      // stored image URLs).
+      // eslint-disable-next-line no-undef
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? [
+            new URL(
+              // eslint-disable-next-line no-undef
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`,
+            ),
+          ]
+        : []),
       // Both Supabase hosts, whatever NEXT_PUBLIC_SUPABASE_URL says: stored
       // image URLs move from the custom domain (dropped with the Pro plan) to
       // the project's own host, and both must render during the switch.
@@ -115,32 +123,48 @@ const nextConfig = {
     qualities: [25, 50, 75, 90, 100],
   },
   async headers() {
-    // Get admin URL from environment or default to localhost:3002
+    // The admin's story preview frames the website. A production build allows
+    // only the admin's own origin; other builds also allow an admin dev
+    // server on this machine (port 3002).
+    // eslint-disable-next-line no-undef
+    const isProduction = process.env.VERCEL_ENV === "production";
     const adminUrl =
       // eslint-disable-next-line no-undef
-      process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3002";
+      process.env.NEXT_PUBLIC_ADMIN_URL ||
+      (isProduction
+        ? "https://admin.lebontemperament.com"
+        : "http://localhost:3002");
     const adminOrigin = new URL(adminUrl).origin;
+    const localAdminOrigins = isProduction
+      ? []
+      : [
+          "http://localhost:3002",
+          "https://localhost:3002",
+          "http://127.0.0.1:3002",
+          "https://127.0.0.1:3002",
+        ];
 
     // Build frame-ancestors directive
-    const frameAncestors = [
-      "'self'",
-      adminOrigin,
-      "http://localhost:3002",
-      "https://localhost:3002",
-      "http://127.0.0.1:3002",
-      "https://127.0.0.1:3002",
-    ]
+    const frameAncestors = ["'self'", adminOrigin, ...localAdminOrigins]
       .filter((origin, index, self) => self.indexOf(origin) === index) // Remove duplicates
       .join(" ");
 
     return [
       {
-        source: "/(.*)",
+        // Every path but the Drive file proxy, which sends its own policy
+        // per file type (app/api/drive/file/route.ts): a header set here
+        // would replace the route's.
+        source: "/((?!api/drive/file$).*)",
         headers: [
           {
             key: "Content-Security-Policy",
             value: `frame-ancestors ${frameAncestors};`,
           },
+        ],
+      },
+      {
+        source: "/(.*)",
+        headers: [
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
@@ -168,23 +192,24 @@ const nextConfig = {
           },
         ],
       },
-      {
-        source: "/:path*.(js|css|png|jpg|jpeg|gif|ico|svg|webp|avif)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+      // No cache rule for static files: Next already serves the hashed
+      // `/_next/static/*` files as immutable, and the files in `public/`
+      // (`/img/*`, `/logo.png`, …) keep their names when they are replaced,
+      // so they must stay revalidated (Next's default for `public/`).
     ];
   },
   experimental: {
     optimizePackageImports: ["@heroui/react", "react-icons"],
   },
   compiler: {
-    // eslint-disable-next-line no-undef
-    removeConsole: process.env.NODE_ENV === "production",
+    // Production builds drop every console call except error and warn, the
+    // server's diagnostics in Vercel's runtime logs: log ids and codes there,
+    // never personal data (lib/errorCodes.ts).
+    removeConsole:
+      // eslint-disable-next-line no-undef
+      process.env.NODE_ENV === "production"
+        ? { exclude: ["error", "warn"] }
+        : false,
   },
   poweredByHeader: false,
   compress: true,

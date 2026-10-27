@@ -29,6 +29,11 @@ export default function HomeAnnouncements({
 
   return live.map((announcement, index) => {
     const external = isExternalLink(announcement.linkUrl);
+    // The title on screen is the link's name; the longer text the admin wrote
+    // describes it (read after the name) instead of replacing it.
+    const bodyId = announcement.body
+      ? `announcement-body-${announcement.id}`
+      : undefined;
     return (
       <m.div
         key={announcement.id}
@@ -45,7 +50,7 @@ export default function HomeAnnouncements({
           size="lg"
           variant="outline"
           className="border-white/50 text-white hover:bg-white/10"
-          aria-label={announcement.body ?? announcement.title}
+          aria-describedby={bodyId}
           href={announcement.linkUrl}
           {...(external
             ? { target: "_blank", rel: "noopener noreferrer" }
@@ -57,6 +62,11 @@ export default function HomeAnnouncements({
             aria-hidden="true"
           />
         </LinkButton>
+        {announcement.body && (
+          <span id={bodyId} hidden>
+            {announcement.body}
+          </span>
+        )}
       </m.div>
     );
   });

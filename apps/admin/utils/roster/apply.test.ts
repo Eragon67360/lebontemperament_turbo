@@ -1,6 +1,10 @@
 import type { RosterDiff, RosterReview } from "@repo/domain/roster/types";
 import assert from "node:assert/strict";
-import { sendInvitations, type InviteClient } from "../invitations";
+import {
+  PROFILE_NOT_CREATED,
+  sendInvitations,
+  type InviteClient,
+} from "../invitations";
 import {
   applyRosterSync,
   invitationFailure,
@@ -389,12 +393,15 @@ assert.equal(
   invitationFailure(undefined),
   "L'invitation n'a pas pu être envoyée.",
 );
+// Sent, but the member's profile is missing: the admin is told to send it again.
+assert.equal(invitationFailure(PROFILE_NOT_CREATED), PROFILE_NOT_CREATED);
 
 // --- The shared sender: batches, pauses, per-entry results ---------------------
 
 {
   const sentTo: string[] = [];
   const pauses: number[] = [];
+  const profiles: Array<{ id: string; role: string }> = [];
   const client: InviteClient = {
     auth: {
       admin: {
@@ -408,10 +415,16 @@ assert.equal(
           if (email === "fail@example.com") {
             return { data: { user: null }, error: { message: "boom" } };
           }
-          return { data: { user: { id: `u-${email}` } }, error: null };
+          return { data: { user: { id: `u-${email}`, email } }, error: null };
         },
       },
     },
+    from: () => ({
+      upsert: async ({ id, role }) => {
+        profiles.push({ id, role });
+        return { error: null };
+      },
+    }),
   };
   const results = await sendInvitations(
     client,
@@ -449,6 +462,11 @@ assert.equal(
     total: 3,
     percentage: 100,
   });
+  // The roster sync's invitations are members too: one profile per account.
+  assert.deepEqual(profiles, [
+    { id: "u-a@example.com", role: "user" },
+    { id: "u-c@example.com", role: "user" },
+  ]);
 }
 
 console.log("roster apply tests passed");

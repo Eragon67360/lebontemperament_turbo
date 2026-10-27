@@ -6,7 +6,10 @@
 //
 // Best effort by design: a failure (secret unset, website down, timeout) is
 // logged and never fails the admin request — the website refreshes by itself
-// at the latest when its revalidate window elapses.
+// at the latest when its revalidate window elapses. The website's address is
+// the configured one only (no fallback to production): a purge aimed at the
+// wrong site is worse than none, and its secret would not match anyway.
+import { configuredWebsiteUrl } from "@/lib/website";
 import { after } from "next/server";
 
 type RevalidatePath = string | { path: string; type: "page" | "layout" };
@@ -98,7 +101,7 @@ const TIMEOUT_MS = 3000;
 export async function revalidateWebsite(
   request: RevalidateRequest,
 ): Promise<boolean> {
-  const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_URL;
+  const baseUrl = configuredWebsiteUrl();
   const secret = process.env.REVALIDATE_SECRET;
   if (!baseUrl || !secret) {
     console.warn(
