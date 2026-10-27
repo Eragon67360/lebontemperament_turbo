@@ -2,7 +2,9 @@ name: E2E Daily (staging)
 
 on:
   schedule:
-    # ~07:30 Europe/Paris (CEST). GitHub cron is UTC-only and may drift 5-30min.
+    # 05:30 UTC (07:30 Paris in summer, 06:30 in winter). GitHub starts scheduled
+    # runs hours late: between 09:30 and 13:20 UTC on the runs of 2026-10-07 to
+    # 2026-10-26, so the result lands around midday in Paris.
     - cron: "30 5 * * *"
   # Daily only (owner's choice, 2026-10-09): PRs get ci.yml; before a
   # release, start this workflow by hand on the dev head.

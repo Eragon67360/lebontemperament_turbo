@@ -39,7 +39,7 @@ Every commit in a worktree with `node_modules` runs `.husky/pre-commit`, which i
 - Shared hot spots get a single owner per batch: root `package.json` and `package-lock.json`, `turbo.json`, `packages/domain` (types, consts), each app's `app/globals.css` and `app/layout.tsx`, `apps/website/proxy.ts`, `version.json` and the apps' `package.json` versions, `.github/workflows/*`. Others touch them only minimally and say so in their report.
 - **Schema changes go through the owner**: try the migration on `website-staging` first ([supabase/staging](../../supabase/staging/README.md)); production gets it from the owner. One package at most per batch carries a migration, written backward compatible ([release](release.md#supabase)), and nothing that depends on it merges before the owner has applied it.
 - **The mobile app** is its own package: Flutter tooling, store releases and backward compatibility with installed versions make it a different rhythm.
-- Owner decisions don't block packages: build behind a flag (the `feature_flags` table and the website's `useFeatureFlag` exist; the mobile app doesn't read flags yet) or a placeholder (`TODO(owner)`), filled in when he answers.
+- Owner decisions don't block packages: build behind a flag (the `feature_flags` table and the website's `useFeatureFlag` exist; the mobile app reads only its own `mobile_maintenance` and `mobile_min_version` rows, #361) or a placeholder (`TODO(owner)`), filled in when he answers.
 - Do last whatever rewrites many files (formatting, renames). Merge it with a merge commit.
 
 ## Sharing one machine
@@ -47,7 +47,7 @@ Every commit in a worktree with `node_modules` runs `.husky/pre-commit`, which i
 - **Worktrees** from `origin/dev`; nobody touches the owner's checkout (it often holds a feature branch in progress).
 - **Builds** one at a time: `flock /tmp/lbt-build.lock npx turbo build --filter=<app>`.
 - **Ports**: each agent runs dev servers on its own ports (`npm run dev -w website -- -p 32NN`, admin on `33NN`).
-- **Database**: there is only production. Agents work read-only against it (local dev pages that only read are fine); anything that would write is mocked, stubbed (`page.route` in Playwright) or deferred to the owner.
+- **Database**: production (`website`) is read-only for agents; test writes go to `website-staging`, which staging, previews and `vercel env pull` use ([safety](safety.md#production-and-staging-databases)). Check which project a local `.env` names before a dev page writes; anything that would write to production is mocked, stubbed (`page.route` in Playwright) or deferred to the owner.
 - **Dependencies**: `npm ci` per worktree; lockfile changes regenerated with npm, never edited by hand, and owned by one package.
 
 ## Merging and rebasing

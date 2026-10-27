@@ -49,4 +49,4 @@ Only on a new, empty project. Run the files in order in that project's SQL Edito
 
 ## Keeping it in step
 
-Every new migration goes to staging first, then to production after release. `seed.sql` can be re-run: it deletes only its own tagged rows before inserting them again.
+Every new migration goes to staging first, then to production after release. Nothing checks that it happened: before relying on a migration being on staging, read `supabase_migrations.schema_migrations` there (SQL Editor, read-only) and apply what is missing with the Supabase CLI linked to `website-staging`. `seed.sql` can be re-run: it deletes only its own tagged rows before inserting them again.
