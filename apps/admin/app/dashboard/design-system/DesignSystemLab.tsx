@@ -42,6 +42,12 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   EmptyState,
   ErrorState,
   ListSkeleton,
@@ -114,6 +120,7 @@ import { buildNavSections } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import {
   CalendarOff,
+  FileText,
   Info,
   Loader2,
   Mail,
@@ -426,6 +433,9 @@ export function DesignSystemLab() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          </Row>
+          <Row label="Élément en surbrillance (survol ou flèches) : teal doux et repère à gauche, dans les menus, les listes déroulantes et la recherche ⌘K">
+            <PaletteDemo />
           </Row>
         </Section>
 
@@ -1322,6 +1332,46 @@ function RowActionsDemo() {
         description="L’élément disparaît de la liste et du site. Cette action est définitive."
       />
     </div>
+  );
+}
+
+/** The ⌘K list at rest: the first result is the one Enter would open. */
+function PaletteDemo() {
+  return (
+    <Command
+      label="Aperçu de la recherche"
+      className="w-full max-w-sm rounded-lg border shadow-lg"
+    >
+      <CommandList>
+        <CommandGroup heading="Pages">
+          <CommandItem value="page-concerts">
+            <FileText aria-hidden />
+            <span className="min-w-0 flex-1 truncate">
+              Concerts et tournées
+            </span>
+            <span className="text-note text-muted-foreground shrink-0">
+              Concerts et site public
+            </span>
+          </CommandItem>
+          <CommandItem value="page-membres">
+            <FileText aria-hidden />
+            <span className="min-w-0 flex-1 truncate">Membres</span>
+            <span className="text-note text-muted-foreground shrink-0">
+              Membres et accès
+            </span>
+          </CommandItem>
+        </CommandGroup>
+        <CommandGroup heading="Membres">
+          <CommandItem value="member-lucie">
+            <User aria-hidden />
+            <span className="min-w-0 flex-1 truncate">Lucie Bernard</span>
+            <span className="text-note text-muted-foreground truncate">
+              lucie@example.com
+            </span>
+          </CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </Command>
   );
 }
 

@@ -114,6 +114,12 @@ const SelectLabel = React.forwardRef<
 ));
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
+/**
+ * The highlighted option (under the pointer, or reached with the arrow keys)
+ * takes the soft teal and the left mark of menu items (see dropdown-menu.tsx):
+ * it reads on the popover in both themes, and `outline-none` keeps the focus
+ * ring from following the mouse.
+ */
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
@@ -121,7 +127,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex min-h-(--control-h) w-full cursor-default items-center rounded-sm py-2 pr-9 pl-3 text-[15px] leading-5 outline-none select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[state=checked]:font-medium data-[state=checked]:text-primary-text",
+      "relative flex min-h-(--control-h) w-full cursor-default items-center rounded-sm py-2 pr-9 pl-3 text-[15px] leading-5 outline-none select-none data-[highlighted]:bg-primary-soft data-[highlighted]:shadow-[inset_3px_0_0_var(--primary)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[state=checked]:font-medium data-[state=checked]:text-primary-text",
       className,
     )}
     {...props}
