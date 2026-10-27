@@ -5,6 +5,7 @@ import {
 } from "@/components/membres/MembersButton";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { DriveFile } from "@/utils/types";
+import { toast } from "@heroui/react";
 import { isDrivePreviewable } from "@repo/domain/utils/driveDownload";
 import { FC, useEffect, useState } from "react";
 import { FaFile, FaFolder, FaMusic, FaRegFilePdf } from "react-icons/fa";
@@ -14,7 +15,6 @@ import {
   IoEyeOutline,
   IoMusicalNotes,
 } from "react-icons/io5";
-import { toast } from "sonner";
 
 interface ExplorerProps {
   initialFolderId: string;
@@ -81,7 +81,7 @@ async function downloadDriveFile(file: DriveFile) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      toast.error(
+      toast.danger(
         response.status === 401
           ? "Votre session a expiré. Reconnectez-vous pour télécharger."
           : response.status === 415
@@ -102,7 +102,7 @@ async function downloadDriveFile(file: DriveFile) {
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   } catch {
-    toast.error("Le téléchargement a échoué. Vérifiez votre connexion.");
+    toast.danger("Le téléchargement a échoué. Vérifiez votre connexion.");
   }
 }
 
@@ -127,7 +127,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
       })
       .catch((error) => {
         console.error("Failed to fetch files:", error);
-        toast.error("Erreur lors du chargement des fichiers");
+        toast.danger("Erreur lors du chargement des fichiers");
       })
       .finally(() => setLoading(false));
 
