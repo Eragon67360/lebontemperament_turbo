@@ -4,13 +4,13 @@ import { RoundedSize } from "@/utils/types";
 import { m, useScroll, useTransform } from "motion/react";
 import { useEffect, useState } from "react";
 import CloudinaryImage from "./CloudinaryImage";
+import { useOverPhotoHero } from "./navigation/OverPhotoHeader";
 
 interface HeroProps {
   title: string;
   subtitle?: string;
   description?: string;
   bannerSrc?: string;
-  fallbackColor?: string;
   dataTestId?: string;
 }
 
@@ -19,10 +19,19 @@ const Hero: React.FC<HeroProps> = ({
   subtitle,
   description,
   bannerSrc,
-  fallbackColor = "oklch(0.57 0.0911 200.74)",
   dataTestId = "hero",
 }) => {
   const prefersReducedMotion = useReducedMotion();
+  const hasPhoto = Boolean(bannerSrc);
+  // The site header turns transparent and white over the banner; without
+  // one it stays solid (OverPhotoHeader).
+  useOverPhotoHero(hasPhoto);
+  // Over the banner, white text lifted by a shadow; without one, the page's
+  // own text colours on its background.
+  const titleClass = hasPhoto ? "text-white drop-shadow-lg" : "text-foreground";
+  const descriptionClass = hasPhoto
+    ? "text-white/90 drop-shadow-md"
+    : "text-muted";
   // Must render identically on server and client: measure in the effect below.
   const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
 
@@ -99,14 +108,8 @@ const Hero: React.FC<HeroProps> = ({
       animate="visible"
       aria-labelledby="hero-title"
     >
-      {bannerSrc ? (
-        <m.div
-          className="absolute inset-0 z-0"
-          variants={imageVariants}
-          style={{
-            background: `linear-gradient(135deg, ${fallbackColor}20 0%, ${fallbackColor}40 100%)`,
-          }}
-        >
+      {bannerSrc && (
+        <m.div className="absolute inset-0 z-0" variants={imageVariants}>
           <CloudinaryImage
             src={bannerSrc}
             alt=""
@@ -119,14 +122,6 @@ const Hero: React.FC<HeroProps> = ({
           />
           <div className="absolute inset-0 bg-black/75" aria-hidden="true" />
         </m.div>
-      ) : (
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            background: `linear-gradient(135deg, ${fallbackColor}20 0%, ${fallbackColor}40 100%)`,
-          }}
-          aria-hidden="true"
-        />
       )}
 
       {/* Content */}
@@ -143,12 +138,14 @@ const Hero: React.FC<HeroProps> = ({
         >
           {/* One H1 holding title and subtitle; the spans keep the former h1/h2 styling. */}
           <h1 id="hero-title">
-            <span className="text-title mb-4 block leading-none font-light text-white drop-shadow-lg">
+            <span
+              className={`text-title mb-4 block leading-none font-light ${titleClass}`}
+            >
               {title}
             </span>
             {subtitle && (
               <m.span
-                className="text-title mb-6 block leading-none font-bold text-white drop-shadow-lg"
+                className={`text-title mb-6 block leading-none font-bold ${titleClass}`}
                 variants={textVariants}
               >
                 {subtitle}
@@ -157,7 +154,7 @@ const Hero: React.FC<HeroProps> = ({
           </h1>
           {description && (
             <m.p
-              className="mx-auto max-w-2xl text-lg leading-relaxed text-white/90 drop-shadow-md md:text-xl"
+              className={`mx-auto max-w-2xl text-lg leading-relaxed md:text-xl ${descriptionClass}`}
               variants={textVariants}
               dangerouslySetInnerHTML={{ __html: description as string }}
             ></m.p>
