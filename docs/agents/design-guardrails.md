@@ -109,7 +109,7 @@ HeroUI 3 with tokens in `app/globals.css`. Light: white background, `#11181c` te
 
 ## Mobile (`apps/mobile_app`)
 
-`lib/core/theme/app_theme.dart` (colours, light and dark) and `theme_provider.dart` (user choice). Light background `#F5F5F5`, surfaces white, text `#212121` / `#757575`; dark background `#181C1F`, surface `#23272A`. `AppTheme.primaryColor = Color(0xFF1A878D)`.
+`lib/core/theme/app_theme.dart` (colours, light and dark) and `theme_provider.dart` (user choice). Direction « Coulisses » with the « Portée » shapes (owner's choice, 2026-10-05): dark by default, light kept with the same layout and type. Dark: page ground `stage` `#0D1517`, cards `#152124`, text `#E9F1F0`, muted `#A9BABB`, teal `#3FB8BE` (7.8:1 on the ground); light: `paper` `#F3F7F7`, text `#0D1517`, muted `#3F5153`, teal `#0F6E73` (5.6:1 on paper). Cards sit on the page ground behind a hairline (`#2A3B3E` / `#CBD7D8`), titles one or two weights lighter (`AppFonts.displayWeight`). `AppTheme.primaryColor = Color(0xFF1A878D)` stays for the splash and icons; screens read `Theme.of(context).colorScheme`. Every text/background pair is at least 4.5:1 and borders 3:1 (the ratios are in the file's comments).
 
 ## Invariants: never change without the owner's explicit approval
 
