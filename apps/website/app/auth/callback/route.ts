@@ -1,4 +1,5 @@
 // app/auth/callback/route.ts
+import { keepMemberSession } from "@/lib/memberSession";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/server";
 import { ERROR_CODES } from "@repo/domain/consts/errorMessages";
@@ -17,18 +18,9 @@ export async function GET(request: Request) {
 
       if (error) throw error;
 
-      if (!user?.email) {
-        throw new Error("Email non disponible");
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError || !profile) {
-        await supabase.auth.signOut();
+      // Only a member keeps the session: an account (not an anonymous
+      // sign-in) with a profile row. Anything else is signed out here.
+      if (!user || !(await keepMemberSession(supabase, user))) {
         return NextResponse.redirect(
           `${requestUrl.origin}${RouteNames.AUTH.LOGIN}?error=${ERROR_CODES.UNAUTHORIZED}&error_description=Compte+non+autorisé`,
         );

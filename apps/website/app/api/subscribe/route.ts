@@ -1,3 +1,5 @@
+import { appsScriptUrl } from "@/lib/appsScript";
+import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer, type Mailer } from "@/lib/mail";
 import { escapeHtml } from "@repo/domain/utils/html";
 import { classifyNewsletterRequest } from "@repo/domain/utils/newsletter";
@@ -56,11 +58,11 @@ async function isAlreadySubscribed(email: string): Promise<boolean> {
   }
 
   try {
-    const url = new URL(scriptUrl);
-    url.searchParams.append(
-      "groupEmail",
-      process.env.GOOGLE_GROUP_EMAIL || "btnewsletter@googlegroups.com",
-    );
+    // Holds the script's key: never logged.
+    const url = appsScriptUrl(scriptUrl, {
+      groupEmail:
+        process.env.GOOGLE_GROUP_EMAIL || "btnewsletter@googlegroups.com",
+    });
     const response = await fetch(url.toString(), {
       headers: { "Content-Type": "application/json" },
     });
@@ -126,6 +128,8 @@ async function processSubscription(
 
 const INVALID = { error: "Une adresse email valide est requise" };
 
+const RATE_LIMITED = { error: RATE_LIMITED_MESSAGE };
+
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {
@@ -146,6 +150,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(INVALID, { status: 400 });
   }
   const { email } = subscription;
+
+  // Per-IP and per-recipient limits, before anything is sent. Counted for
+  // every valid address, subscribed or not, so a 429 says nothing about it.
+  if (await isFormRateLimited("subscribe", request.headers, email)) {
+    return NextResponse.json(RATE_LIMITED, { status: 429 });
+  }
 
   const mailer = createMailer();
   const adminEmail = process.env.ADMIN_EMAIL;

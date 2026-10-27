@@ -119,6 +119,10 @@ jobs:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           # Empty unless this is a preview run (the config falls back to staging).
           ADMIN_URL: ${{ needs.gate.outputs.admin_url }}
+          # No snapshot of the page in a failed test's error-context.md, which
+          # the reports uploaded below carry. Snapshots from failed assertions
+          # are dropped by apps/e2e/reporters/redact-error-context.ts.
+          PLAYWRIGHT_NO_COPY_PROMPT: "1"
         run: >-
           npx playwright test --shard=${{ matrix.shard }}/2
           ${{ needs.gate.outputs.preview == 'true' && '--project=admin' || (inputs.project && inputs.project != 'all' && format('--project={0}', inputs.project)) || '' }}

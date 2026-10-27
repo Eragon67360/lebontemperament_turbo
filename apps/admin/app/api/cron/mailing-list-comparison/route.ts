@@ -8,8 +8,14 @@
 // When CRON_SECRET is set, the workflow sends it as a bearer token and
 // nothing else gets in. Either way a list is compared at most once every 6 days by this
 // route, and the answer carries counts of lists only, so a stray call can
-// neither read anything nor run it in a loop.
+// neither read anything nor run it in a loop. Outside production it compares
+// nothing (utils/memberLists.ts).
 import { runMailingListComparison } from "@/utils/mailing-list/run";
+import {
+  GROUPS_PRODUCTION_ONLY_MESSAGE,
+  memberListsAvailable,
+  productionOnlyResponse,
+} from "@/utils/memberLists";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
@@ -30,6 +36,9 @@ function hasCronSecret(request: Request): boolean {
 export async function POST(request: Request) {
   if (!hasCronSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!memberListsAvailable()) {
+    return productionOnlyResponse(GROUPS_PRODUCTION_ONLY_MESSAGE);
   }
 
   const supabase = createAdminClient();

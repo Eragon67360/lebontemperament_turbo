@@ -2,8 +2,13 @@
 //
 // Sends account invitations through Supabase Auth (its SMTP setting), in
 // throttled batches. Shared by POST /api/invite-users and the roster sync's
-// apply route so both take the same path and the same pace.
+// apply route so both take the same path and the same pace. Each invited
+// account gets its member profile here, right after the invitation.
 
+import {
+  ensureMemberProfile,
+  type ProfileClient,
+} from "@/utils/users/memberProfile";
 import { normalizeName } from "@repo/domain/roster/normalize";
 
 export const INVITE_BATCH_SIZE = 10;
@@ -23,13 +28,17 @@ export interface InvitationProgress {
 export interface InvitationResult extends InvitationEntry {
   success: boolean;
   error?: string;
-  /** The auth user created by the invitation, when it succeeded. */
+  /** The auth account invited, when Supabase returned it. */
   userId?: string;
   progress: InvitationProgress;
 }
 
+/** French, for the admin: the e-mail went out, the profile did not. */
+export const PROFILE_NOT_CREATED =
+  "Invitation envoyée, mais la fiche du membre n'a pas pu être créée : renvoyez l'invitation.";
+
 /** The slice of the service-role client the sender needs (fakeable in tests). */
-export interface InviteClient {
+export interface InviteClient extends ProfileClient {
   auth: {
     admin: {
       inviteUserByEmail(
@@ -39,7 +48,7 @@ export interface InviteClient {
           redirectTo?: string;
         },
       ): Promise<{
-        data: { user: { id: string } | null };
+        data: { user: { id: string; email?: string } | null };
         error: { message: string } | null;
       }>;
     };
@@ -97,44 +106,9 @@ export async function sendInvitations(
         const { email } = entry;
         // One order everywhere: « Prénom NOM », whatever was typed.
         const displayName = normalizeName(entry.displayName);
-        try {
-          const { data, error } = await client.auth.admin.inviteUserByEmail(
-            email,
-            {
-              data: {
-                invited_by: options.invitedBy,
-                display_name: displayName,
-              },
-              redirectTo: options.redirectTo,
-            },
-          );
-          processed++;
-          if (error) {
-            return {
-              email,
-              displayName,
-              success: false,
-              error: error.message,
-              progress: progress(),
-            };
-          }
-          return {
-            email,
-            displayName,
-            success: true,
-            userId: data.user?.id,
-            progress: progress(),
-          };
-        } catch (error) {
-          processed++;
-          return {
-            email,
-            displayName,
-            success: false,
-            error: error instanceof Error ? error.message : "Erreur inconnue",
-            progress: progress(),
-          };
-        }
+        const outcome = await inviteOne(client, email, displayName, options);
+        processed++;
+        return { email, displayName, ...outcome, progress: progress() };
       }),
     );
     results.push(...batchResults);
@@ -142,4 +116,50 @@ export async function sendInvitations(
   }
 
   return results;
+}
+
+type InviteOutcome = Pick<InvitationResult, "success" | "error" | "userId">;
+
+/** One invitation, then the invited account's member profile (role `user`). */
+async function inviteOne(
+  client: InviteClient,
+  email: string,
+  displayName: string,
+  options: SendInvitationsOptions,
+): Promise<InviteOutcome> {
+  let user: { id: string; email?: string } | null;
+  try {
+    const { data, error } = await client.auth.admin.inviteUserByEmail(email, {
+      data: {
+        invited_by: options.invitedBy,
+        display_name: displayName,
+      },
+      redirectTo: options.redirectTo,
+    });
+    if (error) return { success: false, error: error.message };
+    user = data.user;
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erreur inconnue",
+    };
+  }
+
+  // Someone invited again keeps the profile they already have, role included.
+  try {
+    if (!user) throw new Error("the invitation returned no account");
+    await ensureMemberProfile(client, {
+      id: user.id,
+      email: user.email ?? email,
+      role: "user",
+      displayName: displayName || email.split("@")[0] || email,
+    });
+  } catch (error) {
+    console.error(
+      `Invitation sent, profile not written (${user?.id ?? "no account id"}):`,
+      error,
+    );
+    return { success: false, error: PROFILE_NOT_CREATED, userId: user?.id };
+  }
+  return { success: true, userId: user.id };
 }

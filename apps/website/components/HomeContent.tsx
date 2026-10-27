@@ -7,6 +7,7 @@ import { AnniversaryHeroCard } from "@/components/anniversary/AnniversaryEntry";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import HomeAnnouncements from "@/components/home/HomeAnnouncements";
 import { LinkButton } from "@/components/LinkButton";
+import { useOverPhotoHero } from "@/components/navigation/OverPhotoHeader";
 import ProjectViewer from "@/components/ProjectViewer";
 import { useClientValue } from "@/hooks/useClientValue";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
@@ -50,6 +51,9 @@ const HomeContent = ({
 }: HomeContentProps) => {
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
+  // The hero below always draws its dark photo under the site header, which
+  // turns transparent and white over it (OverPhotoHeader).
+  useOverPhotoHero(true);
   // Must render identically on server and client: measure in the effect below.
   const [maxScrollPx, setMaxScrollPx] = useState<number>(600);
 

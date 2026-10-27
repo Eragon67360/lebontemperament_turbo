@@ -1,4 +1,5 @@
 import type { Database } from "@repo/domain/database.types";
+import { googleAvatarUrl } from "@repo/domain/utils/profilePicture";
 import { isMissingFunctionError } from "@repo/domain/utils/supabaseErrors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -11,7 +12,7 @@ export type DirectoryRow = {
   email: string | null;
   voice: string | null;
   profile_picture_url: string | null;
-  /** Google avatar kept in the account's metadata, when there is one. */
+  /** Google account picture kept in the account's metadata, when there is one. */
   auth_avatar_url: string | null;
 };
 
@@ -32,8 +33,8 @@ async function authAvatars(admin: Client): Promise<Map<string, string>> {
     }
     if (!users || users.length === 0) break;
     for (const user of users) {
-      const avatar = user.user_metadata?.avatar_url;
-      if (typeof avatar === "string" && avatar) avatars.set(user.id, avatar);
+      const avatar = googleAvatarUrl(user.user_metadata?.avatar_url);
+      if (avatar) avatars.set(user.id, avatar);
     }
     if (users.length < PAGE_SIZE) break;
   }
@@ -43,7 +44,9 @@ async function authAvatars(admin: Client): Promise<Map<string, string>> {
 /**
  * The members directory, acting as the caller. One database call through
  * member_directory_with_avatars() (#345); until that migration is applied it
- * falls back to member_directory() plus the paged Auth admin API.
+ * falls back to member_directory() plus the paged Auth admin API. Either way
+ * the metadata avatar is kept only when it is a Google account picture, as
+ * the database function does since 20261026192418_directory_avatar_hosts.
  */
 export async function loadMemberDirectory(
   supabase: Client,
@@ -51,7 +54,11 @@ export async function loadMemberDirectory(
 ): Promise<{ rows: DirectoryRow[]; error: { message: string } | null }> {
   const withAvatars = await supabase.rpc("member_directory_with_avatars");
   if (!withAvatars.error) {
-    return { rows: withAvatars.data ?? [], error: null };
+    const rows = (withAvatars.data ?? []).map((row) => ({
+      ...row,
+      auth_avatar_url: googleAvatarUrl(row.auth_avatar_url),
+    }));
+    return { rows, error: null };
   }
   if (!isMissingFunctionError(withAvatars.error)) {
     return { rows: [], error: withAvatars.error };

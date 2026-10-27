@@ -1,5 +1,14 @@
 // app/api/google-groups/route.ts
+//
+// The groups and a group's addresses, read through the Apps Script.
+// Production only (utils/memberLists.ts).
 import { checkAuthorization } from "@/utils/auth";
+import { appsScriptUrl } from "@/utils/google-groups/appsScript";
+import {
+  GROUPS_PRODUCTION_ONLY_MESSAGE,
+  memberListsAvailable,
+  productionOnlyResponse,
+} from "@/utils/memberLists";
 import { NextResponse } from "next/server";
 
 const GOOGLE_APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL;
@@ -16,6 +25,9 @@ export async function GET(request: Request) {
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    if (!memberListsAvailable()) {
+      return productionOnlyResponse(GROUPS_PRODUCTION_ONLY_MESSAGE);
+    }
 
     if (!GOOGLE_APPS_SCRIPT_URL) {
       return NextResponse.json(
@@ -28,14 +40,8 @@ export async function GET(request: Request) {
     const groupEmail = searchParams.get("groupEmail");
     const action = searchParams.get("action"); // 'list-groups' to get all groups
 
-    // Build URL with query parameters
-    const url = new URL(GOOGLE_APPS_SCRIPT_URL);
-    if (action) {
-      url.searchParams.append("action", action);
-    }
-    if (groupEmail) {
-      url.searchParams.append("groupEmail", groupEmail);
-    }
+    // The script's URL with these parameters and its key: never logged
+    const url = appsScriptUrl(GOOGLE_APPS_SCRIPT_URL, { action, groupEmail });
 
     // Fetch from Google Apps Script
     const response = await fetch(url.toString(), {

@@ -48,3 +48,59 @@ export function ownProfilePictureFile(
   if (!match || match[1]!.toLowerCase() !== userId.toLowerCase()) return null;
   return EXTENSIONS.has(match[2]!.toLowerCase()) ? name : null;
 }
+
+// Photos that other people's browsers load straight from their host (the
+// members directory, the admin's members list): only the association's own
+// Storage and Google account pictures.
+
+/**
+ * A Google account picture: https on a googleusercontent.com subdomain
+ * (lh3.googleusercontent.com), the avatar Google sign-in keeps in an
+ * account's metadata. member_directory_with_avatars() and
+ * auth_user_summaries() apply the same pattern in the database
+ * (supabase/migrations/20261026192418_directory_avatar_hosts.sql): keep the
+ * two in step.
+ */
+const GOOGLE_AVATAR =
+  /^https:\/\/([a-z0-9-]+\.)+googleusercontent\.com(\/\S*)?$/i;
+
+/** [url] when it is a Google account picture, otherwise null. */
+export function googleAvatarUrl(url: unknown): string | null {
+  return typeof url === "string" && GOOGLE_AVATAR.test(url) ? url : null;
+}
+
+const STORAGE_PUBLIC_PATH = "/storage/v1/object/public/";
+
+function originOf(base: string | null | undefined): string | null {
+  if (!base) return null;
+  try {
+    return new URL(base).origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The photo to show for a member, or null for their initials: a public file
+ * in the association's Storage on one of [storageOrigins] (the Supabase URLs
+ * the photos are stored under), or a Google account picture. No other
+ * address is loaded.
+ */
+export function memberPhotoUrl(
+  url: string | null | undefined,
+  storageOrigins: readonly (string | null | undefined)[],
+): string | null {
+  if (!url) return null;
+  if (googleAvatarUrl(url)) return url;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.username || parsed.password) return null;
+  if (!parsed.pathname.startsWith(STORAGE_PUBLIC_PATH)) return null;
+  return storageOrigins.some((base) => originOf(base) === parsed.origin)
+    ? url
+    : null;
+}

@@ -5,7 +5,13 @@
 // one account. The roster is read again and each account must still be absent
 // from it; the request is refused (409) when the roster changed since the
 // review. Writes go through the service-role client after the admin check.
+// Production only (utils/memberLists.ts).
 import { checkAuthorization } from "@/utils/auth";
+import {
+  memberListsAvailable,
+  productionOnlyResponse,
+  ROSTER_PRODUCTION_ONLY_MESSAGE,
+} from "@/utils/memberLists";
 import { deleteMemberAccount } from "@/utils/members/memberFiles";
 import {
   deleteAbsentMembers,
@@ -25,6 +31,9 @@ export async function POST(request: Request) {
     const auth = await checkAuthorization();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    if (!memberListsAvailable()) {
+      return productionOnlyResponse(ROSTER_PRODUCTION_ONLY_MESSAGE);
     }
 
     const parsed = parseBulkDeleteRequest(

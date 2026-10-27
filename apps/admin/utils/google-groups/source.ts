@@ -2,7 +2,15 @@
 //
 // Server-only: reads a Google Group's addresses through the Apps Script web
 // app (env GOOGLE_APPS_SCRIPT_URL, source in google-apps-script/Code.gs,
-// read-only). Import it from route handlers and server code only.
+// read-only). Import it from route handlers and server code only. Only
+// production calls the script (utils/memberLists.ts).
+
+import {
+  GROUPS_PRODUCTION_ONLY_MESSAGE,
+  memberListsAvailable,
+} from "@/utils/memberLists";
+
+import { appsScriptUrl } from "./appsScript";
 
 const REQUEST_TIMEOUT_MS = 20_000;
 
@@ -27,6 +35,12 @@ interface ScriptResponse {
 export async function fetchGroupMemberEmails(
   groupEmail: string,
 ): Promise<string[]> {
+  if (!memberListsAvailable()) {
+    throw new GroupSourceError(
+      "The Google Groups are read in production only.",
+      GROUPS_PRODUCTION_ONLY_MESSAGE,
+    );
+  }
   const scriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL?.trim();
   if (!scriptUrl) {
     throw new GroupSourceError(
@@ -35,8 +49,8 @@ export async function fetchGroupMemberEmails(
     );
   }
 
-  const url = new URL(scriptUrl);
-  url.searchParams.set("groupEmail", groupEmail);
+  // Holds the script's key: never logged.
+  const url = appsScriptUrl(scriptUrl, { groupEmail });
 
   let response: Response;
   try {

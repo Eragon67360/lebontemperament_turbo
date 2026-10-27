@@ -12,12 +12,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label, RequiredMark } from "@/components/ui/label";
 import {
+  refetchEventDocuments,
   useCreateEventDocument,
   useDeleteEventDocument,
   useRenameEventDocument,
 } from "@/hooks/useEventDocuments";
 import { EVENT_DOCUMENTS_BUCKET } from "@/utils/events/bucket";
-import { eventFileProblem, uploadEventFile } from "@/utils/events/upload";
+import {
+  eventFileProblem,
+  uploadEventFile,
+  type UploadedEventFile,
+} from "@/utils/events/upload";
+import { settleFailedSave, UNSETTLED_SAVE_HINT } from "@/utils/failedSave";
 import { createClient } from "@/utils/supabase/client";
 import type { Event, EventDocument } from "@repo/domain/types/events";
 import { fileSizeLabel } from "@repo/domain/utils/documents";
@@ -28,6 +34,7 @@ import {
   eventDocumentKind,
   eventDocumentUrl,
 } from "@repo/domain/utils/eventDocuments";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   ExternalLink,
@@ -58,6 +65,12 @@ export function eventDocumentMeta(document: EventDocument): string {
 
 function fileUrl(document: EventDocument): string {
   return eventDocumentUrl(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "", document);
+}
+
+function attachFailure(error: unknown): string {
+  return error instanceof Error && error.message
+    ? error.message
+    : "Le fichier n'a pas pu être joint.";
 }
 
 /** One attached file: open it, rename it, remove it. */
@@ -210,6 +223,7 @@ export function EventDocumentsDialog({
   event: Event | null;
   documents: EventDocument[];
 }) {
+  const queryClient = useQueryClient();
   const create = useCreateEventDocument();
   const remove = useDeleteEventDocument();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -237,6 +251,47 @@ export function EventDocumentsDialog({
     }
   };
 
+  /**
+   * Saves the row for a file just uploaded: null once it is saved, else why
+   * not. The request can fail after the row was saved (its answer lost on
+   * the way back), so a failure is settled against the server's list before
+   * the file is removed: a row that exists is a success, an upload without
+   * a row is removed, and when the list can't be read the file stays.
+   */
+  const saveDocument = async (
+    eventId: string,
+    uploaded: UploadedEventFile,
+    name: string,
+  ): Promise<string | null> => {
+    try {
+      await create.mutateAsync({
+        event_id: eventId,
+        label: name,
+        file_name: uploaded.fileName,
+        storage_key: uploaded.storageKey,
+        mime_type: uploaded.mimeType,
+      });
+      return null;
+    } catch (error) {
+      const outcome = await settleFailedSave({
+        storageKey: uploaded.storageKey,
+        readSavedKeys: async () =>
+          (await refetchEventDocuments(queryClient)).map(
+            (document) => document.storage_key,
+          ),
+        removeFile: () =>
+          createClient()
+            .storage.from(EVENT_DOCUMENTS_BUCKET)
+            .remove([uploaded.storageKey]),
+      });
+      if (outcome === "saved") return null;
+      const why = attachFailure(error);
+      return outcome === "unknown"
+        ? `${why.replace(/\.?$/, ".")} ${UNSETTLED_SAVE_HINT}`
+        : why;
+    }
+  };
+
   const attach = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!event) return;
@@ -246,34 +301,18 @@ export function EventDocumentsDialog({
     }
     const name = label.trim() || eventDocumentDefaultLabel(file.name);
     setUploading(true);
-    let storageKey: string | null = null;
     try {
       const uploaded = await uploadEventFile(file, event.id);
-      storageKey = uploaded.storageKey;
-      await create.mutateAsync({
-        event_id: event.id,
-        label: name,
-        file_name: uploaded.fileName,
-        storage_key: uploaded.storageKey,
-        mime_type: uploaded.mimeType,
-      });
-      storageKey = null;
+      const why = await saveDocument(event.id, uploaded, name);
+      if (why) {
+        setProblem(why);
+        return;
+      }
       toast.success(`« ${name} » joint à « ${event.title} »`);
       reset();
     } catch (error) {
-      setProblem(
-        error instanceof Error && error.message
-          ? error.message
-          : "Le fichier n'a pas pu être joint.",
-      );
+      setProblem(attachFailure(error));
     } finally {
-      // An upload whose row wasn't saved leaves no orphan behind.
-      if (storageKey) {
-        await createClient()
-          .storage.from(EVENT_DOCUMENTS_BUCKET)
-          .remove([storageKey])
-          .catch(() => undefined);
-      }
       setUploading(false);
     }
   };

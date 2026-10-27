@@ -1,3 +1,4 @@
+import { ROSTER_PRODUCTION_ONLY_MESSAGE } from "@/utils/memberLists";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, verify as verifySignature } from "node:crypto";
 import {
@@ -202,7 +203,39 @@ async function expectError(
   return caught;
 }
 
+function setEnvironment(vercelEnv?: string, optIn?: string) {
+  if (vercelEnv === undefined) delete process.env.VERCEL_ENV;
+  else process.env.VERCEL_ENV = vercelEnv;
+  if (optIn === undefined) delete process.env.ALLOW_MEMBER_LISTS_IN_DEVELOPMENT;
+  else process.env.ALLOW_MEMBER_LISTS_IN_DEVELOPMENT = optIn;
+}
+
 async function main() {
+  // Outside production (staging and previews, local development without the
+  // opt-in) nothing is read: no token request, no sheet request, a 403.
+  configure();
+  mockFetch((url) => (url === TOKEN_URI ? tokenOk() : json({ values: grid })));
+  for (const [vercelEnv, optIn] of [
+    ["preview", undefined],
+    ["preview", "1"],
+    ["development", undefined],
+    [undefined, undefined],
+    [undefined, "true"],
+  ] as const) {
+    setEnvironment(vercelEnv, optIn);
+    const refused = await expectError("production_only", 403);
+    assert.equal(refused.userMessage, ROSTER_PRODUCTION_ONLY_MESSAGE);
+  }
+  assert.equal(calls.length, 0, "nothing is requested outside production");
+
+  // Local development with the opt-in reads it, as production does.
+  setEnvironment(undefined, "1");
+  assert.equal((await fetchRosterRows()).rows.length, 1);
+  assert.equal(calls.length, 2);
+
+  // The rest runs as production.
+  setEnvironment("production");
+
   // Not configured: nothing is called, the route gets a 503 and the message.
   delete process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   delete process.env.ROSTER_SHEET_ID;

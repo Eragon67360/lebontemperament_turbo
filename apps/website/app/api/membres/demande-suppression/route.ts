@@ -3,6 +3,7 @@ import {
   parseDeletionNote,
 } from "@/lib/deletionRequest";
 import { createMailer } from "@/lib/mail";
+import { readProfileName } from "@/lib/memberName";
 import { getContactEmail } from "@/lib/siteSettings";
 import { checkAuthorization } from "@/utils/auth";
 import { NextResponse } from "next/server";
@@ -48,19 +49,9 @@ export async function POST(request: Request) {
     return NextResponse.json(FAILED, { status: 500 });
   }
 
-  // The caller's own profile row (row-level security allows exactly that).
-  const { data: profile } = await auth.supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", auth.user.id)
-    .maybeSingle();
-  const metadata = auth.user.user_metadata ?? {};
-  const name =
-    profile?.display_name ||
-    metadata.display_name ||
-    metadata.full_name ||
-    metadata.name ||
-    null;
+  // The name on the caller's own profile row (row-level security allows
+  // exactly that), not the account's metadata.
+  const name = await readProfileName(auth.supabase, auth.user.id);
 
   // Personal-data requests go to the main mailbox (site settings).
   const privacyEmail = await getContactEmail();
