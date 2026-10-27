@@ -179,9 +179,18 @@ const link = (root: El, href: string, text?: string) => {
   const story = (over: Partial<ConcertProject>): ConcertProject => ({
     id: "s",
     name: "Histoire fictive",
+    subName: undefined,
     date: "2025-06-01",
     slug: "histoire-fictive",
     image: "",
+    explanation: undefined,
+    banniere: undefined,
+    image2: undefined,
+    image3: undefined,
+    text1: undefined,
+    text2: undefined,
+    author: undefined,
+    press_articles: undefined,
     ...over,
   });
   const concerts = render(
@@ -195,7 +204,7 @@ const link = (root: El, href: string, text?: string) => {
           id: "a",
           name: "Avec bannière",
           slug: "avec-banniere",
-          banniere: { url: "/banniere.png" },
+          banniere: { url: "/banniere.png", photographer: undefined },
         }),
         story({ id: "b", name: "Sans bannière", slug: "sans-banniere" }),
       ]}
