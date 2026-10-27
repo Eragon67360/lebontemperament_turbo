@@ -4,7 +4,7 @@
 // the row's `id` and the columns the admin UI edits today: the dialog fields
 // (utils/formSchemas.ts), `is_visible` from « Masquer / Afficher »
 // (components/anniversary/useListActions.ts), `display_order` from the reorder
-// hook (hooks/useAnniversaryReorder.ts) and the memories' moderation flags.
+// hook (hooks/useReorder.ts) and the memories' moderation flags.
 // Unknown keys are refused, never dropped silently, so a client that sends a
 // column by mistake hears about it. Server-owned columns (`id` as a value,
 // `created_at`, `updated_at`) are never written.
