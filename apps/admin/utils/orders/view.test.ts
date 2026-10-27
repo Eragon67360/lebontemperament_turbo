@@ -12,6 +12,7 @@ import {
   NO_BUYER_FILTERS,
   normalizeText,
   orderCountLine,
+  paymentDeletionText,
   saleDatesLine,
   saleView,
   slugify,
@@ -120,6 +121,35 @@ assert.equal(
 assert.equal(
   orderCountLine({ orderCount: 3, owingCount: 0 }),
   "3 commandes, toutes payées",
+);
+
+// --- « Supprimer le paiement » names it and says what the order owes after ---
+const NBSP = " ";
+// Léa: 34 € ordered, 20 € paid, 14 € left; without the payment, 34 € left.
+assert.deepEqual(
+  paymentDeletionText(lea, { amount_cents: 2000, paid_on: "2026-10-03" }, now),
+  {
+    title: `Supprimer le paiement de 20,00${NBSP}€ du samedi 3 octobre ?`,
+    description: `Il disparaît de la commande de « Léa TEST », dont le reste à payer passe à 34,00${NBSP}€. Cette action ne peut pas être annulée.`,
+  },
+);
+// Zoé paid 10 € for 9 €: without a 0,50 € payment she is still 0,50 € over.
+assert.equal(
+  paymentDeletionText(zoe, { amount_cents: 50, paid_on: "2026-10-03" }, now)
+    .description,
+  `Il disparaît de la commande de « Zoé TEST », dont le trop-perçu passe à 0,50${NBSP}€. Cette action ne peut pas être annulée.`,
+);
+// Without a payment of exactly the excess, the order is paid to the cent.
+assert.equal(
+  paymentDeletionText(zoe, { amount_cents: 100, paid_on: "2026-10-03" }, now)
+    .description,
+  "Il disparaît de la commande de « Zoé TEST », qui sera alors payée. Cette action ne peut pas être annulée.",
+);
+// A payment from another year says the year.
+assert.equal(
+  paymentDeletionText(lea, { amount_cents: 500, paid_on: "2025-12-24" }, now)
+    .title,
+  `Supprimer le paiement de 5,00${NBSP}€ du mercredi 24 décembre 2025 ?`,
 );
 
 // --- The round: who would be added ---
