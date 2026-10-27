@@ -128,7 +128,12 @@ const Calendrier = () => {
 
       {showGoogleCalendar ? (
         <MembersCard className="overflow-hidden p-2 sm:p-4">
-          <GoogleCalendar embedId={"lebontemperament@gmail.com"} />
+          <GoogleCalendar
+            embedId={
+              process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID ??
+              "lebontemperament@gmail.com"
+            }
+          />
         </MembersCard>
       ) : (
         <MembersCard className="overflow-hidden p-0">
