@@ -27,9 +27,11 @@ async function frameAncestors(env: Env): Promise<string[]> {
   for (const name of names) apply(name, env[name]);
   try {
     const rules = await nextConfig.headers();
+    // The pages' rule (every path but the Drive file proxy, which sends its
+    // own policy per file type).
     const csp = rules
-      .find((rule) => rule.source === "/(.*)")
-      ?.headers.find((header) => header.key === "Content-Security-Policy");
+      .flatMap((rule) => rule.headers)
+      .find((header) => header.key === "Content-Security-Policy");
     assert.ok(csp, "every page sends a Content-Security-Policy");
     const match = csp.value.match(/^frame-ancestors ([^;]+);$/);
     assert.ok(match?.[1], `unexpected policy: ${csp.value}`);
