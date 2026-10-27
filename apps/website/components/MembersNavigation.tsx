@@ -134,7 +134,7 @@ export const MembersNavigation = () => {
                         <Icon className="h-6 w-6" />
                       </span>
                       <span className="flex min-w-0 flex-col">
-                        <span className="text-lg font-semibold">
+                        <span className="text-lg font-medium">
                           {link.label}
                         </span>
                         <span
