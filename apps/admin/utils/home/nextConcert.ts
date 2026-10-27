@@ -1,6 +1,7 @@
 // « Prochain concert » on the home and the countdown in its greeting: which
 // concert comes next, in how many days, and the French wording of its facts.
 // Pure and unit-tested; the home feeds it the concerts query it already has.
+import { websiteUrl } from "@/lib/website";
 import {
   contextLabel,
   formatTimeFr,
@@ -102,8 +103,6 @@ export function concertMetaFr(
   return { when, details: details || null };
 }
 
-const DEFAULT_WEBSITE_URL = "https://www.lebontemperament.com";
-
 /**
  * The public concerts page. A concert has no page of its own on the site
  * (`/concerts/[slug]` is a concert story), so « Voir sur le site » opens the
@@ -112,5 +111,5 @@ const DEFAULT_WEBSITE_URL = "https://www.lebontemperament.com";
 export function siteConcertsUrl(
   base: string | undefined = process.env.NEXT_PUBLIC_WEBSITE_URL,
 ): string {
-  return `${(base || DEFAULT_WEBSITE_URL).replace(/\/+$/, "")}/concerts`;
+  return websiteUrl("/concerts", base);
 }

@@ -21,6 +21,7 @@ import { Stepper } from "@/components/ui/stepper";
 import { useAnniversaryReadiness } from "@/hooks/useAnniversaryReadiness";
 import { useFeatureFlag, useUpdateFeatureFlag } from "@/hooks/useFeatureFlags";
 import { cn } from "@/lib/utils";
+import { websiteUrl } from "@/lib/website";
 import type {
   ReadinessRow,
   ReadinessState,
@@ -56,12 +57,6 @@ const STATE: Record<
     word: "Vide",
   },
 };
-
-function publicUrl() {
-  const base =
-    process.env.NEXT_PUBLIC_WEBSITE_URL ?? "https://www.lebontemperament.com";
-  return `${base.replace(/\/$/, "")}/40-ans`;
-}
 
 export default function AnniversaryOverviewPage() {
   const flag = useFeatureFlag(FLAG);
@@ -235,7 +230,11 @@ export default function AnniversaryOverviewPage() {
 
                   <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Button variant="outline" asChild>
-                      <a href={publicUrl()} target="_blank" rel="noreferrer">
+                      <a
+                        href={websiteUrl("/40-ans")}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         <ExternalLink aria-hidden />
                         {published ? "Voir la page" : "Prévisualiser la page"}
                         <span className="sr-only"> (nouvel onglet)</span>
