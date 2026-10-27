@@ -115,21 +115,29 @@ const nextConfig = {
     qualities: [25, 50, 75, 90, 100],
   },
   async headers() {
-    // Get admin URL from environment or default to localhost:3002
+    // The admin's story preview frames the website. A production build allows
+    // only the admin's own origin; other builds also allow an admin dev
+    // server on this machine (port 3002).
+    // eslint-disable-next-line no-undef
+    const isProduction = process.env.VERCEL_ENV === "production";
     const adminUrl =
       // eslint-disable-next-line no-undef
-      process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3002";
+      process.env.NEXT_PUBLIC_ADMIN_URL ||
+      (isProduction
+        ? "https://admin.lebontemperament.com"
+        : "http://localhost:3002");
     const adminOrigin = new URL(adminUrl).origin;
+    const localAdminOrigins = isProduction
+      ? []
+      : [
+          "http://localhost:3002",
+          "https://localhost:3002",
+          "http://127.0.0.1:3002",
+          "https://127.0.0.1:3002",
+        ];
 
     // Build frame-ancestors directive
-    const frameAncestors = [
-      "'self'",
-      adminOrigin,
-      "http://localhost:3002",
-      "https://localhost:3002",
-      "http://127.0.0.1:3002",
-      "https://127.0.0.1:3002",
-    ]
+    const frameAncestors = ["'self'", adminOrigin, ...localAdminOrigins]
       .filter((origin, index, self) => self.indexOf(origin) === index) // Remove duplicates
       .join(" ");
 
