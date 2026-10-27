@@ -57,6 +57,25 @@ export function searchItems<T>(
   return ranked.slice(0, limit).map((entry) => entry.item);
 }
 
+/**
+ * ⌘K (Ctrl+K on Windows and Linux), also while typing in a field. With Alt
+ * or Shift held it is left to the browser.
+ */
+export function isSearchShortcut(event: {
+  key: string;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
+}): boolean {
+  return (
+    event.key.toLowerCase() === "k" &&
+    (event.metaKey || event.ctrlKey) &&
+    !event.altKey &&
+    !event.shiftKey
+  );
+}
+
 export type PalettePage = {
   href: string;
   label: string;

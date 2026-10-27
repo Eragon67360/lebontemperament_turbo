@@ -1,7 +1,7 @@
 "use client";
 
 import RouteNames from "@/utils/routes";
-import { createClient } from "@/utils/supabase/client";
+import { loadBrowserClient } from "@/utils/supabase/lazy";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -13,7 +13,6 @@ export default function UpdatePasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +28,7 @@ export default function UpdatePasswordForm() {
     setLoading(true);
 
     try {
+      const supabase = await loadBrowserClient();
       const { error } = await supabase.auth.updateUser({
         password: password,
       });

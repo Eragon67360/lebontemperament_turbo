@@ -3,7 +3,7 @@
 import { login } from "@/app/auth/login/actions";
 import { useAuth } from "@/components/providers/AuthProvider";
 import RouteNames from "@/utils/routes";
-import { createClient } from "@/utils/supabase/client";
+import { loadBrowserClient } from "@/utils/supabase/lazy";
 import {
   Button,
   Checkbox,
@@ -59,7 +59,7 @@ export default function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const supabase = createClient();
+      const supabase = await loadBrowserClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -116,7 +116,7 @@ export default function LoginForm() {
         }
 
         if (result?.success) {
-          const supabase = createClient();
+          const supabase = await loadBrowserClient();
           const {
             data: { user },
           } = await supabase.auth.getUser();

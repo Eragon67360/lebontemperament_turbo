@@ -1,7 +1,7 @@
 "use client";
 import LoginForm from "@/components/auth/LoginForm";
 import RouteNames from "@/utils/routes";
-import { createClient } from "@/utils/supabase/client";
+import { hasSessionCookie, loadBrowserClient } from "@/utils/supabase/lazy";
 import { Button, Card } from "@heroui/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -18,18 +18,21 @@ const LoadingSpinner = () => (
 );
 
 export default function LoginPage() {
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
+    // Signed in already (a session cookie): straight to the members area.
+    // Everyone else gets supabase-js on submit only.
+    if (!hasSessionCookie()) return;
     const getUser = async () => {
+      const supabase = await loadBrowserClient();
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
         router.push(RouteNames.MEMBRES.ROOT);
       }
     };
     getUser();
-  }, [supabase.auth, router]);
+  }, [router]);
 
   return (
     <Suspense fallback={<LoadingSpinner />}>

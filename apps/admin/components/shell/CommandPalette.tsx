@@ -27,7 +27,7 @@ import {
 } from "@/utils/search/palette";
 import { CornerDownLeft, FileText, Music2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 /** How many members and concerts one search lists; typing more narrows them. */
 const RESULT_LIMIT = 6;
@@ -40,6 +40,9 @@ const MIN_PEOPLE_QUERY = 2;
  * opens the first result, Escape closes. Members and concerts load only
  * while it is open. Matching ignores accents and capitals
  * (`utils/search/palette.ts`).
+ *
+ * The shell (`DashboardShell`) listens for the shortcut and the button, and
+ * loads this component, with its search library, on the first opening only.
  *
  * A concert opens the concerts list: it has no page of its own.
  */
@@ -63,23 +66,6 @@ export function CommandPalette({
 
   // Each opening starts from an empty search.
   useResetOnChange([open], () => setQuery(""));
-
-  // ⌘K / Ctrl+K from anywhere in the admin, also while typing in a field.
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (
-        event.key.toLowerCase() === "k" &&
-        (event.metaKey || event.ctrlKey) &&
-        !event.altKey &&
-        !event.shiftKey
-      ) {
-        event.preventDefault();
-        onOpenChange(!open);
-      }
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onOpenChange]);
 
   const users = useUsers(undefined, { enabled: open, staleTime: 60_000 });
   const concerts = useConcerts({ enabled: open });
