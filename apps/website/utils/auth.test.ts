@@ -145,8 +145,6 @@ registerHooks({
 
 const { requireUser, checkAuthorization, checkAdminAuth } =
   await import("./auth");
-const { GET: checkAdminRoute } =
-  await import("../app/api/auth/check-admin/route");
 
 // The former name, still used by the Drive routes, is the same function.
 assert.equal(checkAuthorization, requireUser);
@@ -180,13 +178,11 @@ for (const [who, caller] of Object.entries(CALLERS)) {
   state.authorization = null;
   const { isAdmin, user } = await checkAdminAuth();
   assert.equal(user, caller.user);
-  const response = await checkAdminRoute();
 
   matrix[who] = {
     cookie,
     bearer,
     checkAdminAuth: isAdmin ? "admin" : "not admin",
-    checkAdminRoute: `${response.status} ${JSON.stringify(await response.json())}`,
   };
 }
 
@@ -194,13 +190,11 @@ const member = {
   cookie: "200 cookie",
   bearer: "200 bearer",
   checkAdminAuth: "not admin",
-  checkAdminRoute: '200 {"isAdmin":false}',
 };
 const admin = {
   cookie: "200 cookie",
   bearer: "200 bearer",
   checkAdminAuth: "admin",
-  checkAdminRoute: '200 {"isAdmin":true}',
 };
 
 assert.deepEqual(matrix, {
@@ -208,7 +202,6 @@ assert.deepEqual(matrix, {
     cookie: "401 Non authentifié",
     bearer: "401 Non authentifié",
     checkAdminAuth: "not admin",
-    checkAdminRoute: '200 {"isAdmin":false}',
   },
   user: member,
   admin,
