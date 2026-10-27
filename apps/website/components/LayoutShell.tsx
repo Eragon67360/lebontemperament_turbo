@@ -5,10 +5,10 @@ import ConditionalVercelAnalytics from "@/components/cookies/ConditionalVercelAn
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import { OverPhotoHeaderProvider } from "@/components/navigation/OverPhotoHeader";
-import { usePathname } from "next/navigation";
+import { useSitePathname } from "@/hooks/useSitePathname";
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = useSitePathname();
   const isTrackPage = pathname?.startsWith("/track");
   // `/l/<code>` is the delivery link of the SMS (#593): the same tracking
   // view as `/track`, without the site's navigation and footer. It may stack
@@ -30,7 +30,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   // centred) so nothing moves; <main> is itself a flex column so the pages
   // stay flex items exactly as before. The provider lets a page's hero tell
   // the navigation that it draws over a dark photo; the home's photo is
-  // certain, so its server HTML already starts over it.
+  // certain, so its server HTML already starts over it (also when Vercel
+  // renders the cached home as "/index", see useSitePathname).
   return (
     <OverPhotoHeaderProvider assumeOverPhoto={pathname === "/"}>
       <a

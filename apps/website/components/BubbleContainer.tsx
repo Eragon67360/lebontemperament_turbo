@@ -1,11 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useSitePathname } from "@/hooks/useSitePathname";
 import FeaturedVideosBubble from "./FeaturedVideosBubble";
 import { SocialPopover } from "./SocialPopover";
 
 export const BubbleContainer = () => {
-  const pathname = usePathname();
+  const pathname = useSitePathname();
 
   // Don't show on admin or full-screen track pages
   if (pathname.startsWith("/membres") || pathname.startsWith("/track"))
