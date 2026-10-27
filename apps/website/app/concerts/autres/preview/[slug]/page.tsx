@@ -83,7 +83,7 @@ export default function Preview() {
                 </div>
               </div>
             </div>
-            <p className="mb-4 text-gray-600">{cd.description}</p>
+            <p className="text-muted mb-4">{cd.description}</p>
             <p className="mb-4 text-lg font-bold">
               {new Intl.NumberFormat("fr-FR", {
                 style: "currency",
