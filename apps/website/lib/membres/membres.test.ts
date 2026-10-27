@@ -157,10 +157,10 @@ assert.equal(scoreFolderFor("jeune & alte"), "jeunes");
 assert.equal(scoreFolderFor(""), null);
 
 // « Les Pupitres » conformance, read from the sources: the voice colours
-// are typed in tones.ts only, nothing under the members pages asks for a
-// 700 or 800 weight (the concerts page takes MusicList's members variant),
-// and the bold class of FullCalendar's classic theme is the one globals.css
-// softens for the members' calendar.
+// are typed in tones.ts only, nothing under the members pages (MusicList,
+// shown only on the members' concerts page, included) asks for a 700 or 800
+// weight, and the bold class of FullCalendar's classic theme is the one
+// globals.css softens for the members' calendar.
 const website = path.resolve(import.meta.dirname, "../..");
 const read = (file: string) => readFileSync(path.join(website, file), "utf8");
 function* sources(dir: string): Generator<string> {
@@ -180,6 +180,7 @@ const membersFiles = [
   "components/GoogleCalendar.tsx",
   "components/MembersFooter.tsx",
   "components/MembersNavigation.tsx",
+  "components/MusicList.tsx",
 ];
 const retyped: string[] = [];
 const heavy: string[] = [];
@@ -204,10 +205,6 @@ assert.deepEqual(
   heavy,
   [],
   `700 or 800 weights under the members pages:\n${heavy.join("\n")}`,
-);
-assert.match(
-  read("components/membres/MembresConcertsEvents.tsx"),
-  /<MusicList variant="members" \/>/,
 );
 
 const require = createRequire(import.meta.url);
