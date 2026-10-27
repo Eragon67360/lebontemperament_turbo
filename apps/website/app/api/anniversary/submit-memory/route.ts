@@ -1,3 +1,7 @@
+import {
+  insertPendingMemory,
+  pendingMemoryRow,
+} from "@/lib/anniversaryMemories";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
 import { createClient } from "@/utils/supabase/server";
@@ -248,19 +252,10 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-    // Insert new memory (will be pending approval by default)
-    const { data, error } = await supabase
-      .from("anniversary_memories")
-      .insert({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        message: message.trim(),
-        year: year ? parseInt(year) : null,
-        is_approved: false, // Requires admin approval
-        is_featured: false,
-      })
-      .select("id")
-      .single();
+    // The memory starts pending (admin approval). Its id is chosen here and
+    // nothing is read back: the visitor's session may only insert.
+    const memory = pendingMemoryRow({ name, email, message, year });
+    const { error } = await insertPendingMemory(supabase, memory);
 
     if (error) {
       console.error("Error submitting memory:", error);
@@ -280,7 +275,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: "Memory submitted successfully (email notification failed)",
-        id: data.id,
+        id: memory.id,
       });
     }
 
@@ -288,21 +283,21 @@ export async function POST(request: Request) {
       // Send confirmation email to user
       await mailer.transporter.sendMail({
         from: mailer.from,
-        to: email.trim().toLowerCase(),
+        to: memory.email,
         subject: "Merci pour votre témoignage - 40 ans du Bon Tempérament",
-        html: userConfirmationEmailTemplate(name.trim()),
+        html: userConfirmationEmailTemplate(memory.name),
       });
 
       // Send notification email to admin
       await mailer.transporter.sendMail({
         from: mailer.from,
         to: adminEmail,
-        subject: `Nouveau témoignage reçu de ${name.trim()} - 40 ans`,
+        subject: `Nouveau témoignage reçu de ${memory.name} - 40 ans`,
         html: adminNotificationEmailTemplate(
-          name.trim(),
-          email.trim().toLowerCase(),
-          message.trim(),
-          year ? parseInt(year) : null,
+          memory.name,
+          memory.email,
+          memory.message,
+          memory.year,
         ),
       });
     } catch (emailError) {
@@ -313,7 +308,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: "Memory submitted successfully",
-      id: data.id,
+      id: memory.id,
     });
   } catch (error) {
     console.error("Error in POST /api/anniversary/submit-memory:", error);
