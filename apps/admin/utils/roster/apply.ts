@@ -6,7 +6,7 @@
 // from the server's own re-read of the roster, refused when its fingerprint
 // no longer matches the one the admin reviewed.
 
-import type { InvitationEntry } from "@/utils/invitations";
+import { PROFILE_NOT_CREATED, type InvitationEntry } from "@/utils/invitations";
 import type { BuiltReview } from "@/utils/roster/review";
 import {
   ROSTER_OWNED_FIELDS,
@@ -317,6 +317,7 @@ export async function applyRosterSync(
 
 /** Supabase Auth's English reasons, in French for the admin. */
 export function invitationFailure(error: string | undefined): string {
+  if (error === PROFILE_NOT_CREATED) return PROFILE_NOT_CREATED;
   const text = (error ?? "").toLowerCase();
   if (
     text.includes("already been registered") ||

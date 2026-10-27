@@ -1,7 +1,7 @@
 "use server";
 
+import { signInMember } from "@/lib/memberSession";
 import { createClient } from "@/utils/supabase/server";
-import { ERROR_CODES } from "@repo/domain/consts/errorMessages";
 import { revalidatePath } from "next/cache";
 
 export async function login(formData: FormData) {
@@ -12,28 +12,10 @@ export async function login(formData: FormData) {
     password: formData.get("password") as string,
   };
 
-  const { data, error } = await supabase.auth.signInWithPassword(dataForm);
+  // Only a member keeps the session: an account without a profile row is
+  // signed out again (PROFILE_NOT_FOUND).
+  const result = await signInMember(supabase, dataForm);
 
-  if (error) {
-    return {
-      error: ERROR_CODES.INVALID_CREDENTIALS,
-    };
-  }
-
-  if (data?.user) {
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (profileError) {
-      return {
-        error: ERROR_CODES.PROFILE_NOT_FOUND,
-      };
-    }
-
-    revalidatePath("/", "layout");
-    return { success: true };
-  }
+  if (result.success) revalidatePath("/", "layout");
+  return result;
 }
