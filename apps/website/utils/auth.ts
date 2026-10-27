@@ -78,6 +78,29 @@ export async function requireUser(): Promise<AuthorizationResult> {
 export const checkAuthorization = requireUser;
 
 /**
+ * Whether `userId` is an admin or a superadmin, read with `supabase` (the
+ * caller's own client, so row-level security applies). The Drive proxy uses
+ * it for the whole-Drive root.
+ */
+export async function isAdmin(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<boolean> {
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+
+  return isAdminRole(profile?.role);
+}
+
+/**
  * Check if the current user is authenticated and is an admin
  * Used in server components to check admin status
  * @returns Object with isAdmin boolean and user object (or null)
