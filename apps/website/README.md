@@ -19,4 +19,4 @@ The site reads the Supabase project its `.env.local` names: staging (`website-st
 - [docs/agents/project.md](../../docs/agents/project.md): routes, tables, services and quirks.
 - [docs/agents/design-guardrails.md](../../docs/agents/design-guardrails.md): the look stays (teal HeroUI, Roboto; « Les Pupitres » in the members area; « Le Programme » on `/40-ans`).
 - [AGENTS.md](AGENTS.md): Next.js 16 changed several APIs; read `node_modules/next/dist/docs/` before using one from memory.
-- The routes under `app/api/` are called by the shipped mobile app: keep their request and response shapes.
+- The mobile app also calls some routes under `app/api/` (`contact/mobile`, `documents`, `drive/*`, `joining`, `profile/photo`): keep their request and response shapes, since installed versions can't follow a change.
