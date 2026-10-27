@@ -94,6 +94,7 @@ export default function GalleryVideosPage() {
       <DataState
         isLoading={isPending}
         isError={isError}
+        hasData={videos.length > 0}
         isEmpty={videos.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les vidéos n'ont pas pu être chargées."

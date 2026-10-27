@@ -312,6 +312,7 @@ export default function AnnouncementsPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={!!data}
         isEmpty={false}
         onRetry={() => refetch()}
         errorDescription="Les annonces n'ont pas pu être chargées."

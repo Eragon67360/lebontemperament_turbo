@@ -62,6 +62,7 @@ export function HistoryDialog({
         <DataState
           isLoading={isLoading}
           isError={isError}
+          hasData={data.length > 0}
           isEmpty={data.length === 0}
           onRetry={() => refetch()}
           errorDescription="L'historique n'a pas pu être chargé."

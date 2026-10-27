@@ -120,6 +120,7 @@ export default function ConseilsAdministration() {
         <DataState
           isLoading={isLoading}
           isError={isError}
+          hasData={cas.length > 0}
           isEmpty={sortedCAs.length === 0}
           onRetry={() => refetch()}
           errorDescription="Les comptes rendus n'ont pas pu être chargés."

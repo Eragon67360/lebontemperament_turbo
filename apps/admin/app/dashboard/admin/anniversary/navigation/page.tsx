@@ -54,6 +54,7 @@ export default function NavigationPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={cards.length > 0}
         isEmpty={cards.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les cartes de navigation n'ont pas pu être chargées."

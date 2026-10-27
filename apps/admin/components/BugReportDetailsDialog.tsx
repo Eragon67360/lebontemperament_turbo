@@ -141,6 +141,7 @@ export function BugReportDetailsDialog({ report }: BugReportDetailsProps) {
           <DataState
             isLoading={isPending}
             isError={isError}
+            hasData={messages.length > 0}
             isEmpty={messages.length === 0}
             onRetry={() => refetch()}
             errorDescription="Les messages de ce signalement n'ont pas pu être chargés."

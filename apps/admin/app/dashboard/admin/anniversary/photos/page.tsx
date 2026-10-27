@@ -55,6 +55,7 @@ export default function PhotosPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={photos.length > 0}
         isEmpty={photos.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les photos n'ont pas pu être chargées."

@@ -304,6 +304,7 @@ export default function UsersPage() {
               <DataState
                 isLoading={usersQuery.isLoading}
                 isError={usersQuery.isError}
+                hasData={!!usersQuery.data}
                 isEmpty={visible.length === 0}
                 onRetry={() => usersQuery.refetch()}
                 errorDescription="Les membres n’ont pas pu être chargés. Vérifiez votre connexion, puis réessayez."

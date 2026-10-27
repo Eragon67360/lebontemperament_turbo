@@ -280,6 +280,7 @@ export default function ConcertsAndToursPage() {
           <DataState
             isLoading={toursQuery.isLoading}
             isError={toursQuery.isError}
+            hasData={!!toursQuery.data}
             isEmpty={periodTours.length === 0}
             onRetry={() => toursQuery.refetch()}
             errorDescription="Les tournées n'ont pas pu être chargées."
@@ -341,6 +342,7 @@ export default function ConcertsAndToursPage() {
           <DataState
             isLoading={concertsQuery.isLoading}
             isError={concertsQuery.isError}
+            hasData={!!concertsQuery.data}
             isEmpty={periodConcerts.length === 0}
             onRetry={() => concertsQuery.refetch()}
             errorDescription="Les concerts n'ont pas pu être chargés."
