@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FiLoader } from "react-icons/fi";
 import { IoIosArrowRoundBack } from "react-icons/io";
-import { toast } from "sonner";
+
+import { toast } from "@heroui/react";
 
 export default function ResetPasswordForm() {
   const [email, setEmail] = useState("");
@@ -27,7 +28,7 @@ export default function ResetPasswordForm() {
       });
 
       if (error) {
-        toast.error("Aïe aïe aïe !", {
+        toast.danger("Aïe aïe aïe !", {
           description: "Il y a eu un petit souci technique... On réessaie ? 🛠️",
         });
 
@@ -41,7 +42,7 @@ export default function ResetPasswordForm() {
       });
     } catch (error) {
       console.error("Reset password error:", error);
-      toast.error("Aïe aïe aïe !", {
+      toast.danger("Aïe aïe aïe !", {
         description: "Il y a eu un petit souci technique... On réessaie ? 🛠️",
       });
     } finally {

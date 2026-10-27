@@ -3,7 +3,8 @@ import { NEWSLETTER_HONEYPOT_FIELD } from "@repo/domain/utils/newsletter";
 import Link from "next/link";
 import React, { useState } from "react";
 import { FiLoader } from "react-icons/fi";
-import { toast } from "sonner";
+
+import { toast } from "@heroui/react";
 
 const Subscribe = () => {
   const [email, setEmail] = useState("");
@@ -46,14 +47,14 @@ const Subscribe = () => {
     // Validate email is not empty
     if (!trimmedEmail) {
       setEmailError("Veuillez entrer une adresse email");
-      toast.error("Veuillez entrer une adresse email valide");
+      toast.danger("Veuillez entrer une adresse email valide");
       return;
     }
 
     // Validate email format
     if (!validateEmail(trimmedEmail)) {
       setEmailError("Veuillez entrer une adresse email valide");
-      toast.error("Format d'email invalide. Exemple: nom@exemple.com");
+      toast.danger("Format d'email invalide. Exemple: nom@exemple.com");
       return;
     }
 
@@ -82,11 +83,13 @@ const Subscribe = () => {
         setEmail(""); // Clear the input on success
       } else {
         console.error("Failed to subscribe:", data.error);
-        toast.error("Une erreur s'est produite, veuillez réessayer plus tard!");
+        toast.danger(
+          "Une erreur s'est produite, veuillez réessayer plus tard!",
+        );
       }
     } catch (error) {
       console.error("Failed to subscribe:", error);
-      toast.error("Une erreur s'est produite, veuillez réessayer plus tard!");
+      toast.danger("Une erreur s'est produite, veuillez réessayer plus tard!");
     } finally {
       setIsLoading(false);
     }

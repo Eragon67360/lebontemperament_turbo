@@ -6,7 +6,8 @@ import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FiLoader } from "react-icons/fi";
-import { toast } from "sonner";
+
+import { toast } from "@heroui/react";
 
 export default function UpdatePasswordForm() {
   const [password, setPassword] = useState("");
@@ -19,7 +20,7 @@ export default function UpdatePasswordForm() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error("Oups ! 🙈", {
+      toast.danger("Oups ! 🙈", {
         description:
           "Les mots de passe ne matchent pas. Un petit effort de coordination !",
       });
@@ -34,7 +35,7 @@ export default function UpdatePasswordForm() {
       });
 
       if (error) {
-        toast.error("Aïe aïe aïe ! 😅", {
+        toast.danger("Aïe aïe aïe ! 😅", {
           description:
             "Un petit bug s'est glissé dans la matrice. On réessaie ?",
         });
@@ -48,7 +49,7 @@ export default function UpdatePasswordForm() {
       router.push(RouteNames.AUTH.LOGIN);
     } catch (error) {
       console.error("Update password error:", error);
-      toast.error("Houston, on a un problème ! 🚀", {
+      toast.danger("Houston, on a un problème ! 🚀", {
         description:
           "Quelque chose s'est mal passé. Nos meilleurs ingénieurs sont sur le coup !",
       });
