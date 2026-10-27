@@ -1,6 +1,7 @@
 "use client";
 
 import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { SocialNetwork } from "@repo/domain/utils/siteSettings";
 import { AnimatePresence, m } from "motion/react";
 import { ReactNode, useEffect, useRef, useState } from "react";
@@ -45,14 +46,18 @@ export const SocialPopover = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIconIndex, setCurrentIconIndex] = useState(0);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
+  // The closed bubble shows one network after the other; a visitor who asked
+  // for less motion keeps the first one.
   useEffect(() => {
-    if (isOpen || socials.length < 2) return;
+    if (isOpen || socials.length < 2 || prefersReducedMotion) return;
     const interval = setInterval(() => {
       setCurrentIconIndex((prev) => (prev + 1) % socials.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [isOpen, socials.length]);
+  }, [isOpen, socials.length, prefersReducedMotion]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -64,12 +69,21 @@ export const SocialPopover = () => {
       }
     };
 
+    // Escape closes the list and gives the focus back to the bubble
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsOpen(false);
+      buttonRef.current?.focus();
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
@@ -121,6 +135,7 @@ export const SocialPopover = () => {
       </AnimatePresence>
 
       <m.button
+        ref={buttonRef}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         type="button"
