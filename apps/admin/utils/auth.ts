@@ -39,7 +39,10 @@ export function checkAuthorization() {
   return authorize("admin");
 }
 
-/** Superadmin only. */
-export function checkDriverAuthorization() {
+/**
+ * Signed-in superadmin only (401 when signed out, 403 for any other role,
+ * admin included): « Commandes », Signalements and the /api/orders routes.
+ */
+export function checkSuperadminAuthorization() {
   return authorize("superadmin");
 }

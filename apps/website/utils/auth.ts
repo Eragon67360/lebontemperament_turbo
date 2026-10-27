@@ -1,6 +1,7 @@
 import { isAccountUser } from "@/lib/memberSession";
 import type { Database } from "@repo/domain/database.types";
 import { parseBearerToken } from "@repo/domain/utils/bearer";
+import { isAdminRole } from "@repo/domain/utils/roles";
 import {
   createClient as createSupabaseClient,
   type SupabaseClient,
@@ -50,7 +51,7 @@ function createBearerClient(token: string) {
  * refused rather than falling back to cookies). An anonymous sign-in is
  * refused like no session at all.
  */
-export async function checkAuthorization(): Promise<AuthorizationResult> {
+export async function requireUser(): Promise<AuthorizationResult> {
   const token = parseBearerToken((await headers()).get("authorization"));
 
   if (token) {
@@ -71,28 +72,10 @@ export async function checkAuthorization(): Promise<AuthorizationResult> {
 }
 
 /**
- * Check if the current authenticated user is an admin or superadmin
- * @param supabase - Supabase client instance
- * @param userId - The user ID to check (from auth.getUser())
- * @returns boolean indicating if user is admin
+ * @deprecated Former name of {@link requireUser}, the same function: any
+ * signed-in account, whatever its role. Kept for the Drive routes.
  */
-export async function isAdmin(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-): Promise<boolean> {
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  if (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-
-  return profile?.role === "admin" || profile?.role === "superadmin";
-}
+export const checkAuthorization = requireUser;
 
 /**
  * Check if the current user is authenticated and is an admin
@@ -113,11 +96,8 @@ export async function checkAdminAuth() {
     .eq("id", data.user.id)
     .single();
 
-  const isAdminUser =
-    userProfile?.role === "admin" || userProfile?.role === "superadmin";
-
   return {
-    isAdmin: isAdminUser,
+    isAdmin: isAdminRole(userProfile?.role),
     user: data.user,
   };
 }

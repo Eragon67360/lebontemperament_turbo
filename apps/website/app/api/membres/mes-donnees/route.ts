@@ -1,6 +1,6 @@
 import { collectMemberData, exportFileName } from "@/lib/memberData";
 import { getContactEmail } from "@/lib/siteSettings";
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
 
@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
  * that id.
  */
 export async function GET() {
-  const auth = await checkAuthorization();
+  const auth = await requireUser();
   if (!auth.authorized) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

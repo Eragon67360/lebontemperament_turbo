@@ -4,7 +4,7 @@ import {
   supabasePhotoStore,
   type PhotoResult,
 } from "@/lib/profilePhoto";
-import { checkAuthorization } from "@/utils/auth";
+import { requireUser } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
 
@@ -23,7 +23,7 @@ const respond = ({ status, body }: PhotoResult) =>
   });
 
 export async function POST(request: Request) {
-  const auth = await checkAuthorization();
+  const auth = await requireUser();
   if (!auth.authorized)
     return respond({ status: 401, body: { error: auth.error } });
 
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
-  const auth = await checkAuthorization();
+  const auth = await requireUser();
   if (!auth.authorized)
     return respond({ status: 401, body: { error: auth.error } });
 

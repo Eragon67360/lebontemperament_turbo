@@ -5,6 +5,7 @@
 // in recently (probably still a member), who never signed in. Pure and
 // unit-tested; `now` is passed in so the wording is stable in tests.
 
+import { isAdminRole } from "@/utils/access";
 import type { AbsentMember } from "@repo/domain/roster/types";
 
 /** Signed in within this many days: the person is probably still using the account. */
@@ -13,7 +14,7 @@ export const RECENT_SIGN_IN_DAYS = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const isAdminAccount = (account: Pick<AbsentMember, "role">) =>
-  account.role === "admin" || account.role === "superadmin";
+  isAdminRole(account.role);
 
 export function signedInRecently(
   account: Pick<AbsentMember, "lastSignInAt">,

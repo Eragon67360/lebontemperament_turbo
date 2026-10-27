@@ -1,5 +1,6 @@
 "use server";
 
+import { isAdminRole } from "@/utils/access";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/server";
 import { ERROR_CODES } from "@repo/domain/consts/errorMessages";
@@ -34,7 +35,7 @@ export async function login(formData: FormData) {
       redirect(redirection);
     }
 
-    if (profile?.role !== "admin" && profile?.role !== "superadmin") {
+    if (!isAdminRole(profile?.role)) {
       await supabase.auth.signOut();
       const redirection =
         RouteNames.AUTH.LOGIN + "?error=" + ERROR_CODES.UNAUTHORIZED;

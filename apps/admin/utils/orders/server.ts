@@ -1,7 +1,7 @@
 // « Commandes »: what the /api/orders routes share. The rules for each value
 // live in @repo/domain/utils/orders; the database enforces the same limits
 // and RLS keeps every table superadmin-only.
-import { checkDriverAuthorization } from "@/utils/auth";
+import { checkSuperadminAuthorization } from "@/utils/auth";
 import type { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -74,7 +74,7 @@ export function dbErrorResponse(error: DbErrorLike, fallback: string) {
  * role but superadmin (the database's policies say the same).
  */
 export async function requireSuperadmin() {
-  const auth = await checkDriverAuthorization();
+  const auth = await checkSuperadminAuthorization();
   if (!auth.authorized) {
     return {
       ok: false as const,
