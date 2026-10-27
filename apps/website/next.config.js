@@ -184,15 +184,10 @@ const nextConfig = {
           },
         ],
       },
-      {
-        source: "/:path*.(js|css|png|jpg|jpeg|gif|ico|svg|webp|avif)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+      // No cache rule for static files: Next already serves the hashed
+      // `/_next/static/*` files as immutable, and the files in `public/`
+      // (`/img/*`, `/logo.png`, …) keep their names when they are replaced,
+      // so they must stay revalidated (Next's default for `public/`).
     ];
   },
   experimental: {
