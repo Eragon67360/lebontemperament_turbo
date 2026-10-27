@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 
 import { useNow } from "@/hooks/useNow";
 
+import { frenchClock, roundedWindow } from "@repo/domain/utils/parisClock";
 // --- Data Interfaces (No changes here) ---
 export interface Delivery {
   id: string;
@@ -42,7 +43,11 @@ export interface DeliveryRecipient {
   longitude?: number | null;
 }
 
-// --- Helper Functions (No changes here) ---
+// --- Helper Functions ---
+//
+// Times are the recipient's: Paris wall-clock, in the « 9 h 15 » style of
+// the SMS, the pushes and the app, never the viewer's zone. The server and
+// the browser then render the same digits (no hydration mismatch).
 export function calculateETA(
   iso: string | null,
   delayMinutes: number | null,
@@ -55,22 +60,22 @@ export function calculateETA(
   return scheduledDate;
 }
 
+/** « 9 h 15 », « 14 h », Paris time; "--:--" while there is no time. */
 export function formatTime(date: Date | null): string {
   if (!date) return "--:--";
-  return date.toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return frenchClock(date);
 }
 
+const PARIS_DAY = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: "Europe/Paris",
+  day: "2-digit",
+  month: "2-digit",
+});
+
+/** « 10 h 31 le 27/10 », Paris time, after « livré à ». */
 export function formatDateTime(date: Date | null): string {
   if (!date) return "--:--";
-  return date.toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return `${frenchClock(date)} le ${PARIS_DAY.format(date)}`;
 }
 
 function formatTimeRangeLabel(
@@ -86,9 +91,9 @@ function formatTimeRangeLabel(
 }
 
 /**
- * Format per-recipient range: 30-min window with 15-min rounding.
- * e.g. scheduled 09:29 → "09:15 – 09:45"
- * Returns "HH:MM – HH:MM" or "--:--" if no scheduled_at.
+ * The recipient's window: the scheduled time (plus the announced delay)
+ * rounded to the nearest quarter hour, ±15 min, as the SMS and the pushes
+ * announce it: 09:29 → « 9 h 15 – 9 h 45 ». "--:--" without a scheduled_at.
  */
 export function formatRecipientRange(
   scheduledAt: string | null,
@@ -97,10 +102,7 @@ export function formatRecipientRange(
   if (!scheduledAt) return "--:--";
   const base = calculateETA(scheduledAt, delayMinutes);
   if (!base) return "--:--";
-  const quarterMs = 15 * 60 * 1000;
-  const rounded = new Date(Math.round(base.getTime() / quarterMs) * quarterMs);
-  const start = new Date(rounded.getTime() - 15 * 60 * 1000);
-  const end = new Date(rounded.getTime() + 15 * 60 * 1000);
+  const { start, end } = roundedWindow(base);
   return `${formatTime(start)} – ${formatTime(end)}`;
 }
 
