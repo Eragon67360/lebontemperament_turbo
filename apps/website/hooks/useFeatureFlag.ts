@@ -7,12 +7,11 @@ import type { PublicFeatureFlags } from "@/lib/featureFlagKeys";
 /**
  * Reads a feature flag from the value rendered on the server
  * (`FeatureFlagProvider`). Synchronous: nothing to fetch and no Realtime
- * subscription per component any more; `isLoading` and `error` stay for
- * the callers written against the former fetching hook.
+ * subscription per component.
  */
 export function useFeatureFlag(flag: keyof PublicFeatureFlags) {
   const flags = useFeatureFlags();
-  return { isEnabled: flags[flag], isLoading: false, error: null };
+  return { isEnabled: flags[flag] };
 }
 
 /** The 40 years anniversary feature (`anniversary_40_years`). */

@@ -26,8 +26,3 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.GOOGLE_AUTH_ERROR]: "Erreur lors de la connexion avec Google",
   [ERROR_CODES.ACCOUNT_NOT_FOUND]: "Aucun compte n'existe avec cet email",
 } as const;
-
-export type ErrorCode = keyof typeof ERROR_CODES;
-
-export const getErrorMessage = (code: ErrorCode | string): string =>
-  ERROR_MESSAGES[code as ErrorCode] || "Une erreur inattendue est survenue";
