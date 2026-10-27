@@ -1,4 +1,7 @@
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
+import { markReadSchema } from "@/utils/bug-reports/apiSchemas";
+import { databaseErrorResponse } from "@/utils/databaseErrors";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -11,15 +14,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const { bug_report_id } = await request.json();
-  const currentUserId = authCheck.user.id;
-
-  if (!bug_report_id) {
+  const parsed = parsePatchBody(markReadSchema, await readJson(request));
+  if (!parsed.ok) {
     return NextResponse.json(
-      { error: "bug_report_id is required" },
-      { status: 400 },
+      { error: parsed.error },
+      { status: parsed.status },
     );
   }
+  const { bug_report_id } = parsed.data;
+  const currentUserId = authCheck.user.id;
 
   const supabase = await createClient();
 
@@ -36,10 +39,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error marking messages as read:", error);
-    return NextResponse.json(
-      { error: "Failed to mark messages as read" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Les messages n'ont pas pu être marqués comme lus",
     );
   }
 }
