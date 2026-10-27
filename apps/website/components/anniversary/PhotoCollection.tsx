@@ -1,11 +1,12 @@
 "use client";
 
 import CloudinaryImage from "@/components/CloudinaryImage";
+import { useModalDialog } from "@/hooks/useModalDialog";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Photo } from "@/types/anniversary";
 import { RoundedSize } from "@/utils/types";
 import { AnimatePresence, motion, useInView } from "motion/react";
-import { useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import AnniversaryCTA from "./AnniversaryCTA";
 import ProgrammeHeading from "./programme/ProgrammeHeading";
@@ -21,6 +22,11 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
   const shouldReduceMotion = useReducedMotion();
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  const lightboxTitleId = useId();
+  const closeLightbox = useCallback(() => setSelectedPhoto(null), []);
+  // Escape, focus in, Tab kept inside, focus back on close, no scroll behind.
+  useModalDialog(lightboxRef, selectedPhoto !== null, closeLightbox);
 
   const categories = [
     "Tous",
@@ -50,12 +56,14 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="bg-surface-secondary/60 mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full p-1"
+          className="bg-surface-secondary/60 isolate mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full p-1"
         >
           {categories.map((category) => (
             <button
               key={category}
+              type="button"
               onClick={() => setSelectedCategory(category)}
+              aria-pressed={selectedCategory === category}
               className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${
                 selectedCategory === category
                   ? "text-white"
@@ -136,12 +144,17 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
       <AnimatePresence>
         {selectedPhoto && (
           <motion.div
+            ref={lightboxRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={lightboxTitleId}
+            tabIndex={-1}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-            onClick={() => setSelectedPhoto(null)}
+            onClick={closeLightbox}
           >
             <motion.div
               layoutId={selectedPhoto.id}
@@ -171,7 +184,10 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
                 priority
               />
               <div className="absolute bottom-0 left-0 w-full bg-linear-to-t from-black/70 to-transparent p-4 text-white sm:p-6">
-                <h3 className="text-lg font-medium sm:text-xl">
+                <h3
+                  id={lightboxTitleId}
+                  className="text-lg font-medium sm:text-xl"
+                >
                   {selectedPhoto.title}
                 </h3>
                 <p className="mt-1 text-sm font-light text-white/80">
@@ -183,7 +199,7 @@ const PhotoCollection = ({ photos }: PhotoCollectionProps) => {
               </div>
             </motion.div>
             <button
-              onClick={() => setSelectedPhoto(null)}
+              onClick={closeLightbox}
               className="absolute top-4 right-4 rounded-full bg-black/20 p-2 text-white/60 transition-colors hover:text-white"
               aria-label="Fermer la photo"
             >
