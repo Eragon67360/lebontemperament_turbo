@@ -22,6 +22,11 @@ assert.equal(
   documentFileName("Gazette n°12 (été).PDF"),
   "Gazette-n-12-ete.pdf",
 );
+// Ligatures are folded, not dropped.
+assert.equal(
+  documentFileName("Œuvres de Fauré (chœur).pdf"),
+  "Oeuvres-de-Faure-choeur.pdf",
+);
 assert.equal(documentFileName("  ¿¿¿.pdf"), "document.pdf");
 assert.equal(documentFileName("x".repeat(400)).length, 150);
 for (const name of [
@@ -40,6 +45,7 @@ assert.equal(uniqueFileName("a.pdf", ["a.pdf", "a-2.pdf"]), "a-3.pdf");
 // Collection slugs.
 assert.equal(collectionSlug("Programmes de concert"), "programmes-de-concert");
 assert.equal(collectionSlug("Pêle-Mêle !"), "pele-mele");
+assert.equal(collectionSlug("Chœur et orchestre"), "choeur-et-orchestre");
 assert.match(
   collectionSlug("Textes de l'association"),
   COLLECTION_SLUG_PATTERN,

@@ -10,7 +10,9 @@ import {
 
 // --- Accents, case and spaces never get in the way ---
 assert.equal(normalizeSearch("  Thérèse   MARTIN "), "therese martin");
-assert.equal(normalizeSearch("Chœur"), "chœur");
+assert.equal(normalizeSearch("Chœur"), "choeur");
+assert.ok(matchesSearch(["Chœur d'hommes"], "choeur"));
+assert.ok(matchesSearch(["Choeur d'hommes"], "chœur"));
 assert.ok(matchesSearch(["Thérèse Martin"], "therese"));
 assert.ok(matchesSearch(["Thérèse Martin"], "MARTIN thé"));
 assert.ok(!matchesSearch(["Thérèse Martin"], "paul"));

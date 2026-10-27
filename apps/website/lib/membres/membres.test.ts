@@ -63,6 +63,9 @@ assert.ok(!hasVoice(member("A B", "Altesse"), "alte"));
 // Search ignores accents and case, across words.
 assert.ok(matchesSearch(member("Élise SCHMITT"), "elise schm"));
 assert.ok(!matchesSearch(member("Élise SCHMITT"), "weber"));
+// Ligatures fold too: « loeb » finds « LŒB » and the other way round.
+assert.ok(matchesSearch(member("Noé LŒB"), "loeb"));
+assert.ok(matchesSearch(member("Noé LOEB"), "lœb"));
 
 const rehearsal = (over: Partial<MemberRehearsal>): MemberRehearsal => ({
   id: "r",

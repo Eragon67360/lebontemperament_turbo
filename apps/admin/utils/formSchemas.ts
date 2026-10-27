@@ -206,16 +206,6 @@ export type GalleryVideoFormValues = z.output<typeof galleryVideoFormSchema>;
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** "Concert de Noël 2024" → "concert-de-noel-2024" */
-export function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
-
 /** A concert story (the website's `/concerts/[slug]` page). */
 export const projectFormSchema = z.object({
   name: requiredString("Le nom est requis"),

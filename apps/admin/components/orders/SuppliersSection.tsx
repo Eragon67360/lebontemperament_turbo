@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatEuros, type SaleSummary } from "@repo/domain/utils/orders";
+import { slugify } from "@repo/domain/utils/slug";
 import { Truck } from "lucide-react";
 
 /**
@@ -32,7 +33,7 @@ export function SuppliersSection({ summary }: { summary: SaleSummary }) {
     <div className="space-y-4">
       {summary.suppliers.map((supplier) => {
         const name = supplier.supplier ?? "Sans fournisseur";
-        const headingId = `supplier-${slug(name)}`;
+        const headingId = `supplier-${slugify(name)}`;
         return (
           <Card key={name} className="overflow-hidden p-0">
             <section aria-labelledby={headingId}>
@@ -99,12 +100,4 @@ export function SuppliersSection({ summary }: { summary: SaleSummary }) {
       })}
     </div>
   );
-}
-
-function slug(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-");
 }

@@ -1,3 +1,5 @@
+import { slugify } from "./slug";
+
 /**
  * Row of drive_folders that is the whole Drive, not a tab. The admin does not
  * show it (nobody edits it); the Drive sync still walks it.
@@ -56,16 +58,7 @@ export const driveFolderUrl = (folderId: string): string =>
  * no letter or digit.
  */
 export const slugifyDriveLabel = (label: string): string =>
-  (typeof label === "string" ? label : "")
-    .toLowerCase()
-    .replace(/œ/g, "oe")
-    .replace(/æ/g, "ae")
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, DRIVE_LABEL_MAX_LENGTH)
-    .replace(/-+$/, "");
+  slugify(typeof label === "string" ? label : "", DRIVE_LABEL_MAX_LENGTH);
 
 export interface DriveFolderRef {
   id: string;

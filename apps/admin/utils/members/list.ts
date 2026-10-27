@@ -13,6 +13,7 @@ import type {
   RosterOwnedField,
   RosterReview,
 } from "@repo/domain/roster/types";
+import { foldAccents } from "@repo/domain/utils/slug";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -238,8 +239,7 @@ export const NO_FILTERS: MemberFilters = {
   role: "all",
 };
 
-const fold = (value: string) =>
-  value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const fold = (value: string) => foldAccents(value).toLowerCase();
 
 /**
  * The accounts matching the filters, sorted by name (French order). The

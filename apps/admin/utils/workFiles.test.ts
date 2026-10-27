@@ -76,7 +76,7 @@ assert.equal(storageSafeName("あいう"), "fichier");
 assert.equal(storageSafeName(""), "fichier");
 assert.ok(storageSafeName(`${"a".repeat(300)}.pdf`).length <= 120);
 assert.ok(storageSafeName(`${"a".repeat(300)}.pdf`).endsWith(".pdf"));
-assert.match(storageSafeName("Œuvre à l'été.docx"), /^[A-Za-z0-9._-]+$/);
+assert.equal(storageSafeName("Œuvre à l'été.docx"), "Oeuvre_a_l_ete.docx");
 
 // --- Content type
 
