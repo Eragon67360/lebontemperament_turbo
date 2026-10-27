@@ -104,8 +104,8 @@ assert.equal(firstNameOf(""), "");
     html,
     /href="\/dashboard\/public\/concerts\/prochains-concerts"/,
   );
-  assert.match(html, />Répétition<\/div>/);
-  assert.match(html, />Concert<\/div>/);
+  assert.match(html, />Répétition<\/span>/);
+  assert.match(html, />Concert<\/span>/);
 }
 
 // --- DateBlock: the two sizes ---
