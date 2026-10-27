@@ -1,5 +1,27 @@
 import { CreateFileDTO, FileRecord } from "@/types/files";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
+
+const filesKey = (programId: string, groupId: string, folderId?: string) =>
+  ["files", programId, groupId, folderId ?? null] as const;
+
+async function fetchFiles(
+  programId: string,
+  groupId: string,
+  folderId?: string,
+): Promise<FileRecord[]> {
+  const response = await fetch(
+    `/api/files?programId=${programId}&groupId=${groupId}${
+      folderId ? `&folderId=${folderId}` : ""
+    }`,
+  );
+  if (!response.ok) throw new Error("Failed to fetch files");
+  return response.json() as Promise<FileRecord[]>;
+}
 
 // Fetch the files of one folder (root when folderId is undefined)
 export function useFiles(
@@ -8,17 +30,25 @@ export function useFiles(
   folderId?: string,
 ) {
   return useQuery({
-    queryKey: ["files", programId, groupId, folderId ?? null],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/files?programId=${programId}&groupId=${groupId}${
-          folderId ? `&folderId=${folderId}` : ""
-        }`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch files");
-      return response.json() as Promise<FileRecord[]>;
-    },
+    queryKey: filesKey(programId, groupId, folderId),
+    queryFn: () => fetchFiles(programId, groupId, folderId),
   });
+}
+
+/**
+ * The folder's files read again now, whatever the cache's age or an
+ * in-flight refetch; the cache takes them so the explorer shows them. For
+ * a save whose answer was lost: it tells whether the row exists after all.
+ */
+export async function refetchFiles(
+  queryClient: QueryClient,
+  programId: string,
+  groupId: string,
+  folderId?: string,
+): Promise<FileRecord[]> {
+  const files = await fetchFiles(programId, groupId, folderId);
+  queryClient.setQueryData(filesKey(programId, groupId, folderId), files);
+  return files;
 }
 
 // Create file record mutation (the upload to storage happens before)
