@@ -64,7 +64,8 @@
       "passThroughEnv": [
         "VERCEL_AUTOMATION_BYPASS_SECRET",
         "E2E_ALLOW_WRITES",
-        "SUPABASE_URL"
+        "SUPABASE_URL",
+        "LOCAL_WEBSITE_URL"
       ]
     }
   }
