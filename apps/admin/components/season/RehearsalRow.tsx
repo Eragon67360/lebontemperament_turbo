@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DateBlock } from "@/components/ui/date-block";
-import { RowActionsMenu } from "@/components/ui/row-actions-menu";
+import { RowActions, RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   formatLongDateFr,
@@ -71,14 +71,15 @@ export function RehearsalRow({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <RowActions
+          menu={<RowActionsMenu name={rehearsal.name} onDelete={onDelete} />}
+        >
           <Button type="button" variant="outline" size="sm" onClick={onEdit}>
             <Pencil aria-hidden />
             Modifier
             <span className="sr-only"> « {rehearsal.name} »</span>
           </Button>
-          <RowActionsMenu name={rehearsal.name} onDelete={onDelete} />
-        </div>
+        </RowActions>
       </div>
     </Card>
   );

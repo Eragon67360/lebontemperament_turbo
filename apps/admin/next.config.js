@@ -11,16 +11,25 @@ const nextConfig = {
   },
   transpilePackages: ["@repo/domain"],
   images: {
+    // Only the hosts the admin's images come from: Supabase Storage of the
+    // production and staging projects, the custom domain that older
+    // production rows still point at, and Cloudinary.
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.supabase.co",
+        hostname: "fsklunxplbbtzgurwqmc.supabase.co",
         port: "",
         pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
-        hostname: "**.lebontemperament.com",
+        hostname: "cevuqyhwtzjujxsocxkb.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api.lebontemperament.com",
         port: "",
         pathname: "/storage/v1/object/public/**",
       },

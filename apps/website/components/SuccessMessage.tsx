@@ -1,6 +1,6 @@
 // components/SuccessMessage.tsx
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { VideoCarousel, type Video } from "./VideoCarousel";
 
 interface SuccessMessageProps {
@@ -11,6 +11,15 @@ export const SuccessMessage = ({ onClose }: SuccessMessageProps) => {
   const [stage, setStage] = useState<"initial" | "videos" | "conclusion">(
     "initial",
   );
+  const [introDone, setIntroDone] = useState(false);
+
+  // The videos start two seconds after the intro animation ends; closing the
+  // message first cancels the wait.
+  useEffect(() => {
+    if (!introDone) return;
+    const timer = setTimeout(() => setStage("videos"), 2000);
+    return () => clearTimeout(timer);
+  }, [introDone]);
 
   const videos: Video[] = [
     { url: "/videos/video1.mp4", caption: "Bon, y a des gens motivés..." },
@@ -47,7 +56,7 @@ export const SuccessMessage = ({ onClose }: SuccessMessageProps) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           className="mx-auto max-w-2xl px-4 text-center md:px-8"
-          onAnimationComplete={() => setTimeout(() => setStage("videos"), 2000)}
+          onAnimationComplete={() => setIntroDone(true)}
         >
           <motion.div
             className="relative mb-8 inline-block"

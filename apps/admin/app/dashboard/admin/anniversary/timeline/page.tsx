@@ -53,6 +53,7 @@ export default function TimelinePage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={events.length > 0}
         isEmpty={events.length === 0}
         onRetry={() => refetch()}
         errorDescription="La chronologie n'a pas pu être chargée."

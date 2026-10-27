@@ -1,3 +1,5 @@
+import { foldAccents } from "@repo/domain/utils/slug";
+
 /** One member as `/api/membres` returns them (« Prénom NOM » in one field). */
 export interface Member {
   "NOM Prénom": string;
@@ -6,12 +8,12 @@ export interface Member {
   photoUrl?: string;
 }
 
-/** Lower case without accents, to compare and sort « Élise » with « elise ». */
+/**
+ * Lower case without accents or ligatures, to compare and sort « Élise »
+ * with « elise » and « Lœb » with « loeb ».
+ */
 export function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  return foldAccents(text).toLowerCase();
 }
 
 const isUpperWord = (word: string) =>

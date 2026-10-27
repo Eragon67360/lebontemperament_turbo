@@ -2,7 +2,7 @@
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
@@ -47,6 +47,15 @@ export function FileUpload({
     }
   });
 
+  // The object URL this field made for the picked image. It is released once
+  // the preview moves on (another pick, « Retirer », a new stored file) or the
+  // field goes away; a blob URL a parent passes as the stored image stays its own.
+  const pickedUrl = useRef<string | null>(null);
+  useEffect(() => {
+    if (!preview || preview !== pickedUrl.current) return;
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
@@ -77,11 +86,10 @@ export function FileUpload({
         return;
       }
       const objectUrl = URL.createObjectURL(file);
+      pickedUrl.current = objectUrl;
       setPreview(objectUrl);
       setPdfFile(null);
       onFileSelect(file);
-
-      return () => URL.revokeObjectURL(objectUrl);
     },
     [onFileSelect, mode, maxPdfMegabytes],
   );

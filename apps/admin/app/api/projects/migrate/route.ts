@@ -1,4 +1,5 @@
 import { PROJECT_COLUMNS } from "@/lib/columns";
+import { websiteUrl } from "@/lib/website";
 import { checkAuthorization } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
@@ -96,7 +97,7 @@ export async function POST() {
 
   try {
     // Fetch JSON data from the website's public folder
-    const jsonUrl = `${process.env.NEXT_PUBLIC_WEBSITE_URL || "http://localhost:3002"}/json/projects.json`;
+    const jsonUrl = websiteUrl("/json/projects.json");
     const response = await fetch(jsonUrl);
 
     if (!response.ok) {

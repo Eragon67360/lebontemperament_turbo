@@ -188,6 +188,7 @@ export default function AssembliesPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={!!data}
         isEmpty={assemblies.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les assemblées générales n'ont pas pu être chargées."

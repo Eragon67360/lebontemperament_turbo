@@ -9,15 +9,10 @@ import {
   isUpcomingTour,
   splitConcerts,
   splitTours,
-  todayIso,
   tourPeriodLabel,
 } from "./schedule";
 
-// --- todayIso: the local day, not the UTC one ---
-// 00:30 local on the 4th: UTC may still be the 3rd west of Greenwich, or
-// already the 4th east of it; the admin's calendar says the 4th either way.
-assert.equal(todayIso(new Date(2026, 9, 4, 0, 30)), "2026-10-04");
-assert.equal(todayIso(new Date(2026, 0, 1, 23, 59)), "2026-01-01");
+// « Today » is the Paris day: `parisToday` of @repo/domain, tested there.
 
 // --- Concerts: today stays upcoming; upcoming soonest first, past most recent first ---
 {

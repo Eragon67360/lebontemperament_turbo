@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DateBlock } from "@/components/ui/date-block";
-import { RowActionsMenu } from "@/components/ui/row-actions-menu";
+import { RowActions, RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   concertTitle,
@@ -105,7 +105,7 @@ export function ConcertRow({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <RowActions menu={<RowActionsMenu name={title} onDelete={onDelete} />}>
           {concert.related_link && (
             <Button variant="outline" size="sm" asChild>
               <a href={concert.related_link} target="_blank" rel="noreferrer">
@@ -120,8 +120,7 @@ export function ConcertRow({
             Modifier
             <span className="sr-only"> « {title} »</span>
           </Button>
-          <RowActionsMenu name={title} onDelete={onDelete} />
-        </div>
+        </RowActions>
       </div>
     </Card>
   );

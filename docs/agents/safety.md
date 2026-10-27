@@ -43,7 +43,7 @@ Any bulk change or deletion (when approved): count first, restrict by the narrow
 
 ## Third-party settings
 
-Vercel, Supabase, Stripe, Google Cloud, Firebase, Twilio, Cloudinary, GitHub, Google Play, App Store Connect, DNS: reading settings through an API to verify something is fine; changing them needs the owner's explicit OK for that change. **Code first, settings after**: deploy the code that handles a setting before the setting is switched on, write the order down in the PR, and verify each step as the owner completes it.
+Vercel, Supabase, Google Cloud, Firebase, Twilio, Cloudinary, GitHub, Google Play, App Store Connect, DNS: reading settings through an API to verify something is fine; changing them needs the owner's explicit OK for that change. **Code first, settings after**: deploy the code that handles a setting before the setting is switched on, write the order down in the PR, and verify each step as the owner completes it.
 
 ## Security review checklist
 
@@ -53,7 +53,7 @@ Use it on every change touching data access, auth, payments, uploads or user-sub
 - **Service-role key**: server-side only (route handlers, server actions, edge functions), never in client components or the mobile app, and every use is preceded by an explicit authorization check (a service-role query ignores RLS).
 - **Auth** (`@supabase/ssr`): sessions checked server-side in `proxy.ts` / route handlers; admin pages check `admin` / `superadmin`, not just "signed in"; role changes only by `superadmin` (or as the code defines).
 - **API routes** (`apps/website/app/api/**`, `apps/admin/app/api/**`): authentication, input validation, reCAPTCHA where abuse is possible, no user enumeration, rate limits where cheap to abuse (Vercel Firewall), consistent errors without stack traces.
-- **Stripe** (CD catalogue route only, being removed, #318): amounts computed server-side, no secret key in client code.
+- **Payments**: none in this repository. Donations go through HelloAsso's own pages (PR #277) and the last Stripe code left with #785: no payment library, key or webhook belongs here.
 - **Deliveries**: `public_token` tracking links expire (`expires_at`), expose only what the recipient needs, and stop sharing the driver's location after the round.
 - **Uploads**: type and size limits; images through Cloudinary; no SVG with scripts.
 - **Disclosure**: the repo is public. File security issues by impact and fix, without step-by-step exploits; publish details only after the fix is live.

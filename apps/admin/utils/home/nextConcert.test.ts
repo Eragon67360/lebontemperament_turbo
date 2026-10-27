@@ -7,8 +7,9 @@ import {
   siteConcertsUrl,
 } from "./nextConcert";
 
-// Wednesday 7 October 2026, 21:00 local time.
-const now = new Date(2026, 9, 7, 21, 0, 0);
+// Wednesday 7 October 2026, 21:00 in Paris (19:00 UTC). Instants, not local
+// dates: the expectations hold under any TZ (CI runs in UTC).
+const now = new Date("2026-10-07T19:00:00Z");
 
 const concerts = [
   { id: "past", name: "Passé", date: "2026-10-01", time: "20:00:00" },
@@ -23,7 +24,7 @@ const concerts = [
   { id: "today", name: "Ce soir", date: "2026-10-07", time: "20:00:00" },
 ];
 
-// --- Which concert is next (local day, not the clock time) ---
+// --- Which concert is next (the Paris day, not the clock time) ---
 assert.equal(pickNextConcert(concerts, now)?.id, "today");
 assert.equal(pickNextConcert(concerts.slice(0, 3), now)?.id, "nov");
 assert.equal(pickNextConcert([concerts[0]!], now), null);
@@ -37,9 +38,14 @@ assert.equal(daysUntil("2026-11-15", now), 39);
 assert.equal(daysUntil("2026-10-06", now), -1);
 assert.equal(daysUntil("bientôt", now), null);
 // Across the end of summer time (25 October 2026): still whole days.
-assert.equal(daysUntil("2026-10-26", new Date(2026, 9, 24, 23, 30)), 2);
-// Just after midnight, the day has turned.
-assert.equal(daysUntil("2026-10-08", new Date(2026, 9, 8, 0, 5)), 0);
+// 23:30 in Paris on the 24th is 21:30 UTC (summer time, UTC+2).
+assert.equal(daysUntil("2026-10-26", new Date("2026-10-24T21:30:00Z")), 2);
+// Just after midnight in Paris (00:05 on the 8th, 22:05 UTC on the 7th) the
+// day has turned, even where the device's own clock still says the 7th.
+const afterMidnight = new Date("2026-10-07T22:05:00Z");
+assert.equal(daysUntil("2026-10-08", afterMidnight), 0);
+assert.equal(daysUntil("2026-10-07", afterMidnight), -1);
+assert.equal(pickNextConcert(concerts, afterMidnight)?.id, "nov");
 
 // --- The countdown sentence ---
 assert.equal(countdownFr(0, "Ce soir"), "C’est aujourd’hui : « Ce soir ».");

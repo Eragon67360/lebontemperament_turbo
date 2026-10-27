@@ -130,6 +130,7 @@ export default function StoriesPage() {
       <DataState
         isLoading={isPending}
         isError={isError}
+        hasData={projects.length > 0}
         isEmpty={projects.length === 0}
         onRetry={() => refetch()}
         errorDescription="Les histoires n'ont pas pu être chargées."

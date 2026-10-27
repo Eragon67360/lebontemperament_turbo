@@ -7,7 +7,6 @@ import { createPublicClient } from "@/utils/supabase/public";
 import { unstable_cache } from "next/cache";
 
 // Server-only reader (see featureFlagKeys.ts for what client code may import).
-export { ANNIVERSARY_FLAG_KEY, type PublicFeatureFlags };
 
 const DEFAULT_FLAGS: PublicFeatureFlags = { anniversary: false };
 

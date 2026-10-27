@@ -1,6 +1,7 @@
 "use client";
 
 import { hasSessionCookie, loadBrowserClient } from "@/utils/supabase/lazy";
+import { isAdminRole } from "@repo/domain/utils/roles";
 import type { User } from "@supabase/supabase-js";
 import React, {
   createContext,
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .select("role")
           .eq("id", userId)
           .single();
-        isAdmin = profile?.role === "admin" || profile?.role === "superadmin";
+        isAdmin = isAdminRole(profile?.role);
       } catch (error) {
         // An unknown role counts as a plain member for this visit.
         console.error("[Auth] Role read failed:", error);

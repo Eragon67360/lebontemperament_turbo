@@ -3,11 +3,11 @@
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { PROGRAMME_FIRST_YEAR } from "@/lib/anniversaryProgramme";
 import type { FormConfig, Memory } from "@/types/anniversary";
+import { toast } from "@heroui/react";
 import { FILL_TIME_FIELD, HONEYPOT_FIELD } from "@repo/domain/utils/formAbuse";
 import { motion, useInView } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import ProgrammeHeading from "./programme/ProgrammeHeading";
 import { PROGRAMME_PARTS } from "./programme/sections";
 import { BUTTON_TEAL, CAPS, PAPER, TEXT } from "./programme/theme";
@@ -84,7 +84,7 @@ const MemorySharing = ({
       setFormData({ name: "", email: "", message: "", year: "" });
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error("Une erreur est survenue. Veuillez réessayer.");
+      toast.danger("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }

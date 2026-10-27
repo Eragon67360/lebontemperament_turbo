@@ -1,4 +1,5 @@
 import { checkAuthorization } from "@/utils/auth";
+import { loadMessageSummaries, NO_MESSAGES } from "@/utils/bug-reports/inbox";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -78,43 +79,26 @@ export async function GET() {
     return NextResponse.json({ error: reportsError.message }, { status: 500 });
   }
 
-  // For each bug report, get the messages count and last message
-  const transformedData = await Promise.all(
-    bugReports.map(async (report) => {
-      // Get messages for this report, ordered by created_at
-      const { data: messages, error: messagesError } = await supabase
-        .from("bug_messages")
-        .select("id, created_at, message, sender_id, is_read")
-        .eq("bug_report_id", report.id)
-        .order("created_at", { ascending: true });
-
-      if (messagesError) {
-        console.error("Error fetching messages:", messagesError);
-      }
-
-      const messagesList = messages || [];
-      const lastMessage =
-        messagesList.length > 0 ? messagesList[messagesList.length - 1] : null;
-
-      // Count unread messages where current user is the receiver and is_read = false
-      const { count: unreadCount } = await supabase
-        .from("bug_messages")
-        .select("*", { count: "exact", head: true })
-        .eq("bug_report_id", report.id)
-        .eq("receiver_id", userId)
-        .eq("is_read", false);
-
-      return {
-        ...report,
-        profiles: Array.isArray(report.profiles)
-          ? report.profiles[0]
-          : report.profiles,
-        last_message: lastMessage,
-        message_count: messagesList.length,
-        unread_count: unreadCount || 0,
-      };
-    }),
+  // The messages of every report in one query: count, last one, unread.
+  const messages = await loadMessageSummaries(
+    supabase,
+    userId,
+    bugReports.map((report) => report.id),
   );
+  if (!messages.ok) {
+    return NextResponse.json(
+      { error: messages.error.message },
+      { status: 500 },
+    );
+  }
+
+  const transformedData = bugReports.map((report) => ({
+    ...report,
+    profiles: Array.isArray(report.profiles)
+      ? report.profiles[0]
+      : report.profiles,
+    ...(messages.summaries.get(report.id) ?? NO_MESSAGES),
+  }));
 
   return NextResponse.json(transformedData);
 }

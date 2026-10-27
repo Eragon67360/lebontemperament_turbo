@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# `admin`: the dashboard
 
-## Getting Started
+[admin.lebontemperament.com](https://admin.lebontemperament.com): members and roles, concerts and tours, the public site's content and settings, the 40 years campaign, events and rehearsals, the Drive index, association documents, orders, signalements. Next.js 16 (App Router), React 19, TypeScript 7, Tailwind CSS v4, shadcn/ui on Radix, TanStack Query, react-hook-form + zod. Admin and superadmin accounts only.
 
-First, run the development server:
+## Running it
+
+From the repository root, after `npm ci` and the env files ([env/README.md](../../env/README.md)):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev -- --filter=admin
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3002](http://localhost:3002) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`npm test -w admin` runs the unit tests (`scripts/run-tests.mjs` finds every `*.test.ts(x)`, about 90 s); `npx turbo build --filter=admin` builds. The dashboard reads the Supabase project its `.env.local` names: staging (`website-staging`) for development, never production ([safety](../../docs/agents/safety.md)).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
+## Before changing anything
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [docs/agents/design-guardrails.md](../../docs/agents/design-guardrails.md): direction B « Atelier guidé », tokens only, the primitives of `components/ui`; the review page `/dashboard/design-system` shows every primitive and state.
+- [docs/agents/project.md](../../docs/agents/project.md): tables, services and quirks; the navigation tree lives in `lib/navigation.ts`.
+- [AGENTS.md](AGENTS.md): Next.js 16 changed several APIs; read `node_modules/next/dist/docs/` before using one from memory.

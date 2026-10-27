@@ -1,29 +1,11 @@
 // types/files.ts
-export interface Folder {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  program_id: string;
-  group_id: string;
-  parent_folder_id: string | null;
-  path: string;
-}
+import type { Tables } from "@repo/domain/database.types";
 
-export interface FileRecord {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  original_name: string;
-  size: number;
-  mime_type: string;
-  storage_path: string;
-  program_id: string;
-  group_id: string;
-  folder_id: string | null;
-  uploaded_by: string;
-}
+/** A folder of the old Storage explorer (public.folders). */
+export type Folder = Tables<"folders">;
+
+/** A file of the old Storage explorer (public.files). */
+export type FileRecord = Tables<"files">;
 
 // types/files.ts
 export interface CreateFolderDTO {

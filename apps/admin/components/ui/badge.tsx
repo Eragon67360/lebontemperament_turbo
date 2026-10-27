@@ -32,15 +32,16 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {
   /** Leading status dot in the text colour. */
   dot?: boolean;
 }
 
+/** A `<span>`, so a chip can sit inside text: a paragraph, a heading, a button. */
 function Badge({ className, variant, dot, children, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props}>
+    <span className={cn(badgeVariants({ variant }), className)} {...props}>
       {dot && (
         <span
           aria-hidden
@@ -48,7 +49,7 @@ function Badge({ className, variant, dot, children, ...props }: BadgeProps) {
         />
       )}
       {children}
-    </div>
+    </span>
   );
 }
 

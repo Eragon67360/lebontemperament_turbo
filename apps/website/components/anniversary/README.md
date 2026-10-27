@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Cette page de célébration des 40 ans du Bon Tempérament est une expérience interactive et immersive qui combine animations spectaculaires, contenu multimédia et témoignages.
+La page `/40-ans` célèbre les 40 ans du Bon Tempérament : un programme de concert de gala (direction D), nourri par le CMS de l'admin, avec les galeries vidéo, audio et photo et le livre d'or.
 
 ## Structure des Composants
 
@@ -26,157 +26,35 @@ Couverture : sur teal profond dans un filet, un grand « 40 » (`hero_number`) e
 
 ### 5. `VideoGallery.tsx`
 
-**Rôle**: Galerie vidéo avec filtres par catégorie
-
-**Fonctionnalités**:
-
-- Grid responsive de vidéos
-- Filtres par catégorie
-- Overlay avec bouton play
-- Badges d'année
-- Placeholder pour intégration YouTube/Vimeo
-
-**Contenu**:
-
-- 6 vidéos placeholder
-- Catégories: Concert, Témoignage, Documentaire, etc.
+Galerie vidéo (`anniversary_videos`, props `videos`) : grille, filtres par catégorie, badge d'année, vignettes `CloudinaryImage` ; une vidéo s'ouvre dans `VideoModal.tsx` (YouTube).
 
 ### 6. `AudioMemories.tsx`
 
-**Rôle**: Lecteurs audio pour les souvenirs sonores
-
-**Fonctionnalités**:
-
-- Lecteurs audio avec react-h5-audio-player
-- Témoignages audio
-- Extraits musicaux historiques
-- Design avec gradients purple/indigo
-
-**Contenu**:
-
-- 6 fichiers audio placeholder
-- URLs à remplacer par les vrais fichiers
+Souvenirs sonores (`anniversary_audio_memories`, props `audioMemories`) : un `CustomAudioPlayer.tsx` (react-h5-audio-player) par souvenir, avec le locuteur et l'année.
 
 ### 7. `PhotoCollection.tsx`
 
-**Rôle**: Galerie photo en style masonry
-
-**Fonctionnalités**:
-
-- Layout masonry responsive
-- Filtres par catégorie
-- Modal lightbox pour agrandissement
-- Hover effects avec informations
-
-**Contenu**:
-
-- 9 photos placeholder
-- Images à remplacer par les vraies photos
+Galerie photo (`anniversary_photos`, props `photos`) : grille responsive en `CloudinaryImage`, filtres par catégorie, agrandissement dans une superposition.
 
 ### 8. `MemorySharing.tsx`
 
-**Rôle**: Section témoignages et formulaire de partage
+Livre d'or : les souvenirs mis en avant (`anniversary_memories`, props `featuredMemories`) et le formulaire, dont les textes et l'état viennent de `anniversary_form_config` (props `config`). L'envoi part vers `POST /api/anniversary/submit-memory` avec un champ-piège et un temps de remplissage minimal (`@repo/domain/utils/formAbuse`) ; un souvenir est enregistré `is_approved: false` et attend la modération dans l'admin. `prefillYear` reporte l'année choisie sur une saison.
 
-**Fonctionnalités**:
+## Contenu
 
-- Grid de témoignages existants
-- Formulaire de soumission de témoignage
-- Design avec icônes et citations
-- Validation et soumission (à connecter à l'API)
-
-**Contenu**:
-
-- 6 témoignages placeholder
-- Formulaire à connecter au backend
-
-## Intégration du Contenu Réel
-
-### Remplacement des Placeholders
-
-#### Vidéos (`VideoGallery.tsx`)
-
-```typescript
-// Remplacer dans videoItems array
-{
-  id: "1",
-  title: "Titre réel",
-  description: "Description réelle",
-  thumbnail: "URL Cloudinary ou CDN",
-  videoUrl: "URL YouTube/Vimeo ou fichier vidéo",
-  year: 2024,
-  category: "Concert"
-}
-```
-
-#### Audio (`AudioMemories.tsx`)
-
-```typescript
-// Remplacer les URLs audio
-{
-  id: "1",
-  title: "Titre réel",
-  description: "Description réelle",
-  speaker: "Nom du locuteur",
-  year: 2024,
-  duration: "5:32",
-  audioUrl: "/audio/reel-fichier.mp3" // Chemin vers le fichier réel
-}
-```
-
-#### Photos (`PhotoCollection.tsx`)
-
-```typescript
-// Remplacer les URLs d'images
-{
-  id: "1",
-  title: "Titre réel",
-  year: 1984,
-  category: "Concert",
-  imageUrl: "URL Cloudinary ou CDN",
-  description: "Description réelle"
-}
-```
-
-#### Timeline (`AnniversaryTimeline.tsx`)
-
-```typescript
-// Mettre à jour les événements réels
-{
-  year: 1984,
-  title: "Titre réel de l'événement",
-  description: "Description détaillée réelle",
-  icon: FaMusic, // Choisir l'icône appropriée
-  color: "from-amber-500 to-orange-500" // Gradient de couleur
-}
-```
-
-#### Témoignages (`MemorySharing.tsx`)
-
-```typescript
-// Remplacer par les vrais témoignages
-{
-  id: "1",
-  author: "Nom réel",
-  role: "Rôle réel",
-  year: 1984,
-  content: "Témoignage réel",
-  avatar: "URL Cloudinary ou CDN"
-}
-```
+Tout le contenu vient du CMS de l'admin (« Campagne 40 ans » : en-tête, chiffres clés, cartes de navigation, chronologie, vidéos, souvenirs audio, photos, archives, témoignages, formulaire, modération), lu côté serveur par `lib/anniversary.ts` (`getAnniversaryPageData`, tables `anniversary_*`) et transmis en props ; les médias sont sur Cloudinary. Rien n'est codé en dur dans les composants. La page n'est servie que si le drapeau `anniversary_40_years` est actif, ou aux admins (`app/40-ans/page.tsx`, sinon 404).
 
 ## Performance et Optimisations
 
 ### Images
 
-- Utilisation de `img` tags pour les placeholders
-- Pour les images réelles, considérer CloudinaryImage pour l'optimisation
+- `CloudinaryImage` pour les images du CMS, `getImageProps` pour la photo de couverture
 - Lazy loading automatique avec `loading="lazy"`
 
 ### Animations
 
-- GSAP utilisé uniquement pour l'animation d'entrée
-- Motion (Framer Motion) pour les animations de scroll (plus performant)
-- `prefers-reduced-motion` respecté automatiquement
+- Aucune bibliothèque dédiée : `motion` (`motion/react`) pour l'animation d'entrée de la couverture et les apparitions au défilement (`MotionSection`)
+- `prefers-reduced-motion` respecté (`hooks/useReducedMotion.ts`) : la couverture est alors statique
 
 ### Code Splitting
 
@@ -202,42 +80,18 @@ Couverture : sur teal profond dans un filet, un grand « 40 » (`hero_number`) e
 
 ### Couleurs
 
-Les gradients peuvent être modifiés dans chaque composant:
-
-- Amber/Orange pour le landing
-- Blue/Cyan pour la timeline
-- Purple/Indigo pour l'audio
-- Green/Emerald pour les photos
-- Rose/Red pour les témoignages
+Les tons papier et le teal d'accent sont des jetons de page dans `programme/theme.ts` (variante sombre comprise) ; les composants n'ont ni couleur en dur ni dégradé ([design guardrails](../../../../docs/agents/design-guardrails.md)).
 
 ### Animations
 
-- Durées ajustables dans les props `transition`
-- Délais (`delay`) configurables
-- Types d'easing personnalisables
+- Durées et délais dans les props `transition` de `motion`
+- Rien ne bouge quand `prefers-reduced-motion` est actif
 
-## Prochaines Étapes
+## Pour aller plus loin
 
-1. **Intégration du contenu réel**
-   - Remplacer tous les placeholders
-   - Uploader les médias (vidéos, audio, photos)
-   - Valider les textes en français
-
-2. **Backend Integration**
-   - Connecter le formulaire de témoignages à une API
-   - Système de modération des témoignages
-   - Gestion dynamique du contenu (CMS optionnel)
-
-3. **Améliorations possibles**
-   - Lightbox avancé pour les photos (yet-another-react-lightbox déjà installé)
-   - Intégration YouTube/Vimeo pour les vidéos
-   - Partage social des témoignages
-   - Export PDF de la timeline
-
-4. **SEO**
-   - Métadonnées déjà configurées dans `page.tsx`
-   - Ajouter des structured data (JSON-LD) pour les événements
-   - Optimiser les images avec alt text descriptifs
+- Les textes et les médias se changent dans l'admin, pas dans le code.
+- Les métadonnées et le JSON-LD sont dans `app/40-ans/page.tsx` ; les aperçus de liens dans `lib/og/`.
+- Les entrées vers la page (navigation, menu du téléphone, carte de l'accueil) sont décrites dans `INTEGRATION_GUIDE.md`.
 
 ## Notes Techniques
 

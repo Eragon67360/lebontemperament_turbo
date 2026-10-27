@@ -1,7 +1,8 @@
 // « À venir / Passés » for the concerts page (F4, #480): the split of
-// concerts and tours by today's date, their sort orders and the French
-// wording of their facts. Pure and unit-tested; the page feeds it the two
-// existing queries.
+// concerts and tours by today's date (the Paris day, `parisToday` of
+// @repo/domain, as on the site), their sort orders and the French wording
+// of their facts. Pure and unit-tested; the page feeds it the two existing
+// queries.
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -23,16 +24,6 @@ export type TourLike = {
   start_date?: string | null;
   end_date?: string | null;
 };
-
-/**
- * Today as `yyyy-MM-dd` in the admin's own time zone. `toISOString()`
- * would give the UTC day, which is still yesterday in Paris before 2 am.
- */
-export function todayIso(now: Date = new Date()): string {
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
-}
 
 /** A concert dated today is still « à venir » until midnight. */
 export function isUpcomingConcert(concert: ConcertLike, today: string) {

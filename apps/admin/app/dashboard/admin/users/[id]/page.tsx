@@ -415,7 +415,7 @@ function ContactCard({
           ) : (
             <Button
               variant="link"
-              className="h-auto self-start p-0"
+              className="h-auto min-h-11 self-start px-0"
               onClick={onEmail}
             >
               Changer l’e-mail…
@@ -427,7 +427,7 @@ function ContactCard({
           <ProvenanceNote>{fromRoster}</ProvenanceNote>
           <Button
             variant="link"
-            className="h-auto self-start p-0"
+            className="h-auto min-h-11 self-start px-0"
             onClick={onRename}
           >
             Corriger le nom affiché…
@@ -456,7 +456,7 @@ function ContactCard({
           </ProvenanceNote>
           <Button
             variant="link"
-            className="h-auto self-start p-0"
+            className="h-auto min-h-11 self-start px-0"
             onClick={onVoice}
           >
             Modifier la voix…
@@ -469,7 +469,7 @@ function ContactCard({
           </ProvenanceNote>
           <Button
             variant="link"
-            className="h-auto self-start p-0"
+            className="h-auto min-h-11 self-start px-0"
             onClick={onPhoto}
           >
             Changer la photo…

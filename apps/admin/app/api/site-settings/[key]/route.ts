@@ -10,7 +10,6 @@ import {
   NOT_INSTALLED_MESSAGE,
 } from "@/utils/siteSettings/server";
 import { createClient } from "@/utils/supabase/server";
-import type { Json } from "@repo/domain/database.types";
 import {
   isSiteSettingKey,
   parseSiteSetting,
@@ -67,7 +66,7 @@ export async function PUT(request: Request, { params }: Params) {
     .upsert(
       {
         key,
-        value: parsed.value as unknown as Json,
+        value: parsed.value,
         updated_by: auth.user.id,
       },
       { onConflict: "key" },

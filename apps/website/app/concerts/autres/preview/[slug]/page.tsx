@@ -7,8 +7,6 @@ import { Avatar } from "@heroui/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
 // interface Track {
 //     title: string;
 //     duration: string;

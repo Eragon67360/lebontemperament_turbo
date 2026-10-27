@@ -557,6 +557,8 @@ const ConcertsClient = ({
                         <Link
                           href={`/concerts/${story.slug}`}
                           className="relative block h-56 overflow-hidden"
+                          aria-hidden="true"
+                          tabIndex={-1}
                         >
                           {story.banniere?.url ? (
                             <CloudinaryImage

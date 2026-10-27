@@ -163,7 +163,7 @@ function main() {
   );
   fs.writeFileSync(PUBSPEC_PATH, newPubspec);
 
-  // Output for scripts (build-local.sh uses tail -1)
+  // Output for scripts: the last line is the new version
   console.log(oldMobile);
   console.log(newMobile);
 }

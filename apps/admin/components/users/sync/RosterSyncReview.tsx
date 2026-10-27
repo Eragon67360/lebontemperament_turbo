@@ -1,7 +1,6 @@
 "use client";
 
 import { PageShell } from "@/components/layouts/PageShell";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
 import { ErrorState, ListSkeleton } from "@/components/ui/data-state";
 import { Stepper, type Step } from "@/components/ui/stepper";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
@@ -371,37 +371,34 @@ function ValidationPanel({ review }: { review: RosterReview }) {
 
   return (
     <div className="space-y-3">
+      {/* A failure (nothing can be applied): announced when it appears. */}
       {errors.length > 0 && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-          <AlertTitle>Le tableau ne peut pas être synchronisé</AlertTitle>
-          <AlertDescription>
-            <ul className="list-disc pl-5">
-              {errors.map((issue, index) => (
-                <li key={`${issue.code}-${index}`}>{issue.message}</li>
-              ))}
-            </ul>
-            <p className="mt-2">
-              Corrigez le tableau, puis cliquez sur « Relire le tableau ».
-            </p>
-          </AlertDescription>
-        </Alert>
+        <Callout
+          tone="danger"
+          role="alert"
+          title="Le tableau ne peut pas être synchronisé"
+        >
+          <ul className="list-disc pl-5">
+            {errors.map((issue, index) => (
+              <li key={`${issue.code}-${index}`}>{issue.message}</li>
+            ))}
+          </ul>
+          <p className="mt-2">
+            Corrigez le tableau, puis cliquez sur « Relire le tableau ».
+          </p>
+        </Callout>
       )}
       {warnings.length > 0 && (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-          <AlertTitle>
-            {plural(warnings.length, "point à vérifier", "points à vérifier")}{" "}
-            dans le tableau
-          </AlertTitle>
-          <AlertDescription>
-            <ul className="list-disc pl-5">
-              {warnings.map((issue, index) => (
-                <li key={`${issue.code}-${index}`}>{issue.message}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <Callout
+          tone="warning"
+          title={`${plural(warnings.length, "point à vérifier", "points à vérifier")} dans le tableau`}
+        >
+          <ul className="list-disc pl-5">
+            {warnings.map((issue, index) => (
+              <li key={`${issue.code}-${index}`}>{issue.message}</li>
+            ))}
+          </ul>
+        </Callout>
       )}
     </div>
   );
@@ -420,22 +417,23 @@ function ApplyOutcome({
 
   return (
     <section aria-labelledby="roster-apply-result" className="space-y-4">
-      <Alert variant={summary.failed > 0 ? "destructive" : "default"}>
-        {summary.failed > 0 ? (
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-        ) : (
-          <Check className="h-4 w-4" aria-hidden />
-        )}
-        <AlertTitle id="roster-apply-result">
-          {summary.failed > 0
-            ? `${plural(summary.done, "élément appliqué", "éléments appliqués")}, ${plural(summary.failed, "échec", "échecs")}`
-            : `Synchronisation appliquée : ${describeSelection(summary.invited, summary.updated)}`}
-        </AlertTitle>
-        <AlertDescription>
+      {/* Announced only when something failed; a success is already toasted. */}
+      <Callout
+        tone={summary.failed > 0 ? "danger" : "success"}
+        role={summary.failed > 0 ? "alert" : undefined}
+        title={
+          <span id="roster-apply-result">
+            {summary.failed > 0
+              ? `${plural(summary.done, "élément appliqué", "éléments appliqués")}, ${plural(summary.failed, "échec", "échecs")}`
+              : `Synchronisation appliquée : ${describeSelection(summary.invited, summary.updated)}`}
+          </span>
+        }
+      >
+        <p>
           Le détail de chaque élément est ci-dessous. Relisez le tableau pour
           vérifier le résultat ou continuer.
-        </AlertDescription>
-      </Alert>
+        </p>
+      </Callout>
 
       <ul className="divide-y rounded-md border text-sm">
         {[...failed, ...done].map((result) => (
@@ -510,22 +508,23 @@ function DeleteOutcome({
 
   return (
     <section aria-labelledby="roster-delete-result" className="space-y-3">
-      <Alert variant={summary.failed > 0 ? "destructive" : "default"}>
-        {summary.failed > 0 ? (
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-        ) : (
-          <Check className="h-4 w-4" aria-hidden />
-        )}
-        <AlertTitle id="roster-delete-result">
-          {summary.failed > 0
-            ? `${plural(summary.done, "compte supprimé", "comptes supprimés")}, ${plural(summary.failed, "échec", "échecs")}`
-            : `${plural(summary.done, "compte supprimé", "comptes supprimés")}`}
-        </AlertTitle>
-        <AlertDescription>
+      {/* Announced only when something failed; a success is already toasted. */}
+      <Callout
+        tone={summary.failed > 0 ? "danger" : "success"}
+        role={summary.failed > 0 ? "alert" : undefined}
+        title={
+          <span id="roster-delete-result">
+            {summary.failed > 0
+              ? `${plural(summary.done, "compte supprimé", "comptes supprimés")}, ${plural(summary.failed, "échec", "échecs")}`
+              : `${plural(summary.done, "compte supprimé", "comptes supprimés")}`}
+          </span>
+        }
+      >
+        <p>
           Le détail de chaque compte est ci-dessous. Les comptes en échec sont
           conservés.
-        </AlertDescription>
-      </Alert>
+        </p>
+      </Callout>
       <ul className="divide-y rounded-md border text-sm">
         {[...failed, ...done].map((result) => (
           <li

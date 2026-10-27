@@ -295,15 +295,18 @@ export const paymentFormSchema = z.object({
   note: optionalText(PAYMENT_NOTE_MAX),
 });
 export type PaymentFormValues = z.output<typeof paymentFormSchema>;
+/** What the dialog starts from: no payment method chosen yet. */
+export type PaymentFormDefaults = Omit<PaymentFormValues, "method"> & {
+  method?: PaymentMethod;
+};
 
 export function paymentFormDefaults(
   /** What is left to pay, prefilled when positive. */
   dueCents: number,
   todayIso: string,
-): PaymentFormValues {
+): PaymentFormDefaults {
   return {
     amount: dueCents > 0 ? eurosInput(dueCents) : "",
-    method: undefined as unknown as PaymentMethod,
     paid_on: parseISO(todayIso),
     note: "",
   };

@@ -1,4 +1,4 @@
-import { checkDriverAuthorization } from "@/utils/auth";
+import { checkSuperadminAuthorization } from "@/utils/auth";
 import RouteNames from "@/utils/routes";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
@@ -13,7 +13,7 @@ export default async function BugReportsLayout({
 }: {
   children: ReactNode;
 }) {
-  const auth = await checkDriverAuthorization();
+  const auth = await checkSuperadminAuthorization();
   if (!auth.authorized) {
     redirect(
       auth.status === 401 ? RouteNames.AUTH.LOGIN : RouteNames.UNAUTHORIZED,

@@ -67,6 +67,7 @@ export function ThemeSwitcher({
         className={`${buttonBaseClasses} ${theme === "light" ? selectedClasses : ""}`}
         onPress={() => setTheme("light")}
         aria-label="Passer au thème clair"
+        aria-pressed={theme === "light"}
       >
         <FiSun className={`${iconSize} ${iconClasses}`} />
       </Button>
@@ -79,6 +80,7 @@ export function ThemeSwitcher({
         className={`${buttonBaseClasses} ${theme === "dark" ? selectedClasses : ""}`}
         onPress={() => setTheme("dark")}
         aria-label="Passer au thème sombre"
+        aria-pressed={theme === "dark"}
       >
         <FiMoon className={`${iconSize} ${iconClasses}`} />
       </Button>
@@ -91,6 +93,7 @@ export function ThemeSwitcher({
         className={`${buttonBaseClasses} ${theme === "system" ? selectedClasses : ""}`}
         onPress={() => setTheme("system")}
         aria-label="Utiliser le thème du système"
+        aria-pressed={theme === "system"}
       >
         <FiMonitor className={`${iconSize} ${iconClasses}`} />
       </Button>

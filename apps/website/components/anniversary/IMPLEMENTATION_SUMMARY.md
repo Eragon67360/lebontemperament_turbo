@@ -1,5 +1,7 @@
 # Résumé de l'Implémentation - Page 40ème Anniversaire
 
+> Résumé historique de la première version de la page (3 octobre 2026, direction A, contenu placeholder). Depuis le 5 octobre 2026 la page suit la direction D « Le Programme » et lit son contenu dans le CMS de l'admin : `README.md` décrit l'état actuel. GSAP a été retiré du site, et `AnniversaryLanding`, `AnniversaryNavigation` et `AnniversaryTimeline` n'existent plus (remplacés par les composants de `programme/`).
+
 ## ✅ Ce qui a été créé
 
 ### Page Principale
@@ -11,7 +13,7 @@
 ### Composants Créés (7 composants)
 
 1. **AnniversaryLanding** - Animation d'entrée spectaculaire
-   - Animation GSAP avec particules
+   - Animation avec particules (GSAP, retiré depuis)
    - Révélation du "40" avec effet wow
    - Statistiques animées
    - Option skip
@@ -65,7 +67,7 @@
 
 ## 🚀 Technologies Utilisées
 
-- **GSAP** (v3.13.0) - Animation d'entrée spectaculaire
+- **GSAP** (v3.13.0) - Animation d'entrée (retiré depuis : `motion` seul)
 - **Motion** (Framer Motion v12.23.24) - Animations de scroll
 - **react-h5-audio-player** - Lecteurs audio
 - **@heroui/react** - Composants UI
@@ -124,7 +126,7 @@ Voir `CONTENT_STRUCTURE.md` pour les détails d'intégration.
 
 - Lazy loading des images
 - Code splitting automatique (Next.js)
-- Animations optimisées (GSAP + Motion)
+- Animations optimisées (Motion ; GSAP retiré depuis)
 - Responsive images
 
 ### Accessibilité

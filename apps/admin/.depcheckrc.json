@@ -2,7 +2,9 @@
   "ignores": [
     "@supabase/ssr",
     "@tailwindcss/postcss",
+    "server-only",
     "tailwindcss",
+    "tsx",
     "tw-animate-css"
   ]
 }

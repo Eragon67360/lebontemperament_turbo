@@ -21,9 +21,9 @@ Both Vercel projects build from the **repository root**, with a Turbo filter per
 
 `lebontemperament.com` must be **connected to Production** in the website project's domains, not set to « Redirect to www.lebontemperament.com ». A domain-level redirect answers before the site runs, so it also redirects `/.well-known/assetlinks.json` and `/.well-known/apple-app-site-association`, and Android App Links and iOS Universal Links refuse a redirected file (Play Console then lists the bare domain as not verified). The site itself sends every other path of the bare domain to `www` with a 308 (first rule of `redirects()` in `apps/website/next.config.js`).
 
-## `vercel.json` files are not read
+## No `vercel.json`
 
-Vercel only reads `vercel.json` from the Root Directory, which is the repository root here. `apps/website/vercel.json` and `apps/admin/vercel.json` are therefore never read: change the settings in the Vercel project, not in those files. Build skipping and the dead `vercel.json` files are tracked in #366.
+Vercel only reads `vercel.json` from the Root Directory, which is the repository root here, and the repository has none: every setting lives in the Vercel project (the table above). The old `apps/website/vercel.json` and `apps/admin/vercel.json` were never read and were deleted (#366).
 
 ## Deployment protection
 

@@ -1,6 +1,7 @@
 import { isAccountUser } from "@/lib/memberSession";
 import type { Database } from "@repo/domain/database.types";
 import { parseBearerToken } from "@repo/domain/utils/bearer";
+import { isAdminRole } from "@repo/domain/utils/roles";
 import {
   createClient as createSupabaseClient,
   type SupabaseClient,
@@ -50,7 +51,7 @@ function createBearerClient(token: string) {
  * refused rather than falling back to cookies). An anonymous sign-in is
  * refused like no session at all.
  */
-export async function checkAuthorization(): Promise<AuthorizationResult> {
+export async function requireUser(): Promise<AuthorizationResult> {
   const token = parseBearerToken((await headers()).get("authorization"));
 
   if (token) {
@@ -71,10 +72,15 @@ export async function checkAuthorization(): Promise<AuthorizationResult> {
 }
 
 /**
- * Check if the current authenticated user is an admin or superadmin
- * @param supabase - Supabase client instance
- * @param userId - The user ID to check (from auth.getUser())
- * @returns boolean indicating if user is admin
+ * @deprecated Former name of {@link requireUser}, the same function: any
+ * signed-in account, whatever its role. Kept for the Drive routes.
+ */
+export const checkAuthorization = requireUser;
+
+/**
+ * Whether `userId` is an admin or a superadmin, read with `supabase` (the
+ * caller's own client, so row-level security applies). The Drive proxy uses
+ * it for the whole-Drive root.
  */
 export async function isAdmin(
   supabase: SupabaseClient<Database>,
@@ -91,7 +97,7 @@ export async function isAdmin(
     return false;
   }
 
-  return profile?.role === "admin" || profile?.role === "superadmin";
+  return isAdminRole(profile?.role);
 }
 
 /**
@@ -113,11 +119,8 @@ export async function checkAdminAuth() {
     .eq("id", data.user.id)
     .single();
 
-  const isAdminUser =
-    userProfile?.role === "admin" || userProfile?.role === "superadmin";
-
   return {
-    isAdmin: isAdminUser,
+    isAdmin: isAdminRole(userProfile?.role),
     user: data.user,
   };
 }

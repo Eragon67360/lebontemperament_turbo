@@ -148,7 +148,11 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           className="mt-12 text-center"
         >
           {youtubeUrl && (
-            <AnniversaryCTA href={youtubeUrl} external>
+            <AnniversaryCTA
+              href={youtubeUrl}
+              external
+              ariaLabel="Voir plus sur YouTube"
+            >
               Voir Plus sur <FaYoutube />
             </AnniversaryCTA>
           )}

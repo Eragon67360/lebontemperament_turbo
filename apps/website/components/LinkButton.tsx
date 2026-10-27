@@ -6,7 +6,14 @@ import type { AnchorHTMLAttributes, ReactNode } from "react";
 type LinkButtonProps = LinkProps &
   Pick<
     AnchorHTMLAttributes<HTMLAnchorElement>,
-    "target" | "rel" | "download" | "aria-label" | "onClick" | "id" | "title"
+    | "target"
+    | "rel"
+    | "download"
+    | "aria-label"
+    | "aria-describedby"
+    | "onClick"
+    | "id"
+    | "title"
   > &
   ButtonVariants & {
     children: ReactNode;
