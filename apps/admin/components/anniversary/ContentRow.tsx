@@ -3,7 +3,7 @@
 import { useSortableHandle } from "@/components/anniversary/SortableList";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RowActionsMenu } from "@/components/ui/row-actions-menu";
+import { RowActions, RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 import {
@@ -184,7 +184,11 @@ export function ContentRow({
 
         {children}
 
-        <div className="flex flex-wrap items-center gap-2">
+        <RowActions
+          menu={
+            <RowActionsMenu name={name} onDelete={onDelete} disabled={busy} />
+          }
+        >
           {extraActions}
           <Button
             type="button"
@@ -211,8 +215,7 @@ export function ContentRow({
               <span className="sr-only"> « {name} »</span>
             </Button>
           )}
-          <RowActionsMenu name={name} onDelete={onDelete} disabled={busy} />
-        </div>
+        </RowActions>
       </div>
     </Card>
   );

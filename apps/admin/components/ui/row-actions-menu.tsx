@@ -100,3 +100,31 @@ export function RowActionsMenu({
     </DropdownMenu>
   );
 }
+
+export interface RowActionsProps {
+  /** The row's « Plus d'actions » menu (`RowActionsMenu`), after the buttons. */
+  menu: React.ReactNode;
+  /** The row's visible buttons (« Modifier », « Masquer »…), in reading order. */
+  children?: React.ReactNode;
+  className?: string;
+}
+
+/**
+ * The action bar of a list row: its buttons, wrapping on narrow screens, then
+ * the « ⋯ » menu. The last button and the menu stay together, so the menu
+ * never wraps onto a line of its own under the buttons. Wide rows look as
+ * before: same order, same gaps.
+ */
+export function RowActions({ menu, children, className }: RowActionsProps) {
+  const buttons = React.Children.toArray(children);
+  const last = buttons.pop();
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      {buttons}
+      <span className="flex items-center gap-2">
+        {last}
+        {menu}
+      </span>
+    </div>
+  );
+}

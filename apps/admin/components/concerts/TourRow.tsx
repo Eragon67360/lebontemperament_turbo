@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RowActionsMenu } from "@/components/ui/row-actions-menu";
+import { RowActions, RowActionsMenu } from "@/components/ui/row-actions-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { Tour } from "@/types/tours";
 import {
@@ -85,7 +85,9 @@ export function TourRow({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <RowActions
+          menu={<RowActionsMenu name={tour.name} onDelete={onDelete} />}
+        >
           <Button
             type="button"
             variant="outline"
@@ -101,8 +103,7 @@ export function TourRow({
             Modifier
             <span className="sr-only"> « {tour.name} »</span>
           </Button>
-          <RowActionsMenu name={tour.name} onDelete={onDelete} />
-        </div>
+        </RowActions>
       </div>
     </Card>
   );

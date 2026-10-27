@@ -5,7 +5,11 @@
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RowActionsMenu, rowActionsLabels } from "./row-actions-menu";
+import {
+  RowActions,
+  RowActionsMenu,
+  rowActionsLabels,
+} from "./row-actions-menu";
 
 // --- Names: the item in guillemets, or the row's own phrase ---
 assert.deepEqual(rowActionsLabels("Requiem"), {
@@ -47,6 +51,47 @@ assert.deepEqual(rowActionsLabels("Lucie", "le témoignage de Lucie"), {
     }),
   );
   assert.match(html, /disabled=""/);
+}
+
+// --- RowActions: the last button and the menu wrap together ---
+{
+  const button = (label: string) =>
+    createElement("button", { type: "button" }, label);
+  const html = renderToStaticMarkup(
+    createElement(
+      RowActions,
+      { menu: button("⋯") },
+      button("Modifier"),
+      false,
+      button("Masquer"),
+    ),
+  );
+  // The buttons keep their order; the last one shares a non-wrapping group
+  // with the menu, so the menu never sits alone on a line.
+  assert.equal(
+    html,
+    '<div class="flex flex-wrap items-center gap-2">' +
+      '<button type="button">Modifier</button>' +
+      '<span class="flex items-center gap-2">' +
+      '<button type="button">Masquer</button>' +
+      '<button type="button">⋯</button>' +
+      "</span></div>",
+  );
+}
+{
+  // Without buttons the menu still renders, in its group.
+  const html = renderToStaticMarkup(
+    createElement(RowActions, {
+      menu: createElement("button", { type: "button" }, "⋯"),
+    }),
+  );
+  assert.equal(
+    html,
+    '<div class="flex flex-wrap items-center gap-2">' +
+      '<span class="flex items-center gap-2">' +
+      '<button type="button">⋯</button>' +
+      "</span></div>",
+  );
 }
 
 console.log("row actions menu: all assertions passed");
