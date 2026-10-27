@@ -15,16 +15,31 @@ export function hasSessionCookie(): boolean {
   return /(?:^|;\s*)sb-[^=;]*-auth-token(?:\.\d+)?=/.test(document.cookie);
 }
 
-let client: Promise<BrowserClient> | null = null;
+/**
+ * Memoises an async load: every caller shares the one pending promise, and a
+ * load that fails is forgotten, so the next call tries again instead of
+ * getting the same rejection for the rest of the page's life.
+ */
+export function memoizeLoader<T>(load: () => Promise<T>): () => Promise<T> {
+  let pending: Promise<T> | null = null;
+  return () => {
+    if (!pending) {
+      pending = load().catch((error: unknown) => {
+        // No other attempt can have started while this one was pending.
+        pending = null;
+        throw error;
+      });
+    }
+    return pending;
+  };
+}
 
 /**
  * The browser client, loaded on first use. `createBrowserClient` is itself a
  * singleton per page, so every caller shares one session and one Realtime
- * connection, as before.
+ * connection, as before. A failed load (a chunk missing after a deployment, a
+ * flaky network) is retried by the next caller.
  */
-export function loadBrowserClient(): Promise<BrowserClient> {
-  if (!client) {
-    client = import("./client").then((mod) => mod.createClient());
-  }
-  return client;
-}
+export const loadBrowserClient: () => Promise<BrowserClient> = memoizeLoader(
+  () => import("./client").then((mod) => mod.createClient()),
+);

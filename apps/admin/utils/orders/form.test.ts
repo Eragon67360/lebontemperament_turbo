@@ -214,6 +214,24 @@ const products = [
     "Ce numéro de téléphone n'est pas valide",
   );
 
+  // « +33 (0)6… », a usual way to write a French number, is accepted and
+  // stored as « 06 … »; a « +330… » that nothing folds is refused.
+  const withZero = orderFormSchema.safeParse({
+    ...edit,
+    buyer_phone: "+33 (0)6 39 98 12 34",
+  });
+  assert.ok(withZero.success);
+  assert.equal(orderFormToBody(withZero.data).buyer_phone, "06 39 98 12 34");
+  const shortWithZero = orderFormSchema.safeParse({
+    ...edit,
+    buyer_phone: "+33 (0)6 39 98 12",
+  });
+  assert.equal(shortWithZero.success, false);
+  assert.equal(
+    shortWithZero.error?.issues[0]?.message,
+    "Ce numéro de téléphone n'est pas valide",
+  );
+
   const noName = orderFormSchema.safeParse({ ...edit, buyer_name: " " });
   assert.equal(noName.success, false);
   assert.equal(

@@ -1,4 +1,5 @@
 import { getDriveClient, isDriveItemAllowed } from "@/lib/drive";
+import { errorCodes } from "@/lib/errorCodes";
 import { checkAuthorization } from "@/utils/auth";
 import {
   DRIVE_LIST_MAX_ITEMS,
@@ -82,7 +83,7 @@ export async function GET(req: NextRequest) {
       headers: truncated ? { "X-Drive-Truncated": "true" } : undefined,
     });
   } catch (error: unknown) {
-    console.error("Error retrieving Drive files:", error);
+    console.error("Error retrieving Drive files:", errorCodes(error));
     return NextResponse.json(
       { error: "Failed to retrieve files" },
       { status: 500 },

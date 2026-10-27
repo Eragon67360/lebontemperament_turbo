@@ -41,6 +41,17 @@ export const VOICE_TINT: Record<VoiceKey | "none", string> = {
   none: "bg-members-band",
 };
 
+/**
+ * The home's three tiles borrow the voices' fills rather than new colours:
+ * the tenors' blue for the scores, the orchestra's lilac for the concerts,
+ * the basses' green for the documents.
+ */
+export const TILE_FILL = {
+  scores: VOICE_FILL.tenor,
+  concerts: VOICE_FILL.orchestre,
+  documents: VOICE_FILL.basse,
+} as const;
+
 /** A member's fill, from their roster voice (grey when unknown). */
 export function voiceFill(voice: string | null | undefined): string {
   return VOICE_FILL[mainVoice(voice) ?? "none"];

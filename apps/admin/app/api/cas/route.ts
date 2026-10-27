@@ -1,8 +1,13 @@
 import { CA_COLUMNS } from "@/lib/columns";
-import { UpdateCADTO } from "@/types/ca";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
+import {
+  caCreateSchema,
+  caDeleteSchema,
+  caPatchSchema,
+} from "@/utils/ca/apiSchemas";
+import { databaseErrorResponse } from "@/utils/databaseErrors";
 import { createClient } from "@/utils/supabase/server";
-import { CA } from "@repo/domain/types/ca";
 import { getFileNameFromUrl } from "@repo/domain/utils/storage";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -25,7 +30,10 @@ export async function GET() {
     .order("date_from", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return databaseErrorResponse(
+      error,
+      "Les comptes rendus n'ont pas pu être chargés",
+    );
   }
 
   return NextResponse.json(data);
@@ -40,14 +48,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // Only the columns the page sends; `created_by` is the signed-in admin.
+  const parsed = parsePatchBody(caCreateSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
   const supabase = await createClient();
-  const caData: CA = await request.json();
 
   try {
     // First create the CA record
     const { data: newCA, error: caError } = await supabase
       .from("cas")
-      .insert([{ ...caData, created_by: authCheck.user.id }])
+      .insert([{ ...parsed.data, created_by: authCheck.user.id }])
       .select(CA_COLUMNS)
       .single();
 
@@ -78,11 +93,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newCA);
   } catch (error) {
-    console.error("Error creating CA:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création du CA" },
-      { status: 500 },
-    );
+    return databaseErrorResponse(error, "Erreur lors de la création du CA");
   }
 }
 
@@ -95,9 +106,16 @@ export async function PATCH(request: Request) {
     );
   }
 
+  // Only the page's columns: unknown keys are refused.
+  const parsed = parsePatchBody(caPatchSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id, ...updateData } = parsed.data;
   const supabase = await createClient();
-  const ca: UpdateCADTO = await request.json();
-  const { id, ...updateData } = ca;
 
   const { data, error } = await supabase
     .from("cas")
@@ -107,7 +125,7 @@ export async function PATCH(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return databaseErrorResponse(error, "Erreur lors de la modification du CA");
   }
 
   return NextResponse.json(data);
@@ -122,7 +140,14 @@ export async function DELETE(request: Request) {
     );
   }
 
-  const { id } = await request.json();
+  const parsed = parsePatchBody(caDeleteSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id } = parsed.data;
   const supabase = await createClient();
 
   try {
@@ -163,10 +188,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete operation error:", error);
-    return NextResponse.json(
-      { error: "Delete operation failed" },
-      { status: 500 },
-    );
+    return databaseErrorResponse(error, "Erreur lors de la suppression du CA");
   }
 }

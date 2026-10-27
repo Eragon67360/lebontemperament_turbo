@@ -45,6 +45,21 @@ async function loadFolder(folderId: string) {
 const driveViewUrl = (file: DriveFile) =>
   `/api/drive/file?fileId=${encodeURIComponent(file.id ?? "")}`;
 
+/**
+ * One icon per file type, all in the muted grey (« Les Pupitres » keeps its
+ * colours for the voices), with the type in words for screen readers.
+ */
+const FILE_KINDS: Record<string, { Icon: typeof FaFile; label: string }> = {
+  "application/pdf": { Icon: FaRegFilePdf, label: "PDF" },
+  "audio/mpeg": { Icon: FaMusic, label: "Audio" },
+  "audio/wav": { Icon: FaMusic, label: "Audio" },
+  "application/x-musescore": {
+    Icon: IoMusicalNotes,
+    label: "Partition MuseScore",
+  },
+};
+const OTHER_FILE = { Icon: FaFile, label: "Fichier" };
+
 /** The name the proxy chose (Google Docs gain ".pdf"), from `filename*`. */
 function fileNameFromDisposition(header: string | null): string | null {
   const encoded = header?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
@@ -146,17 +161,13 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
   };
 
   const renderFileIcon = (mimeType: string) => {
-    switch (mimeType) {
-      case "application/pdf":
-        return <FaRegFilePdf className="text-red-700 dark:text-red-300" />;
-      case "audio/mpeg":
-      case "audio/wav":
-        return <FaMusic className="text-blue-700 dark:text-blue-300" />;
-      case "application/x-musescore":
-        return <IoMusicalNotes className="text-primary-text" />;
-      default:
-        return <FaFile className="text-muted" />;
-    }
+    const { Icon, label } = FILE_KINDS[mimeType] ?? OTHER_FILE;
+    return (
+      <>
+        <Icon aria-hidden="true" />
+        <span className="sr-only">{label}, </span>
+      </>
+    );
   };
 
   const rowClass =
@@ -226,7 +237,7 @@ const Explorer: FC<ExplorerProps> = ({ initialFolderId }) => {
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((file) => (
                 <div key={file.id} className={`${rowClass} flex-wrap`}>
-                  <div aria-hidden="true" className="h-5 w-5 shrink-0">
+                  <div className="text-members-muted h-5 w-5 shrink-0">
                     {renderFileIcon(file.mimeType)}
                   </div>
                   <span className="text-foreground min-w-0 flex-[1_1_200px] font-medium break-words">

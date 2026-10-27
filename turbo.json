@@ -11,14 +11,10 @@
     "build": {
       "env": [
         "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
-        "DISABLE_SIGN_UP",
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
-        "GOOGLE_REDIRECT_URI",
-        "GOOGLE_API_KEY",
         "GOOGLE_REFRESH_TOKEN",
         "GOOGLE_GROUP_EMAIL",
-        "GOOGLE_GROUP_ID",
         "GOOGLE_SERVICE_ACCOUNT_JSON",
         "ROSTER_SHEET_ID",
         "ROSTER_SHEET_RANGE",
@@ -28,18 +24,19 @@
         "NEXT_PUBLIC_GOOGLE_CALENDAR_ID",
         "SMTP_USER",
         "SMTP_PASSWORD",
-        "CLOUDINARY_URL",
         "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME",
         "CLOUDINARY_CLOUD_NAME",
         "CLOUDINARY_API_KEY",
         "CLOUDINARY_API_SECRET",
-        "ANALYZE",
         "NEXT_PUBLIC_SITE_URL",
         "GOOGLE_APPS_SCRIPT_URL",
         "GOOGLE_APPS_SCRIPT_KEY",
         "ADMIN_EMAIL",
         "INDEXNOW_SUBMIT_SECRET",
-        "REVALIDATE_SECRET"
+        "REVALIDATE_SECRET",
+        "GOOGLE_SITE_VERIFICATION",
+        "BING_SITE_VERIFICATION",
+        "CRON_SECRET"
       ],
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
@@ -63,6 +60,12 @@
         "E2E_USER_EMAIL",
         "E2E_USER_PASSWORD",
         "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "passThroughEnv": [
+        "VERCEL_AUTOMATION_BYPASS_SECRET",
+        "E2E_ALLOW_WRITES",
+        "SUPABASE_URL",
+        "LOCAL_WEBSITE_URL"
       ]
     }
   }

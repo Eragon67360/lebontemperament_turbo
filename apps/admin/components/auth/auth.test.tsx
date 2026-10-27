@@ -1,7 +1,10 @@
-// Static renders of the pages outside the shell (sign-in, not found, error):
-// direction B only, the names the e2e suite and password managers rely on.
+// Static renders of the pages outside the shell (sign-in, not found, error,
+// the error boundaries): direction B only, the names the e2e suite and
+// password managers rely on.
 import LoginPage from "@/app/auth/login/page";
+import RootError from "@/app/error";
 import ErrorPage from "@/app/error/page";
+import GlobalError from "@/app/global-error";
 import NotFound from "@/app/not-found";
 import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import assert from "node:assert/strict";
@@ -67,5 +70,39 @@ for (const [html, title] of [
   assert.match(html, /<p class="text-section[^"]*">Le Bon Tempérament<\/p>/);
   assert.match(html, /href="\/dashboard"[^>]*>Retour à l’accueil</);
 }
+
+// The root error boundary: the same frame (the brand is the h1), the shared
+// ErrorState announced as an alert with « Réessayer », a way home, and no
+// filled button (a page without a primary action).
+const boundaryProps = { error: new Error("probe"), retry: () => {} };
+const rootError = renderToStaticMarkup(<RootError {...boundaryProps} />);
+assert.equal((rootError.match(/<h1/g) ?? []).length, 1);
+assert.match(rootError, /<h1[^>]*>Le Bon Tempérament<\/h1>/);
+assert.match(
+  rootError,
+  /role="alert"[^>]*>.*<h2[^>]*>Cette page n’a pas pu s’afficher<\/h2>/,
+);
+assert.match(rootError, /<button[^>]*>(?:<svg.*?<\/svg>)?Réessayer<\/button>/);
+assert.match(rootError, /href="\/dashboard"[^>]*>Retour à l’accueil</);
+assert.equal((rootError.match(/bg-primary-strong(?=[\s"])/g) ?? []).length, 1); // the mark only
+assert.doesNotMatch(
+  rootError,
+  /bg-white|text-gray-|#[0-9a-f]{6}/i,
+  "tokens only",
+);
+
+// The global boundary replaces the root layout: its own French document with
+// the brand, the same words as /error, « Réessayer » and a way home.
+const globalError = renderToStaticMarkup(<GlobalError {...boundaryProps} />);
+assert.match(globalError, /^<html lang="fr"><head>/);
+assert.match(
+  globalError,
+  /<title>Un problème est survenu \| BT Admin<\/title>/,
+);
+assert.match(globalError, /<p class="name">Le Bon Tempérament<\/p>/);
+assert.match(globalError, /<h1[^>]*>Un problème est survenu<\/h1>/);
+assert.equal((globalError.match(/<h1/g) ?? []).length, 1);
+assert.match(globalError, /<button type="button">Réessayer<\/button>/);
+assert.match(globalError, /href="\/dashboard"[^>]*>Retour à l’accueil</);
 
 console.log("auth pages: ok");

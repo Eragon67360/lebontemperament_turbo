@@ -12,10 +12,10 @@ export interface BugMessage {
   };
 }
 
+/** What POST /api/bug-messages accepts; the route sets the sender and receiver. */
 export interface CreateBugMessageDTO {
   bug_report_id: string;
   message: string;
-  receiver_id?: string; // Optional, will be auto-set by API if not provided
 }
 
 export interface UpdateBugMessageDTO {

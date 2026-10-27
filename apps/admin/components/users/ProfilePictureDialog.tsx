@@ -1,3 +1,4 @@
+import { DeleteConfirmDialog } from "@/components/anniversary/DeleteConfirmDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,8 @@ export function ProfilePictureDialog({
 }: ProfilePictureDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  // « Supprimer la photo de … ? », opened by the footer's outlined button.
+  const [confirmOpen, setConfirmOpen] = useState(false);
   // Both refresh the users list on success.
   const uploadPicture = useUploadProfilePicture();
   const deletePicture = useDeleteProfilePicture();
@@ -48,6 +51,7 @@ export function ProfilePictureDialog({
     if (isOpen) {
       setSelectedFile(null);
       setPreview(null);
+      setConfirmOpen(false);
     }
   });
 
@@ -104,11 +108,13 @@ export function ProfilePictureDialog({
     }
   };
 
+  // Runs from the confirmation only; an error keeps it open with its toast.
   const handleDelete = async () => {
     try {
       await deletePicture.mutateAsync(userId);
 
       toast.success("Photo de profil supprimée avec succès");
+      setConfirmOpen(false);
       onOpenChange(false);
       setSelectedFile(null);
       setPreview(null);
@@ -130,130 +136,134 @@ export function ProfilePictureDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Photo de profil</DialogTitle>
-          <DialogDescription>
-            Modifiez la photo de profil de {displayName || email}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Photo de profil</DialogTitle>
+            <DialogDescription>
+              Modifiez la photo de profil de {displayName || email}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Current Avatar Preview */}
-          <div className="flex flex-col items-center gap-4">
-            <Avatar
-              className="border-border h-24 w-24 border-2"
-              key={currentAvatar}
-            >
-              <AvatarImage
-                src={preview || currentAvatar || undefined}
-                alt={displayName || email}
-              />
-              <AvatarFallback className="text-lg font-medium">
-                {displayName?.[0] || email[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-
-            {/* Upload Area */}
-            {!preview && (
-              <div
-                {...getRootProps()}
-                className={`w-full cursor-pointer rounded-lg border-2 border-dashed p-6 transition-colors ${
-                  isDragActive
-                    ? "border-primary bg-primary/10"
-                    : "hover:border-primary border-border-strong"
-                }`}
+          <div className="space-y-4">
+            {/* Current Avatar Preview */}
+            <div className="flex flex-col items-center gap-4">
+              <Avatar
+                className="border-border h-24 w-24 border-2"
+                key={currentAvatar}
               >
-                <input {...getInputProps()} />
-                <div className="text-muted-foreground flex flex-col items-center gap-2">
-                  <Upload className="h-8 w-8" />
-                  <p className="text-center text-sm">
-                    {isDragActive
-                      ? "Déposez l'image ici"
-                      : "Glissez-déposez une image ou cliquez pour sélectionner"}
-                  </p>
-                  <p className="text-note text-muted-foreground">
-                    PNG, JPG, GIF, SVG ou WEBP (max. 5MB)
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Preview */}
-            {preview && (
-              <div className="relative w-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={preview}
-                  alt="Aperçu"
-                  className="w-full rounded-lg object-contain"
+                <AvatarImage
+                  src={preview || currentAvatar || undefined}
+                  alt={displayName || email}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setPreview(null);
-                    URL.revokeObjectURL(preview);
-                  }}
-                  className="mt-2 w-full"
-                >
-                  Changer d&apos;image
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
+                <AvatarFallback className="text-lg font-medium">
+                  {displayName?.[0] || email[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
 
-        <DialogFooter>
-          {currentAvatar && (
+              {/* Upload Area */}
+              {!preview && (
+                <div
+                  {...getRootProps()}
+                  className={`w-full cursor-pointer rounded-lg border-2 border-dashed p-6 transition-colors ${
+                    isDragActive
+                      ? "border-primary bg-primary/10"
+                      : "hover:border-primary border-border-strong"
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <div className="text-muted-foreground flex flex-col items-center gap-2">
+                    <Upload className="h-8 w-8" />
+                    <p className="text-center text-sm">
+                      {isDragActive
+                        ? "Déposez l'image ici"
+                        : "Glissez-déposez une image ou cliquez pour sélectionner"}
+                    </p>
+                    <p className="text-note text-muted-foreground">
+                      PNG, JPG, GIF, SVG ou WEBP (max. 5MB)
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Preview */}
+              {preview && (
+                <div className="relative w-full">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preview}
+                    alt="Aperçu"
+                    className="w-full rounded-lg object-contain"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setPreview(null);
+                      URL.revokeObjectURL(preview);
+                    }}
+                    className="mt-2 w-full"
+                  >
+                    Changer d&apos;image
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            {currentAvatar && (
+              <Button
+                type="button"
+                variant="destructive-outline"
+                onClick={() => setConfirmOpen(true)}
+                disabled={isUploading || isDeleting}
+              >
+                <Trash2 aria-hidden />
+                Supprimer la photo…
+              </Button>
+            )}
             <Button
               type="button"
-              variant="destructive"
-              onClick={handleDelete}
+              variant="outline"
+              onClick={handleClose}
               disabled={isUploading || isDeleting}
             >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Suppression...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Supprimer
-                </>
-              )}
+              Annuler
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            disabled={isUploading || isDeleting}
-          >
-            Annuler
-          </Button>
-          {selectedFile && (
-            <Button
-              type="button"
-              onClick={handleUpload}
-              disabled={isUploading || isDeleting}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Téléversement...
-                </>
-              ) : (
-                "Enregistrer"
-              )}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {selectedFile && (
+              <Button
+                type="button"
+                onClick={handleUpload}
+                disabled={isUploading || isDeleting}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Téléversement...
+                  </>
+                ) : (
+                  "Enregistrer"
+                )}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmDialog
+        open={confirmOpen}
+        onOpenChange={(next) => {
+          if (!next && !isDeleting) setConfirmOpen(false);
+        }}
+        onConfirm={handleDelete}
+        title={`Supprimer la photo de ${displayName || email} ?`}
+        description="Sa photo disparaît du site et de l’application, et son fichier est effacé. Le membre pourra en remettre une depuis son espace ou l’application. Cette action ne peut pas être annulée."
+        isLoading={isDeleting}
+      />
+    </>
   );
 }

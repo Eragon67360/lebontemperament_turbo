@@ -74,7 +74,7 @@ export default async function AnniversaryPage() {
       <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Erreur de chargement</h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted mt-2">
             Impossible de charger les données de la page anniversaire.
           </p>
         </div>

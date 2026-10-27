@@ -575,7 +575,7 @@ export type Database = {
       cas: {
         Row: {
           created_at: string;
-          created_by: string;
+          created_by: string | null;
           date_from: string;
           file_url: string | null;
           id: string;
@@ -584,7 +584,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
-          created_by: string;
+          created_by?: string | null;
           date_from: string;
           file_url?: string | null;
           id?: string;
@@ -593,7 +593,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
-          created_by?: string;
+          created_by?: string | null;
           date_from?: string;
           file_url?: string | null;
           id?: string;
@@ -606,11 +606,11 @@ export type Database = {
         Row: {
           additional_informations: string | null;
           affiche: string | null;
+          city: string | null;
           context: string;
+          country: string | null;
           created_at: string | null;
           created_by: string | null;
-          city: string | null;
-          country: string | null;
           date: string;
           event_data_generated_at: string | null;
           id: string;
@@ -629,11 +629,11 @@ export type Database = {
         Insert: {
           additional_informations?: string | null;
           affiche?: string | null;
+          city?: string | null;
           context: string;
+          country?: string | null;
           created_at?: string | null;
           created_by?: string | null;
-          city?: string | null;
-          country?: string | null;
           date: string;
           event_data_generated_at?: string | null;
           id?: string;
@@ -652,11 +652,11 @@ export type Database = {
         Update: {
           additional_informations?: string | null;
           affiche?: string | null;
+          city?: string | null;
           context?: string;
+          country?: string | null;
           created_at?: string | null;
           created_by?: string | null;
-          city?: string | null;
-          country?: string | null;
           date?: string;
           event_data_generated_at?: string | null;
           id?: string;
@@ -695,7 +695,7 @@ export type Database = {
         Insert: {
           changed_at?: string;
           changed_by?: string | null;
-          id?: number;
+          id?: never;
           old_row: Json;
           operation: string;
           row_id: string;
@@ -704,7 +704,7 @@ export type Database = {
         Update: {
           changed_at?: string;
           changed_by?: string | null;
-          id?: number;
+          id?: never;
           old_row?: Json;
           operation?: string;
           row_id?: string;
@@ -777,6 +777,56 @@ export type Database = {
             columns: ["driver_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      delivery_code_attempts: {
+        Row: {
+          attempted_at: string;
+          client_key: string;
+          id: number;
+        };
+        Insert: {
+          attempted_at?: string;
+          client_key: string;
+          id?: never;
+        };
+        Update: {
+          attempted_at?: string;
+          client_key?: string;
+          id?: never;
+        };
+        Relationships: [];
+      };
+      delivery_devices: {
+        Row: {
+          created_at: string;
+          fcm_token: string;
+          id: string;
+          platform: string | null;
+          recipient_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          fcm_token: string;
+          id?: string;
+          platform?: string | null;
+          recipient_id: string;
+        };
+        Update: {
+          created_at?: string;
+          fcm_token?: string;
+          id?: string;
+          platform?: string | null;
+          recipient_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "delivery_devices_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "delivery_recipients";
             referencedColumns: ["id"];
           },
         ];
@@ -1663,6 +1713,42 @@ export type Database = {
           },
         ];
       };
+      ops_alerts: {
+        Row: {
+          body: string;
+          first_fired_at: string | null;
+          key: string;
+          last_notified_at: string | null;
+          notified_count: number;
+          resolved_at: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          body: string;
+          first_fired_at?: string | null;
+          key: string;
+          last_notified_at?: string | null;
+          notified_count?: number;
+          resolved_at?: string | null;
+          status: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string;
+          first_fired_at?: string | null;
+          key?: string;
+          last_notified_at?: string | null;
+          notified_count?: number;
+          resolved_at?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       order_items: {
         Row: {
           id: string;
@@ -2068,6 +2154,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      public_concert_pushes: {
+        Row: {
+          concert_id: string;
+          kind: string;
+          sent_at: string;
+        };
+        Insert: {
+          concert_id: string;
+          kind: string;
+          sent_at?: string;
+        };
+        Update: {
+          concert_id?: string;
+          kind?: string;
+          sent_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "public_concert_pushes_concert_id_fkey";
+            columns: ["concert_id"];
+            isOneToOne: false;
+            referencedRelation: "concerts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      push_devices: {
+        Row: {
+          created_at: string;
+          last_seen_at: string;
+          platform: string;
+          token: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          last_seen_at?: string;
+          platform: string;
+          token: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          last_seen_at?: string;
+          platform?: string;
+          token?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       rehearsal_sync_logs: {
         Row: {
           created: number | null;
@@ -2403,18 +2539,15 @@ export type Database = {
       auth_user_summaries: {
         Args: never;
         Returns: {
-          avatar_url: string | null;
-          confirmed_at: string | null;
-          email_confirmed_at: string | null;
+          avatar_url: string;
+          confirmed_at: string;
+          email_confirmed_at: string;
           id: string;
-          invited_at: string | null;
-          last_sign_in_at: string | null;
+          invited_at: string;
+          last_sign_in_at: string;
         }[];
       };
-      can_read_order_document: {
-        Args: { p_name: string };
-        Returns: boolean;
-      };
+      can_read_order_document: { Args: { p_name: string }; Returns: boolean };
       concert_event_data_write: {
         Args: {
           p_city: string;
@@ -2444,6 +2577,11 @@ export type Database = {
         };
         Returns: Json;
       };
+      edge_function_auth_headers: { Args: never; Returns: Json };
+      forget_delivery_device: {
+        Args: { p_fcm_token: string; p_tracking_token: string };
+        Returns: undefined;
+      };
       get_delivery_by_token: {
         Args: { token: string };
         Returns: {
@@ -2470,25 +2608,10 @@ export type Database = {
       };
       is_admin: { Args: never; Returns: boolean };
       is_admin_or_superadmin: { Args: never; Returns: boolean };
-      is_superadmin: {
-        Args: never;
-        Returns: boolean;
-      };
+      is_superadmin: { Args: never; Returns: boolean };
       mark_bug_report_read: {
         Args: { p_report_id: string };
         Returns: undefined;
-      };
-      member_orders: { Args: never; Returns: Json };
-      member_directory_with_avatars: {
-        Args: never;
-        Returns: {
-          auth_avatar_url: string | null;
-          display_name: string;
-          email: string;
-          id: string;
-          profile_picture_url: string;
-          voice: string;
-        }[];
       };
       member_directory: {
         Args: never;
@@ -2500,14 +2623,29 @@ export type Database = {
           voice: string;
         }[];
       };
-      normalize_order_phone: {
-        Args: { p_phone: string };
-        Returns: string;
+      member_directory_with_avatars: {
+        Args: never;
+        Returns: {
+          auth_avatar_url: string;
+          display_name: string;
+          email: string;
+          id: string;
+          profile_picture_url: string;
+          voice: string;
+        }[];
       };
+      member_orders: { Args: never; Returns: Json };
+      new_delivery_code: { Args: never; Returns: string };
+      normalize_order_phone: { Args: { p_phone: string }; Returns: string };
+      ops_alert_facts: { Args: { p_window_minutes?: number }; Returns: Json };
       order_documents_to_purge: {
         Args: { p_limit?: number };
         Returns: string[];
       };
+      purge_cron_run_history: { Args: never; Returns: number };
+      purge_expired_delivery_personal_data: { Args: never; Returns: number };
+      purge_expired_order_personal_data: { Args: never; Returns: number };
+      purge_expired_records: { Args: never; Returns: Json };
       redeem_delivery_code: {
         Args: {
           p_client: string;
@@ -2516,6 +2654,10 @@ export type Database = {
           p_platform?: string;
         };
         Returns: Json;
+      };
+      register_push_device: {
+        Args: { p_platform: string; p_token: string };
+        Returns: boolean;
       };
       rehearsals_sync_write: {
         Args: {
@@ -2529,7 +2671,7 @@ export type Database = {
         Args: {
           p_items: Json;
           p_order: Json;
-          p_order_id: string | null;
+          p_order_id: string;
           p_sale_id: string;
         };
         Returns: string;
@@ -2538,6 +2680,7 @@ export type Database = {
         Args: { p_collection: string; p_file_name: string };
         Returns: string;
       };
+      unregister_push_device: { Args: { p_token: string }; Returns: undefined };
     };
     Enums: {
       activity_type:

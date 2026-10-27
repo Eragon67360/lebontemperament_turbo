@@ -1,12 +1,18 @@
 import { EVENT_COLUMNS } from "@/lib/columns";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
+import { databaseErrorResponse } from "@/utils/databaseErrors";
 import { removeEventFiles } from "@/utils/events/documents";
 import {
   REVALIDATE,
   revalidateWebsiteAfterResponse,
 } from "@/utils/revalidateWebsite";
+import {
+  eventCreateSchema,
+  eventDeleteSchema,
+  eventPatchSchema,
+} from "@/utils/season/apiSchemas";
 import { createClient } from "@/utils/supabase/server";
-import { CreateEventDTO, UpdateEventDTO } from "@repo/domain/types/events";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -26,7 +32,10 @@ export async function GET() {
     .order("date_from", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return databaseErrorResponse(
+      error,
+      "Les événements n'ont pas pu être chargés",
+    );
   }
 
   return NextResponse.json(data);
@@ -42,23 +51,28 @@ export async function POST(request: Request) {
     );
   }
 
+  // Only the columns the event dialog sends, each value checked.
+  const parsed = parsePatchBody(eventCreateSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+
   try {
     const supabase = await createClient();
-    const data: CreateEventDTO = await request.json();
 
-    const { error } = await supabase.from("events").insert([data]);
+    const { error } = await supabase.from("events").insert([parsed.data]);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
     revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ message: "Événement créé avec succès" });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création de l'événement" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la création de l'événement",
     );
   }
 }
@@ -72,28 +86,32 @@ export async function PATCH(request: Request) {
     );
   }
 
+  // The event's id and the dialog's columns: unknown keys are refused.
+  const parsed = parsePatchBody(eventPatchSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id, ...updateData } = parsed.data;
+
   try {
     const supabase = await createClient();
-    const data: UpdateEventDTO = await request.json();
-    const { id, ...updateData } = data;
 
     const { error } = await supabase
       .from("events")
       .update(updateData)
       .eq("id", id);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
     revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ message: "Événement mis à jour avec succès" });
   } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      { error: "Erreur lors de la mise à jour de l'événement" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la mise à jour de l'événement",
     );
   }
 }
@@ -108,9 +126,17 @@ export async function DELETE(request: Request) {
     );
   }
 
+  const parsed = parsePatchBody(eventDeleteSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id } = parsed.data;
+
   try {
     const supabase = await createClient();
-    const { id } = await request.json();
 
     // The event's files go with it (the rows cascade, the objects don't).
     // Before the event_documents migration the read fails: nothing to remove.
@@ -121,9 +147,7 @@ export async function DELETE(request: Request) {
 
     const { error } = await supabase.from("events").delete().eq("id", id);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
     await removeEventFiles(
       supabase,
@@ -133,10 +157,9 @@ export async function DELETE(request: Request) {
     revalidateWebsiteAfterResponse(REVALIDATE.agenda);
     return NextResponse.json({ message: "Événement supprimé avec succès" });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Erreur lors de la suppression de l'événement" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la suppression de l'événement",
     );
   }
 }

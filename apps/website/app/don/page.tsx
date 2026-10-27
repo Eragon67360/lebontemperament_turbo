@@ -57,7 +57,7 @@ export default async function DonPage() {
             defaultAmount={donations.defaultAmount}
           />
 
-          <p className="border-default-200 text-muted mt-8 border-t pt-5 text-sm">
+          <p className="border-separator text-muted mt-8 border-t pt-5 text-sm">
             Le Bon Tempérament est une association d&apos;intérêt général :
             votre don ouvre droit à une réduction d&apos;impôt de 66 % de son
             montant (article 200 du Code général des impôts). Votre reçu fiscal

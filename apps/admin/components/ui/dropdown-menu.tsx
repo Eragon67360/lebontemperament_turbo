@@ -18,9 +18,17 @@ const DropdownMenuSub = DropdownMenuPrimitive.Sub;
 
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
-/** Items are 44 px tall (40 px compact): the menu is a touch target too. */
+/**
+ * Items are 44 px tall (40 px compact): the menu is a touch target too. The
+ * highlighted item (under the pointer, or reached with the arrow keys) is
+ * tinted soft teal and marked on its left edge like a selected table row, so
+ * the item Enter will run reads on the popover in both themes (the `accent`
+ * tint is the popover colour itself in dark mode). Items keep `outline-none`:
+ * Radix moves the focus to the item under the pointer, and Chrome would draw
+ * the global focus ring under the mouse.
+ */
 const itemClassName =
-  "relative flex min-h-(--control-h) cursor-default items-center gap-3 rounded-sm px-3 py-2 text-[15px] leading-5 text-foreground outline-none select-none transition-colors motion-reduce:transition-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:text-muted-foreground";
+  "relative flex min-h-(--control-h) cursor-default items-center gap-3 rounded-sm px-3 py-2 text-[15px] leading-5 text-foreground outline-none select-none transition-colors motion-reduce:transition-none data-[highlighted]:bg-primary-soft data-[highlighted]:text-foreground data-[highlighted]:shadow-[inset_3px_0_0_var(--primary)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:text-muted-foreground";
 
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
@@ -32,7 +40,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       itemClassName,
-      "data-[state=open]:bg-accent",
+      "data-[state=open]:bg-primary-soft",
       inset && "pl-11",
       className,
     )}
@@ -84,9 +92,9 @@ const DropdownMenuContent = React.forwardRef<
 ));
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
-/** A destructive item (« Supprimer… »): danger text and icon, soft red focus. */
+/** A destructive item (« Supprimer… »): danger text and icon, soft red and a red mark when highlighted. */
 const destructiveItemClassName =
-  "text-danger-foreground focus:bg-danger-soft focus:text-danger-foreground [&>svg]:text-danger-foreground";
+  "text-danger-foreground data-[highlighted]:bg-danger-soft data-[highlighted]:text-danger-foreground data-[highlighted]:shadow-[inset_3px_0_0_var(--danger)] [&>svg]:text-danger-foreground";
 
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,

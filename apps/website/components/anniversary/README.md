@@ -196,6 +196,7 @@ Couverture : sur teal profond dans un filet, un grand « 40 » (`hero_number`) e
 - Navigation au clavier
 - Labels ARIA implicites via sémantique HTML
 - Skip links pour l'animation d'entrée
+- Les trois superpositions (photo, vidéo, PDF) sont des dialogues modaux (`role="dialog"`, nommés par leur titre) : `hooks/useModalDialog.ts` y déplace le focus, garde Tab à l'intérieur, ferme à Échap et rend le focus au déclencheur ; les filtres des galeries exposent `aria-pressed`
 
 ## Personnalisation
 

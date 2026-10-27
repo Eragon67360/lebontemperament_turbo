@@ -4,13 +4,13 @@ import { diffRoster, fieldChanges } from "./diff";
 import { rosterFingerprint } from "./fingerprint";
 import {
   findHeaderRowIndex,
+  formatRosterPhone,
   isValidEmail,
   joinVoices,
   mapHeaders,
   nameKey,
   normalizeHeader,
   normalizeName,
-  normalizePhone,
   phoneKey,
   splitVoices,
 } from "./normalize";
@@ -142,37 +142,37 @@ assert.equal(nameKey("Jean DE LA FONTAINE"), nameKey("de la Fontaine Jean"));
 assert.equal(nameKey("Zoé LEROY"), nameKey("zoe leroy"));
 assert.notEqual(nameKey("Marie DUPONT"), nameKey("Marie DURAND"));
 
-assert.equal(normalizePhone("06 12 34 56 78"), "06 12 34 56 78");
-assert.equal(normalizePhone("0612345678"), "06 12 34 56 78");
-assert.equal(normalizePhone("+33 6 12 34 56 78"), "06 12 34 56 78");
-assert.equal(normalizePhone("+33612345678"), "06 12 34 56 78");
-assert.equal(normalizePhone("0033612345678"), "06 12 34 56 78");
-assert.equal(normalizePhone("03.88.12.34.56"), "03 88 12 34 56");
-assert.equal(normalizePhone("+33 (0)6 12 34 56 78"), "06 12 34 56 78");
-assert.equal(normalizePhone("0033 (0)6 12 34 56 78"), "06 12 34 56 78");
-assert.equal(normalizePhone("+33(0)612345678"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("06 12 34 56 78"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("0612345678"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("+33 6 12 34 56 78"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("+33612345678"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("0033612345678"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("03.88.12.34.56"), "03 88 12 34 56");
+assert.equal(formatRosterPhone("+33 (0)6 12 34 56 78"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("0033 (0)6 12 34 56 78"), "06 12 34 56 78");
+assert.equal(formatRosterPhone("+33(0)612345678"), "06 12 34 56 78");
 assert.equal(
-  normalizePhone("+41  79 123 45 67"),
+  formatRosterPhone("+41  79 123 45 67"),
   "+41 79 123 45 67",
   "foreign number: kept as written, single spaces",
 );
 assert.equal(phoneKey("+41 79 123 45 67"), "+41791234567");
 assert.notEqual(phoneKey("+41 79 123 45 67"), phoneKey("041 79 123 45 67"));
 assert.equal(
-  normalizePhone("0612345678 / 0698765432"),
+  formatRosterPhone("0612345678 / 0698765432"),
   "0612345678 / 0698765432",
   "two numbers: kept as written",
 );
 assert.equal(
-  normalizePhone("06 12 34 56 78, 06 98 76 54 32"),
+  formatRosterPhone("06 12 34 56 78, 06 98 76 54 32"),
   "06 12 34 56 78, 06 98 76 54 32",
 );
 assert.equal(
-  normalizePhone("0612345678 ; 0698765432"),
+  formatRosterPhone("0612345678 ; 0698765432"),
   "0612345678 ; 0698765432",
 );
 assert.equal(
-  normalizePhone("0612345678 ou  0698765432"),
+  formatRosterPhone("0612345678 ou  0698765432"),
   "0612345678 ou 0698765432",
 );
 assert.equal(
@@ -185,12 +185,16 @@ assert.notEqual(
   phoneKey("06123456780698765432"),
 );
 assert.equal(
-  normalizePhone("06 12 34 56"),
+  formatRosterPhone("06 12 34 56"),
   "06 12 34 56",
   "odd length: as written",
 );
-assert.equal(normalizePhone("n/a"), "n/a", "no digit: text kept for the admin");
-assert.equal(normalizePhone(""), "");
+assert.equal(
+  formatRosterPhone("n/a"),
+  "n/a",
+  "no digit: text kept for the admin",
+);
+assert.equal(formatRosterPhone(""), "");
 assert.equal(phoneKey("+33 6 12 34 56 78"), phoneKey("06.12.34.56.78"));
 
 assert.equal(isValidEmail("marie.dupont@example.com"), true);

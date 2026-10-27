@@ -195,9 +195,10 @@ export function phoneKey(value: string | null | undefined): string {
 /**
  * Display format: « 06 12 34 56 78 » for a ten-digit French number. Anything
  * else (a foreign number with its « + », several numbers, an odd length, no
- * digit) is shown as written, trimmed to single spaces.
+ * digit) is shown as written, trimmed to single spaces. Not the orders'
+ * normalizePhone (utils/orders), which gives the international form for SMS.
  */
-export function normalizePhone(value: string | null | undefined): string {
+export function formatRosterPhone(value: string | null | undefined): string {
   const text = normalizeText(value);
   if (!text) return "";
   if (phoneParts(text).length > 1) return text;

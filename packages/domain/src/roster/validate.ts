@@ -4,12 +4,12 @@
 import {
   DEFAULT_KNOWN_VOICES,
   FIELD_LABELS,
+  formatRosterPhone,
   isKnownVoice,
   isValidEmail,
   mapHeaders,
   normalizeEmail,
   normalizeName,
-  normalizePhone,
   normalizeText,
   splitVoices,
 } from "./normalize";
@@ -152,8 +152,8 @@ export function parseRoster(
       email,
       emailValid: email !== "" && isValidEmail(email),
       address: cell(raw, "address"),
-      homePhone: normalizePhone(cell(raw, "homePhone")),
-      mobilePhone: normalizePhone(cell(raw, "mobilePhone")),
+      homePhone: formatRosterPhone(cell(raw, "homePhone")),
+      mobilePhone: formatRosterPhone(cell(raw, "mobilePhone")),
       voices: splitVoices(cell(raw, "voice"), known),
     });
   });

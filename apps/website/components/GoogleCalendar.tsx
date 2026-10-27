@@ -10,12 +10,18 @@ import "@fullcalendar/react/themes/classic/theme.css";
 import React from "react";
 
 interface GoogleCalendarProps {
+  /** The public Google Calendar to show, by its id (usually an address). */
   embedId: string;
 }
 
-const GoogleCalendar: React.FC<GoogleCalendarProps> = () => {
+/**
+ * A month of the association's Google Calendar. Inside the members area the
+ * classic theme reads the « Les Pupitres » tokens (`.members-scope` in
+ * globals.css), so the grid follows the page in both themes.
+ */
+const GoogleCalendar: React.FC<GoogleCalendarProps> = ({ embedId }) => {
   return (
-    <div className="bg-content1 rounded p-4 shadow">
+    <div className="bg-members-card p-4">
       <FullCalendar
         plugins={[themePlugin, dayGridPlugin, googleCalendarPlugin]}
         initialView="dayGridMonth"
@@ -28,7 +34,7 @@ const GoogleCalendar: React.FC<GoogleCalendarProps> = () => {
         googleCalendarApiKey={process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_API_KEY}
         eventSources={[
           {
-            googleCalendarId: process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID,
+            googleCalendarId: embedId,
             className: "gcal-event", // optional
           },
         ]}

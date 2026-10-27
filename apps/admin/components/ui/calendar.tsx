@@ -1,74 +1,128 @@
 "use client";
 
-import * as React from "react";
+import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import * as React from "react";
+import {
+  DateLib,
+  DayButton as DayPickerDayButton,
+  DayPicker,
+  type DayButtonProps,
+} from "react-day-picker";
 
-import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
+/**
+ * The month grid of a date field (react-day-picker 10) on direction B: the
+ * days and the month arrows are 40 px ghost buttons, 44 px under a coarse
+ * pointer, at full opacity; the days of the months around are
+ * `text-muted-foreground` (5.6:1), never faded. In react-day-picker 9+ the
+ * `day` class names the grid cell (`td`) and `day_button` the button inside
+ * it; the picker puts the state classes (selected, today, outside…) on the
+ * cell, so `CalendarDayButton` reads the modifiers and styles the button
+ * the person presses. French by default: month, weekdays and the buttons'
+ * names.
+ */
 function Calendar({
   className,
   classNames,
+  components,
+  labels,
+  locale = fr,
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      locale={locale}
       className={cn("p-3", className)}
       classNames={{
-        month: "space-y-4",
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-y-0 relative",
-        month_caption: "flex justify-center pt-1 relative items-center",
-        month_grid: "w-full border-collapse space-y-1",
-        caption_label: "text-sm font-medium",
-        nav: "flex items-center justify-between absolute inset-x-0",
+        months: "relative flex flex-col gap-4 sm:flex-row",
+        month: "flex flex-col gap-4",
+        month_caption:
+          "pointer-coarse:h-11 pointer-coarse:px-11 flex h-10 items-center justify-center px-10",
+        caption_label: "text-[15px] leading-5 font-medium",
+        nav: "absolute inset-x-0 top-0 flex items-center justify-between",
         button_previous: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 z-10",
+          buttonVariants({ variant: "ghost" }),
+          "pointer-coarse:size-11 size-10 p-0 aria-disabled:pointer-events-none aria-disabled:opacity-55",
         ),
         button_next: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 z-10",
+          buttonVariants({ variant: "ghost" }),
+          "pointer-coarse:size-11 size-10 p-0 aria-disabled:pointer-events-none aria-disabled:opacity-55",
         ),
-        weeks: "w-full border-collapse space-y-",
+        month_grid: "w-full border-collapse",
         weekdays: "flex",
         weekday:
-          "text-muted-foreground rounded-md w-9 font-normal text-note",
-        week: "flex w-full mt-2",
-        day_button:
-          "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: cn(
+          "text-muted-foreground text-note pointer-coarse:w-11 w-10 font-normal",
+        week: "mt-2 flex w-full",
+        day: "relative p-0 text-center focus-within:z-20",
+        day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+          "pointer-coarse:size-11 size-10 p-0 text-sm font-normal",
         ),
-        range_end: "day-range-end",
-        selected:
-          "bg-primary-strong text-primary-foreground hover:bg-primary-strong hover:text-primary-foreground focus:bg-primary-strong focus:text-primary-foreground",
-        today: "bg-primary-soft text-primary-text",
-        outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        disabled: "text-muted-foreground opacity-50",
-        range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
         ...classNames,
       }}
       components={{
-        Chevron: ({ ...props }) =>
-          props.orientation === "left" ? (
-            <ChevronLeft {...props} className="h-4 w-4" />
+        Chevron: ({ orientation, className: chevronClassName }) =>
+          orientation === "left" ? (
+            <ChevronLeft
+              aria-hidden
+              className={cn("size-4", chevronClassName)}
+            />
           ) : (
-            <ChevronRight {...props} className="h-4 w-4" />
+            <ChevronRight
+              aria-hidden
+              className={cn("size-4", chevronClassName)}
+            />
           ),
+        DayButton: CalendarDayButton,
+        ...components,
+      }}
+      labels={{
+        labelPrevious: () => "Mois précédent",
+        labelNext: () => "Mois suivant",
+        labelDayButton: (date, modifiers, options, dateLib) => {
+          let label = (dateLib ?? new DateLib(options)).format(date, "PPPP");
+          if (modifiers.today) label = `Aujourd’hui, ${label}`;
+          if (modifiers.selected) label = `${label}, sélectionné`;
+          return label;
+        },
+        ...labels,
       }}
       {...props}
     />
   );
 }
 Calendar.displayName = "Calendar";
+
+/**
+ * One day of the grid: the picker's own button (it moves the focus with the
+ * arrow keys) carrying the day's state, since the picker only gives the
+ * modifiers to the cell. Today reads in soft teal, the chosen day in filled
+ * teal, a day of the month before or after in `text-muted-foreground`; a
+ * day that cannot be picked looks like every disabled button.
+ */
+function CalendarDayButton({ className, ...props }: DayButtonProps) {
+  const { modifiers } = props;
+  return (
+    <DayPickerDayButton
+      {...props}
+      className={cn(
+        className,
+        modifiers.outside && "text-muted-foreground",
+        modifiers.today && "bg-primary-soft text-primary-text",
+        modifiers.selected &&
+          "bg-primary-strong text-primary-foreground hover:bg-primary-strong-hover hover:text-primary-foreground",
+        modifiers.range_middle && "bg-primary-soft text-foreground",
+      )}
+    />
+  );
+}
 
 export { Calendar };

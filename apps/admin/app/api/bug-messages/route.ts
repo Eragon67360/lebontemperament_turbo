@@ -1,5 +1,11 @@
-import { CreateBugMessageDTO, UpdateBugMessageDTO } from "@/types/bugMessages";
+import { parsePatchBody, readJson } from "@/utils/anniversary/patchSchemas";
 import { checkAuthorization } from "@/utils/auth";
+import {
+  bugMessageCreateSchema,
+  bugMessageDeleteSchema,
+  bugMessagePatchSchema,
+} from "@/utils/bug-reports/apiSchemas";
+import { databaseErrorResponse } from "@/utils/databaseErrors";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -36,7 +42,10 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return databaseErrorResponse(
+      error,
+      "Les messages n'ont pas pu être chargés",
+    );
   }
 
   // Transform the data to match the expected structure
@@ -57,8 +66,19 @@ export async function POST(request: Request) {
     );
   }
 
+  // The report and the text only: the sender and receiver are set below.
+  const parsed = parsePatchBody(
+    bugMessageCreateSchema,
+    await readJson(request),
+  );
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const messageData = parsed.data;
   const supabase = await createClient();
-  const messageData: CreateBugMessageDTO = await request.json();
   const currentUserId = authCheck.user.id;
 
   try {
@@ -122,10 +142,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(transformedMessage);
   } catch (error) {
-    console.error("Error creating bug message:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création du message" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la création du message",
     );
   }
 }
@@ -139,9 +158,16 @@ export async function PATCH(request: Request) {
     );
   }
 
+  // The text only: unknown keys are refused.
+  const parsed = parsePatchBody(bugMessagePatchSchema, await readJson(request));
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id, ...updateData } = parsed.data;
   const supabase = await createClient();
-  const messageData: UpdateBugMessageDTO = await request.json();
-  const { id, ...updateData } = messageData;
 
   // Check if the user is the sender of the message
   const { data: existingMessage, error: fetchError } = await supabase
@@ -151,7 +177,10 @@ export async function PATCH(request: Request) {
     .single();
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return databaseErrorResponse(
+      fetchError,
+      "Erreur lors de la modification du message",
+    );
   }
 
   if (existingMessage.sender_id !== authCheck.user.id) {
@@ -174,7 +203,10 @@ export async function PATCH(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la modification du message",
+    );
   }
 
   // Transform the sender data
@@ -195,7 +227,17 @@ export async function DELETE(request: Request) {
     );
   }
 
-  const { id } = await request.json();
+  const parsed = parsePatchBody(
+    bugMessageDeleteSchema,
+    await readJson(request),
+  );
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+  const { id } = parsed.data;
   const supabase = await createClient();
 
   try {
@@ -229,10 +271,9 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete operation error:", error);
-    return NextResponse.json(
-      { error: "Delete operation failed" },
-      { status: 500 },
+    return databaseErrorResponse(
+      error,
+      "Erreur lors de la suppression du message",
     );
   }
 }
