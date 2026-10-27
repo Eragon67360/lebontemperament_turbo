@@ -2,6 +2,8 @@
 // their tests (no I/O). The table is public.site_documents; its PDFs live in
 // the public bucket site-media under documents/<collection>/.
 
+import { asciiWords, slugify } from "./slug";
+
 /** Largest PDF the admin accepts (the bucket allows 50 MB). */
 export const DOCUMENT_MAX_BYTES = 25 * 1024 * 1024;
 
@@ -29,21 +31,12 @@ const MONTHS = [
   "décembre",
 ];
 
-/** ASCII words joined by `sep`: accents dropped, everything else a separator. */
-function asciiWords(value: string, sep: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^A-Za-z0-9]+/g, sep)
-    .replace(new RegExp(`^\\${sep}+|\\${sep}+$`, "g"), "");
-}
-
 /**
  * The URL-safe file name a new document gets, from the uploaded file's name
  * or its title: « Compte rendu AG 2025.pdf » → `Compte-rendu-AG-2025.pdf`.
  */
 export function documentFileName(source: string): string {
-  const base = asciiWords(source.replace(/\.pdf$/i, ""), "-").slice(
+  const base = asciiWords(source.replace(/\.pdf$/i, "")).slice(
     0,
     FILE_NAME_MAX - 4,
   );
@@ -63,10 +56,7 @@ export function uniqueFileName(name: string, taken: Iterable<string>): string {
 
 /** A collection slug from its label: « Programmes de concert » → `programmes-de-concert`. */
 export function collectionSlug(label: string): string {
-  return asciiWords(label, "-")
-    .toLowerCase()
-    .slice(0, SLUG_MAX)
-    .replace(/-+$/, "");
+  return slugify(label, SLUG_MAX);
 }
 
 /** Object key in site-media for a new upload; unique, never the raw name. */

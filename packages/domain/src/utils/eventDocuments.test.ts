@@ -33,6 +33,10 @@ assert.equal(
   eventDocumentFileName("Bulletin de réservation (fromages).DOCX"),
   "Bulletin-de-reservation-fromages.docx",
 );
+assert.equal(
+  eventDocumentFileName("Œuvres du chœur (ex æquo).XLSX"),
+  "Oeuvres-du-choeur-ex-aequo.xlsx",
+);
 assert.equal(eventDocumentFileName("¿¿.xlsx"), "document.xlsx");
 assert.equal(eventDocumentFileName("x.svg"), null);
 assert.equal(eventDocumentFileName("x".repeat(400) + ".pdf")!.length, 150);
