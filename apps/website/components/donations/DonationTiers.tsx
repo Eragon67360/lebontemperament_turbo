@@ -52,7 +52,7 @@ export default function DonationTiers({
               className={`min-w-16 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
                 isSelected
                   ? "border-primary bg-primary/10 text-primary-text dark:bg-primary/5"
-                  : "border-default-300 hover:border-primary/50"
+                  : "border-separator hover:border-primary/50"
               }`}
             >
               {tier.amount.toLocaleString("fr-FR")} €
