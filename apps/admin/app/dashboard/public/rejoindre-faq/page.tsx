@@ -333,6 +333,7 @@ export default function JoiningContentPage() {
       <DataState
         isLoading={isLoading}
         isError={isError}
+        hasData={!!data}
         isEmpty={false}
         onRetry={() => refetch()}
         errorDescription="La FAQ et les horaires n'ont pas pu être chargés."

@@ -197,6 +197,7 @@ export function FileExplorer({ programId, groupId }: FileExplorerProps) {
       <DataState
         isLoading={loading}
         isError={failed}
+        hasData={!!(foldersQuery.data && filesQuery.data)}
         onRetry={() => {
           foldersQuery.refetch();
           filesQuery.refetch();

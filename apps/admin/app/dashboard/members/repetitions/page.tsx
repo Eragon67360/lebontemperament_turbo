@@ -126,6 +126,7 @@ export default function RepetitionsPage() {
         <DataState
           isLoading={rehearsalsQuery.isLoading}
           isError={rehearsalsQuery.isError}
+          hasData={!!rehearsalsQuery.data}
           isEmpty={rows.length === 0}
           onRetry={() => rehearsalsQuery.refetch()}
           errorDescription="Les répétitions n'ont pas pu être chargées."

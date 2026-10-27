@@ -43,6 +43,7 @@ export default function StoryPreviewPage() {
       <DataState
         isLoading={isPending}
         isError={isError}
+        hasData={!!project}
         isEmpty={!project}
         onRetry={() => refetch()}
         errorDescription="L'histoire n'a pas pu être chargée : le serveur n'a pas répondu."

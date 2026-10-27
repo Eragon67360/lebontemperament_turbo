@@ -134,6 +134,7 @@ export default function AnniversaryOverviewPage() {
               <DataState
                 isLoading={readiness.isLoading}
                 isError={readiness.isError}
+                hasData={!!readiness.data}
                 onRetry={() => readiness.refetch()}
                 errorDescription="L'état des sections n'a pas pu être calculé."
                 skeleton={

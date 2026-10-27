@@ -143,6 +143,7 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
               <DataState
                 isLoading={isLoadingReports}
                 isError={isReportsError}
+                hasData={bugReports.length > 0}
                 isEmpty={bugReports.length === 0}
                 onRetry={() => refetchReports()}
                 errorDescription="Vos signalements n'ont pas pu être chargés."
@@ -222,6 +223,7 @@ export function MessagesDialog({ open, onOpenChange }: MessagesDialogProps) {
                   <DataState
                     isLoading={isLoadingMessages}
                     isError={isMessagesError}
+                    hasData={messages.length > 0}
                     isEmpty={messages.length === 0}
                     onRetry={() => refetchMessages()}
                     errorDescription="Les messages de ce signalement n'ont pas pu être chargés."

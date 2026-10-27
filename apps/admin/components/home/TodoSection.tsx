@@ -84,6 +84,7 @@ export function TodoSection({ className }: { className?: string }) {
           <DataState
             isLoading={sources.isLoading}
             isError={sources.isError}
+            hasData={!!(readiness.data && reports.data && runs.data)}
             onRetry={sources.retryAll}
             errorDescription="Ce qui vous attend n'a pas pu être chargé."
             skeleton={
@@ -100,7 +101,9 @@ export function TodoSection({ className }: { className?: string }) {
                 className="py-8"
               />
             )}
-            <SourceNote failed={sources.failed} className="mt-4" />
+            {!sources.isError && (
+              <SourceNote failed={sources.failed} className="mt-4" />
+            )}
           </DataState>
         </CardContent>
       </Card>

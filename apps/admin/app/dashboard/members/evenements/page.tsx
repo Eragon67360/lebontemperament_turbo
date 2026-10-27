@@ -127,6 +127,7 @@ export default function EvenementsPage() {
         <DataState
           isLoading={eventsQuery.isLoading}
           isError={eventsQuery.isError}
+          hasData={!!eventsQuery.data}
           isEmpty={rows.length === 0}
           onRetry={() => eventsQuery.refetch()}
           errorDescription="Les événements n'ont pas pu être chargés."
