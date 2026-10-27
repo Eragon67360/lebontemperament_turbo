@@ -182,6 +182,61 @@
   --color-primary: var(--members-ink);
 }
 
+/* The members' Google Calendar (components/GoogleCalendar.tsx) paints
+   FullCalendar's classic theme with the same tokens: ink for the buttons,
+   the pressed view and the events, the card for the grid, the soft grey
+   line for the borders, ink at 10 % (like bg-primary/10) for today. The
+   theme only switches to its own dark palette under
+   [data-color-scheme=dark], which the site never sets (next-themes toggles
+   `.dark`), so the dark members tokens take over through these variables. */
+.members-scope {
+  --fc-classic-button: var(--members-ink);
+  --fc-classic-button-border: var(--members-ink);
+  --fc-classic-button-strong: var(--members-ink-hover);
+  --fc-classic-button-strong-border: var(--members-ink-hover);
+  --fc-classic-button-outline: var(--members-ink);
+  --fc-classic-button-foreground: var(--members-ink-foreground);
+  --fc-classic-primary: var(--members-ink);
+  --fc-classic-primary-foreground: var(--members-ink-foreground);
+  --fc-classic-event: var(--members-ink);
+  --fc-classic-event-contrast: var(--members-ink-foreground);
+  --fc-classic-background-event: var(--members-ink);
+  --fc-classic-highlight: color-mix(
+    in oklab,
+    var(--members-ink) 10%,
+    transparent
+  );
+  --fc-classic-today: color-mix(in oklab, var(--members-ink) 10%, transparent);
+  --fc-classic-now: var(--members-ink);
+  --fc-classic-background: var(--members-card);
+  --fc-classic-foreground: var(--foreground);
+  --fc-classic-faint-foreground: var(--members-muted);
+  --fc-classic-muted-foreground: var(--members-muted);
+  --fc-classic-border: var(--members-line);
+  --fc-classic-strong-border: var(--members-line);
+}
+
+.dark .members-scope,
+.dark.members-scope {
+  /* The theme's own translucent neutrals for a dark surface (hover and
+     pressed day cells), the values its dark palette would set. */
+  --fc-classic-faint: #ffffff0a;
+  --fc-classic-muted: #ffffff14;
+  --fc-classic-strong: #ffffff24;
+}
+
+/* The classic theme's one bold class (the toolbar title, the event titles,
+   the month's first day): « Les Pupitres » has titles at 600 and labels at
+   500, never 700. The class name is FullCalendar's own;
+   lib/membres/membres.test.ts checks it against the installed theme. */
+.members-scope .fc-classic-DIS {
+  font-weight: 500;
+}
+
+.members-scope .fc-classic-DIS[role="heading"] {
+  font-weight: 600;
+}
+
 @media (prefers-contrast: more) {
   .members-scope {
     --members-line: #000000;

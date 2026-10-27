@@ -1,9 +1,11 @@
 import Image from "next/image";
 import NextLink from "next/link";
 import { IoArrowForwardOutline } from "react-icons/io5";
+import { TILE_FILL } from "./tones";
 
+// The fill (background and ink text) comes from TILE_FILL.
 const tile =
-  "group flex min-h-[220px] flex-col gap-4 rounded-[32px] p-6 text-[#17171c] no-underline transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 sm:p-7";
+  "group flex min-h-[220px] flex-col gap-4 rounded-[32px] p-6 no-underline transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 sm:p-7";
 
 function Cta({ children }: { children: string }) {
   return (
@@ -26,7 +28,10 @@ export function HomeTiles({ scoreFolder }: { scoreFolder: string | null }) {
   return (
     <ul aria-label="Raccourcis" className="grid gap-4 sm:gap-6 md:grid-cols-3">
       <li className="flex">
-        <NextLink href={scoresHref} className={`${tile} w-full bg-[#7db8f5]`}>
+        <NextLink
+          href={scoresHref}
+          className={`${tile} w-full ${TILE_FILL.scores}`}
+        >
           <span className="font-medium">Partitions</span>
           <span className="font-members-display text-[28px] leading-[1.1] font-semibold sm:text-[32px]">
             Tes partitions et tes enregistrements
@@ -37,7 +42,7 @@ export function HomeTiles({ scoreFolder }: { scoreFolder: string | null }) {
       <li className="flex">
         <NextLink
           href="/membres/concerts"
-          className={`${tile} w-full bg-[#c3a6f2] p-3.5 sm:p-3.5`}
+          className={`${tile} w-full ${TILE_FILL.concerts} p-3.5 sm:p-3.5`}
         >
           <Image
             src="/img/entre_terre_et_ciel.jpg"
@@ -58,7 +63,7 @@ export function HomeTiles({ scoreFolder }: { scoreFolder: string | null }) {
       <li className="flex">
         <NextLink
           href="/membres/administration"
-          className={`${tile} w-full bg-[#6ccb96]`}
+          className={`${tile} w-full ${TILE_FILL.documents}`}
         >
           <span className="font-medium">Documents</span>
           <span className="font-members-display text-[28px] leading-[1.1] font-semibold sm:text-[32px]">
