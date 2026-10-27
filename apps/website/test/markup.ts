@@ -58,7 +58,12 @@ function decode(text: string): string {
 export function parseHtml(html: string): El {
   const root: El = { tag: "#root", attrs: {}, children: [], parent: null };
   let current = root;
-  const source = html.replace(/<(script|style)\b[\s\S]*?<\/\1>/g, "");
+  // Strip until nothing changes, so a removal can't splice a new tag together.
+  let source = html;
+  for (let previous = ""; previous !== source;) {
+    previous = source;
+    source = source.replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, "");
+  }
   for (const match of source.matchAll(TOKEN)) {
     const [whole, closing, tag, attributes, text] = match;
     if (text !== undefined) {
