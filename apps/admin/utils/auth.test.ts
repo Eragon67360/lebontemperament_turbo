@@ -132,7 +132,8 @@ registerHooks({
 
 // --- The checks, loaded after the fakes are in place ---
 
-const { checkAuthorization, checkDriverAuthorization } = await import("./auth");
+const { checkAuthorization, checkSuperadminAuthorization } =
+  await import("./auth");
 const { requireSuperadmin } = await import("./orders/server");
 const { default: ProtectedLayout } =
   await import("../components/layouts/ProtectedLayout");
@@ -187,7 +188,7 @@ for (const [who, caller] of Object.entries(CALLERS)) {
   state.caller = caller;
   matrix[who] = {
     admin: check(await checkAuthorization()),
-    superadmin: check(await checkDriverAuthorization()),
+    superadmin: check(await checkSuperadminAuthorization()),
     dashboard: await page(ProtectedLayout),
     bugReports: await page(BugReportsLayout),
     commandes: await page(OrdersLayout),
@@ -259,7 +260,7 @@ assert.deepEqual(matrix, {
 state.caller = CALLERS.superadmin;
 for (const result of [
   await checkAuthorization(),
-  await checkDriverAuthorization(),
+  await checkSuperadminAuthorization(),
 ]) {
   assert.ok(result.authorized);
   assert.equal(result.user, someone);
