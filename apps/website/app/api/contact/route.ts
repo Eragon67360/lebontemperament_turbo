@@ -1,3 +1,4 @@
+import { errorCodes } from "@/lib/errorCodes";
 import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(SENT);
   } catch (error) {
-    console.error("[api/contact] Email sending error:", error);
+    console.error("[api/contact] Email sending error:", errorCodes(error));
     return NextResponse.json(SEND_FAILED, { status: 500 });
   }
 }

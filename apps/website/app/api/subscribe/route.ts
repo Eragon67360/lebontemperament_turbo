@@ -1,4 +1,5 @@
 import { appsScriptUrl } from "@/lib/appsScript";
+import { errorCodes } from "@/lib/errorCodes";
 import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer, type Mailer } from "@/lib/mail";
 import { escapeHtml } from "@repo/domain/utils/html";
@@ -86,7 +87,10 @@ async function isAlreadySubscribed(email: string): Promise<boolean> {
       );
     });
   } catch (error) {
-    console.error("[api/subscribe] Group membership check failed:", error);
+    console.error(
+      "[api/subscribe] Group membership check failed:",
+      errorCodes(error),
+    );
     return false;
   }
 }
@@ -122,7 +126,10 @@ async function processSubscription(
       html: welcomeEmailTemplate,
     });
   } catch (error) {
-    console.error("[api/subscribe] Failed to send subscription emails:", error);
+    console.error(
+      "[api/subscribe] Failed to send subscription emails:",
+      errorCodes(error),
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import {
   insertPendingMemory,
   pendingMemoryRow,
 } from "@/lib/anniversaryMemories";
+import { errorCodes } from "@/lib/errorCodes";
 import { isFormRateLimited, RATE_LIMITED_MESSAGE } from "@/lib/formRateLimit";
 import { createMailer } from "@/lib/mail";
 import { getContactEmail } from "@/lib/siteSettings";
@@ -268,7 +269,7 @@ export async function POST(request: Request) {
     const { error } = await insertPendingMemory(supabase, memory);
 
     if (error) {
-      console.error("Error submitting memory:", error);
+      console.error("Error submitting memory:", errorCodes(error));
       return NextResponse.json(
         { error: "Failed to submit memory" },
         { status: 500 },
@@ -311,7 +312,7 @@ export async function POST(request: Request) {
         ),
       });
     } catch (emailError) {
-      console.error("Error sending emails:", emailError);
+      console.error("Error sending emails:", errorCodes(emailError));
       // Still return success if email fails, as the memory was saved
     }
 
@@ -321,7 +322,10 @@ export async function POST(request: Request) {
       id: memory.id,
     });
   } catch (error) {
-    console.error("Error in POST /api/anniversary/submit-memory:", error);
+    console.error(
+      "Error in POST /api/anniversary/submit-memory:",
+      errorCodes(error),
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
