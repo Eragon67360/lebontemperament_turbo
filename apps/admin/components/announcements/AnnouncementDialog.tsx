@@ -213,7 +213,7 @@ export function AnnouncementDialog({
           />
           <p className="text-note text-muted-foreground">
             {isHome
-              ? "Lu par les lecteurs d'écran à la place du titre."
+              ? "Lu par les lecteurs d'écran après le titre."
               : "Sous le titre de la carte."}
           </p>
           <FieldError field={id("body")} message={errors.body} />
