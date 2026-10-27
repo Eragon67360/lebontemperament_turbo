@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { ErrorState, ListSkeleton } from "@/components/ui/data-state";
+import { Stepper, type Step } from "@/components/ui/stepper";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
@@ -24,7 +25,6 @@ import {
   type ApplyResponse,
   type BulkDeleteResponse,
 } from "@/hooks/useRosterSync";
-import { cn } from "@/lib/utils";
 import { MAX_APPLY_INVITES, type ApplyRequest } from "@/utils/roster/apply";
 import { MAX_BULK_DELETIONS } from "@/utils/roster/bulkDelete";
 import RouteNames from "@/utils/routes";
@@ -47,7 +47,11 @@ import {
   ToSettleGroup,
 } from "./RosterSyncGroups";
 
-const STEPS = ["Vérifier", "Choisir", "Appliquer"] as const;
+const STEPS: Step[] = [
+  { label: "Vérifier" },
+  { label: "Choisir" },
+  { label: "Appliquer" },
+];
 
 const EMPTY_SET: ReadonlySet<string> = new Set();
 
@@ -236,7 +240,11 @@ export function RosterSyncReview() {
         </div>
       }
     >
-      <Stepper current={step} />
+      <Stepper
+        aria-label="Étapes de la synchronisation"
+        steps={STEPS}
+        current={step}
+      />
 
       {review.isLoading ? (
         <ListSkeleton rows={4} label="Lecture du tableau des membres…" />
@@ -357,51 +365,6 @@ export function RosterSyncReview() {
   );
 }
 
-function Stepper({ current }: { current: number }) {
-  return (
-    <nav aria-label="Étapes de la synchronisation">
-      <ol className="flex flex-wrap gap-x-6 gap-y-2">
-        {STEPS.map((label, index) => {
-          const done = index < current;
-          const active = index === current;
-          return (
-            <li
-              key={label}
-              aria-current={active ? "step" : undefined}
-              className={cn(
-                "flex items-center gap-2 text-sm",
-                active
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground",
-              )}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full border text-xs font-medium",
-                  done &&
-                    "bg-primary-600 text-primary-foreground border-transparent",
-                  active && "border-primary-600 text-primary-600",
-                )}
-              >
-                {done ? <Check className="h-4 w-4" /> : index + 1}
-              </span>
-              <span className="sr-only">
-                {done
-                  ? "Étape terminée : "
-                  : active
-                    ? "Étape en cours : "
-                    : "Étape à venir : "}
-              </span>
-              {label}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-
 function ValidationPanel({ review }: { review: RosterReview }) {
   const { errors, warnings } = review.validation;
   if (errors.length === 0 && warnings.length === 0) return null;
@@ -483,7 +446,7 @@ function ApplyOutcome({
             <span className="mt-0.5 shrink-0">
               {result.status === "done" ? (
                 <>
-                  <Check className="text-primary-600 h-4 w-4" aria-hidden />
+                  <Check className="text-primary h-4 w-4" aria-hidden />
                   <span className="sr-only">Fait :</span>
                 </>
               ) : (
@@ -572,7 +535,7 @@ function DeleteOutcome({
             <span className="mt-0.5 shrink-0">
               {result.status === "done" ? (
                 <>
-                  <Check className="text-primary-600 h-4 w-4" aria-hidden />
+                  <Check className="text-primary h-4 w-4" aria-hidden />
                   <span className="sr-only">Supprimé :</span>
                 </>
               ) : (
