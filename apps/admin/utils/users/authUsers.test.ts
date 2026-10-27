@@ -11,13 +11,17 @@ import {
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
+const GOOGLE_A = "https://lh3.googleusercontent.com/a/fake-a=s96-c";
+const GOOGLE_B = "https://lh3.googleusercontent.com/a/fake-b=s96-c";
+const OTHER_HOST = "https://other.example/x.gif";
+
 const summary: AuthSummary = {
   id: "u1",
   invited_at: null,
   confirmed_at: null,
   email_confirmed_at: "2026-01-01T00:00:00Z",
   last_sign_in_at: null,
-  avatar_url: "https://example.com/a.png",
+  avatar_url: GOOGLE_A,
 };
 
 const authUser = {
@@ -26,7 +30,7 @@ const authUser = {
   confirmed_at: undefined,
   email_confirmed_at: undefined,
   last_sign_in_at: "2026-03-01T00:00:00Z",
-  user_metadata: { avatar_url: "https://example.com/b.png" },
+  user_metadata: { avatar_url: GOOGLE_B },
 } as unknown as User;
 
 function fakeClient(
@@ -55,10 +59,18 @@ function fakeClient(
 }
 
 async function main() {
-  // The function exists: one call, no Auth API paging.
+  // The function exists: one call, no Auth API paging. Only Google account
+  // pictures are kept, even before the function filters them itself.
   {
-    const { client, calls } = fakeClient({ data: [summary], error: null });
-    assert.deepEqual(await listAuthSummaries(client), [summary]);
+    const other = { ...summary, id: "u3", avatar_url: OTHER_HOST };
+    const { client, calls } = fakeClient({
+      data: [summary, other],
+      error: null,
+    });
+    assert.deepEqual(await listAuthSummaries(client), [
+      summary,
+      { ...other, avatar_url: null },
+    ]);
     assert.equal(calls.listUsers, 0);
   }
   // Migration not applied yet: fall back to the Auth admin API.
@@ -86,8 +98,13 @@ async function main() {
     confirmed_at: null,
     email_confirmed_at: null,
     last_sign_in_at: "2026-03-01T00:00:00Z",
-    avatar_url: "https://example.com/b.png",
+    avatar_url: GOOGLE_B,
   });
+  // Through the Auth API too: anything but a Google picture is dropped.
+  for (const avatar of [OTHER_HOST, "http://lh3.googleusercontent.com/a", 42]) {
+    const user = { ...authUser, user_metadata: { avatar_url: avatar } } as User;
+    assert.equal(summaryOf(user).avatar_url, null, String(avatar));
+  }
 
   assert.equal(inviteStatusOf(undefined), "en attente");
   assert.equal(inviteStatusOf(summary), "approuvé");
