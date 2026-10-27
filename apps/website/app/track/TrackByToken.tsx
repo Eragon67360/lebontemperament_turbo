@@ -1,5 +1,6 @@
 "use client";
 
+import { createPollGuard } from "@/lib/pollGuard";
 import { createClient } from "@/utils/supabase/client";
 import { AnimatePresence } from "motion/react";
 import dynamic from "next/dynamic";
@@ -32,6 +33,12 @@ const TrackMapClient = dynamic(
 function isExpired(expiresAt: string): boolean {
   return new Date(expiresAt) < new Date();
 }
+
+/**
+ * How long a refresh may stay unanswered before the next tick asks again
+ * (the late answer is then dropped).
+ */
+const POLL_PENDING_LIMIT_MS = 30_000;
 
 /** How often the page refreshes the driver's position while a round is live. */
 const POLL_INTERVAL_MS = 10_000;
@@ -133,11 +140,18 @@ export function TrackByTokenContent({
   useEffect(() => {
     if (!isLive) return;
     let cancelled = false;
+    // One refresh at a time: a tick or a visibility change while an answer
+    // is pending is skipped, so requests don't pile up on a slow connection,
+    // and an answer that comes after a newer request is dropped, so an older
+    // position never replaces a newer one.
+    const guard = createPollGuard(POLL_PENDING_LIMIT_MS);
     const refresh = async () => {
       if (document.visibilityState !== "visible") return;
+      const request = guard.begin();
+      if (request === null) return;
       try {
         const state = await fetchTracking();
-        if (cancelled) return;
+        if (cancelled || !guard.settle(request)) return;
         if (state.kind === "ok") {
           setDelivery(state.delivery);
           setRecipient(state.recipient);
@@ -146,6 +160,7 @@ export function TrackByTokenContent({
         }
       } catch {
         // Transient network error: keep the last known state, retry next tick.
+        guard.settle(request);
       }
     };
     const interval = window.setInterval(refresh, POLL_INTERVAL_MS);
