@@ -31,6 +31,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Callout } from "@/components/ui/callout";
 import {
   Card,
@@ -292,7 +293,12 @@ export function DesignSystemLab() {
           title="Champs"
           intro="Même hauteur, même rayon (10 px), même bordure pour les champs, les zones de texte et les listes déroulantes. L’erreur se lit sous le champ et dans le résumé en haut du formulaire."
         >
-          <FieldsDemo />
+          <div className="flex flex-col gap-5">
+            <FieldsDemo />
+            <Row label="Calendrier du champ de date : jours de 40 px (44 au doigt), aujourd’hui en teal doux, le jour choisi en teal plein, les jours du mois voisin en gris lisible, les jours indisponibles comme un bouton désactivé">
+              <CalendarDemo />
+            </Row>
+          </div>
         </Section>
 
         <Section
@@ -1141,6 +1147,23 @@ function FieldsDemo() {
           Désactivé
         </label>
       </div>
+    </div>
+  );
+}
+
+/** The month a date field opens on: today, a chosen day, the days around. */
+function CalendarDemo() {
+  const [date, setDate] = useState<Date | undefined>(new Date(2026, 9, 14));
+  return (
+    <div className="bg-popover text-popover-foreground rounded-lg border shadow-lg">
+      <Calendar
+        mode="single"
+        selected={date}
+        onSelect={setDate}
+        defaultMonth={new Date(2026, 9)}
+        today={new Date(2026, 9, 27)}
+        disabled={{ before: new Date(2026, 9, 5) }}
+      />
     </div>
   );
 }
