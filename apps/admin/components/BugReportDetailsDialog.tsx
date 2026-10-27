@@ -23,6 +23,8 @@ import {
   bugReportStatusTone,
   formatReportDate,
   personName,
+  type BugReportSource,
+  type BugReportStatus,
 } from "@/utils/bug-reports/status";
 import { Loader2, MessageSquare, Send } from "lucide-react";
 import { useId, useState } from "react";
@@ -36,10 +38,10 @@ interface BugReportDetailsProps {
     id: string;
     title: string;
     description: string;
-    status: "pending" | "in_progress" | "resolved";
+    status: BugReportStatus;
     created_at: string;
     screenshot_paths?: string[];
-    source?: "admin" | "app";
+    source?: BugReportSource;
     app_info?: string | null;
     profiles: {
       email: string;

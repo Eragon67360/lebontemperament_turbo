@@ -99,10 +99,7 @@ export function useUpdateUserRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
-      userId: string;
-      role: "user" | "admin" | "superadmin";
-    }) => {
+    mutationFn: async (data: { userId: string; role: User["role"] }) => {
       const response = await fetch("/api/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
