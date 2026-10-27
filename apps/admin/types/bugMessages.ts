@@ -1,11 +1,7 @@
-export interface BugMessage {
-  id: string;
-  bug_report_id: string;
-  sender_id: string;
-  receiver_id: string | null;
-  message: string;
-  created_at: string;
-  is_read: boolean;
+import type { Tables } from "@repo/domain/database.types";
+
+/** A message of a report's thread (public.bug_messages) with its sender. */
+export interface BugMessage extends Tables<"bug_messages"> {
   sender: {
     email: string;
     display_name: string | null;

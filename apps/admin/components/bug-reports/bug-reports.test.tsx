@@ -14,6 +14,8 @@ const report = {
   description: "Sur la page des concerts, rien ne se passe.",
   status: "in_progress" as const,
   created_at: "2026-10-06T12:00:00Z",
+  source: "admin" as const,
+  screenshot_paths: [] as string[],
   profiles: { email: "anne@example.org", display_name: "Anne" },
 };
 

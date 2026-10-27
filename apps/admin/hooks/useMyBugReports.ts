@@ -1,10 +1,11 @@
+import type { BugReportStatus } from "@/utils/bug-reports/status";
 import { useQuery } from "@tanstack/react-query";
 
 export interface MyBugReport {
   id: string;
   title: string;
   description: string;
-  status: "pending" | "in_progress" | "resolved";
+  status: BugReportStatus;
   reported_by: string;
   created_at: string;
   is_read: boolean;

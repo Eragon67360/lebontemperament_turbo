@@ -1,12 +1,6 @@
-export type FeatureFlag = {
-  id: string;
-  flag_key: string;
-  flag_name: string;
-  description: string | null;
-  is_enabled: boolean;
-  created_at: string;
-  updated_at: string;
-};
+import type { Tables } from "@repo/domain/database.types";
+
+export type FeatureFlag = Tables<"feature_flags">;
 
 export type UpdateFeatureFlagDTO = {
   flag_key: string;

@@ -1,117 +1,130 @@
-// Website types for Anniversary CMS (read-only)
+// Website types for the 40-ans CMS (read-only): each one is the columns the
+// page selects (`lib/anniversaryColumns.ts`), typed from the table's row so
+// a renamed or dropped column fails the build here. The CMS keeps a few
+// nullable columns filled; `Filled` reads them as such, where
+// `lib/anniversary.ts` casts the row.
 
-export interface AnniversaryHero {
-  hero_number: string;
-  hero_subtitle: string;
-  description: string | null;
-  cta_text: string;
-  cta_target_section: string;
-  enable_intro_animation: boolean;
-  skip_button_text: string;
-}
+import type {
+  AnniversaryArchive,
+  AnniversaryAudioMemory,
+  AnniversaryFormConfig,
+  AnniversaryHero as AnniversaryHeroRow,
+  AnniversaryHeroStat,
+  AnniversaryMemory,
+  AnniversaryNavigationCard,
+  AnniversaryPhoto,
+  AnniversaryTimelineEvent,
+  AnniversaryVideo,
+  ArchiveType,
+} from "@repo/domain/types/anniversary";
 
-export interface HeroStat {
-  id: string;
-  icon_name: string;
-  number: string;
-  label: string;
-  display_order: number;
-}
+export type { ArchiveType };
 
-export interface NavigationCard {
-  id: string;
-  title: string;
-  description: string;
-  icon_name: string;
-  target_section_id: string;
-  display_order: number;
-}
+/** The columns the CMS always fills, read without their `null`. */
+type Filled<T> = { [K in keyof T]-?: NonNullable<T[K]> };
 
-export interface TimelineEvent {
-  id: string;
-  year: number;
-  title: string;
-  description: string;
-  icon_name: string;
-  display_order: number;
-}
+export type AnniversaryHero = Pick<
+  AnniversaryHeroRow,
+  "hero_number" | "hero_subtitle" | "description"
+> &
+  Filled<
+    Pick<
+      AnniversaryHeroRow,
+      | "cta_text"
+      | "cta_target_section"
+      | "enable_intro_animation"
+      | "skip_button_text"
+    >
+  >;
 
-export interface Video {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail_url: string;
-  video_url: string | null;
-  year: number | null;
-  category: string;
-  display_order: number;
-}
+export type HeroStat = Pick<
+  AnniversaryHeroStat,
+  "id" | "icon_name" | "number" | "label" | "display_order"
+>;
 
-export interface AudioMemory {
-  id: string;
-  title: string;
-  description: string;
-  speaker_name: string | null;
-  year: number | null;
-  duration: string;
-  audio_url: string;
-  display_order: number;
-}
+export type NavigationCard = Pick<
+  AnniversaryNavigationCard,
+  | "id"
+  | "title"
+  | "description"
+  | "icon_name"
+  | "target_section_id"
+  | "display_order"
+>;
 
-export interface Photo {
-  id: string;
-  title: string;
-  description: string | null;
-  year: number | null;
-  category: string;
-  image_url: string;
-  display_order: number;
-}
+export type TimelineEvent = Pick<
+  AnniversaryTimelineEvent,
+  "id" | "year" | "title" | "description" | "icon_name" | "display_order"
+>;
 
-export interface FormConfig {
-  section_title: string;
-  section_description: string;
-  name_label: string;
-  email_label: string;
-  message_label: string;
-  year_label: string;
-  submit_button_text: string;
-  success_message: string;
-  is_enabled: boolean;
-}
+export type Video = Pick<
+  AnniversaryVideo,
+  | "id"
+  | "title"
+  | "description"
+  | "thumbnail_url"
+  | "video_url"
+  | "year"
+  | "category"
+  | "display_order"
+>;
+
+export type AudioMemory = Pick<
+  AnniversaryAudioMemory,
+  | "id"
+  | "title"
+  | "description"
+  | "speaker_name"
+  | "year"
+  | "duration"
+  | "audio_url"
+  | "display_order"
+>;
+
+export type Photo = Pick<
+  AnniversaryPhoto,
+  | "id"
+  | "title"
+  | "description"
+  | "year"
+  | "category"
+  | "image_url"
+  | "display_order"
+>;
+
+export type FormConfig = Pick<
+  AnniversaryFormConfig,
+  "section_title" | "section_description"
+> &
+  Filled<
+    Pick<
+      AnniversaryFormConfig,
+      | "name_label"
+      | "email_label"
+      | "message_label"
+      | "year_label"
+      | "submit_button_text"
+      | "success_message"
+      | "is_enabled"
+    >
+  >;
 
 /**
  * A featured memory as visitors see it. The author's email stays in the
  * database for the admin's moderation screens and never reaches the website
- * (see `lib/anniversaryMemories.ts`).
+ * (see `lib/anniversaryMemories.ts`, which fills the two flags).
  */
-export interface Memory {
-  id: string;
-  name: string;
-  message: string;
-  year: number | null;
-  is_featured: boolean;
-  created_at: string;
-}
+export type Memory = Pick<
+  AnniversaryMemory,
+  "id" | "name" | "message" | "year"
+> &
+  Filled<Pick<AnniversaryMemory, "is_featured" | "created_at">>;
 
-export type ArchiveType =
-  | "assemblée-générale"
-  | "rapport-annuel"
-  | "rapport-financier"
-  | "gazette"
-  | "programme"
-  | "document-historique";
-
-export interface Archive {
-  id: string;
-  title: string;
-  description: string;
-  year: number;
-  type: ArchiveType;
-  theme: string;
-  file_url: string;
-  file_size: string;
-}
+/** An archive as `/40-ans/archives` lists it; `type` is one of ARCHIVE_TYPES. */
+export type Archive = Pick<
+  AnniversaryArchive,
+  "id" | "title" | "description" | "year" | "theme" | "file_url" | "file_size"
+> & { type: ArchiveType };
 
 // Combined response types for API
 export interface AnniversaryPageData {

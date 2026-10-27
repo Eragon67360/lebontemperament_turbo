@@ -78,7 +78,7 @@ const dayStart = (date: Date) => new Date(date).setHours(0, 0, 0, 0);
 
 /** "" | "2" | 2 → number: the weekly interval, typed as text. */
 const weeksInput = z.preprocess(
-  (value) =>
+  (value: string | number | null | undefined) =>
     value === "" || value === null || value === undefined
       ? undefined
       : typeof value === "string"
@@ -89,7 +89,7 @@ const weeksInput = z.preprocess(
     .int("Indiquez un nombre entier de semaines")
     .min(1, "Au moins une semaine")
     .max(52, "52 semaines au plus"),
-) as unknown as z.ZodType<number, string | number | null | undefined>;
+);
 
 /**
  * A rehearsal: what the previous form required natively, plus two checks it
@@ -262,7 +262,8 @@ const yearNumber = (missing?: string) =>
     .min(YEAR_MIN, YEAR_RANGE)
     .max(YEAR_MAX, YEAR_RANGE);
 
-const yearInput = (value: unknown, empty: null | undefined) =>
+type YearInput = string | number | null | undefined;
+const yearInput = (value: YearInput, empty: null | undefined) =>
   value === "" || value === null || value === undefined
     ? empty
     : typeof value === "string"
@@ -272,15 +273,15 @@ const yearInput = (value: unknown, empty: null | undefined) =>
 /** "" | "1998" | 1998 → number; empty is refused with `message`. */
 const requiredYear = (message: string) =>
   z.preprocess(
-    (value) => yearInput(value, undefined),
+    (value: YearInput) => yearInput(value, undefined),
     yearNumber(message),
-  ) as unknown as z.ZodType<number, string | number | null | undefined>;
+  );
 
 /** "" | "1998" | 1998 | null → number | null. */
 const optionalYear = z.preprocess(
-  (value) => yearInput(value, null),
+  (value: YearInput) => yearInput(value, null),
   yearNumber().nullable(),
-) as unknown as z.ZodType<number | null, string | number | null | undefined>;
+);
 
 const iconName = z.enum(ICON_OPTIONS, { error: "Choisissez une icône" });
 const sectionId = z.enum(SECTION_IDS as [string, ...string[]], {

@@ -1,6 +1,6 @@
-import { ROLE_LABELS } from "@/utils/members/list";
+import { ROLE_LABELS, type Role } from "@/utils/members/list";
 // utils/roleUtils.ts
-export function getRoleBadgeVariant(role: "user" | "admin" | "superadmin") {
+export function getRoleBadgeVariant(role: Role) {
   switch (role) {
     case "superadmin":
       return "default"; // Could be a custom variant like 'purple'
@@ -13,6 +13,6 @@ export function getRoleBadgeVariant(role: "user" | "admin" | "superadmin") {
   }
 }
 
-export function getRoleLabel(role: "user" | "admin" | "superadmin") {
+export function getRoleLabel(role: Role) {
   return ROLE_LABELS[role] ?? role;
 }

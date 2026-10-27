@@ -1,3 +1,6 @@
+import type { ArchiveType } from "@repo/domain/types/anniversary";
+
+export { ARCHIVE_TYPES } from "@repo/domain/types/anniversary";
 export type {
   AnniversaryArchive,
   AnniversaryAudioMemory,
@@ -9,6 +12,7 @@ export type {
   AnniversaryPhoto,
   AnniversaryTimelineEvent,
   AnniversaryVideo,
+  ArchiveType,
 } from "@repo/domain/types/anniversary";
 
 // ============================================================================
@@ -189,18 +193,6 @@ export const PHOTO_CATEGORIES = [
 ] as const;
 
 export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number];
-
-// Archive type options
-export const ARCHIVE_TYPES = [
-  "assemblée-générale",
-  "rapport-annuel",
-  "rapport-financier",
-  "gazette",
-  "programme",
-  "document-historique",
-] as const;
-
-export type ArchiveType = (typeof ARCHIVE_TYPES)[number];
 
 // Archive theme options (common themes)
 export const ARCHIVE_THEMES = [
