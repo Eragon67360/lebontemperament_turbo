@@ -152,7 +152,126 @@ const SKIP_DIRS = new Set([
   "coverage",
 ]);
 
-/** Names read through process.env.NAME in the source files under the given directories. */
+// A `/` after one of these characters or keywords starts a regular
+// expression; after anything else it is a division.
+const BEFORE_REGEX = new Set([..."(,=:[!&|?{};+-*%<>~^"]);
+const KEYWORDS_BEFORE_REGEX = new Set([
+  "return",
+  "typeof",
+  "instanceof",
+  "in",
+  "of",
+  "new",
+  "delete",
+  "void",
+  "throw",
+  "case",
+  "do",
+  "else",
+  "yield",
+  "await",
+]);
+
+/**
+ * JavaScript or TypeScript source without its comments (line breaks kept),
+ * so that a commented-out `process.env.NAME` is not taken for a read.
+ * Strings, template literals and regular expressions are copied as they
+ * are: the `//` of a URL in a string is not a comment. JSX text is read as
+ * code, so a `//` written in it would start a comment.
+ */
+export function stripComments(source) {
+  let out = "";
+  let i = 0;
+  let last = ""; // the last character of code that isn't white space
+  const holes = []; // open `${` of template literals: the `{` depth in each
+
+  // Copies template text up to and including its closing backtick or `${`.
+  const templateText = () => {
+    while (i < source.length) {
+      const c = source[i];
+      if (c === "`" || (c === "$" && source[i + 1] === "{")) {
+        const token = c === "`" ? c : "${";
+        if (token === "${") holes.push(0);
+        out += token;
+        i += token.length;
+        last = token.at(-1);
+        return;
+      }
+      const length = c === "\\" ? 2 : 1;
+      out += source.slice(i, i + length);
+      i += length;
+    }
+  };
+
+  // The index after the regular expression literal starting at i, or -1.
+  const regexEnd = () => {
+    let inClass = false;
+    for (let j = i + 1; j < source.length; j += 1) {
+      const c = source[j];
+      if (c === "\n") return -1;
+      if (c === "\\") j += 1;
+      else if (c === "[") inClass = true;
+      else if (c === "]") inClass = false;
+      else if (c === "/" && !inClass) {
+        let k = j + 1;
+        while (k < source.length && /[a-z]/.test(source[k])) k += 1;
+        return k;
+      }
+    }
+    return -1;
+  };
+
+  const regexMayStart = () =>
+    last === "" ||
+    BEFORE_REGEX.has(last) ||
+    KEYWORDS_BEFORE_REGEX.has(/[\w$]+(?=\s*$)/.exec(out.slice(-40))?.[0]);
+
+  while (i < source.length) {
+    const c = source[i];
+    const next = source[i + 1];
+    if (c === "/" && next === "/") {
+      while (i < source.length && source[i] !== "\n") i += 1;
+    } else if (c === "/" && next === "*") {
+      const end = source.indexOf("*/", i + 2);
+      const stop = end === -1 ? source.length : end + 2;
+      out += source.slice(i, stop).replace(/[^\n]/g, "");
+      i = stop;
+    } else if (c === '"' || c === "'") {
+      let j = i + 1;
+      while (j < source.length && source[j] !== c && source[j] !== "\n") {
+        j += source[j] === "\\" ? 2 : 1;
+      }
+      out += source.slice(i, j + 1);
+      i = j + 1;
+      last = c;
+    } else if (c === "`") {
+      out += c;
+      i += 1;
+      templateText();
+    } else if (c === "}" && holes.at(-1) === 0) {
+      holes.pop();
+      out += c;
+      i += 1;
+      templateText();
+    } else {
+      const end = c === "/" && regexMayStart() ? regexEnd() : -1;
+      if (end !== -1) {
+        out += source.slice(i, end);
+        i = end;
+        last = "/";
+        continue;
+      }
+      if (holes.length && c === "{") holes[holes.length - 1] += 1;
+      if (holes.length && c === "}") holes[holes.length - 1] -= 1;
+      out += c;
+      i += 1;
+      if (!/\s/.test(c)) last = c;
+    }
+  }
+  return out;
+}
+
+/** Names read through process.env.NAME in the source files under the given directories (not in comments). */
 export function scanCodeNames(dirs) {
   const names = new Set();
   const walk = (dir) => {
@@ -164,7 +283,7 @@ export function scanCodeNames(dirs) {
         /\.(ts|tsx|js|mjs)$/.test(entry.name) &&
         !/\.test\.|\.spec\./.test(entry.name)
       ) {
-        for (const match of readFileSync(path, "utf8").matchAll(
+        for (const match of stripComments(readFileSync(path, "utf8")).matchAll(
           /process\.env\.([A-Z][A-Z0-9_]*)/g,
         )) {
           if (!PROVIDED.has(match[1])) names.add(match[1]);
