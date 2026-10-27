@@ -776,7 +776,10 @@ export function DesignSystemLab() {
                   </Button>
                   <Button>
                     <RefreshCw /> Synchroniser avec la liste{" "}
-                    <Badge className="bg-primary-foreground/20 min-h-5 px-1.5 text-xs">
+                    <Badge
+                      variant="secondary"
+                      className="bg-primary-foreground text-primary-strong min-h-5 px-1.5"
+                    >
                       4
                     </Badge>
                   </Button>
