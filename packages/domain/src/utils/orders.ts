@@ -138,17 +138,6 @@ export function productsById<T extends OrderProductLike>(
   return new Map(products.map((p) => [p.id, p]));
 }
 
-export function orderTotalCents(
-  items: readonly OrderItemLike[],
-  byId: ReadonlyMap<string, OrderProductLike>,
-): number {
-  return items.reduce(
-    (sum, item) =>
-      sum + item.quantity * (byId.get(item.product_id)?.unit_price_cents ?? 0),
-    0,
-  );
-}
-
 export function orderPaidCents(payments: readonly OrderPaymentLike[]): number {
   return payments.reduce((sum, p) => sum + p.amount_cents, 0);
 }
