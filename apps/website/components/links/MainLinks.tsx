@@ -1,10 +1,10 @@
 // MainLinks.tsx
 import { AnniversaryNavLink } from "@/components/anniversary/AnniversaryEntry";
 import { useAdminStatus, useAnniversaryFeature } from "@/hooks/useFeatureFlag";
+import { useSitePathname } from "@/hooks/useSitePathname";
 import RouteNames from "@/utils/routes";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import React from "react";
 
 interface MainLinksProps {
@@ -14,7 +14,7 @@ interface MainLinksProps {
 }
 
 const MainLinks: React.FC<MainLinksProps> = ({ user, isLoading, isLight }) => {
-  const pathname = usePathname();
+  const pathname = useSitePathname();
   const { isEnabled: isAnniversaryEnabled } = useAnniversaryFeature();
   const { isAdmin } = useAdminStatus();
 
