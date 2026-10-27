@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DataState, EmptyState } from "@/components/ui/data-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProject } from "@/hooks/useProjects";
+import { websiteUrl } from "@/lib/website";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -19,7 +20,7 @@ export default function StoryPreviewPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: project, isPending, isError, refetch } = useProject(slug);
 
-  const previewUrl = `${process.env.NEXT_PUBLIC_WEBSITE_URL || "http://localhost:3002"}/concerts/${slug}`;
+  const previewUrl = websiteUrl(`/concerts/${slug}`);
 
   return (
     <PageShell

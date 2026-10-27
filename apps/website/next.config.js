@@ -98,10 +98,18 @@ const nextConfig = {
   images: {
     remotePatterns: [
       new URL("https://res.cloudinary.com/dlt2j3dld/image/**"),
-      new URL(
-        // eslint-disable-next-line no-undef
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`,
-      ),
+      // The configured Supabase host, when there is one: the config also
+      // loads without NEXT_PUBLIC_SUPABASE_URL (the two hosts below cover the
+      // stored image URLs).
+      // eslint-disable-next-line no-undef
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? [
+            new URL(
+              // eslint-disable-next-line no-undef
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/**`,
+            ),
+          ]
+        : []),
       // Both Supabase hosts, whatever NEXT_PUBLIC_SUPABASE_URL says: stored
       // image URLs move from the custom domain (dropped with the Pro plan) to
       // the project's own host, and both must render during the switch.
