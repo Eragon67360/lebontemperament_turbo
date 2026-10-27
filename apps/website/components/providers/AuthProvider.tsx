@@ -1,6 +1,7 @@
 "use client";
 
 import { hasSessionCookie, loadBrowserClient } from "@/utils/supabase/lazy";
+import { isAdminRole } from "@repo/domain/utils/roles";
 import type { User } from "@supabase/supabase-js";
 import React, {
   createContext,
@@ -78,7 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (cancelled) return;
       setRole({
         userId,
-        isAdmin: profile?.role === "admin" || profile?.role === "superadmin",
+        isAdmin: isAdminRole(profile?.role),
       });
     };
     getRole();
