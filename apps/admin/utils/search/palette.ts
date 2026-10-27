@@ -2,15 +2,11 @@
 // accent- and case-insensitive matching, pure and unit-tested. The palette
 // filters here instead of in cmdk so « Therese » finds « Thérèse » and the
 // order of the results is ours.
+import { foldAccents } from "@repo/domain/utils/slug";
 
 /** « Thérèse  MARTIN » → « therese martin »: lower case, no accents, single spaces. */
 export function normalizeSearch(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
+  return foldAccents(text).toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 /** Every word of `query` appears somewhere in `fields` (in any order). */

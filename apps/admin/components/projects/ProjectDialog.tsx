@@ -18,11 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
 import { cloudinaryUrl } from "@/utils/anniversary/media";
 import { parseIsoDate } from "@/utils/concerts/schedule";
-import {
-  projectFormSchema,
-  slugify,
-  type ProjectFormValues,
-} from "@/utils/formSchemas";
+import { projectFormSchema, type ProjectFormValues } from "@/utils/formSchemas";
 import {
   firstTabWithError,
   STORY_FIELD_LABELS as LABELS,
@@ -34,6 +30,7 @@ import {
 } from "@/utils/projects/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Project } from "@repo/domain/types/projects";
+import { slugify } from "@repo/domain/utils/slug";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm, type FieldErrors } from "react-hook-form";

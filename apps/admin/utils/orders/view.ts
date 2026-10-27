@@ -12,6 +12,7 @@ import {
   type SaleSummary,
   saleSummary,
 } from "@repo/domain/utils/orders";
+import { foldAccents, slugify as toSlug } from "@repo/domain/utils/slug";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -78,9 +79,9 @@ export function saleView(detail: SaleDetail): {
   return { summary, rows };
 }
 
-/** Lower case, no accents: « Léa » matches « lea ». */
+/** Lower case, no accents: « Léa » matches « lea », « Chœur » « choeur ». */
 export function normalizeText(value: string): string {
-  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  return foldAccents(value).toLowerCase().trim();
 }
 
 export function hasBuyerFilters(filters: BuyerFilters): boolean {
@@ -265,8 +266,5 @@ export function todayParisIso(now: Date = new Date()): string {
 
 /** « fromages-et-saucissons-novembre-2026 » from a sale title. */
 export function slugify(title: string): string {
-  const slug = normalizeText(title)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return slug || "vente";
+  return toSlug(title) || "vente";
 }

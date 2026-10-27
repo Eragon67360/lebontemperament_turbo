@@ -11,6 +11,7 @@ import {
   groupProductsByCategory,
   productLabel,
 } from "@repo/domain/utils/orders";
+import { slugify } from "@repo/domain/utils/slug";
 import { ArrowDown, ArrowUp, Package, Pencil, Plus } from "lucide-react";
 
 export interface CatalogueSectionProps {
@@ -66,11 +67,7 @@ export function CatalogueSection({
   return (
     <div className="space-y-4">
       {groups.map((group) => {
-        const headingId = `catalogue-${group.category
-          .normalize("NFD")
-          .replace(/[̀-ͯ]/g, "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")}`;
+        const headingId = `catalogue-${slugify(group.category)}`;
         return (
           <Card key={group.category} className="overflow-hidden p-0">
             <section aria-labelledby={headingId}>

@@ -162,6 +162,20 @@ assert.deepEqual(
   names(filterMembers(all, { ...NO_FILTERS, query: "lucie@" })),
   ["lucie"],
 );
+// Ligatures fold too: « loeb » finds « LŒB » and the other way round.
+const noe = user({
+  id: "noe",
+  display_name: "Noé LŒB",
+  email: "noe@example.org",
+});
+assert.deepEqual(
+  names(filterMembers([...all, noe], { ...NO_FILTERS, query: "loeb" })),
+  ["noe"],
+);
+assert.deepEqual(
+  names(filterMembers([...all, noe], { ...NO_FILTERS, query: "lœb" })),
+  ["noe"],
+);
 assert.deepEqual(names(filterMembers(all, { ...NO_FILTERS, voice: "Jeune" })), [
   "lucie",
 ]);

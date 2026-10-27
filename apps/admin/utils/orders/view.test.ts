@@ -46,6 +46,7 @@ assert.equal(summary.byMethod.cash, 1400);
 
 // --- Search: accents and case ignored, phone and seller searchable ---
 assert.equal(normalizeText("  Émile Zoé "), "emile zoe");
+assert.equal(normalizeText("Chœur"), "choeur");
 const search = (query: string) =>
   filterBuyers(rows, { ...NO_BUYER_FILTERS, query }).map((r) => r.buyerName);
 assert.deepEqual(search("emile"), ["Émile TEST"]);
@@ -183,4 +184,6 @@ assert.equal(
   slugify("Fromages et saucissons · novembre 2026"),
   "fromages-et-saucissons-novembre-2026",
 );
+assert.equal(slugify("Vente du chœur · 2026"), "vente-du-choeur-2026");
+assert.equal(slugify("!!!"), "vente");
 console.log("orders/view: all assertions passed");

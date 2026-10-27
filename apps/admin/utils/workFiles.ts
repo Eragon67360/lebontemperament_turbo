@@ -6,6 +6,7 @@
 // message before the upload starts and pick the content type the bucket
 // checks.
 
+import { foldAccents } from "@repo/domain/utils/slug";
 import { AUDIO_TYPES, IMAGE_TYPES, MB, PDF_TYPES, WORD_TYPES } from "./uploads";
 
 export const WORK_FILE_MAX_BYTES = 50 * MB;
@@ -135,9 +136,7 @@ export function checkWorkFile(file: {
  * stays in `files.original_name`.
  */
 export function storageSafeName(name: string): string {
-  const ascii = name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+  const ascii = foldAccents(name)
     .replace(/[^A-Za-z0-9._-]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^[._]+|_+$/g, "");
