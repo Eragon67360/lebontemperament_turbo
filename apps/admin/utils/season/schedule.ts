@@ -1,22 +1,17 @@
 // « À venir / Passés » for the member-season screens (Répétitions and
-// Événements, Phase 4 wave 4, #433): the split by today's local day, the
-// sort orders, the French wording of the facts, the recurrence of a weekly
-// rehearsal and the exact payloads the forms send. Pure and unit-tested; the
-// pages feed it the existing queries. Shares `todayIso`, `parseIsoDate` and
-// `formatTimeFr` with the concerts page so the three screens agree on what
-// « aujourd'hui » means.
+// Événements, Phase 4 wave 4, #433): the split by today's date (the Paris
+// day, `parisToday` of @repo/domain), the sort orders, the French wording of
+// the facts, the recurrence of a weekly rehearsal and the exact payloads the
+// forms send. Pure and unit-tested; the pages feed it the existing queries.
+// Shares `parseIsoDate` and `formatTimeFr` with the concerts page so the
+// three screens agree on what « aujourd'hui » means.
 import type { EventFormValues, RehearsalFormValues } from "@/utils/formSchemas";
 import type { CreateEventDTO, UpdateEventDTO } from "@repo/domain/types/events";
 import { addWeeks, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import {
-  excerpt,
-  formatTimeFr,
-  parseIsoDate,
-  todayIso,
-} from "../concerts/schedule";
+import { excerpt, formatTimeFr, parseIsoDate } from "../concerts/schedule";
 
-export { excerpt, formatTimeFr, parseIsoDate, todayIso };
+export { excerpt, formatTimeFr, parseIsoDate };
 
 /** The slice of a rehearsal row the split needs (fixtures stay small). */
 export type RehearsalLike = {
