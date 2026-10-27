@@ -2,10 +2,11 @@
 
 import VideoFacade from "@/components/VideoFacade";
 import { youTubeEmbedUrl } from "@/components/YouTubeVideo";
+import { useModalDialog } from "@/hooks/useModalDialog";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Video } from "@/types/anniversary";
-import { motion, useTime, useTransform } from "motion/react";
-import { useEffect } from "react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react";
+import { useEffect, useId, useRef } from "react";
 import { FaTimes } from "react-icons/fa";
 
 interface VideoModalProps {
@@ -38,30 +39,41 @@ const getEmbed = (url: string): Embed => {
 export function VideoModal({ video, onClose }: VideoModalProps) {
   const shouldReduceMotion = useReducedMotion();
   const embed = getEmbed(video.video_url || "");
-  const time = useTime();
-  const rotate = useTransform(time, [0, 4000], [0, 360], { clamp: false });
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
-  const rotatingBg = useTransform(rotate, (r) => {
-    const angle = shouldReduceMotion ? 0 : r;
-    return `conic-gradient(from ${angle}deg, var(--color-primary), transparent, color-mix(in oklab, var(--color-primary) 55%, white), transparent, var(--color-primary))`;
-  });
+  // The decorative border turns once every 4 s. Under reduced motion it
+  // stands still, with no frame loop behind it.
+  const rotate = useMotionValue(0);
+  const rotatingBg = useTransform(
+    rotate,
+    (angle) =>
+      `conic-gradient(from ${angle}deg, var(--color-primary), transparent, color-mix(in oklab, var(--color-primary) 55%, white), transparent, var(--color-primary))`,
+  );
 
   useEffect(() => {
-    const originalStyle = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEsc);
+    if (shouldReduceMotion) {
+      rotate.set(0);
+      return;
+    }
+    const controls = animate(rotate, 360, {
+      duration: 4,
+      ease: "linear",
+      repeat: Infinity,
+    });
+    return () => controls.stop();
+  }, [rotate, shouldReduceMotion]);
 
-    return () => {
-      document.body.style.overflow = originalStyle;
-      window.removeEventListener("keydown", handleEsc);
-    };
-  }, [onClose]);
+  // Escape, focus in, Tab kept inside, focus back on close, no scroll behind.
+  useModalDialog(dialogRef, true, onClose);
 
   return (
     <motion.div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -101,11 +113,13 @@ export function VideoModal({ video, onClose }: VideoModalProps) {
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-primary mb-2 text-xs font-semibold tracking-wider uppercase">
+          <p className="text-primary-300 mb-2 text-xs font-semibold tracking-wider uppercase">
             {video.category}
             {video.year && ` • ${video.year}`}
           </p>
-          <h3 className="text-xl font-medium text-white">{video.title}</h3>
+          <h3 id={titleId} className="text-xl font-medium text-white">
+            {video.title}
+          </h3>
           <p className="mx-auto mt-2 max-w-2xl text-sm font-light text-white/75">
             {video.description}
           </p>

@@ -55,12 +55,14 @@ const VideoGallery = ({ videos }: VideoGalleryProps) => {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="bg-surface-secondary/60 mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full p-1"
+          className="bg-surface-secondary/60 isolate mx-auto mb-12 flex w-fit flex-wrap justify-center gap-2 rounded-full p-1"
         >
           {categories.map((category) => (
             <button
               key={category}
+              type="button"
               onClick={() => setSelectedCategory(category)}
+              aria-pressed={selectedCategory === category}
               className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${
                 selectedCategory === category
                   ? "text-white"
