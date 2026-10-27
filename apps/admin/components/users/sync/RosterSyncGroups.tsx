@@ -1,8 +1,8 @@
 "use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Collapsible,
@@ -20,7 +20,7 @@ import type {
   ToSettle,
   ToSettleKind,
 } from "@repo/domain/roster/types";
-import { ChevronRight, Info, Trash2 } from "lucide-react";
+import { ChevronRight, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
@@ -358,18 +358,16 @@ export function AbsentMembersGroup({
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-2">
-          <Alert>
-            <Info className="h-4 w-4" aria-hidden />
-            <AlertTitle>Pour information</AlertTitle>
-            <AlertDescription>
+          <Callout tone="info" title="Pour information">
+            <p>
               Comptes du site dont l&apos;email n&apos;apparaît plus dans le
               tableau, quel que soit leur statut. La désactivation arrive
               bientôt.{" "}
               {deletion
                 ? "Pour supprimer définitivement des comptes (par exemple les personnes parties depuis plus d'un an), cochez-les : une relecture détaillée vous est demandée avant la suppression."
                 : "Seul un super administrateur peut supprimer des comptes."}
-            </AlertDescription>
-          </Alert>
+            </p>
+          </Callout>
           {deletion && items.length > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
