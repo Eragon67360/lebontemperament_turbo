@@ -53,11 +53,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let cancelled = false;
-    readSessionUser().then((sessionUser) => {
-      if (cancelled) return;
-      setUser(sessionUser);
-      setSessionLoaded(true);
-    });
+    readSessionUser()
+      .catch((error: unknown) => {
+        // supabase-js could not be loaded or asked (a chunk missing after a
+        // deployment, a flaky network): the visitor is shown signed out
+        // rather than loading forever; the members area asks again itself.
+        console.error("[Auth] Session read failed:", error);
+        return null;
+      })
+      .then((sessionUser) => {
+        if (cancelled) return;
+        setUser(sessionUser);
+        setSessionLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -69,19 +77,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!userId) return;
     let cancelled = false;
     const getRole = async () => {
-      const supabase = await loadBrowserClient();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
+      let isAdmin = false;
+      try {
+        const supabase = await loadBrowserClient();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .single();
+        isAdmin = profile?.role === "admin" || profile?.role === "superadmin";
+      } catch (error) {
+        // An unknown role counts as a plain member for this visit.
+        console.error("[Auth] Role read failed:", error);
+      }
       if (cancelled) return;
-      setRole({
-        userId,
-        isAdmin: profile?.role === "admin" || profile?.role === "superadmin",
-      });
+      setRole({ userId, isAdmin });
     };
-    getRole();
+    void getRole();
     return () => {
       cancelled = true;
     };
