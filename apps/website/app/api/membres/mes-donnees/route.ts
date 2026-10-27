@@ -2,7 +2,6 @@ import { collectMemberData, exportFileName } from "@/lib/memberData";
 import { getContactEmail } from "@/lib/siteSettings";
 import { checkAuthorization } from "@/utils/auth";
 import { createAdminClient } from "@/utils/supabase/admin";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 /**
@@ -22,7 +21,7 @@ export async function GET() {
     const data = await collectMemberData(
       // Several tables have no policy for members; the service role reads
       // them and collectMemberData keeps only this member's rows.
-      createAdminClient() as unknown as SupabaseClient,
+      createAdminClient(),
       auth.user,
       await getContactEmail(),
       now,

@@ -14,6 +14,7 @@
  * address (donations, anniversary memories), which may belong to someone who
  * shares that address. Those are answered by e-mail on request.
  */
+import type { Database } from "@repo/domain/database.types";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 /** Version of the export's shape, bumped whenever a section changes. */
@@ -71,9 +72,17 @@ export function accountSection(user: User): Row {
   };
 }
 
-type Query = PromiseLike<{ data: unknown; error: { message: string } | null }>;
+type Query<T> = PromiseLike<{
+  data: T[] | null;
+  error: { message: string } | null;
+}>;
 
-async function rows(query: Query): Promise<ExportSection> {
+/**
+ * The rows of one typed query. `T extends Row` turns a column the generated
+ * types don't know into a type error instead of a section « Lecture
+ * impossible » at run time.
+ */
+async function rows<T extends Row>(query: Query<T>): Promise<ExportSection> {
   try {
     const { data, error } = await query;
     if (error) return { erreur: "Lecture impossible" };
@@ -94,7 +103,7 @@ const idsOf = (section: ExportSection): string[] =>
  * filtering is done here, on `user.id` only.
  */
 export async function collectMemberData(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   user: User,
   contact: string,
   now: Date = new Date(),

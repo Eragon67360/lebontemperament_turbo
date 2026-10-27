@@ -12,7 +12,7 @@ Nothing is "done" until these pass, and your report says exactly which ran and w
 | Build           | `npx turbo build --filter=<app>` for each app you touched                                                          | succeeds                                                                      |
 | Domain tests    | `npm test -w @repo/domain` when `packages/domain` changed                                                          | all pass                                                                      |
 | App tests       | `npm test -w website` and `npm test -w admin` when that app changed (CI runs both on every PR, about 2 min)        | all pass                                                                      |
-| Supabase types  | `npm run db:types` after any schema change (owner applies the migration first, see [release](release.md#supabase)) | `packages/domain/src/database.types.ts` matches the database and is committed |
+| Supabase types  | `npm run db:types` after each schema change, once the migration is on staging (see [release](release.md#supabase)) | `packages/domain/src/database.types.ts` is generated, then committed unedited |
 | Mobile          | `flutter analyze` and `flutter test` in `apps/mobile_app` when the app changed                                     | no new analyzer issues, tests pass                                            |
 | Vercel previews | the PR's preview builds for `lebontemperament` and `lebontemperament-admin`                                        | both ready (CI builds with placeholder env; previews prove the real config)   |
 
