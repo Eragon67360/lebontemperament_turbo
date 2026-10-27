@@ -26,10 +26,10 @@ import type { EventFormValues } from "@/utils/formSchemas";
 import {
   eventCountLabel,
   splitEvents,
-  todayIso,
   toEventPayload,
 } from "@/utils/season/schedule";
 import type { Event, EventDocument } from "@repo/domain/types/events";
+import { parisToday } from "@repo/domain/utils/parisDay";
 import { CalendarDays, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -71,7 +71,7 @@ export default function EvenementsPage() {
   // Today is read when the data changes, so a page left open overnight
   // stays consistent until it refetches (same as the concerts page).
   const events = useMemo(
-    () => splitEvents(eventsQuery.data ?? [], todayIso()),
+    () => splitEvents(eventsQuery.data ?? [], parisToday()),
     [eventsQuery.data],
   );
 

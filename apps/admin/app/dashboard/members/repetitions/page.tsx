@@ -29,7 +29,6 @@ import {
   formatLongDateFr,
   rehearsalCountLabel,
   splitRehearsals,
-  todayIso,
   toRehearsalPayloads,
 } from "@/utils/season/schedule";
 import {
@@ -37,6 +36,7 @@ import {
   type GroupType,
   type Rehearsal,
 } from "@repo/domain/types/rehearsals";
+import { parisToday } from "@repo/domain/utils/parisDay";
 import { Music, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -67,7 +67,7 @@ export default function RepetitionsPage() {
     const all = rehearsalsQuery.data ?? [];
     const filtered =
       group === "all" ? all : all.filter((r) => r.group_type === group);
-    return splitRehearsals(filtered, todayIso());
+    return splitRehearsals(filtered, parisToday());
   }, [rehearsalsQuery.data, group]);
 
   const save = async (values: RehearsalFormValues) => {

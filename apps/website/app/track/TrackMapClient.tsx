@@ -498,7 +498,9 @@ export function TrackMapClient({
             <div>
               <p className="text-sm font-medium">Position actuelle</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {new Date(delivery.updated_at).toLocaleString("fr-FR")}
+                {new Date(delivery.updated_at).toLocaleString("fr-FR", {
+                  timeZone: "Europe/Paris",
+                })}
               </p>
             </div>
           </div>
