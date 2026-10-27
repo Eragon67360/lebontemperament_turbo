@@ -37,8 +37,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   // "github" turns failures into check annotations, readable without
-  // downloading the report artifacts.
-  reporter: process.env.CI ? [["blob"], ["github"]] : "html",
+  // downloading the report artifacts. The first one keeps page snapshots out
+  // of the error-context.md files that the uploaded reports carry.
+  reporter: process.env.CI
+    ? [["./reporters/redact-error-context.ts"], ["blob"], ["github"]]
+    : "html",
   use: {
     trace: "retain-on-failure",
     video: "retain-on-failure",

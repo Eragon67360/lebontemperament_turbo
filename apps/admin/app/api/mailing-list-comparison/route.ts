@@ -3,7 +3,8 @@
 // Comparison between the member roster and one Google Group (« Liste de
 // diffusion » page). GET runs it for an enabled group and answers the
 // differences; POST turns the comparison of a group on or off (the weekly
-// check and its alert follow the enabled groups).
+// check and its alert follow the enabled groups). GET reads the roster and
+// the group: production only (utils/memberLists.ts).
 import { checkAuthorization } from "@/utils/auth";
 import { runMailingListComparison } from "@/utils/mailing-list/run";
 import {
@@ -11,6 +12,11 @@ import {
   NOT_INSTALLED_MESSAGE,
   toggleComparisonSchema,
 } from "@/utils/mailing-list/schemas";
+import {
+  GROUPS_PRODUCTION_ONLY_MESSAGE,
+  memberListsAvailable,
+  productionOnlyResponse,
+} from "@/utils/memberLists";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
 
@@ -21,6 +27,9 @@ export async function GET(request: Request) {
   const auth = await checkAuthorization();
   if (!auth.authorized) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  if (!memberListsAvailable()) {
+    return productionOnlyResponse(GROUPS_PRODUCTION_ONLY_MESSAGE);
   }
 
   const groupEmail = new URL(request.url).searchParams

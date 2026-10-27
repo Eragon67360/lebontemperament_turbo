@@ -4,9 +4,15 @@
 // roster-owned fields and invitations for new members. The roster is read
 // again and the request is refused (409) when its fingerprint changed. Any
 // admin may apply (owner decision, #433); writes go through the service-role
-// client after the admin check, as the previous sync routes did.
+// client after the admin check, as the previous sync routes did. Production
+// only (utils/memberLists.ts).
 import { checkAuthorization } from "@/utils/auth";
 import { inviteRedirectUrl, sendInvitations } from "@/utils/invitations";
+import {
+  memberListsAvailable,
+  productionOnlyResponse,
+  ROSTER_PRODUCTION_ONLY_MESSAGE,
+} from "@/utils/memberLists";
 import { applyRosterSync, parseApplyRequest } from "@/utils/roster/apply";
 import { buildRosterReview, loadProfilesForDiff } from "@/utils/roster/review";
 import { fetchRosterRows, RosterSourceError } from "@/utils/roster/source";
@@ -27,6 +33,9 @@ export async function POST(request: Request) {
     const auth = await checkAuthorization();
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    if (!memberListsAvailable()) {
+      return productionOnlyResponse(ROSTER_PRODUCTION_ONLY_MESSAGE);
     }
 
     const parsed = parseApplyRequest(await request.json().catch(() => null));
