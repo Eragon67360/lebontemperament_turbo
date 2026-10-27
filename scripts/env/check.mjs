@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 // Offline check of the env/ templates: syntax, vault rules, and drift against the
-// names the code and workflows read. Needs no Proton Pass, no token, no network.
+// names the code and workflows read, and of turbo.json's env lists against the
+// same names. Needs no Proton Pass, no token, no network.
 //
-//   npm run env:check            errors fail, drift is a warning
+//   npm run env:check            errors fail (syntax, vault rules, a name
+//                                turbo.json hides from its task), drift is a warning
 //   npm run env:check -- --items lists the Proton Pass items and fields to create
 
 import { existsSync } from "node:fs";
 import {
   itemsNeeded,
   loadTargets,
+  loadTurbo,
   readTemplate,
   scanCodeNames,
   scanWorkflowSecrets,
   templatePath,
+  turboDrift,
   validateTarget,
 } from "./lib.mjs";
 
@@ -82,6 +86,30 @@ for (const name of [...githubListed]
   warnings.push(
     `github: ${name} is in a github.* template but no workflow reads it`,
   );
+}
+
+// turbo.json: Turbo's strict env mode hides every name a task doesn't declare
+// (apart from NEXT_PUBLIC_* and the CI vendor's own variables), so a name the
+// code reads must be declared or the task silently runs without it, which is
+// an error. A declared name nobody reads is only noise, and a cache key for
+// nothing: a warning. The directories are the code each task runs.
+const TURBO_TASKS = {
+  build: ["apps/website", "apps/admin", "packages"],
+  "test:e2e": ["apps/e2e"],
+};
+const turbo = loadTurbo();
+for (const [task, dirs] of Object.entries(TURBO_TASKS)) {
+  const { undeclared, unused } = turboDrift(turbo, task, scanCodeNames(dirs));
+  for (const name of undeclared) {
+    errors.push(
+      `turbo.json: the code reads ${name}, which task "${task}" doesn't declare (strict env mode hides it)`,
+    );
+  }
+  for (const name of unused) {
+    warnings.push(
+      `turbo.json: task "${task}" declares ${name}, which no code under ${dirs.join(", ")} reads`,
+    );
+  }
 }
 
 if (process.argv.includes("--items")) {

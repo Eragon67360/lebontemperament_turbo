@@ -72,7 +72,7 @@ Vercel uses new values from the next build only. For dev, merge the next PR into
 
 ## Checking (anywhere, no secrets)
 
-`npm run env:check` validates the templates and compares them with the names the code (`process.env.*`) and the workflows (`secrets.*`) read; CI runs it with `npm run test:env`. Names the code reads but that are deliberately not managed are listed under `unmanaged` in `targets.json`.
+`npm run env:check` validates the templates, compares them with the names the code (`process.env.*`) and the workflows (`secrets.*`) read, and checks that `turbo.json` declares every name the code reads (Turbo's strict env mode hides the others from the build and the e2e suite); CI runs it with `npm run test:env`. Names the code reads but that are deliberately not managed are listed under `unmanaged` in `targets.json`.
 
 ## Not covered yet
 

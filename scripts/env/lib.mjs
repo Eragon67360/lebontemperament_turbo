@@ -17,6 +17,10 @@ export function loadTargets() {
   return JSON.parse(readFileSync(join(ENV_DIR, "targets.json"), "utf8"));
 }
 
+export function loadTurbo() {
+  return JSON.parse(readFileSync(join(ROOT, "turbo.json"), "utf8"));
+}
+
 export function templatePath(target) {
   return join(ENV_DIR, `${target}.env`);
 }
@@ -185,6 +189,33 @@ export function scanWorkflowSecrets() {
     }
   }
   return names;
+}
+
+/**
+ * Drift between a turbo.json task and `used`, the names the code it runs reads
+ * (see scanCodeNames). In strict env mode (Turbo 2's default) a task only sees
+ * the names it declares: globalEnv, globalPassThroughEnv, its own env and
+ * passThroughEnv; plus what Turbo adds itself, NEXT_PUBLIC_* (framework
+ * inference) and the CI vendor's variables (CI, GITHUB_ACTIONS, VERCEL_ENV…).
+ * `undeclared` names are hidden from the task; `unused` names are in the
+ * task's own lists but read nowhere.
+ */
+export function turboDrift(turbo, task, used) {
+  const own = [
+    ...(turbo.tasks?.[task]?.env ?? []),
+    ...(turbo.tasks?.[task]?.passThroughEnv ?? []),
+  ];
+  const declared = new Set([
+    ...(turbo.globalEnv ?? []),
+    ...(turbo.globalPassThroughEnv ?? []),
+    ...own,
+  ]);
+  return {
+    undeclared: [...used]
+      .filter((n) => !declared.has(n) && !n.startsWith("NEXT_PUBLIC_"))
+      .sort(),
+    unused: own.filter((n) => !used.has(n)).sort(),
+  };
 }
 
 /** Keyed fingerprint of a pushed value, so a later run can tell "changed" without storing it. */
