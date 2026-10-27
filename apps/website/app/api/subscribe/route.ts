@@ -1,3 +1,4 @@
+import { appsScriptUrl } from "@/lib/appsScript";
 import { createMailer, type Mailer } from "@/lib/mail";
 import { escapeHtml } from "@repo/domain/utils/html";
 import { classifyNewsletterRequest } from "@repo/domain/utils/newsletter";
@@ -56,11 +57,11 @@ async function isAlreadySubscribed(email: string): Promise<boolean> {
   }
 
   try {
-    const url = new URL(scriptUrl);
-    url.searchParams.append(
-      "groupEmail",
-      process.env.GOOGLE_GROUP_EMAIL || "btnewsletter@googlegroups.com",
-    );
+    // Holds the script's key: never logged.
+    const url = appsScriptUrl(scriptUrl, {
+      groupEmail:
+        process.env.GOOGLE_GROUP_EMAIL || "btnewsletter@googlegroups.com",
+    });
     const response = await fetch(url.toString(), {
       headers: { "Content-Type": "application/json" },
     });

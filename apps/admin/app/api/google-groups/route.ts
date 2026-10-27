@@ -1,5 +1,6 @@
 // app/api/google-groups/route.ts
 import { checkAuthorization } from "@/utils/auth";
+import { appsScriptUrl } from "@/utils/google-groups/appsScript";
 import { NextResponse } from "next/server";
 
 const GOOGLE_APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL;
@@ -28,14 +29,8 @@ export async function GET(request: Request) {
     const groupEmail = searchParams.get("groupEmail");
     const action = searchParams.get("action"); // 'list-groups' to get all groups
 
-    // Build URL with query parameters
-    const url = new URL(GOOGLE_APPS_SCRIPT_URL);
-    if (action) {
-      url.searchParams.append("action", action);
-    }
-    if (groupEmail) {
-      url.searchParams.append("groupEmail", groupEmail);
-    }
+    // The script's URL with these parameters and its key: never logged
+    const url = appsScriptUrl(GOOGLE_APPS_SCRIPT_URL, { action, groupEmail });
 
     // Fetch from Google Apps Script
     const response = await fetch(url.toString(), {
