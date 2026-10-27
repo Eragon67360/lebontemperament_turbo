@@ -20,6 +20,7 @@ import {
   type OrderLike,
   type OrderProductLike,
 } from "./orders";
+import phoneVectors from "./phoneVectors.json";
 
 const P = (n: number) =>
   `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -278,6 +279,24 @@ assert.ok(isValidPhone("+33 6 12 34 56 78"));
 assert.ok(!isValidPhone("12"));
 assert.ok(!isValidPhone("06 12 34"));
 assert.ok(!isValidPhone("abc"));
+// The « (0) » written after the country code is dropped, so the SMS goes to
+// the number itself; a « +330… » that nothing folds is refused.
+assert.equal(normalizePhone("+33 (0)6 39 98 12 34"), "+33639981234");
+assert.equal(normalizePhone("0033 (0)6 39 98 12 34"), "+33639981234");
+assert.ok(isValidPhone("+33 (0)6 39 98 12 34"));
+assert.ok(!isValidPhone("+33 (0)6 39 98 12"));
+assert.ok(!isValidPhone("+3300639981234"));
+// The vectors shared with the SQL, Deno and Dart copies of the rule.
+for (const v of phoneVectors.vectors) {
+  const typed = JSON.stringify(v.input);
+  assert.equal(
+    normalizePhone(v.input),
+    v.normalized,
+    `normalizePhone(${typed})`,
+  );
+  assert.equal(isValidPhone(v.input), v.valid, `isValidPhone(${typed})`);
+  assert.equal(formatPhone(v.input), v.formatted, `formatPhone(${typed})`);
+}
 
 // Sale input
 assert.deepEqual(

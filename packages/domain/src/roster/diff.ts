@@ -2,10 +2,10 @@
 // no longer listed, what needs sorting out in the sheet. Pure.
 
 import {
+  formatRosterPhone,
   joinVoices,
   nameKey,
   normalizeEmail,
-  normalizePhone,
   normalizeText,
   phoneKey,
   splitVoices,
@@ -68,7 +68,7 @@ export function fieldChanges(
   if (row.homePhone && phoneKey(currentPhone) !== phoneKey(row.homePhone)) {
     changes.push({
       field: "home_phone",
-      from: normalizePhone(currentPhone),
+      from: formatRosterPhone(currentPhone),
       to: row.homePhone,
     });
   }
