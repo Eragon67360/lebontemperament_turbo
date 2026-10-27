@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import {
   CONTENT_DISPOSITION_MAX_BYTES,
+  DRIVE_FILE_SANDBOX_CSP,
+  DRIVE_MEDIA_SANDBOX_CSP,
   asciiFileName,
   contentDisposition,
   driveDownloadName,
   driveDownloadPlan,
+  driveFileHeaders,
   isDrivePreviewable,
   listAllDrivePages,
   type DrivePage,
@@ -126,6 +129,183 @@ assert.equal(
 assert.equal(
   driveDownloadName(undefined, driveDownloadPlan("application/pdf")),
   "fichier",
+);
+
+// --- driveFileHeaders --------------------------------------------------------
+
+const FILE_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+const MEDIA_CSP =
+  "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox allow-same-origin";
+assert.equal(DRIVE_FILE_SANDBOX_CSP, FILE_CSP);
+assert.equal(DRIVE_MEDIA_SANDBOX_CSP, MEDIA_CSP);
+// Neither policy lets anything run.
+for (const policy of [FILE_CSP, MEDIA_CSP]) {
+  assert.match(policy, /^default-src 'none';/);
+  assert.match(policy, /; sandbox( allow-same-origin)?$/);
+  assert.doesNotMatch(policy, /allow-scripts|script-src|unsafe-eval/);
+}
+
+const disposition = (kind: "inline" | "attachment", name: string) =>
+  contentDisposition(name, kind);
+
+// PDFs open in the browser's viewer: inline, without a sandbox (the viewers
+// may not run under it). Google Docs and Sheets are exported as PDF.
+assert.deepEqual(driveFileHeaders("application/pdf", "Partition.pdf", false), {
+  "Content-Type": "application/pdf",
+  "Content-Disposition": disposition("inline", "Partition.pdf"),
+  "X-Content-Type-Options": "nosniff",
+});
+const exported = driveDownloadPlan("application/vnd.google-apps.spreadsheet");
+assert.equal(exported.kind, "export");
+if (exported.kind === "export") {
+  assert.deepEqual(driveFileHeaders(exported.mimeType, "Planning.pdf", false), {
+    "Content-Type": "application/pdf",
+    "Content-Disposition": disposition("inline", "Planning.pdf"),
+    "X-Content-Type-Options": "nosniff",
+  });
+}
+
+// PNG, JPEG, GIF and WebP images show inline under the sandbox; audio and
+// video too, under the media sandbox (the browser's player must load them).
+assert.deepEqual(driveFileHeaders("image/png", "Plan.png", false), {
+  "Content-Type": "image/png",
+  "Content-Disposition": disposition("inline", "Plan.png"),
+  "X-Content-Type-Options": "nosniff",
+  "Content-Security-Policy": FILE_CSP,
+});
+assert.deepEqual(driveFileHeaders("audio/mpeg", "Alto.mp3", false), {
+  "Content-Type": "audio/mpeg",
+  "Content-Disposition": disposition("inline", "Alto.mp3"),
+  "X-Content-Type-Options": "nosniff",
+  "Content-Security-Policy": MEDIA_CSP,
+});
+for (const [type, policy] of [
+  ["image/jpeg", FILE_CSP],
+  ["image/gif", FILE_CSP],
+  ["image/webp", FILE_CSP],
+  ["audio/wav", MEDIA_CSP],
+  ["audio/x-m4a", MEDIA_CSP],
+  ["audio/midi", MEDIA_CSP],
+  ["video/mp4", MEDIA_CSP],
+  ["video/quicktime", MEDIA_CSP],
+] as const) {
+  const headers = driveFileHeaders(type, "fichier", false);
+  assert.equal(headers["Content-Type"], type, type);
+  assert.equal(
+    headers["Content-Disposition"],
+    disposition("inline", "fichier"),
+    type,
+  );
+  assert.equal(headers["Content-Security-Policy"], policy, type);
+  assert.equal(headers["X-Content-Type-Options"], "nosniff");
+}
+
+// Anything else is saved, never shown: an attachment typed
+// application/octet-stream, under the sandbox.
+assert.deepEqual(driveFileHeaders("text/html", "Page.html", false), {
+  "Content-Type": "application/octet-stream",
+  "Content-Disposition": disposition("attachment", "Page.html"),
+  "X-Content-Type-Options": "nosniff",
+  "Content-Security-Policy": FILE_CSP,
+});
+assert.deepEqual(driveFileHeaders("image/svg+xml", "Logo.svg", false), {
+  "Content-Type": "application/octet-stream",
+  "Content-Disposition": disposition("attachment", "Logo.svg"),
+  "X-Content-Type-Options": "nosniff",
+  "Content-Security-Policy": FILE_CSP,
+});
+for (const type of [
+  "application/xhtml+xml",
+  "text/xml",
+  "application/xml",
+  "text/plain",
+  "text/css",
+  "text/javascript",
+  "application/javascript",
+  "application/x-musescore",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/zip",
+  "application/octet-stream",
+  "image/bmp",
+  "image/x-icon",
+  "",
+  "html",
+  "audio/",
+  "text/html\r\nX-Injected: 1",
+]) {
+  const headers = driveFileHeaders(type, "fichier", false);
+  assert.equal(headers["Content-Type"], "application/octet-stream", type);
+  assert.equal(
+    headers["Content-Disposition"],
+    disposition("attachment", "fichier"),
+    type,
+  );
+  assert.equal(headers["Content-Security-Policy"], FILE_CSP, type);
+  assert.equal(headers["X-Content-Type-Options"], "nosniff");
+}
+
+// Types are read without case or parameters.
+assert.equal(
+  driveFileHeaders("Image/PNG; foo=bar", "Plan.png", false)["Content-Type"],
+  "image/png",
+);
+assert.equal(
+  driveFileHeaders(" TEXT/HTML; charset=utf-8", "Page.html", false)[
+    "Content-Type"
+  ],
+  "application/octet-stream",
+);
+
+// `download` is always an attachment. A downloaded file keeps its own type
+// (the app hands it to the share sheet, which offers the apps that open
+// it), except script and stylesheet types; PDFs still go without a sandbox.
+assert.deepEqual(driveFileHeaders("application/pdf", "Partition.pdf", true), {
+  "Content-Type": "application/pdf",
+  "Content-Disposition": disposition("attachment", "Partition.pdf"),
+  "X-Content-Type-Options": "nosniff",
+});
+assert.deepEqual(driveFileHeaders("audio/mpeg", "Alto.mp3", true), {
+  "Content-Type": "audio/mpeg",
+  "Content-Disposition": disposition("attachment", "Alto.mp3"),
+  "X-Content-Type-Options": "nosniff",
+  "Content-Security-Policy": MEDIA_CSP,
+});
+assert.deepEqual(driveFileHeaders("text/html", "Page.html", true), {
+  "Content-Type": "text/html",
+  "Content-Disposition": disposition("attachment", "Page.html"),
+  "X-Content-Type-Options": "nosniff",
+  "Content-Security-Policy": FILE_CSP,
+});
+for (const [type, served] of [
+  ["image/png", "image/png"],
+  ["image/svg+xml", "image/svg+xml"],
+  ["application/x-musescore", "application/x-musescore"],
+  [
+    "application/vnd.recordare.musicxml+xml",
+    "application/vnd.recordare.musicxml+xml",
+  ],
+  ["Application/X-MuseScore; x=1", "application/x-musescore"],
+  ["text/javascript", "application/octet-stream"],
+  ["application/javascript", "application/octet-stream"],
+  ["application/x-javascript", "application/octet-stream"],
+  ["text/ecmascript", "application/octet-stream"],
+  ["text/jscript", "application/octet-stream"],
+  ["text/css", "application/octet-stream"],
+  ["", "application/octet-stream"],
+  ["not a type", "application/octet-stream"],
+] as const) {
+  const headers = driveFileHeaders(type, "fichier", true);
+  assert.equal(headers["Content-Type"], served, type);
+  assert.equal(
+    headers["Content-Disposition"],
+    disposition("attachment", "fichier"),
+    type,
+  );
+  assert.equal(headers["Content-Security-Policy"], FILE_CSP, type);
+}
+assert.equal(
+  driveFileHeaders("video/mp4", "Concert.mp4", true)["Content-Disposition"],
+  disposition("attachment", "Concert.mp4"),
 );
 
 // --- listAllDrivePages -------------------------------------------------------

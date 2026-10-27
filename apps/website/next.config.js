@@ -135,12 +135,20 @@ const nextConfig = {
 
     return [
       {
-        source: "/(.*)",
+        // Every path but the Drive file proxy, which sends its own policy
+        // per file type (app/api/drive/file/route.ts): a header set here
+        // would replace the route's.
+        source: "/((?!api/drive/file$).*)",
         headers: [
           {
             key: "Content-Security-Policy",
             value: `frame-ancestors ${frameAncestors};`,
           },
+        ],
+      },
+      {
+        source: "/(.*)",
+        headers: [
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
