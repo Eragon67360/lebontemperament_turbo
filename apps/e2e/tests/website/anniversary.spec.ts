@@ -8,17 +8,19 @@ test("40-ans archives follow the anniversary feature flag", async ({
   page,
 }) => {
   // The archives are public only while the anniversary experience is on
-  // (owner decision 16); otherwise visitors get a real 404.
-  const flag = await page.request.get(
-    "/api/feature-flags?flag_key=anniversary_40_years",
-  );
-  const enabled = flag.ok() && (await flag.json()).is_enabled === true;
+  // (owner decision 16); otherwise visitors get a real 404. The site reads
+  // the flag on the server (no public endpoint exposes it), so `/40-ans`
+  // itself says whether the experience is on: both pages answer 404, or
+  // both are public.
+  const home = await page.request.get("/40-ans");
+  const enabled = home.status() !== 404;
 
   const response = await page.goto("/40-ans/archives");
   if (!enabled) {
     expect(response?.status()).toBe(404);
     return;
   }
+  expect(home.ok()).toBe(true);
   expect(response?.ok()).toBe(true);
   await expect(
     page.getByRole("searchbox", { name: "Rechercher dans les archives" }),
