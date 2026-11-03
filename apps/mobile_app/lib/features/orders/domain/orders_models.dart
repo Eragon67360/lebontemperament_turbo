@@ -172,6 +172,14 @@ class OrderRecord {
   bool get isInRound => deliveryRecipientId != null;
   bool get isErased => personalDataErasedAt != null;
 
+  /// The buyer can become a stop now: to deliver, not in a round yet, their
+  /// data still there, with an address (« Ajouter à la tournée »).
+  bool get canJoinRound =>
+      isDelivery &&
+      !isInRound &&
+      !isErased &&
+      (buyerAddress ?? '').trim().isNotEmpty;
+
   factory OrderRecord.fromJson(Map<String, dynamic> json) => OrderRecord(
     id: json['id'] as String,
     saleId: json['sale_id'] as String,

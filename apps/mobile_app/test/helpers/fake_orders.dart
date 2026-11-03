@@ -189,6 +189,7 @@ class FakeOrdersService implements OrdersService {
   final handedOver = <(String, bool)>[];
   final deletedOrders = <String>[];
   final roundCalls = <String>[];
+  final chosenRoundCalls = <(String, List<String>)>[];
   int loads = 0;
 
   void _check() {
@@ -279,6 +280,16 @@ class FakeOrdersService implements OrdersService {
   Future<DeliveryAddResult> addSaleOrdersToDelivery(String saleId) async {
     _check();
     roundCalls.add(saleId);
+    return deliveryResult;
+  }
+
+  @override
+  Future<DeliveryAddResult> addOrdersToDelivery(
+    String saleId,
+    List<String> orderIds,
+  ) async {
+    _check();
+    chosenRoundCalls.add((saleId, orderIds));
     return deliveryResult;
   }
 }
