@@ -39,6 +39,7 @@ import {
   parseDotenv,
   readTemplate,
   refKey,
+  templateOf,
 } from "./lib.mjs";
 
 const LEVEL = { vercel: 1, dotenv: 2, file: 3, ask: 4 };
@@ -72,10 +73,13 @@ if (opts.vercel && !process.env.LBT_SYNC_VERCEL_TOKEN) {
   process.exit(run.status ?? 1);
 }
 
-// What the templates read: target -> entries, and vault/item -> fields.
+// What the templates read: target -> entries, and vault/item -> fields. A Coolify
+// target reads its Vercel counterpart's template (templateOf).
 const templates = {};
 for (const target of [...Object.keys(config.targets), "sync"]) {
-  const { entries, errors } = readTemplate(target);
+  const { entries, errors } = readTemplate(
+    target === "sync" ? target : templateOf(target, config.targets[target]),
+  );
   if (errors.length) fail(errors.join("\n"));
   templates[target] = entries;
 }
