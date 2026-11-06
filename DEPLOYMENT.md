@@ -1,6 +1,6 @@
 # Deployment Guide (Turborepo)
 
-Both sites are moving from Vercel to a self-hosted server (Hetzner Cloud + Coolify), staging first, then production once staging has run for a week (owner's decision, 2026-11-05). Until production moves, Vercel builds `main` as described in the first sections; the [self-hosted section](#self-hosted-hetzner--coolify) describes the new setup.
+Both sites are moving from Vercel to a self-hosted server (Hetzner Cloud + Coolify) (owner's decision, 2026-11-05). **Staging moved on 2026-11-06**: `dev.lebontemperament.com` and `admin-dev.lebontemperament.com` point to the server. Production follows once staging has run for a week. Until then, Vercel builds `main` as described in the first sections (it still builds `dev` too, though no domain points there any more); the [self-hosted section](#self-hosted-hetzner--coolify) describes the new setup.
 
 Both Vercel projects build from the **repository root**, with a Turbo filter per app. _Measured on 2026-10-02 through the Vercel API._
 
@@ -31,7 +31,7 @@ Vercel only reads `vercel.json` from the Root Directory, which is the repository
 
 Since 2026-10-02 both projects use Vercel Authentication with `all_except_custom_domains`:
 
-- Staging (`dev.`, `admin-dev.`), every preview and every generated production deployment URL need a Vercel login.
+- Every preview and every generated production deployment URL need a Vercel login. Staging (`dev.`, `admin-dev.`) left Vercel on 2026-11-06 and asks for HTTP basic auth instead (see [Coolify applications](#coolify-applications)).
 - `www.lebontemperament.com` and `admin.lebontemperament.com` stay public.
 - The e2e suite uses one automation bypass secret, valid for both projects.
 - Production deployments are retained 36,500 days, so old builds are now behind the protection too.
@@ -71,7 +71,9 @@ Vercel sets `VERCEL_ENV`; the self-hosted apps set **`APP_ENV`** (`production` o
 | Build arguments     | Coolify's "Inject build args to Dockerfile" **off**: the Dockerfiles declare their own `ARG`s in the build stage only, and the injection would add every variable after each `FROM`, including the image that runs |
 | Variables           | `APP_ENV`, plus the app's template in `env/`; build-time **and** runtime                                                                                                                                           |
 | Persistent storage  | a volume on `/app/apps/<app>/.next/cache` (optimised images survive a deployment)                                                                                                                                  |
-| Staging only        | project `Le Bon Temperament`, environment `staging`: `website-staging` and `admin-staging`, ids in `env/targets.json`; HTTP basic auth on; the e2e suite reads `E2E_BASIC_AUTH_USER` and `E2E_BASIC_AUTH_PASSWORD` |
+| Staging only        | project `Le Bon Temperament`, environment `staging`: `website-staging` (`dev.`) and `admin-staging` (`admin-dev.`), ids in `env/targets.json`; auto-deploy from `dev`; noindex; HTTP basic auth (below)            |
 | Website, production | `www` and the bare domain on the same application, with Coolify's www redirect **off**: the bare domain must serve `/.well-known/*` itself (see [The bare domain](#the-bare-domain))                               |
+
+**Staging's basic auth.** The login lives in Proton Pass, `LBT Staging / E2E` (`basic_auth_user`, `basic_auth_password`); the e2e suite reads it from the GitHub secrets `E2E_BASIC_AUTH_USER` and `E2E_BASIC_AUTH_PASSWORD`. Keep the password to **31 characters at most**: Coolify 4.6.0 fails to save a longer one, the API answering 500 and the dashboard silently dropping the username and password (_measured_ 2026-11-06). Basic auth only applies once both are stored, and after a redeployment.
 
 The client IP reaches the apps in `x-real-ip` and `x-forwarded-for`, set by Traefik as Vercel does, so form rate limiting (`apps/website/lib/formRateLimit.ts`) works unchanged. There are no per-PR previews on the server: CI still runs the gates on every PR, and staging is the `dev` branch.
