@@ -125,9 +125,12 @@ const nextConfig = {
   async headers() {
     // The admin's story preview frames the website. A production build allows
     // only the admin's own origin; other builds also allow an admin dev
-    // server on this machine (port 3002).
-    // eslint-disable-next-line no-undef
-    const isProduction = process.env.VERCEL_ENV === "production";
+    // server on this machine (port 3002). Production is APP_ENV on the
+    // self-hosted servers, else VERCEL_ENV (@repo/domain/utils/deployEnv,
+    // which this file can't import).
+    const isProduction =
+      // eslint-disable-next-line no-undef
+      (process.env.APP_ENV || process.env.VERCEL_ENV) === "production";
     const adminUrl =
       // eslint-disable-next-line no-undef
       process.env.NEXT_PUBLIC_ADMIN_URL ||

@@ -10,6 +10,7 @@ import {
   type ProfileClient,
 } from "@/utils/users/memberProfile";
 import { normalizeName } from "@repo/domain/roster/normalize";
+import { isProductionDeploy } from "@repo/domain/utils/deployEnv";
 
 export const INVITE_BATCH_SIZE = 10;
 export const INVITE_BATCH_DELAY_MS = 1000;
@@ -67,7 +68,7 @@ export interface SendInvitationsOptions {
 
 /** Where the invitation link lands: the website's profile-creation page. */
 export function inviteRedirectUrl(): string {
-  return process.env.VERCEL_ENV === "production"
+  return isProductionDeploy()
     ? "https://www.lebontemperament.com/auth/create-profile"
     : "https://dev.lebontemperament.com/auth/create-profile";
 }
