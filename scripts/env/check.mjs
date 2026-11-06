@@ -15,6 +15,7 @@ import {
   readTemplate,
   scanCodeNames,
   scanWorkflowSecrets,
+  templateOf,
   templatePath,
   turboDrift,
   validateTarget,
@@ -26,11 +27,12 @@ const warnings = [];
 const parsed = {};
 
 for (const [target, targetConfig] of Object.entries(config.targets)) {
-  if (!existsSync(templatePath(target))) {
-    errors.push(`${target}: env/${target}.env is missing`);
+  const template = templateOf(target, targetConfig);
+  if (!existsSync(templatePath(template))) {
+    errors.push(`${target}: env/${template}.env is missing`);
     continue;
   }
-  const { entries, errors: parseErrors } = readTemplate(target);
+  const { entries, errors: parseErrors } = readTemplate(template);
   parsed[target] = entries;
   errors.push(...parseErrors);
   errors.push(...validateTarget(target, targetConfig, entries, config.rules));
@@ -65,6 +67,8 @@ for (const name of Object.keys(config.optional ?? {})) {
 
 const sync = readTemplate("sync");
 errors.push(...sync.errors);
+const syncCoolify = readTemplate("sync.coolify");
+errors.push(...syncCoolify.errors);
 
 const githubTargets = Object.keys(config.targets).filter(
   (t) => config.targets[t].kind === "github",
@@ -117,6 +121,7 @@ if (process.argv.includes("--items")) {
   for (const [item, fields] of itemsNeeded([
     ...Object.values(parsed),
     sync.entries,
+    syncCoolify.entries,
   ])) {
     console.log(`  ${item}: ${[...fields].sort().join(", ")}`);
   }

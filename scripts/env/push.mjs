@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Pushes one env/ target to Vercel or GitHub. Runs INSIDE `pass-cli run`, which puts
+// Pushes one env/ target to Vercel, GitHub or a Coolify application. Runs INSIDE `pass-cli run`, which puts
 // the resolved values in this process's environment: start it with
 // `npm run env:push -- <target>` (scripts/env/cli.mjs), never directly.
 //
@@ -27,6 +27,7 @@ import {
   planGithub,
   planVercel,
   readTemplate,
+  templateOf,
   validateTarget,
 } from "./lib.mjs";
 
@@ -42,7 +43,7 @@ if (!targetConfig)
     `Unknown target "${target}". Known: ${Object.keys(config.targets).join(", ")}`,
   );
 
-const { entries, errors } = readTemplate(target);
+const { entries, errors } = readTemplate(templateOf(target, targetConfig));
 errors.push(...validateTarget(target, targetConfig, entries, config.rules));
 if (errors.length) fail(errors.join("\n"));
 
@@ -73,9 +74,12 @@ const fingerprintOf = (name, value) =>
 const where =
   targetConfig.kind === "vercel"
     ? `Vercel ${targetConfig.project} (${targetConfig.environments.join(", ")})`
-    : `GitHub ${config.githubRepo} ${targetConfig.environment ? `environment ${targetConfig.environment}` : "repository secrets"}`;
+    : targetConfig.kind === "coolify"
+      ? `Coolify application ${targetConfig.application} (${config.coolifyUrl})`
+      : `GitHub ${config.githubRepo} ${targetConfig.environment ? `environment ${targetConfig.environment}` : "repository secrets"}`;
 console.log(`\n${target} -> ${where}`);
 
+// Coolify, like GitHub, is planned on names: values are not read back.
 const plan =
   targetConfig.kind === "vercel"
     ? planVercel({
@@ -89,7 +93,8 @@ const plan =
       })
     : planGithub({
         entries: active,
-        existingNames: githubList(),
+        existingNames:
+          targetConfig.kind === "coolify" ? await coolifyList() : githubList(),
         values,
         known,
         fingerprintOf,
@@ -150,6 +155,7 @@ let failed = 0;
 for (const a of writes) {
   try {
     if (targetConfig.kind === "vercel") await vercelWrite(a);
+    else if (targetConfig.kind === "coolify") await coolifyWrite(a);
     else githubWrite(a.name);
     known[a.name] = a.fp;
     console.log(`  written    ${a.name}`);
@@ -164,6 +170,11 @@ saveState(state);
 console.log(
   `\n${writes.length - failed} written, ${failed} failed, ${conflicts} conflicts.`,
 );
+if (targetConfig.kind === "coolify" && writes.length > failed) {
+  console.log(
+    "Coolify uses the new values from the next deployment of the application: redeploy it (or merge into its branch).",
+  );
+}
 if (targetConfig.kind === "vercel" && writes.length > failed) {
   console.log(
     targetConfig.production
@@ -292,6 +303,65 @@ async function vercelWrite(a) {
   } else {
     await vercel("PATCH", `/v9/projects/${project}/env/${a.id}`, { value });
   }
+}
+
+async function coolify(method, path, body) {
+  const token = process.env.LBT_SYNC_COOLIFY_TOKEN;
+  if (!token || token.startsWith("pass://"))
+    fail(
+      "No Coolify token: LBT_SYNC_COOLIFY_TOKEN (env/sync.coolify.env) was not resolved.",
+    );
+  if (!config.coolifyUrl) fail("targets.json has no coolifyUrl.");
+  const response = await fetch(new URL(`/api/v1${path}`, config.coolifyUrl), {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  // Report the status only; never a body that might echo a value.
+  if (!response.ok) throw new Error(`Coolify ${response.status}`);
+  return response.json().catch(() => ({}));
+}
+
+async function coolifyList() {
+  let envs;
+  try {
+    envs = await coolify(
+      "GET",
+      `/applications/${encodeURIComponent(targetConfig.application)}/envs`,
+    );
+  } catch (error) {
+    fail(
+      `Could not list the Coolify variables (${error.message}). Check the token and the application uuid.`,
+    );
+  }
+  // The application's own variables, not its preview-deployment copies. Keep
+  // the names only: the list can carry values, which must not linger.
+  return [
+    ...new Set(
+      [].concat(envs ?? []).flatMap((e) => (e.is_preview ? [] : [e.key])),
+    ),
+  ];
+}
+
+async function coolifyWrite(a) {
+  const value = values[a.name];
+  // Literal: Coolify must not expand a `$` inside a secret. Build-time and
+  // runtime are Coolify's defaults for a new variable (DEPLOYMENT.md).
+  await coolify(
+    a.action === "create" ? "POST" : "PATCH",
+    `/applications/${encodeURIComponent(targetConfig.application)}/envs`,
+    {
+      key: a.name,
+      value,
+      is_preview: false,
+      is_literal: true,
+      is_multiline: value.includes("\n"),
+    },
+  );
 }
 
 function gh(args, input) {
