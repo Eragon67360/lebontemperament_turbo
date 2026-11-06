@@ -2,6 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalEnv": [
+    "APP_ENV",
     "VERCEL_ENV",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
@@ -36,7 +37,8 @@
         "REVALIDATE_SECRET",
         "GOOGLE_SITE_VERIFICATION",
         "BING_SITE_VERIFICATION",
-        "CRON_SECRET"
+        "CRON_SECRET",
+        "BUILD_STANDALONE"
       ],
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
@@ -63,6 +65,8 @@
       ],
       "passThroughEnv": [
         "VERCEL_AUTOMATION_BYPASS_SECRET",
+        "E2E_BASIC_AUTH_USER",
+        "E2E_BASIC_AUTH_PASSWORD",
         "E2E_ALLOW_WRITES",
         "SUPABASE_URL",
         "LOCAL_WEBSITE_URL"

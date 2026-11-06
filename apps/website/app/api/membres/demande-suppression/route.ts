@@ -7,6 +7,7 @@ import { createMailer } from "@/lib/mail";
 import { readProfileName } from "@/lib/memberName";
 import { getContactEmail } from "@/lib/siteSettings";
 import { requireUser } from "@/utils/auth";
+import { isProductionDeploy } from "@repo/domain/utils/deployEnv";
 import { NextResponse } from "next/server";
 
 const FAILED = {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     { id: auth.user.id, email, name },
     note,
     new Date(),
-    process.env.VERCEL_ENV !== "production",
+    !isProductionDeploy(),
   );
 
   try {

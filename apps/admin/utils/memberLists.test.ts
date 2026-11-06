@@ -15,13 +15,14 @@ import {
 // staging, previews and local development refuse them, local development
 // unless it opts in (SEC-007). `fetch` is mocked, nothing leaves the process.
 
-// --- Which environments may read them: (VERCEL_ENV, opt-in) ---
+// --- Which environments may read them: (deployment environment, opt-in) ---
 
 assert.equal(memberListsAvailable("production", undefined), true);
 assert.equal(memberListsAvailable("production", "1"), true);
 
-// Staging and PR previews are Vercel "preview" deployments: never, whatever
-// their variables. Unknown values are refused too.
+// Staging and test deployments are "preview" (APP_ENV on the self-hosted
+// servers, VERCEL_ENV on Vercel): never, whatever their variables. Unknown
+// values are refused too.
 for (const optIn of [undefined, "", "0", "true", "1"]) {
   for (const vercelEnv of ["preview", "staging", "Production", " production"]) {
     assert.equal(
@@ -32,7 +33,8 @@ for (const optIn of [undefined, "", "0", "true", "1"]) {
   }
 }
 
-// Local development (no VERCEL_ENV, or `development` from `vercel env pull`):
+// Local development (no APP_ENV nor VERCEL_ENV, or `development` from
+// `vercel env pull`):
 // only with the opt-in, and only "1".
 for (const vercelEnv of [undefined, "", "development"]) {
   for (const optIn of [undefined, "", "0", "true", "yes"]) {
@@ -47,14 +49,22 @@ for (const vercelEnv of [undefined, "", "development"]) {
 
 // The defaults read the environment at each call.
 const saved = {
+  appEnv: process.env.APP_ENV,
   vercelEnv: process.env.VERCEL_ENV,
   optIn: process.env.ALLOW_MEMBER_LISTS_IN_DEVELOPMENT,
 };
-function setEnv(vercelEnv: string | undefined, optIn: string | undefined) {
-  if (vercelEnv === undefined) delete process.env.VERCEL_ENV;
-  else process.env.VERCEL_ENV = vercelEnv;
-  if (optIn === undefined) delete process.env.ALLOW_MEMBER_LISTS_IN_DEVELOPMENT;
-  else process.env.ALLOW_MEMBER_LISTS_IN_DEVELOPMENT = optIn;
+function set(name: string, value: string | undefined) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
+function setEnv(
+  vercelEnv: string | undefined,
+  optIn: string | undefined,
+  appEnv?: string,
+) {
+  set("APP_ENV", appEnv);
+  set("VERCEL_ENV", vercelEnv);
+  set("ALLOW_MEMBER_LISTS_IN_DEVELOPMENT", optIn);
 }
 setEnv(undefined, undefined);
 assert.equal(memberListsAvailable(), false, "unset: refused");
@@ -64,7 +74,23 @@ setEnv("preview", "1");
 assert.equal(memberListsAvailable(), false, "a preview ignores the opt-in");
 setEnv("production", undefined);
 assert.equal(memberListsAvailable(), true, "production");
-setEnv(saved.vercelEnv, saved.optIn);
+
+// Self-hosted: APP_ENV decides, and wins over VERCEL_ENV.
+setEnv(undefined, undefined, "production");
+assert.equal(memberListsAvailable(), true, "self-hosted production");
+setEnv(undefined, "1", "preview");
+assert.equal(
+  memberListsAvailable(),
+  false,
+  "self-hosted staging ignores the opt-in",
+);
+setEnv("production", undefined, "preview");
+assert.equal(
+  memberListsAvailable(),
+  false,
+  "self-hosted staging, whatever VERCEL_ENV says",
+);
+setEnv(saved.vercelEnv, saved.optIn, saved.appEnv);
 
 // --- The refusal the routes answer ---
 

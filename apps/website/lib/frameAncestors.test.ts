@@ -14,11 +14,15 @@ const LOCAL_ORIGINS = [
   "https://127.0.0.1:3002",
 ];
 
-type Env = { VERCEL_ENV?: string; NEXT_PUBLIC_ADMIN_URL?: string };
+type Env = {
+  APP_ENV?: string;
+  VERCEL_ENV?: string;
+  NEXT_PUBLIC_ADMIN_URL?: string;
+};
 
 /** The frame-ancestors sources sent on every page, built with `env`. */
 async function frameAncestors(env: Env): Promise<string[]> {
-  const names = ["VERCEL_ENV", "NEXT_PUBLIC_ADMIN_URL"] as const;
+  const names = ["APP_ENV", "VERCEL_ENV", "NEXT_PUBLIC_ADMIN_URL"] as const;
   const saved = names.map((name) => process.env[name]);
   const apply = (name: (typeof names)[number], value: string | undefined) => {
     if (value === undefined) delete process.env[name];
@@ -64,7 +68,29 @@ assert.deepEqual(
   ["'self'", "https://admin-dev.example.com", ...LOCAL_ORIGINS],
 );
 
-// A local build (no VERCEL_ENV): the admin dev server, listed once.
+// Self-hosted (APP_ENV, which wins over VERCEL_ENV): the same rules.
+assert.deepEqual(
+  await frameAncestors({
+    APP_ENV: "production",
+    NEXT_PUBLIC_ADMIN_URL: "https://admin.example.com",
+  }),
+  ["'self'", "https://admin.example.com"],
+);
+assert.deepEqual(
+  await frameAncestors({ APP_ENV: "production", VERCEL_ENV: "preview" }),
+  ["'self'", "https://admin.lebontemperament.com"],
+);
+assert.deepEqual(
+  await frameAncestors({
+    APP_ENV: "preview",
+    VERCEL_ENV: "production",
+    NEXT_PUBLIC_ADMIN_URL: "https://admin-dev.example.com",
+  }),
+  ["'self'", "https://admin-dev.example.com", ...LOCAL_ORIGINS],
+  "a staging server is not production, whatever VERCEL_ENV says",
+);
+
+// A local build (neither set): the admin dev server, listed once.
 assert.deepEqual(await frameAncestors({}), ["'self'", ...LOCAL_ORIGINS]);
 assert.deepEqual(
   await frameAncestors({ NEXT_PUBLIC_ADMIN_URL: "http://localhost:3001" }),

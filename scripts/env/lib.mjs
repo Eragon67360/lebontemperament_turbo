@@ -135,10 +135,13 @@ export function itemsNeeded(entryLists) {
 }
 
 // Variables the platforms or tooling set themselves; never expected in a template.
+// APP_ENV is the self-hosted servers' VERCEL_ENV, set in each Coolify
+// application (DEPLOYMENT.md).
 const PROVIDED = new Set([
   "NODE_ENV",
   "CI",
   "VERCEL_ENV",
+  "APP_ENV",
   "VERCEL_URL",
   "NEXT_RUNTIME",
   "ANALYZE",
