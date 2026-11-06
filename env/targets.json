@@ -3,6 +3,7 @@
   "passCliVersion": "2.4.2",
   "vercelTeamId": "team_5NFi3yBnYiFnHmMVJJXhd9m4",
   "githubRepo": "Eragon67360/lebontemperament_turbo",
+  "coolifyUrl": "https://coolify.thomasmoserdev.com",
   "$unmanaged": "Names the code reads that are deliberately left out of the templates, with why.",
   "unmanaged": {
     "ROSTER_SHEET_RANGE": "optional, the admin defaults to A:ZZ",

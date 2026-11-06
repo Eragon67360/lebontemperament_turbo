@@ -6,11 +6,12 @@
 // references into the push's environment: no value is ever written to a file.
 //
 // Groups: dev (website.dev, admin.dev), production (website.production,
-// admin.production), github (github.repo, github.app-store, github.play-store).
+// admin.production), github (github.repo, github.app-store, github.play-store),
+// coolify-dev and coolify-production (the Coolify targets in targets.json).
 
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { ENV_DIR, ROOT, loadTargets } from "./lib.mjs";
+import { ENV_DIR, ROOT, loadTargets, templateOf } from "./lib.mjs";
 
 const config = loadTargets();
 const args = process.argv.slice(2);
@@ -21,6 +22,7 @@ const GROUPS = {
   dev: ["website.dev", "admin.dev"],
   production: ["website.production", "admin.production"],
   github: ["github.repo", "github.app-store", "github.play-store"],
+  ...coolifyGroups(),
 };
 const targets = [...new Set(names.flatMap((n) => GROUPS[n] ?? [n]))];
 const unknown = targets.filter((t) => !config.targets[t]);
@@ -67,8 +69,12 @@ for (const target of targets) {
       "run",
       "--env-file",
       join(ENV_DIR, "sync.env"),
+      // Only Coolify pushes need the Coolify token.
+      ...(config.targets[target].kind === "coolify"
+        ? ["--env-file", join(ENV_DIR, "sync.coolify.env")]
+        : []),
       "--env-file",
-      join(ENV_DIR, `${target}.env`),
+      join(ENV_DIR, `${templateOf(target, config.targets[target])}.env`),
       "--",
       process.execPath,
       join(ROOT, "scripts", "env", "push.mjs"),
@@ -83,4 +89,17 @@ for (const target of targets) {
     );
     process.exit(run.status || 1);
   }
+}
+
+/** coolify-dev and coolify-production: the Coolify targets, by environment. */
+function coolifyGroups() {
+  const coolify = Object.entries(config.targets).filter(
+    ([, t]) => t.kind === "coolify",
+  );
+  return {
+    "coolify-dev": coolify.filter(([, t]) => !t.production).map(([n]) => n),
+    "coolify-production": coolify
+      .filter(([, t]) => t.production)
+      .map(([n]) => n),
+  };
 }

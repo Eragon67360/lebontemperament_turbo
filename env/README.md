@@ -15,6 +15,7 @@ To change a value: edit it in Proton Pass, then push it from the owner's Mac wit
 | `github.repo.env`                               | GitHub repository secrets                                           |
 | `github.app-store.env`, `github.play-store.env` | GitHub environments `app-store` and `play-store`                    |
 | `sync.env`                                      | The Vercel token the push itself uses (GitHub uses your `gh` login) |
+| `sync.coolify.env`                              | The Coolify token, loaded only for Coolify targets                  |
 
 `targets.json` maps each template to its destination and holds the vault rules: production targets never read `LBT Staging` (except the e2e item for the repository secrets), and dev targets never read the production `Supabase` or `Sites` items.
 
@@ -59,7 +60,22 @@ npm run env:push -- github.repo                 # dry run of the repository secr
 npm run env:push -- production --apply --prod   # production: asks you to type the target name
 ```
 
-Groups: `dev`, `production`, `github`; or name targets one by one. `--force` rewrites values even when they look unchanged.
+Groups: `dev`, `production`, `github`, `coolify-dev`, `coolify-production`; or name targets one by one. `--force` rewrites values even when they look unchanged.
+
+### Coolify (the self-hosted server)
+
+A target of kind `coolify` pushes to one Coolify application and reuses the Vercel target's template, so both hosts get the same names from the same Proton Pass fields while the sites move ([DEPLOYMENT.md](../DEPLOYMENT.md#self-hosted-hetzner--coolify)):
+
+```json
+"coolify.website.dev": {
+  "kind": "coolify",
+  "application": "<uuid from the application's URL in Coolify>",
+  "template": "website.dev",
+  "production": false
+}
+```
+
+One-time set-up: in Coolify, Keys & Tokens › API tokens, create a token with write access and store it in `LBT Production / Sync tokens / coolify_token`. `coolifyUrl` in `targets.json` says which instance. The push writes each variable as literal (Coolify must not expand a `$` in a secret), for the application itself rather than its preview deployments, available at build time and at runtime. `APP_ENV` is not in the templates: it is set once on each application when it is created, and the push lists it as `extra`. Coolify uses new values from the application's next deployment.
 
 What a run does:
 
