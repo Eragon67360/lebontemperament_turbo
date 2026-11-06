@@ -758,14 +758,15 @@ class DriverTrackingNotifier extends StateNotifier<DriverTrackingState> {
               enableWakeLock: true,
             ),
           )
-        // iOS only keeps delivering positions to a backgrounded app when the
-        // location manager is told so explicitly; plain LocationSettings
-        // stopped the stream as soon as the screen went off (#360).
+        // iOS shares the position while « Mode livraison » is on screen
+        // only: the « location » background mode was dropped for App Review
+        // (2.5.4, Nov 2026) since the driver uses Android, and asking for
+        // background updates without that mode makes Core Location throw.
         : AppleSettings(
             accuracy: LocationAccuracy.high,
             distanceFilter: 10,
-            allowBackgroundLocationUpdates: true,
-            showBackgroundLocationIndicator: true,
+            allowBackgroundLocationUpdates: false,
+            showBackgroundLocationIndicator: false,
             pauseLocationUpdatesAutomatically: false,
             activityType: ActivityType.automotiveNavigation,
           );
