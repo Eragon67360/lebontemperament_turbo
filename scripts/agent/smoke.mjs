@@ -3,9 +3,12 @@
 //   node scripts/agent/smoke.mjs                       # staging (dev.* / admin-dev.*)
 //   node scripts/agent/smoke.mjs https://www.lebontemperament.com https://admin.lebontemperament.com
 //
-// Staging is behind Vercel deployment protection: pass temporary share links
-// (from the Vercel MCP tool `get_access_to_vercel_url`, valid ~23 h) in
-// SHARE_WEBSITE and SHARE_ADMIN; their protection cookie is reused.
+// Staging is behind HTTP basic auth since 2026-11-06: pass its login in
+// E2E_BASIC_AUTH_USER and E2E_BASIC_AUTH_PASSWORD (Proton Pass, LBT Staging /
+// E2E). It is sent to the two sites only. A Vercel preview is behind Vercel
+// deployment protection instead: pass temporary share links (from the Vercel
+// MCP tool `get_access_to_vercel_url`, valid ~23 h) in SHARE_WEBSITE and
+// SHARE_ADMIN; their protection cookie is reused.
 // The tracking-RPC check needs NEXT_PUBLIC_SUPABASE_URL and
 // NEXT_PUBLIC_SUPABASE_ANON_KEY (public values), read from the environment or
 // from apps/website/.env.local.
@@ -46,6 +49,14 @@ for (const share of [process.env.SHARE_WEBSITE, process.env.SHARE_ADMIN].filter(
     .join("; ");
 }
 
+const { E2E_BASIC_AUTH_USER: authUser, E2E_BASIC_AUTH_PASSWORD: authPassword } =
+  process.env;
+const basicAuth =
+  authUser && authPassword
+    ? `Basic ${Buffer.from(`${authUser}:${authPassword}`).toString("base64")}`
+    : undefined;
+const siteHosts = new Set([new URL(base).host, new URL(adminBase).host]);
+
 const results = [];
 let failed = 0;
 const check = async (label, url, expect, extra = {}) => {
@@ -56,6 +67,7 @@ const check = async (label, url, expect, extra = {}) => {
     body: extra.body,
     headers: {
       ...(cookies[host] ? { cookie: cookies[host] } : {}),
+      ...(basicAuth && siteHosts.has(host) ? { authorization: basicAuth } : {}),
       ...extra.headers,
     },
   });
