@@ -9,8 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../helpers/screen_harness.dart';
 
-/// « Continuer avec Google » on both platforms, « Continuer avec Apple » on
-/// iOS only, and a Google or Apple account that matches no member is told so.
+/// « Continuer avec Google » on Android only, no social sign-in on iOS, and a
+/// Google or Apple account that matches no member is told so.
 void main() {
   group('parseOAuthCallback', () {
     test('reads the PKCE code Supabase sends back', () {
@@ -73,15 +73,16 @@ void main() {
     expect(find.byTooltip('Retour'), findsOneWidget);
   });
 
-  testWidgets('iOS shows Google and Apple', (tester) async {
+  testWidgets('iOS shows neither Google nor Apple: e-mail and password only '
+      '(App Review 2.1 and 4.8)', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     await pumpScreen(tester, const LoginScreen());
     await tester.pumpAndSettle();
 
-    expect(find.text('Continuer avec Google'), findsOneWidget);
-    expect(find.byType(SignInWithAppleButton), findsOneWidget);
-    expect(find.text('Continuer avec Apple'), findsOneWidget);
+    expect(find.text('Continuer avec Google'), findsNothing);
+    expect(find.byType(SignInWithAppleButton), findsNothing);
+    expect(find.text('Continuer avec Apple'), findsNothing);
     debugDefaultTargetPlatformOverride = null;
   });
 
