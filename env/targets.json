@@ -50,6 +50,18 @@
       "production": false,
       "scan": ["apps/admin"]
     },
+    "coolify.website.dev": {
+      "kind": "coolify",
+      "application": "gm7cklnz2mhxoknrtn8iow5w",
+      "template": "website.dev",
+      "production": false
+    },
+    "coolify.admin.dev": {
+      "kind": "coolify",
+      "application": "up8n8pv7po967yhv3pchzmuk",
+      "template": "admin.dev",
+      "production": false
+    },
     "github.repo": {
       "kind": "github",
       "production": true,
