@@ -62,15 +62,16 @@ Vercel sets `VERCEL_ENV`; the self-hosted apps set **`APP_ENV`** (`production` o
 
 ### Coolify applications
 
-| Setting             | Value                                                                                                                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Source              | GitHub App, `Eragon67360/lebontemperament_turbo`; branch `dev` (staging) or `main` (production)                                                                                      |
-| Build pack          | Dockerfile; base directory `/`; Dockerfile `/apps/website/Dockerfile` or `/apps/admin/Dockerfile`                                                                                    |
-| Port                | 3000                                                                                                                                                                                 |
-| Watch paths         | `apps/<app>/**`, `packages/**`, `package.json`, `package-lock.json`, `turbo.json`                                                                                                    |
-| Variables           | `APP_ENV`, plus the app's template in `env/`; build-time **and** runtime                                                                                                             |
-| Persistent storage  | a volume on `/app/apps/<app>/.next/cache` (optimised images survive a deployment)                                                                                                    |
-| Staging only        | HTTP basic auth on; the e2e suite reads `E2E_BASIC_AUTH_USER` and `E2E_BASIC_AUTH_PASSWORD`                                                                                          |
-| Website, production | `www` and the bare domain on the same application, with Coolify's www redirect **off**: the bare domain must serve `/.well-known/*` itself (see [The bare domain](#the-bare-domain)) |
+| Setting             | Value                                                                                                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Source              | GitHub App, `Eragon67360/lebontemperament_turbo`; branch `dev` (staging) or `main` (production)                                                                                                                    |
+| Build pack          | Dockerfile; base directory `/`; Dockerfile `/apps/website/Dockerfile` or `/apps/admin/Dockerfile`                                                                                                                  |
+| Port                | 3000                                                                                                                                                                                                               |
+| Watch paths         | `apps/<app>/**`, `packages/**`, `package.json`, `package-lock.json`, `turbo.json`, `.dockerignore`                                                                                                                 |
+| Build arguments     | Coolify's "Inject build args to Dockerfile" **off**: the Dockerfiles declare their own `ARG`s in the build stage only, and the injection would add every variable after each `FROM`, including the image that runs |
+| Variables           | `APP_ENV`, plus the app's template in `env/`; build-time **and** runtime                                                                                                                                           |
+| Persistent storage  | a volume on `/app/apps/<app>/.next/cache` (optimised images survive a deployment)                                                                                                                                  |
+| Staging only        | project `Le Bon Temperament`, environment `staging`: `website-staging` and `admin-staging`, ids in `env/targets.json`; HTTP basic auth on; the e2e suite reads `E2E_BASIC_AUTH_USER` and `E2E_BASIC_AUTH_PASSWORD` |
+| Website, production | `www` and the bare domain on the same application, with Coolify's www redirect **off**: the bare domain must serve `/.well-known/*` itself (see [The bare domain](#the-bare-domain))                               |
 
 The client IP reaches the apps in `x-real-ip` and `x-forwarded-for`, set by Traefik as Vercel does, so form rate limiting (`apps/website/lib/formRateLimit.ts`) works unchanged. There are no per-PR previews on the server: CI still runs the gates on every PR, and staging is the `dev` branch.
