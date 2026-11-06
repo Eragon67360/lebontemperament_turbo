@@ -1,0 +1,24 @@
+# Build context of apps/website/Dockerfile and apps/admin/Dockerfile (the
+# repository root). Keep it small, and never send env files or local builds.
+.git
+**/node_modules
+**/.next
+**/.turbo
+**/.vercel
+out
+
+# Values live in Proton Pass and reach the build as build arguments.
+**/.env*
+!**/.env.example
+
+# Not part of the web builds.
+apps/mobile_app
+apps/e2e/.auth
+apps/e2e/test-results
+apps/e2e/playwright-report
+apps/e2e/blob-report
+supabase
+docs
+.claude
+.cursor
+.github

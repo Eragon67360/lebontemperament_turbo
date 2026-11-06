@@ -37,7 +37,8 @@
         "REVALIDATE_SECRET",
         "GOOGLE_SITE_VERIFICATION",
         "BING_SITE_VERIFICATION",
-        "CRON_SECRET"
+        "CRON_SECRET",
+        "BUILD_STANDALONE"
       ],
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],

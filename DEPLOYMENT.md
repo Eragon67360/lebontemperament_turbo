@@ -1,4 +1,6 @@
-# Vercel Deployment Guide (Turborepo)
+# Deployment Guide (Turborepo)
+
+Both sites are moving from Vercel to a self-hosted server (Hetzner Cloud + Coolify), staging first, then production once staging has run for a week (owner's decision, 2026-11-05). Until production moves, Vercel builds `main` as described in the first sections; the [self-hosted section](#self-hosted-hetzner--coolify) describes the new setup.
 
 Both Vercel projects build from the **repository root**, with a Turbo filter per app. _Measured on 2026-10-02 through the Vercel API._
 
@@ -37,3 +39,38 @@ Since 2026-10-02 both projects use Vercel Authentication with `all_except_custom
 ## Environment variables
 
 Values live in Proton Pass and are pushed to both projects (and to GitHub secrets) from the owner's Mac with `npm run env:push`; the templates in [`env/`](env/README.md) say which variable goes to which environment. Change a value in Proton Pass, not in the Vercel dashboard: the next push overwrites dashboard edits. After a push, force the build as described above.
+
+## Self-hosted (Hetzner + Coolify)
+
+One Hetzner Cloud server runs [Coolify](https://coolify.io), which builds each app from its Dockerfile when its branch changes and serves it behind Traefik with Let's Encrypt certificates. The server's own set-up (firewall, SSH, swap, Coolify) is outside this repository.
+
+### How an app is built
+
+`apps/website/Dockerfile` and `apps/admin/Dockerfile` build from the **repository root**:
+
+1. `turbo prune <app> --docker` keeps only the workspaces the app needs.
+2. `npm ci`, then `turbo run build --filter=<app>` with `BUILD_STANDALONE=1`, which turns on `output: "standalone"` in the app's `next.config.js` (Vercel builds leave it off).
+3. The final image holds only `.next/standalone`, `.next/static` and `public/`, runs `node apps/<app>/server.js` on port 3000 as a non-root user, and checks `/favicon.ico` for health.
+
+Coolify passes the application's build-time variables as build arguments, and a Dockerfile only sees the arguments it declares: **a variable the build reads must have an `ARG` line in the app's Dockerfile.** Server values stay in the build stage; the image that runs gets its variables from Coolify at runtime.
+
+To build one locally: `docker build -f apps/website/Dockerfile -t lbt-website .` from the repository root.
+
+### Which deployment is production
+
+Vercel sets `VERCEL_ENV`; the self-hosted apps set **`APP_ENV`** (`production` or `preview`) in Coolify, as a build-time and runtime variable. Code asks `deployEnv()` or `isProductionDeploy()` from `@repo/domain/utils/deployEnv`, which reads `APP_ENV` first and falls back to `VERCEL_ENV`; `apps/website/next.config.js` does the same inline. Never test `VERCEL_ENV` directly in new code.
+
+### Coolify applications
+
+| Setting             | Value                                                                                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Source              | GitHub App, `Eragon67360/lebontemperament_turbo`; branch `dev` (staging) or `main` (production)                                                                                      |
+| Build pack          | Dockerfile; base directory `/`; Dockerfile `/apps/website/Dockerfile` or `/apps/admin/Dockerfile`                                                                                    |
+| Port                | 3000                                                                                                                                                                                 |
+| Watch paths         | `apps/<app>/**`, `packages/**`, `package.json`, `package-lock.json`, `turbo.json`                                                                                                    |
+| Variables           | `APP_ENV`, plus the app's template in `env/`; build-time **and** runtime                                                                                                             |
+| Persistent storage  | a volume on `/app/apps/<app>/.next/cache` (optimised images survive a deployment)                                                                                                    |
+| Staging only        | HTTP basic auth on; the e2e suite reads `E2E_BASIC_AUTH_USER` and `E2E_BASIC_AUTH_PASSWORD`                                                                                          |
+| Website, production | `www` and the bare domain on the same application, with Coolify's www redirect **off**: the bare domain must serve `/.well-known/*` itself (see [The bare domain](#the-bare-domain)) |
+
+The client IP reaches the apps in `x-real-ip` and `x-forwarded-for`, set by Traefik as Vercel does, so form rate limiting (`apps/website/lib/formRateLimit.ts`) works unchanged. There are no per-PR previews on the server: CI still runs the gates on every PR, and staging is the `dev` branch.
