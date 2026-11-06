@@ -15,7 +15,9 @@
     "BING_SITE_VERIFICATION": "only needed to verify the site in Bing Webmaster Tools",
     "INDEXNOW_SUBMIT_SECRET": "without it /api/indexnow refuses every submission",
     "REVALIDATE_SECRET": "without it admin edits wait for the cache to expire instead of refreshing the site",
-    "CRON_SECRET": "without it the weekly mailing list check still runs, limited to once every 6 days per list"
+    "CRON_SECRET": "without it the weekly mailing list check still runs, limited to once every 6 days per list",
+    "E2E_BASIC_AUTH_USER": "only the self-hosted staging asks for basic auth; the e2e suite against Vercel staging needs none",
+    "E2E_BASIC_AUTH_PASSWORD": "only the self-hosted staging asks for basic auth; the e2e suite against Vercel staging needs none"
   },
   "targets": {
     "website.production": {
