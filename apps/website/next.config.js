@@ -5,9 +5,21 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// The monorepo root: Turbopack resolves from it and a standalone build traces
+// the files it needs from it.
+const monorepoRoot = path.join(__dirname, "..", "..");
+
 const nextConfig = {
+  // A self-hosted build (the Dockerfile sets BUILD_STANDALONE=1, see
+  // DEPLOYMENT.md) writes a standalone server: .next/standalone holds
+  // server.js and only the node_modules it needs. Vercel builds leave it unset.
+  // eslint-disable-next-line no-undef
+  ...(process.env.BUILD_STANDALONE === "1" && {
+    output: "standalone",
+    outputFileTracingRoot: monorepoRoot,
+  }),
   turbopack: {
-    root: path.join(__dirname, "..", ".."),
+    root: monorepoRoot,
     resolveAlias: {
       // `motion/react` binds the full-featured `motion` proxy (drag, layout)
       // eagerly, so every page importing `m` or a hook from it bundled those
@@ -125,9 +137,12 @@ const nextConfig = {
   async headers() {
     // The admin's story preview frames the website. A production build allows
     // only the admin's own origin; other builds also allow an admin dev
-    // server on this machine (port 3002).
-    // eslint-disable-next-line no-undef
-    const isProduction = process.env.VERCEL_ENV === "production";
+    // server on this machine (port 3002). Production is APP_ENV on the
+    // self-hosted servers, else VERCEL_ENV (@repo/domain/utils/deployEnv,
+    // which this file can't import).
+    const isProduction =
+      // eslint-disable-next-line no-undef
+      (process.env.APP_ENV || process.env.VERCEL_ENV) === "production";
     const adminUrl =
       // eslint-disable-next-line no-undef
       process.env.NEXT_PUBLIC_ADMIN_URL ||

@@ -1,3 +1,4 @@
+import { isProductionDeploy } from "@repo/domain/utils/deployEnv";
 import { notFound } from "next/navigation";
 import { DesignSystemLab } from "./DesignSystemLab";
 
@@ -10,6 +11,6 @@ import { DesignSystemLab } from "./DesignSystemLab";
 export const metadata = { title: "Système de design | BT Admin" };
 
 export default function DesignSystemPage() {
-  if (process.env.VERCEL_ENV === "production") notFound();
+  if (isProductionDeploy()) notFound();
   return <DesignSystemLab />;
 }

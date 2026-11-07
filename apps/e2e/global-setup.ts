@@ -1,15 +1,9 @@
 import { chromium } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { basicAuthFor, protectionHeaders } from "./protection.js";
 
 const AUTH_DIR = path.join(import.meta.dirname, ".auth");
-
-// Vercel Deployment Protection bypass (staging is behind Vercel Auth).
-const bypassHeaders = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-  ? {
-      "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
-    }
-  : undefined;
 
 // Logs in once per host and saves the session for the authenticated projects.
 // Credentials come from env only — never hardcode them.
@@ -22,7 +16,8 @@ async function saveLogin(
 ) {
   const browser = await chromium.launch();
   const context = await browser.newContext({
-    extraHTTPHeaders: bypassHeaders,
+    extraHTTPHeaders: protectionHeaders,
+    httpCredentials: basicAuthFor(baseURL),
   });
   const page = await context.newPage();
 

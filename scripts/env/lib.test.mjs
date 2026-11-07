@@ -13,6 +13,7 @@ import {
   loadTurbo,
   mergeCandidates,
   parseDotenv,
+  templateOf,
   parseTemplate,
   planGithub,
   readTemplate,
@@ -112,6 +113,45 @@ test("validateTarget keeps staging out of production and production Supabase out
     validateTarget("x", prod, [entry("A", "Personal")], rules).length,
     1,
   );
+});
+
+test("validateTarget checks Coolify targets, and templateOf lets them reuse a template", () => {
+  const app = {
+    kind: "coolify",
+    application: "abc123def456",
+    template: "website.dev",
+    production: false,
+  };
+  assert.deepEqual(
+    validateTarget("c", app, [entry("A", "LBT Staging", "Supabase")], rules),
+    [],
+  );
+  assert.equal(
+    validateTarget("c", app, [entry("A", "LBT Production", "Supabase")], rules)
+      .length,
+    1,
+    "a staging application never reads production Supabase",
+  );
+  const prodApp = { ...app, template: "website.production", production: true };
+  assert.equal(
+    validateTarget("c", prodApp, [entry("A", "LBT Staging", "Supabase")], rules)
+      .length,
+    1,
+    "a production application never reads staging",
+  );
+  for (const application of [undefined, "", "https://coolify.example.com/x"]) {
+    assert.equal(
+      validateTarget("c", { ...app, application }, [], rules).length,
+      1,
+      `application ${String(application)} is refused`,
+    );
+  }
+  assert.equal(
+    validateTarget("c", { ...app, production: undefined }, [], rules).length,
+    1,
+  );
+  assert.equal(templateOf("coolify.website.dev", app), "website.dev");
+  assert.equal(templateOf("website.dev", { kind: "vercel" }), "website.dev");
 });
 
 const fpOf = (name, value) => fingerprint("k", "t", name, value);
