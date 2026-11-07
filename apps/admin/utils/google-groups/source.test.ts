@@ -24,6 +24,9 @@ globalThis.fetch = (async () => {
 process.env.GOOGLE_APPS_SCRIPT_URL = "https://script.example.com/exec";
 
 function setEnvironment(vercelEnv?: string, optIn?: string) {
+  // VERCEL_ENV stands for the deployment environment; an APP_ENV from the
+  // shell would win over it (deployEnv), so it is cleared.
+  delete process.env.APP_ENV;
   if (vercelEnv === undefined) delete process.env.VERCEL_ENV;
   else process.env.VERCEL_ENV = vercelEnv;
   if (optIn === undefined) delete process.env.ALLOW_MEMBER_LISTS_IN_DEVELOPMENT;

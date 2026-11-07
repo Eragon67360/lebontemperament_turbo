@@ -119,6 +119,10 @@ jobs:
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # Basic auth of the self-hosted staging (DEPLOYMENT.md); unset while
+          # staging is on Vercel.
+          E2E_BASIC_AUTH_USER: ${{ secrets.E2E_BASIC_AUTH_USER }}
+          E2E_BASIC_AUTH_PASSWORD: ${{ secrets.E2E_BASIC_AUTH_PASSWORD }}
           # Empty unless this is a preview run (the config falls back to staging).
           ADMIN_URL: ${{ needs.gate.outputs.admin_url }}
           # No snapshot of the page in a failed test's error-context.md, which

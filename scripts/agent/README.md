@@ -5,16 +5,14 @@ Read-only helpers the lead agent used for releases and checks. None of them writ
 ## `smoke.mjs`: 24 read-only checks
 
 ```sh
-# staging is behind Vercel deployment protection: pass share links
-SHARE_WEBSITE='https://dev.lebontemperament.com/?_vercel_share=…' \
-SHARE_ADMIN='https://admin-dev.lebontemperament.com/?_vercel_share=…' \
-node scripts/agent/smoke.mjs
+# staging is behind HTTP basic auth (Proton Pass, LBT Staging / E2E)
+E2E_BASIC_AUTH_USER=… E2E_BASIC_AUTH_PASSWORD=… node scripts/agent/smoke.mjs
 
 # production (custom domains are public)
 node scripts/agent/smoke.mjs https://www.lebontemperament.com https://admin.lebontemperament.com
 ```
 
-Share links come from the Vercel MCP tool `get_access_to_vercel_url` (team `le-bon-temperament`) and last about 23 hours. The tracking-RPC check reads the public `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from the environment or `apps/website/.env.local`, and is skipped when they're absent.
+The basic-auth header goes to the two sites only. A Vercel preview needs share links instead, in `SHARE_WEBSITE` and `SHARE_ADMIN`: they come from the Vercel MCP tool `get_access_to_vercel_url` (team `le-bon-temperament`) and last about 23 hours. The tracking-RPC check reads the public `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from the environment or `apps/website/.env.local`, and is skipped when they're absent.
 
 ## `preview-e2e/`: the repo's logged-in admin specs against a protected preview
 

@@ -3,9 +3,11 @@
   "passCliVersion": "2.4.2",
   "vercelTeamId": "team_5NFi3yBnYiFnHmMVJJXhd9m4",
   "githubRepo": "Eragon67360/lebontemperament_turbo",
+  "coolifyUrl": "https://coolify.thomasmoserdev.com",
   "$unmanaged": "Names the code reads that are deliberately left out of the templates, with why.",
   "unmanaged": {
     "ROSTER_SHEET_RANGE": "optional, the admin defaults to A:ZZ",
+    "BUILD_STANDALONE": "set by apps/website/Dockerfile and apps/admin/Dockerfile for the self-hosted builds, never by a deployment",
     "ALLOW_MEMBER_LISTS_IN_DEVELOPMENT": "local development only (apps/admin/.env.local): lets next dev read the roster and the Google Groups; Vercel deployments other than production ignore it"
   },
   "$optional": "Names a push skips when their Proton Pass field is empty (the code works without them), with why.",
@@ -15,7 +17,9 @@
     "BING_SITE_VERIFICATION": "only needed to verify the site in Bing Webmaster Tools",
     "INDEXNOW_SUBMIT_SECRET": "without it /api/indexnow refuses every submission",
     "REVALIDATE_SECRET": "without it admin edits wait for the cache to expire instead of refreshing the site",
-    "CRON_SECRET": "without it the weekly mailing list check still runs, limited to once every 6 days per list"
+    "CRON_SECRET": "without it the weekly mailing list check still runs, limited to once every 6 days per list",
+    "E2E_BASIC_AUTH_USER": "only the self-hosted staging asks for basic auth; the e2e suite against Vercel staging needs none",
+    "E2E_BASIC_AUTH_PASSWORD": "only the self-hosted staging asks for basic auth; the e2e suite against Vercel staging needs none"
   },
   "targets": {
     "website.production": {
@@ -45,6 +49,18 @@
       "environments": ["preview", "development"],
       "production": false,
       "scan": ["apps/admin"]
+    },
+    "coolify.website.dev": {
+      "kind": "coolify",
+      "application": "gm7cklnz2mhxoknrtn8iow5w",
+      "template": "website.dev",
+      "production": false
+    },
+    "coolify.admin.dev": {
+      "kind": "coolify",
+      "application": "up8n8pv7po967yhv3pchzmuk",
+      "template": "admin.dev",
+      "production": false
     },
     "github.repo": {
       "kind": "github",

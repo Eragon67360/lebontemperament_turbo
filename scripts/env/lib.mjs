@@ -25,6 +25,15 @@ export function templatePath(target) {
   return join(ENV_DIR, `${target}.env`);
 }
 
+/**
+ * The template a target pushes: its own `env/<target>.env`, or the one named by
+ * its `template` (a Coolify application reuses the Vercel target's template, so
+ * both destinations get the same names from the same Proton Pass fields).
+ */
+export function templateOf(target, config) {
+  return config?.template ?? target;
+}
+
 /** Parses a template: KEY=pass://vault/item/field lines, blank lines and # comments. */
 export function parseTemplate(text, file = "template") {
   const entries = [];
@@ -72,8 +81,18 @@ export function readTemplate(target) {
 /** Checks one target's config and entries against the vault rules. */
 export function validateTarget(target, config, entries, rules) {
   const errors = [];
-  if (!["vercel", "github"].includes(config.kind)) {
+  if (!["vercel", "github", "coolify"].includes(config.kind)) {
     errors.push(`${target}: unknown kind "${config.kind}"`);
+  }
+  if (config.kind === "coolify") {
+    if (!/^[a-z0-9]+$/.test(config.application ?? "")) {
+      errors.push(
+        `${target}: missing Coolify application uuid ("application", from the application's URL in Coolify)`,
+      );
+    }
+    if (typeof config.production !== "boolean") {
+      errors.push(`${target}: "production" must be true or false`);
+    }
   }
   if (config.kind === "vercel") {
     if (!config.project) errors.push(`${target}: missing Vercel project`);
@@ -135,10 +154,13 @@ export function itemsNeeded(entryLists) {
 }
 
 // Variables the platforms or tooling set themselves; never expected in a template.
+// APP_ENV is the self-hosted servers' VERCEL_ENV, set in each Coolify
+// application (DEPLOYMENT.md).
 const PROVIDED = new Set([
   "NODE_ENV",
   "CI",
   "VERCEL_ENV",
+  "APP_ENV",
   "VERCEL_URL",
   "NEXT_RUNTIME",
   "ANALYZE",

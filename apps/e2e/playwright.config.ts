@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 // Merge manually: first file wins per key, but empty placeholder values are
 // skipped so a fallback file can still supply the real value.
 import { existsSync, readFileSync } from "node:fs";
+import { basicAuthFor, protectionHeaders } from "./protection.js";
 
 for (const path of [".env.local", ".env", "../../.env.local"]) {
   if (!existsSync(path)) continue;
@@ -15,12 +16,10 @@ for (const path of [".env.local", ".env", "../../.env.local"]) {
   }
 }
 
-// Vercel Deployment Protection bypass (admin staging is behind Vercel Auth).
-const bypassHeaders = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-  ? {
-      "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
-    }
-  : undefined;
+const websiteURL =
+  process.env.WEBSITE_URL ?? "https://dev.lebontemperament.com";
+const adminURL =
+  process.env.ADMIN_URL || "https://admin-dev.lebontemperament.com";
 
 // Logged-in pages show real members, and CI artifacts of this public repo
 // can be downloaded by anyone signed in to GitHub (#488): in CI the logged-in
@@ -52,18 +51,19 @@ export default defineConfig({
       name: "website",
       testDir: "./tests/website",
       use: {
-        baseURL: process.env.WEBSITE_URL ?? "https://dev.lebontemperament.com",
-        extraHTTPHeaders: bypassHeaders,
+        baseURL: websiteURL,
+        extraHTTPHeaders: protectionHeaders,
+        httpCredentials: basicAuthFor(websiteURL),
       },
     },
     {
       name: "admin",
       testDir: "./tests/admin",
       use: {
-        baseURL:
-          process.env.ADMIN_URL || "https://admin-dev.lebontemperament.com",
+        baseURL: adminURL,
         storageState: ".auth/admin.json",
-        extraHTTPHeaders: bypassHeaders,
+        extraHTTPHeaders: protectionHeaders,
+        httpCredentials: basicAuthFor(adminURL),
         ...loggedInCapture,
       },
     },
@@ -71,9 +71,10 @@ export default defineConfig({
       name: "website-members",
       testDir: "./tests/website-members",
       use: {
-        baseURL: process.env.WEBSITE_URL ?? "https://dev.lebontemperament.com",
+        baseURL: websiteURL,
         storageState: ".auth/website.json",
-        extraHTTPHeaders: bypassHeaders,
+        extraHTTPHeaders: protectionHeaders,
+        httpCredentials: basicAuthFor(websiteURL),
         ...loggedInCapture,
       },
     },

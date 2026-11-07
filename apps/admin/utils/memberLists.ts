@@ -10,8 +10,10 @@
 // Local development refuses them too, unless the admin's .env.local sets
 // ALLOW_MEMBER_LISTS_IN_DEVELOPMENT=1 (for work on these pages, knowing that
 // « Appliquer » would then invite real members into the database the local
-// keys point at). A Vercel deployment other than production never reads them,
-// whatever its variables.
+// keys point at). A deployment other than production (Vercel or self-hosted)
+// never reads them, whatever its variables.
+
+import { deployEnv } from "@repo/domain/utils/deployEnv";
 
 /** Title of the notice the pages show outside production. */
 export const PRODUCTION_ONLY_TITLE = "Disponible uniquement en production";
@@ -26,16 +28,18 @@ export const GROUPS_PRODUCTION_ONLY_MESSAGE =
 
 /**
  * Whether this deployment may read the roster and the Google Groups lists:
- * production, or local development (no VERCEL_ENV, or `development` as
- * `vercel env pull` writes it) with the opt-in set to "1". Preview (staging
- * and PR previews) and any other value: never.
+ * production, or local development (no deployment environment, or
+ * `development` as `vercel env pull` writes it) with the opt-in set to "1".
+ * Preview (staging and test deployments) and any other value: never. The
+ * environment is `deployEnv()`: APP_ENV on the self-hosted servers, else
+ * VERCEL_ENV.
  */
 export function memberListsAvailable(
-  vercelEnv: string | undefined = process.env.VERCEL_ENV,
+  environment: string | undefined = deployEnv(),
   optIn: string | undefined = process.env.ALLOW_MEMBER_LISTS_IN_DEVELOPMENT,
 ): boolean {
-  if (vercelEnv === "production") return true;
-  const local = !vercelEnv || vercelEnv === "development";
+  if (environment === "production") return true;
+  const local = !environment || environment === "development";
   return local && optIn === "1";
 }
 

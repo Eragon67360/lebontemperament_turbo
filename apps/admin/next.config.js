@@ -5,9 +5,21 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// The monorepo root: Turbopack resolves from it and a standalone build traces
+// the files it needs from it.
+const monorepoRoot = path.join(__dirname, "..", "..");
+
 const nextConfig = {
+  // A self-hosted build (the Dockerfile sets BUILD_STANDALONE=1, see
+  // DEPLOYMENT.md) writes a standalone server: .next/standalone holds
+  // server.js and only the node_modules it needs. Vercel builds leave it unset.
+  // eslint-disable-next-line no-undef
+  ...(process.env.BUILD_STANDALONE === "1" && {
+    output: "standalone",
+    outputFileTracingRoot: monorepoRoot,
+  }),
   turbopack: {
-    root: path.join(__dirname, "..", ".."),
+    root: monorepoRoot,
   },
   transpilePackages: ["@repo/domain"],
   images: {
