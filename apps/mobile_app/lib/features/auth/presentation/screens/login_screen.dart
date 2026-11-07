@@ -5,18 +5,19 @@ import 'package:go_router/go_router.dart';
 import 'package:lebontemperament/core/config/app_router.dart';
 import 'package:lebontemperament/core/widgets/fade_in_up.dart';
 import 'package:lebontemperament/core/theme/app_fonts.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/services/auth_service.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/google_logo.dart';
 
-/// Sign in with Apple is offered on iOS only: App Store review requires it
-/// next to Google there, and on Android it would need a web flow with a
-/// secret to renew every six months.
-bool get showAppleSignIn =>
-    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+/// « Continuer avec Google » is offered on Android only. On iOS, App Review
+/// would then require Sign in with Apple (4.8), and its reviewers' own
+/// Apple IDs match no member, which they rejected as a bug (2.1, Nov 2026).
+/// iPhone members sign in with their e-mail and password; the Google and
+/// Apple flows stay in AuthService.
+bool get showSocialSignIn =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 /// Loose on purpose: Supabase validates the address, the field only catches
 /// a typo (no « @ », no domain). Long TLDs and « + » tags are valid.
@@ -341,41 +342,29 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
             ),
             child: const Text('Se connecter'),
           ),
-          const SizedBox(height: 24),
 
-          // --- Google / Apple ---
-          const _OrDivider(),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: isLoading
-                ? null
-                : () => _handleSocial(
-                    ref.read(authControllerProvider.notifier).signInWithGoogle,
-                  ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: AppFonts.sans(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            icon: const GoogleLogo(),
-            label: const Text('Continuer avec Google'),
-          ),
-          if (showAppleSignIn) ...[
-            const SizedBox(height: 12),
-            SignInWithAppleButton(
-              text: 'Continuer avec Apple',
-              height: 52,
-              borderRadius: const BorderRadius.all(Radius.circular(26)),
-              style: theme.brightness == Brightness.dark
-                  ? SignInWithAppleButtonStyle.white
-                  : SignInWithAppleButtonStyle.black,
+          // --- Google (Android) ---
+          if (showSocialSignIn) ...[
+            const SizedBox(height: 24),
+            const _OrDivider(),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
               onPressed: isLoading
                   ? null
                   : () => _handleSocial(
-                      ref.read(authControllerProvider.notifier).signInWithApple,
+                      ref
+                          .read(authControllerProvider.notifier)
+                          .signInWithGoogle,
                     ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                textStyle: AppFonts.sans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              icon: const GoogleLogo(),
+              label: const Text('Continuer avec Google'),
             ),
           ],
         ],
