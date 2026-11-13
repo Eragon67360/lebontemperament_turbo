@@ -12,14 +12,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import {
   BALANCE_TONES,
   type BuyerRow,
+  type BuyerSort,
+  type BuyerSortKey,
+  buyerSortDirection,
+  buyerSortKey,
   canJoinRound,
   fulfilmentLabel,
+  nextBuyerSort,
 } from "@/utils/orders/view";
 import { BALANCE_LABELS, formatEuros } from "@repo/domain/utils/orders";
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   Banknote,
   PackageCheck,
   Paperclip,
@@ -31,6 +40,9 @@ import {
 
 export interface BuyersListProps {
   rows: BuyerRow[];
+  /** The order `rows` come in; the « Acheteur » and « Total » headers show and change it. */
+  sort?: BuyerSort;
+  onSort?: (sort: BuyerSort) => void;
   onEdit: (row: BuyerRow) => void;
   onPay: (row: BuyerRow) => void;
   onHandOver: (row: BuyerRow, handedOver: boolean) => void;
@@ -46,10 +58,14 @@ export interface BuyersListProps {
  * reste, state and chips, actions), stacked rows on phones. « Modifier »
  * stays visible; payments, « Ajouter à la tournée… » (a buyer to be
  * delivered, with an address and no stop yet), « Remis » and deletion are in
- * the row's menu.
+ * the row's menu. With `onSort`, a click on « Acheteur » or « Total » sorts
+ * by that column and a second click reverses it (phones use the page's
+ * « Trier » menu).
  */
 export function BuyersList({
   rows,
+  sort,
+  onSort,
   onEdit,
   onPay,
   onHandOver,
@@ -113,15 +129,27 @@ export function BuyersList({
       <Table className="hidden md:table">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead scope="col" className="pl-4 lg:pl-6">
-              Acheteur
+            <TableHead
+              scope="col"
+              className="pl-4 lg:pl-6"
+              aria-sort={ariaSort(sort, "name")}
+            >
+              <SortHeader column="name" sort={sort} onSort={onSort}>
+                Acheteur
+              </SortHeader>
             </TableHead>
             <TableHead scope="col">Mode</TableHead>
             <TableHead scope="col" className="hidden lg:table-cell">
               Vendu par
             </TableHead>
-            <TableHead scope="col" className="text-right">
-              Total
+            <TableHead
+              scope="col"
+              className="text-right"
+              aria-sort={ariaSort(sort, "total")}
+            >
+              <SortHeader column="total" sort={sort} onSort={onSort}>
+                Total
+              </SortHeader>
             </TableHead>
             <TableHead scope="col" className="text-right">
               Payé
@@ -215,6 +243,57 @@ export function BuyersList({
         ))}
       </ul>
     </>
+  );
+}
+
+function ariaSort(
+  sort: BuyerSort | undefined,
+  column: BuyerSortKey,
+): "ascending" | "descending" | undefined {
+  if (!sort || buyerSortKey(sort) !== column) return undefined;
+  return buyerSortDirection(sort) === "asc" ? "ascending" : "descending";
+}
+
+/**
+ * A header that sorts its column: plain text without `onSort`, otherwise a
+ * quiet button with an arrow (both ways when another column sorts).
+ */
+function SortHeader({
+  column,
+  sort,
+  onSort,
+  children,
+}: {
+  column: BuyerSortKey;
+  sort?: BuyerSort;
+  onSort?: (sort: BuyerSort) => void;
+  children: string;
+}) {
+  if (!sort || !onSort) return <>{children}</>;
+  const active = buyerSortKey(sort) === column;
+  const Icon = !active
+    ? ArrowUpDown
+    : buyerSortDirection(sort) === "asc"
+      ? ArrowUp
+      : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(nextBuyerSort(sort, column))}
+      className={cn(
+        "hover:text-foreground focus-visible:ring-ring/50 -mx-1 inline-flex items-center gap-1 rounded px-1 py-0.5 outline-none focus-visible:ring-[3px]",
+        active && "text-foreground",
+      )}
+    >
+      {children}
+      <Icon
+        aria-hidden
+        className={cn("size-3.5", !active && "text-muted-foreground/70")}
+      />
+      <span className="sr-only">
+        {column === "name" ? ", trier par nom" : ", trier par total"}
+      </span>
+    </button>
   );
 }
 

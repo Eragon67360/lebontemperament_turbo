@@ -65,7 +65,10 @@ import { memberName } from "@/utils/members/list";
 import { memberOptions } from "@/utils/orders/members";
 import type { OrderPayment, SaleProduct } from "@/utils/orders/types";
 import {
+  BUYER_SORTS,
   type BuyerFilters,
+  type BuyerSort,
+  DEFAULT_BUYER_SORT,
   deliverableBuyers,
   filterBuyers,
   hasBuyerFilters,
@@ -75,6 +78,7 @@ import {
   paymentDeletionText,
   saleDatesLine,
   saleView,
+  sortBuyers,
   STATE_FILTERS,
   type StateFilter,
 } from "@/utils/orders/view";
@@ -141,6 +145,7 @@ export default function SalePage() {
 
   const [tab, setTab] = useState<Tab>("buyers");
   const [filters, setFilters] = useState<BuyerFilters>(NO_BUYER_FILTERS);
+  const [sort, setSort] = useState<BuyerSort>(DEFAULT_BUYER_SORT);
   const [orderDialog, setOrderDialog] = useState<{
     open: boolean;
     orderId: string | null;
@@ -173,8 +178,8 @@ export default function SalePage() {
 
   const view = useMemo(() => (detail ? saleView(detail) : null), [detail]);
   const visibleRows = useMemo(
-    () => (view ? filterBuyers(view.rows, filters) : []),
-    [view, filters],
+    () => (view ? sortBuyers(filterBuyers(view.rows, filters), sort) : []),
+    [view, filters, sort],
   );
   const members = useMemo(
     () => memberOptions(users.data ?? [], memberName),
@@ -637,10 +642,10 @@ export default function SalePage() {
                       <form
                         role="search"
                         aria-label="Filtrer les acheteurs"
-                        className="grid gap-2 sm:grid-cols-2 lg:flex lg:items-center"
+                        className="grid gap-2 sm:grid-cols-3 lg:flex lg:items-center"
                         onSubmit={(event) => event.preventDefault()}
                       >
-                        <div className="relative sm:col-span-2 lg:min-w-56 lg:flex-1">
+                        <div className="relative sm:col-span-3 lg:min-w-56 lg:flex-1">
                           <label htmlFor="buyer-search" className="sr-only">
                             Rechercher un acheteur
                           </label>
@@ -700,6 +705,27 @@ export default function SalePage() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <Select
+                          value={sort}
+                          onValueChange={(value) => setSort(value as BuyerSort)}
+                        >
+                          <SelectTrigger
+                            className="lg:w-48"
+                            aria-label="Trier les acheteurs"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {BUYER_SORTS.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </form>
                     </div>
                     <div className="border-border border-t">
@@ -737,6 +763,8 @@ export default function SalePage() {
                       ) : (
                         <BuyersList
                           rows={visibleRows}
+                          sort={sort}
+                          onSort={setSort}
                           busyOrderId={busyOrderId}
                           onEdit={(row) => openOrder(row.orderId)}
                           onPay={(row) =>
