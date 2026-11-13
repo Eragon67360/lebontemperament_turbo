@@ -4,11 +4,14 @@ import assert from "node:assert/strict";
 import { detail } from "./testData";
 import {
   BALANCE_TONES,
+  buyerSortDirection,
+  buyerSortKey,
   canJoinRound,
   deliverableBuyers,
   deliveryResultLine,
   filterBuyers,
   formatDayFr,
+  nextBuyerSort,
   NO_BUYER_FILTERS,
   normalizeText,
   orderCountLine,
@@ -16,6 +19,7 @@ import {
   saleDatesLine,
   saleView,
   slugify,
+  sortBuyers,
   todayParisIso,
 } from "./view";
 
@@ -83,6 +87,54 @@ assert.deepEqual(
   ),
   ["Émile TEST", "Léa TEST"],
 );
+
+// --- Sort: by name or by total, both ways; equal totals by name ---
+const names = (sorted: typeof rows) => sorted.map((r) => r.buyerName);
+const totals = (sorted: typeof rows) => sorted.map((r) => r.totalCents);
+assert.deepEqual(names(sortBuyers(rows, "name-asc")), [
+  "Émile TEST",
+  "Léa TEST",
+  "marc test",
+  "Zoé TEST",
+]);
+assert.deepEqual(names(sortBuyers(rows, "name-desc")), [
+  "Zoé TEST",
+  "marc test",
+  "Léa TEST",
+  "Émile TEST",
+]);
+assert.deepEqual(names(sortBuyers(rows, "total-desc")), [
+  "Léa TEST",
+  "Émile TEST",
+  "Zoé TEST",
+  "marc test",
+]);
+assert.deepEqual(totals(sortBuyers(rows, "total-asc")), [400, 900, 1100, 3400]);
+// Same total: the name decides, A to Z, whichever the direction.
+const twin = { ...lea, orderId: "z-twin", buyerName: "Aline TEST" };
+const withTwin = [...rows, twin];
+for (const sort of ["total-asc", "total-desc"] as const) {
+  const sorted = names(sortBuyers(withTwin, sort));
+  assert.ok(
+    sorted.indexOf("Aline TEST") < sorted.indexOf("Léa TEST"),
+    `${sort}: equal totals by name`,
+  );
+}
+// The input is left as it was (the filtered list keeps its order).
+assert.deepEqual(names(rows), [
+  "Émile TEST",
+  "Léa TEST",
+  "marc test",
+  "Zoé TEST",
+]);
+// Headers: the same column flips, another starts A to Z or biggest first.
+assert.equal(nextBuyerSort("name-asc", "name"), "name-desc");
+assert.equal(nextBuyerSort("name-desc", "name"), "name-asc");
+assert.equal(nextBuyerSort("name-asc", "total"), "total-desc");
+assert.equal(nextBuyerSort("total-desc", "total"), "total-asc");
+assert.equal(nextBuyerSort("total-asc", "name"), "name-asc");
+assert.equal(buyerSortKey("total-asc"), "total");
+assert.equal(buyerSortDirection("total-asc"), "asc");
 
 // --- Tones: the word carries the meaning, the colour reinforces it ---
 assert.equal(BALANCE_TONES.paid, "success");

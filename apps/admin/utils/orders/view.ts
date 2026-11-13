@@ -119,6 +119,69 @@ export function filterBuyers(
   });
 }
 
+// ---------------------------------------------------------------------------
+// Sorting « Acheteurs »
+
+export type BuyerSortKey = "name" | "total";
+export type BuyerSortDirection = "asc" | "desc";
+export type BuyerSort = `${BuyerSortKey}-${BuyerSortDirection}`;
+
+/** Alphabetical, as the sale's breakdown already lists them. */
+export const DEFAULT_BUYER_SORT: BuyerSort = "name-asc";
+
+export const BUYER_SORTS: { value: BuyerSort; label: string }[] = [
+  { value: "name-asc", label: "Nom, de A à Z" },
+  { value: "name-desc", label: "Nom, de Z à A" },
+  { value: "total-desc", label: "Total décroissant" },
+  { value: "total-asc", label: "Total croissant" },
+];
+
+export function buyerSortKey(sort: BuyerSort): BuyerSortKey {
+  return sort.startsWith("total") ? "total" : "name";
+}
+
+export function buyerSortDirection(sort: BuyerSort): BuyerSortDirection {
+  return sort.endsWith("desc") ? "desc" : "asc";
+}
+
+/**
+ * A click on a column header: the same column flips its direction, another
+ * column starts from A to Z for the name and from the biggest for the total.
+ */
+export function nextBuyerSort(
+  current: BuyerSort,
+  key: BuyerSortKey,
+): BuyerSort {
+  if (buyerSortKey(current) === key) {
+    return `${key}-${buyerSortDirection(current) === "asc" ? "desc" : "asc"}`;
+  }
+  return key === "name" ? "name-asc" : "total-desc";
+}
+
+function compareNames(a: BuyerRow, b: BuyerRow): number {
+  return (
+    a.buyerName.localeCompare(b.buyerName, "fr", { sensitivity: "base" }) ||
+    a.orderId.localeCompare(b.orderId)
+  );
+}
+
+/**
+ * The buyers in the chosen order: by name (accents and case ignored, as the
+ * breakdown) or by total, equal totals then by name from A to Z. A new array.
+ */
+export function sortBuyers(
+  rows: readonly BuyerRow[],
+  sort: BuyerSort,
+): BuyerRow[] {
+  const sign = buyerSortDirection(sort) === "asc" ? 1 : -1;
+  if (buyerSortKey(sort) === "name") {
+    return [...rows].sort((a, b) => sign * compareNames(a, b));
+  }
+  return [...rows].sort(
+    (a, b) => sign * (a.totalCents - b.totalCents) || compareNames(a, b),
+  );
+}
+
 export function isOwing(status: BalanceStatus) {
   return status === "unpaid" || status === "partial";
 }
