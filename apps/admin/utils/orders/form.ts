@@ -12,6 +12,7 @@ import {
   ORDER_NOTES_MAX,
   type OrderInput,
   parseEuros,
+  PAYMENT_MAX_CENTS,
   PAYMENT_METHODS,
   PAYMENT_NOTE_MAX,
   type PaymentMethod,
@@ -285,10 +286,10 @@ export const paymentFormSchema = z.object({
     (value) => {
       const cents = parseEuros(value);
       return (
-        cents !== null && cents !== 0 && Math.abs(cents) <= PRICE_MAX_CENTS
+        cents !== null && cents !== 0 && Math.abs(cents) <= PAYMENT_MAX_CENTS
       );
     },
-    "Le montant doit être différent de 0 et d'au plus 1 000 €",
+    "Le montant doit être différent de 0 et d'au plus 100 000 €",
   ),
   method: z.enum(PAYMENT_METHODS, { error: "Choisissez un moyen de paiement" }),
   paid_on: z.date({ error: "La date du paiement est requise" }),

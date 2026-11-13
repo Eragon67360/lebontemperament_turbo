@@ -261,7 +261,29 @@ const { summary, rows } = saleView(detail);
   // Menu items only exist once open: nothing destructive on the page.
   assert.doesNotMatch(markup, />Supprimer…</);
   assert.doesNotMatch(markup, /Enregistrer un paiement/);
+  // Without `onSort` the headers stay plain text.
+  assert.doesNotMatch(markup, /aria-sort/);
   noRawColours(markup);
+
+  // With `onSort`: « Acheteur » and « Total » are buttons, the sorted one
+  // says so to screen readers.
+  const sorted = html(
+    createElement(BuyersList, {
+      rows,
+      sort: "total-desc",
+      onSort: noop,
+      onEdit: noop,
+      onPay: noop,
+      onHandOver: noop,
+      onDelete: noop,
+    }),
+  );
+  assert.equal(sorted.match(/aria-sort="descending"/g)?.length, 1);
+  assert.match(sorted, /aria-sort="descending"[^>]*><button[^>]*>Total/);
+  assert.match(sorted, /Acheteur<svg[\s\S]*?, trier par nom/);
+  assert.match(sorted, /, trier par total/);
+  assert.doesNotMatch(sorted, /aria-sort="ascending"/);
+  noRawColours(sorted);
 }
 
 // --- « Bon de commande »: attach, the current file, a pending change ---
