@@ -464,10 +464,19 @@ assert.equal(
   parsePaymentInput({ amount_cents: -500, method: "cash" }).ok,
   true,
 );
+// Payments above 1 000 € are fine (a buyer paying for a big order at once).
+for (const amount of [100_001, 245_000, 10_000_000, -10_000_000]) {
+  assert.equal(
+    parsePaymentInput({ amount_cents: amount, method: "transfer" }).ok,
+    true,
+    `payment ${amount} accepted`,
+  );
+}
 for (const [body, field] of [
   [{ amount_cents: 0, method: "cash" }, "amount_cents"],
   [{ amount_cents: 12.5, method: "cash" }, "amount_cents"],
-  [{ amount_cents: 100001, method: "cash" }, "amount_cents"],
+  [{ amount_cents: 10_000_001, method: "cash" }, "amount_cents"],
+  [{ amount_cents: -10_000_001, method: "cash" }, "amount_cents"],
   [{ amount_cents: 100, method: "bitcoin" }, "method"],
   [{ amount_cents: 100, method: "cash", paid_on: "13/11/2026" }, "paid_on"],
 ] as const) {

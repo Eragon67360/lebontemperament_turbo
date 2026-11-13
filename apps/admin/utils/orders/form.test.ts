@@ -315,6 +315,22 @@ const products = [
   assert.equal(text.success, false);
   assert.match(text.error?.issues[0]?.message ?? "", /8,50/);
 
+  // A big order paid at once: above 1 000 € is fine, up to 100 000 €.
+  const big = paymentFormSchema.safeParse({
+    ...defaults,
+    amount: "2 450,00",
+    method: "transfer",
+  });
+  assert.ok(big.success);
+  assert.equal(paymentFormToBody(big.data).amount_cents, 245_000);
+  const typo = paymentFormSchema.safeParse({
+    ...defaults,
+    amount: "1000000",
+    method: "transfer",
+  });
+  assert.equal(typo.success, false);
+  assert.match(typo.error?.issues[0]?.message ?? "", /100 000 €/);
+
   const ok = paymentFormSchema.safeParse({
     ...defaults,
     amount: "8,5",

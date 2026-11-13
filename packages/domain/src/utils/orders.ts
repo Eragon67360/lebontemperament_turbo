@@ -39,6 +39,8 @@ export const PRODUCT_NAME_MAX = 120;
 export const PRODUCT_VARIANT_MAX = 60;
 export const PRODUCT_SUPPLIER_MAX = 120;
 export const PRICE_MAX_CENTS = 100000;
+/** One payment or refund: 100 000 €, a guard against a typo, not a business rule. */
+export const PAYMENT_MAX_CENTS = 10_000_000;
 export const BUYER_NAME_MAX = 120;
 export const BUYER_PHONE_MAX = 40;
 export const BUYER_ADDRESS_MAX = 300;
@@ -748,11 +750,11 @@ export function parsePaymentInput(body: unknown): Parsed<PaymentInput> {
     typeof amount !== "number" ||
     !Number.isInteger(amount) ||
     amount === 0 ||
-    Math.abs(amount) > PRICE_MAX_CENTS
+    Math.abs(amount) > PAYMENT_MAX_CENTS
   ) {
     return {
       ok: false,
-      error: "Le montant doit être différent de 0 et d'au plus 1 000 €",
+      error: "Le montant doit être différent de 0 et d'au plus 100 000 €",
       field: "amount_cents",
     };
   }
