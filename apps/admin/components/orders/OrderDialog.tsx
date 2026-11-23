@@ -118,6 +118,11 @@ export interface OrderDialogProps {
    */
   onDeletePayment?: (paymentId: string) => void;
   deletingPaymentId?: string | null;
+  /**
+   * « seller »: a seller's own buyer (« Mes ventes »). No « Vendu par » (it is
+   * them), no member link and no order form; the wording says « acheteur ».
+   */
+  variant?: "admin" | "seller";
 }
 
 /**
@@ -138,7 +143,9 @@ export function OrderDialog({
   onPay,
   onDeletePayment,
   deletingPaymentId,
+  variant = "admin",
 }: OrderDialogProps) {
+  const seller = variant === "seller";
   const [saveError, setSaveError] = useState<string | null>(null);
   const [documentChange, setDocumentChange] = useState<DocumentChange>({
     type: "keep",
@@ -255,17 +262,27 @@ export function OrderDialog({
       title={
         order
           ? `Modifier la commande de « ${order.buyer_name} »`
-          : "Ajouter une commande"
+          : seller
+            ? "Ajouter un acheteur"
+            : "Ajouter une commande"
       }
       description={
         order
           ? "Les quantités et les coordonnées remplacent celles enregistrées ; les paiements restent."
-          : "Une commande par acheteur : ses coordonnées, puis les quantités de la feuille de commande."
+          : seller
+            ? "Ses coordonnées, puis ce qu'il commande. La commande est enregistrée à votre nom."
+            : "Une commande par acheteur : ses coordonnées, puis les quantités de la feuille de commande."
       }
       formId={FORM_ID}
       isDirty={form.formState.isDirty || documentChange.type !== "keep"}
       isPending={isPending}
-      submitLabel={order ? "Enregistrer" : "Ajouter la commande"}
+      submitLabel={
+        order
+          ? "Enregistrer"
+          : seller
+            ? "Ajouter l'acheteur"
+            : "Ajouter la commande"
+      }
       className="lg:max-w-[1040px]"
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
@@ -338,15 +355,17 @@ export function OrderDialog({
                   pas être ajoutée à la tournée.
                 </Callout>
               )}
-              <SelectField
-                control={form.control}
-                name="sold_by"
-                id={LABELS.sold_by.id}
-                label={LABELS.sold_by.label}
-                required={false}
-                options={memberOptions}
-                hint="Le membre qui a pris la commande."
-              />
+              {!seller && (
+                <SelectField
+                  control={form.control}
+                  name="sold_by"
+                  id={LABELS.sold_by.id}
+                  label={LABELS.sold_by.label}
+                  required={false}
+                  options={memberOptions}
+                  hint="Le membre qui a pris la commande."
+                />
+              )}
             </fieldset>
 
             <FormField
@@ -419,8 +438,9 @@ export function OrderDialog({
                     </legend>
                     {groups.length === 0 && (
                       <p className="text-detail text-muted-foreground">
-                        Le catalogue de cette vente est vide : ajoutez des
-                        produits dans « Catalogue ».
+                        {seller
+                          ? "Le catalogue de cette vente est encore vide : un superadmin doit d'abord y ajouter les produits."
+                          : "Le catalogue de cette vente est vide : ajoutez des produits dans « Catalogue »."}
                       </p>
                     )}
                     {groups.map((group) => (
@@ -478,12 +498,14 @@ export function OrderDialog({
               placeholder="Code de la porte, horaires, demande particulière…"
             />
 
-            <OrderDocumentField
-              current={document}
-              change={documentChange}
-              onChange={setDocumentChange}
-              linkedName={linkedMember?.name ?? null}
-            />
+            {!seller && (
+              <OrderDocumentField
+                current={document}
+                change={documentChange}
+                onChange={setDocumentChange}
+                linkedName={linkedMember?.name ?? null}
+              />
+            )}
           </form>
         </Form>
 

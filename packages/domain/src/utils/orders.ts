@@ -336,6 +336,92 @@ export function saleSummary(
 }
 
 // ---------------------------------------------------------------------------
+// Sellers (« Vendeurs »: who sold what)
+
+export type SellerOrderLike = Omit<OrderLike, "payments"> & {
+  sold_by: string | null;
+  payments: readonly (OrderPaymentLike & { recorded_by?: string | null })[];
+};
+
+export type SellerTotal = {
+  /** The member in `sold_by`; null for the orders nobody sold. */
+  sellerId: string | null;
+  /** Their orders only, totalled like the whole sale. */
+  summary: SaleSummary;
+  /**
+   * Cash and cheques the seller recorded themselves on their orders (refunds
+   * subtracted): what they should hand to the treasurer. A payment a
+   * superadmin recorded is already with the association.
+   */
+  heldCashCents: number;
+  heldChequeCents: number;
+  /** Cheques received (positive cheque payments) among those. */
+  heldChequeCount: number;
+};
+
+/**
+ * One total per seller: the members of `sellerIds` first, in that order
+ * (with nothing sold yet if so), then any other member found in `sold_by`
+ * (a former seller), then the orders without a seller when there are some.
+ */
+export function sellerTotals(
+  products: readonly OrderProductLike[],
+  orders: readonly SellerOrderLike[],
+  sellerIds: readonly string[] = [],
+): SellerTotal[] {
+  const ids: (string | null)[] = [...new Set(sellerIds)];
+  for (const o of orders) {
+    if (o.sold_by && !ids.includes(o.sold_by)) ids.push(o.sold_by);
+  }
+  if (orders.some((o) => !o.sold_by)) ids.push(null);
+
+  return ids.map((sellerId) => {
+    const own = orders.filter((o) => (o.sold_by ?? null) === sellerId);
+    let heldCashCents = 0;
+    let heldChequeCents = 0;
+    let heldChequeCount = 0;
+    if (sellerId) {
+      for (const o of own) {
+        for (const p of o.payments) {
+          if (p.recorded_by !== sellerId) continue;
+          if (p.method === "cash") heldCashCents += p.amount_cents;
+          if (p.method === "cheque") {
+            heldChequeCents += p.amount_cents;
+            if (p.amount_cents > 0) heldChequeCount += 1;
+          }
+        }
+      }
+    }
+    return {
+      sellerId,
+      summary: saleSummary(products, own),
+      heldCashCents,
+      heldChequeCents,
+      heldChequeCount,
+    };
+  });
+}
+
+/** « 45,00 € en espèces · 1 chèque (19,00 €) », or null when nothing is held. */
+export function heldLine(total: {
+  heldCashCents: number;
+  heldChequeCents: number;
+  heldChequeCount: number;
+}): string | null {
+  const parts: string[] = [];
+  if (total.heldCashCents !== 0) {
+    parts.push(`${formatEuros(total.heldCashCents)} en espèces`);
+  }
+  if (total.heldChequeCount > 0 || total.heldChequeCents !== 0) {
+    const n = total.heldChequeCount;
+    parts.push(
+      `${n} chèque${n > 1 ? "s" : ""} (${formatEuros(total.heldChequeCents)})`,
+    );
+  }
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+// ---------------------------------------------------------------------------
 // Spreadsheet export (one row per buyer, one column per ordered product)
 
 export function saleSpreadsheet(

@@ -122,4 +122,5 @@ export const detail: SaleDetail = {
     }),
   ],
   sellers: { "dddddddd-dddd-4ddd-8ddd-000000000001": "Camille ROTH" },
+  saleSellers: [],
 };

@@ -1,4 +1,4 @@
-// The Excel export: its five sheets, the figures they carry, and a real
+// The Excel export: its six sheets, the figures they carry, and a real
 // .xlsx written with write-excel-file. Fake data only (testData.ts).
 import assert from "node:assert/strict";
 import type { CellObject, Row } from "write-excel-file/node";
@@ -23,7 +23,14 @@ assert.equal(
 );
 assert.deepEqual(
   sheets.map((s) => s.sheet),
-  ["Résumé", "Acheteurs", "Détail par acheteur", "Fournisseurs", "Paiements"],
+  [
+    "Résumé",
+    "Par vendeur",
+    "Acheteurs",
+    "Détail par acheteur",
+    "Fournisseurs",
+    "Paiements",
+  ],
 );
 for (const s of sheets) {
   assert.ok(s.sheet!.length <= 31, `${s.sheet}: Excel caps names at 31`);
@@ -57,7 +64,7 @@ assert.deepEqual(values(find(resume, "Salaison TEST")!), [
 ]);
 
 // --- Acheteurs: categories over the products, one row per buyer ---
-const buyers = sheets[1]!;
+const buyers = sheets[2]!;
 assert.equal(buyers.stickyRowsCount, 3);
 assert.equal(buyers.stickyColumnsCount, 1);
 const [, groups, heads] = buyers.data;
@@ -90,7 +97,7 @@ const totalRow = buyers.data.at(-1)!;
 assert.deepEqual(values(totalRow).slice(5), [3, 4, 1, 58, 34, 24, undefined]);
 
 // --- Détail par acheteur: each buyer's lines and what is left ---
-const lines = sheets[2]!.data;
+const lines = sheets[3]!.data;
 const leaAt = lines.findIndex((r) => value(r[0]) === "Léa TEST");
 assert.ok(leaAt > 0);
 assert.match(
@@ -107,8 +114,92 @@ const zoeAt = lines.findIndex((r) => value(r[0]) === "Zoé TEST");
 const zoeEnd = lines.slice(zoeAt).find((r) => value(r[0]) === "Trop perçu")!;
 assert.equal(value(zoeEnd[3]), 1);
 
+// --- Par vendeur: each seller, then nobody, then the sale's total ---
+const bySeller = sheets[1]!.data;
+assert.deepEqual(values(find(bySeller, "Camille ROTH")!), [
+  "Camille ROTH",
+  1,
+  34,
+  20,
+  0,
+  0,
+  20,
+  14,
+  // A transfer reaches the bank: nothing to hand over.
+  undefined,
+]);
+assert.deepEqual(values(find(bySeller, "Sans vendeur")!).slice(0, 8), [
+  "Sans vendeur",
+  3,
+  24,
+  14,
+  14,
+  0,
+  0,
+  11,
+]);
+assert.deepEqual(values(find(bySeller, "Total")!).slice(0, 8), [
+  "Total",
+  4,
+  58,
+  34,
+  14,
+  0,
+  20,
+  25,
+]);
+assert.ok(find(bySeller, "Camille ROTH · 1 acheteur"));
+assert.deepEqual(values(find(bySeller, "Léa TEST")!).slice(0, 5), [
+  "Léa TEST",
+  "Livraison",
+  34,
+  20,
+  14,
+]);
+
+// Cash a seller recorded is theirs to hand over; a listed seller who sold
+// nothing yet still has a row.
+{
+  const SELLER = "dddddddd-dddd-4ddd-8ddd-000000000001";
+  const OTHER = "dddddddd-dddd-4ddd-8ddd-000000000002";
+  const held = saleWorkbook(
+    {
+      ...detail,
+      saleSellers: [SELLER, OTHER],
+      sellers: { ...detail.sellers, [OTHER]: "Inès TEST" },
+      orders: detail.orders.map((o, i) =>
+        i === 0
+          ? {
+              ...o,
+              payments: [
+                ...o.payments,
+                {
+                  ...o.payments[0]!,
+                  id: "p-cash",
+                  amount_cents: 500,
+                  method: "cash",
+                  recorded_by: SELLER,
+                },
+              ],
+            }
+          : o,
+      ),
+    },
+    NOW,
+  )[1]!.data;
+  assert.match(
+    String(value(find(held, "Camille ROTH")![8])),
+    /5,00\s€ en espèces/,
+  );
+  assert.deepEqual(values(find(held, "Inès TEST")!).slice(0, 3), [
+    "Inès TEST",
+    0,
+    0,
+  ]);
+}
+
 // --- Fournisseurs: what to order ---
-const suppliers = sheets[3]!.data;
+const suppliers = sheets[4]!.data;
 assert.deepEqual(values(find(suppliers, "Total Fruitière TEST")!), [
   "Total Fruitière TEST",
   4,
@@ -117,13 +208,21 @@ assert.deepEqual(values(find(suppliers, "Total Fruitière TEST")!), [
 ]);
 
 // --- Paiements: dated, as real dates ---
-const payments = sheets[4]!.data;
+const payments = sheets[5]!.data;
 const first = payments[4]!;
 assert.ok(value(first[0]) instanceof Date);
 assert.equal(
   (value(first[0]) as Date).toISOString(),
   "2026-10-03T00:00:00.000Z",
 );
+assert.deepEqual(values(payments[3]!), [
+  "Date",
+  "Acheteur",
+  "Mode",
+  "Montant",
+  "Encaissé par",
+  "Note",
+]);
 assert.deepEqual(values(payments.at(-1)!).slice(0, 4), [
   "Total",
   "3 paiements",

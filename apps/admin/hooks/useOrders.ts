@@ -47,7 +47,8 @@ export const saleKey = (saleId: string) => ["orders", "sale", saleId];
 const DRIVERS_KEY = ["orders", "drivers"];
 const BASE = "/api/orders";
 
-async function send<T>(
+/** One /api request: the JSON answer, or an `OrderApiError` / `NotInstalledError`. */
+export async function send<T>(
   url: string,
   method: string,
   body?: unknown,
@@ -70,7 +71,7 @@ async function send<T>(
   return json as T;
 }
 
-const retryUnlessFinal = (count: number, error: unknown) =>
+export const retryUnlessFinal = (count: number, error: unknown) =>
   !(error instanceof NotInstalledError) &&
   !(error instanceof OrderApiError && error.status < 500) &&
   count < 2;
@@ -327,5 +328,30 @@ export function useAddSaleToDelivery(saleId: string) {
       // The driver's round has the new stops (and may be a new round).
       queryClient.invalidateQueries({ queryKey: DRIVERS_KEY });
     },
+  });
+}
+
+/** « Ajouter un vendeur »: the member sells for this sale (« Mes ventes »). */
+export function useAddSeller(saleId: string) {
+  const refresh = useRefresh(saleId);
+  return useMutation({
+    mutationFn: (memberId: string) =>
+      send<{ ok: true }>(`${BASE}/sales/${saleId}/sellers`, "POST", {
+        member_id: memberId,
+      }),
+    onSuccess: refresh,
+  });
+}
+
+/** The member no longer sells for this sale; their orders stay theirs. */
+export function useRemoveSeller(saleId: string) {
+  const refresh = useRefresh(saleId);
+  return useMutation({
+    mutationFn: (memberId: string) =>
+      send<{ ok: true }>(
+        `${BASE}/sales/${saleId}/sellers/${memberId}`,
+        "DELETE",
+      ),
+    onSuccess: refresh,
   });
 }

@@ -1876,6 +1876,42 @@ export type Database = {
           },
         ];
       };
+      order_sale_sellers: {
+        Row: {
+          added_by: string | null;
+          created_at: string;
+          member_id: string;
+          sale_id: string;
+        };
+        Insert: {
+          added_by?: string | null;
+          created_at?: string;
+          member_id: string;
+          sale_id: string;
+        };
+        Update: {
+          added_by?: string | null;
+          created_at?: string;
+          member_id?: string;
+          sale_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_sale_sellers_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_sale_sellers_sale_id_fkey";
+            columns: ["sale_id"];
+            isOneToOne: false;
+            referencedRelation: "order_sales";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       order_sales: {
         Row: {
           archived_at: string | null;
@@ -2676,6 +2712,33 @@ export type Database = {
         };
         Returns: string;
       };
+      seller_add_payment: {
+        Args: {
+          p_amount_cents: number;
+          p_method: string;
+          p_note: string;
+          p_order_id: string;
+          p_paid_on: string;
+        };
+        Returns: Json;
+      };
+      seller_delete_order: { Args: { p_order_id: string }; Returns: undefined };
+      seller_delete_payment: {
+        Args: { p_payment_id: string };
+        Returns: undefined;
+      };
+      seller_sale: { Args: { p_sale_id: string }; Returns: Json };
+      seller_sales: { Args: never; Returns: Json };
+      seller_save_order: {
+        Args: {
+          p_items: Json;
+          p_order: Json;
+          p_order_id: string;
+          p_sale_id: string;
+        };
+        Returns: string;
+      };
+      sells_for_sale: { Args: { p_sale_id: string }; Returns: boolean };
       site_document_object: {
         Args: { p_collection: string; p_file_name: string };
         Returns: string;

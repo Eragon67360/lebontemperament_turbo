@@ -10,6 +10,7 @@ import { PaymentDialog } from "@/components/orders/PaymentDialog";
 import { ProductDialog } from "@/components/orders/ProductDialog";
 import { SaleDialog } from "@/components/orders/SaleDialog";
 import { SaleFigures } from "@/components/orders/SaleFigures";
+import { SellersSection } from "@/components/orders/SellersSection";
 import { SuppliersSection } from "@/components/orders/SuppliersSection";
 import {
   AlertDialog,
@@ -47,12 +48,14 @@ import {
   orderDocumentHref,
   useAddPayment,
   useAddSaleToDelivery,
+  useAddSeller,
   useChangeOrderDocument,
   useDeleteOrder,
   useDeletePayment,
   useDeleteProduct,
   useDeleteSale,
   useDrivers,
+  useRemoveSeller,
   useReorderProducts,
   useSale,
   useSaveOrder,
@@ -87,6 +90,7 @@ import RouteNames from "@/utils/routes";
 import {
   groupProductsByCategory,
   productLabel,
+  sellerTotals,
 } from "@repo/domain/utils/orders";
 import {
   ArrowLeft,
@@ -103,7 +107,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-type Tab = "buyers" | "suppliers" | "catalogue";
+type Tab = "buyers" | "sellers" | "suppliers" | "catalogue";
 
 type Deleting =
   | { type: "order"; id: string; name: string }
@@ -116,6 +120,7 @@ type Deleting =
       buyerName: string;
       dueCents: number;
     }
+  | { type: "seller"; id: string; name: string }
   | { type: "sale" };
 
 const describe = (error: unknown) =>
@@ -142,6 +147,8 @@ export default function SalePage() {
   const updateSale = useUpdateSale(saleId);
   const deleteSale = useDeleteSale();
   const addToDelivery = useAddSaleToDelivery(saleId);
+  const addSeller = useAddSeller(saleId);
+  const removeSeller = useRemoveSeller(saleId);
 
   const [tab, setTab] = useState<Tab>("buyers");
   const [filters, setFilters] = useState<BuyerFilters>(NO_BUYER_FILTERS);
@@ -184,6 +191,23 @@ export default function SalePage() {
   const members = useMemo(
     () => memberOptions(users.data ?? [], memberName),
     [users.data],
+  );
+  const sellers = useMemo(
+    () =>
+      detail
+        ? sellerTotals(
+            detail.products,
+            detail.orders,
+            // Listed sellers by name; « Sans vendeur » stays last.
+            [...detail.saleSellers].sort((a, b) =>
+              (detail.sellers[a] ?? "").localeCompare(
+                detail.sellers[b] ?? "",
+                "fr",
+              ),
+            ),
+          )
+        : [],
+    [detail],
   );
   const orderedQuantities = useMemo(
     () =>
@@ -415,7 +439,8 @@ export default function SalePage() {
       anchor.remove();
       URL.revokeObjectURL(url);
       toast.success("Export téléchargé", {
-        description: "Résumé, acheteurs, détail, fournisseurs et paiements.",
+        description:
+          "Résumé, par vendeur, acheteurs, détail, fournisseurs et paiements.",
       });
     } catch (error) {
       toast.error("L'export n'a pas pu être créé", {
@@ -438,6 +463,9 @@ export default function SalePage() {
       } else if (deleting.type === "product") {
         await deleteProduct.mutateAsync(deleting.product.id);
         toast.success(`« ${productLabel(deleting.product)} » supprimé`);
+      } else if (deleting.type === "seller") {
+        await removeSeller.mutateAsync(deleting.id);
+        toast.success(`${deleting.name} ne vend plus pour cette vente`);
       } else if (deleting.type === "payment") {
         await deletePayment.mutateAsync({
           orderId: deleting.orderId,
@@ -476,21 +504,25 @@ export default function SalePage() {
       ? paymentDeletionText(deleting, deleting.payment)
       : null;
   const deleteTitle =
-    deleting?.type === "order"
-      ? `Supprimer la commande de « ${deleting.name} » ?`
-      : deleting?.type === "product"
-        ? `Supprimer « ${productLabel(deleting.product)} » ?`
-        : paymentText
-          ? paymentText.title
-          : `Supprimer la vente « ${detail?.sale.title ?? ""} » ?`;
+    deleting?.type === "seller"
+      ? `Retirer ${deleting.name} des vendeurs ?`
+      : deleting?.type === "order"
+        ? `Supprimer la commande de « ${deleting.name} » ?`
+        : deleting?.type === "product"
+          ? `Supprimer « ${productLabel(deleting.product)} » ?`
+          : paymentText
+            ? paymentText.title
+            : `Supprimer la vente « ${detail?.sale.title ?? ""} » ?`;
   const deleteDescription =
-    deleting?.type === "order"
-      ? "Ses quantités et ses paiements sont effacés. Si l'acheteur est déjà dans une tournée, son arrêt y reste. Cette action ne peut pas être annulée."
-      : deleting?.type === "product"
-        ? "Le produit disparaît du catalogue de cette vente. Cette action ne peut pas être annulée."
-        : paymentText
-          ? paymentText.description
-          : "Le catalogue, toutes les commandes et tous les paiements de cette vente sont effacés. Cette action ne peut pas être annulée.";
+    deleting?.type === "seller"
+      ? "Ses acheteurs et leurs paiements restent, toujours « vendu par » ce membre ; il ne peut plus les voir ni en noter de nouveaux. Vous pourrez l'ajouter de nouveau."
+      : deleting?.type === "order"
+        ? "Ses quantités et ses paiements sont effacés. Si l'acheteur est déjà dans une tournée, son arrêt y reste. Cette action ne peut pas être annulée."
+        : deleting?.type === "product"
+          ? "Le produit disparaît du catalogue de cette vente. Cette action ne peut pas être annulée."
+          : paymentText
+            ? paymentText.description
+            : "Le catalogue, toutes les commandes et tous les paiements de cette vente sont effacés. Cette action ne peut pas être annulée.";
 
   // --- States ---
 
@@ -605,8 +637,9 @@ export default function SalePage() {
                 className="max-w-full overflow-x-auto"
               >
                 <TabsTrigger value="buyers">Acheteurs</TabsTrigger>
+                <TabsTrigger value="sellers">Vendeurs</TabsTrigger>
                 <TabsTrigger value="suppliers">
-                  {/* The three tabs must fit side by side on a 390 px phone. */}
+                  {/* The four tabs must fit side by side on a 390 px phone. */}
                   <span className="sm:hidden">Fournisseurs</span>
                   <span className="hidden sm:inline">
                     Produits et fournisseurs
@@ -787,6 +820,39 @@ export default function SalePage() {
                       )}
                     </div>
                   </section>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="sellers" className="mt-5">
+                <Card className="overflow-hidden p-0">
+                  <SellersSection
+                    totals={sellers}
+                    listed={detail.saleSellers}
+                    names={detail.sellers}
+                    members={members}
+                    busyId={
+                      removeSeller.isPending
+                        ? (removeSeller.variables ?? null)
+                        : null
+                    }
+                    onAdd={async (memberId) => {
+                      await addSeller.mutateAsync(memberId);
+                      const name =
+                        members.find((m) => m.id === memberId)?.name ??
+                        "Le membre";
+                      toast.success(`${name} vend pour cette vente`, {
+                        description:
+                          "Il retrouve ses acheteurs dans « Mes ventes » en se connectant à l'administration.",
+                      });
+                    }}
+                    onRemove={(id, name) =>
+                      setDeleting({ type: "seller", id, name })
+                    }
+                    onShowBuyers={(name) => {
+                      setFilters({ ...NO_BUYER_FILTERS, query: name });
+                      setTab("buyers");
+                    }}
+                  />
                 </Card>
               </TabsContent>
 

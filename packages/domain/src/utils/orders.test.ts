@@ -17,7 +17,11 @@ import {
   productsById,
   saleSpreadsheet,
   saleSummary,
+  heldLine,
+  sellerTotals,
   type OrderLike,
+  type SellerOrderLike,
+  type SellerTotal,
   type OrderProductLike,
 } from "./orders";
 import phoneVectors from "./phoneVectors.json";
@@ -485,3 +489,97 @@ for (const [body, field] of [
 }
 
 console.log("orders: ok");
+
+// --- sellerTotals / heldLine ------------------------------------------------
+
+{
+  const A = "seller-a";
+  const B = "seller-b";
+  const C = "former";
+  const order = (
+    id: string,
+    sold_by: string | null,
+    quantity: number,
+    payments: SellerOrderLike["payments"] = [],
+  ): SellerOrderLike => ({
+    id,
+    buyer_name: id,
+    fulfilment: "delivery",
+    sold_by,
+    items: [{ product_id: P(3), quantity }],
+    payments,
+  });
+  const orders: SellerOrderLike[] = [
+    order("o1", A, 2, [
+      { amount_cents: 500, method: "cash", recorded_by: A },
+      { amount_cents: 300, method: "cheque", recorded_by: A },
+    ]),
+    order("o2", A, 1, [
+      { amount_cents: 400, method: "cheque", recorded_by: "treasurer" },
+    ]),
+    order("o3", null, 1),
+    order("o4", C, 1, [
+      { amount_cents: 400, method: "transfer", recorded_by: C },
+    ]),
+    order("o5", A, 1, [
+      { amount_cents: 400, method: "cash", recorded_by: A },
+      { amount_cents: -100, method: "cash", recorded_by: A },
+    ]),
+  ];
+  const totals = sellerTotals(products, orders, [B, A]);
+
+  // Listed sellers first (B with nothing), then a former seller, then nobody.
+  assert.deepEqual(
+    totals.map((t) => t.sellerId),
+    [B, A, C, null],
+  );
+  const [b, a, c, none] = totals as [
+    SellerTotal,
+    SellerTotal,
+    SellerTotal,
+    SellerTotal,
+  ];
+  assert.equal(b.summary.orderCount, 0);
+  assert.equal(b.summary.totalCents, 0);
+  assert.equal(heldLine(b), null);
+
+  assert.equal(a.summary.orderCount, 3);
+  assert.equal(a.summary.totalCents, 1600);
+  assert.equal(a.summary.paidCents, 1500);
+  assert.equal(a.summary.dueCents, 100);
+  // The treasurer's cheque is not held by the seller; the refund is subtracted.
+  assert.equal(a.heldCashCents, 800);
+  assert.equal(a.heldChequeCents, 300);
+  assert.equal(a.heldChequeCount, 1);
+  assert.equal(
+    heldLine(a),
+    `${formatEuros(800)} en espèces · 1 chèque (${formatEuros(300)})`,
+  );
+
+  // A transfer reaches the bank: nothing to hand over.
+  assert.equal(c.summary.paidCents, 400);
+  assert.equal(heldLine(c), null);
+
+  assert.equal(none.sellerId, null);
+  assert.equal(none.summary.dueCents, 400);
+  assert.equal(none.heldCashCents, 0);
+
+  // Every order counted once.
+  assert.equal(
+    totals.reduce((s, t) => s + t.summary.orderCount, 0),
+    orders.length,
+  );
+  // No orders without a seller: no « Sans vendeur » total.
+  assert.deepEqual(
+    sellerTotals(
+      products,
+      orders.filter((o) => o.sold_by),
+      [],
+    ).map((t) => t.sellerId),
+    [A, C],
+  );
+  assert.equal(
+    heldLine({ heldCashCents: 0, heldChequeCents: 2500, heldChequeCount: 2 }),
+    `2 chèques (${formatEuros(2500)})`,
+  );
+}
