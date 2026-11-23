@@ -1,9 +1,8 @@
 // Firebase Cloud Messaging (HTTP v1) with the Firebase service account in the
 // function secret FIREBASE_SERVICE_ACCOUNT_JSON.
 //
-// send-push-notification still carries its own copy of getAccessToken (it
-// sends to the members' topics, see its target.ts); new functions use this
-// module.
+// Used by every function that pushes, send-push-notification included (its
+// topics in target.ts, and the devices of a group event's members).
 import * as jose from "npm:jose@5.2.0";
 
 export interface ServiceAccount {
