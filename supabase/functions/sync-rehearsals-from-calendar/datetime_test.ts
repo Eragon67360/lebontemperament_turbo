@@ -5,6 +5,7 @@ import {
   isAllDayEvent,
   parseAllDayDate,
   parseParisDateTimes,
+  rehearsalHasEnded,
 } from "./datetime.ts";
 
 Deno.test("getParisToday uses the Paris calendar day, not UTC", () => {
@@ -124,4 +125,34 @@ Deno.test("parseParisDateTimes rejects missing or invalid values", () => {
       { dateTime: "2026-01-01T10:00:00Z" },
     ),
   );
+});
+
+Deno.test("rehearsalHasEnded compares the end with Paris time", () => {
+  const row = {
+    date: "2026-11-23",
+    start_time: "20:00:00",
+    end_time: "22:00:00",
+  };
+  // 20:30 UTC = 21:30 in Paris (UTC+1): still going.
+  assertEquals(rehearsalHasEnded(row, new Date("2026-11-23T20:30:00Z")), false);
+  // 21:00 UTC = 22:00 in Paris: over.
+  assertEquals(rehearsalHasEnded(row, new Date("2026-11-23T21:00:00Z")), true);
+  // Earlier that day, and on a later day.
+  assertEquals(rehearsalHasEnded(row, new Date("2026-11-23T08:00:00Z")), false);
+  assertEquals(rehearsalHasEnded(row, new Date("2026-11-24T08:00:00Z")), true);
+  // The day before: not ended.
+  assertEquals(rehearsalHasEnded(row, new Date("2026-11-22T22:00:00Z")), false);
+});
+
+Deno.test("rehearsalHasEnded uses summer time and HH:MM values", () => {
+  const row = { date: "2026-07-01", start_time: "14:00", end_time: "17:00" };
+  // 15:00 UTC = 17:00 in Paris (UTC+2).
+  assertEquals(rehearsalHasEnded(row, new Date("2026-07-01T14:59:00Z")), false);
+  assertEquals(rehearsalHasEnded(row, new Date("2026-07-01T15:00:00Z")), true);
+});
+
+Deno.test("rehearsalHasEnded: an end past midnight ends with the day", () => {
+  const row = { date: "2026-11-23", start_time: "22:00", end_time: "00:30" };
+  assertEquals(rehearsalHasEnded(row, new Date("2026-11-23T22:50:00Z")), false);
+  assertEquals(rehearsalHasEnded(row, new Date("2026-11-24T00:00:00Z")), true);
 });
