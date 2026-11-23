@@ -51,6 +51,7 @@ const NEW_NAV_HREFS = [
   "/dashboard/public/rejoindre-faq",
   "/dashboard/public/reglages-du-site",
   "/dashboard/admin/commandes",
+  "/dashboard/admin/groups",
 ];
 for (const href of NEW_NAV_HREFS) {
   assert.ok(hrefs.includes(href), `${href} has no nav entry`);

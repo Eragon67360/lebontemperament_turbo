@@ -17,6 +17,7 @@ import {
   CalendarOff,
   Clock,
   ExternalLink,
+  Lock,
   MapPin,
   Paperclip,
   Pencil,
@@ -25,19 +26,22 @@ import {
 
 /**
  * One event of the « À venir » or « Passés » list: date block, title, type
- * chip, « Public » or « Membres » visibility, period, time, place and the
+ * chip, « Public », « Membres » or the groups it is reserved for, period, time, place and the
  * person in charge, an excerpt of the description, the attached files,
  * then the link, « Modifier », « Documents » and the « Plus d'actions » menu
  * (« Supprimer… »).
  */
 export function EventRow({
   event,
+  audience,
   documents,
   onEdit,
   onDocuments,
   onDelete,
 }: {
   event: Event;
+  /** The groups it is reserved for (« Conseil d’administration »), null for every member. */
+  audience?: string | null;
   /** The event's files; the « Documents » button is hidden without `onDocuments`. */
   documents: EventDocument[];
   onEdit: () => void;
@@ -64,7 +68,15 @@ export function EventRow({
             <StatusBadge tone="accent" dot={false}>
               {eventTypeLabel(event.event_type)}
             </StatusBadge>
-            {event.is_public ? (
+            {audience ? (
+              <StatusBadge tone="info" dot={false}>
+                <Lock aria-hidden />
+                <span>
+                  <span className="sr-only">Réservé à : </span>
+                  {audience}
+                </span>
+              </StatusBadge>
+            ) : event.is_public ? (
               <StatusBadge tone="success">Public</StatusBadge>
             ) : (
               <StatusBadge tone="neutral">Membres</StatusBadge>

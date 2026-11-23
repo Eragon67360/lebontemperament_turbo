@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { rehearsalFormSchema } from "../formSchemas";
 import {
+  audienceOf,
   eventCountLabel,
   eventPeriodLabel,
   eventTypeLabel,
@@ -13,6 +14,7 @@ import {
   timeRangeFr,
   toEventPayload,
   toRehearsalPayloads,
+  withAudience,
 } from "./schedule";
 
 // « Today » is the Paris day: `parisToday` of @repo/domain, tested there.
@@ -222,6 +224,37 @@ import {
   assert.equal(edited.link, "https://example.org");
   assert.equal(edited.description, "Apportez vos partitions.");
   assert.equal(edited.is_public, true);
+
+  // « Pour qui ? » (member groups): without it the payload is unchanged, so
+  // the route leaves the event's audience as it is.
+  const CA = "00000000-0000-4000-8000-000000000001";
+  assert.deepEqual(
+    withAudience(toEventPayload(base), base),
+    toEventPayload(base),
+  );
+  assert.deepEqual(audienceOf(base), []);
+  // Every member: an empty audience is sent (it opens a group event to all).
+  assert.deepEqual(
+    withAudience(toEventPayload(base), {
+      ...base,
+      audience_mode: "all",
+      audience: [CA],
+    }),
+    { ...toEventPayload(base), audience: [] },
+  );
+  // Some groups: their ids, and never public.
+  const forCa = {
+    ...base,
+    is_public: true,
+    audience_mode: "groups" as const,
+    audience: [CA],
+  };
+  assert.deepEqual(audienceOf(forCa), [CA]);
+  assert.deepEqual(withAudience(toEventPayload(forCa, "evt-1"), forCa), {
+    ...toEventPayload(forCa, "evt-1"),
+    audience: [CA],
+    is_public: false,
+  });
 }
 
 // --- The rehearsal schema: the two added rules ---

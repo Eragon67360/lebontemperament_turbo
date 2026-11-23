@@ -22,16 +22,21 @@ import {
   useEvents,
   useUpdateEvent,
 } from "@/hooks/useEvents";
+import { useGroups } from "@/hooks/useGroups";
 import type { EventFormValues } from "@/utils/formSchemas";
+import { audienceLabel, groupFromSearch } from "@/utils/groups/view";
+import RouteNames from "@/utils/routes";
 import {
+  audienceOf,
   eventCountLabel,
   splitEvents,
   toEventPayload,
+  withAudience,
 } from "@/utils/season/schedule";
 import type { Event, EventDocument } from "@repo/domain/types/events";
 import { parisToday } from "@repo/domain/utils/parisDay";
 import { CalendarDays, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 type Period = "upcoming" | "past";
@@ -55,14 +60,51 @@ export default function EvenementsPage() {
     }
     return byEvent;
   }, [documentsQuery.data]);
+  // « Pour qui ? »: the member groups, once loaded (before the migration,
+  // or while they fail, the dialog has no audience and leaves it alone).
+  const groupsQuery = useGroups();
+  const groups = groupsQuery.data?.groups;
+  const groupNames = useMemo(
+    () => new Map((groups ?? []).map((g) => [g.id, g.name])),
+    [groups],
+  );
   const [documentsFor, setDocumentsFor] = useState<Event | null>(null);
   const [documentsOpen, setDocumentsOpen] = useState(false);
 
   const [tab, setTab] = useState<Period>("upcoming");
-  const [dialog, setDialog] = useState<{ open: boolean; event: Event | null }>({
+  const [dialog, setDialog] = useState<{
+    open: boolean;
+    event: Event | null;
+    /** A new event started from a group's page (« Nouvel événement »). */
+    audience?: string[];
+  }>({
     open: false,
     event: null,
   });
+
+  // « Nouvel événement » of a group page: ?pour=<group id> opens the dialog
+  // for that group once the groups are known. Read once on the client (the
+  // server renders without it), then dropped from the address.
+  const [requestedGroup, setRequestedGroup] = useState<string | null>(() =>
+    typeof window === "undefined"
+      ? null
+      : groupFromSearch(window.location.search),
+  );
+  if (requestedGroup && groups) {
+    setRequestedGroup(null);
+    if (groups.some((g) => g.id === requestedGroup && g.archived_at === null)) {
+      setDialog({ open: true, event: null, audience: [requestedGroup] });
+    }
+  }
+  useEffect(() => {
+    if (groupFromSearch(window.location.search)) {
+      window.history.replaceState(
+        null,
+        "",
+        RouteNames.DASHBOARD.MEMBERS.EVENEMENTS,
+      );
+    }
+  }, []);
   // The item stays set while the dialog closes, so its text never empties.
   const [deleting, setDeleting] = useState<Event | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -77,15 +119,22 @@ export default function EvenementsPage() {
 
   const save = async (values: EventFormValues) => {
     const editing = dialog.event;
+    const forGroups = audienceLabel(audienceOf(values), groupNames);
     if (editing) {
-      await updateEvent.mutateAsync(toEventPayload(values, editing.id));
+      await updateEvent.mutateAsync(
+        withAudience(toEventPayload(values, editing.id), values),
+      );
       toast.success(`« ${values.title} » enregistré`);
     } else {
-      await createEvent.mutateAsync(toEventPayload(values));
+      await createEvent.mutateAsync(
+        withAudience(toEventPayload(values), values),
+      );
       toast.success(
-        values.is_public
-          ? `« ${values.title} » ajouté à l'agenda et au site public`
-          : `« ${values.title} » ajouté à l'agenda des membres`,
+        forGroups
+          ? `« ${values.title} » ajouté, réservé à : ${forGroups}`
+          : values.is_public
+            ? `« ${values.title} » ajouté à l'agenda et au site public`
+            : `« ${values.title} » ajouté à l'agenda des membres`,
       );
     }
   };
@@ -160,6 +209,7 @@ export default function EvenementsPage() {
               <li key={event.id} className="list-none">
                 <EventRow
                   event={event}
+                  audience={audienceLabel(event.audience, groupNames)}
                   documents={documentsByEvent.get(event.id) ?? []}
                   onEdit={() => setDialog({ open: true, event })}
                   onDocuments={
@@ -214,6 +264,8 @@ export default function EvenementsPage() {
         event={dialog.event}
         onSubmit={save}
         isPending={createEvent.isPending || updateEvent.isPending}
+        groups={groups}
+        initialAudience={dialog.audience}
       />
 
       <EventDocumentsDialog
@@ -235,7 +287,9 @@ export default function EvenementsPage() {
         description={`${
           deleting?.is_public
             ? "L'événement disparaît de l'agenda des membres et du site public"
-            : "L'événement disparaît de l'agenda des membres"
+            : deleting?.audience?.length
+              ? "L'événement disparaît de l'agenda des groupes auxquels il est réservé"
+              : "L'événement disparaît de l'agenda des membres"
         }${
           deleting && (documentsByEvent.get(deleting.id)?.length ?? 0) > 0
             ? ", avec ses documents."

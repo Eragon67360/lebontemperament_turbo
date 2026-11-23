@@ -70,6 +70,10 @@ function fakeClient() {
       state.calls.push(["from", table]);
       return query;
     },
+    rpc(name: string, args: unknown) {
+      state.calls.push(["rpc", name, args]);
+      return query;
+    },
   };
 }
 
@@ -393,6 +397,120 @@ for (const [method, path, handler] of HANDLERS) {
     ["update", event],
     ["eq", "id", ID],
   ]);
+
+  // « Pour qui ? » (member groups): every member is the plain insert; some
+  // groups go through save_event_with_audience(), the event and its groups
+  // in one transaction.
+  const CA = "00000000-0000-4000-8000-00000000000a";
+  reset(admin, [{ data: null, error: null }]);
+  assert.equal(
+    (await events.POST(request("POST", { ...event, audience: [] }))).status,
+    200,
+  );
+  assert.deepEqual(state.calls, [
+    ["from", "events"],
+    ["insert", [event]],
+  ]);
+
+  reset(admin, [{ data: ID, error: null }]);
+  assert.equal(
+    (
+      await events.POST(
+        request("POST", { ...event, audience: [CA, CA.toUpperCase()] }),
+      )
+    ).status,
+    200,
+  );
+  assert.deepEqual(state.calls, [
+    ["rpc", "save_event_with_audience", { p_event: event, p_group_ids: [CA] }],
+  ]);
+
+  // An edit reads the row, so the columns not sent keep their value.
+  const stored = { ...event, description: "Gardée", time: "09:30:00" };
+  reset(admin, [
+    { data: stored, error: null },
+    { data: ID, error: null },
+  ]);
+  assert.equal(
+    (
+      await events.PATCH(
+        request("PATCH", { id: ID, title: "Réunion du CA", audience: [CA] }),
+      )
+    ).status,
+    200,
+  );
+  assert.deepEqual(state.calls.at(-1), [
+    "rpc",
+    "save_event_with_audience",
+    {
+      p_event: { ...stored, title: "Réunion du CA" },
+      p_group_ids: [CA],
+      p_id: ID,
+    },
+  ]);
+
+  // The migration's own refusal reaches the admin in its words.
+  reset(admin, [
+    { data: stored, error: null },
+    {
+      data: null,
+      error: {
+        code: "23514",
+        message: "Un événement réservé à des groupes ne peut pas être public",
+      },
+    },
+  ]);
+  assert.deepEqual(
+    await answer(
+      await events.PATCH(
+        request("PATCH", { id: ID, is_public: true, audience: [CA] }),
+      ),
+    ),
+    {
+      status: 400,
+      body: {
+        status: 400,
+        error: "Un événement réservé à des groupes ne peut pas être public",
+      },
+    },
+  );
+
+  // Before the migration, « Tous les membres » still saves (plain update).
+  reset(admin, [
+    { data: stored, error: null },
+    { data: null, error: { code: "PGRST202", message: "not found" } },
+    { data: null, error: null },
+  ]);
+  assert.equal(
+    (
+      await events.PATCH(
+        request("PATCH", { id: ID, title: "Week-end", audience: [] }),
+      )
+    ).status,
+    200,
+  );
+  assert.deepEqual(state.calls.slice(-3), [
+    ["from", "events"],
+    ["update", { title: "Week-end" }],
+    ["eq", "id", ID],
+  ]);
+  // …but a group event can't be saved there: 503, said plainly.
+  reset(admin, [
+    { data: null, error: { code: "PGRST202", message: "not found" } },
+  ]);
+  const early = await answer(
+    await events.POST(request("POST", { ...event, audience: [CA] })),
+  );
+  assert.equal(early.status, 503);
+  assert.equal(early.body.notInstalled, true);
+
+  // An audience holds group ids only: refused before any client.
+  reset(admin);
+  assert.equal(
+    (await events.POST(request("POST", { ...event, audience: ["ca"] }))).status,
+    400,
+  );
+  assert.equal(state.clients, 0);
 
   // A value the database refuses: a French 400, never its own message.
   reset(admin, [
