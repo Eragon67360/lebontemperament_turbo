@@ -25,4 +25,4 @@ select net.http_post(
 
 ## Setup
 
-Uses the existing secret `INTERNAL_FUNCTION_SECRET`. Apply the migration, then `npx supabase functions deploy purge-bug-screenshots --project-ref fsklunxplbbtzgurwqmc`. Until it is deployed, pg_net records one 404 a day and reports with screenshots simply wait; the first app signalements (2.0.138) can't be due before October 2027.
+Uses the existing secret `INTERNAL_FUNCTION_SECRET`. Apply the migration, then `npx supabase@3 functions deploy purge-bug-screenshots --remote=fsklunxplbbtzgurwqmc`. Until it is deployed, pg_net records one 404 a day and reports with screenshots simply wait; the first app signalements (2.0.138) can't be due before October 2027.

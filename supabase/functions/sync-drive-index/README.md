@@ -26,7 +26,7 @@ Callers (`requireInternalSecretOrAdmin` in `_shared/caller-auth.ts`): the nightl
 3. **Function secrets** (Supabase Dashboard → Edge Functions → Secrets): `GOOGLE_SERVICE_ACCOUNT_JSON` and `INTERNAL_FUNCTION_SECRET` already exist for the other functions; nothing to add. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided by Supabase. The admin's Vercel project needs no new variable.
 4. **Apply the migration** `supabase/migrations/20261003120000_drive_index.sql` (`supabase db push`, or the SQL editor). It refuses to apply unless the Vault secrets `project_url`, `anon_key` and `internal_function_secret` exist (the ETA cron and the push trigger already use them): without them the cron job would call the function with empty headers and get 401 every night. It creates the two tables, their RLS policies, `drive_index_apply()` (service_role only) and the cron job.
 5. **Regenerate the types**: `npm run db:types` and commit if `packages/domain/src/database.types.ts` differs (the PR ships a hand-written copy of the generated shape).
-6. **Deploy the function**: `supabase functions deploy sync-drive-index`.
+6. **Deploy the function**: `npx supabase@3 functions deploy sync-drive-index --remote=fsklunxplbbtzgurwqmc`.
 7. **First run**: in the admin (« Partitions et documents »), « Synchroniser depuis Drive ». Every root should be readable; a root listed under « Dossiers illisibles » is not shared with the service account yet. Then « Appliquer ces changements ».
 
 ## Manual dry run

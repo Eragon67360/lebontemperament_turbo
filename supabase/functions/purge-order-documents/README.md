@@ -25,4 +25,4 @@ select net.http_post(
 
 ## Setup
 
-Uses the existing secret `INTERNAL_FUNCTION_SECRET`. Apply the migration, then `npx supabase functions deploy purge-order-documents --project-ref fsklunxplbbtzgurwqmc`. Until it is deployed, pg_net records one 404 a day and unreferenced files simply wait in the private bucket, where nobody but superadmins can read them; the first files can't be due before late December 2026 (the November sale delivers on 27 November).
+Uses the existing secret `INTERNAL_FUNCTION_SECRET`. Apply the migration, then `npx supabase@3 functions deploy purge-order-documents --remote=fsklunxplbbtzgurwqmc`. Until it is deployed, pg_net records one 404 a day and unreferenced files simply wait in the private bucket, where nobody but superadmins can read them; the first files can't be due before late December 2026 (the November sale delivers on 27 November).

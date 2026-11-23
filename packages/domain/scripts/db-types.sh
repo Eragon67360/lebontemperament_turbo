@@ -27,7 +27,7 @@ fi
 # committed types.
 TMP=$(mktemp)
 trap 'rm -f "$TMP" "$TMP.kept"' EXIT
-npx supabase gen types typescript --project-id "$PROJECT_REF" > "$TMP"
+npx supabase@3 gen types typescript --remote="$PROJECT_REF" > "$TMP"
 
 # __InternalSupabase.PostgrestVersion is the PostgREST version of the project
 # generated from, not part of the schema: supabase-js reads it to allow, at

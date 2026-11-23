@@ -34,4 +34,4 @@ select net.http_post(
 
 ## Setup
 
-Secrets already exist for the other functions: `FIREBASE_SERVICE_ACCOUNT_JSON`, `INTERNAL_FUNCTION_SECRET`. Apply `supabase/migrations/20261008120000_public_concert_pushes.sql` (table and cron job; on staging, which has no Vault secrets, the job is not scheduled), then `npx supabase functions deploy notify-public-concerts --project-ref fsklunxplbbtzgurwqmc`. The function keeps the gateway's default `verify_jwt`: the cron sends the anon key as bearer, and the real check is the internal secret.
+Secrets already exist for the other functions: `FIREBASE_SERVICE_ACCOUNT_JSON`, `INTERNAL_FUNCTION_SECRET`. Apply `supabase/migrations/20261008120000_public_concert_pushes.sql` (table and cron job; on staging, which has no Vault secrets, the job is not scheduled), then `npx supabase@3 functions deploy notify-public-concerts --remote=fsklunxplbbtzgurwqmc`. The function keeps the gateway's default `verify_jwt`: the cron sends the anon key as bearer, and the real check is the internal secret.
