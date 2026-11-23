@@ -167,6 +167,28 @@ export function toEventPayload(
   return id ? { id, ...data } : data;
 }
 
+/** The groups « Pour qui ? » picked: none for every member. */
+export function audienceOf(values: EventFormValues): string[] {
+  return values.audience_mode === "groups" ? [...(values.audience ?? [])] : [];
+}
+
+/**
+ * The payload with its audience when the dialog showed « Pour qui ? »
+ * (`audience_mode` set): `audience` is then always sent, empty for every
+ * member, and an event for some groups is never public. Without it the
+ * payload is unchanged, so the event keeps whatever audience it has.
+ */
+export function withAudience<T extends CreateEventDTO | UpdateEventDTO>(
+  payload: T,
+  values: EventFormValues,
+): T {
+  if (values.audience_mode === undefined) return payload;
+  const audience = audienceOf(values);
+  return audience.length > 0
+    ? { ...payload, audience, is_public: false }
+    : { ...payload, audience };
+}
+
 // --- Wording ---
 
 export const EVENT_TYPE_LABELS: Record<string, string> = {

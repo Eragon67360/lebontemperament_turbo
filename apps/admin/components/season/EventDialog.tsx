@@ -11,6 +11,10 @@ import {
   FormFeedback,
   saveErrorMessage,
 } from "@/components/anniversary/FormFeedback";
+import {
+  AUDIENCE_IDS,
+  AudienceFieldset,
+} from "@/components/season/AudienceFieldset";
 import { Form } from "@/components/ui/form";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { useResetOnChange } from "@/hooks/useResetOnChange";
@@ -19,10 +23,11 @@ import {
   eventFormSchema,
   type EventFormValues,
 } from "@/utils/formSchemas";
+import type { GroupSummary } from "@/utils/groups/types";
 import { EVENT_TYPE_LABELS, parseIsoDate } from "@/utils/season/schedule";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Event } from "@repo/domain/types/events";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 const FORM_ID = "event-form";
@@ -43,6 +48,8 @@ const LABELS = {
   description: { label: "Description", id: "event-description" },
   link: { label: "Lien", id: "event-link" },
   is_public: { label: "Visible sur le site public", id: "event-public" },
+  audience_mode: { label: "Pour qui ?", id: AUDIENCE_IDS.mode },
+  audience: { label: "Groupes", id: AUDIENCE_IDS.groups },
 };
 
 const TYPE_OPTIONS = EVENT_TYPES.map((value) => ({
@@ -50,7 +57,13 @@ const TYPE_OPTIONS = EVENT_TYPES.map((value) => ({
   label: EVENT_TYPE_LABELS[value]!,
 }));
 
-const defaults = (event?: Event | null): EventFormValues => ({
+const defaults = (
+  event: Event | null | undefined,
+  /** « Pour qui ? » is shown (the member groups are installed). */
+  withAudience: boolean,
+  /** A new event started from a group's page. */
+  initialAudience: readonly string[] | undefined,
+): EventFormValues => ({
   title: event?.title ?? "",
   date_from:
     (event?.date_from ? parseIsoDate(event.date_from) : null) ??
@@ -64,7 +77,18 @@ const defaults = (event?: Event | null): EventFormValues => ({
   link: event?.link ?? "",
   description: event?.description ?? "",
   is_public: event?.is_public ?? false,
+  ...(withAudience ? audienceDefaults(event, initialAudience) : {}),
 });
+
+function audienceDefaults(
+  event: Event | null | undefined,
+  initialAudience: readonly string[] | undefined,
+): Pick<EventFormValues, "audience_mode" | "audience"> {
+  const audience = event
+    ? (event.audience ?? [])
+    : [...(initialAudience ?? [])];
+  return { audience_mode: audience.length > 0 ? "groups" : "all", audience };
+}
 
 export interface EventDialogProps {
   open: boolean;
@@ -74,6 +98,13 @@ export interface EventDialogProps {
   /** Saves; throws when it fails. */
   onSubmit: (values: EventFormValues) => Promise<void>;
   isPending: boolean;
+  /**
+   * The member groups (« Pour qui ? »); without them the dialog has no
+   * audience and the event stays for every member, as before the groups.
+   */
+  groups?: readonly GroupSummary[];
+  /** For a new event: the groups it starts reserved for (« Nouvel événement » of a group). */
+  initialAudience?: readonly string[];
 }
 
 /**
@@ -87,19 +118,38 @@ export function EventDialog({
   event,
   onSubmit,
   isPending,
+  groups,
+  initialAudience,
 }: EventDialogProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
+  const withAudience = groups !== undefined;
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
-    defaultValues: defaults(event),
+    defaultValues: defaults(event, withAudience, initialAudience),
     shouldFocusError: false,
   });
   const dateFrom = useWatch({ control: form.control, name: "date_from" });
+  const audienceMode = useWatch({
+    control: form.control,
+    name: "audience_mode",
+  });
+  const forGroups = audienceMode === "groups";
+
+  // The live groups, and the archived ones this event already has.
+  const offered = useMemo(
+    () =>
+      (groups ?? []).filter(
+        (g) => g.archived_at === null || (event?.audience ?? []).includes(g.id),
+      ),
+    [groups, event],
+  );
 
   useResetOnChange([open], () => setSaveError(null));
   useEffect(() => {
-    if (open) form.reset(defaults(event));
+    if (open) form.reset(defaults(event, withAudience, initialAudience));
+    // Reset on open and when the subject changes, not when the groups refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, event, form]);
 
   const submit = async (values: EventFormValues) => {
@@ -225,6 +275,12 @@ export function EventDialog({
             </div>
           </fieldset>
 
+          {/* Only when the dialog opened with the groups: an audience never
+              read is never sent (it would open a group event to everyone). */}
+          {withAudience && audienceMode !== undefined && (
+            <AudienceFieldset form={form} groups={offered} />
+          )}
+
           <fieldset className="space-y-4">
             <legend className="text-[17px] leading-6 font-semibold">
               Pour les membres
@@ -252,7 +308,12 @@ export function EventDialog({
               name="is_public"
               id={LABELS.is_public.id}
               label={LABELS.is_public.label}
-              hint="Sinon, seuls les membres le voient dans leur espace et dans l'application."
+              disabled={forGroups}
+              hint={
+                forGroups
+                  ? "Un événement réservé à des groupes n'est jamais affiché sur le site public."
+                  : "Sinon, seuls les membres le voient dans leur espace et dans l'application."
+              }
             />
           </fieldset>
         </form>

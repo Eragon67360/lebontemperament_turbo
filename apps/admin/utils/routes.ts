@@ -12,6 +12,11 @@ const RouteNames = {
       /** One member's page. */
       USER: (id: string) => `/dashboard/admin/users/${encodeURIComponent(id)}`,
       USERS_SYNC: "/dashboard/admin/users/sync",
+      /** « Groupes »: the CA, the commissions… */
+      GROUPS: "/dashboard/admin/groups",
+      /** One group's page. */
+      GROUP: (id: string) =>
+        `/dashboard/admin/groups/${encodeURIComponent(id)}`,
       CA: "/dashboard/admin/ca",
       DOCUMENTS: "/dashboard/admin/documents",
       ASSEMBLIES: "/dashboard/admin/assemblies",

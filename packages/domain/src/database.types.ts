@@ -1155,6 +1155,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      event_audiences: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          group_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          group_id: string;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          group_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_audiences_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_audiences_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "member_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       event_documents: {
         Row: {
           created_at: string;
@@ -1664,6 +1697,96 @@ export type Database = {
             referencedColumns: ["group_email"];
           },
         ];
+      };
+      member_group_members: {
+        Row: {
+          added_at: string;
+          added_by: string | null;
+          group_id: string;
+          profile_id: string;
+          role: string;
+          title: string | null;
+        };
+        Insert: {
+          added_at?: string;
+          added_by?: string | null;
+          group_id: string;
+          profile_id: string;
+          role?: string;
+          title?: string | null;
+        };
+        Update: {
+          added_at?: string;
+          added_by?: string | null;
+          group_id?: string;
+          profile_id?: string;
+          role?: string;
+          title?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "member_group_members_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "member_groups";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "member_group_members_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      member_groups: {
+        Row: {
+          archived_at: string | null;
+          color: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          icon: string;
+          id: string;
+          is_system: boolean;
+          kind: string;
+          name: string;
+          slug: string;
+          updated_at: string;
+          visibility: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          icon?: string;
+          id?: string;
+          is_system?: boolean;
+          kind?: string;
+          name: string;
+          slug: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          icon?: string;
+          id?: string;
+          is_system?: boolean;
+          kind?: string;
+          name?: string;
+          slug?: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -2584,6 +2707,7 @@ export type Database = {
         }[];
       };
       can_read_order_document: { Args: { p_name: string }; Returns: boolean };
+      can_see_event: { Args: { p_event_id: string }; Returns: boolean };
       concert_event_data_write: {
         Args: {
           p_city: string;
@@ -2643,6 +2767,7 @@ export type Database = {
         Returns: Json;
       };
       is_admin: { Args: never; Returns: boolean };
+      is_in_group: { Args: { p_group_id: string }; Returns: boolean };
       is_admin_or_superadmin: { Args: never; Returns: boolean };
       is_superadmin: { Args: never; Returns: boolean };
       mark_bug_report_read: {
@@ -2702,6 +2827,10 @@ export type Database = {
           p_upserts: Json;
         };
         Returns: Json;
+      };
+      save_event_with_audience: {
+        Args: { p_event: Json; p_group_ids: string[]; p_id?: string };
+        Returns: string;
       };
       save_order: {
         Args: {

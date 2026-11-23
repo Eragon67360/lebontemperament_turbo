@@ -21,6 +21,7 @@ import {
   Store,
   Ticket,
   Users,
+  UsersRound,
   Vote,
 } from "lucide-react";
 
@@ -231,7 +232,7 @@ export function buildNavSections({
     {
       id: "members",
       label: "Membres et accès",
-      description: "Qui fait partie de l’association",
+      description: "Qui fait partie de l’association, et de quel groupe",
       icon: Users,
       groups: [
         {
@@ -241,6 +242,11 @@ export function buildNavSections({
               href: RouteNames.DASHBOARD.ADMIN.USERS,
               label: "Membres",
               icon: Users,
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.GROUPS,
+              label: "Groupes",
+              icon: UsersRound,
             },
             {
               href: RouteNames.DASHBOARD.ADMIN.GOOGLE_GROUPS,

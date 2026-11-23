@@ -52,3 +52,88 @@ export function pushCondition(
   }
   return anyOf([ALL_USERS_TOPIC, MEMBERS_TOPIC]);
 }
+
+// --- Events reserved for member groups ---------------------------------------
+//
+// An event can be reserved for groups (public.event_audiences, migration
+// 20261123185221). Such an event never goes to a topic: anyone's app can
+// subscribe to a topic, so a « ca » topic would let any phone hear the CA's
+// meetings. It goes device by device (push_devices) to the members of its
+// groups, read when the push is sent, so someone removed from a group stops
+// hearing about it at once.
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The group ids the trigger sent (`audience`), keeping only well-formed ids. */
+export function audienceFromBody(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (v): v is string => typeof v === "string" && UUID.test(v),
+  );
+}
+
+/**
+ * The groups an event's push goes to: those the trigger saw and those the
+ * event has now (`current`, null on DELETE: the rows went with the event).
+ * Either one is enough to keep the push off the topics, so a push never
+ * reaches every member because one of the two reads came back empty.
+ */
+export function eventGroupIds(
+  fromTrigger: readonly string[],
+  current: readonly string[] | null,
+): string[] {
+  return [...new Set([...fromTrigger, ...(current ?? [])])].sort();
+}
+
+/** « Conseil d'administration · Nouvel événement ». */
+export function groupPushTitle(
+  groupNames: readonly string[],
+  title: string,
+): string {
+  const names = [...groupNames]
+    .filter((n) => n.trim().length > 0)
+    .sort((a, b) => a.localeCompare(b, "fr"));
+  return names.length > 0 ? `${names.join(", ")} · ${title}` : title;
+}
+
+export interface GroupPush {
+  token: string;
+  title: string;
+}
+
+/**
+ * One push per device of a member of the event's groups, titled with the
+ * groups of the audience that member is in. A device appears once even when
+ * its member is in several of the groups.
+ */
+export function planGroupPushes(input: {
+  groupIds: readonly string[];
+  groupNames: Readonly<Record<string, string>>;
+  memberships: readonly { group_id: string; profile_id: string }[];
+  devices: readonly { token: string; user_id: string }[];
+  title: string;
+}): GroupPush[] {
+  const audience = new Set(input.groupIds);
+  const groupsOf = new Map<string, Set<string>>();
+  for (const m of input.memberships) {
+    if (!audience.has(m.group_id)) continue;
+    const set = groupsOf.get(m.profile_id) ?? new Set<string>();
+    set.add(m.group_id);
+    groupsOf.set(m.profile_id, set);
+  }
+  const seen = new Set<string>();
+  const pushes: GroupPush[] = [];
+  for (const d of input.devices) {
+    const groups = groupsOf.get(d.user_id);
+    if (!groups || seen.has(d.token)) continue;
+    seen.add(d.token);
+    pushes.push({
+      token: d.token,
+      title: groupPushTitle(
+        [...groups].map((g) => input.groupNames[g] ?? ""),
+        input.title,
+      ),
+    });
+  }
+  return pushes;
+}

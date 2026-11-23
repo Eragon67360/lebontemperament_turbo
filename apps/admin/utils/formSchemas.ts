@@ -51,21 +51,38 @@ export const concertFormSchema = z.object({
 });
 export type ConcertFormValues = z.output<typeof concertFormSchema>;
 
-export const eventFormSchema = z.object({
-  title: requiredString("Le titre est requis"),
-  date_from: z.date({ error: "La date de début est requise" }),
-  date_to: z.date().optional(),
-  time: requiredTime("L'heure est requise"),
-  location: requiredString("Le lieu est requis"),
-  responsible_name: requiredString("Le responsable est requis"),
-  responsible_email: optionalEmail,
-  event_type: z.enum(EVENT_TYPES, {
-    error: "Le type d'événement est requis",
-  }),
-  link: z.string(),
-  description: z.string(),
-  is_public: z.boolean(),
-});
+export const eventFormSchema = z
+  .object({
+    title: requiredString("Le titre est requis"),
+    date_from: z.date({ error: "La date de début est requise" }),
+    date_to: z.date().optional(),
+    time: requiredTime("L'heure est requise"),
+    location: requiredString("Le lieu est requis"),
+    responsible_name: requiredString("Le responsable est requis"),
+    responsible_email: optionalEmail,
+    event_type: z.enum(EVENT_TYPES, {
+      error: "Le type d'événement est requis",
+    }),
+    link: z.string(),
+    description: z.string(),
+    is_public: z.boolean(),
+    /**
+     * « Pour qui ? » (member groups): every member, or only some groups.
+     * Absent where the groups aren't installed: every member.
+     */
+    audience_mode: z.enum(["all", "groups"]).optional(),
+    /** The ids of the groups picked under « Certains groupes ». */
+    audience: z.array(z.string()).optional(),
+  })
+  .superRefine((values, context) => {
+    if (values.audience_mode === "groups" && !values.audience?.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["audience"],
+        message: "Choisissez au moins un groupe",
+      });
+    }
+  });
 export type EventFormValues = z.output<typeof eventFormSchema>;
 
 // --- Saison des membres (Phase 4 wave 4, #433) ---

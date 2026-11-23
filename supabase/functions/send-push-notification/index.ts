@@ -1,19 +1,27 @@
-import { serve as serveHttp } from "https://deno.land/std@0.177.0/http/server.ts";
-import * as jose from "npm:jose@5.2.0";
+import {
+  createClient,
+  type SupabaseClient,
+} from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalSecret } from "../_shared/caller-auth.ts";
-import { pushCondition } from "./target.ts";
+import {
+  getAccessToken,
+  readServiceAccount,
+  sendToToken,
+  type ServiceAccount,
+} from "../_shared/fcm.ts";
+import { requireServiceKey } from "../_shared/supabase-keys.ts";
+import {
+  audienceFromBody,
+  eventGroupIds,
+  planGroupPushes,
+  pushCondition,
+} from "./target.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-interface ServiceAccount {
-  project_id: string;
-  client_email: string;
-  private_key: string;
-}
 
 const FRENCH_MONTHS = [
   "janvier",
@@ -111,40 +119,138 @@ function getNotificationContent(
   return { title: "Notification", body: String(name) };
 }
 
-async function getAccessToken(sa: ServiceAccount): Promise<string> {
-  const key = await jose.importPKCS8(
-    sa.private_key.replace(/\\n/g, "\n"),
-    "RS256",
-  );
-  const jwt = await new jose.SignJWT({
-    scope: "https://www.googleapis.com/auth/firebase.messaging",
-  })
-    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-    .setIssuer(sa.client_email)
-    .setSubject(sa.client_email)
-    .setAudience("https://oauth2.googleapis.com/token")
-    .setIssuedAt(Math.floor(Date.now() / 1000))
-    .setExpirationTime("1h")
-    .sign(key);
-
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
-    }),
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`OAuth2 token failed: ${res.status} ${text}`);
-  }
-  const data = (await res.json()) as { access_token: string };
-  return data.access_token;
 }
 
-serveHttp(async (req) => {
+function log(event: string, data: Record<string, unknown> = {}): void {
+  console.log(JSON.stringify({ fn: "send-push-notification", event, ...data }));
+}
+
+/** 42P01 / PGRST205: a table of a migration not applied on this project. */
+function isMissingTable(error: { code?: string } | null): boolean {
+  return error?.code === "42P01" || error?.code === "PGRST205";
+}
+
+function adminClient(): SupabaseClient {
+  const url = Deno.env.get("SUPABASE_URL");
+  if (!url) throw new Error("SUPABASE_URL is not set");
+  return createClient(url, requireServiceKey(), {
+    auth: { persistSession: false },
+  });
+}
+
+/**
+ * The groups an event is for, read now. `null` when the event is gone
+ * (deleted before this push ran: nothing to announce), `[]` when it is for
+ * every member or the groups' migration isn't applied on this project.
+ * Throws on any other failed read: a group event must never fall back to the
+ * topics.
+ */
+async function currentEventGroups(
+  supabase: SupabaseClient,
+  eventId: string,
+): Promise<string[] | null> {
+  const event = await supabase
+    .from("events")
+    .select("id")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (event.error) throw new Error(`events: ${event.error.message}`);
+  if (!event.data) return null;
+  const rows = await supabase
+    .from("event_audiences")
+    .select("group_id")
+    .eq("event_id", eventId);
+  if (rows.error) {
+    if (isMissingTable(rows.error)) return [];
+    throw new Error(`event_audiences: ${rows.error.message}`);
+  }
+  return (rows.data ?? []).map((r: { group_id: string }) => r.group_id);
+}
+
+/**
+ * Sends an event reserved for groups to the devices of their members, one
+ * push per device (never a topic). Tokens FCM reports as gone are dropped.
+ */
+async function sendToGroups(
+  supabase: SupabaseClient,
+  sa: ServiceAccount,
+  eventId: string,
+  groupIds: string[],
+  title: string,
+  body: string,
+): Promise<{ devices: number; sent: number; dropped: number }> {
+  const [groups, memberships] = await Promise.all([
+    supabase.from("member_groups").select("id, name").in("id", groupIds),
+    supabase
+      .from("member_group_members")
+      .select("group_id, profile_id")
+      .in("group_id", groupIds),
+  ]);
+  if (groups.error) throw new Error(`member_groups: ${groups.error.message}`);
+  if (memberships.error) {
+    throw new Error(`member_group_members: ${memberships.error.message}`);
+  }
+  const members = [
+    ...new Set(
+      (memberships.data ?? []).map((m: { profile_id: string }) => m.profile_id),
+    ),
+  ];
+  if (members.length === 0) return { devices: 0, sent: 0, dropped: 0 };
+
+  const devices = await supabase
+    .from("push_devices")
+    .select("token, user_id")
+    .in("user_id", members);
+  if (devices.error) throw new Error(`push_devices: ${devices.error.message}`);
+
+  const pushes = planGroupPushes({
+    groupIds,
+    groupNames: Object.fromEntries(
+      (groups.data ?? []).map((g: { id: string; name: string }) => [
+        g.id,
+        g.name,
+      ]),
+    ),
+    memberships: memberships.data ?? [],
+    devices: devices.data ?? [],
+    title,
+  });
+  if (pushes.length === 0) return { devices: 0, sent: 0, dropped: 0 };
+
+  const accessToken = await getAccessToken(sa);
+  const results = await Promise.all(
+    pushes.map((p) =>
+      sendToToken(sa, accessToken, p.token, {
+        title: p.title,
+        body,
+        tag: `event-${eventId}`,
+        data: { type: "event", id: eventId },
+      }),
+    ),
+  );
+  const gone = pushes
+    .filter((_, i) => results[i] === "unregistered")
+    .map((p) => p.token);
+  if (gone.length > 0) {
+    const { error } = await supabase
+      .from("push_devices")
+      .delete()
+      .in("token", gone);
+    if (error) log("drop_tokens_failed", { error: error.message });
+  }
+  return {
+    devices: pushes.length,
+    sent: results.filter((r) => r === "sent").length,
+    dropped: gone.length,
+  };
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -186,19 +292,41 @@ serveHttp(async (req) => {
       record,
     );
 
-    const saJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON");
-    if (!saJson) {
+    if (!Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON")) {
       console.error("FIREBASE_SERVICE_ACCOUNT_JSON is not set");
-      return new Response(
-        JSON.stringify({ error: "Server configuration error" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+      return jsonResponse({ error: "Server configuration error" }, 500);
+    }
+    const sa = readServiceAccount();
+
+    // An event reserved for groups goes to their members' devices only.
+    if (table === "events") {
+      const supabase = adminClient();
+      const current =
+        operation === "DELETE" ? null : await currentEventGroups(supabase, id);
+      if (operation !== "DELETE" && current === null) {
+        log("event_gone", { operation, id });
+        return jsonResponse({ sent: 0, reason: "event_gone" });
+      }
+      const groupIds = eventGroupIds(audienceFromBody(body.audience), current);
+      if (groupIds.length > 0) {
+        const result = await sendToGroups(
+          supabase,
+          sa,
+          id,
+          groupIds,
+          title,
+          bodyText,
+        );
+        log("pushed_to_groups", {
+          operation,
+          id,
+          groups: groupIds.length,
+          ...result,
+        });
+        return jsonResponse({ success: true, ...result });
+      }
     }
 
-    const sa = JSON.parse(saJson) as ServiceAccount;
     const accessToken = await getAccessToken(sa);
 
     const condition = pushCondition(table, record, oldRecord);

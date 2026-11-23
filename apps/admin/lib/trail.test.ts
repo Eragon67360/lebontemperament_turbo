@@ -3,6 +3,7 @@ import { buildNavSections } from "./navigation";
 import {
   buildTrail,
   groupSegmentFromPathname,
+  memberGroupIdFromPathname,
   memberIdFromPathname,
   programIdFromPathname,
   saleIdFromPathname,
@@ -127,6 +128,41 @@ assert.equal(
 assert.deepEqual(trail("/dashboard/design-system"), [
   { label: "Design system" },
 ]);
+
+// A group page: « Membres et accès › Groupes › <name> », the id swapped for
+// the name once loaded, « Groupe… » before, « Groupe introuvable » when unknown.
+{
+  const groupPath = "/dashboard/admin/groups/33333333-cccc";
+  assert.equal(memberGroupIdFromPathname(groupPath), "33333333-cccc");
+  assert.equal(memberGroupIdFromPathname("/dashboard/admin/groups"), undefined);
+  const memberGroupId = memberGroupIdFromPathname(groupPath);
+  assert.deepEqual(
+    trail(groupPath, {
+      pathname: groupPath,
+      sections,
+      memberGroupId,
+      memberGroupName: "Conseil d’administration",
+    }),
+    [
+      { label: "Membres et accès" },
+      { label: "Groupes", href: "/dashboard/admin/groups" },
+      { label: "Conseil d’administration" },
+    ],
+  );
+  assert.deepEqual(
+    trail(groupPath, { pathname: groupPath, sections, memberGroupId }).at(-1),
+    { label: "Groupe…" },
+  );
+  assert.deepEqual(
+    trail(groupPath, {
+      pathname: groupPath,
+      sections,
+      memberGroupId,
+      memberGroupName: null,
+    }).at(-1),
+    { label: "Groupe introuvable" },
+  );
+}
 
 console.log("trail: ok");
 
