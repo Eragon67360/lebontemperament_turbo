@@ -28,8 +28,8 @@ Linked phones are erased by `purge_expired_delivery_personal_data()` (daily, 03:
 
 1. Apply the migration (SQL Editor: staging first, then production).
 2. Deploy, without the gateway's JWT check (the app calls it signed out; `supabase/config.toml` says the same):
-   `npx supabase functions deploy redeem-delivery-code --no-verify-jwt --project-ref fsklunxplbbtzgurwqmc`
+   `npx supabase@3 functions deploy redeem-delivery-code --no-verify-jwt --remote=fsklunxplbbtzgurwqmc`
 3. Redeploy the four delivery functions so they push:
-   `npx supabase functions deploy start-delivery-round send-delivery-sms check-eta-and-send-arrival-sms send-delivery-complete-sms --project-ref fsklunxplbbtzgurwqmc`
+   `npx supabase@3 functions deploy start-delivery-round send-delivery-sms check-eta-and-send-arrival-sms send-delivery-complete-sms --remote=fsklunxplbbtzgurwqmc`
 
 Secrets already exist: `FIREBASE_SERVICE_ACCOUNT_JSON` (pushes), `SUPABASE_SERVICE_ROLE_KEY` (provided by Supabase).

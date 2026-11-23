@@ -52,4 +52,4 @@ select net.http_post(
 
 ## Setup
 
-Secrets already exist for the other functions: `FIREBASE_SERVICE_ACCOUNT_JSON`, `INTERNAL_FUNCTION_SECRET`. Apply `supabase/migrations/20261007140000_superadmin_ops_alerts.sql` (tables, functions, cron job), then `supabase functions deploy check-ops-alerts`. The function keeps the gateway's default `verify_jwt`: the cron sends the anon key as bearer, and the real check is the internal secret.
+Secrets already exist for the other functions: `FIREBASE_SERVICE_ACCOUNT_JSON`, `INTERNAL_FUNCTION_SECRET`. Apply `supabase/migrations/20261007140000_superadmin_ops_alerts.sql` (tables, functions, cron job), then `npx supabase@3 functions deploy check-ops-alerts --remote=fsklunxplbbtzgurwqmc`. The function keeps the gateway's default `verify_jwt`: the cron sends the anon key as bearer, and the real check is the internal secret.

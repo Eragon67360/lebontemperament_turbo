@@ -22,6 +22,6 @@ The database trigger `notify_bug_report_push` (migration `20261008090000_app_bug
 
 ## Setup
 
-Secrets already exist for the other functions: `FIREBASE_SERVICE_ACCOUNT_JSON`, `INTERNAL_FUNCTION_SECRET`. Apply the migration, then `supabase functions deploy notify-bug-report`. The function keeps the gateway's default `verify_jwt`: the trigger sends the anon key as bearer, and the real check is the internal secret.
+Secrets already exist for the other functions: `FIREBASE_SERVICE_ACCOUNT_JSON`, `INTERNAL_FUNCTION_SECRET`. Apply the migration, then `npx supabase@3 functions deploy notify-bug-report --remote=fsklunxplbbtzgurwqmc`. The function keeps the gateway's default `verify_jwt`: the trigger sends the anon key as bearer, and the real check is the internal secret.
 
 Tests: `npx -y deno test --allow-env --node-modules-dir=none supabase/functions/notify-bug-report/`.

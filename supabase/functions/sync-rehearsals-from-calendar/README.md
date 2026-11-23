@@ -60,7 +60,7 @@ curl -X POST "$SUPABASE_URL/functions/v1/sync-rehearsals-from-calendar?mode=dry-
 ## Deploy
 
 ```bash
-supabase functions deploy sync-rehearsals-from-calendar
+npx supabase@3 functions deploy sync-rehearsals-from-calendar --remote=fsklunxplbbtzgurwqmc
 ```
 
 ## All-day rehearsals
