@@ -1,5 +1,6 @@
 "use client";
 
+import { MemberGroupsCard } from "@/components/groups/MemberGroupsCard";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Card } from "@/components/ui/card";
@@ -176,6 +177,8 @@ export default function MemberPage() {
               )}
             </div>
           </SectionCard>
+
+          <MemberGroupsCard userId={user.id} firstName={firstNameOf(user)} />
 
           <SectionCard
             id="danger"

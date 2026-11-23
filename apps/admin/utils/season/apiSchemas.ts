@@ -10,7 +10,12 @@
 //
 // Types follow packages/domain/src/database.types.ts and the SQL columns
 // (`rehearsals.name` and `place` are varchar(255)).
+//
+// `audience` (member groups, 20261123185221_member_groups.sql) is not a
+// column: the groups the event is reserved for, empty for every member. The
+// route writes it with the event through save_event_with_audience().
 import { GROUP_TYPES, type GroupType } from "@repo/domain/types/rehearsals";
+import { EVENT_AUDIENCE_MAX } from "@repo/domain/utils/memberGroups";
 import { z } from "zod";
 import {
   clockTime,
@@ -63,6 +68,9 @@ const eventFields = {
   is_public: z.boolean(),
 };
 
+/** The groups an event is for: ids, at most EVENT_AUDIENCE_MAX. */
+const audience = z.array(z.guid()).max(EVENT_AUDIENCE_MAX);
+
 /** POST /api/events: the NOT NULL columns required, the others optional. */
 export const eventCreateSchema = z
   .object({
@@ -77,11 +85,12 @@ export const eventCreateSchema = z
     description: eventFields.description.optional(),
     link: eventFields.link.optional(),
     is_public: eventFields.is_public.optional(),
+    audience: audience.optional(),
   })
   .strict();
 
-/** PATCH /api/events: `id` and at least one field. */
-export const eventPatchSchema = rowPatch(eventFields);
+/** PATCH /api/events: `id` and at least one field (`audience` included). */
+export const eventPatchSchema = rowPatch({ ...eventFields, audience });
 
 /** DELETE /api/events: `{ id }`. */
 export const eventDeleteSchema = idBody;

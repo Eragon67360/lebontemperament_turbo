@@ -5,11 +5,13 @@ The words the association, its members and the code use. Use them in issues, cod
 ## The association
 
 - **Le Bon Tempérament**: a choir and orchestra association. Its public face is the website; its members use the members area and the mobile app; its board and admins use the admin dashboard.
-- **Groupe** (`group_type`): which ensemble something concerns: Orchestre, Chœur complet (`Choeur complet` in the data), Tous, Hommes, Femmes, Jeunes/Enfants. Rehearsals, events and work materials are scoped by group.
+- **Groupe** (`group_type`): which ensemble something concerns: Orchestre, Chœur complet (`Choeur complet` in the data), Tous, Hommes, Femmes, Jeunes/Enfants. Rehearsals and work materials are scoped by group. Not the admin's « Groupes » (member groups, below).
 - **Membre** (`profiles`): a person with an account and a `profiles` row. Only the admin creates that row, with the account (« Créer un compte ») or the invitation; the website's sign-in signs out an account without one. Has a role, groups, a voice (`voice`), a profile picture, and shows in the member directory.
 - **Nom** (`display_name`): one field, always written « Prénom NOM » (surname in capitals, last), e.g. « Lucie BERNARD ». The roster's « NOM Prénom » column, the admin's forms and invitations all store it in that order (`normalizeName` in `@repo/domain`).
 - **Rôle** (`user_role`): `user` (member), `admin`, `superadmin`.
 - **CA** (`cas`): a board meeting (_conseil d'administration_) record: title, date, attached file (minutes).
+- **Groupe de membres** (`member_groups`, `member_group_members`): the admin's « Groupes » (Membres et accès): the CA (built in, slug `ca`, never archived), commissions, teams. Superadmins create, edit and archive them (a group is archived, never deleted once used); admins add and remove members. A member may be « Responsable » (`role` `manager`; no admin access) and have a function (« Trésorière »). « Privé »: only its members and the admins see the group; « Visible des membres »: every member may see who is in it.
+- **Événement réservé** (`event_audiences`): an event for some member groups only (« Pour qui ? » in the event dialog): only their members and the admins see it, and only their phones get its notification. Never public. An event with no audience row is for every member. Comptes rendus du CA stay readable by every member.
 - **AG**: the general assembly (_assemblée générale_); `/ag` shows the newest one, edited in the admin (Association › Assemblée générale); `/ag-2026` redirects there.
 
 ## Music and calendar

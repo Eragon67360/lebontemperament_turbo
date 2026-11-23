@@ -51,6 +51,26 @@ export function getParisToday(now = new Date()): string {
   return formatParisDate(now);
 }
 
+/**
+ * True once a stored rehearsal is over, in Paris time. The sync only asks
+ * Google for events that have not ended yet, so an ended rehearsal is missing
+ * from the answer without having been removed from the calendar.
+ * `end_time` may carry seconds ("21:00:00"); an end at or before the start is
+ * read as running past midnight, so it ends with its day.
+ */
+export function rehearsalHasEnded(
+  row: { date: string; start_time: string; end_time: string },
+  now = new Date(),
+): boolean {
+  const today = formatParisDate(now);
+  if (row.date < today) return true;
+  if (row.date > today) return false;
+  const start = row.start_time.slice(0, 5);
+  const end = row.end_time.slice(0, 5);
+  if (end <= start) return false;
+  return end <= formatParisTime(now);
+}
+
 export function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }

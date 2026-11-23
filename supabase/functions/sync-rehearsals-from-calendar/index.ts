@@ -2,7 +2,12 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { chunk, mapSettledWithConcurrency } from "./concurrency.ts";
-import { addDays, getParisToday, isAllDayEvent } from "./datetime.ts";
+import {
+  addDays,
+  getParisToday,
+  isAllDayEvent,
+  rehearsalHasEnded,
+} from "./datetime.ts";
 import { fetchCalendarEvents, patchEventLocations } from "./google-calendar.ts";
 import { extractRehearsalFields } from "./llm-extract.ts";
 import {
@@ -540,9 +545,18 @@ serve(async (req) => {
       }
     });
 
-    const removedFromCalendarIds = dbSynced
-      .filter((row) => row.event_id && !googleEventIds.has(row.event_id))
+    // Google only returns events that have not ended yet (timeMin = now),
+    // while the database rows start at today's date. A rehearsal that ended
+    // earlier today is therefore missing from Google's answer without having
+    // been removed: it stays, and nobody gets « Répétition supprimée ».
+    const missingFromCalendar = dbSynced.filter(
+      (row) => row.event_id && !googleEventIds.has(row.event_id),
+    );
+    const removedFromCalendarIds = missingFromCalendar
+      .filter((row) => !rehearsalHasEnded(row, now))
       .map((row) => row.id);
+    const keptEnded =
+      missingFromCalendar.length - removedFromCalendarIds.length;
 
     const deleteIds = [
       ...new Set([...removedFromCalendarIds, ...reclassifiedDeleteIds]),
@@ -553,6 +567,7 @@ serve(async (req) => {
       deletes: deleteIds.length,
       deletes_removed_from_calendar: removedFromCalendarIds.length,
       deletes_reclassified_non_rehearsal: reclassifiedDeleteIds.length,
+      kept_ended_today: keptEnded,
       skipped_total: stats.skipped,
       skipped_cancelled: skippedCancelled,
       skipped_unchanged: skippedUnchanged,

@@ -199,6 +199,25 @@ assert.equal(
     undefined,
   true,
 );
+// « Pour qui ? »: « Certains groupes » needs at least one group.
+assert.equal(
+  errorsOf(eventFormSchema, { ...event, audience_mode: "groups", audience: [] })
+    .audience,
+  "Choisissez au moins un groupe",
+);
+assert.equal(
+  eventFormSchema.safeParse({
+    ...event,
+    audience_mode: "groups",
+    audience: ["g"],
+  }).success,
+  true,
+);
+assert.equal(
+  eventFormSchema.safeParse({ ...event, audience_mode: "all", audience: [] })
+    .success,
+  true,
+);
 
 // --- Tours ---
 const tour = {

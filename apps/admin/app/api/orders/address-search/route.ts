@@ -1,4 +1,6 @@
+import { mySellerSales } from "@/utils/orders/seller";
 import { requireSuperadmin } from "@/utils/orders/server";
+import { createClient } from "@/utils/supabase/server";
 import {
   addressQuery,
   addressSearchUrl,
@@ -7,14 +9,20 @@ import {
 import { NextResponse } from "next/server";
 
 /**
- * GET ?q=: address suggestions for a buyer (« Commandes »), from the national
+ * GET ?q=: address suggestions for a buyer (« Commandes », « Mes ventes »), from the national
  * address base. Asked from the server so the browser only talks to the
  * admin. A query too short to search answers no suggestion; a geocoder that
  * fails answers 502 and the field stays a plain text field.
  */
 export async function GET(request: Request) {
   const auth = await requireSuperadmin();
-  if (!auth.ok) return auth.response;
+  // A seller (« Mes ventes ») types their buyers' addresses too.
+  if (!auth.ok && auth.response.status === 403) {
+    const sales = await mySellerSales(await createClient());
+    if (sales.length === 0) return auth.response;
+  } else if (!auth.ok) {
+    return auth.response;
+  }
 
   const q = addressQuery(new URL(request.url).searchParams.get("q") ?? "");
   if (!q) return NextResponse.json({ suggestions: [] });

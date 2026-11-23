@@ -51,6 +51,7 @@ const NEW_NAV_HREFS = [
   "/dashboard/public/rejoindre-faq",
   "/dashboard/public/reglages-du-site",
   "/dashboard/admin/commandes",
+  "/dashboard/admin/groups",
 ];
 for (const href of NEW_NAV_HREFS) {
   assert.ok(hrefs.includes(href), `${href} has no nav entry`);
@@ -177,6 +178,20 @@ assert.deepEqual(
     )
     .map((section) => section.id),
   [],
+);
+
+// « Mes ventes » only for an admin who sells for a sale, in « Association ».
+const sellerHrefs = (isSuperAdmin: boolean) =>
+  flattenNavItems(buildNavSections({ isSuperAdmin, isSeller: true })).map(
+    (item) => item.href,
+  );
+assert.ok(sellerHrefs(false).includes("/ventes"));
+assert.ok(sellerHrefs(true).includes("/ventes"));
+assert.ok(!flattenNavItems(admin).some((item) => item.href === "/ventes"));
+assert.ok(
+  buildNavSections({ isSeller: true })
+    .find((section) => section.id === "association")!
+    .groups[0]!.items.some((item) => item.label === "Mes ventes"),
 );
 
 console.log("navigation: ok");

@@ -19,7 +19,8 @@ const unknown = () =>
 
 /**
  * GET: one sale with its catalogue, every order (quantities and payments
- * included) and the names of the members who sold them.
+ * included), its sellers and the names of the members who sold them or
+ * recorded a payment.
  */
 export async function GET(_request: Request, { params }: Params) {
   const auth = await requireSuperadmin();
@@ -28,7 +29,7 @@ export async function GET(_request: Request, { params }: Params) {
   if (!isUuid(saleId)) return unknown();
 
   const supabase = await createClient();
-  const [sale, products, orders] = await Promise.all([
+  const [sale, products, orders, saleSellers] = await Promise.all([
     supabase.from("order_sales").select("*").eq("id", saleId).maybeSingle(),
     supabase
       .from("order_products")
@@ -40,6 +41,11 @@ export async function GET(_request: Request, { params }: Params) {
       .select("*, order_items(product_id, quantity), order_payments(*)")
       .eq("sale_id", saleId)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("order_sale_sellers")
+      .select("member_id")
+      .eq("sale_id", saleId)
+      .order("created_at", { ascending: true }),
   ]);
   const failed = sale.error ?? products.error ?? orders.error;
   if (failed) {
@@ -48,10 +54,16 @@ export async function GET(_request: Request, { params }: Params) {
   if (!sale.data) return unknown();
   const orderRows = orders.data ?? [];
 
-  const sellers = await displayNames(
-    supabase,
-    orderRows.map((o) => o.sold_by),
+  // Before 20261123181503_order_sellers.sql a sale has no sellers: the
+  // missing table must not break the page.
+  const sellerIds = (saleSellers.error ? [] : (saleSellers.data ?? [])).map(
+    (s) => s.member_id,
   );
+  const sellers = await displayNames(supabase, [
+    ...orderRows.map((o) => o.sold_by),
+    ...orderRows.flatMap((o) => o.order_payments.map((p) => p.recorded_by)),
+    ...sellerIds,
+  ]);
   const detail: SaleDetail = {
     sale: sale.data,
     products: products.data ?? [],
@@ -65,6 +77,7 @@ export async function GET(_request: Request, { params }: Params) {
       ),
     })),
     sellers,
+    saleSellers: sellerIds,
   };
   return NextResponse.json(detail);
 }

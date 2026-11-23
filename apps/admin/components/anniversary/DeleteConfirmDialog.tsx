@@ -21,6 +21,8 @@ interface DeleteConfirmDialogProps {
   /** What happens, and that it cannot be undone. */
   description: string;
   confirmLabel?: string;
+  /** While it runs: « Suppression… » unless the action has its own word. */
+  pendingLabel?: string;
   isLoading?: boolean;
 }
 
@@ -32,6 +34,7 @@ export function DeleteConfirmDialog({
   title,
   description,
   confirmLabel = "Supprimer",
+  pendingLabel = "Suppression…",
   isLoading = false,
 }: DeleteConfirmDialogProps) {
   return (
@@ -53,7 +56,7 @@ export function DeleteConfirmDialog({
             aria-busy={isLoading || undefined}
           >
             {isLoading && <Loader2 className="animate-spin" aria-hidden />}
-            {isLoading ? "Suppression…" : confirmLabel}
+            {isLoading ? pendingLabel : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

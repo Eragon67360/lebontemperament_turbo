@@ -45,12 +45,17 @@ export interface BuyersListProps {
   onSort?: (sort: BuyerSort) => void;
   onEdit: (row: BuyerRow) => void;
   onPay: (row: BuyerRow) => void;
-  onHandOver: (row: BuyerRow, handedOver: boolean) => void;
+  /** « Marquer comme remis »; left out, the menu doesn't offer it (« Mes ventes »). */
+  onHandOver?: (row: BuyerRow, handedOver: boolean) => void;
   /** « Ajouter à la tournée… » for this buyer alone; offered when `canJoinRound`. */
   onAddToRound?: (row: BuyerRow) => void;
   onDelete: (row: BuyerRow) => void;
   /** The id of the order whose write is running: its row waits. */
   busyOrderId?: string | null;
+  /** The « Vendu par » column (false on a seller's own list). */
+  showSoldBy?: boolean;
+  /** « Encaisser » as a button beside « Modifier » while the buyer owes. */
+  payButton?: boolean;
 }
 
 /**
@@ -72,11 +77,28 @@ export function BuyersList({
   onAddToRound,
   onDelete,
   busyOrderId,
+  showSoldBy = true,
+  payButton = false,
 }: BuyersListProps) {
   const actions = (row: BuyerRow) => {
     const busy = busyOrderId === row.orderId;
+    const owing = row.status === "unpaid" || row.status === "partial";
     return (
       <div className="ml-auto flex items-center justify-end gap-1">
+        {payButton && owing && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onPay(row)}
+            disabled={busy}
+            className="border-primary text-primary-text"
+          >
+            <Banknote aria-hidden />
+            Encaisser
+            <span className="sr-only"> pour « {row.buyerName} »</span>
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
@@ -106,19 +128,21 @@ export function BuyersList({
               Ajouter à la tournée…
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onSelect={() => onHandOver(row, !row.handedOver)}>
-            {row.handedOver ? (
-              <>
-                <Undo2 aria-hidden />
-                Annuler la remise
-              </>
-            ) : (
-              <>
-                <PackageCheck aria-hidden />
-                Marquer comme remis
-              </>
-            )}
-          </DropdownMenuItem>
+          {onHandOver && (
+            <DropdownMenuItem onSelect={() => onHandOver(row, !row.handedOver)}>
+              {row.handedOver ? (
+                <>
+                  <Undo2 aria-hidden />
+                  Annuler la remise
+                </>
+              ) : (
+                <>
+                  <PackageCheck aria-hidden />
+                  Marquer comme remis
+                </>
+              )}
+            </DropdownMenuItem>
+          )}
         </RowActionsMenu>
       </div>
     );
@@ -139,9 +163,11 @@ export function BuyersList({
               </SortHeader>
             </TableHead>
             <TableHead scope="col">Mode</TableHead>
-            <TableHead scope="col" className="hidden lg:table-cell">
-              Vendu par
-            </TableHead>
+            {showSoldBy && (
+              <TableHead scope="col" className="hidden lg:table-cell">
+                Vendu par
+              </TableHead>
+            )}
             <TableHead
               scope="col"
               className="text-right"
@@ -180,16 +206,18 @@ export function BuyersList({
               <TableCell className="py-2 whitespace-nowrap">
                 {fulfilmentLabel(row.fulfilment)}
               </TableCell>
-              <TableCell className="text-muted-foreground hidden max-w-40 py-2 lg:table-cell">
-                <span className="block truncate">
-                  {row.soldBy ?? (
-                    <>
-                      <span aria-hidden>—</span>
-                      <span className="sr-only">Personne</span>
-                    </>
-                  )}
-                </span>
-              </TableCell>
+              {showSoldBy && (
+                <TableCell className="text-muted-foreground hidden max-w-40 py-2 lg:table-cell">
+                  <span className="block truncate">
+                    {row.soldBy ?? (
+                      <>
+                        <span aria-hidden>—</span>
+                        <span className="sr-only">Personne</span>
+                      </>
+                    )}
+                  </span>
+                </TableCell>
+              )}
               <TableCell className="py-2 text-right whitespace-nowrap tabular-nums">
                 {formatEuros(row.totalCents)}
               </TableCell>
@@ -219,7 +247,10 @@ export function BuyersList({
                 <BuyerMarks row={row} />
               </p>
               <p className="text-note text-muted-foreground truncate">
-                {[fulfilmentLabel(row.fulfilment), row.soldBy]
+                {[
+                  fulfilmentLabel(row.fulfilment),
+                  showSoldBy ? row.soldBy : row.order.buyer_phone,
+                ]
                   .filter(Boolean)
                   .join(" · ")}
               </p>

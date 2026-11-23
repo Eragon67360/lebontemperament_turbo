@@ -13,6 +13,12 @@ export type Event = {
   updated_at: string;
   link?: string | null;
   is_public: boolean;
+  /**
+   * The member groups the event is reserved for (public.event_audiences),
+   * as the admin's /api/events gives and takes it: empty or absent, every
+   * member. A group event is never public.
+   */
+  audience?: string[];
 };
 
 export type CreateEventDTO = Omit<Event, "id" | "created_at" | "updated_at">;

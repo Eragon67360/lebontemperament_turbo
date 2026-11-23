@@ -18,8 +18,10 @@ import {
   Music2,
   ShoppingBasket,
   SlidersHorizontal,
+  Store,
   Ticket,
   Users,
+  UsersRound,
   Vote,
 } from "lucide-react";
 
@@ -58,6 +60,8 @@ export type NavSection = {
 type NavContext = {
   unreadBugReports?: number;
   isSuperAdmin?: boolean;
+  /** The admin also sells for a sale: « Mes ventes » joins « Association ». */
+  isSeller?: boolean;
 };
 
 /**
@@ -71,6 +75,7 @@ type NavContext = {
 export function buildNavSections({
   unreadBugReports = 0,
   isSuperAdmin = false,
+  isSeller = false,
 }: NavContext = {}): NavSection[] {
   const sections: NavSection[] = [
     {
@@ -227,7 +232,7 @@ export function buildNavSections({
     {
       id: "members",
       label: "Membres et accès",
-      description: "Qui fait partie de l’association",
+      description: "Qui fait partie de l’association, et de quel groupe",
       icon: Users,
       groups: [
         {
@@ -237,6 +242,11 @@ export function buildNavSections({
               href: RouteNames.DASHBOARD.ADMIN.USERS,
               label: "Membres",
               icon: Users,
+            },
+            {
+              href: RouteNames.DASHBOARD.ADMIN.GROUPS,
+              label: "Groupes",
+              icon: UsersRound,
             },
             {
               href: RouteNames.DASHBOARD.ADMIN.GOOGLE_GROUPS,
@@ -297,6 +307,17 @@ export function buildNavSections({
           badge: unreadBugReports > 0 ? "dot" : undefined,
         },
       );
+  }
+
+  if (isSeller) {
+    // The admin's own buyers and payments for the sales they sell for.
+    sections
+      .find((section) => section.id === "association")
+      ?.groups[0]?.items.push({
+        href: RouteNames.SELLER.ROOT,
+        label: "Mes ventes",
+        icon: Store,
+      });
   }
 
   return sections;

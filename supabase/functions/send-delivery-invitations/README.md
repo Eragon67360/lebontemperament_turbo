@@ -39,6 +39,6 @@ Links use the host of the `SITE_URL` secret, which must be `https://www.lebontem
 
 1. Apply `supabase/migrations/20261008140000_delivery_invitations.sql` (SQL Editor: staging first, then production). It adds `invited_at` and keeps each round's links valid until the day after delivery.
 2. Deploy this function and redeploy the four delivery functions (now push-only, apart from the « 5 minutes » fallback):
-   `npx supabase functions deploy send-delivery-invitations start-delivery-round send-delivery-sms check-eta-and-send-arrival-sms send-delivery-complete-sms --project-ref fsklunxplbbtzgurwqmc`
+   `npx supabase@3 functions deploy send-delivery-invitations start-delivery-round send-delivery-sms check-eta-and-send-arrival-sms send-delivery-complete-sms --remote=fsklunxplbbtzgurwqmc`
 
 Secrets already exist: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `SITE_URL`. `DELIVERY_SUPPORT_PHONE` is no longer used (it was in the « livrée » SMS).

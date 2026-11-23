@@ -1,12 +1,14 @@
 "use client";
 
 import { useDriveIndex } from "@/hooks/useDriveIndex";
+import { useGroup } from "@/hooks/useGroups";
 import { useSale } from "@/hooks/useOrders";
 import { useUsers } from "@/hooks/useUsers";
 import { buildNavSections } from "@/lib/navigation";
 import {
   buildTrail,
   groupSegmentFromPathname,
+  memberGroupIdFromPathname,
   memberIdFromPathname,
   programIdFromPathname,
   saleIdFromPathname,
@@ -55,6 +57,15 @@ export function useShellTrail(): TrailItem[] {
       ? null
       : undefined;
 
+  // A member group's page: the same query as the page (shared cache).
+  const memberGroupId = memberGroupIdFromPathname(pathname);
+  const memberGroup = useGroup(memberGroupId);
+  const memberGroupName = memberGroup.data
+    ? memberGroup.data.group.name
+    : memberGroup.isError
+      ? null
+      : undefined;
+
   const names = useMemo(() => {
     if (legacy) return { programName: legacyName, groupName: undefined };
     const nodes = driveIndex.data?.nodes;
@@ -82,6 +93,8 @@ export function useShellTrail(): TrailItem[] {
         memberName,
         saleId,
         saleTitle,
+        memberGroupId,
+        memberGroupName,
       }),
     [
       pathname,
@@ -93,6 +106,8 @@ export function useShellTrail(): TrailItem[] {
       memberName,
       saleId,
       saleTitle,
+      memberGroupId,
+      memberGroupName,
     ],
   );
 }

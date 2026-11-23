@@ -151,6 +151,38 @@ const noop = () => {};
   assert.doesNotMatch(html, /\(\)/, "no empty parentheses without an e-mail");
 }
 
+// --- An event reserved for a group: its name instead of « Membres » ---
+{
+  const html = renderToStaticMarkup(
+    createElement(EventRow, {
+      event: {
+        id: "e4",
+        title: "Réunion du CA",
+        date_from: "2026-12-03",
+        date_to: null,
+        time: "20:00:00",
+        location: "Wangen",
+        responsible_name: "Claire",
+        responsible_email: null,
+        event_type: "autre",
+        description: null,
+        link: null,
+        is_public: false,
+        audience: ["ca"],
+        created_at: "",
+        updated_at: "",
+      },
+      audience: "Conseil d’administration",
+      documents: [],
+      onEdit: noop,
+      onDelete: noop,
+    }),
+  );
+  assert.match(html, /Réservé à : <\/span>Conseil d’administration/);
+  assert.doesNotMatch(html, />Membres</);
+  assert.doesNotMatch(html, />Public</);
+}
+
 // --- An event with files: their names on the row, « Documents (n) » ---
 {
   const event = {

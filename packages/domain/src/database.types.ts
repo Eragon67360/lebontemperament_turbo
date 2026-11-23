@@ -1155,6 +1155,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      event_audiences: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          group_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          group_id: string;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          group_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_audiences_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_audiences_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "member_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       event_documents: {
         Row: {
           created_at: string;
@@ -1665,6 +1698,96 @@ export type Database = {
           },
         ];
       };
+      member_group_members: {
+        Row: {
+          added_at: string;
+          added_by: string | null;
+          group_id: string;
+          profile_id: string;
+          role: string;
+          title: string | null;
+        };
+        Insert: {
+          added_at?: string;
+          added_by?: string | null;
+          group_id: string;
+          profile_id: string;
+          role?: string;
+          title?: string | null;
+        };
+        Update: {
+          added_at?: string;
+          added_by?: string | null;
+          group_id?: string;
+          profile_id?: string;
+          role?: string;
+          title?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "member_group_members_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "member_groups";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "member_group_members_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      member_groups: {
+        Row: {
+          archived_at: string | null;
+          color: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          icon: string;
+          id: string;
+          is_system: boolean;
+          kind: string;
+          name: string;
+          slug: string;
+          updated_at: string;
+          visibility: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          icon?: string;
+          id?: string;
+          is_system?: boolean;
+          kind?: string;
+          name: string;
+          slug: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          icon?: string;
+          id?: string;
+          is_system?: boolean;
+          kind?: string;
+          name?: string;
+          slug?: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Relationships: [];
+      };
       notifications: {
         Row: {
           bug_report_id: string | null;
@@ -1869,6 +1992,42 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "order_products_sale_id_fkey";
+            columns: ["sale_id"];
+            isOneToOne: false;
+            referencedRelation: "order_sales";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_sale_sellers: {
+        Row: {
+          added_by: string | null;
+          created_at: string;
+          member_id: string;
+          sale_id: string;
+        };
+        Insert: {
+          added_by?: string | null;
+          created_at?: string;
+          member_id: string;
+          sale_id: string;
+        };
+        Update: {
+          added_by?: string | null;
+          created_at?: string;
+          member_id?: string;
+          sale_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_sale_sellers_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_sale_sellers_sale_id_fkey";
             columns: ["sale_id"];
             isOneToOne: false;
             referencedRelation: "order_sales";
@@ -2548,6 +2707,7 @@ export type Database = {
         }[];
       };
       can_read_order_document: { Args: { p_name: string }; Returns: boolean };
+      can_see_event: { Args: { p_event_id: string }; Returns: boolean };
       concert_event_data_write: {
         Args: {
           p_city: string;
@@ -2607,6 +2767,7 @@ export type Database = {
         Returns: Json;
       };
       is_admin: { Args: never; Returns: boolean };
+      is_in_group: { Args: { p_group_id: string }; Returns: boolean };
       is_admin_or_superadmin: { Args: never; Returns: boolean };
       is_superadmin: { Args: never; Returns: boolean };
       mark_bug_report_read: {
@@ -2667,6 +2828,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      save_event_with_audience: {
+        Args: { p_event: Json; p_group_ids: string[]; p_id?: string };
+        Returns: string;
+      };
       save_order: {
         Args: {
           p_items: Json;
@@ -2676,6 +2841,33 @@ export type Database = {
         };
         Returns: string;
       };
+      seller_add_payment: {
+        Args: {
+          p_amount_cents: number;
+          p_method: string;
+          p_note: string;
+          p_order_id: string;
+          p_paid_on: string;
+        };
+        Returns: Json;
+      };
+      seller_delete_order: { Args: { p_order_id: string }; Returns: undefined };
+      seller_delete_payment: {
+        Args: { p_payment_id: string };
+        Returns: undefined;
+      };
+      seller_sale: { Args: { p_sale_id: string }; Returns: Json };
+      seller_sales: { Args: never; Returns: Json };
+      seller_save_order: {
+        Args: {
+          p_items: Json;
+          p_order: Json;
+          p_order_id: string;
+          p_sale_id: string;
+        };
+        Returns: string;
+      };
+      sells_for_sale: { Args: { p_sale_id: string }; Returns: boolean };
       site_document_object: {
         Args: { p_collection: string; p_file_name: string };
         Returns: string;

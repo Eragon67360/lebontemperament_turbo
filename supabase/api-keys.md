@@ -39,7 +39,7 @@ select public.edge_function_auth_headers() ? 'Authorization' as still_sends_bear
 From the repository root, on an up-to-date `main`:
 
 ```bash
-for f in check-eta-and-send-arrival-sms check-ops-alerts generate-concert-event-data notify-bug-report notify-public-concerts optimize-recipients-route purge-bug-screenshots redeem-delivery-code send-delivery-complete-sms send-delivery-invitations send-delivery-sms send-push-notification start-delivery-round sync-drive-index sync-rehearsals-from-calendar; do npx supabase functions deploy "$f" --project-ref fsklunxplbbtzgurwqmc || break; done
+for f in check-eta-and-send-arrival-sms check-ops-alerts generate-concert-event-data notify-bug-report notify-public-concerts optimize-recipients-route purge-bug-screenshots redeem-delivery-code send-delivery-complete-sms send-delivery-invitations send-delivery-sms send-push-notification start-delivery-round sync-drive-index sync-rehearsals-from-calendar; do npx supabase@3 functions deploy "$f" --remote=fsklunxplbbtzgurwqmc || break; done
 ```
 
 Check: Supabase › Edge Functions › each of the 8 functions above › Details shows « Enforce JWT verification » **off**; the five driver functions (`optimize-recipients-route`, `send-delivery-*`, `start-delivery-round`) show it **on**. Within 15 minutes the ops-alerts cron runs; step 5's check query shows a 200.
