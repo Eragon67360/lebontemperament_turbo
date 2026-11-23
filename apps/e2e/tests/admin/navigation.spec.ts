@@ -37,7 +37,13 @@ test("the header trail names the section and the page", async ({ page }) => {
 // P1 — every sidebar entry must lead somewhere. The travail and hub pages used
 // to link routes that had been moved or never built (/dashboard/travail/...,
 // /dashboard/members/users), which only showed up as a 404 after a click.
+//
+// It requests about 40 pages one after the other, and on the self-hosted
+// staging each one is challenged by its basic auth first (401, then the same
+// request with the credentials): 30 s was not enough on 2026-11-21 and
+// 2026-11-23, timing out on the last campaign pages. slow() gives it 90 s.
 test("no sidebar entry leads to a missing page", async ({ page }) => {
+  test.slow();
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/dashboard");
 
