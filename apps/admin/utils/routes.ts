@@ -53,6 +53,14 @@ const RouteNames = {
       },
     },
   },
+  /**
+   * « Mes ventes »: a seller's own buyers and payments, outside the
+   * dashboard (a seller needs no admin role).
+   */
+  SELLER: {
+    ROOT: "/ventes",
+    SALE: (id: string) => `/ventes/${encodeURIComponent(id)}`,
+  },
   ERROR: "/error",
   UNAUTHORIZED: "/unauthorized",
 };

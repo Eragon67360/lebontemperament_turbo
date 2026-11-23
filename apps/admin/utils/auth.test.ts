@@ -1,6 +1,7 @@
 // Role matrix of everything that lets someone into the admin: the two checks
 // of utils/auth.ts, what is built on them (the dashboard shell, the
-// superadmin-only pages, the /api/orders routes) and the sign-in action.
+// superadmin-only pages, the /api/orders routes, « Mes ventes ») and the
+// sign-in action.
 // Supabase, the redirects and the cache are fakes; each row is one kind of
 // caller, each column one check, and the whole table is compared at once.
 import assert from "node:assert/strict";
@@ -12,6 +13,8 @@ type Caller = {
   user: { id: string } | null;
   /** Its `profiles` row; null when there is none. */
   profile: { role: unknown } | null;
+  /** Sells for a sale (seller_sales() is not empty). */
+  sells?: boolean;
 };
 
 const someone = { id: "11111111-1111-4111-8111-111111111111" };
@@ -23,6 +26,8 @@ const CALLERS = {
   "no role": { user: someone, profile: { role: null } },
   "unknown role": { user: someone, profile: { role: "owner" } },
   "no profile": { user: someone, profile: null },
+  seller: { user: someone, profile: { role: "user" }, sells: true },
+  "admin seller": { user: someone, profile: { role: "admin" }, sells: true },
 } satisfies Record<string, Caller>;
 
 // --- Fakes, swapped in for the real modules below ---
@@ -41,8 +46,25 @@ const state: { caller: Caller; signedOut: boolean; revalidated: boolean } = {
 
 /** The few calls the checks make, answered for `state.caller`. */
 function fakeSupabase() {
-  const { user, profile } = state.caller;
+  const { user, profile, sells = false } = state.caller as Caller;
   return {
+    rpc: async (name: string) => {
+      assert.equal(name, "seller_sales");
+      return {
+        data:
+          user && sells
+            ? [
+                {
+                  id: "22222222-2222-4222-8222-222222222222",
+                  title: "Vente TEST",
+                  order_deadline: null,
+                  delivery_date: null,
+                },
+              ]
+            : [],
+        error: null,
+      };
+    },
     auth: {
       getUser: async () => ({
         data: { user },
@@ -64,7 +86,7 @@ function fakeSupabase() {
       assert.equal(table, "profiles");
       return {
         select(columns: string) {
-          assert.equal(columns, "role");
+          assert.ok(columns === "role" || columns === "display_name, email");
           return {
             eq(column: string, id: unknown) {
               assert.equal(column, "id");
@@ -77,6 +99,10 @@ function fakeSupabase() {
                         data: null,
                         error: { code: "PGRST116", message: "0 rows" },
                       },
+                maybeSingle: async () => ({
+                  data: profile ? { display_name: "TEST", email: null } : null,
+                  error: null,
+                }),
               };
             },
           };
@@ -94,6 +120,8 @@ const fakes = {
   redirect: (url: string): never => {
     throw new Redirect(url);
   },
+  // Imported by the seller's shell; never called by the layouts.
+  useRouter: () => ({}),
 };
 Object.assign(globalThis, { __roleMatrixFakes: fakes });
 
@@ -117,7 +145,7 @@ const FAKE_FILES = new Map([
 ]);
 const FAKE_PACKAGES = new Map([
   ["next/cache", fakeModule(["revalidatePath"])],
-  ["next/navigation", fakeModule(["redirect"])],
+  ["next/navigation", fakeModule(["redirect", "useRouter"])],
 ]);
 
 registerHooks({
@@ -141,6 +169,7 @@ const { default: BugReportsLayout } =
   await import("../app/dashboard/admin/bug-reports/layout");
 const { default: OrdersLayout } =
   await import("../app/dashboard/admin/commandes/layout");
+const { default: SellerLayout } = await import("../app/ventes/layout");
 const { login } = await import("../app/auth/login/actions");
 
 type Check = Awaited<ReturnType<typeof checkAuthorization>>;
@@ -193,6 +222,7 @@ for (const [who, caller] of Object.entries(CALLERS)) {
     bugReports: await page(BugReportsLayout),
     commandes: await page(OrdersLayout),
     ordersApi: await ordersRoute(),
+    sellerArea: await page(SellerLayout),
   };
   state.signedOut = false;
   state.revalidated = false;
@@ -207,6 +237,7 @@ const refused = {
   bugReports: "→ /unauthorized",
   commandes: "→ /unauthorized",
   ordersApi: SUPERADMIN_ONLY,
+  sellerArea: "→ /unauthorized",
 };
 
 assert.deepEqual(matrix, {
@@ -217,6 +248,7 @@ assert.deepEqual(matrix, {
     bugReports: "→ /auth/login",
     commandes: "→ /auth/login",
     ordersApi: "401 Non authentifié",
+    sellerArea: "→ /auth/login",
     signIn: "→ /auth/login?error=INVALID_CREDENTIALS",
   },
   user: {
@@ -230,6 +262,7 @@ assert.deepEqual(matrix, {
     bugReports: "→ /unauthorized",
     commandes: "→ /unauthorized",
     ordersApi: SUPERADMIN_ONLY,
+    sellerArea: "→ /dashboard",
     signIn: "→ /dashboard (revalidated)",
   },
   superadmin: {
@@ -239,6 +272,7 @@ assert.deepEqual(matrix, {
     bugReports: "renders",
     commandes: "renders",
     ordersApi: "200",
+    sellerArea: "→ /dashboard",
     signIn: "→ /dashboard (revalidated)",
   },
   "no role": {
@@ -253,6 +287,23 @@ assert.deepEqual(matrix, {
   "no profile": {
     ...refused,
     signIn: "→ /auth/login?error=PROFILE_NOT_FOUND",
+  },
+  // A member who sells for a sale: « Mes ventes » and nothing else.
+  seller: {
+    ...refused,
+    dashboard: "→ /ventes",
+    sellerArea: "renders",
+    signIn: "→ /ventes (revalidated)",
+  },
+  "admin seller": {
+    admin: "200 admin",
+    superadmin: SUPERADMIN_ONLY,
+    dashboard: "renders",
+    bugReports: "→ /unauthorized",
+    commandes: "→ /unauthorized",
+    ordersApi: SUPERADMIN_ONLY,
+    sellerArea: "renders",
+    signIn: "→ /dashboard (revalidated)",
   },
 });
 

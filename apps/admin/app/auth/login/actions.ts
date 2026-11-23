@@ -1,6 +1,7 @@
 "use server";
 
 import { isAdminRole } from "@/utils/access";
+import { mySellerSales } from "@/utils/orders/seller";
 import RouteNames from "@/utils/routes";
 import { createClient } from "@/utils/supabase/server";
 import { ERROR_CODES } from "@repo/domain/consts/errorMessages";
@@ -36,6 +37,11 @@ export async function login(formData: FormData) {
     }
 
     if (!isAdminRole(profile?.role)) {
+      // A member who sells for a sale only gets « Mes ventes ».
+      if ((await mySellerSales(supabase)).length > 0) {
+        revalidatePath("/", "layout");
+        redirect(RouteNames.SELLER.ROOT);
+      }
       await supabase.auth.signOut();
       const redirection =
         RouteNames.AUTH.LOGIN + "?error=" + ERROR_CODES.UNAUTHORIZED;

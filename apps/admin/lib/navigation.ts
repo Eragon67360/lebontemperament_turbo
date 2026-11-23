@@ -18,6 +18,7 @@ import {
   Music2,
   ShoppingBasket,
   SlidersHorizontal,
+  Store,
   Ticket,
   Users,
   Vote,
@@ -58,6 +59,8 @@ export type NavSection = {
 type NavContext = {
   unreadBugReports?: number;
   isSuperAdmin?: boolean;
+  /** The admin also sells for a sale: « Mes ventes » joins « Association ». */
+  isSeller?: boolean;
 };
 
 /**
@@ -71,6 +74,7 @@ type NavContext = {
 export function buildNavSections({
   unreadBugReports = 0,
   isSuperAdmin = false,
+  isSeller = false,
 }: NavContext = {}): NavSection[] {
   const sections: NavSection[] = [
     {
@@ -297,6 +301,17 @@ export function buildNavSections({
           badge: unreadBugReports > 0 ? "dot" : undefined,
         },
       );
+  }
+
+  if (isSeller) {
+    // The admin's own buyers and payments for the sales they sell for.
+    sections
+      .find((section) => section.id === "association")
+      ?.groups[0]?.items.push({
+        href: RouteNames.SELLER.ROOT,
+        label: "Mes ventes",
+        icon: Store,
+      });
   }
 
   return sections;

@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/shell/AppSidebar";
 import { ShellDialogsProvider } from "@/components/shell/ShellDialogs";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { useMyBugReports } from "@/hooks/useMyBugReports";
+import { useSellerSales } from "@/hooks/useSellerOrders";
 import { useUnreadBugReports } from "@/hooks/useUnreadBugReports";
 import { buildNavSections } from "@/lib/navigation";
 import { isSearchShortcut } from "@/utils/search/palette";
@@ -68,9 +69,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
     0,
   );
 
+  const { data: sellerSales } = useSellerSales();
+
   const sections = buildNavSections({
     unreadBugReports,
     isSuperAdmin: profile?.role === "superadmin",
+    isSeller: (sellerSales?.sales.length ?? 0) > 0,
   });
 
   // Pages (the home's « Lire » task) open the dialogs through this context.

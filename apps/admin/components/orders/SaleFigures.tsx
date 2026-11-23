@@ -11,7 +11,14 @@ import {
  * The sale in four figures: what was ordered, what came in (by method in
  * small text), what is still owed, and how many orders still have to pay.
  */
-export function SaleFigures({ summary }: { summary: SaleSummary }) {
+export function SaleFigures({
+  summary,
+  seller = false,
+}: {
+  summary: SaleSummary;
+  /** A seller's own figures (« Mes ventes »): « Mes ventes », « Acheteurs ». */
+  seller?: boolean;
+}) {
   const byMethod = PAYMENT_METHODS.filter((m) => summary.byMethod[m] !== 0)
     .map(
       (m) => `${PAYMENT_METHOD_LABELS[m]} ${formatEuros(summary.byMethod[m])}`,
@@ -20,7 +27,10 @@ export function SaleFigures({ summary }: { summary: SaleSummary }) {
   const owed = summary.dueCents;
   return (
     <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <Figure label="Total commandé" value={formatEuros(summary.totalCents)} />
+      <Figure
+        label={seller ? "Mes ventes" : "Total commandé"}
+        value={formatEuros(summary.totalCents)}
+      />
       <Figure
         label="Encaissé"
         value={formatEuros(summary.paidCents)}
@@ -37,7 +47,7 @@ export function SaleFigures({ summary }: { summary: SaleSummary }) {
         }
       />
       <Figure
-        label="Commandes"
+        label={seller ? "Acheteurs" : "Commandes"}
         value={String(summary.orderCount)}
         detail={orderCountLine(summary)}
       />

@@ -36,6 +36,7 @@ export type DescribedError = {
 export function describeDbError(
   error: DbErrorLike,
   fallback: string,
+  forbidden = "Réservé aux superadmins",
 ): DescribedError {
   if (isMissingTable(error)) {
     return { status: 503, error: NOT_INSTALLED_MESSAGE, notInstalled: true };
@@ -43,7 +44,7 @@ export function describeDbError(
   const message = error?.message?.trim();
   switch (error?.code) {
     case "42501":
-      return { status: 403, error: "Réservé aux superadmins" };
+      return { status: 403, error: forbidden };
     case "P0002":
       return { status: 404, error: message || "Introuvable" };
     case "PGRST116":
@@ -63,8 +64,12 @@ export function describeDbError(
 }
 
 /** The JSON answer for a database error (see `describeDbError`). */
-export function dbErrorResponse(error: DbErrorLike, fallback: string) {
-  const described = describeDbError(error, fallback);
+export function dbErrorResponse(
+  error: DbErrorLike,
+  fallback: string,
+  forbidden?: string,
+) {
+  const described = describeDbError(error, fallback, forbidden);
   if (described.status === 500) console.error(fallback, error);
   return NextResponse.json(described, { status: described.status });
 }

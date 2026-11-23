@@ -1,7 +1,9 @@
-// « Exporter (Excel) »: the sale as a formatted .xlsx workbook, five sheets:
-// « Résumé » (the figures), « Acheteurs » (one row per buyer, one column per
-// product), « Détail par acheteur » (each buyer's lines, to prepare the
-// bags), « Fournisseurs » (what to order from each) and « Paiements ».
+// « Exporter (Excel) »: the sale as a formatted .xlsx workbook, six sheets:
+// « Résumé » (the figures), « Par vendeur » (what each seller sold and
+// collected, then their buyers), « Acheteurs » (one row per buyer, one
+// column per product), « Détail par acheteur » (each buyer's lines, to
+// prepare the bags), « Fournisseurs » (what to order from each) and
+// « Paiements » (with who recorded each).
 // Pure: it returns the sheets; the page writes them with write-excel-file.
 // The totals come from @repo/domain/utils/orders and are never recomputed.
 import type { SaleDetail } from "@/utils/orders/types";
@@ -9,10 +11,12 @@ import { fulfilmentLabel, saleDatesLine, slugify } from "@/utils/orders/view";
 import {
   BALANCE_LABELS,
   type BalanceStatus,
+  heldLine,
   PAYMENT_METHOD_LABELS,
   PAYMENT_METHODS,
   type PaymentMethod,
   saleSummary,
+  sellerTotals,
 } from "@repo/domain/utils/orders";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -229,6 +233,153 @@ export function saleWorkbook(
       money(summary.totalCents, false, total()),
     ],
   ];
+
+  // --- Par vendeur ---------------------------------------------------------------
+  const nameOf = (id: string | null) =>
+    id ? (detail.sellers[id] ?? "Membre") : "Sans vendeur";
+  const sellers = sellerTotals(
+    detail.products,
+    detail.orders,
+    [...detail.saleSellers].sort((a, b) =>
+      nameOf(a).localeCompare(nameOf(b), "fr"),
+    ),
+  );
+  const sellerHeads = [
+    "Vendeur",
+    "Acheteurs",
+    "Vendu",
+    "Encaissé",
+    "dont espèces",
+    "dont chèques",
+    "dont virements",
+    "Reste à payer",
+    "À remettre au trésorier",
+  ];
+  const sellerRows: Row[] = [
+    ...heading(sellerHeads.length, [dates, exported]),
+    [],
+    sellerHeads.map((h, i) =>
+      header(h, { align: i === 0 || i === 8 ? "left" : "right", wrap: true }),
+    ),
+    ...sellers.map((t, i): Row => {
+      const band = i % 2 === 1;
+      return [
+        body(nameOf(t.sellerId), band, {
+          fontWeight: t.sellerId ? "bold" : undefined,
+          fontStyle: t.sellerId ? undefined : "italic",
+        }),
+        body(t.summary.orderCount, band, { align: "right" }),
+        money(t.summary.totalCents, band),
+        money(t.summary.paidCents, band),
+        money(t.summary.byMethod.cash, band),
+        money(t.summary.byMethod.cheque, band),
+        money(t.summary.byMethod.transfer, band),
+        money(t.summary.dueCents, band, { fontWeight: "bold" }),
+        body(heldLine(t), band, { wrap: true }),
+      ];
+    }),
+    [
+      body("Total", false, total()),
+      body(summary.orderCount, false, total({ align: "right" })),
+      money(summary.totalCents, false, total()),
+      money(summary.paidCents, false, total()),
+      money(summary.byMethod.cash, false, total()),
+      money(summary.byMethod.cheque, false, total()),
+      money(summary.byMethod.transfer, false, total()),
+      money(summary.dueCents, false, total()),
+      body(
+        heldLine({
+          heldCashCents: sellers.reduce((n, t) => n + t.heldCashCents, 0),
+          heldChequeCents: sellers.reduce((n, t) => n + t.heldChequeCents, 0),
+          heldChequeCount: sellers.reduce((n, t) => n + t.heldChequeCount, 0),
+        }),
+        false,
+        total({ wrap: true }),
+      ),
+    ],
+  ];
+  if (sellers.length === 0) {
+    sellerRows.push([
+      {
+        value: "Aucune commande pour le moment.",
+        columnSpan: sellerHeads.length,
+        textColor: MUTED,
+      },
+      ...Array(sellerHeads.length - 1).fill(null),
+    ]);
+  }
+  for (const t of sellers) {
+    if (t.summary.orderCount === 0) continue;
+    const pad = Array(sellerHeads.length - 1).fill(null);
+    sellerRows.push(
+      [],
+      [
+        header(
+          `${nameOf(t.sellerId)} · ${count(t.summary.orderCount, "acheteur", "acheteurs")}`,
+          { columnSpan: sellerHeads.length, fontSize: 12 },
+        ),
+        ...pad,
+      ],
+      [
+        body("Acheteur", false, {
+          fontWeight: "bold",
+          backgroundColor: TEAL_SOFT,
+        }),
+        body("Mode", false, { fontWeight: "bold", backgroundColor: TEAL_SOFT }),
+        ...["Total", "Payé", "Reste à payer"].map((h) =>
+          body(h, false, {
+            fontWeight: "bold",
+            backgroundColor: TEAL_SOFT,
+            align: "right",
+          }),
+        ),
+        body("Payé en", false, {
+          fontWeight: "bold",
+          backgroundColor: TEAL_SOFT,
+          columnSpan: 2,
+        }),
+        null,
+        body("État", false, {
+          fontWeight: "bold",
+          backgroundColor: TEAL_SOFT,
+          align: "center",
+        }),
+        body("Téléphone", false, {
+          fontWeight: "bold",
+          backgroundColor: TEAL_SOFT,
+        }),
+      ],
+      ...t.summary.buyers.map((b, i): Row => {
+        const band = i % 2 === 1;
+        const o = orders.get(b.orderId);
+        const methods = [...new Set((o?.payments ?? []).map((p) => p.method))]
+          .map((m) => PAYMENT_METHOD_LABELS[m as PaymentMethod] ?? m)
+          .join(", ");
+        return [
+          body(b.buyerName, band),
+          body(fulfilmentLabel(b.fulfilment), band),
+          money(b.totalCents, band),
+          money(b.paidCents, band),
+          money(b.dueCents, band, { fontWeight: "bold" }),
+          body(methods || null, band, { columnSpan: 2 }),
+          null,
+          status(b.status),
+          body(o?.buyer_phone ?? null, band, { type: String, format: "@" }),
+        ];
+      }),
+      [
+        body(`Total ${nameOf(t.sellerId)}`, false, total()),
+        body(null, false, total()),
+        money(t.summary.totalCents, false, total()),
+        money(t.summary.paidCents, false, total()),
+        money(t.summary.dueCents - t.summary.overpaidCents, false, total()),
+        body(null, false, total({ columnSpan: 2 })),
+        null,
+        body(null, false, total()),
+        body(null, false, total()),
+      ],
+    );
+  }
 
   // --- Acheteurs (one column per ordered product) ---------------------------
   const info = ["Acheteur", "Téléphone", "Adresse", "Vendu par", "Mode"];
@@ -496,13 +647,14 @@ export function saleWorkbook(
         a.buyer.localeCompare(b.buyer, "fr"),
     );
   const paymentRows: Row[] = [
-    ...heading(5, [exported]),
+    ...heading(6, [exported]),
     [],
     [
       header("Date"),
       header("Acheteur"),
       header("Mode"),
       header("Montant", { align: "right" }),
+      header("Encaissé par"),
       header("Note"),
     ],
     ...payments.map((p, i): Row => {
@@ -519,6 +671,10 @@ export function saleWorkbook(
           band,
           p.amount_cents < 0 ? { textColor: "#B42318" } : {},
         ),
+        body(
+          p.recorded_by ? (detail.sellers[p.recorded_by] ?? null) : null,
+          band,
+        ),
         body(p.note, band, { wrap: true }),
       ];
     }),
@@ -528,6 +684,7 @@ export function saleWorkbook(
       body(null, false, total()),
       money(summary.paidCents, false, total()),
       body(null, false, total()),
+      body(null, false, total()),
     ],
   ];
 
@@ -536,6 +693,22 @@ export function saleWorkbook(
       sheet: "Résumé",
       data: summaryRows,
       columns: [{ width: 36 }, { width: 16 }, { width: 18 }],
+      showGridLines: false,
+    },
+    {
+      sheet: "Par vendeur",
+      data: sellerRows,
+      columns: [
+        { width: 26 },
+        { width: 11 },
+        { width: 12 },
+        { width: 12 },
+        { width: 12 },
+        { width: 12 },
+        { width: 13 },
+        { width: 13 },
+        { width: 34 },
+      ],
       showGridLines: false,
     },
     {
@@ -584,6 +757,7 @@ export function saleWorkbook(
         { width: 24 },
         { width: 11 },
         { width: 12 },
+        { width: 22 },
         { width: 28 },
       ],
       stickyRowsCount: 4,

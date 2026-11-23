@@ -179,4 +179,18 @@ assert.deepEqual(
   [],
 );
 
+// « Mes ventes » only for an admin who sells for a sale, in « Association ».
+const sellerHrefs = (isSuperAdmin: boolean) =>
+  flattenNavItems(buildNavSections({ isSuperAdmin, isSeller: true })).map(
+    (item) => item.href,
+  );
+assert.ok(sellerHrefs(false).includes("/ventes"));
+assert.ok(sellerHrefs(true).includes("/ventes"));
+assert.ok(!flattenNavItems(admin).some((item) => item.href === "/ventes"));
+assert.ok(
+  buildNavSections({ isSeller: true })
+    .find((section) => section.id === "association")!
+    .groups[0]!.items.some((item) => item.label === "Mes ventes"),
+);
+
 console.log("navigation: ok");

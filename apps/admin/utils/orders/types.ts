@@ -22,9 +22,17 @@ export type SaleDetail = {
   sale: Sale;
   products: SaleProduct[];
   orders: SaleOrder[];
-  /** Display names of the members in `sold_by`, by id. */
+  /**
+   * Display names by id of the members in `sold_by`, of the sale's sellers
+   * and of whoever recorded a payment (`recorded_by`).
+   */
   sellers: Record<string, string>;
+  /** The members who sell for this sale (« Vendeurs »), in the order they were added. */
+  saleSellers: string[];
 };
+
+/** One seller of a sale (GET /api/orders/sales/[id]/sellers). */
+export type SaleSeller = { id: string; name: string };
 
 /** One row of the sales list (GET /api/orders/sales). */
 export type SaleListItem = Sale & {
